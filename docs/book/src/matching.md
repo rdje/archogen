@@ -228,7 +228,7 @@ beside controls that hold.
 **A device the system does not have.** An assignment is one system's, and a block or platform it binds is part of
 that system's **hardware**: the blocks and platforms its `platform` clause names, or its own and its tasks' `uses` and
 `needs` name, and the blocks and platforms those name in turn, at any depth — a service between them ends the path, so a
-block that only a service names is not hardware. A block that offers the right fact but sits on no platform the system uses
+block that only a service names is not hardware, so a service naming one is `infeasible-configuration` for each system it leaves that block outside of, naming the service, the block and the system, with the repair *compose the block into the system's platform, or name hardware the platform composes*; a system whose platform composes the block is not refused for it (`M1.49`). A block that offers the right fact but sits on no platform the system uses
 cannot serve it:
 
 ```text

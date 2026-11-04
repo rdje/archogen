@@ -26,7 +26,8 @@ pub const PLAN_RECORD: &str = "plan-record";
 /// The stale plan's code: the record's digest is not the elaborated program's.
 pub const PLAN_STALE: &str = "plan-stale";
 
-/// Check (2)'s code, where the checker itself refuses the description rather than one of the language's passes.
+/// The code of a refusal of the description by the checker itself rather than one of the language's passes: check (2)'s,
+/// and what checks (3) to (5) find that §8 makes the description's whatever the assignment.
 pub const PLAN_DESCRIPTION: &str = "plan-description";
 
 /// Check (3)'s code: a requirement that binds left unbound, a binding of no requirement or of a requester the system
@@ -285,8 +286,7 @@ pub fn plan_file(
     let verdict = (|| {
         let assignment = record(&program, profile, name, text)?;
         judged(sources, &program, &all, &outcome)?;
-        bindings(sources, &program, name, text, &assignment)?;
-        joint(sources, &program, profile, name, text, &assignment)
+        bound(sources, &program, profile, name, text, &assignment)
     })();
     (program, verdict)
 }
@@ -314,8 +314,9 @@ pub fn bindings(
 
 /// Every check over one plan, in order (`M3.5`'s design, *Its verdicts*; `M3.5.4.5`): check (1), a stale plan
 /// refused before any judgement; check (2), the description; checks (3) and (4), the bindings; check (5), the joint
-/// rules (`M3.5.5`) — the first that refuses the verdict. `text` is the record `name` names; `sources` holds the description's files, as elaborated into
-/// `program`.
+/// rules (`M3.5.5`) — the first that refuses the verdict; but a service or a policy of the plan's system naming hardware
+/// outside it is the description's whatever the assignment, and is said before checks (3) and (4) (model §8 rule 7).
+/// `text` is the record `name` names; `sources` holds the description's files, as elaborated into `program`.
 ///
 /// # Errors
 ///
@@ -329,19 +330,39 @@ pub fn plan(
 ) -> Result<(), Verdict> {
     let assignment = record(program, profile, name, text)?;
     description(sources, program, profile)?;
-    bindings(sources, program, name, text, &assignment)?;
-    joint(sources, program, profile, name, text, &assignment)
+    bound(sources, program, profile, name, text, &assignment)
+}
+
+/// Checks (3) to (5) over a plan checks (1) and (2) accepted. A service or a policy of the plan's system naming hardware
+/// outside it is a conflict of that system whatever the assignment (`docs/semantics/model.md` §8 rule 7), so no finding
+/// of the bindings stands before it: check (5), which says the description's verdict first and whole, runs alone. It is
+/// no refusal of check (2), which judges every system's description and has no plan's system to judge this one for.
+fn bound(
+    sources: &SourceMap,
+    program: &Program,
+    profile: &Profile,
+    name: &str,
+    text: &str,
+    assignment: &Assignment,
+) -> Result<(), Verdict> {
+    if !crate::joint::names_outside_hardware(program, &assignment.system) {
+        bindings(sources, program, name, text, assignment)?;
+    }
+    joint(sources, program, profile, name, text, assignment)
 }
 
 /// Check (5) (`M3.5.5`; [`crate::joint`]): the bindings of one system's assignment hold together by
-/// `docs/semantics/model.md` §8's joint rules, judged after checks (3) and (4) accept each binding alone, the system's
-/// level the `profile`'s and never the record's. `assignment` is what check (1) read from `text`, the record `name`
-/// names; `sources` holds the description's files, as elaborated into `program`.
+/// `docs/semantics/model.md` §8's joint rules, judged after checks (3) and (4) accept each binding alone — or in their
+/// place, where [`plan`] finds rule 7's name of the system — the system's level the `profile`'s and never the record's.
+/// `assignment` is what check (1) read from `text`, the record `name` names; `sources` holds the description's files, as
+/// elaborated into `program`.
 ///
 /// # Errors
 ///
 /// The [`Verdict`] refusing it: `tool-failure`, a finding per conflict or unknown under [`PLAN_JOINT`]; or, judged
-/// first, `unsupported-profile` under [`PLAN_DESCRIPTION`] where a caller states levels that do not hold the profile's.
+/// first, the description's own status under [`PLAN_DESCRIPTION`] — `unsupported-profile` where a caller states levels
+/// that do not hold the profile's, `infeasible-configuration` where a service or a policy the system serves names a
+/// block or platform outside its hardware.
 pub fn joint(
     sources: &SourceMap,
     program: &Program,

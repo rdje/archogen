@@ -214,13 +214,14 @@ fn a_name_that_is_no_system_reads_as_none() {
 
 #[test]
 fn check_5_judges_a_binding_against_the_hardware_the_reading_gives() {
-    // Rule 7: the same description as the service's — a requester the system serves bound to a provider of its
-    // hardware holds; bound to a block outside it, it is a conflict naming the requester, the provider and the system.
+    // Rule 7: a requester the system serves bound to a provider of its hardware holds; bound to a block outside it, one
+    // nothing names — a service naming it would refuse the system whatever the binding — it is a conflict naming the
+    // requester, the provider and the system.
     let (sources, program) = describe(
         "
   (defblock console.uart (offers (observable-output true) (reachable-at-privilege machine)))
   (defplatform soc (offers (core-count 1 tick) (observable-output true) (reachable-at-privilege machine)))
-  (defservice console.write (requires (needs observable-output)) (uses console.uart))
+  (defservice console.write (requires (needs observable-output)))
   (defsystem s (requires (uses console.write)) (platform (uses soc)))",
     );
     let reading = system(&program, "s").expect("`s` is a system");

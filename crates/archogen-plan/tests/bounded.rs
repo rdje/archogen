@@ -13,7 +13,8 @@
 //! (R13-R1 to R13-R3), blocks and platforms whose `uses` or `needs` name a service, a policy, a system or another
 //! block, alone, several at once or beside each other refusal of §1 that can co-apply, on the lowered system's hardware
 //! or on another's; a block a service names, served though not the system's hardware, bound for requirements of its
-//! own or not, refused since round 20; and requesters naming several systems, held to the naming-system refusal's order; and, after round 14 (R14-D1,
+//! own or not, model §8 rule 7's conflict since `M1.49`; and requesters naming several systems, held to the
+//! naming-system refusal's order; and, after round 14 (R14-D1,
 //! R14-R1, R14-R6), names one of which prefixes another — `m` and `m.s`, `y` and `y.b`, `d` and `d.x` — and names
 //! continuing with `!`, a byte below `)`, so that each order §1 holds by text is held where a message's words would
 //! give another: the naming-system refusal's namers and systems, tasks among them; the hardware-naming refusal's
@@ -55,10 +56,11 @@
 //! `os-calls-category` beside its `os-calls`, each of the application's bounds and counts owed with its evidence
 //! category a fact of its own, the reading's facts of a task, a source and a timer route held to §2.10's table and §3's
 //! `FACT` list as the record writes them; and, after round 20 (R20-D3, R20-R7), a block or a platform the system serves
-//! outside its hardware — one a served service or policy names that model §8 rule 7 makes no hardware — refused in its
-//! place after the receivers of interrupt code, each named by its namer's text and then its own, over names one of
-//! which prefixes another, beside a task's, the system's own and a platform's `needs` making such a block hardware, a
-//! namer the system does not serve, every refusal before it that can co-apply, and a system that declares no task;
+//! outside its hardware — one a served service or policy names that model §8 rule 7 makes no hardware — which round 20
+//! had §1 refuse and which, since `M1.49` (`RTP-H22`), is that rule's conflict of each system serving it, the search's
+//! `infeasible-configuration`, beside a task's, the system's own and a platform's `needs` making such a block hardware,
+//! a namer the system does not serve, every refusal of §1 it leaves unreached, a system that declares no task, and one
+//! service two systems serve, the name inside one's hardware and outside the other's;
 //! §1's bullet over tasks whole — a period, a minimum separation, a deadline and a jitter that is not a time, in every
 //! unit the language accepts that is no time, a period or a minimum separation of zero, a periodic task bound to its
 //! source, and two at once — taken task by task in runtime order, each task's clauses in the order the bullet writes
@@ -113,7 +115,11 @@
 //! checker's result record, its third input; once it does, §1 refuses each of those systems `tool-failure`, "naming
 //! both verdicts", before anything is lowered (R16-R2). **A system's side that contradicts itself, read whole**, is the
 //! search's to refuse, `invalid-description` (`SEARCH_READS_THE_SIDE_WHOLE`; model §7 rule 4, §8 rule 1; `RTP-H20`): no
-//! record of it reaches the checker, and a record the search wrote for one would be a finding. **The records binding a
+//! record of it reaches the checker, and a record the search wrote for one would be a finding. **A service or a policy
+//! the system serves naming a block or a platform outside its hardware** is the search's to refuse too,
+//! `infeasible-configuration`, whatever else the description writes (`SEARCH_REFUSES_A_NAME_OUTSIDE_THE_HARDWARE`;
+//! model §8 rule 7; `M1.49`, `RTP-H22`): `Joint::map`'s refusal stops the search, no record of it reaches the checker
+//! or the lowering, and a record written for one, or another verdict, would be a finding. **The records binding a
 //! task's own source rule 16 does not admit**, which no search writes, are a class of their own (`RULE_16_RECORD`),
 //! neither a finding nor one of `CHECKER_HELD`: each is judged by the configuration checker and lowered, and each
 //! refused by both, the codes agreeing. Each plan is held to an **independent reading** of
@@ -2873,16 +2879,17 @@ impl ServedBy {
     ];
 }
 
-/// **A block a service names** (§1, §2; model §8 rule 7; round 13, R13-R2; round 20, R20-D3): a block `blk` no
+/// **A block a service names** (§2; model §8 rule 7; round 13, R13-R2; round 20, R20-D3; `M1.49`): a block `blk` no
 /// platform composes, requiring nothing, a timer's channel, an absolute deadline, the source or an output; named by a
-/// service `drv` that task `t`, task `u`, both, the system's own level or nothing uses, by `uses` or `needs`, or by task
-/// `t` itself, or by `drv` beside `t`, `u` or the system's own level naming it too; its own offer bound to by a service
-/// `t` uses or by nothing; and task `u` periodic or sporadic. "A declaration of another kind ends the path: a block that
-/// only a service names is not hardware", so a requester bound to it is the search's conflict (model §8 rule 7), and
-/// since round 20 §1 refuses a system serving it — "a block or a platform the system serves outside its hardware" —
-/// before any plan, `unsupported-profile`; beside a task's or the system's own name, which makes it hardware, it is a
-/// node, bound or not, its namer's named edge from it, running where what reaches it runs; and one only a service the
-/// system does not serve names is neither refused nor a node.
+/// service `drv` that task `t`, task `u`, both, the system's own level or nothing uses, by `uses` or `needs`, or by
+/// task `t` itself, or by `drv` beside `t`, `u` or the system's own level naming it too; its own offer bound to by a
+/// service `t` uses or by nothing; and task `u` periodic or sporadic. "A declaration of another kind ends the path: a
+/// block that only a service names is not hardware", so a served service or policy naming it is the search's conflict,
+/// "judged once for the system whatever the assignment" (model §8 rule 7, `M1.49`), `infeasible-configuration`, bound
+/// to or not; beside a task's or the system's own name, which makes it hardware, it is a node, bound or not, its
+/// namer's named edge from it, running where what reaches it runs; and one only a service the system does not serve
+/// names is neither refused nor a node, a requester bound to it alone being an assignment's conflict, which leaves
+/// `missing-fact`.
 fn served_blocks() -> Vec<Case> {
     let mut cases = Vec::new();
     for by in ServedBy::ALL {
@@ -3565,7 +3572,8 @@ const UNSERVED_NAMING: [Naming; 5] = [
 ];
 /// What `soc`, the platform of `sys`, names beside the blocks it composes (round 15, R15-R5): nothing; the policy
 /// `pol.p` by `uses`; the system `other`, by `uses` or by `needs`; or the service `via.s`, which names `lone` by `uses`,
-/// so that `lone` is served through what hardware the system serves names (§1: "serving what it names").
+/// so that a system serving `soc` serves `via.s` through what hardware names (§1: "serving what it names"), and
+/// `via.s` leaves it naming a block outside its hardware (model §8 rule 7, `M1.49`).
 const SOC_NAMES: [Naming; 5] = [
     &[],
     &[(false, "pol.p")],
@@ -3582,8 +3590,9 @@ const SOC_NAMES: [Naming; 5] = [
 /// names what is not hardware — a service it serves, a policy, a system, the lowered system itself — and is refused by
 /// neither naming bullet, "nothing else reach[ing] its plan"; the same hardware, served when its own system is lowered,
 /// is refused, a platform naming a system by `uses` or `needs` meeting the naming-system refusal first; a system
-/// reached by a platform serves its own `platform` clause, whose platform names the lowered one; and `lone`, served
-/// once `soc` names `via.s`, is refused for what it names beside `soc`.
+/// reached by a platform serves its own `platform` clause, whose platform names the lowered one; and a system serving
+/// `soc` — its own platform, or another system's it reaches — with `soc` naming `via.s` is model §8 rule 7's conflict
+/// (`M1.49`), whatever else its hardware names, `via.s` naming `lone`, which neither system's hardware holds.
 fn unserved_hardware_naming() -> Vec<Case> {
     let options = UNSERVED_NAMING.len();
     let mut cases = Vec::new();
@@ -4025,8 +4034,8 @@ const NAMERS_USED: [NamersUsed; 3] = [
 /// edge `named` alone, and a policy the system does not serve is no namer; the edge's line holds a binding's reason
 /// beside `named`, or `named` alone,
 /// ordering two steps unlike their texts or like them; a block no platform composes is served through its namer alone,
-/// a requester bound to it being the search's conflict (model §8 rule 7); and each node is in a job or in none, owing
-/// its call cost and its masked runs where it is in one.
+/// a served namer naming it being the search's conflict and a requester bound to it alone an assignment's (model §8
+/// rule 7); and each node is in a job or in none, owing its call cost and its masked runs where it is in one.
 fn named_hardware() -> Vec<Case> {
     const BLOCK: &str = "m.blk";
     const PLATFORM: &str = "m.soc";
@@ -4280,7 +4289,8 @@ const UNBOUND_NAMERS: [&str; 5] = ["t", "a.s", "a.p", "a.h", "sys"];
 /// the hardware's step before a namer whose text is less; the system's own level naming it makes none, nor does a
 /// platform composing a block nothing else names (composition is no call, §2); and a binding elsewhere, `w`'s, changes
 /// nothing the name gives — the pair held line by line in its test. A block no platform composes and no task nor the
-/// system's own level names is no hardware (model §8 rule 7), so `w` bound to it is the search's conflict.
+/// system's own level names is no hardware (model §8 rule 7): a served service or policy naming it is the search's
+/// conflict, `infeasible-configuration`, and `w` bound to it alone an assignment's, which leaves `missing-fact`.
 fn unbound_named_hardware() -> Vec<Case> {
     let mut cases = Vec::new();
     for target in Unbound::ALL {
@@ -4664,18 +4674,18 @@ enum OutsideServed {
     PolicyAlone,
 }
 
-/// **A block or a platform the system serves outside its hardware** (§1; model §8 rule 7; round 20, R20-D3): the
+/// **A block or a platform the system serves outside its hardware** (model §8 rule 7; round 20, R20-D3; `M1.49`): the
 /// system `sys`, on the platform `soc` composing the timer `d`; the blocks `x`, `x.y`, `x!` and `q`, which no platform
 /// of `sys` composes, `q` composed by `p`, the platform of the system `other`, and the platform `p2`, which no system
 /// uses; the services `n` and `n.s` and the policy `n!`, naming one choice of [`N_NAMING`], [`NS_NAMING`] and
 /// [`NBANG_NAMING`], served as one choice of [`OutsideServed`]; `x`, `x.y` or `x!` made hardware by another name —
-/// none, `t`'s, the system's own level's `needs`, or `soc`'s `needs` — "beside hardware a task names, which rule 7 makes
-/// hardware"; and `t` meeting another refusal of §1 or not: none, a zero period, `t` naming the system `other`, an alarm
-/// it programs itself, a deadline from another event, a jitter past the arithmetic, or `x` naming the service `m`. Beside them, a system declaring no task whose own
-/// level uses `n` naming `x` or nothing, programming an alarm or not. So each pair, "by the namer's text and then the
-/// block's or the platform's", over names one of which prefixes another and names continuing with `!`, is named after
-/// every bullet before it and the receivers', and a block a task names, the system's own names or its hardware's `needs`
-/// bring in is lowered, a node, as `M4.1.18` makes it.
+/// none, `t`'s, the system's own level's `needs`, or `soc`'s `needs` — "beside hardware a task names, which rule 7
+/// makes hardware"; and `t` meeting another refusal of §1 or not: none, a zero period, `t` naming the system `other`,
+/// an alarm it programs itself, a deadline from another event, a jitter past the arithmetic, or `x` naming the service
+/// `m`. Beside them, a system declaring no task whose own level uses `n` naming `x` or nothing, programming an alarm or
+/// not. So a served name outside the hardware is the search's conflict whatever else `t` meets, no record reaching the
+/// checker or §1; a block a task names, the system's own names or its hardware's `needs` bring in is lowered, a node,
+/// as `M4.1.18` makes it; and where no served name lies outside, each other refusal of §1 is given as it is alone.
 fn outside_hardware_universe() -> Vec<Case> {
     const HARDWARE_BY: [&str; 4] = ["nothing", "t names x", "sys needs x.y", "soc needs x!"];
     const ALSO: [&str; 7] = [
@@ -4927,6 +4937,97 @@ fn ranks() -> Vec<Case> {
     cases
 }
 
+/// What the service `log` of the one-service universe names: nothing; `uart.a`, of `sa`'s hardware, by `uses` or by
+/// `needs`; `pa`, `sa`'s platform; `uart.b`, of `sb`'s hardware; or `pb`, `sb`'s platform, by `needs`.
+const LOG_NAMING: [Naming; 6] = [
+    &[],
+    &[(false, "uart.a")],
+    &[(true, "uart.a")],
+    &[(false, "pa")],
+    &[(false, "uart.b")],
+    &[(true, "pb")],
+];
+
+/// Who uses `log`: `sa`'s task, `sb`'s, both, `sa`'s own level or `sb`'s.
+const LOG_USERS: [&str; 5] = ["ta", "tb", "both", "sa", "sb"];
+
+/// **One service two systems serve** (model §8 rule 7, `M1.49`: "It is each serving system's, so a system the name
+/// leaves inside its hardware is not refused for it"): the systems `sa` on `pa`, composing `uart.a`, and `sb` on `pb`,
+/// composing `uart.b`, with one service `log` naming one choice of [`LOG_NAMING`], used as one choice of [`LOG_USERS`];
+/// each description lowered for each system. So one name is inside one system's hardware and outside the other's: the
+/// second is the search's to refuse where it serves `log`, and the first lowers, the name a node of its plan; a system
+/// that does not serve `log` is refused for nothing it names.
+fn one_service_two_systems() -> Vec<Case> {
+    let mut cases = Vec::new();
+    for log in LOG_NAMING {
+        for users in LOG_USERS {
+            let using = |used: bool| Side {
+                uses: if used { names(&["log"]) } else { Vec::new() },
+                ..Side::default()
+            };
+            let system = |name: &str, task: &str, platform: &str| System {
+                name: name.to_string(),
+                tasks: vec![Task {
+                    name: task.to_string(),
+                    side: using(users == task || users == "both"),
+                    ..Task::default()
+                }],
+                own: using(users == name),
+                platform: platform.to_string(),
+            };
+            let (sa, sb) = (system("sa", "ta", "pa"), system("sb", "tb", "pb"));
+            let uart = |name: &str| Block {
+                name: name.to_string(),
+                offers: names(&[
+                    "(observable-output true)",
+                    "(reachable-at-privilege machine)",
+                ]),
+                ..Block::default()
+            };
+            let platform = |name: &str, composes: &str| Block {
+                name: name.to_string(),
+                offers: names(&["(core-count 1 tick)", "(reachable-at-privilege machine)"]),
+                side: Side {
+                    uses: names(&[composes]),
+                    ..Side::default()
+                },
+                ..Block::default()
+            };
+            let named: Vec<String> = log
+                .iter()
+                .map(|(by_needs, name)| {
+                    format!("{}:{name}", if *by_needs { "needs" } else { "uses" })
+                })
+                .collect();
+            let lowering = |lowered: &System, beside: &System, others_first: bool| Case {
+                label: format!(
+                    "log names [{}] used by {users}: lowering {}",
+                    named.join(","),
+                    lowered.name
+                ),
+                description: Description {
+                    system: lowered.name.clone(),
+                    blocks: vec![uart("uart.a"), uart("uart.b")],
+                    platforms: vec![platform("pa", "uart.a"), platform("pb", "uart.b")],
+                    services: vec![Service {
+                        name: "log".to_string(),
+                        policy: false,
+                        side: naming(Side::default(), log),
+                    }],
+                    tasks: lowered.tasks.clone(),
+                    own: lowered.own.clone(),
+                    platform: lowered.platform.clone(),
+                    others: vec![beside.clone()],
+                    others_first,
+                },
+            };
+            cases.push(lowering(&sa, &sb, false));
+            cases.push(lowering(&sb, &sa, true));
+        }
+    }
+    cases
+}
+
 /// The tasks' names of the one-name universe, in declared order, each task ranked by its place: two tasks of one name;
 /// three; `t` and `t!` each carried twice, whose tasks' texts order `(task sys t!)` before `(task sys t)`, the names
 /// the other way; `t.x` and `t` each carried twice, `t.x` first in runtime order and last by text; and, after round 24
@@ -4950,7 +5051,8 @@ const ONE_NAME_BINDERS: [&str; 4] = ["none", "first", "second", "both"];
 /// (the naming-system bullet); its platform naming `s` (hardware naming what is not hardware); its last task's jitter
 /// past the arithmetic; its last task's deadline from activation; its first task, the next carrying its name, or both,
 /// programming an alarm itself (a receiver of interrupt code), the record's binding then written of a text two tasks
-/// carry; or its last task using `w`, which names `out.b`, a block no platform composes (outside the hardware).
+/// carry. And, no refusal of §1's since `M1.49` but the search's, before the lowering reads any: its last task using
+/// `w`, which names `out.b`, a block no platform composes (model §8 rule 7).
 const ONE_NAME_LATER: [&str; 10] = [
     "none",
     "zero",
@@ -4969,7 +5071,8 @@ const ONE_NAME_LATER: [&str; 10] = [
 /// identity""): each name pattern of [`ONE_NAME`] and its twin, the tasks named by each of [`ONE_NAME_BINDERS`] using a
 /// service, beside each of [`ONE_NAME_LATER`]. So the refusal is held in its place in §1's order — before each later
 /// refusal, one of the same code among them — naming the system and each name by its text, and each twin lowered or
-/// refused by the later refusal alone.
+/// refused by the later refusal alone; and a system a served service leaves naming a block outside its hardware, twin
+/// or not, is the search's to refuse, no record of it reaching §1.
 fn one_name_two_tasks() -> Vec<Case> {
     let mut cases = Vec::new();
     for [carried, twin] in ONE_NAME {
@@ -6509,9 +6612,10 @@ fn read_the_record(description: &Description, binds: &[Bind]) -> Reading {
     // §2: "A **node** below is a node of the joint rules' initialization graph (§2.7): a provider an active binding
     // names (a block, a platform or an adapter's instance), a block or a platform the system serves that is bound for
     // requirements of its own — a requester like any other ... — a block or a platform of the system's hardware that a
-    // served task, service or policy names by `uses` or `needs`, whose code that name calls (`M4.1.18`) — one the
-    // system serves outside its hardware refused (§1) —, a service, or a policy". A task and the system's own level are
-    // requesters but never nodes. A service is the system's where the system or a task of it reaches it.
+    // served task, service or policy names by `uses` or `needs`, whose code that name calls (`M4.1.18`) ..., a service,
+    // or a policy", one the system serves outside its hardware being model §8 rule 7's conflict, of which no record
+    // reaches here (`M1.49`). A task and the system's own level are requesters but never nodes. A service is the
+    // system's where the system or a task of it reaches it.
     let mut served = reach(&edges, system);
     for task in &description.tasks {
         served.extend(reach(&edges, &task_text(task)));
@@ -6523,10 +6627,10 @@ fn read_the_record(description: &Description, binds: &[Bind]) -> Reading {
                 nodes.insert(bind.requester.clone());
                 if !system_hardware.contains(&bind.requester) {
                     // Served outside the hardware only through a service or a policy naming it, or a block so served
-                    // composing it: §1 refuses the system before any plan (round 20, R20-D3).
+                    // composing it: model §8 rule 7's conflict, the search writing no record (`M1.49`).
                     classes.insert(
-                        "unreachable: a block outside the hardware bound for requirements of its own in a plan, §1 \
-                         refusing the service or policy that serves it",
+                        "unreachable: a block outside the hardware bound for requirements of its own in a plan, model \
+                         §8 rule 7's conflict refusing the service or policy that serves it",
                     );
                 }
             } else {
@@ -6545,11 +6649,12 @@ fn read_the_record(description: &Description, binds: &[Bind]) -> Reading {
     }
     // Round 18 (R18-D1; `M4.1.18`): hardware a served task, service or policy names by `uses` or `needs` is a node,
     // bound or not — model §8 rule 12's "each block or platform a served task, service or policy names by `uses` or
-    // `needs`, a call" — of the system's hardware since round 20 (R20-D3), a block or a platform outside it refused
-    // before any plan (§1). Every task of the system is served (rule 7: "its own level, one of its tasks"). The system's own
-    // level is no such namer: rule 12 lists it among what is "none" — it "initialises nothing" — and its `uses` "says what
-    // the system includes" (rule 4); nor is a block or a platform, whose names are "never a call" (§2). Each called
-    // block or platform, with who names it: the namer's text, its kind and whether by `needs`.
+    // `needs`, a call" — of the system's hardware since round 20 (R20-D3), a block or a platform outside it being rule
+    // 7's conflict, no record of it reaching here (`M1.49`). Every task of the system is served (rule 7: "its own
+    // level, one of its tasks"). The system's own level is no such namer: rule 12 lists it among what is "none" — it
+    // "initialises nothing" — and its `uses` "says what the system includes" (rule 4); nor is a block or a platform,
+    // whose names are "never a call" (§2). Each called block or platform, with who names it: the namer's text, its kind
+    // and whether by `needs`.
     let mut called: BTreeMap<String, BTreeSet<(String, &'static str, bool)>> = BTreeMap::new();
     {
         let mut call = |namer: String, kind: &'static str, side: &Side| {
@@ -6634,9 +6739,10 @@ fn read_the_record(description: &Description, binds: &[Bind]) -> Reading {
         }
         if !system_hardware.contains(block) {
             // §2's node is "a block or a platform of the system's hardware that a served task, service or policy names"
-            // — "one the system serves outside its hardware refused (§1)" (round 20, R20-D3).
+            // (round 20, R20-D3): one outside it is model §8 rule 7's conflict, the search writing no record (`M1.49`).
             classes.insert(
-                "unreachable: a block outside the hardware a served service or policy names in a plan, §1 refusing it",
+                "unreachable: a block outside the hardware a served service or policy names in a plan, model §8 rule \
+                 7's conflict refusing it",
             );
         }
     }
@@ -6666,7 +6772,8 @@ fn read_the_record(description: &Description, binds: &[Bind]) -> Reading {
             );
         }
     }
-    // A block outside the hardware a service or a policy the system does not serve names: neither served nor refused.
+    // A block outside the hardware a service or a policy the system does not serve names: neither served nor refused,
+    // the conflict being "each serving system's" (model §8 rule 7).
     if description.services.iter().any(|s| {
         !served.contains(&s.name)
             && s.side
@@ -7819,7 +7926,8 @@ fn read_the_record(description: &Description, binds: &[Bind]) -> Reading {
             });
             if !system_hardware.contains(named) {
                 classes.insert(
-                    "unreachable: a named edge from a block outside the hardware, §1 refusing the name",
+                    "unreachable: a named edge from a block outside the hardware, model §8 rule 7's conflict refusing \
+                     the name",
                 );
             }
             // Beside the path a binding gives through an instance: the device, then the instance, then the namer.
@@ -9339,10 +9447,6 @@ enum Names {
     Receivers(Vec<Receiver>),
     /// "the system declares no task".
     NoTask,
-    /// The refusal of a block or a platform the system serves outside its hardware: each served service or policy
-    /// naming one, with what it names — "each named, by the namer's text and then the block's or the platform's"
-    /// (round 20, R20-D3).
-    Outside(Vec<(String, String)>),
     /// The generator's joint rules refusing the record: "naming both verdicts, the checker's acceptance and each of the
     /// generator's findings — its conflicts, then its unknowns, then the map's refusals and the map's unknowns, each
     /// group in the order the joint rules give it" — of model §8 rule 16, each task bound itself to a source the
@@ -9387,7 +9491,7 @@ impl Due {
             Names::Task { task, clause } => {
                 clause.map_or_else(|| task.clone(), |clause| format!("{task} {clause}"))
             }
-            Names::Systems(pairs) | Names::Operands(pairs) | Names::Outside(pairs) => pairs
+            Names::Systems(pairs) | Names::Operands(pairs) => pairs
                 .iter()
                 .map(|(namer, named)| format!("{namer} naming {named}"))
                 .collect::<Vec<_>>()
@@ -9452,10 +9556,9 @@ fn name_order_classes(
     refusal: &str,
     classes: &mut BTreeSet<&'static str>,
 ) {
-    let pick = |[naming, operand, outside]: [&'static str; 3]| match refusal {
+    let pick = |[naming, operand]: [&'static str; 2]| match refusal {
         "naming" => naming,
-        "operand" => operand,
-        _ => outside,
+        _ => operand,
     };
     let namers: BTreeSet<&String> = pairs.iter().map(|(namer, _)| namer).collect();
     let named: BTreeSet<&String> = pairs.iter().map(|(_, named)| named).collect();
@@ -9463,21 +9566,18 @@ fn name_order_classes(
         classes.insert(pick([
             "naming: one namer's text a prefix of another's",
             "operand: one namer's text a prefix of another's",
-            "outside: one namer's text a prefix of another's",
         ]));
     }
     if prefixed(named.iter().copied()) {
         classes.insert(pick([
             "naming: one system's text a prefix of another's",
             "operand: one operand's text a prefix of another's",
-            "outside: one named block's or platform's text a prefix of another's",
         ]));
     }
     if namers.iter().chain(&named).any(|text| below_paren(text)) {
         classes.insert(pick([
             "naming: a name continuing with a byte below `)`",
             "operand: a name continuing with a byte below `)`",
-            "outside: a name continuing with a byte below `)`",
         ]));
     }
     let tasks: Vec<&String> = namers
@@ -9496,15 +9596,12 @@ fn name_order_classes(
             "naming: tasks' texts ordered unlike their names",
             // §1's hardware-naming bullet names "a block or a platform the system serves", never a task.
             "unreachable: a task among the namers of hardware naming what is not hardware, blocks and platforms alone",
-            // Its namers are "a served service or policy", never a task, whose name makes hardware (model §8 rule 7).
-            "unreachable: a task among the namers of a block outside the hardware, services and policies alone",
         ]));
     }
     if worded_otherwise(pairs, |(namer, named)| format!("`{namer}` names `{named}`")) {
         classes.insert(pick([
             "naming: an order the message's words would give otherwise",
             "operand: an order the message's words would give otherwise",
-            "outside: an order the message's words would give otherwise",
         ]));
     }
 }
@@ -9598,42 +9695,82 @@ fn hardware_naming_other_kinds(description: &Description) -> Vec<(String, String
     out.into_iter().collect()
 }
 
-/// The services and policies the system serves: those "its closure reaches through `uses` and `needs`" from "its own
-/// level, one of its tasks" (model §8 rule 7), the closure passing through each service and policy it reaches. (A
-/// system named, and served hardware naming a service, would serve more: §1 refuses each before the bullet that reads
-/// this.)
-fn served_services(description: &Description) -> BTreeSet<String> {
-    let mut todo: Vec<String> = description
-        .own
-        .uses
+/// What the system's own level names: its `platform` clause, its `uses` and its `needs` (model §8 rule 1: "what it
+/// writes at its own level outside its tasks").
+fn own_level_names(description: &Description) -> Vec<String> {
+    std::iter::once(description.platform.clone())
+        .chain(description.own.uses.iter().cloned())
+        .chain(description.own.needs.iter().cloned())
+        .collect()
+}
+
+/// What the system's tasks name by `uses` or `needs`.
+fn tasks_names(description: &Description) -> Vec<String> {
+    description
+        .tasks
         .iter()
-        .chain(&description.own.needs)
-        .chain(
-            description
-                .tasks
-                .iter()
-                .flat_map(|t| t.side.uses.iter().chain(&t.side.needs)),
-        )
-        .cloned()
+        .flat_map(|t| t.side.uses.iter().chain(&t.side.needs).cloned())
+        .collect()
+}
+
+/// The services and policies the closure reaches from `from` through `uses` and `needs` (model §8 rule 7), passing
+/// through each service and policy it reaches; through each block and platform where `through_hardware` — hardware
+/// "serving what it names" (§1); and through each system named where `through_systems`, "what a system it names writes
+/// at its own level — its `platform` clause included — being served too" (§1), that system's tasks being its own.
+fn services_reached(
+    description: &Description,
+    from: Vec<String>,
+    through_hardware: bool,
+    through_systems: bool,
+) -> BTreeSet<String> {
+    let hardware: BTreeMap<String, Block> = description
+        .hardware()
+        .into_iter()
+        .map(|b| (b.name.clone(), b))
         .collect();
+    let systems: BTreeMap<String, System> = description
+        .systems()
+        .into_iter()
+        .map(|s| (s.name.clone(), s))
+        .collect();
+    let mut todo = from;
+    let mut seen = BTreeSet::new();
     let mut out = BTreeSet::new();
     while let Some(named) = todo.pop() {
+        if !seen.insert(named.clone()) {
+            continue;
+        }
         if let Some(service) = description.services.iter().find(|s| s.name == named) {
-            if out.insert(named) {
-                todo.extend(service.side.uses.iter().chain(&service.side.needs).cloned());
-            }
+            todo.extend(service.side.uses.iter().chain(&service.side.needs).cloned());
+            out.insert(named);
+        } else if let Some(block) = hardware.get(&named).filter(|_| through_hardware) {
+            todo.extend(block.side.uses.iter().chain(&block.side.needs).cloned());
+        } else if let Some(system) = systems.get(&named).filter(|_| through_systems) {
+            todo.extend(system.own.uses.iter().chain(&system.own.needs).cloned());
+            todo.push(system.platform.clone());
         }
     }
     out
 }
 
-/// §1 (round 20, R20-D3): "a block or a platform the system serves outside its hardware — one a served service or
-/// policy names that no `platform` clause, the system's own names or its tasks' bring in, so that model §8 rule 7
-/// makes it no hardware: "a block that only a service names is not hardware" — ...: each named, by the namer's text
-/// and then the block's or the platform's". So each served service or policy, with each block or platform it names by
-/// `uses` or `needs` that is not of the system's hardware (rule 7, [`system_hardware`]), the pairs by the namer's text
-/// and then the named one's. A block such a block composes is served too, and named by no service or policy: the
-/// bullet's "one a served service or policy names" takes it not.
+/// The services and policies the system serves: those "its closure reaches through `uses` and `needs`" from "its own
+/// level, one of its tasks" (model §8 rule 7), the closure taking every declaration it reaches. A system named and
+/// hardware naming a service are §1's refusals, given after the search, so the closure the search judges rule 7's
+/// conflict over passes through both.
+fn served_services(description: &Description) -> BTreeSet<String> {
+    let mut from = own_level_names(description);
+    from.extend(tasks_names(description));
+    services_reached(description, from, true, true)
+}
+
+/// Model §8 rule 7 (`M1.49`, `RTP-H22`): "A service or a policy the system serves that names, by `uses` or `needs`, a
+/// block or platform outside that hardware is no path into it, and the same conflict, judged once for the system
+/// whatever the assignment: `infeasible-configuration` ... It is each serving system's, so a system the name leaves
+/// inside its hardware is not refused for it." So each service or policy the system serves ([`served_services`]), with
+/// each block or platform it names by `uses` or `needs` that is not of the system's hardware (rule 7,
+/// [`system_hardware`]). Non-empty, the system is the search's to refuse before any assignment, whatever else its
+/// description writes; a block such a block composes is served too, and named by no service or policy, so it adds no
+/// pair; and a system a service names is no block or platform, so it adds none either (`M1.46`'s, and §1's until then).
 fn outside_hardware(description: &Description) -> Vec<(String, String)> {
     let declared: BTreeSet<String> = description.hardware().into_iter().map(|b| b.name).collect();
     let hardware = system_hardware(description);
@@ -9651,6 +9788,113 @@ fn outside_hardware(description: &Description) -> Vec<(String, String)> {
         }
     }
     out.into_iter().collect()
+}
+
+/// The classes of model §8 rule 7's conflict a system reaches, each read from what its description writes, the search
+/// writing no record of it: `outside` is [`outside_hardware`]'s, non-empty. What the search's finding names is not read
+/// here: the harness takes its verdict alone (`searched_record`).
+fn outside_classes(
+    description: &Description,
+    outside: &[(String, String)],
+) -> BTreeSet<&'static str> {
+    let mut classes = BTreeSet::from([SEARCH_REFUSES_A_NAME_OUTSIDE_THE_HARDWARE]);
+    let declared: BTreeMap<String, Block> = description
+        .hardware()
+        .into_iter()
+        .map(|b| (b.name.clone(), b))
+        .collect();
+    let platforms: BTreeSet<String> = description
+        .platforms()
+        .into_iter()
+        .map(|p| p.name)
+        .collect();
+    let hardware = system_hardware(description);
+    let from_tasks = services_reached(description, tasks_names(description), true, true);
+    let mut roots = own_level_names(description);
+    roots.extend(tasks_names(description));
+    let directly: BTreeSet<&String> = roots.iter().collect();
+    let through_services = services_reached(description, roots.clone(), false, false);
+    let through_hardware = services_reached(description, roots.clone(), true, false);
+    let is_declared = |name: &String| {
+        declared.contains_key(name)
+            || description.services.iter().any(|s| &s.name == name)
+            || description.systems().iter().any(|s| &s.name == name)
+    };
+    for (namer, named) in outside {
+        let service = description
+            .services
+            .iter()
+            .find(|s| &s.name == namer)
+            .expect("a service or a policy");
+        classes.insert(if service.policy {
+            "outside: named by a policy"
+        } else {
+            "outside: named by a service"
+        });
+        classes.insert(if service.side.needs.contains(named) {
+            "outside: named by `needs`"
+        } else {
+            "outside: named by `uses`"
+        });
+        classes.insert(if from_tasks.contains(namer) {
+            "outside: its namer served by a task"
+        } else {
+            "outside: its namer served by the system's own level alone"
+        });
+        if !directly.contains(namer) {
+            classes.insert(if through_services.contains(namer) {
+                "outside: its namer served through another service or policy"
+            } else if through_hardware.contains(namer) {
+                "outside: its namer served only through what hardware the system serves names"
+            } else {
+                "outside: its namer served only through a system it names"
+            });
+        }
+        let composed = description
+            .platforms()
+            .iter()
+            .chain(&description.blocks)
+            .any(|p| p.side.uses.contains(named));
+        classes.insert(if platforms.contains(named) {
+            if description.systems().iter().any(|s| &s.platform == named) {
+                "outside: a platform another system uses"
+            } else {
+                "outside: a platform no system uses"
+            }
+        } else if composed {
+            "outside: a block a platform outside the hardware composes"
+        } else {
+            "outside: a block no platform composes"
+        });
+        // Read from its declaration, no record binding it: a fact it needs, which names no declaration.
+        if declared[named].side.needs.iter().any(|n| !is_declared(n)) {
+            classes.insert("outside: requiring something of its own");
+        }
+    }
+    let namers: BTreeSet<&String> = outside.iter().map(|(n, _)| n).collect();
+    let named: BTreeSet<&String> = outside.iter().map(|(_, n)| n).collect();
+    if outside.len() >= 2 {
+        classes.insert("outside: several");
+    }
+    if namers.len() < outside.len() {
+        classes.insert("outside: one namer naming two");
+    }
+    if named.len() < outside.len() {
+        classes.insert("outside: one block or platform named by two");
+    }
+    // Beside hardware a served service or policy names, which leaves the conflict as it is.
+    let served = served_services(description);
+    if description.services.iter().any(|s| {
+        served.contains(&s.name)
+            && s.side
+                .uses
+                .iter()
+                .chain(&s.side.needs)
+                .any(|n| hardware.contains(n))
+    }) {
+        classes.insert("outside: beside hardware a served service or policy names");
+    }
+    classes
 }
 
 /// §1, the first list (round 23, R23-D1): "the system declares two tasks of one name: every rule keyed by a requester's
@@ -9804,9 +10048,6 @@ fn two_tasks_of_one_name(description: &Description, binds: &[Bind]) -> Option<Du
     {
         classes.insert("duplicate: before a receiver of interrupt code");
     }
-    if !outside_hardware(description).is_empty() {
-        classes.insert("duplicate: before a block or a platform outside the hardware");
-    }
     Some(Due {
         code: "tool-failure",
         names: Names::Duplicates(names),
@@ -9839,11 +10080,12 @@ fn two_tasks_of_one_name(description: &Description, binds: &[Bind]) -> Option<Du
 ///   binding — or an adapter instance with a cost running its requester's code (`expiry`) whose requester it is, the one
 ///   an exclusive instance serves or one bound to a shared instance. ... It names every such receiver — each task in
 ///   runtime order, then the system's own level — with what it would receive"; and, between the durations and the
-///   deadline, "the system declares no task", and after the receivers, "a block or a platform the system serves outside
-///   its hardware ...: each named, by the namer's text and then the block's or the platform's" (round 20, R20-D3).
+///   deadline, "the system declares no task".
 ///
 /// No other bullet applies here: no system has placement memory, and the two refusals after the last, of a record's
-/// supported contexts and its initialisation's calls, wait for a record that can be a provider (`M3.7`, `RTP-H10`).
+/// supported contexts and its initialisation's calls, wait for a record that can be a provider (`M3.7`, `RTP-H10`). A
+/// system a served service or policy leaves naming hardware outside, which round 20 had §1 refuse, is model §8 rule 7's
+/// conflict since `M1.49`: the search writes no record of it ([`outside_hardware`]), so nothing here reads one.
 fn refusal_the_record_gives(description: &Description, binds: &[Bind]) -> Option<Due> {
     // First: every bullet below reads a task by its text, which two tasks of one name share.
     if let Some(due) = two_tasks_of_one_name(description, binds) {
@@ -9863,13 +10105,6 @@ fn refusal_the_record_gives(description: &Description, binds: &[Bind]) -> Option
         });
     }
     let system = description.system.as_str();
-    let outside = outside_hardware(description);
-    // The class of a refusal given before the outside-hardware bullet that would apply too, keyed by the one given.
-    let before_outside = |classes: &mut BTreeSet<&'static str>, class: &'static str| {
-        if !outside.is_empty() {
-            classes.insert(class);
-        }
-    };
     let task_text = |task: &Task| format!("(task {system} {})", task.name);
     let mut by_index: Vec<&Task> = description.tasks.iter().collect();
     by_index.sort_by_key(|t| t.rank());
@@ -10002,10 +10237,6 @@ fn refusal_the_record_gives(description: &Description, binds: &[Bind]) -> Option
                 );
             }
         }
-        before_outside(
-            &mut classes,
-            "task bullet: before a block or a platform outside the hardware",
-        );
         return Some(Due {
             code: "tool-failure",
             names: Names::Task {
@@ -10072,10 +10303,6 @@ fn refusal_the_record_gives(description: &Description, binds: &[Bind]) -> Option
             );
         }
         name_order_classes(&named, "naming", &mut classes);
-        before_outside(
-            &mut classes,
-            "naming: before a block or a platform outside the hardware",
-        );
         return Some(Due {
             code: "tool-failure",
             names: Names::Systems(named),
@@ -10159,12 +10386,17 @@ fn refusal_the_record_gives(description: &Description, binds: &[Bind]) -> Option
                 "operand: hardware the system does not serve naming what is not hardware too, not named",
             );
         }
+        // A namer served only through a service hardware names lies outside the hardware, and that service names it or
+        // what composes it: model §8 rule 7's conflict (`M1.49`), no record reaching this refusal.
         let served_otherwise = served_hardware_by(description, false);
         if operands
             .iter()
             .any(|(namer, _)| !served_otherwise.contains(namer))
         {
-            classes.insert("operand: hardware served only through what served hardware names");
+            classes.insert(
+                "unreachable: hardware naming what is not hardware, served only through what served hardware names, \
+                 model §8 rule 7's conflict refusing it",
+            );
         }
         if operands.len() >= 2 {
             classes.insert("operand: several, named in order");
@@ -10201,10 +10433,6 @@ fn refusal_the_record_gives(description: &Description, binds: &[Bind]) -> Option
         }) {
             classes.insert("operand: before a receiver of interrupt code");
         }
-        before_outside(
-            &mut classes,
-            "operand: before a block or a platform outside the hardware",
-        );
         return Some(Due {
             code: "tool-failure",
             names: Names::Operands(operands),
@@ -10352,10 +10580,6 @@ fn refusal_the_record_gives(description: &Description, binds: &[Bind]) -> Option
         {
             classes.insert("past: before a deadline from another event");
         }
-        before_outside(
-            &mut classes,
-            "past: before a block or a platform outside the hardware",
-        );
         return Some(Due {
             code: "unsupported-profile",
             names: Names::Durations(past),
@@ -10376,10 +10600,6 @@ fn refusal_the_record_gives(description: &Description, binds: &[Bind]) -> Option
         }) {
             classes.insert("no task: before the system's own level receiving interrupt code");
         }
-        before_outside(
-            &mut classes,
-            "no task: before a block or a platform outside the hardware",
-        );
         return Some(Due {
             code: "unsupported-profile",
             names: Names::NoTask,
@@ -10399,10 +10619,6 @@ fn refusal_the_record_gives(description: &Description, binds: &[Bind]) -> Option
                     "deadline: the first in runtime order named, an earlier declared one measured from another event too",
                 );
             }
-            before_outside(
-                &mut classes,
-                "deadline: before a block or a platform outside the hardware",
-            );
             return Some(Due {
                 code: "unsupported-profile",
                 names: Names::Task {
@@ -10508,10 +10724,6 @@ fn refusal_the_record_gives(description: &Description, binds: &[Bind]) -> Option
         if prefixed(&programmed) {
             classes.insert("receivers: providers one of whose names prefixes another's");
         }
-        before_outside(
-            &mut classes,
-            "receivers: before a block or a platform outside the hardware",
-        );
         return Some(Due {
             code: "unsupported-profile",
             names: Names::Receivers(receivers),
@@ -10519,122 +10731,7 @@ fn refusal_the_record_gives(description: &Description, binds: &[Bind]) -> Option
         });
     }
 
-    // "a block or a platform the system serves outside its hardware ... each named, by the namer's text and then the
-    // block's or the platform's" (round 20, R20-D3), after the receivers.
-    if outside.is_empty() {
-        return None;
-    }
-    let mut classes =
-        BTreeSet::from(["refusal: a block or a platform the system serves outside its hardware"]);
-    let platforms: BTreeSet<String> = description
-        .platforms()
-        .into_iter()
-        .map(|p| p.name)
-        .collect();
-    let hardware = system_hardware(description);
-    let from_tasks: BTreeSet<String> = {
-        let mut only_tasks = description.clone();
-        only_tasks.own = Side::default();
-        served_services(&only_tasks)
-    };
-    let directly: BTreeSet<&String> = description
-        .own
-        .uses
-        .iter()
-        .chain(&description.own.needs)
-        .chain(
-            description
-                .tasks
-                .iter()
-                .flat_map(|t| t.side.uses.iter().chain(&t.side.needs)),
-        )
-        .collect();
-    for (namer, named) in &outside {
-        let service = description
-            .services
-            .iter()
-            .find(|s| &s.name == namer)
-            .expect("a service or a policy");
-        classes.insert(if service.policy {
-            "outside: named by a policy"
-        } else {
-            "outside: named by a service"
-        });
-        classes.insert(if service.side.needs.contains(named) {
-            "outside: named by `needs`"
-        } else {
-            "outside: named by `uses`"
-        });
-        classes.insert(if from_tasks.contains(namer) {
-            "outside: its namer served by a task"
-        } else {
-            "outside: its namer served by the system's own level alone"
-        });
-        if !directly.contains(namer) {
-            classes.insert("outside: its namer served through another service or policy");
-        }
-        let composed_by: Vec<String> = description
-            .platforms()
-            .into_iter()
-            .chain(description.blocks.iter().cloned())
-            .filter(|p| p.side.uses.contains(named))
-            .map(|p| p.name)
-            .collect();
-        classes.insert(if platforms.contains(named) {
-            if description.systems().iter().any(|s| &s.platform == named) {
-                "outside: a platform another system uses"
-            } else {
-                "outside: a platform no system uses"
-            }
-        } else if composed_by.is_empty() {
-            "outside: a block no platform composes"
-        } else {
-            "outside: a block a platform outside the hardware composes"
-        });
-        if binds.iter().any(|b| &b.requester == named) {
-            classes.insert("outside: bound for requirements of its own");
-        }
-    }
-    let namers: BTreeSet<&String> = outside.iter().map(|(n, _)| n).collect();
-    let named: BTreeSet<&String> = outside.iter().map(|(_, n)| n).collect();
-    if outside.len() >= 2 {
-        classes.insert("outside: several, named in order");
-    }
-    if namers.len() < outside.len() {
-        classes.insert("outside: one namer naming two");
-    }
-    if named.len() < outside.len() {
-        classes.insert("outside: one block or platform named by two");
-    }
-    if outside.windows(2).any(|w| w[0].1 > w[1].1) {
-        classes.insert("outside: the namers' order unlike the named ones'");
-    }
-    // Served outside the hardware and named by no service or policy — a block an outside block composes — and so not
-    // named (`outside_hardware`).
-    if served_hardware(description)
-        .iter()
-        .any(|b| !hardware.contains(b) && !named.contains(b))
-    {
-        classes.insert("outside: a block served outside the hardware that no service or policy names, not named");
-    }
-    // Beside hardware a served service or policy names, which rule 7 makes hardware by another name.
-    let served = served_services(description);
-    if description.services.iter().any(|s| {
-        served.contains(&s.name)
-            && s.side
-                .uses
-                .iter()
-                .chain(&s.side.needs)
-                .any(|n| hardware.contains(n))
-    }) {
-        classes.insert("outside: beside hardware a served service or policy names, not named");
-    }
-    name_order_classes(&outside, "outside", &mut classes);
-    Some(Due {
-        code: "unsupported-profile",
-        names: Names::Outside(outside),
-        classes,
-    })
+    None
 }
 
 /// Round 15's classes (R15-D2), which §1's two refusals keyed by their bindings meet whatever the system's outcome: a
@@ -11114,7 +11211,7 @@ fn refusal_disagrees(due: &Due, refusal: &Refusal, description: &Description) ->
                 }
             }
         }
-        Names::Systems(pairs) | Names::Operands(pairs) | Names::Outside(pairs) => {
+        Names::Systems(pairs) | Names::Operands(pairs) => {
             let named = names_mentioned(&refusal.message, &declared);
             if !names_pairs(&named, pairs) {
                 wrong.push(format!(
@@ -11198,6 +11295,17 @@ fn refusal_disagrees(due: &Due, refusal: &Refusal, description: &Description) ->
 /// what this holds, "so that the configuration checker refuses no record the search writes for that reason".
 const SEARCH_READS_THE_SIDE_WHOLE: &str =
     "the search refuses, `invalid-description`, a system's side that contradicts itself, read whole";
+
+/// The systems a service or a policy they serve leaves naming a block or a platform outside their hardware, which the
+/// search refuses `infeasible-configuration`: model §8 rule 7's conflict, "judged once for the system whatever the
+/// assignment" (`M1.49`, `RTP-H22`), `Joint::map`'s refusal stopping the search, so no record is written, for the
+/// configuration checker to judge or the lowering to refuse. The reading derives the conflict from the description
+/// alone ([`outside_hardware`]), and a system it names is this class only where the search gives that verdict: a record
+/// written for one, or another verdict, is a finding. Round 20 had §1 refuse such a system; the bullet went with
+/// `M1.49`.
+const SEARCH_REFUSES_A_NAME_OUTSIDE_THE_HARDWARE: &str =
+    "the search refuses, `infeasible-configuration`, a service or a policy the system serves naming a block or a \
+     platform outside its hardware";
 
 /// The class of the systems whose record the configuration checker refuses because it reads a binding of a task's text,
 /// `(task SYSTEM NAME)`, which two tasks carry, as one of the first declared: held by name and count rather than as a
@@ -11361,6 +11469,9 @@ fn outcome_of_the_search(universe: &str, case: &Case, keep: bool) -> (Outcome, O
             case.description.system
         )
     };
+    // Model §8 rule 7: a served service or policy naming hardware outside the system's is "judged once for the system
+    // whatever the assignment" ([`SEARCH_REFUSES_A_NAME_OUTSIDE_THE_HARDWARE`]).
+    let outside = outside_hardware(&case.description);
     let (record, program, checker, lowered) = match flow(&text, &case.description.system) {
         Flow::Rejected(verdict) => {
             out.class = "rejected";
@@ -11369,7 +11480,24 @@ fn outcome_of_the_search(universe: &str, case: &Case, keep: bool) -> (Outcome, O
         }
         Flow::Unresolved(verdict) => {
             out.class = "unresolved";
-            if let Some(fact) = &contradicted {
+            if !outside.is_empty() {
+                if verdict == "InfeasibleConfiguration" {
+                    out.classes = outside_classes(&case.description, &outside);
+                } else {
+                    out.findings.push(format!(
+                        "== {universe}: {}\n-- the description\n{text}-- the search refuses it `{verdict}`, where \
+                         model §8 rule 7 gives `infeasible-configuration`, `{}` serving {outside:?}\n",
+                        case.label, case.description.system
+                    ));
+                }
+                // Neither rule states which verdict a system writing both takes, and no universe writes both.
+                if contradicted.is_some() || rule_16.is_some() {
+                    out.classes.insert(
+                        "unreachable: a name outside the hardware beside a side that contradicts itself or a source \
+                         rule 16 refuses, no universe writing both",
+                    );
+                }
+            } else if let Some(fact) = &contradicted {
                 if verdict == "InvalidDescription" {
                     out.classes.insert(SEARCH_READS_THE_SIDE_WHOLE);
                 } else {
@@ -11424,6 +11552,16 @@ fn outcome_of_the_search(universe: &str, case: &Case, keep: bool) -> (Outcome, O
         out.findings.push(reproducer(
             "",
             &format!("-- the search resolves it, where {}\n", reads_whole(fact)),
+        ));
+    }
+    if !outside.is_empty() {
+        out.findings.push(reproducer(
+            "",
+            &format!(
+                "-- the search resolves it, where model §8 rule 7 refuses it `infeasible-configuration`: `{}` serving \
+                 {outside:?}\n",
+                case.description.system
+            ),
         ));
     }
     // The checker's verdict, against what the reading derives of it: every record accepted, but where it reads a
@@ -11799,6 +11937,51 @@ fn hold(
         ));
     }
     assert!(problems.is_empty(), "{problems}");
+}
+
+/// Each system the search resolves no plan for, held by its exact label with its verdict, the reading deriving both:
+/// `InfeasibleConfiguration` for each system model §8 rule 7's conflict takes ([`outside_hardware`]), "judged once for
+/// the system whatever the assignment" and so before any assignment's finding, `conflicts` of them; and `MissingFact`
+/// for each other of `cases` that `missing_fact`, a predicate over its construction, says no assignment can satisfy,
+/// `missing` of them: a requester bound to hardware outside the system is an assignment's conflict, and nothing else
+/// offering the fact, the search concludes `missing-fact` (rules 6 and 7).
+fn hold_unresolved(
+    universe: &str,
+    tally: &Tally,
+    cases: &[Case],
+    (conflicts, missing): (usize, usize),
+    missing_fact: impl Fn(&Case) -> bool,
+) {
+    let (mut infeasible, mut unknown) = (0, 0);
+    let read: BTreeMap<String, String> = cases
+        .iter()
+        .filter_map(|c| {
+            let verdict = if !outside_hardware(&c.description).is_empty() {
+                infeasible += 1;
+                "InfeasibleConfiguration"
+            } else if missing_fact(c) {
+                unknown += 1;
+                "MissingFact"
+            } else {
+                return None;
+            };
+            Some((c.label.clone(), verdict.to_string()))
+        })
+        .collect();
+    assert_eq!(
+        (infeasible, unknown),
+        (conflicts, missing),
+        "{universe}: the systems the reading derives, `infeasible-configuration` and `missing-fact`"
+    );
+    assert_eq!(
+        read.len(),
+        conflicts + missing,
+        "{universe}: each label one system's"
+    );
+    assert_eq!(
+        tally.unresolved_systems, read,
+        "{universe}: the systems the search resolves no plan for, each with its verdict"
+    );
 }
 
 #[test]
@@ -12997,17 +13180,19 @@ fn hardware_naming_what_is_not_hardware_refused_in_its_place() {
 }
 
 #[test]
-fn a_block_a_service_names_refused_outside_the_hardware() {
+fn a_block_a_service_names_outside_the_hardware_the_search_s_conflict() {
     let cases = served_blocks();
     // How `blk` is named, of 10; what it requires, of 5; its offer bound to or not; `u` of 2 kinds.
     assert_eq!(cases.len(), 10 * 5 * 2 * 2);
     let tally = run("served blocks", &cases);
-    // Unresolved: the 60 where `xfer` needs `blk`'s offer and `blk` is no hardware (6 namings of 10, 5 requirements, 2
-    // kinds of `u`): a requester bound outside the hardware is a conflict (model §8 rule 7), and nothing else offers
-    // `transfer-engine`, so the search concludes `missing-fact`. Refused: the 50 where a served `drv` names `blk`, no
-    // hardware, and nothing is bound to it (5 namings, 5 requirements, 2 kinds of `u`; §1, round 20). Every other
-    // lowered. Each count read from the label: `blk` hardware where a task or the system's own level names it; its
-    // namers; what it requires; whether `xfer` binds it.
+    // Unresolved: the 100 where a served `drv` names `blk`, no hardware (5 namings, 5 requirements, 2 of its offer
+    // bound to or not, 2 kinds of `u`), model §8 rule 7's conflict, `infeasible-configuration`, "whatever the
+    // assignment", so `xfer`'s binding changes nothing; and the 10 where `xfer` needs `blk`'s offer, `drv` served by
+    // nothing (1 naming, 5 requirements, 2 kinds of `u`): a requester bound outside the hardware is an assignment's
+    // conflict, and nothing else offers `transfer-engine`, so the search concludes `missing-fact`. Lowered: the 80
+    // where a task or the system's own level names `blk` (4 namings, 5, 2, 2), and the 10 where `drv` is served by
+    // nothing and nothing binds `blk` (1, 5, 2). 100 + 10 + 80 + 10 = 200. Each count read from the label: `blk`
+    // hardware where a task or the system's own level names it; its namers; what it requires; whether `xfer` binds it.
     let by = |c: &Case| {
         c.label
             .split(" named ")
@@ -13027,25 +13212,28 @@ fn a_block_a_service_names_refused_outside_the_hardware() {
     let hardware =
         |c: &Case| ["TDirect", "TDrvAndT", "UDrvAndU", "OwnDrvAndOwn"].contains(&by(c).as_str());
     let named_also = |c: &Case| ["TDrvAndT", "UDrvAndU", "OwnDrvAndOwn"].contains(&by(c).as_str());
-    let refused = |c: &Case| !hardware(c) && by(c) != "NoDrv" && !bound(c);
+    let conflict = |c: &Case| !hardware(c) && by(c) != "NoDrv";
     let lowered = |c: &Case| hardware(c) || (by(c) == "NoDrv" && !bound(c));
     let bare = |c: &Case| requires(c) == "Nothing" && !bound(c);
+    hold_unresolved("served blocks", &tally, &cases, (100, 10), |c| {
+        by(c) == "NoDrv" && bound(c)
+    });
     hold(
         "served blocks",
         &tally,
-        (200, 90, 0, 60, 50),
+        (200, 90, 0, 110, 0),
         &[
-            counted("refusal: a block or a platform the system serves outside its hardware", &cases, refused),
-            counted("outside: named by a service", &cases, refused),
-            counted("outside: a block no platform composes", &cases, refused),
-            counted("outside: named by `uses`", &cases, |c| refused(c) && by(c) != "TDrvNeeds"),
-            counted("outside: named by `needs`", &cases, |c| refused(c) && by(c) == "TDrvNeeds"),
-            counted("outside: its namer served by a task", &cases, |c| refused(c) && by(c) != "OwnDrv"),
+            counted(SEARCH_REFUSES_A_NAME_OUTSIDE_THE_HARDWARE, &cases, conflict),
+            counted("outside: named by a service", &cases, conflict),
+            counted("outside: a block no platform composes", &cases, conflict),
+            counted("outside: named by `uses`", &cases, |c| conflict(c) && by(c) != "TDrvNeeds"),
+            counted("outside: named by `needs`", &cases, |c| conflict(c) && by(c) == "TDrvNeeds"),
+            counted("outside: its namer served by a task", &cases, |c| conflict(c) && by(c) != "OwnDrv"),
             counted("outside: its namer served by the system's own level alone", &cases, |c| {
-                refused(c) && by(c) == "OwnDrv"
+                conflict(c) && by(c) == "OwnDrv"
             }),
-            counted("outside: bound for requirements of its own", &cases, |c| {
-                refused(c) && requires(c) != "Nothing"
+            counted("outside: requiring something of its own", &cases, |c| {
+                conflict(c) && requires(c) != "Nothing"
             }),
             counted(
                 "outside: a block outside the hardware named by a service or a policy the system does not serve, no \
@@ -13944,48 +14132,33 @@ fn hardware_the_lowered_system_does_not_serve_naming_what_is_not_hardware() {
         );
     }
     let tally = run("unserved hardware naming", &cases);
-    // Unresolved: the 232 lowering `other` that serve `alarm`: the 225 where `blk.q` or `host.q`, which `other` serves,
-    // names it (9 of the 25 choices of the two, 5 of `lone`, 5 of `soc`); and the 7 where neither does, one names `sys`
-    // by `uses`, so that `sys`'s `platform` clause is served and with it `soc`, which names `via.s`, which names `lone`,
-    // which names `alarm` (7 of the 16 choices of the two). The joint rules serve what hardware names (§1: "serving what
-    // it names") and what a system named writes at its own level, "its `platform` clause included", and `alarm`'s
-    // `relative-delay` has no provider among `other`'s hardware, so the search concludes `missing-fact` (model §8 rule
-    // 7).
-    let serves_alarm: BTreeSet<String> = cases
-        .iter()
-        .filter(|c| {
+    // Unresolved `infeasible-configuration`, model §8 rule 7's conflict, the 170 serving `via.s`, which names `lone`,
+    // and `lone` is of neither system's hardware: only `soc` names `via.s`, and the system serves `soc` — `sys`, the
+    // platform it uses, whatever `blk.q`, `host.q` and `lone` name (125 choices of the three); or `other`, where
+    // `blk.q` or `host.q`, which it serves, names `sys` by `uses` (9 of the 25 choices of the two, 5 of `lone`, 45), so
+    // that `sys`'s `platform` clause is served, "what a system it names writes at its own level ... being served too"
+    // (§1). Unresolved `missing-fact`, the 215 lowering `other` that serve `alarm` and not `via.s`: `blk.q` or `host.q`
+    // names it (9 of the 25 choices of the two, 5 of `lone`, 5 of `soc`: 225), less the 10 of those the conflict takes,
+    // one naming `alarm`, the other `sys`, and `soc` `via.s` (2, 5 of `lone`); `alarm`'s `relative-delay` has no
+    // provider among `other`'s hardware, so the search concludes `missing-fact` (model §8 rule 7). `lone` names `alarm`
+    // to no effect of its own: only `via.s` serves `lone`, and then the conflict takes the system.
+    hold_unresolved(
+        "unserved hardware naming",
+        &tally,
+        &cases,
+        (170, 215),
+        |c| {
             let names =
                 |namer: &str, naming: &str| c.label.contains(&format!("{namer} names [{naming}]"));
             c.label.ends_with("lowering other")
-                && (names("blk.q", "uses:alarm")
-                    || names("host.q", "uses:alarm")
-                    || ((names("blk.q", "uses:sys") || names("host.q", "uses:sys"))
-                        && names("soc", "uses:via.s")
-                        && names("lone", "uses:alarm")))
-        })
-        .map(|c| c.label.clone())
-        .collect();
-    assert_eq!(serves_alarm.len(), 232);
-    assert_eq!(
-        tally
-            .unresolved_systems
-            .keys()
-            .cloned()
-            .collect::<BTreeSet<_>>(),
-        serves_alarm,
-        "the systems the search resolves no plan for are those `other` lowered serving `alarm`"
-    );
-    assert!(
-        tally
-            .unresolved_systems
-            .values()
-            .all(|verdict| verdict == "MissingFact"),
-        "the search's answer: {:?}",
-        tally.unresolved_systems
+                && (names("blk.q", "uses:alarm") || names("host.q", "uses:alarm"))
+        },
     );
     // Lowered: lowering `sys`, the 125 where `soc` names nothing, whatever `blk.q`, `host.q` and `lone`, which `sys`
     // does not serve, name; lowering `other`, the 25 where `blk.q` and `host.q` name nothing, whatever `soc` and `lone`
-    // name. Every other refused or unresolved. Each count read from what the four namers write ([`unserved_model`]).
+    // name: 150. Refused, the 715 left of the 1,250: lowering `sys`, the 375 where `soc` names `pol.p` or `other` (3 of
+    // its choices, 125 of the others); lowering `other`, the 340 left of its 625, past its 25 lowered and its 260
+    // unresolved. Each count read from what the four namers write ([`unserved_model`]).
     let model: Vec<UnservedModel> = cases.iter().map(unserved_model).collect();
     let count = |class: &'static str, f: &dyn Fn(&UnservedModel) -> bool| {
         exactly(class, model.iter().filter(|m| f(m)).count())
@@ -14009,8 +14182,19 @@ fn hardware_the_lowered_system_does_not_serve_naming_what_is_not_hardware() {
     hold(
         "unserved hardware naming",
         &tally,
-        (1_250, 150, 0, 232, 868),
+        (1_250, 150, 0, 385, 715),
         &[
+            count(SEARCH_REFUSES_A_NAME_OUTSIDE_THE_HARDWARE, &|m| m.outcome == "outside"),
+            count("outside: named by a service", &|m| m.outcome == "outside"),
+            count("outside: named by `uses`", &|m| m.outcome == "outside"),
+            count("outside: a block no platform composes", &|m| m.outcome == "outside"),
+            count("outside: its namer served by the system's own level alone", &|m| m.outcome == "outside"),
+            count("outside: its namer served only through what hardware the system serves names", &|m| {
+                m.outcome == "outside" && m.lowering == "sys"
+            }),
+            count("outside: its namer served only through a system it names", &|m| {
+                m.outcome == "outside" && m.lowering == "other"
+            }),
             count("unserved: a block naming a service", &|m| unserved(m, false, &["alarm", "via.s"], None)),
             count("unserved: a block naming a policy", &|m| unserved(m, false, &["pol.p"], None)),
             count("unserved: a block's `uses` naming a system", &|m| {
@@ -14050,21 +14234,13 @@ fn hardware_the_lowered_system_does_not_serve_naming_what_is_not_hardware() {
             count("multiplex: a channel with one user", &|m| m.outcome == "lowered" && m.lowering == "sys"),
             count("refusal: hardware naming what is not hardware", &|m| m.outcome == "operand"),
             count("operand: a platform's `uses` naming a policy", &|m| operand(m, "soc", "pol.p")),
-            count("operand: a platform's `uses` naming a service", &|m| operand(m, "soc", "via.s")),
             count("operand: a platform's `needs` naming a policy", &|m| operand(m, "host.q", "pol.p")),
-            count("operand: a block's `needs` naming a policy", &|m| {
-                operand(m, "blk.q", "pol.p") || operand(m, "lone", "pol.p")
-            }),
-            count("operand: a block's `uses` naming a service", &|m| operand(m, "lone", "alarm")),
-            count("operand: a service only hardware names", &|m| operand(m, "soc", "via.s")),
+            count("operand: a block's `needs` naming a policy", &|m| operand(m, "blk.q", "pol.p")),
             count("operand: several, named in order", &|m| m.outcome == "operand" && m.operands.len() >= 2),
             count(
                 "operand: hardware the system does not serve naming what is not hardware too, not named",
                 &|m| m.outcome == "operand" && !m.unserved.is_empty(),
             ),
-            count("operand: hardware served only through what served hardware names", &|m| {
-                m.outcome == "operand" && m.operands.iter().any(|(namer, _)| namer == "lone")
-            }),
             count("refusal: a requester naming a system", &|m| m.outcome == "naming"),
             count("naming: a block or a platform naming a system", &|m| m.outcome == "naming"),
             count("naming: before hardware naming what is not hardware", &|m| m.outcome == "naming"),
@@ -14083,13 +14259,15 @@ fn hardware_the_lowered_system_does_not_serve_naming_what_is_not_hardware() {
     );
 }
 
-/// What the unserved-hardware universe's construction gives one system: the namers `soc`, `host.q`, `blk.q` and
-/// `lone` each name what [`UNSERVED_NAMING`] or [`SOC_NAMES`] chose; the lowered system serves its own platform and
-/// what it composes, and, by what a served namer names, another system's — "what a system it names writes at its own
-/// level — its `platform` clause included — being served too" (§1) — and the service `via.s`, which names `lone`. So
-/// the lowering of `other` serving `alarm`, whose channel no block of its hardware offers, is unresolved; otherwise the
-/// served namers' pairs naming a system are the naming-system refusal's, else their pairs naming a service or a policy
-/// the hardware-naming refusal's, else the system lowers, every unserved namer's names counted apart.
+/// What the unserved-hardware universe's construction gives one system: the namers `soc`, `host.q`, `blk.q` and `lone`
+/// each name what [`UNSERVED_NAMING`] or [`SOC_NAMES`] chose; the lowered system serves its own platform and what it
+/// composes, and, by what a served namer names, another system's — "what a system it names writes at its own level —
+/// its `platform` clause included — being served too" (§1) — and the service `via.s`, which names `lone`. So a system
+/// `soc` leaves serving `via.s` is model §8 rule 7's conflict, `lone` being of neither system's hardware, whatever else
+/// is named; the lowering of `other` serving `alarm`, whose channel no block of its hardware offers, is otherwise
+/// unresolved; otherwise the served namers' pairs naming a system are the naming-system refusal's, else their pairs
+/// naming a service or a policy the hardware-naming refusal's, else the system lowers, every unserved namer's names
+/// counted apart.
 struct UnservedModel {
     lowering: String,
     outcome: &'static str,
@@ -14178,7 +14356,9 @@ fn unserved_model(case: &Case) -> UnservedModel {
             }
         }
     }
-    out.outcome = if lowering == "other" && alarm {
+    out.outcome = if served.contains("lone") {
+        "outside"
+    } else if lowering == "other" && alarm {
         "unresolved"
     } else if !out.naming.is_empty() {
         "naming"
@@ -14580,38 +14760,17 @@ fn a_named_edge_from_hardware_a_service_or_a_policy_names() {
     // 3.
     assert_eq!(cases.len(), 2 * 5 * 5 * (1 << 5) * 3);
     let tally = run("named hardware", &cases);
-    // Unresolved: the 1,200 where the service needs `m.blk`'s offer and no platform composes `m.blk` (2 namings, 25
-    // choices of what the two name, 8 of the other three, 3 of who uses them), each `missing-fact`: a block only a
-    // service or a policy names is no hardware, a requester bound to it is a conflict (model §8 rule 7), and nothing
-    // else offers `transfer-engine`. Refused: the 672 where a served service or policy names `m.blk`, no platform
-    // composing it, and the service is not bound to it (2 namings, 8 choices of the other three, and 16 choices of what
-    // the two name where both are used, twice, or 10 where only the service is), `unsupported-profile`: "a block or a
-    // platform the system serves outside its hardware" (§1, round 20, R20-D3). Every other lowered.
-    let bound_outside: BTreeSet<String> = cases
-        .iter()
-        .filter(|c| {
-            c.label.contains(", bound to m.blk;") && c.label.contains("composed by nothing")
-        })
-        .map(|c| c.label.clone())
-        .collect();
-    assert_eq!(bound_outside.len(), 1_200);
-    assert_eq!(
-        tally
-            .unresolved_systems
-            .keys()
-            .cloned()
-            .collect::<BTreeSet<_>>(),
-        bound_outside,
-        "the systems the search resolves no plan for are those bound to `m.blk` outside the hardware"
-    );
-    assert!(
-        tally
-            .unresolved_systems
-            .values()
-            .all(|verdict| verdict == "MissingFact"),
-        "the search's answer: {:?}",
-        tally.unresolved_systems
-    );
+    // Unresolved `infeasible-configuration`, model §8 rule 7's conflict, the 1,344 where a served service or policy
+    // names `m.blk` and no platform composes it (2 namings, 16 choices of the other four, and 16 choices of what the
+    // two name where both are used, twice, or 10 where only the service is: 2 × 16 × 42), bound to or not, "whatever
+    // the assignment". Unresolved `missing-fact`, the 528 where the service needs `m.blk`'s offer, no platform
+    // composing it, and no served namer names it (2 namings, 8 choices of the other three, and 9 choices of what the
+    // two name where both are used, twice, or 15 where only the service is: 2 × 8 × 33): a requester bound to a block
+    // outside the hardware is an assignment's conflict (rule 7), and nothing else offers `transfer-engine`. Lowered:
+    // the 2,928 left of the 4,800. 1,344 + 528 + 2,928 = 4,800.
+    hold_unresolved("named hardware", &tally, &cases, (1_344, 528), |c| {
+        c.label.contains(", bound to m.blk;") && c.label.contains("composed by nothing")
+    });
     // Each count read from the label's choices ([`NamedModel`]).
     let model: Vec<NamedModel> = cases.iter().map(NamedModel::of).collect();
     let count = |class: &'static str, f: &dyn Fn(&NamedModel) -> bool| {
@@ -14635,7 +14794,7 @@ fn a_named_edge_from_hardware_a_service_or_a_policy_names() {
     hold(
         "named hardware",
         &tally,
-        (4_800, 2_928, 0, 1_200, 672),
+        (4_800, 2_928, 0, 1_872, 0),
         &[
             count("initialisation: a named edge from a block a service names by `uses`", &|m| edge_class(m, false, false, false)),
             count("initialisation: a named edge from a block a service names by `needs`", &|m| edge_class(m, false, false, true)),
@@ -14691,7 +14850,7 @@ fn a_named_edge_from_hardware_a_service_or_a_policy_names() {
             count("second system: requiring hardware the lowered system does not serve", &|m| {
                 m.lowered() && m.blk_requires && !m.composed
             }),
-            count("refusal: a block or a platform the system serves outside its hardware", &|m| m.outcome() == "outside"),
+            count(SEARCH_REFUSES_A_NAME_OUTSIDE_THE_HARDWARE, &|m| m.outcome() == "outside"),
             count("outside: a block no platform composes", &|m| m.outcome() == "outside"),
             count("outside: named by a service", &|m| m.outcome() == "outside" && m.service_names.is_some_and(|(h, _)| h == "m.blk")),
             count("outside: named by a policy", &|m| {
@@ -14703,11 +14862,11 @@ fn a_named_edge_from_hardware_a_service_or_a_policy_names() {
             count("outside: its namer served by the system's own level alone", &|m| {
                 m.outcome() == "outside" && m.users == NamersUsed::ByOwnLevel
             }),
-            count("outside: bound for requirements of its own", &|m| m.outcome() == "outside" && m.blk_requires),
-            count("outside: several, named in order", &|m| m.outcome() == "outside" && m.outside_pairs() == 2),
+            count("outside: requiring something of its own", &|m| m.outcome() == "outside" && m.blk_requires),
+            count("outside: several", &|m| m.outcome() == "outside" && m.outside_pairs() == 2),
             count("outside: one block or platform named by two", &|m| m.outcome() == "outside" && m.outside_pairs() == 2),
             count(
-                "outside: beside hardware a served service or policy names, not named",
+                "outside: beside hardware a served service or policy names",
                 &|m| {
                     m.outcome() == "outside"
                         && (m.service_names.is_some_and(|(h, _)| h == "m.soc")
@@ -14787,7 +14946,7 @@ impl NamedModel {
     }
 
     /// The service's and the served policy's names of `m.blk`, a block no platform composes, `m.soc` being the
-    /// system's: the outside-hardware refusal's pairs (§1).
+    /// system's: model §8 rule 7's conflict's pairs ([`outside_hardware`]).
     fn outside_pairs(&self) -> usize {
         let outside = |names: Option<(&str, bool)>| {
             usize::from(!self.composed && names.is_some_and(|(h, _)| h == "m.blk"))
@@ -14805,13 +14964,14 @@ impl NamedModel {
         names(self.service_names) || (self.policy_served() && names(self.policy_names))
     }
 
-    /// Unresolved where the service is bound to `m.blk` and no platform composes it (model §8 rule 7); refused where a
-    /// served namer names it so; lowered otherwise.
+    /// Model §8 rule 7's conflict where a served namer names `m.blk` and no platform composes it, whatever is bound;
+    /// otherwise unresolved where the service is bound to it so, an assignment's conflict with nothing else offering
+    /// the fact; lowered otherwise.
     fn outcome(&self) -> &'static str {
-        if self.s_binds && !self.composed {
-            "unresolved"
-        } else if self.outside_pairs() > 0 {
+        if self.outside_pairs() > 0 {
             "outside"
+        } else if self.s_binds && !self.composed {
+            "unresolved"
         } else {
             "lowered"
         }
@@ -15008,44 +15168,22 @@ fn hardware_a_served_requester_names_a_node_bound_or_not() {
     // system's own level; `w` bound to it or not.
     assert_eq!(cases.len(), 3 * (1 << 5) * 2 * 2 * 2);
     let (tally, plans) = run_keeping("unbound named hardware", &cases, true);
-    // Unresolved: the 32 where `w` is bound to `m.blk`, which no platform composes and neither `t` nor the system's own
-    // level names (8 subsets of the three services, 2 clauses, 2 users), each `missing-fact`: a block only a service or
-    // a policy names is no hardware, a requester bound to it is a conflict (model §8 rule 7), and nothing else offers
-    // `transfer-engine`. Refused: the 28 twins of those where some of the three services names `m.blk` and nothing is
-    // bound to it, `unsupported-profile`: "a block or a platform the system serves outside its hardware" (§1, round 20,
-    // R20-D3). Every other lowered.
-    let outside: BTreeSet<String> = cases
-        .iter()
-        .filter(|c| {
-            c.label.starts_with("Alone ")
-                && c.label.ends_with("w bound to it")
-                && !c.label.contains("\"t\"")
-                && !c.label.contains("\"sys\"")
-        })
-        .map(|c| c.label.clone())
-        .collect();
-    assert_eq!(outside.len(), 32);
-    assert_eq!(
-        tally
-            .unresolved_systems
-            .keys()
-            .cloned()
-            .collect::<BTreeSet<_>>(),
-        outside,
-        "the systems the search resolves no plan for are those binding `w` to `m.blk` outside the hardware"
-    );
-    assert!(
-        tally
-            .unresolved_systems
-            .values()
-            .all(|verdict| verdict == "MissingFact"),
-        "the search's answer: {:?}",
-        tally.unresolved_systems
-    );
+    // Unresolved `infeasible-configuration`, model §8 rule 7's conflict, the 56 where some of the three services, each
+    // served, names `m.blk`, which no platform composes and neither `t` nor the system's own level names (7 subsets of
+    // the three, 2 clauses, 2 users, `w` bound to it or not, "whatever the assignment"). Unresolved `missing-fact`, the
+    // 4 where `w` is bound to it and nothing names it (2 clauses, 2 users): a requester bound to a block outside the
+    // hardware is an assignment's conflict (rule 7), and nothing else offers `transfer-engine`. Lowered: the 708 left
+    // of the 768.
+    hold_unresolved("unbound named hardware", &tally, &cases, (56, 4), |c| {
+        c.label.starts_with("Alone ")
+            && c.label.ends_with("w bound to it")
+            && !c.label.contains("\"t\"")
+            && !c.label.contains("\"sys\"")
+    });
     // Each count read from the label: what is named, by whom and by which clause, who uses the three services, and
     // whether `w` binds it. A served namer — `t`, `a.s`, `a.p` or `a.h`, never the system's own level — makes the named
     // hardware a node, bound or not; `m.blk` no platform composes is hardware only where `t` or the system's own level
-    // names it, and otherwise refused where a service names it, or unresolved where `w` binds it.
+    // names it, and otherwise the search's conflict where a service names it, or unresolved where `w` alone binds it.
     let target = |c: &Case| {
         if c.label.starts_with("Platform ") {
             "m.soc"
@@ -15070,10 +15208,10 @@ fn hardware_a_served_requester_names_a_node_bound_or_not() {
     let outcome = |c: &Case| {
         if hardware(c) {
             "lowered"
-        } else if bound(c) {
-            "unresolved"
         } else if by_service(c) {
             "outside"
+        } else if bound(c) {
+            "unresolved"
         } else {
             "lowered"
         }
@@ -15093,7 +15231,7 @@ fn hardware_a_served_requester_names_a_node_bound_or_not() {
     hold(
         "unbound named hardware",
         &tally,
-        (768, 708, 0, 32, 28),
+        (768, 708, 0, 60, 0),
         &[
             counted("named: a block a task names, bound for nothing, a node", &cases, |c| {
                 named_as(c, "t") && target(c) == "m.blk"
@@ -15207,7 +15345,7 @@ fn hardware_a_served_requester_names_a_node_bound_or_not() {
                 &cases,
                 |c| by_service(c) && by(c, "sys"),
             ),
-            counted("refusal: a block or a platform the system serves outside its hardware", &cases, outside),
+            counted(SEARCH_REFUSES_A_NAME_OUTSIDE_THE_HARDWARE, &cases, outside),
             counted("outside: a block no platform composes", &cases, outside),
             counted("outside: named by a service", &cases, |c| outside(c) && (by(c, "a.s") || by(c, "a.h"))),
             counted("outside: named by a policy", &cases, |c| outside(c) && by(c, "a.p")),
@@ -15215,7 +15353,7 @@ fn hardware_a_served_requester_names_a_node_bound_or_not() {
             counted("outside: named by `needs`", &cases, |c| outside(c) && by_needs(c)),
             counted("outside: its namer served by a task", &cases, |c| outside(c) && by_task(c)),
             counted("outside: its namer served by the system's own level alone", &cases, |c| outside(c) && !by_task(c)),
-            counted("outside: several, named in order", &cases, |c| {
+            counted("outside: several", &cases, |c| {
                 outside(c) && services.iter().filter(|n| by(c, n)).count() >= 2
             }),
             counted("outside: one block or platform named by two", &cases, |c| {
@@ -15231,10 +15369,11 @@ fn hardware_a_served_requester_names_a_node_bound_or_not() {
     );
     // "placed when an unrelated binding makes it a node" (R18-D1): each system beside its twin, the one with `w` bound
     // to the named hardware, where a served task, service or policy names it — `w`, used by the system's own level
-    // alone, runs in no job and no interrupt, so a provider of it takes no context from it (§2.6). Every line naming the
-    // hardware, its context, its edges to its namers and what it owes, is the same in both, but for `w`'s own lines and
-    // the steps, which `w`'s node renumbers. Compared: 3 targets × 30 subsets with a served namer × 2 clauses × 2 users,
-    // less the 28 whose twin the search refuses (7 subsets of the three services alone × 2 × 2).
+    // alone, runs in no job and no interrupt, so a provider of it takes no context from it (§2.6). Every line naming
+    // the hardware, its context, its edges to its namers and what it owes, is the same in both, but for `w`'s own lines
+    // and the steps, which `w`'s node renumbers. Compared: 3 targets × 30 subsets with a served namer × 2 clauses × 2
+    // users, less the 28 the search refuses with their twins, `m.blk` outside the hardware (7 subsets of the three
+    // services alone × 2 × 2).
     let mut compared = 0;
     for (pair, plans) in cases.chunks(2).zip(plans.chunks(2)) {
         let [alone, beside] = pair else {
@@ -15542,7 +15681,7 @@ fn the_bullet_over_tasks_taken_whole_in_runtime_order() {
 }
 
 #[test]
-fn a_block_or_a_platform_served_outside_the_hardware_named_in_order() {
+fn a_block_or_a_platform_served_outside_the_hardware_a_conflict_whatever_else_is_written() {
     let cases = outside_hardware_universe();
     // What `n`, `n.s` and `n!` each name, of 5, 3 and 3; who serves them, of 3; what makes a block hardware, of 4; what
     // else `t` meets, of 7; and 4 systems with no task.
@@ -15553,88 +15692,68 @@ fn a_block_or_a_platform_served_outside_the_hardware_named_in_order() {
     // hardware; `n.s`: nothing, and `x.y` where made hardware; `n!`: nothing, and `x!` where made hardware — times the
     // choices of the namers not served: served by `t` and the system's own level, 1 + 2 + 4 + 2 = 9 over the four ways
     // of making hardware; served by the system's own level and through `m`, `n!` free, 3 × (1 + 2 + 4 + 1) = 24; `n!`
-    // alone, `n` and `n.s` free, 15 × (1 + 1 + 1 + 2) = 75. With `x` naming `m`, the same where `x` is served by no name,
-    // or else the hardware-naming refusal: 7, 18 and 60. 108 + 85; every other refused.
+    // alone, `n` and `n.s` free, 15 × (1 + 1 + 1 + 2) = 75. With `x` naming `m`, the same where `x` is served by no
+    // name, or else the hardware-naming refusal: 7, 18 and 60. 108 + 85 = 193. Those 108 choices with no served name
+    // outside are the same whatever else `t` meets. Refused: with each of the 5 it meets by a bullet of §1 (the zero
+    // period, `other`, the jitter, the deadline, the alarm), 5 × 108 = 540; with `x` naming `m`, the 108 - 85 = 23
+    // where `x` is hardware; and the 2 systems with no task whose `n` names nothing. 540 + 23 + 2 = 565. Unresolved
+    // `infeasible-configuration`, model §8 rule 7's conflict, each other: beside each of the 7 things `t` meets lie 45
+    // namings × 3 × 4 = 540 choices, 432 of them past those 108, whatever `t` meets, no bullet of §1 reached (7 × 432 =
+    // 3,024); and the 2 systems with no task whose `n` names `x`. 193 + 565 + 3,026 = 3,784. None is `missing-fact`:
+    // `d` offers the one fact anything here requires.
+    hold_unresolved("outside hardware", &tally, &cases, (3_026, 0), |_| false);
     let model: Vec<OutsideModel> = cases.iter().map(OutsideModel::of).collect();
     let count = |class: &'static str, f: &dyn Fn(&OutsideModel) -> bool| {
         exactly(class, model.iter().filter(|m| f(m)).count())
     };
-    let refused = |m: &OutsideModel| m.outcome == "outside";
-    let before = |m: &OutsideModel, outcome: &str| m.outcome == outcome && !m.pairs.is_empty();
+    let conflict = |m: &OutsideModel| m.outcome == "outside";
     let blocks = ["x", "x.y", "x!"];
     hold(
         "outside hardware",
         &tally,
-        (3_784, 193, 0, 0, 3_591),
+        (3_784, 193, 0, 3_026, 565),
         &[
-            count("refusal: a block or a platform the system serves outside its hardware", &refused),
+            count(SEARCH_REFUSES_A_NAME_OUTSIDE_THE_HARDWARE, &conflict),
             count("refusal: a system with no task", &|m| m.outcome == "no task"),
             count("task bullet: a period of zero", &|m| m.outcome == "bullet"),
-            count("task bullet: before a block or a platform outside the hardware", &|m| before(m, "bullet")),
             count("refusal: a requester naming a system", &|m| m.outcome == "naming"),
             count("naming: a task naming a system", &|m| m.outcome == "naming"),
-            count("naming: before a block or a platform outside the hardware", &|m| before(m, "naming")),
-            count("no task: before a block or a platform outside the hardware", &|m| before(m, "no task")),
             count("no task: before the system's own level receiving interrupt code", &|m| {
                 m.outcome == "no task" && m.also == "the system's own level programs an alarm"
             }),
             count("receivers: one", &|m| m.outcome == "receivers"),
-            count("receivers: before a block or a platform outside the hardware", &|m| before(m, "receivers")),
             count("refusal: a deadline measured from another event", &|m| m.outcome == "deadline"),
-            count("deadline: before a block or a platform outside the hardware", &|m| before(m, "deadline")),
             count("refusal: a duration past the arithmetic", &|m| m.outcome == "past"),
-            count("past: before a block or a platform outside the hardware", &|m| before(m, "past")),
             count("refusal: hardware naming what is not hardware", &|m| m.outcome == "operand"),
-            count("operand: before a block or a platform outside the hardware", &|m| before(m, "operand")),
             count("operand: a service only hardware names", &|m| m.outcome == "operand" && m.served != "OwnAndThrough"),
-            count("outside: named by a service", &|m| refused(m) && m.pairs.iter().any(|(n, _, _)| n != "n!")),
-            count("outside: named by a policy", &|m| refused(m) && m.pairs.iter().any(|(n, _, _)| n == "n!")),
-            count("outside: named by `uses`", &|m| refused(m) && m.pairs.iter().any(|(_, _, needs)| !needs)),
-            count("outside: named by `needs`", &|m| refused(m) && m.pairs.iter().any(|(_, _, needs)| *needs)),
+            count("outside: named by a service", &|m| conflict(m) && m.pairs.iter().any(|(n, _, _)| n != "n!")),
+            count("outside: named by a policy", &|m| conflict(m) && m.pairs.iter().any(|(n, _, _)| n == "n!")),
+            count("outside: named by `uses`", &|m| conflict(m) && m.pairs.iter().any(|(_, _, needs)| !needs)),
+            count("outside: named by `needs`", &|m| conflict(m) && m.pairs.iter().any(|(_, _, needs)| *needs)),
             count("outside: its namer served by a task", &|m| {
-                refused(m) && m.pairs.iter().any(|(n, _, _)| m.from_tasks.contains(n))
+                conflict(m) && m.pairs.iter().any(|(n, _, _)| m.from_tasks.contains(n))
             }),
             count("outside: its namer served by the system's own level alone", &|m| {
-                refused(m) && m.pairs.iter().any(|(n, _, _)| !m.from_tasks.contains(n))
+                conflict(m) && m.pairs.iter().any(|(n, _, _)| !m.from_tasks.contains(n))
             }),
             count("outside: its namer served through another service or policy", &|m| {
-                refused(m) && m.served == "OwnAndThrough" && m.pairs.iter().any(|(n, _, _)| n == "n.s")
+                conflict(m) && m.served == "OwnAndThrough" && m.pairs.iter().any(|(n, _, _)| n == "n.s")
             }),
             count("outside: a block no platform composes", &|m| {
-                refused(m) && m.pairs.iter().any(|(_, b, _)| blocks.contains(&b.as_str()))
+                conflict(m) && m.pairs.iter().any(|(_, b, _)| blocks.contains(&b.as_str()))
             }),
             count("outside: a block a platform outside the hardware composes", &|m| {
-                refused(m) && m.pairs.iter().any(|(_, b, _)| b == "q")
+                conflict(m) && m.pairs.iter().any(|(_, b, _)| b == "q")
             }),
-            count("outside: a platform another system uses", &|m| refused(m) && m.pairs.iter().any(|(_, b, _)| b == "p")),
-            count("outside: a platform no system uses", &|m| refused(m) && m.pairs.iter().any(|(_, b, _)| b == "p2")),
-            count("outside: several, named in order", &|m| refused(m) && m.pairs.len() >= 2),
-            count("outside: one namer naming two", &|m| refused(m) && m.pairs.windows(2).any(|w| w[0].0 == w[1].0)),
+            count("outside: a platform another system uses", &|m| conflict(m) && m.pairs.iter().any(|(_, b, _)| b == "p")),
+            count("outside: a platform no system uses", &|m| conflict(m) && m.pairs.iter().any(|(_, b, _)| b == "p2")),
+            count("outside: several", &|m| conflict(m) && m.pairs.len() >= 2),
+            count("outside: one namer naming two", &|m| conflict(m) && m.pairs.windows(2).any(|w| w[0].0 == w[1].0)),
             count("outside: one block or platform named by two", &|m| {
-                refused(m) && m.pairs.iter().any(|(n, b, _)| m.pairs.iter().any(|(o, c, _)| o != n && c == b))
+                conflict(m) && m.pairs.iter().any(|(n, b, _)| m.pairs.iter().any(|(o, c, _)| o != n && c == b))
             }),
-            count("outside: the namers' order unlike the named ones'", &|m| {
-                refused(m) && m.pairs.windows(2).any(|w| w[0].1 > w[1].1)
-            }),
-            count(
-                "outside: a block served outside the hardware that no service or policy names, not named",
-                &|m| refused(m) && m.pairs.iter().any(|(_, b, _)| b == "p") && !m.pairs.iter().any(|(_, b, _)| b == "q"),
-            ),
-            count("outside: beside hardware a served service or policy names, not named", &|m| {
-                refused(m) && m.served_names_hardware
-            }),
-            count("outside: one namer's text a prefix of another's", &|m| {
-                let namers: BTreeSet<&str> = m.pairs.iter().map(|(n, _, _)| n.as_str()).collect();
-                refused(m) && namers.contains("n") && (namers.contains("n.s") || namers.contains("n!"))
-            }),
-            count("outside: one named block's or platform's text a prefix of another's", &|m| {
-                let named: BTreeSet<&str> = m.pairs.iter().map(|(_, b, _)| b.as_str()).collect();
-                refused(m)
-                    && ((named.contains("x") && (named.contains("x.y") || named.contains("x!")))
-                        || (named.contains("p") && named.contains("p2")))
-            }),
-            count("outside: a name continuing with a byte below `)`", &|m| {
-                refused(m) && m.pairs.iter().any(|(n, b, _)| n == "n!" || b == "x!")
+            count("outside: beside hardware a served service or policy names", &|m| {
+                conflict(m) && m.served_names_hardware
             }),
             count(
                 "outside: a block outside the hardware named by a service or a policy the system does not serve, no \
@@ -15659,24 +15778,23 @@ fn a_block_or_a_platform_served_outside_the_hardware_named_in_order() {
             count("named: a block a policy names, bound for nothing, a node", &|m| {
                 m.outcome == "lowered" && m.served_namings.iter().any(|(n, b)| n == "n!" && m.hardware.contains(b))
             }),
-            some("outside: an order the message's words would give otherwise"),
         ],
     );
 }
 
 /// What the outside-hardware universe's construction gives one system ([`outside_hardware_universe`]): who serves the
-/// namers, what makes a block hardware, what else `t` meets, what each namer names — and so §1's refusal given, in its
-/// order: the bullet over tasks for a zero period; the naming-system refusal where `t` names `other`; the
-/// hardware-naming refusal where `x`, served, names `m`; then a jitter past the arithmetic; the system with
-/// no task; a deadline from another event; an alarm `t` programs; and then each served namer's pair with a block or a
-/// platform outside the hardware — `d` and whatever `t`'s, the system's own or `soc`'s `needs` names being the hardware
-/// (model §8 rule 7).
+/// namers, what makes a block hardware, what else `t` meets, what each namer names — and so what it comes to: model §8
+/// rule 7's conflict where a served namer names a block or a platform outside the hardware, `d` and whatever `t`'s, the
+/// system's own or `soc`'s `needs` names being the hardware, the search's before any refusal of §1; otherwise §1's
+/// refusal given, in its order: the bullet over tasks for a zero period; the naming-system refusal where `t` names
+/// `other`; the hardware-naming refusal where `x`, served, names `m`; then a jitter past the arithmetic; the system
+/// with no task; a deadline from another event; and an alarm `t` programs.
 struct OutsideModel {
     served: &'static str,
     made: &'static str,
     also: &'static str,
     outcome: &'static str,
-    /// The pairs, by the namer's text and then the named one's, each with whether by `needs`.
+    /// Each served namer with each block or platform outside the hardware it names, and whether by `needs`.
     pairs: Vec<(String, String, bool)>,
     /// What each served namer names.
     served_namings: Vec<(String, String)>,
@@ -15751,7 +15869,6 @@ impl OutsideModel {
                 }
             }
         }
-        pairs.sort();
         let unserved_name_outside = ["n", "n.s", "n!"]
             .iter()
             .filter(|n| !namers.contains(n))
@@ -15762,7 +15879,9 @@ impl OutsideModel {
             });
         let x_served =
             hardware.contains("x") || served_namings.iter().any(|(_, named)| named == "x");
-        let outcome = if also == "also t's zero period" {
+        let outcome = if !pairs.is_empty() {
+            "outside"
+        } else if also == "also t's zero period" {
             "bullet"
         } else if also == "also t names other" {
             "naming"
@@ -15776,8 +15895,6 @@ impl OutsideModel {
             "deadline"
         } else if also == "also t programs an alarm" {
             "receivers"
-        } else if !pairs.is_empty() {
-            "outside"
         } else {
             "lowered"
         };
@@ -15800,6 +15917,118 @@ impl OutsideModel {
     fn served_names(&self, block: &str) -> bool {
         self.served_namings.iter().any(|(_, named)| named == block)
     }
+}
+
+#[test]
+fn one_service_each_serving_system_s_conflict_alone() {
+    let cases = one_service_two_systems();
+    // What `log` names, of 6; who uses it, of 5; each description lowered for each system.
+    assert_eq!(cases.len(), 6 * 5 * 2);
+    for pair in cases.chunks(2) {
+        assert_eq!(
+            pair[0].description.text(),
+            pair[1].description.text(),
+            "one description, lowered for each of its systems"
+        );
+    }
+    let (tally, plans) = run_keeping("one service, two systems", &cases, true);
+    // Unresolved `infeasible-configuration`, model §8 rule 7's conflict, each system serving `log` — 3 of the 5 users:
+    // its task, both tasks or its own level — where `log` names what its hardware does not hold: of `sa`, `uart.b` and
+    // `pb` (3 × 2), of `sb`, `uart.a` by either clause and `pa` (3 × 3): 15. `log` requires no fact, so none is
+    // `missing-fact`. Lowered: the other 45. Each count read from the label and the system lowered.
+    hold_unresolved("one service, two systems", &tally, &cases, (15, 0), |_| {
+        false
+    });
+    let named = |c: &Case| {
+        let side = &c.description.services[0].side;
+        side.uses
+            .iter()
+            .chain(&side.needs)
+            .next()
+            .cloned()
+            .unwrap_or_default()
+    };
+    let by_needs = |c: &Case| !c.description.services[0].side.needs.is_empty();
+    let inside = |c: &Case| {
+        let (platform, block) = if c.description.system == "sa" {
+            ("pa", "uart.a")
+        } else {
+            ("pb", "uart.b")
+        };
+        [platform, block].contains(&named(c).as_str())
+    };
+    let platform_named = |c: &Case| ["pa", "pb"].contains(&named(c).as_str());
+    let task_serves = |c: &Case| {
+        c.description.tasks[0]
+            .side
+            .uses
+            .contains(&"log".to_string())
+    };
+    let serves = |c: &Case| task_serves(c) || !c.description.own.uses.is_empty();
+    let names_any = |c: &Case| !named(c).is_empty();
+    let conflict = |c: &Case| serves(c) && names_any(c) && !inside(c);
+    let node = |c: &Case| serves(c) && inside(c);
+    hold(
+        "one service, two systems",
+        &tally,
+        (60, 45, 0, 15, 0),
+        &[
+            counted(SEARCH_REFUSES_A_NAME_OUTSIDE_THE_HARDWARE, &cases, conflict),
+            counted("outside: named by a service", &cases, conflict),
+            counted("outside: named by `uses`", &cases, |c| conflict(c) && !by_needs(c)),
+            counted("outside: named by `needs`", &cases, |c| conflict(c) && by_needs(c)),
+            counted("outside: its namer served by a task", &cases, |c| conflict(c) && task_serves(c)),
+            counted("outside: its namer served by the system's own level alone", &cases, |c| {
+                conflict(c) && !task_serves(c)
+            }),
+            counted("outside: a platform another system uses", &cases, |c| conflict(c) && platform_named(c)),
+            counted("outside: a block a platform outside the hardware composes", &cases, |c| {
+                conflict(c) && !platform_named(c)
+            }),
+            counted("named: a block a service names, bound for nothing, a node", &cases, |c| {
+                node(c) && !platform_named(c)
+            }),
+            counted("named: a platform a service names, bound for nothing, a node", &cases, |c| {
+                node(c) && platform_named(c)
+            }),
+            counted(
+                "outside: a block outside the hardware named by a service or a policy the system does not serve, no \
+                 refusal",
+                &cases,
+                |c| !serves(c) && names_any(c) && !inside(c),
+            ),
+            counted("named: hardware a service or a policy the system does not serve names, no node", &cases, |c| {
+                !serves(c) && names_any(c)
+            }),
+            exactly("task: deadline-from written", 45),
+        ],
+    );
+    // "a system the name leaves inside its hardware is not refused for it": the 5 descriptions whose both tasks use
+    // `log` naming anything, one system refused and the other's plan holding the name, a node.
+    let mut one_of_each = 0;
+    for (pair, plans) in cases.chunks(2).zip(plans.chunks(2)) {
+        if !(task_serves(&pair[0]) && task_serves(&pair[1]) && names_any(&pair[0])) {
+            continue;
+        }
+        let (lowered, plan, refused) = match (&plans[0], &plans[1]) {
+            (Some(plan), None) => (&pair[0], plan, &pair[1]),
+            (None, Some(plan)) => (&pair[1], plan, &pair[0]),
+            _ => panic!("{}: one system lowered and one refused", pair[0].label),
+        };
+        assert!(
+            inside(lowered) && conflict(refused),
+            "{}: the name inside the system lowered, outside the one refused",
+            lowered.label
+        );
+        assert!(
+            plan.lines()
+                .any(|l| l.starts_with(&format!("(context {} ", named(lowered)))),
+            "{}: the name a node\n{plan}",
+            lowered.label
+        );
+        one_of_each += 1;
+    }
+    assert_eq!(one_of_each, 5);
 }
 
 #[test]
@@ -15868,14 +16097,18 @@ fn ranks_that_start_past_one_or_skip() {
 #[test]
 fn two_tasks_of_one_name_refused_before_every_later_refusal() {
     let cases = one_name_two_tasks();
-    // 5 name patterns, each with its twin; 4 binders; 10 later refusals, none among them.
+    // 5 name patterns, each with its twin; 4 binders; what else it writes, of 10: 8 later refusals, none, and a name
+    // outside the hardware.
     assert_eq!(cases.len(), ONE_NAME.len() * 2 * 4 * 10);
     let tally = run("one name, two tasks", &cases);
-    // Every system resolved. Refused: every system declaring two tasks of one name (5 × 4 × 10), whatever else it
-    // writes, and every twin writing a later refusal (5 × 4 × 9). Lowered: each twin writing none (5 × 4). Every record
-    // accepted by the configuration checker, but where a later task of a name alone programs an alarm (5 × 4): the
-    // checker reads the binding as the first task's ([`CHECKER_READS_THE_FIRST`]). Each count read from the tasks'
-    // names, the binder and the later refusal its description writes.
+    // Unresolved `infeasible-configuration`, model §8 rule 7's conflict, every system writing `w`, which names `out.b`,
+    // outside the hardware, twin or not (5 × 2 × 4): the search's refusal, so no record reaches §1, whose first refusal
+    // would be two tasks of one name, nor the configuration checker. Every other resolved. Refused: every system
+    // declaring two tasks of one name (5 × 4 × 9), whatever else it writes, and every twin writing a later refusal (5 ×
+    // 4 × 8). Lowered: each twin writing none (5 × 4). 40 + 180 + 160 + 20 = 400. Every record accepted by the
+    // configuration checker, but where a later task of a name alone programs an alarm (5 × 4): the checker reads the
+    // binding as the first task's ([`CHECKER_READS_THE_FIRST`]). Each count read from the tasks' names, the binder and
+    // the later refusal its description writes.
     let carried_twice = |c: &Case| -> Vec<String> {
         let tasks = &c.description.tasks;
         let mut out: Vec<String> = tasks
@@ -15898,6 +16131,8 @@ fn two_tasks_of_one_name_refused_before_every_later_refusal() {
     };
     let later = |c: &Case| word(c, "later:");
     let binder = |c: &Case| word(c, "binder:");
+    let outside = |c: &Case| later(c) == "outside";
+    let refused = |c: &Case| one_name(c) && !outside(c);
     let before = |l: &'static str| move |c: &Case| one_name(c) && later(c) == l;
     let alone = |l: &'static str| move |c: &Case| !one_name(c) && later(c) == l;
     // The most tasks one name is carried by.
@@ -15917,54 +16152,56 @@ fn two_tasks_of_one_name_refused_before_every_later_refusal() {
     };
     // `t` a prefix of `t!` and of `t.x`, by hand; `t` and `u` neither.
     let prefixing = |c: &Case| carried_twice(c) == ["t", "t!"] || carried_twice(c) == ["t", "t.x"];
+    hold_unresolved("one name, two tasks", &tally, &cases, (40, 0), |_| false);
     hold(
         "one name, two tasks",
         &tally,
-        (400, 20, 0, 0, 380),
+        (400, 20, 0, 40, 340),
         &[
-            counted("refusal: two tasks of one name", &cases, one_name),
+            counted(SEARCH_REFUSES_A_NAME_OUTSIDE_THE_HARDWARE, &cases, outside),
+            counted("refusal: two tasks of one name", &cases, refused),
             counted(CHECKER_READS_THE_FIRST, &cases, before("alarm2")),
             counted("duplicate: one name", &cases, |c| {
-                carried_twice(c).len() == 1
+                refused(c) && carried_twice(c).len() == 1
             }),
             counted("duplicate: two names, named in order", &cases, |c| {
-                carried_twice(c).len() == 2
+                refused(c) && carried_twice(c).len() == 2
             }),
             counted("duplicate: one name carried by three tasks", &cases, |c| {
-                most(c) >= 3
+                refused(c) && most(c) >= 3
             }),
             counted(
                 "duplicate: one name carried by three tasks beside another carried by two",
                 &cases,
-                |c| most(c) >= 3 && carried_twice(c).len() >= 2,
+                |c| refused(c) && most(c) >= 3 && carried_twice(c).len() >= 2,
             ),
             counted(
                 "duplicate: one name's text a prefix of another's",
                 &cases,
-                prefixing,
+                |c| refused(c) && prefixing(c),
             ),
             // `t` before `t!`, and `(task sys t!)` before `(task sys t)`: `!` lies below `)`.
             // "`t!`" and "`t.x`" each sort before "`t`": a backquote lies above `!` and `.`; "`t`" before "`u`".
             counted(
                 "duplicate: an order the message's words would give otherwise",
                 &cases,
-                prefixing,
+                |c| refused(c) && prefixing(c),
             ),
             counted(
                 "duplicate: the names' order unlike their tasks' texts' order",
                 &cases,
-                |c| carried_twice(c) == ["t", "t!"],
+                |c| refused(c) && carried_twice(c) == ["t", "t!"],
             ),
             // `t.x` ranked first, `t` before it by text.
             counted(
                 "duplicate: the names' order unlike their tasks' runtime order",
                 &cases,
-                |c| carried_twice(c) == ["t", "t.x"],
+                |c| refused(c) && carried_twice(c) == ["t", "t.x"],
             ),
             counted(
                 "duplicate: a later task of a name naming a service no earlier one of it names",
                 &cases,
-                |c| one_name(c) && (binder(c) == "second" || later(c) == "outside"),
+                |c| refused(c) && binder(c) == "second",
             ),
             counted(
                 "duplicate: a binding of a text two tasks carry",
@@ -16001,11 +16238,6 @@ fn two_tasks_of_one_name_refused_before_every_later_refusal() {
                 &cases,
                 |c| before("alarm")(c) || before("alarm2")(c) || before("alarms")(c),
             ),
-            counted(
-                "duplicate: before a block or a platform outside the hardware",
-                &cases,
-                before("outside"),
-            ),
             // The twins, each refused by its later refusal alone.
             counted("task bullet: a period of zero", &cases, alone("zero")),
             counted(
@@ -16037,11 +16269,6 @@ fn two_tasks_of_one_name_refused_before_every_later_refusal() {
                 alone("alarm")(c) || alone("alarm2")(c)
             }),
             counted("receivers: two", &cases, alone("alarms")),
-            counted(
-                "refusal: a block or a platform the system serves outside its hardware",
-                &cases,
-                alone("outside"),
-            ),
             counted("multiplex: a channel with one user", &cases, |c| {
                 alone("none")(c) && ["first", "second"].contains(&binder(c).as_str())
             }),

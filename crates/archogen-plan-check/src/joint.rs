@@ -14,13 +14,19 @@
 //! ⭐ **Two kinds of finding.** A conflict or an unknown the rules find in the plan is the plan's — a plan the search
 //! wrote that the rules refuse is a corrupted plan, never a valid system (`ROADMAP.md` §5.5) — so it is [`PLAN_JOINT`]
 //! under `tool-failure`, its message naming its rule. What §8 makes the description's own status whatever the
-//! assignment — a caller stating levels that do not hold the profile's (rule 9, judged first), a region that does not
-//! read (rule 5), rule 10's unknowns (placement memory with no size, a region against it whose overlap no size decides,
-//! holes of no size that leave it no free byte), a side or a provider the relation does not read — is
-//! [`PLAN_DESCRIPTION`] under that status, and refuses before any finding of the plan's. Rule 5's unread region and rule
-//! 10's unknowns are check (2)'s first, description-wide ([`crate::providers`]), so [`check::plan`] never reaches check
-//! (5) with one; check (5) judges them again, over the system's hardware, so its own verdict holds where it is called
-//! alone. Rule 10's `invalid-description`s, overlaps and memory reserved in every byte, are check (2)'s alone.
+//! assignment — a service or a policy the system serves naming hardware outside it (rule 7), a caller stating levels
+//! that do not hold the profile's (rule 9, judged first), a region that does not read (rule 5), rule 10's unknowns
+//! (placement memory with no size, a region against it whose overlap no size decides, holes of no size that leave it no
+//! free byte), a side or a provider the relation does not read — is [`PLAN_DESCRIPTION`] under that status, and refuses
+//! before any finding of the plan's. Rule 5's unread region and rule 10's unknowns are check (2)'s first,
+//! description-wide ([`crate::providers`]), so [`check::plan`] never reaches check (5) with one; check (5) judges them
+//! again, over the system's hardware, so its own verdict holds where it is called alone. Rule 10's
+//! `invalid-description`s, overlaps and memory reserved in every byte, are check (2)'s alone.
+//!
+//! ⭐ **Rule 7's name is one system's, so it is no refusal of check (2)**, which judges the description for every system
+//! and would refuse a plan for a system the name leaves inside its hardware. It is check (5)'s, for the plan's system; and
+//! since it holds whatever the assignment, [`check::plan`] asks `names_outside_hardware` first and, where one holds, goes
+//! to check (5) past checks (3) and (4), so no finding of the bindings stands before it.
 //!
 //! ⛔ **The level is the profile's, never the record's**: `Profile::caller_level`, so a corrupted level cannot pass.
 //!
@@ -40,6 +46,14 @@
 //! - Rule 7: the positions read for `uses` and `needs` are a side's (§7 rule 4): any depth of any clause but `offers`,
 //!   `absent` and `refines` — on a block or platform the kinds admit, the positions rule 7 names, a clause of its own
 //!   or inside `requires`. Rule 5's `uses` is read at the same positions.
+//! - Rule 7: a service or a policy naming a block or platform outside the hardware is "the same conflict" by what it
+//!   names, and the description's own by "judged once for the system whatever the assignment" and the code the rule
+//!   states: [`PLAN_DESCRIPTION`] under `infeasible-configuration`, where a binding's conflict is the plan's
+//!   [`PLAN_JOINT`]. Once is one finding per namer and name, however often written or however many reach the namer.
+//! - Rule 7: its namers are the declarations of kind service and policy the system's closure reaches, at any depth and
+//!   through declarations of every kind, as the requesters it serves are read. What the rule's words do not name is not
+//!   judged: a block's or a platform's own names are composition, its tasks' and its own level's are its hardware, and a
+//!   declaration of another kind, a system another system names among them, is said nothing of.
 //! - Rule 3: a provider offering a consumed function `true` with `channels` absent or `0` is the description's
 //!   `invalid-description`, refused when it is read — check (2)'s, first. Check (5) meets one only when called past
 //!   check (2), and there counts what it offers: `channels` absent or `0` holds no channel for two requesters taking
@@ -57,8 +71,9 @@
 //!   serves, bound or not.
 //! - Rule 9: an empty `caller_level` is no level given, and the rule says nothing; one outside
 //!   `reachable-at-privilege`'s domain is the engine's input error, refused as `tool-failure` before anything is judged.
-//! - Several verdicts of the description's: `invalid-description` before `unsupported-profile` before `missing-fact`,
-//!   every finding kept.
+//! - Several verdicts of the description's: `invalid-description` before `unsupported-profile` before
+//!   `infeasible-configuration` before `missing-fact`, the precedence rule 6 names as the language orders it
+//!   (`eadl_front::Verdict::precedence`), every finding kept.
 //! - Rule 13: a function's requirements are every requirement the requester writes on a fact of it, a group by its head.
 //! - Rule 13: a qualifier is judged for every requester the system serves that writes one; the requesters it reaches
 //!   through `uses` and `needs` are reached at any depth; a qualifier judged past the exact arithmetic is an unknown.
@@ -122,8 +137,9 @@ const ARRIVALS: &str = "min-arrival-separation";
 /// The clause a sporadic task states its own minimum separation in (§4 rule 1).
 const SEPARATION: &str = "min-separation";
 
-/// Check (5) of `assignment`, which checks (1)–(4) accepted, over the elaborated `program`, `sources` its files, under
-/// `profile`; `name` and `text` the record's, for the spans of its clauses.
+/// Check (5) of `assignment`, which checks (1)–(4) accepted — or checks (1) and (2) alone, where rule 7's name holds
+/// whatever the assignment — over the elaborated `program`, `sources` its files, under `profile`; `name` and `text` the
+/// record's, for the spans of its clauses.
 pub(crate) fn check(
     sources: &SourceMap,
     program: &Program,
@@ -173,6 +189,7 @@ pub(crate) fn check(
     judgement.channels();
     judgement.ownership();
     judgement.privilege(profile.id, level);
+    judgement.names();
     judgement.sources();
     judgement.placement();
     judgement.functions();
@@ -211,6 +228,19 @@ pub fn system(program: &Program, name: &str) -> Option<SystemReading> {
         hardware,
         reached,
         served: served.into_iter().collect(),
+    })
+}
+
+/// Whether a service or a policy the system `name` serves names, by `uses` or `needs`, a block or platform outside its
+/// hardware (rule 7): a conflict of that system whatever the assignment, which check (5) reports; `false` for a name of
+/// no system.
+pub(crate) fn names_outside_hardware(program: &Program, name: &str) -> bool {
+    let world = World::read(program);
+    world.system(name).is_some_and(|system| {
+        let reading = Reading::of(&world, name, system);
+        !world
+            .named_outside(&reading.hardware, &reading.reached)
+            .is_empty()
     })
 }
 
@@ -324,6 +354,17 @@ struct Declaration<'p> {
     kind: Kind,
 }
 
+/// A service or a policy naming a block or platform outside a system's hardware (rule 7).
+#[derive(Debug, Clone)]
+struct NamedOutside {
+    namer: String,
+    namer_kind: Kind,
+    hardware: String,
+    hardware_kind: Kind,
+    /// Where the namer first writes the name.
+    span: Span,
+}
+
 /// The program's declarations by qualified name, and the names each writes, resolved as module resolution resolves
 /// them.
 struct World<'p> {
@@ -368,20 +409,71 @@ impl<'p> World<'p> {
     }
 
     /// The declarations `form`, written in instance `instance`, names through the lists `heads` selects — `needs`,
-    /// `uses` or both — each by its qualified name. A name that resolves to no declaration is a fact's, or nothing's.
+    /// `uses` or both — each by its qualified name.
     fn names(&self, instance: usize, form: &Form, heads: &[&str]) -> Vec<String> {
+        self.named_at(instance, form, heads)
+            .into_iter()
+            .map(|(qualified, _)| qualified)
+            .collect()
+    }
+
+    /// What [`Self::names`] reads, each with where it is written. A name that resolves to no declaration is a fact's, or
+    /// nothing's.
+    fn named_at(&self, instance: usize, form: &Form, heads: &[&str]) -> Vec<(String, Span)> {
         let mut operands = Vec::new();
         operands_of(form, heads, &mut operands);
         operands
             .into_iter()
             .filter_map(|operand| match operand {
-                Form::Symbol { name, span } => {
-                    self.program.resolve(instance, name, *span).ok().flatten()
-                }
+                Form::Symbol { name, span } => self
+                    .program
+                    .resolve(instance, name, *span)
+                    .ok()
+                    .flatten()
+                    .map(|qualified| (qualified, *span)),
                 _ => None,
             })
-            .filter(|qualified| self.declarations.contains_key(qualified))
+            .filter(|(qualified, _)| self.declarations.contains_key(qualified))
             .collect()
+    }
+
+    /// Rule 7: each service or policy of `reached` naming, by `uses` or `needs`, a block or platform outside `hardware` —
+    /// once for a namer and a name, at the place it is first written, namers in order of name.
+    fn named_outside(
+        &self,
+        hardware: &BTreeSet<String>,
+        reached: &BTreeSet<String>,
+    ) -> Vec<NamedOutside> {
+        let mut found = Vec::new();
+        for namer in reached {
+            let Some(declaration) = self.get(namer) else {
+                continue;
+            };
+            if !matches!(declaration.kind, Kind::Service | Kind::Policy) {
+                continue;
+            }
+            let mut said = BTreeSet::new();
+            for (name, span) in
+                self.named_at(declaration.instance, declaration.form, &["needs", "uses"])
+            {
+                let Some(hardware_kind) = self.get(&name).map(|d| d.kind) else {
+                    continue;
+                };
+                if hardware_kind.provides()
+                    && !hardware.contains(&name)
+                    && said.insert(name.clone())
+                {
+                    found.push(NamedOutside {
+                        namer: namer.clone(),
+                        namer_kind: declaration.kind,
+                        hardware: name,
+                        hardware_kind,
+                        span,
+                    });
+                }
+            }
+        }
+        found
     }
 
     /// The declarations reached from `seeds` that `keep` admits, each followed through what it names in `heads`, at
@@ -1060,6 +1152,46 @@ impl<'a, 'p> Judgement<'a, 'p> {
                 let named = self.world.names(instance, &form, &["needs", "uses"]);
                 self.world.closure(named, &["needs", "uses"], |_| true)
             })
+    }
+
+    /// Rule 7: a service or a policy the system serves naming, by `uses` or `needs`, a block or platform outside its
+    /// hardware is no path into it, and a conflict of the system whatever the assignment: the description's
+    /// `infeasible-configuration`, at the name, naming the namer, the hardware and the system.
+    fn names(&mut self) {
+        let system = self.assignment.system.clone();
+        for named in self.world.named_outside(&self.hardware, &self.reached) {
+            let NamedOutside {
+                namer,
+                namer_kind,
+                hardware,
+                hardware_kind,
+                span,
+            } = named;
+            let primary = self.at(span, &format!("`{namer}` names `{hardware}` here"));
+            let secondary = [
+                self.declared(&hardware),
+                Some(self.at(self.system.form.span(), &format!("the system `{system}`"))),
+            ]
+            .into_iter()
+            .flatten()
+            .collect();
+            self.refuse_description(
+                Status::InfeasibleConfiguration,
+                format!(
+                    "`{namer}`, a {} `{system}` serves, names `{hardware}`, a {} outside the hardware of `{system}`: a \
+                     service's or a policy's name is no path into a system's hardware, and the conflict is `{system}`'s \
+                     whatever the assignment (rule 7)",
+                    namer_kind.word(),
+                    hardware_kind.word()
+                ),
+                primary,
+                secondary,
+                &format!(
+                    "compose `{hardware}` into the platform of `{system}`, or name in `{namer}` hardware the platform \
+                     composes"
+                ),
+            );
+        }
     }
 
     /// Rules 1 and 7: each binding is a requester's the system serves, of a vocabulary fact, to a block or platform of
@@ -2047,6 +2179,7 @@ impl<'a, 'p> Judgement<'a, 'p> {
             let status = [
                 Status::InvalidDescription,
                 Status::UnsupportedProfile,
+                Status::InfeasibleConfiguration,
                 Status::MissingFact,
             ]
             .into_iter()

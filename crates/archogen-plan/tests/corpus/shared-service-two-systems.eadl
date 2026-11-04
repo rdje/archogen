@@ -1,6 +1,7 @@
 (eadl-version eadl/1)
 ; One service, named by two systems' tasks, names a block of one system's hardware only: that system lowers, the
-; other is refused, outside its hardware (§1; round 21, R4; round 22, R2).
+; other is refused, outside its hardware: model §8 rule 7's conflict of the system it leaves outside (`M1.49`; round
+; 21, R4; round 22, R2).
 (defblock uart.a (offers (observable-output true) (reachable-at-privilege machine)))
 (defblock uart.b (offers (observable-output true) (reachable-at-privilege machine)))
 (defplatform pa (offers (core-count 1 tick) (reachable-at-privilege machine)) (requires (uses uart.a)))

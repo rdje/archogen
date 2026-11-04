@@ -27,7 +27,9 @@ one.
 > `stale-input`; (2) the description is re-checked, by the language's passes and the provider-level rules; (3) each
 > requirement that binds is bound once, each binding is a requirement's, of a requester the system serves, to a
 > declared block or platform; (4) each binding is satisfied by the model's judgement — the reference model of
-> `docs/semantics/model.md` §7, never the generator's code; (5) the bindings hold together by §8's joint rules, today
+> `docs/semantics/model.md` §7, never the generator's code; (5) the bindings hold together by §8's joint rules, a
+> service or a policy naming hardware outside the plan's system said ahead of (3) and (4), since it is the
+> description's whatever the plan binds, today
 > rule 7's hardware, rules 2–4's channels, rule 5's ownership, rule 10's placement, rule 9's privilege at the
 > profile's level, rule 13's one provider per function and qualifiers, rule 14's one time base, and rule 16's sporadic
 > task released by its own source, which must be at least as far apart as the task — an engine adapter's instance
@@ -87,7 +89,9 @@ a requester binding what its kind needs beneath to the device it programs
    asks these questions. First, is every provider part of the system's own **hardware** — the platform its
    `platform` clause names, the blocks and platforms the system and its tasks name, and everything those compose? A
    serial port on the board that the system's platform never composes serves nobody, however well it would match.
-   Only blocks and platforms compose: a service that names a block does not bring it into the system, and a platform
+   Only blocks and platforms compose: a service that names a block does not bring it into the system, and it refuses
+   the description, `infeasible-configuration`, whatever the plan binds, while a system whose platform does compose
+   that block is not refused for it. A platform
    that refines another keeps that platform's promises, not its parts. Second, does every timer have enough
    **channels**? A need that programs a timer — a delay, a deadline — takes one of its channels, while a need that only
    reads it takes none. A timer with two channels serves two such needs, not three; a service several tasks share
@@ -229,7 +233,7 @@ Each check reports under a code of its own. The codes are stated, with what fire
 | --- | --- | --- |
 | `plan-record` | 1 | the record does not read, or names another profile or a system the description does not declare |
 | `plan-stale` | 1 | the record's digest is not the description's |
-| `plan-description` | 2 | the checker's own rules refuse a description the language's passes accept |
+| `plan-description` | 2, 5 | the checker's own rules refuse a description the language's passes accept; at check 5, what §8 makes the description's whatever the plan binds |
 | `plan-binding` | 3 | a need left unbound, a binding of no need or of a requester the system does not serve, a provider not declared |
 | `plan-unsatisfied` | 4 | a binding the reference model does not satisfy |
 | `plan-joint` | 5 | the bindings do not hold together: a provider outside the system's hardware, more needs taking a channel than a provider has or two where its channels are unknown, two bound parts owning one address, the image placed nowhere or outside placement memory, a caller's provider not reachable at the profile's level, one requester's function split across providers, a qualifier unmet where its requester relies, or a sporadic task bound itself to a source faster than it, unbounded, or stating no separation (rule 16) |

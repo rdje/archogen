@@ -116,6 +116,27 @@ fn a_record_that_does_not_rebuild_is_a_tool_failure() {
 }
 
 #[test]
+fn a_record_for_a_system_naming_hardware_outside_is_refused_as_the_joint_rules_say() {
+    // `M1.49`, model §8 rule 7: no search writes this record, since the same rule stops the search, so a hand-written
+    // one is the only way here, and the lowering, which holds no such rule of its own now, reads the joint rules'.
+    let description = DESCRIPTION.replace(
+        "(defservice console.write\n  (requires (needs observable-output)))",
+        "(defblock stray (offers (observable-output true) (reachable-at-privilege machine)))\n\
+         (defservice console.write\n  (requires (needs observable-output) (uses stray)))",
+    );
+    let (code, message) = refused(
+        &description,
+        &record("dg", "PROGRAM", "rt-static-up-v1", "adapters/1", ""),
+    );
+    assert_eq!(code, "tool-failure");
+    assert!(message.contains("infeasible-configuration: "), "{message}");
+    assert!(
+        message.contains("`console.write` names `stray`"),
+        "{message}"
+    );
+}
+
+#[test]
 fn the_joint_rules_refusing_the_accepted_record_name_their_findings() {
     // Round 23 (R23-R4): the configuration checker refuses this record too (`plan-joint`, rule 3), so the two roles agree
     // and no record they both accept reaches this branch; lowering one the checker refused, unjudged, is the one way to

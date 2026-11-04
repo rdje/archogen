@@ -133,13 +133,6 @@ leaf that adds it:
   would receive: first the alarms it programs, each naming the provider, then its expiries, each naming the instance
   that delivers it, each kind by those texts. So no order among them decides the message, though one receiver receives
   at most one today, the search binding a requester's `counter` facts to one provider whole;
-- a block or a platform the system serves outside its hardware — one a served service or policy names that no `platform`
-  clause, the system's own names or its tasks' bring in, so that model §8 rule 7 makes it no hardware: "a block that
-  only a service names is not hardware" — whose code the node rule would place and whose device the simulator would
-  model, though the system has none: each named, by the namer's text and then the block's or the platform's. Round 13's
-  decision holds: an operand that means something to some rules and nothing to others is refused. `M1.49` decides
-  whether rule 7 counts such a name as a path into the hardware or, as it treats a binding to hardware outside a system,
-  a conflict of each system that serves it (`RTP-H22`);
 - a node whose record's supported contexts do not include a context its line holds (§2.6), once a record can be a
   provider (`M3.7`, `RTP-H10`);
 - an initialisation component whose members' records state that one's initialisation calls another's code (§2.7),
@@ -165,7 +158,8 @@ system serves, or of a provider such a binding names, at any depth (rule 12's "c
 rebuilds, every binding) — names (a block, a platform or an adapter's instance), a block or a platform the system serves
 that is bound for requirements of its own — a requester like any other (model §8 rule 1, `M4.1.14`), whose code an
 interrupt can run (§2.6) — a block or a platform of the system's hardware that a served task, service or policy names by
-`uses` or `needs`, whose code that name calls (`M4.1.18`) — one the system serves outside its hardware refused (§1) —, a
+`uses` or `needs`, whose code that name calls (`M4.1.18`) — one a service or a policy names outside its hardware being
+model §8 rule 7's conflict, which no record reaches (`M1.49`) —, a
 service the system serves, or a policy it serves: the three kinds of node `crates/eadl-resolve/src/joint.rs` gives,
 `Provider` (hardware and instances), `Service` and `Other`, the last a policy's, a description naming a system being
 refused (§1). Its tasks and its own level, requesters too, are never nodes; a block or a platform the system serves that

@@ -14,7 +14,7 @@
 #             This script writes the baseline; that check enforces it.
 729a9724bc1673d7463e6e2455ea2e71a8b09736edbe1a64ba4a3447ff638caf  docs/semantics/grammar.md#ebnf
 f43870b2252ba2f76072adefc99b328e35b32aec8c62b6a1f4c4553d33280736  docs/semantics/reference.md#comment-headers
-10812558a56e5ef7da9cab91ceb66823df57a73dfd4a9f3cc292736ab47b9173  docs/semantics/reference.md#diagnostics
+db2fb93a4e2a9b167272543c32f46e7524a75afef11fb363380983be74098468  docs/semantics/reference.md#diagnostics
 24da41fe2d7949db327454ff0ee13c980263da15995636a0d20e211cccf3ec14  docs/semantics/reference.md#language-version
 09f95bf5879fdf8de68768c3441bfcd45ef68f779a883f85954264231e1eeaef  docs/semantics/reference.md#normative-sources
 491364023b22e9b111db659262d32c3e3a480606c7fd9df75e82daa164daf2cb  docs/semantics/reference.md#number-values

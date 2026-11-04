@@ -10,7 +10,7 @@ use archogen_digest::Digest;
 use archogen_outcome::record::{Judged, Record};
 use archogen_outcome::Status;
 use archogen_plan_check::assignment::{program_digest, program_text, Assignment, Requester};
-use archogen_plan_check::check::{plan_file, PLAN_STALE, PLAN_UNSATISFIED};
+use archogen_plan_check::check::{plan_file, PLAN_DESCRIPTION, PLAN_STALE, PLAN_UNSATISFIED};
 use eadl_front::module::DirectoryModules;
 use eadl_front::SourceMap;
 use eadl_model::profile::RT_STATIC_UP_V1;
@@ -214,6 +214,40 @@ fn a_stale_a_corrupted_and_a_refused_plan_each_exit_with_their_status() {
     let rewritten = plan(&description, "console.write", "console.uart");
     let (code, record, _) = check(&description, &rewritten);
     assert_eq!((code, record.status()), (10, Status::InvalidDescription));
+}
+
+#[test]
+fn a_service_naming_hardware_outside_its_system_exits_with_the_description_s_status() {
+    // Model §8 rule 7: the plan binds nothing outside the hardware, and the service's name refuses the system whatever
+    // it binds — the description's `infeasible-configuration`, with the rule's repair, by the plain route and the
+    // module's.
+    let service = "(defservice console.write (requires (needs observable-output)))";
+    let named = "(defservice console.write (requires (needs observable-output)) (uses spare.uart))";
+    let spare =
+        "(defblock spare.uart (offers (observable-output true) (reachable-at-privilege machine)))";
+    let plain = format!("{}{spare}\n", PLAIN.replace(service, named));
+    let module = format!(
+        "(defmodule app (version 1 0)\n{})",
+        plain.replace("(eadl-version eadl/1)\n", "")
+    );
+    for (file, text) in [("system.eadl", plain), ("app.eadl", module)] {
+        let dir = scratch();
+        let description = dir.join(file);
+        std::fs::write(&description, text).unwrap();
+        let plan_text = plan(&description, "console.write", "console.uart");
+        let (code, record, stderr) = check(&description, &plan_text);
+        assert_eq!(
+            (code, record.status(), record.findings()[0].code.as_str()),
+            (13, Status::InfeasibleConfiguration, PLAN_DESCRIPTION),
+            "{file}: {stderr}"
+        );
+        assert!(
+            stderr.contains("error[plan-description]")
+                && stderr.contains("(rule 7)")
+                && stderr.contains("= repair: compose `spare.uart` into the platform of `s`"),
+            "{file}: {stderr}"
+        );
+    }
 }
 
 #[test]

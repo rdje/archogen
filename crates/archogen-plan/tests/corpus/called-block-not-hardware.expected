@@ -1,2 +1,2 @@
 == system sb
-refused unsupported-profile: `drv` names `blk`: a block or a platform outside the system's hardware, which model §8 rule 7 makes no hardware, and `/1` places no code for a device the system does not have; `M1.49` decides whether such a name is a path into the hardware or a conflict of each system serving it
+unresolved InfeasibleConfiguration

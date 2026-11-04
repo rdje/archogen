@@ -4,7 +4,8 @@
 //! (3) refuses first are run apart, to hold check (5)'s own reading of them. An engine adapter's instance is judged by
 //! the rules as model §8 rule 15 and `docs/specs/adapters/decision_engine-adapters.md` §4 say, and one time base by rule
 //! 14, each from the record and the model alone; a task released by its own source by rule 16, written from its text
-//! alone by the fenced context of `M4.1.2.3`.
+//! alone by the fenced context of `M4.1.2.3`; and a service or a policy naming hardware outside its system by rule 7's
+//! amended text alone, its verdict the description's whatever the plan binds.
 
 use std::collections::BTreeMap;
 
@@ -12,8 +13,8 @@ use archogen_outcome::record::{Finding, Severity};
 use archogen_outcome::Status;
 use archogen_plan_check::assignment::{program_digest, Assignment, Instance, Provider, Requester};
 use archogen_plan_check::check::{
-    bindings, description, joint, record, Verdict, PLAN_BINDING, PLAN_DESCRIPTION, PLAN_JOINT,
-    PLAN_RECORD, PLAN_UNSATISFIED,
+    bindings, description, joint, plan as every_check, record, Verdict, PLAN_BINDING,
+    PLAN_DESCRIPTION, PLAN_JOINT, PLAN_RECORD, PLAN_STALE, PLAN_UNSATISFIED,
 };
 use eadl_front::module::{elaborate, MemoryModules};
 use eadl_front::{Program, SourceMap};
@@ -73,9 +74,19 @@ type Bind = (Requester, &'static str, &'static str);
 impl Description {
     /// The record a search would write for the system `s`: `binds` its bindings, `placement` its placement.
     fn plan(&self, placement: Option<(&str, &str)>, binds: &[Bind]) -> Assignment {
+        self.plan_for("s", placement, binds)
+    }
+
+    /// The record a search would write for the system `system`: `binds` its bindings, `placement` its placement.
+    fn plan_for(
+        &self,
+        system: &str,
+        placement: Option<(&str, &str)>,
+        binds: &[Bind],
+    ) -> Assignment {
         Assignment {
             profile: RT_STATIC_UP_V1.id.to_owned(),
-            system: "s".to_owned(),
+            system: system.to_owned(),
             program: program_digest(&self.program),
             placement: placement.map(|(p, r)| (p.to_owned(), r.to_owned())),
             bindings: binds
@@ -114,6 +125,18 @@ impl Description {
     /// `binds` as a plan with no placement, judged.
     fn bound(&self, binds: &[Bind]) -> Result<(), Verdict> {
         self.joint(&self.plan(None, binds))
+    }
+
+    /// Every check over `assignment`, in order, as the executable runs them: whatever each says, none is required to
+    /// accept.
+    fn every_check(&self, assignment: &Assignment) -> Result<(), Verdict> {
+        every_check(
+            &self.sources,
+            &self.program,
+            &RT_STATIC_UP_V1,
+            RECORD,
+            &assignment.to_canonical(),
+        )
     }
 }
 
@@ -272,10 +295,87 @@ fn rule_7_hardware_is_composed_at_any_depth_and_never_through_refines() {
     assert!(message.contains("`spare.uart`"), "{message}");
 }
 
+/// A console on the platform `soc` and a spare one on the platform `board`, `declarations` beside them, and `system`.
+fn naming(declarations: &str, system: &str) -> Description {
+    describe(&format!(
+        "
+      (defblock console.uart (offers (observable-output true) (reachable-at-privilege machine)))
+      (defblock spare.uart (offers (observable-output true) (reachable-at-privilege machine)))
+      (defplatform soc (offers (core-count 1 tick) (reachable-at-privilege machine)) (requires (uses console.uart)))
+      (defplatform board (offers (core-count 1 tick) (reachable-at-privilege machine)) (requires (uses spare.uart)))
+      {declarations}
+      {system}"
+    ))
+}
+
+/// The console service, naming what `names` writes.
+fn writer(names: &str) -> String {
+    format!("(defservice console.write (requires (needs observable-output)) {names})")
+}
+
+/// The system on `soc`, serving the console service.
+const ON_SOC: &str = "(defsystem s (requires (uses console.write)) (platform (uses soc)))";
+
+/// Every position rule 7 reads a name at, for the name `name`: by `uses` and by `needs`, a clause of its own and inside
+/// `requires`.
+fn positions(name: &str) -> [String; 4] {
+    [
+        format!("(uses {name})"),
+        format!("(needs {name})"),
+        format!("(requires (uses {name}))"),
+        format!("(requires (needs {name}))"),
+    ]
+}
+
+/// The one finding of a system refused for `namer`, a `namer_kind`, naming `hardware`, a `hardware_kind` outside the
+/// hardware of `system` (rule 7): the description's `infeasible-configuration`, naming the three, with where the
+/// hardware is declared and where the system is, and the rule's repair.
+fn named_outside(
+    verdict: Result<(), Verdict>,
+    (namer, namer_kind): (&str, &str),
+    (hardware, hardware_kind): (&str, &str),
+    system: &str,
+) -> Finding {
+    refused_description(verdict.clone(), Status::InfeasibleConfiguration, 7);
+    let findings = verdict.expect_err("refused").findings;
+    assert_eq!(findings.len(), 1, "{findings:#?}");
+    let finding = findings[0].clone();
+    for words in [
+        format!("`{namer}`, a {namer_kind} `{system}` serves"),
+        format!("names `{hardware}`, a {hardware_kind} outside the hardware of `{system}`"),
+    ] {
+        assert!(finding.message.contains(&words), "{words}: {finding:#?}");
+    }
+    assert!(
+        finding.primary.message.contains(&format!("`{namer}`"))
+            && finding.primary.message.contains(&format!("`{hardware}`")),
+        "{finding:#?}"
+    );
+    assert_eq!(finding.secondary.len(), 2, "{finding:#?}");
+    assert!(finding.secondary.iter().all(|l| l.source == SOURCE));
+    assert!(
+        finding.secondary[0]
+            .message
+            .contains(&format!("`{hardware}`"))
+            && finding.secondary[1]
+                .message
+                .contains(&format!("`{system}`")),
+        "{finding:#?}"
+    );
+    for words in [
+        format!("compose `{hardware}` into the platform of `{system}`"),
+        format!("name in `{namer}` hardware the platform composes"),
+    ] {
+        assert!(finding.repair.contains(&words), "{words}: {finding:#?}");
+    }
+    finding
+}
+
 #[test]
-fn rule_7_a_block_a_service_names_is_reached_but_is_no_hardware() {
+fn rule_7_a_block_a_service_names_is_no_hardware_and_refuses_the_system_whatever_it_is_bound_to() {
     // `those` in rule 7 are the blocks and platforms found: a service's `needs` of a block makes it a requester the
-    // system serves, never hardware.
+    // system serves, never hardware — "no path into it", and the same conflict. A plan naming no binding to it is
+    // refused for it, and one bound to it for it first: the plan's own conflict is never the verdict.
     let d = describe(
         "
       (defblock console.uart (offers (observable-output true) (reachable-at-privilege machine)))
@@ -284,14 +384,547 @@ fn rule_7_a_block_a_service_names_is_reached_but_is_no_hardware() {
       (defservice console.write (requires (needs observable-output spare.uart)))
       (defsystem s (requires (uses console.write)) (platform (uses soc)))",
     );
+    for provider in ["console.uart", "spare.uart"] {
+        named_outside(
+            d.bound(&[(named("console.write"), "observable-output", provider)]),
+            ("console.write", "service"),
+            ("spare.uart", "block"),
+            "s",
+        );
+    }
+}
+
+#[test]
+fn rule_7_a_service_or_a_policy_naming_a_block_outside_the_hardware_is_infeasible_at_every_position(
+) {
+    for names in positions("spare.uart") {
+        let d = naming(&writer(&names), ON_SOC);
+        named_outside(
+            d.bound(&write()),
+            ("console.write", "service"),
+            ("spare.uart", "block"),
+            "s",
+        );
+        let d = naming(
+            &format!("{} (defpolicy fair.share (requires) {names})", writer("")),
+            "(defsystem s (requires (uses console.write fair.share)) (platform (uses soc)))",
+        );
+        named_outside(
+            d.bound(&write()),
+            ("fair.share", "policy"),
+            ("spare.uart", "block"),
+            "s",
+        );
+    }
+}
+
+#[test]
+fn rule_7_a_service_or_a_policy_naming_a_platform_outside_the_hardware_is_infeasible() {
+    // `board` composes `spare.uart`: one conflict, the namer's, since what the platform composes the namer does not name.
+    for names in positions("board") {
+        let d = naming(&writer(&names), ON_SOC);
+        named_outside(
+            d.bound(&write()),
+            ("console.write", "service"),
+            ("board", "platform"),
+            "s",
+        );
+        let d = naming(
+            &format!("{} (defpolicy fair.share (requires) {names})", writer("")),
+            "(defsystem s (requires (uses console.write fair.share)) (platform (uses soc)))",
+        );
+        named_outside(
+            d.bound(&write()),
+            ("fair.share", "policy"),
+            ("board", "platform"),
+            "s",
+        );
+    }
+}
+
+#[test]
+fn rule_7_a_name_s_refusal_points_at_the_name_the_hardware_and_the_system() {
+    // Derived from the text: the module's two lines, an empty line, then each declaration on its own line; the name
+    // eight spaces and `(uses ` into its line.
+    let d = describe(
+        "
+      (defblock console.uart (offers (observable-output true) (reachable-at-privilege machine)))
+      (defblock spare.uart (offers (observable-output true) (reachable-at-privilege machine)))
+      (defplatform soc (offers (core-count 1 tick) (reachable-at-privilege machine)) (requires (uses console.uart)))
+      (defservice console.write (requires (needs observable-output))
+        (uses spare.uart))
+      (defsystem s (requires (uses console.write)) (platform (uses soc)))",
+    );
+    let finding = named_outside(
+        d.bound(&write()),
+        ("console.write", "service"),
+        ("spare.uart", "block"),
+        "s",
+    );
     assert_eq!(
-        d.bound(&[(named("console.write"), "observable-output", "console.uart")]),
-        Ok(())
+        (
+            finding.primary.source.as_str(),
+            finding.primary.line,
+            finding.primary.column
+        ),
+        (SOURCE, 8, 15),
+        "{finding:#?}"
     );
-    refused(
-        d.bound(&[(named("console.write"), "observable-output", "spare.uart")]),
-        7,
+    assert_eq!(finding.secondary[0].line, 5, "{finding:#?}");
+    assert_eq!(finding.secondary[1].line, 9, "{finding:#?}");
+}
+
+#[test]
+fn rule_7_the_same_name_where_the_platform_composes_it_holds() {
+    // The block the platform composes, and the platform itself.
+    for name in ["console.uart", "soc"] {
+        for names in positions(name) {
+            assert_eq!(
+                naming(&writer(&names), ON_SOC).bound(&write()),
+                Ok(()),
+                "{names}"
+            );
+            let d = naming(
+                &format!("{} (defpolicy fair.share (requires) {names})", writer("")),
+                "(defsystem s (requires (uses console.write fair.share)) (platform (uses soc)))",
+            );
+            assert_eq!(d.bound(&write()), Ok(()), "a policy: {names}");
+        }
+    }
+    // The very name refused on `soc` holds where `spare.uart` is composed, at any depth: `soc.deep` composing `bus.bridge`
+    // inside `requires`, which composes it in a clause of its own.
+    let d = naming(
+        &format!(
+            "{}
+             (defblock bus.bridge (offers (bus-width 32 bit)) (uses spare.uart))
+             (defplatform soc.deep (offers (core-count 1 tick) (reachable-at-privilege machine))
+               (requires (uses console.uart bus.bridge)))",
+            writer("(uses spare.uart)")
+        ),
+        "(defsystem s (requires (uses console.write)) (platform (uses soc.deep)))",
     );
+    assert_eq!(d.bound(&write()), Ok(()));
+    // And where the system's own level or a task of it names it: rule 7's hardware is what those name too.
+    for system in [
+        "(defsystem s (requires (uses console.write spare.uart)) (platform (uses soc)))",
+        "(defsystem s (requires (uses console.write))
+           (task log (period 20 ms) (deadline 20 ms) (deadline-from release) (priority 1) (uses spare.uart))
+           (platform (uses soc)))",
+    ] {
+        let d = naming(&writer("(uses spare.uart)"), system);
+        assert_eq!(d.bound(&write()), Ok(()), "{system}");
+    }
+}
+
+#[test]
+fn rule_7_a_name_is_each_serving_system_s_and_never_another_s() {
+    // `s` runs on `soc` and `t` on `board`, each serving the console service; `u`, on `soc`, does not serve it. Check (2)
+    // accepts the description for all three: it is no description-wide refusal.
+    let systems = "
+      (defsystem s (requires (uses console.write)) (platform (uses soc)))
+      (defsystem t (requires (uses console.write)) (platform (uses board)))
+      (defsystem u
+        (task log (period 20 ms) (deadline 20 ms) (deadline-from release) (priority 1) (needs observable-output))
+        (platform (uses soc)))";
+    let serving = |provider: &'static str| -> [Bind; 1] {
+        [(named("console.write"), "observable-output", provider)]
+    };
+    let log: [Bind; 1] = [(task("u", "log"), "observable-output", "console.uart")];
+    for (name, refused, held, provider, other) in [
+        ("spare.uart", "s", "t", "spare.uart", "`t`"),
+        ("console.uart", "t", "s", "console.uart", "`s`"),
+    ] {
+        let d = naming(&writer(&format!("(uses {name})")), systems);
+        let inside = d.plan_for(held, None, &serving(provider));
+        assert_eq!(d.joint(&inside), Ok(()), "{held}");
+        assert_eq!(d.every_check(&inside), Ok(()), "{held}");
+        let bystander = d.plan_for("u", None, &log);
+        assert_eq!(d.joint(&bystander), Ok(()));
+        assert_eq!(d.every_check(&bystander), Ok(()));
+        // The refused system's plan binds what its own hardware offers, and the finding is its own alone.
+        let own = if refused == "s" {
+            "console.uart"
+        } else {
+            "spare.uart"
+        };
+        let outside = d.plan_for(refused, None, &serving(own));
+        let finding = named_outside(
+            d.joint(&outside),
+            ("console.write", "service"),
+            (name, "block"),
+            refused,
+        );
+        assert!(!finding.message.contains(other), "{finding:#?}");
+        named_outside(
+            d.every_check(&outside),
+            ("console.write", "service"),
+            (name, "block"),
+            refused,
+        );
+    }
+}
+
+#[test]
+fn rule_7_a_block_s_own_uses_is_composition_and_judged_by_no_such_conflict() {
+    // Inside the hardware, a block's and a platform's own names compose; nothing is refused.
+    let d = naming(
+        &format!(
+            "{}
+             (defblock bus.bridge (offers (bus-width 32 bit)) (uses spare.uart) (needs board))
+             (defplatform soc.deep (offers (core-count 1 tick) (reachable-at-privilege machine))
+               (requires (uses console.uart bus.bridge)))",
+            writer("")
+        ),
+        "(defsystem s (requires (uses console.write)) (platform (uses soc.deep)))",
+    );
+    assert_eq!(d.bound(&write()), Ok(()));
+    // Outside it too, a block's own names are judged by no conflict: `bus.bridge`, reached through the service alone,
+    // names a block and a platform outside the hardware, and the one conflict is the service's name of `bus.bridge`.
+    let d = naming(
+        &format!(
+            "{}
+             (defblock bus.bridge (offers (bus-width 32 bit)) (uses spare.uart) (needs board))",
+            writer("(uses bus.bridge)")
+        ),
+        ON_SOC,
+    );
+    let finding = named_outside(
+        d.bound(&write()),
+        ("console.write", "service"),
+        ("bus.bridge", "block"),
+        "s",
+    );
+    assert!(
+        !finding.message.contains("spare.uart") && !finding.message.contains("`board`"),
+        "{finding:#?}"
+    );
+    // And a block no served declaration reaches is said nothing of, whatever it names.
+    let d = naming(
+        &format!(
+            "{}
+             (defblock bus.bridge (offers (bus-width 32 bit)) (uses spare.uart))",
+            writer("")
+        ),
+        ON_SOC,
+    );
+    assert_eq!(d.bound(&write()), Ok(()));
+}
+
+#[test]
+fn rule_7_a_name_of_what_the_platform_only_refines_is_outside() {
+    // `refines` is no edge: `soc.next` keeps `soc.base`'s obligations, not its blocks, so `soc.base` and `spare.uart`
+    // are no hardware of `s`.
+    let declarations = |names: &str| {
+        format!(
+            "{}
+             (defplatform soc.base (offers (core-count 1 tick) (reachable-at-privilege machine))
+               (requires (uses spare.uart)))
+             (defplatform soc.next (refines soc.base) (offers (core-count 1 tick) (reachable-at-privilege machine))
+               (requires (uses console.uart)))",
+            writer(names)
+        )
+    };
+    let system = "(defsystem s (requires (uses console.write)) (platform (uses soc.next)))";
+    for (name, kind) in [("soc.base", "platform"), ("spare.uart", "block")] {
+        let d = naming(&declarations(&format!("(uses {name})")), system);
+        named_outside(
+            d.bound(&write()),
+            ("console.write", "service"),
+            (name, kind),
+            "s",
+        );
+    }
+    let d = naming(&declarations("(uses soc.next console.uart)"), system);
+    assert_eq!(d.bound(&write()), Ok(()));
+}
+
+#[test]
+fn rule_7_a_namer_is_any_service_or_policy_the_closure_reaches_and_no_other() {
+    let far = "(defservice console.base (requires) (uses spare.uart))";
+    // Through another service, which names no hardware itself; through a task alone; through a block of the hardware;
+    // through a policy.
+    for (declarations, system) in [
+        (
+            format!("{far} {}", writer("(uses console.base)")),
+            ON_SOC.to_owned(),
+        ),
+        (
+            format!("{far} {}", writer("")),
+            "(defsystem s (requires (uses console.write))
+               (task log (period 20 ms) (deadline 20 ms) (deadline-from release) (priority 1) (uses console.base))
+               (platform (uses soc)))"
+                .to_owned(),
+        ),
+        (
+            format!(
+                "{far} {}
+                 (defblock hook.pin (offers (bus-width 32 bit)) (uses console.base))
+                 (defplatform soc.hooked (offers (core-count 1 tick) (reachable-at-privilege machine))
+                   (requires (uses console.uart hook.pin)))",
+                writer("")
+            ),
+            "(defsystem s (requires (uses console.write)) (platform (uses soc.hooked)))".to_owned(),
+        ),
+        (
+            format!(
+                "{far} {} (defpolicy fair.share (requires) (uses console.base))",
+                writer("")
+            ),
+            "(defsystem s (requires (uses console.write fair.share)) (platform (uses soc)))"
+                .to_owned(),
+        ),
+    ] {
+        let d = naming(&declarations, &system);
+        named_outside(
+            d.bound(&write()),
+            ("console.base", "service"),
+            ("spare.uart", "block"),
+            "s",
+        );
+    }
+    // A service nothing the system serves reaches is another's or nobody's.
+    let d = naming(&format!("{far} {}", writer("")), ON_SOC);
+    assert_eq!(d.bound(&write()), Ok(()));
+}
+
+#[test]
+fn rule_7_judges_each_namer_and_each_name_once() {
+    // One name written at every position is one conflict.
+    let d = naming(&writer(&positions("spare.uart").join(" ")), ON_SOC);
+    named_outside(
+        d.bound(&write()),
+        ("console.write", "service"),
+        ("spare.uart", "block"),
+        "s",
+    );
+    // One namer two tasks and the system reach is one conflict.
+    let d = naming(
+        &writer("(uses spare.uart)"),
+        "(defsystem s (requires (uses console.write))
+           (task a (period 20 ms) (deadline 20 ms) (deadline-from release) (priority 1) (uses console.write))
+           (task b (period 40 ms) (deadline 40 ms) (deadline-from release) (priority 2) (uses console.write))
+           (platform (uses soc)))",
+    );
+    named_outside(
+        d.bound(&write()),
+        ("console.write", "service"),
+        ("spare.uart", "block"),
+        "s",
+    );
+    // Two names of one namer are two conflicts, and one name of two namers.
+    let d = naming(&writer("(uses spare.uart board)"), ON_SOC);
+    let message = refused_description(d.bound(&write()), Status::InfeasibleConfiguration, 7);
+    assert_eq!(message.lines().count(), 2, "{message}");
+    assert!(
+        message.contains("`spare.uart`") && message.contains("`board`"),
+        "{message}"
+    );
+    let d = naming(
+        &format!(
+            "{} (defservice console.flush (requires) (uses spare.uart))",
+            writer("(uses spare.uart)")
+        ),
+        "(defsystem s (requires (uses console.write console.flush)) (platform (uses soc)))",
+    );
+    let message = refused_description(d.bound(&write()), Status::InfeasibleConfiguration, 7);
+    assert_eq!(message.lines().count(), 2, "{message}");
+    assert!(
+        message.contains("`console.write`") && message.contains("`console.flush`"),
+        "{message}"
+    );
+}
+
+#[test]
+fn rule_7_a_name_is_the_verdict_whatever_the_assignment_and_no_check_of_the_bindings_stands_before_it(
+) {
+    let names = ("console.write", "service");
+    let spare = ("spare.uart", "block");
+    let d = naming(&writer("(uses spare.uart)"), ON_SOC);
+    // Two plans checks (3) and (4) accept, one of them bound to the very block: one verdict.
+    let clean = d.plan(None, &write());
+    let inside_out = d.plan(
+        None,
+        &[(named("console.write"), "observable-output", "spare.uart")],
+    );
+    assert_eq!(d.joint(&clean), d.joint(&inside_out));
+    named_outside(d.every_check(&clean), names, spare, "s");
+    named_outside(d.every_check(&inside_out), names, spare, "s");
+    // A plan check (3) refuses, binding nothing, and one check (4) refuses, bound where the fact is not offered: the
+    // description's status, never the plan's.
+    for corrupt in [
+        d.plan(None, &[]),
+        d.plan(
+            None,
+            &[(named("console.write"), "observable-output", "soc")],
+        ),
+    ] {
+        let text = corrupt.to_canonical();
+        assert!(
+            bindings(&d.sources, &d.program, RECORD, &text, &corrupt).is_err(),
+            "checks (3) and (4) refuse it alone:\n{text}"
+        );
+        named_outside(d.every_check(&corrupt), names, spare, "s");
+    }
+    // The block named asks something of its own: a plan leaving it unbound, for a block no binding can make hardware,
+    // is refused for the name too.
+    let d = naming(
+        &format!(
+            "{}
+             (defblock far.timer (offers (bus-width 32 bit)) (requires (counter-width 32 bit)))",
+            writer("(uses far.timer)")
+        ),
+        ON_SOC,
+    );
+    let plan = d.plan(None, &write());
+    let text = plan.to_canonical();
+    let unbound = bindings(&d.sources, &d.program, RECORD, &text, &plan)
+        .expect_err("check (3) refuses the block's unbound requirement alone");
+    assert_eq!(unbound.status, Status::ToolFailure, "{unbound:#?}");
+    assert_eq!(unbound.findings[0].code, PLAN_BINDING, "{unbound:#?}");
+    named_outside(d.every_check(&plan), names, ("far.timer", "block"), "s");
+    // Check (1) still comes first: a stale plan, and a plan for a system the description does not declare, say nothing
+    // of what the description holds.
+    let d = naming(&writer("(uses spare.uart)"), ON_SOC);
+    let mut stale = d.plan(None, &write());
+    stale.program = "0".repeat(64);
+    let verdict = d.every_check(&stale).expect_err("a stale plan");
+    assert_eq!(verdict.status, Status::StaleInput, "{verdict:#?}");
+    assert_eq!(verdict.findings[0].code, PLAN_STALE, "{verdict:#?}");
+    let verdict = d
+        .every_check(&d.plan_for("nowhere", None, &[]))
+        .expect_err("a plan for no system");
+    assert_eq!(verdict.status, Status::ToolFailure, "{verdict:#?}");
+    assert_eq!(verdict.findings[0].code, PLAN_RECORD, "{verdict:#?}");
+}
+
+#[test]
+fn rule_7_a_name_takes_its_place_by_precedence_among_the_description_s_verdicts() {
+    use eadl_front::Verdict as Concluded;
+    // Rule 6's "by precedence", the language's own order: the description's verdicts below rest on it.
+    assert!(
+        Concluded::InvalidDescription.precedence() > Concluded::UnsupportedProfile.precedence()
+    );
+    assert!(
+        Concluded::UnsupportedProfile.precedence()
+            > Concluded::InfeasibleConfiguration.precedence()
+    );
+    assert!(Concluded::InfeasibleConfiguration.precedence() > Concluded::MissingFact.precedence());
+    let kept = |verdict: &Verdict, rule: u32| {
+        assert!(
+            verdict.findings.iter().any(
+                |f| f.code == PLAN_DESCRIPTION && f.message.contains(&format!("(rule {rule})"))
+            ),
+            "{verdict:#?}"
+        );
+    };
+    // Rule 9's stated level, above it: both findings kept, whichever route the plan takes.
+    let d = naming(
+        &writer("(requires (reachable-at-privilege supervisor)) (uses spare.uart)"),
+        ON_SOC,
+    );
+    for verdict in [d.bound(&write()), d.every_check(&d.plan(None, &write()))] {
+        let verdict = verdict.expect_err("refused");
+        assert_eq!(verdict.status, Status::UnsupportedProfile, "{verdict:#?}");
+        kept(&verdict, 9);
+        kept(&verdict, 7);
+    }
+    // A side the relation does not read, above it.
+    let d = naming(
+        &writer("(requires (counter-width (at-least 16 bit)) (counter-width (exactly 8 bit))) (uses spare.uart)"),
+        ON_SOC,
+    );
+    let verdict = d.every_check(&d.plan(None, &write())).expect_err("refused");
+    assert_eq!(verdict.status, Status::InvalidDescription, "{verdict:#?}");
+    kept(&verdict, 7);
+    // Rule 10's unknown, below it where check (5) is called alone; description-wide, check (2) says it first.
+    let d = describe(&format!(
+        "
+      (defblock console.uart (offers (observable-output true) (reachable-at-privilege machine)))
+      (defblock spare.uart (offers (observable-output true) (reachable-at-privilege machine)))
+      (defplatform soc (offers (core-count 1 tick) (reachable-at-privilege machine)
+          (region ram (base 0x8000_0000) (executable true)))
+        (requires (uses console.uart)))
+      {}
+      {ON_SOC}",
+        writer("(uses spare.uart)")
+    ));
+    let plan = d.plan(Some(("soc", "ram")), &write());
+    let verdict = joint(
+        &d.sources,
+        &d.program,
+        &RT_STATIC_UP_V1,
+        RECORD,
+        &plan.to_canonical(),
+        &plan,
+    )
+    .expect_err("refused");
+    assert_eq!(
+        verdict.status,
+        Status::InfeasibleConfiguration,
+        "{verdict:#?}"
+    );
+    kept(&verdict, 10);
+    kept(&verdict, 7);
+    let verdict = d.every_check(&plan).expect_err("refused");
+    assert_eq!(verdict.status, Status::MissingFact, "{verdict:#?}");
+}
+
+#[test]
+fn rule_7_a_name_through_an_import_is_judged_by_its_qualified_name() {
+    let board = "(defmodule hw.board (version 1 0) (export soc console.uart spare.uart)
+  (defblock console.uart (offers (observable-output true) (reachable-at-privilege machine)))
+  (defblock spare.uart (offers (observable-output true) (reachable-at-privilege machine)))
+  (defplatform soc (offers (core-count 1 tick) (reachable-at-privilege machine)) (requires (uses console.uart))))";
+    let imported = |name: &str| {
+        let modules = MemoryModules::new().with("hw.board", board).with(
+            "app",
+            &format!(
+                "(defmodule app (version 1 0) (import hw.board (as hw))
+  (defservice console.write (requires (needs observable-output)) (uses {name}))
+  (defsystem s (requires (uses console.write)) (platform (uses hw.soc))))"
+            ),
+        );
+        let mut sources = SourceMap::new();
+        let (program, diagnostics) = elaborate(&mut sources, &modules, "app");
+        assert!(
+            !diagnostics.has_errors(),
+            "{}",
+            diagnostics.render(&sources)
+        );
+        Description { sources, program }
+    };
+    let bind: [Bind; 1] = [(
+        named("console.write"),
+        "observable-output",
+        "hw.console.uart",
+    )];
+    assert_eq!(imported("hw.console.uart").bound(&bind), Ok(()));
+    let d = imported("hw.spare.uart");
+    let verdict = d.bound(&bind).expect_err("refused");
+    assert_eq!(
+        verdict.status,
+        Status::InfeasibleConfiguration,
+        "{verdict:#?}"
+    );
+    assert_eq!(verdict.findings.len(), 1, "{verdict:#?}");
+    assert!(
+        verdict.findings[0]
+            .message
+            .contains("names `hw.spare.uart`, a block outside the hardware of `s`"),
+        "{verdict:#?}"
+    );
+}
+
+#[test]
+fn rule_7_reaches_a_service_or_a_policy_alone() {
+    // "A service or a policy": a task's and the system's own names are its hardware (above), a block's and a platform's
+    // composition; and a system a system reaches, which the rule's words do not reach, names nothing it is refused for.
+    let d = naming(
+        &writer(""),
+        "(defsystem peer (uses spare.uart) (platform (uses board)))
+         (defsystem s (requires (uses console.write peer)) (platform (uses soc)))",
+    );
+    assert_eq!(d.bound(&write()), Ok(()));
 }
 
 #[test]

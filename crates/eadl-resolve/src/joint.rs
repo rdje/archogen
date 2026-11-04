@@ -225,6 +225,8 @@ pub struct System {
     pub hardware: BTreeSet<String>,
     /// Every declaration a `uses` or `needs` of the system, its tasks, or of what they reach names, at any depth.
     pub reached: BTreeSet<String>,
+    /// Those of `reached` that are another system, reached for its own level alone, which `M1.46` refuses.
+    pub other_systems: BTreeSet<String>,
     /// The privilege level a plan binds the system's callers to, when one is given (model §8 rule 9).
     pub level: Option<String>,
     /// The region a plan places the image in, when one is given (model §8 rule 10): M3 chooses it, `M4.1` the offsets.
@@ -250,12 +252,14 @@ impl System {
             span: system.span(),
         };
         let mut reached = BTreeSet::new();
+        let mut other_systems = BTreeSet::new();
         let mut todo: Vec<Form> = vec![decl.clone()];
         while let Some(at) = todo.pop() {
             for name in named_by(&at) {
                 if let Some(next) = declared.get(name) {
                     if reached.insert(name.to_string()) {
                         todo.push(if next.head() == Some("defsystem") {
+                            other_systems.insert(name.to_string());
                             own_level(next)
                         } else {
                             (*next).clone()
@@ -283,6 +287,7 @@ impl System {
             span: decl.span(),
             hardware,
             reached,
+            other_systems,
             level: None,
             placement: None,
         }
@@ -613,6 +618,20 @@ pub enum Finding {
         /// The relation's verdict there: refused or absent, unknown or undescribed, or past the arithmetic.
         verdict: Verdict,
     },
+    /// A service or a policy a system serves naming a block or platform outside the system's hardware, judged once for
+    /// the system (model §8 rule 7, leaf `M1.49`).
+    NamedOutside {
+        /// The service or policy.
+        namer: String,
+        /// Where it is declared.
+        span: Span,
+        /// The block or platform it names.
+        named: String,
+        /// Where that is declared.
+        declared: Span,
+        /// The system.
+        system: String,
+    },
     /// A requester of a system bound to a block or platform outside the system's hardware (leaf `M3.3.3`).
     Unconnected {
         /// The requester.
@@ -670,6 +689,7 @@ impl Finding {
             Self::OverChannels { .. }
             | Self::Overlap { .. }
             | Self::Unconnected { .. }
+            | Self::NamedOutside { .. }
             | Self::TwoTimeBases { .. }
             | Self::OutOfLevel { .. }
             | Self::PlacementIllegal { .. }
@@ -816,6 +836,23 @@ impl Finding {
                 format!(
                     "compose `{provider}` into `{system}`'s platform, or bind `{requester}` to a provider its \
                      platform composes"
+                ),
+            )
+            .with_secondary(Label::new(*declared, "declared here, outside it")),
+            Self::NamedOutside {
+                namer,
+                span,
+                named,
+                declared,
+                system,
+            } => Diagnostic::error(
+                "infeasible-configuration",
+                format!(
+                    "`{namer}` names `{named}`, which is not part of the hardware of `{system}`, which serves `{namer}`"
+                ),
+                Label::new(*span, "names it here"),
+                format!(
+                    "compose `{named}` into `{system}`'s platform, or have `{namer}` name hardware the platform composes"
                 ),
             )
             .with_secondary(Label::new(*declared, "declared here, outside it")),
@@ -1208,10 +1245,12 @@ pub enum Obligation {
     },
 }
 
-/// What one system's memory map says of placement, judged once for the system (model §8 rule 10).
+/// What one system's hardware says whatever the assignment, judged once for the system: its memory map (model §8 rule
+/// 10), and what it serves naming hardware outside it (rule 7).
 #[derive(Debug, Clone, Default, PartialEq)]
 pub struct Map {
-    /// Two claims on the same bytes, or memory all holes: `invalid-description`.
+    /// Two claims on the same bytes, or memory all holes, `invalid-description`; a name outside the hardware,
+    /// `infeasible-configuration`.
     pub refused: Vec<Finding>,
     /// A size the judgment cannot do without: `missing-fact`.
     pub unknowns: Vec<Finding>,
@@ -1362,6 +1401,8 @@ pub struct Joint<'v> {
     requesters: BTreeMap<String, Kind>,
     /// The declarations each requester names by `uses` or `needs`.
     names: BTreeMap<String, BTreeSet<String>>,
+    /// Where each requester is written.
+    spans: BTreeMap<String, Span>,
     /// Each provider as read, which rule 13 judges requirements at.
     providers: BTreeMap<String, Provider>,
     /// Each requester's requirements on a qualifier but `reachable-at-privilege`, rule 9's (rule 13).
@@ -1470,6 +1511,10 @@ impl<'v> Joint<'v> {
             requesters: requesters
                 .iter()
                 .map(|r| (r.name.clone(), r.kind))
+                .collect(),
+            spans: requesters
+                .iter()
+                .map(|r| (r.name.clone(), r.span))
                 .collect(),
             names: requesters
                 .iter()
@@ -2091,11 +2136,38 @@ impl<'v> Joint<'v> {
         }
     }
 
-    /// Model §8 rule 10, once per system: its placement memory, the holes in it, and what contradicts or blocks it.
+    /// Model §8 rules 7 and 10, once per system: what it serves naming hardware outside it; its placement memory, the
+    /// holes in it, and what contradicts or blocks it.
     #[must_use]
     pub fn map(&self, system: &System) -> Map {
         let regions = self.hardware_regions(system);
         let mut map = Map::default();
+        for (namer, named) in self
+            .names
+            .iter()
+            .flat_map(|(namer, named)| named.iter().map(move |named| (namer, named)))
+        {
+            // The system's own level and its tasks bring what they name in, a block's or a platform's names are
+            // composition, and another system named is `M1.46`'s: only a service or a policy names past the hardware.
+            let hardware = |name: &str| self.held.get(name).is_some_and(|h| h.hardware);
+            let (Some(held), Some(span)) = (self.held.get(named), self.spans.get(namer)) else {
+                continue;
+            };
+            if system.reached.contains(namer)
+                && !system.other_systems.contains(namer)
+                && !hardware(namer)
+                && held.hardware
+                && !system.hardware.contains(named)
+            {
+                map.refused.push(Finding::NamedOutside {
+                    namer: namer.clone(),
+                    span: *span,
+                    named: named.clone(),
+                    declared: held.span,
+                    system: system.name.clone(),
+                });
+            }
+        }
         for (i, (owner, memory)) in regions.iter().enumerate() {
             if !memory.is_memory() {
                 continue;

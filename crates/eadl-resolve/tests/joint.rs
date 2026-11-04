@@ -277,6 +277,12 @@ fn named(f: &Finding) -> String {
             sizeless.0,
             sizeless.1.name
         ),
+        Finding::NamedOutside {
+            namer,
+            named,
+            system,
+            ..
+        } => format!("{} named outside {system}: {namer} {named}", f.code()),
         Finding::MemoryUnsized { system, memory } => {
             format!(
                 "{} size of memory {} {} in {system}",
@@ -1824,6 +1830,54 @@ fn a_bare_region_is_an_offer_that_names_no_byte_range() {
     assert_eq!(
         found.iter().map(named).collect::<Vec<_>>(),
         ["invalid-description b: a region is named first"]
+    );
+}
+
+#[test]
+fn a_service_naming_hardware_outside_the_system_is_that_system_s_conflict() {
+    // `M1.49`, model §8 rule 7: "a block that only a service names is not hardware", so the name is no path into it.
+    let v = vocabulary();
+    let text = |platform: &str| {
+        format!(
+            "(defblock blk (offers (observable-output true) (reachable-at-privilege machine)))
+(defplatform soc (offers (core-count 1 tick) (reachable-at-privilege machine)) {platform})
+(defservice drv (requires (uses blk)))
+{}",
+            one_task_system("(uses drv)", "\n  (platform (uses soc))")
+        )
+    };
+    assert_eq!(
+        map_of(&text(""), &v).0,
+        ["infeasible-configuration named outside s: drv blk"]
+    );
+    // Composed by the platform, the same name is a path inside it.
+    assert!(map_of(&text("(requires (uses blk))"), &v).0.is_empty());
+    // A second system the name leaves inside its hardware is not refused for it, and the first is (rule 7: each
+    // serving system's).
+    let two = format!(
+        "{}\n(defplatform soc2 (offers (core-count 1 tick) (reachable-at-privilege machine)) (requires (uses blk)))
+(defsystem s2 (task t (period 10 ms) (deadline 10 ms) (deadline-from release) (priority 1) (uses drv)) (platform (uses soc2)))",
+        text("")
+    );
+    let read = Read::of(&two, &v);
+    let joint = read.joint(&v).expect("reads");
+    let outcomes: Vec<(String, Vec<String>)> = read
+        .systems()
+        .into_iter()
+        .map(|system| {
+            let refused = joint.map(&system).refused.iter().map(named).collect();
+            (system.name, refused)
+        })
+        .collect();
+    assert_eq!(
+        outcomes,
+        [
+            (
+                "s".to_string(),
+                vec!["infeasible-configuration named outside s: drv blk".to_string()]
+            ),
+            ("s2".to_string(), vec![]),
+        ]
     );
 }
 

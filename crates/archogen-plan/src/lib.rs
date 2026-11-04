@@ -226,8 +226,8 @@ struct Timing {
 /// source itself; a declaration or a task the system serves naming a system; a block or a platform the system serves
 /// naming what is not hardware; and what `/1` cannot lower — a duration past the exact arithmetic, placement memory, a
 /// system with no task, a deadline measured from an event other than the release, an alarm or an expiry a task or the
-/// system's own level would receive, a block or a platform the system serves outside its hardware. Then §2.4's: an
-/// obliged value that is not a duration.
+/// system's own level would receive. Then §2.4's: an obliged value that is not a duration. A block or a platform a
+/// service or a policy names outside the system's hardware is the joint rules' to refuse (model §8 rule 7, `M1.49`).
 #[allow(clippy::too_many_lines)]
 pub fn lower(
     program: &Program,
@@ -777,41 +777,6 @@ pub fn lower(
             "unsupported-profile",
             format!(
                 "{}: no context runs a job's code in an interrupt, and how a job receives an alarm it programs itself or an expiry, and what the system's own level's requirement for either means, are `M4.1.6`'s",
-                named.join("; ")
-            ),
-        ));
-    }
-
-    // §1: a block or a platform the system serves outside its hardware (model §8 rule 7), each by the namer's text and
-    // then the hardware's, byte by byte (R20-D3).
-    let mut outside: Vec<(&str, &str)> = rebuilt
-        .requesters
-        .iter()
-        .filter(|r| {
-            rebuilt.system.serves(&r.name) && !declared(&r.name).is_some_and(is_hardware_decl)
-        })
-        .flat_map(|r| {
-            r.uses
-                .iter()
-                .chain(&r.needs)
-                .filter(|n| {
-                    declared(n).is_some_and(is_hardware_decl)
-                        && !rebuilt.system.hardware.contains(n.as_str())
-                })
-                .map(move |n| (r.name.as_str(), n.as_str()))
-        })
-        .collect();
-    outside.sort();
-    outside.dedup();
-    if !outside.is_empty() {
-        let named: Vec<String> = outside
-            .iter()
-            .map(|(namer, n)| format!("`{namer}` names `{n}`"))
-            .collect();
-        return Err(refuse(
-            "unsupported-profile",
-            format!(
-                "{}: a block or a platform outside the system's hardware, which model §8 rule 7 makes no hardware, and `/1` places no code for a device the system does not have; `M1.49` decides whether such a name is a path into the hardware or a conflict of each system serving it",
                 named.join("; ")
             ),
         ));
