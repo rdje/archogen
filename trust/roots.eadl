@@ -7,7 +7,7 @@
   (role generator)
   (package "crates/archogen-cli")
   (target bin archogen)
-  (role-packages "crates/archogen-cli" "crates/archogen-api" "crates/archogen-s0" "crates/eadl-resolve")
+  (role-packages "crates/archogen-cli" "crates/archogen-api" "crates/archogen-plan" "crates/archogen-s0" "crates/eadl-resolve")
   (invokes configuration-checker)
   (installed "archogen-install.json"))
 

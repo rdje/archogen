@@ -27,12 +27,12 @@ exist.
 | id | What S0 hard-codes | Removed by |
 | --- | --- | --- |
 | `horizon-is-one-hyperperiod` | the generated system is observed for exactly one hyperperiod, because any other run length would be arbitrary | `M4.3` |
-| `whole-millisecond-periods` | every declared period must be an exact whole number of milliseconds; S0's modeled clock has no finer tick | `M4.1` |
+| `whole-millisecond-periods` | every declared period must be an exact whole number of milliseconds; S0's modeled clock has no finer tick | `M4.2` |
 | `periodic-releases-only` | a task with a minimum separation is refused; no event source is modeled | `M4.3` |
 | `fixed-observation-format` | the `system` / `release` / `summary` line format is fixed inside the engine and is not the §6.3 observation event set | `M4.3` |
 | `stdout-is-observable-output` | `observable-output` is realized by writing to standard output, with no device model behind it | `M4.3` |
 | `single-fixed-realization` | one realization is selected unconditionally; there is no candidate enumeration and no provider search | `M3.1` |
-| `no-lock-data` | no lock data is emitted, so `--locked` is refused rather than honored | `M4.1` |
+| `no-lock-data` | no lock data is emitted, so `--locked` is refused rather than honored | `M4.7` |
 | `plan-is-not-independently-checked` | the plan the emitter consumes is the one the interpreter produced; nothing re-validates it against the description | `M3.5` |
 | `catalog-record-is-a-stub` | `provenance.json`'s `realization` carries four of §9's fourteen catalog fields | `M2.7` |
 | `no-assurance-report` | no per-property report is produced; the build makes no claim of any kind | `M4.8` |

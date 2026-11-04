@@ -50,7 +50,7 @@ COMMANDS:
 | Command | Does | Built by |
 | --- | --- | --- |
 | `archogen check <DESCRIPTION> [--profile <PROFILE>]` | elaborate and type-check a description against a profile | **built** — a description is one file or a module tree; see [Checking a description](checking.md) and [Modules and composition](modules.md) |
-| `archogen resolve <DESCRIPTION> [--profile <P>] [--locked] --out <PLAN> [--unchecked] [--system <NAME>]` | resolve providers and resources into an independently checked build plan | **experimental** — one system of a description, a module tree among them, over its own blocks and platforms, the plan checked by `archogen-plan-check`; `--locked` refused until `M4.1`; `M3.7` adds the catalog's providers, completing it |
+| `archogen resolve <DESCRIPTION> [--profile <P>] [--locked] --out <PLAN> [--unchecked] [--system <NAME>]` | resolve providers and resources into an independently checked build plan | **experimental** — one system of a description, a module tree among them, over its own blocks and platforms, the plan checked by `archogen-plan-check`; `--locked` refused until `M4.7`; `M3.7` adds the catalog's providers, completing it |
 | `archogen plan-check <DESCRIPTION> <PLAN>` | check a resolved plan against its description, by the independent configuration checker | **built** — runs the configuration checker's own executable, `archogen-plan-check`, from an install, its arguments handed over unparsed; see [Checking a plan](plan-check.md) |
 | `archogen build <DESCRIPTION> [--profile <P>] --out <DIR>` | generate, assemble and build a complete system and its simulator | **experimental** — the S0 path only, see [The S0 early generation path](s0.md); leaf `M4.2` completes it |
 | `archogen analyze <BUILD> --property <PROPERTY>` | run an analysis for one named property | leaf `M2.21.2` |
@@ -138,7 +138,7 @@ it means (leaf `M3.2.6.1`, [The engine API](engine-api.md#the-second-operation-r
 its record written in `plan.json.check/`, and the command's status is the checker's verdict. A description the search
 cannot resolve writes no plan and exits with the search's verdict — `periodic-three` is `missing-fact` today, its
 timer offering a width and no modulus and its policy's constraints waiting on the catalog — and `--locked` is refused
-until lock data exists (`M4.1`). `--system` names the system when a description declares several.
+until lock data exists (`M4.7`). `--system` names the system when a description declares several.
 
 `archogen explain` (leaf `M3.4.13.2`) says what the search did with one requirement: `--requirement` names the fact,
 and `--requester` or `--task` narrows it to one requester's; without either, each requester of the system requiring

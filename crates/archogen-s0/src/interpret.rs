@@ -195,8 +195,8 @@ fn task(form: &Form) -> Result<Task, Box<Diagnostic>> {
 /// `ms` would refuse the first, which is a restriction on *spelling* rather than on anything the
 /// realization actually cannot do.
 fn whole_milliseconds(clause: &Form, task_name: &str) -> Result<i64, Box<Diagnostic>> {
-    // S0-ASSUMPTION: whole-millisecond-periods — S0's modeled clock has no finer tick. `M4.1`
-    // carries exact rational time in the plan.
+    // S0-ASSUMPTION: whole-millisecond-periods — S0's modeled clock has no finer tick. The
+    // runtime plan carries exact rational time, and `M4.2` builds from it.
     let quantity = Quantity::read(clause.items().get(1), clause.items().get(2), clause.span())?;
     let millisecond = unit("ms").expect("`ms` is in the unit table");
     let Ok(converted) = quantity.convert_to(millisecond) else {
@@ -225,7 +225,7 @@ fn whole_milliseconds(clause: &Form, task_name: &str) -> Result<i64, Box<Diagnos
             Label::new(clause.span(), "not a whole number of milliseconds"),
             "this is missing engine support, not an impossible request: S0's modeled clock ticks \
              in whole milliseconds, and the exact rational time base that removes the \
-             restriction is task-tree leaf `M4.1`. To build today, express the period as a whole \
+             restriction is task-tree leaf `M4.2`. To build today, express the period as a whole \
              number of milliseconds",
         )));
     }
@@ -376,7 +376,7 @@ mod tests {
         assert_eq!(code, "unsupported-profile");
         assert!(text.contains("whole-millisecond"), "{text}");
         assert!(
-            text.contains("M4.1"),
+            text.contains("M4.2"),
             "the refusal must name its leaf: {text}"
         );
     }

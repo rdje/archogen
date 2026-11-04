@@ -188,7 +188,7 @@ fn a_description_that_does_not_check_does_not_build() {
 fn locked_is_refused_rather_than_accepted_and_ignored() {
     // ⛔ The S0 path emits no lock data, so it cannot honor `--locked` — and a build that took
     // the flag silently would be an unlocked build wearing a locked build's label. §10.3 makes
-    // lock data a build output; leaf `M4.1` owns producing it.
+    // lock data a build output; leaf `M4.7` owns producing it.
     let dir = out_dir("locked");
     let (status, out, err) = build(&[
         "build",
@@ -201,7 +201,7 @@ fn locked_is_refused_rather_than_accepted_and_ignored() {
     assert_eq!(status.code(), 20);
     assert!(!dir.exists(), "a refused build created {}", dir.display());
     assert!(out.is_empty(), "{out}");
-    assert!(err.contains("M4.1"), "{err}");
+    assert!(err.contains("M4.7"), "{err}");
 }
 
 #[test]

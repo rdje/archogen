@@ -116,7 +116,7 @@ pub const RT_STATIC_UP_V1: Profile = Profile {
                 },
                 Part {
                     rule: "one execution context runs at a time",
-                    stage: Stage::Later { stage: "build", owner: "M4.1" },
+                    stage: Stage::Later { stage: "build", owner: "M4.2" },
                 },
             ],
         },

@@ -113,7 +113,7 @@ Leaf `S0.6` owns the retirement note. These are the temporary decisions this cor
 | Assumption | Retired by |
 | --- | --- |
 | The observation horizon is exactly one hyperperiod | `M4.3` — the harness declares its own observation policy |
-| Task periods must be whole milliseconds | `M4.1` — the plan carries exact rational time |
+| Task periods must be whole milliseconds | `M4.2` — the runtime plan carries exact rational time |
 | The event format above is fixed and engine-internal | `M4.3` — the §6.3 observation event set |
 | Only periodic releases are realized | `M4.3` — the modeled event source |
 | One fixed engine-owned realization, no provider search | `M3` — joint resolution |

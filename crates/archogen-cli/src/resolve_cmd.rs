@@ -5,7 +5,7 @@
 //!
 //! # The order of operations is the contract
 //!
-//! 1. Refuse `--locked` before reading anything: there is no lock data to honor it with until `M4.1`, and a plan that
+//! 1. Refuse `--locked` before reading anything: there is no lock data to honor it with until `M4.7`, and a plan that
 //!    accepted the flag silently would be an unlocked one wearing a locked one's label.
 //! 2. Ask the **engine API**'s `resolve` ([`archogen_api::resolve_with`]), the search alone, with `unchecked` set — it
 //!    checks the description as `archogen check` does, and answers the check's verdict for one it does not accept,
@@ -60,7 +60,7 @@ pub fn run(
             err,
             "  hint: there is no lock data yet to check a resolution against, and a plan that accepted the flag \
              silently would be an unlocked one wearing a locked one's label. Lock data is ROADMAP.md §10.3 and \
-             task-tree leaf M4.1. Re-run without `--locked`"
+             task-tree leaf M4.7. Re-run without `--locked`"
         );
         Some(Status::Unimplemented)
     };
