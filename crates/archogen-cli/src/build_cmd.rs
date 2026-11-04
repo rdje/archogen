@@ -18,14 +18,14 @@
 //! so nothing else reaches this file: the command table excludes it, and only the command line holds a launcher.
 
 use std::io::Write;
-use std::path::{Path, PathBuf};
+use std::path::{Component, Path, PathBuf};
 
 use archogen_api::{Elaborated, Limits, Plan, Resolve, Response};
 use archogen_digest::Digest;
 use archogen_emit::{emit, Emitted, Inputs, ASSIGNMENT_FILE};
 use archogen_plan::{lower_checked, Acceptance, Generator, Refusal};
 
-use crate::built::Built;
+use crate::built::{Built, CARRIED};
 use crate::check_cmd::{ask_with, report_not_judged};
 use crate::cli::Parsed;
 use crate::consume::{self, Checked, Expected};
@@ -122,26 +122,26 @@ pub fn run(
         }
     };
     match place.land() {
-        Ok(leftover) => {
-            if let Some(error) = leftover {
-                let _ = writeln!(
-                    err,
-                    "archogen: the package is in place, and the earlier one stays at {}: {error}; remove it",
-                    place.replaced.display()
-                );
-            }
+        Ok(None) => {}
+        Ok(Some(remains)) => {
+            let _ = writeln!(
+                err,
+                "archogen: the package is in place, and {} keeps what could not go or what no build wrote: {remains}; \
+                 look at it, and remove it",
+                place.replaced.display()
+            );
         }
-        Err(error) => {
+        Err(why) => {
             place.abandon();
             let _ = writeln!(
                 err,
-                "archogen: {}: cannot put the generated package in place at {}: {error}",
+                "archogen: {}: cannot put the generated package in place at {}: {why}",
                 Status::ToolFailure.slug(),
                 place.dir.display()
             );
             let _ = writeln!(
                 err,
-                "  hint: give `--out` a writable directory on the same filesystem as the project"
+                "  hint: give `--out` a directory whose parent can be written"
             );
             return Status::ToolFailure;
         }
@@ -152,17 +152,18 @@ pub fn run(
 
 /// Where a package goes: `dir`, by way of a stage beside it, so that it lands whole.
 ///
-/// ⛔ **A build deletes nothing it did not write.** It removes only a stage this very run made, and an earlier build that
-/// [`Built`] finds exactly as a build wrote it: every file listed and unchanged, nothing unlisted. Anything else is
-/// refused and left alone, a stage some other run left among it: a run that stopped, or the report of a disagreement,
-/// which is not this run's to delete.
+/// ⛔ **A build deletes nothing it did not write.** With `remove_dir_all` it removes only a stage this very run made. Of an
+/// earlier build it removes each file [`Built`] lists, file by file and only if still as written, and the directories that
+/// held them where that leaves them empty. So whatever appears meanwhile, or is edited, stays, and the command says so. What
+/// [`crate::built::CARRIED`] names is moved to the new package. Anything else is refused and left alone, a stage some other run
+/// left among it: a run that stopped, or the report of a disagreement, which is not this run's to delete.
 struct Place {
     dir: PathBuf,
     stage: PathBuf,
     /// Where an earlier build waits between the two renames.
     replaced: PathBuf,
-    /// Whether something stands at `dir`.
-    occupied: bool,
+    /// What stands at `dir` now, if anything: its mode, and the build it is, if it holds one.
+    occupied: Option<(std::fs::Permissions, Option<Built>)>,
     /// The directories this run must make to reach `dir`, innermost first.
     made: Vec<PathBuf>,
 }
@@ -178,6 +179,22 @@ impl Place {
                 format!("`--out {out_dir}` names no directory of its own"),
                 "name a directory to hold the generated package",
             ));
+        }
+        // `missing/../here` reads as absent until `missing` is made, and is `here` after.
+        let mut after_a_name = false;
+        for part in dir.components() {
+            match part {
+                Component::Normal(_) => after_a_name = true,
+                Component::ParentDir if after_a_name => {
+                    return Err(usage(
+                        format!(
+                        "`--out {out_dir}` goes back through a name, and a name may not exist yet"
+                    ),
+                        "name the directory without `..` after a name",
+                    ))
+                }
+                _ => {}
+            }
         }
         let beside = |suffix: &str| {
             let mut name = dir.as_os_str().to_owned();
@@ -198,7 +215,7 @@ impl Place {
             }
         }
         let occupied = match std::fs::symlink_metadata(&dir) {
-            Err(error) if error.kind() == std::io::ErrorKind::NotFound => false,
+            Err(error) if error.kind() == std::io::ErrorKind::NotFound => None,
             Err(error) => {
                 return Err(usage(
                     format!("cannot use `--out {out_dir}`: {error}"),
@@ -214,30 +231,32 @@ impl Place {
                     "name the directory itself, not a file or a link to it",
                 ))
             }
-            Ok(_) => true,
-        };
-        if occupied {
-            let empty = std::fs::read_dir(&dir)
-                .map_err(|error| {
-                    usage(
-                        format!("cannot use `--out {out_dir}`: {error}"),
-                        "name another directory",
-                    )
-                })?
-                .next()
-                .is_none();
-            if !empty {
-                Self::earlier_build(&dir).map_err(|why| {
-                    usage(
-                        format!(
-                            "`--out {out_dir}` is not an earlier build as a build wrote it, and a build deletes nothing \
-                             it did not write: {why}"
-                        ),
-                        "name a new directory, or move what is yours out of it",
-                    )
-                })?;
+            Ok(meta) => {
+                let empty = std::fs::read_dir(&dir)
+                    .map_err(|error| {
+                        usage(
+                            format!("cannot use `--out {out_dir}`: {error}"),
+                            "name another directory",
+                        )
+                    })?
+                    .next()
+                    .is_none();
+                let earlier = if empty {
+                    None
+                } else {
+                    Some(Self::earlier_build(&dir).map_err(|why| {
+                        usage(
+                            format!(
+                                "`--out {out_dir}` is not an earlier build as a build wrote it, and a build deletes nothing \
+                                 it did not write: {why}"
+                            ),
+                            "name a new directory, or move what is yours out of it",
+                        )
+                    })?)
+                };
+                Some((meta.permissions(), earlier))
             }
-        }
+        };
         let mut made = Vec::new();
         let mut parent = dir.parent();
         while let Some(up) = parent.filter(|up| !up.as_os_str().is_empty() && !up.exists()) {
@@ -253,12 +272,12 @@ impl Place {
         })
     }
 
-    /// Why `dir` is not exactly a build's, if it is not.
-    fn earlier_build(dir: &Path) -> Result<(), String> {
+    /// `dir` as the earlier build it is, or why it is not exactly a build's.
+    fn earlier_build(dir: &Path) -> Result<Built, String> {
         let built = Built::read(dir)?;
         match built.edited(dir).or_else(|| built.foreign(dir)) {
             Some(why) => Err(why),
-            None => Ok(()),
+            None => Ok(built),
         }
     }
 
@@ -286,25 +305,71 @@ impl Place {
         }
     }
 
-    /// The package in place, and any trouble removing what it replaced, which leaves the new package standing. Two
-    /// renames, so `dir` is at every moment a whole package or absent, and an earlier build is restored if the second
-    /// fails.
-    fn land(&self) -> std::io::Result<Option<std::io::Error>> {
-        if self.occupied {
-            std::fs::rename(&self.dir, &self.replaced)?;
-        }
+    /// The package in place, by two renames, so `dir` is at every moment a whole package or absent, and an earlier build is
+    /// restored if the second fails, or named if it cannot be. Then what it replaced goes as [`Place`] says, and what is
+    /// left there, if anything, is the answer: the new package stands either way.
+    fn land(&self) -> Result<Option<String>, String> {
+        let Some((mode, earlier)) = &self.occupied else {
+            return std::fs::rename(&self.stage, &self.dir)
+                .map(|()| None)
+                .map_err(|error| error.to_string());
+        };
+        // A directory of yours keeps the mode you gave it, a private one staying private.
+        std::fs::set_permissions(&self.stage, mode.clone()).map_err(|error| error.to_string())?;
+        std::fs::rename(&self.dir, &self.replaced).map_err(|error| error.to_string())?;
         if let Err(error) = std::fs::rename(&self.stage, &self.dir) {
-            if self.occupied {
-                let _ = std::fs::rename(&self.replaced, &self.dir);
-            }
-            return Err(error);
+            return Err(match std::fs::rename(&self.replaced, &self.dir) {
+                Ok(()) => error.to_string(),
+                Err(again) => format!(
+                    "{error}; and what stood there could not be put back ({again}), and is at {}",
+                    self.replaced.display()
+                ),
+            });
         }
-        if self.occupied {
-            if let Err(error) = std::fs::remove_dir_all(&self.replaced) {
-                return Ok(Some(error));
+        for name in CARRIED {
+            let from = self.replaced.join(name);
+            if std::fs::symlink_metadata(&from).is_ok() {
+                let _ = std::fs::rename(&from, self.dir.join(name));
             }
         }
-        Ok(None)
+        if let Some(earlier) = earlier {
+            earlier.remove(&self.replaced);
+        }
+        if std::fs::remove_dir(&self.replaced).is_ok() {
+            return Ok(None);
+        }
+        let mut remains: Vec<String> = Vec::new();
+        let mut pending = vec![self.replaced.clone()];
+        while let Some(next) = pending.pop() {
+            for entry in std::fs::read_dir(&next).into_iter().flatten().flatten() {
+                let found = entry.path();
+                if entry.file_type().is_ok_and(|kind| kind.is_dir()) {
+                    pending.push(found);
+                } else {
+                    remains.push(
+                        found
+                            .strip_prefix(&self.replaced)
+                            .unwrap_or(&found)
+                            .display()
+                            .to_string(),
+                    );
+                }
+            }
+        }
+        remains.sort();
+        let shown = remains
+            .iter()
+            .take(5)
+            .cloned()
+            .collect::<Vec<_>>()
+            .join(", ");
+        Ok(Some(if remains.len() > 5 {
+            format!("{shown} and {} more", remains.len() - 5)
+        } else if shown.is_empty() {
+            "directories".to_owned()
+        } else {
+            shown
+        }))
     }
 }
 
@@ -337,10 +402,7 @@ impl Build<'_> {
             acceptance,
         )
         .map_err(Failed::Refused)?;
-        let language: Vec<String> = archogen_api::kind_modules()
-            .into_iter()
-            .map(|(name, _)| name)
-            .collect();
+        let language = archogen_api::kind_modules();
         let inputs = Inputs {
             program,
             sources: &self.response.sources,
@@ -468,7 +530,7 @@ fn refused(failed: &Failed, path: &str, err: &mut dyn Write) -> Status {
             );
             let _ = writeln!(
                 err,
-                "  hint: give `--out` a writable directory on the same filesystem as the project"
+                "  hint: give `--out` a directory whose parent can be written"
             );
             Status::ToolFailure
         }

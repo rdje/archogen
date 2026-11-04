@@ -29,3 +29,25 @@ reproducer through the code. H1-1, H1-2, H1-3, H1-5, H1-6, H1-7, H1-8 and H1-9 w
 Also said, and left as it stands: the generator cannot compile against the runtime, so a table it writes is first compiled when
 the package is, a test building and running each shape; the admissions hash `COPIES`'s extent and not the copied bytes, so the test
 is the only binding, and the record says so.
+
+**Round 2** — `2026-11-04`: not acceptable, 12 findings. Its reader ran the toolchain, an install of `5c136b19`'s code, over 196
+descriptions, and found "a build deletes nothing it did not write" still false by several routes. The explain answer and the
+arithmetic of the run's bound held. Of round 1, H1-2 was not closed; H1-3 and H1-13 held but for the rows below.
+
+| # | Kind | Finding | Answer |
+| --- | --- | --- | --- |
+| H2-1 | defect | `target` and `Cargo.lock` were exempted by name, whatever they held, so a file of mine under them, or the description being built, was deleted; a test asserted it | What those names hold is carried to the new package, not judged and not deleted. `.DS_Store` with them, the desktop's. Cargo's output now survives a rebuild too |
+| H2-2 | defect | an earlier build was checked once and later removed whole, so a file written meanwhile went with exit 0 | Removal by the list: each file only if still as written, then the directories that held them where left empty. What appears meanwhile stays at `DIR.replaced`, and the command names it |
+| H2-3 | defect | the run's bound came before `(released-by (unknown CAUSE))`, and hid its code, its task and its repair | The unknown cause is refused first |
+| H2-4 | defect | an empty directory of mine passed as no foreign thing, and went | A directory that holds no listed file is no build's, empty or not |
+| H2-5 | gap | `provenance.json` was outside every check: a note in it unnoticed by `explain` and deleted by `build`, a link accepted, a pipe hanging both, `"files": []` accepted | Format `/4`'s `self`, its own digest over its text. A regular file, read within a bound. A list lacking what every build writes is no build's |
+| H2-6 | gap | `explain` asked `edited` and never `foreign`, so a `build.rs` added changed what the package did and was called healthy | `explain` asks both, as `build` does |
+| H2-7 | gap | a source-released task's own minimum separation entered the hyperperiod, though the run releases it only at arrivals: a plan refused that should run, and a header overclaiming | The hyperperiod is of what the run repeats: each timer-released task's period and each arriving source's separation |
+| H2-8 | gap | deadlines and jitters set the tick, though no table holds them, and a refusal blamed the wrong duration | The tick is of those same durations |
+| H2-9 | gap | an empty `--out` was renamed away, and a private directory's mode lost | The new package takes the mode of what it replaces; the record says an empty directory is removed too, and a mount point fails safe |
+| H2-10 | wording | "the earlier one stays at" was false once removal stopped part way | It says what `DIR.replaced` keeps, naming it; a test holds the new package whole against a clean build |
+| H2-11 | gap | a failed restore was dropped, and the command said nothing of where the earlier build was | The refusal names where it is. Not forced in a test: it needs something to appear at `DIR` between two renames |
+| H2-12 | gap | `--out missing/../x` read as absent and resolved after; a stale hint; a test line asserting nothing; `std::env::args` panicking on a non-UTF-8 argument, exit 101, a code no status has; a lossy name compared with a list; a description at a definition's path left unrecorded | Refused; reworded; removed; `args_os` and `usage`; a name that is no text is foreign; the language filtered by name and text |
+
+Said, and left as it stands: `.DS_Store` deeper than the top still refuses, naming it; durability across a power loss is not claimed,
+there being no sync call. The two renames say nothing of that.

@@ -475,13 +475,20 @@ fn an_earlier_build_is_replaced_and_stays_when_the_next_is_refused() {
     let dir = root.join("out");
     let (status, _, err) = build(&example(HEARTBEAT), &dir);
     assert_eq!(status, Status::Ok, "{err}");
-    // What building the package leaves is a build's too.
+    // What building the package leaves goes with it, untouched: a build wrote none of it, so none of it is a build's to delete.
     fs::create_dir_all(dir.join("target/debug")).expect("a directory");
     fs::write(dir.join("target/debug/heartbeat"), "cargo's").expect("written");
     fs::write(dir.join("Cargo.lock"), "cargo's").expect("written");
     let (status, _, err) = build(&example("examples/s0-heartbeat/system-changed.eadl"), &dir);
     assert_eq!(status, Status::Ok, "{err}");
-    assert!(!dir.join("target").exists() && !dir.join("Cargo.lock").exists());
+    assert_eq!(
+        fs::read_to_string(dir.join("target/debug/heartbeat")).expect("carried"),
+        "cargo's"
+    );
+    assert_eq!(
+        fs::read_to_string(dir.join("Cargo.lock")).expect("carried"),
+        "cargo's"
+    );
     assert!(!scratch_has_stage(&dir) && !beside(&dir, ".replaced").exists());
     let replaced = snapshot(&dir);
     let (status, _, err) = build(
@@ -591,11 +598,155 @@ fn a_build_deletes_nothing_it_did_not_write() {
     let (status, _, err) = build(&recorded, &earlier);
     assert_eq!(status, Status::Ok, "{err}");
 
-    // An empty directory takes a build.
+    // An empty directory of mine beside a build, at any depth, is mine.
+    let (status, _, err) = build(&description, &earlier);
+    assert_eq!(status, Status::Ok, "{err}");
+    fs::create_dir_all(earlier.join("photos/2026")).expect("a directory");
+    let (status, _, err) = build(&description, &earlier);
+    assert_eq!(status, Status::Usage, "{err}");
+    assert!(err.contains("`photos` is no file a build wrote"), "{err}");
+    assert!(earlier.join("photos/2026").is_dir());
+    fs::remove_dir_all(earlier.join("photos")).expect("removed");
+
+    // Whatever stands under the names cargo uses is carried, not judged: mine under `target`, a file named `target`, a
+    // directory named `Cargo.lock`, and the description being built.
+    let (status, _, err) = build(&description, &earlier);
+    assert_eq!(status, Status::Ok, "{err}");
+    fs::create_dir_all(earlier.join("target/thesis")).expect("a directory");
+    fs::write(earlier.join("target/thesis/ch1.txt"), "mine").expect("written");
+    let inside = earlier.join("target/mine.eadl");
+    fs::write(&inside, &text).expect("written");
+    fs::create_dir_all(earlier.join("Cargo.lock")).expect("a directory");
+    fs::write(earlier.join("Cargo.lock/notes"), "mine").expect("written");
+    let (status, _, err) = build(&inside.display().to_string(), &earlier);
+    assert_eq!(status, Status::Ok, "{err}");
+    assert_eq!(
+        fs::read_to_string(earlier.join("target/thesis/ch1.txt")).expect("kept"),
+        "mine"
+    );
+    assert!(inside.is_file(), "the description was deleted");
+    assert_eq!(
+        fs::read_to_string(earlier.join("Cargo.lock/notes")).expect("kept"),
+        "mine"
+    );
+    let fresh = root.join("named-target");
+    let (status, _, err) = build(&description, &fresh);
+    assert_eq!(status, Status::Ok, "{err}");
+    fs::write(fresh.join("target"), "mine").expect("written");
+    let (status, _, err) = build(&description, &fresh);
+    assert_eq!(status, Status::Ok, "{err}");
+    assert_eq!(
+        fs::read_to_string(fresh.join("target")).expect("kept"),
+        "mine"
+    );
+
+    // An empty directory takes a build, keeping the mode it was given.
     let empty = root.join("empty");
     fs::create_dir_all(&empty).expect("a directory");
+    #[cfg(unix)]
+    {
+        use std::os::unix::fs::PermissionsExt;
+        fs::set_permissions(&empty, fs::Permissions::from_mode(0o700)).expect("private");
+    }
     let (status, _, err) = build(&description, &empty);
     assert_eq!(status, Status::Ok, "{err}");
+    assert!(empty.join("Cargo.toml").is_file());
+    #[cfg(unix)]
+    {
+        use std::os::unix::fs::PermissionsExt;
+        let mode = fs::metadata(&empty)
+            .expect("a directory")
+            .permissions()
+            .mode();
+        assert_eq!(
+            mode & 0o777,
+            0o700,
+            "a private directory became readable by others"
+        );
+    }
+}
+
+/// The checker, with something appearing in the place while it runs.
+struct Meddling {
+    file: PathBuf,
+}
+
+impl Launch for Meddling {
+    fn launch(
+        &self,
+        program: &str,
+        args: &[String],
+        out: &mut dyn Write,
+        err: &mut dyn Write,
+    ) -> Result<Launched, Unlaunched> {
+        fs::write(&self.file, "mine").expect("written");
+        Checker.launch(program, args, out, err)
+    }
+}
+
+#[test]
+fn what_appears_while_a_build_runs_stays_and_is_said() {
+    let root = scratch("meanwhile");
+    let dir = root.join("out");
+    let description = example(HEARTBEAT);
+    let (status, _, err) = build(&description, &dir);
+    assert_eq!(status, Status::Ok, "{err}");
+    let (status, _, err) = invoke(
+        &["build", &description, "--out", &dir.display().to_string()],
+        &Meddling {
+            file: dir.join("thesis.txt"),
+        },
+    );
+    assert_eq!(status, Status::Ok, "{err}");
+    let replaced = beside(&dir, ".replaced");
+    assert_eq!(
+        fs::read_to_string(replaced.join("thesis.txt")).expect("kept"),
+        "mine"
+    );
+    assert!(err.contains("keeps what could not go"), "{err}");
+    assert!(err.contains("thesis.txt"), "{err}");
+    assert!(
+        !replaced.join("Cargo.toml").exists(),
+        "what the earlier build wrote stays behind"
+    );
+    assert!(dir.join("src/main.rs").is_file());
+    // The next build does not take it for its own.
+    let (status, _, err) = build(&description, &dir);
+    assert_eq!(status, Status::Usage, "{err}");
+    assert_eq!(
+        fs::read_to_string(replaced.join("thesis.txt")).expect("kept"),
+        "mine"
+    );
+}
+
+#[test]
+fn an_out_that_goes_back_through_a_name_is_refused() {
+    let root = scratch("through");
+    let target = format!("{}/missing/../here", root.display());
+    let (status, _, err) = invoke(&["build", &example(HEARTBEAT), "--out", &target], &Checker);
+    assert_eq!(status, Status::Usage, "{err}");
+    assert!(err.contains("without `..` after a name"), "{err}");
+    assert!(!root.join("missing").exists() && !root.join("here").exists());
+}
+
+#[test]
+#[cfg(unix)]
+fn an_argument_that_is_no_text_is_a_usage_error_from_the_executable() {
+    use std::os::unix::ffi::OsStrExt;
+    let output = Command::new(env!("CARGO_BIN_EXE_archogen"))
+        .arg("check")
+        .arg(std::ffi::OsStr::from_bytes(b"bad\xff"))
+        .output()
+        .expect("the executable runs");
+    assert_eq!(
+        output.status.code(),
+        Some(Status::Usage.code()),
+        "{output:?}"
+    );
+    assert!(
+        String::from_utf8_lossy(&output.stderr).contains("not UTF-8"),
+        "{output:?}"
+    );
 }
 
 #[test]
@@ -663,28 +814,33 @@ fn a_link_is_no_place_for_a_build() {
 #[cfg(unix)]
 fn what_stands_in_the_way_of_removing_an_earlier_build_leaves_the_new_one_whole() {
     use std::os::unix::fs::PermissionsExt;
-    let dir = scratch("in-the-way").join("out");
+    let root = scratch("in-the-way");
+    let dir = root.join("out");
     let description = example(HEARTBEAT);
+    let (status, _, err) = build(&description, &root.join("clean"));
+    assert_eq!(status, Status::Ok, "{err}");
+    let clean = snapshot(&root.join("clean"));
     let (status, _, err) = build(&description, &dir);
     assert_eq!(status, Status::Ok, "{err}");
-    let locked = dir.join("rt-core");
-    fs::set_permissions(&locked, fs::Permissions::from_mode(0o555)).expect("read-only");
+    fs::set_permissions(dir.join("rt-core/src"), fs::Permissions::from_mode(0o555))
+        .expect("read-only");
     let (status, _, err) = build(&description, &dir);
     let replaced = beside(&dir, ".replaced");
-    let held = replaced.join("rt-core");
-    if held.exists() {
-        fs::set_permissions(&held, fs::Permissions::from_mode(0o755)).expect("writable");
-    }
-    fs::set_permissions(dir.join("rt-core"), fs::Permissions::from_mode(0o755)).expect("writable");
-    assert_eq!(status, Status::Ok, "{err}");
-    let (again, _, _) = (Status::Ok, (), ());
-    assert_eq!(again, Status::Ok);
-    assert!(dir.join("src/main.rs").is_file() && dir.join("provenance.json").is_file());
     let held_on = replaced.exists();
-    // Running as root, nothing stands in the way, and there is nothing to say.
-    assert_eq!(held_on, err.contains("the earlier one stays at"), "{err}");
     if held_on {
-        // That is left for its owner to look at, and the next build says so rather than delete it.
+        fs::set_permissions(
+            replaced.join("rt-core/src"),
+            fs::Permissions::from_mode(0o755),
+        )
+        .expect("writable");
+    }
+    assert_eq!(status, Status::Ok, "{err}");
+    assert_eq!(clean, snapshot(&dir), "the new package is not whole");
+    // Running as root, nothing stands in the way, and there is nothing to say.
+    assert_eq!(held_on, err.contains("keeps what could not go"), "{err}");
+    if held_on {
+        // It names what stays, and the next build refuses rather than delete it.
+        assert!(err.contains("rt-core/src/"), "{err}");
         let (status, _, err) = build(&description, &dir);
         assert_eq!(status, Status::Usage, "{err}");
         assert!(err.contains(".replaced exists"), "{err}");
@@ -1017,7 +1173,18 @@ fn rewrite_in_step(dir: &Path, name: &str, contents: &str) {
         &Digest::of(contents.as_bytes()).to_string(),
     );
     assert_ne!(moved, text, "`{name}` is not listed");
-    fs::write(&provenance, moved).expect("written");
+    rewrite_provenance(dir, &moved);
+}
+
+/// A provenance replaced, its own digest kept in step.
+fn rewrite_provenance(dir: &Path, text: &str) {
+    const MEMBER: &str = "\"self\": \"sha256:";
+    let start = text.find(MEMBER).expect("its own digest") + MEMBER.len();
+    let blank = "0".repeat(64);
+    let blanked = format!("{}{blank}{}", &text[..start], &text[start + 64..]);
+    let own = Digest::of(blanked.as_bytes()).hex();
+    let written = format!("{}{own}{}", &text[..start], &text[start + 64..]);
+    fs::write(dir.join("provenance.json"), written).expect("written");
 }
 
 /// What `explain` of `target` says of a build it must not speak for: the error stream.
@@ -1154,6 +1321,68 @@ fn a_record_that_does_not_accept_this_plan_from_this_checker_is_stale() {
             "{case}: {err}"
         );
     }
+}
+
+#[test]
+fn a_file_no_build_wrote_or_a_provenance_edited_is_stale_and_gets_no_account() {
+    let fresh = |case: &str| {
+        let dir = scratch(case).join("out");
+        let (status, _, err) = build(&example(HEARTBEAT), &dir);
+        assert_eq!(status, Status::Ok, "{err}");
+        dir
+    };
+    // A file added can change what the package does, with no listed file touched.
+    let dir = fresh("foreign-build-rs");
+    fs::write(dir.join("build.rs"), "fn main() {}\n").expect("written");
+    let err = stale(&dir.display().to_string());
+    assert!(err.contains("`build.rs` is no file a build wrote"), "{err}");
+    // A note in the provenance, and the list untouched: `build` would otherwise delete it, and `explain` not see it.
+    let dir = fresh("provenance-note");
+    let provenance = dir.join("provenance.json");
+    let text = fs::read_to_string(&provenance).expect("provenance");
+    let noted = text.replacen("{\n", "{\n  \"note\": \"mine\",\n", 1);
+    fs::write(&provenance, &noted).expect("written");
+    let err = stale(&dir.display().to_string());
+    assert!(err.contains("`provenance.json` has changed"), "{err}");
+    let (status, _, err) = build(&example(HEARTBEAT), &dir);
+    assert_eq!(status, Status::Usage, "{err}");
+    assert_eq!(fs::read_to_string(&provenance).expect("kept"), noted);
+    // A list that lacks what every build writes is no build's, its digest in step or not.
+    let dir = fresh("no-list");
+    let provenance = dir.join("provenance.json");
+    let text = fs::read_to_string(&provenance).expect("provenance");
+    let start = text.find("\"files\": [").expect("a list");
+    rewrite_provenance(&dir, &format!("{}\"files\": []\n}}\n", &text[..start]));
+    let (status, _, err) = explain(&dir.display().to_string());
+    assert_eq!(status, Status::Usage, "{err}");
+    assert!(err.contains("which every build writes"), "{err}");
+    let (status, _, err) = build(&example(HEARTBEAT), &dir);
+    assert_eq!(status, Status::Usage, "{err}");
+}
+
+#[test]
+#[cfg(unix)]
+fn a_provenance_that_is_no_file_is_refused_and_never_read() {
+    // A pipe would never end, and a link is no file a build wrote.
+    let dir = scratch("provenance-odd").join("out");
+    let (status, _, err) = build(&example(HEARTBEAT), &dir);
+    assert_eq!(status, Status::Ok, "{err}");
+    let provenance = dir.join("provenance.json");
+    let held = dir.with_file_name("held.json");
+    fs::rename(&provenance, &held).expect("moved");
+    std::os::unix::fs::symlink(&held, &provenance).expect("a link");
+    let (status, _, err) = explain(&dir.display().to_string());
+    assert_eq!(status, Status::Usage, "{err}");
+    assert!(err.contains("is no file a build wrote"), "{err}");
+    fs::remove_file(&provenance).expect("removed");
+    let made = Command::new("mkfifo")
+        .arg(&provenance)
+        .status()
+        .expect("mkfifo runs");
+    assert!(made.success());
+    let (status, _, err) = explain(&dir.display().to_string());
+    assert_eq!(status, Status::Usage, "{err}");
+    assert!(err.contains("is no file a build wrote"), "{err}");
 }
 
 #[test]

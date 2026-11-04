@@ -62,7 +62,7 @@ impl Asked {
     fn read(dir: &str) -> Result<Self, Unasked> {
         let root = Path::new(dir);
         let built = Built::read(root).map_err(Unasked::NoBuild)?;
-        if let Some(why) = built.edited(root) {
+        if let Some(why) = built.edited(root).or_else(|| built.foreign(root)) {
             return Err(Unasked::Altered(format!(
                 "the build {dir} is not as it was written: {why}"
             )));

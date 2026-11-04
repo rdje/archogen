@@ -97,7 +97,7 @@ Thirteen files, and only one of them is generated in any interesting sense:
 | `sim-playground/Cargo.toml` | a generated manifest |
 | `sim-playground/src/lib.rs` | the engine's simulator, byte for byte |
 | `plan.txt` | the runtime plan's canonical text |
-| `provenance.json` | what the plan was lowered from, what each table entry came from, and every other file with its digest |
+| `provenance.json` | what the plan was lowered from, what each table entry came from, every other file with its digest, and its own |
 | `description/system.eadl` | the description it was made from, with every module it imports beside it |
 | `assignment.eadl` | the assignment the search wrote, which the checker judged |
 | `plan-check.json` | the checker's result record for it |
@@ -121,7 +121,8 @@ is code the engine compiles and tests, and `crates/archogen-emit/tests/emit.rs` 
 There is one frontend, so `build` can never accept what `check` refuses.
 
 **What the emitter refuses.** A task the plan cannot say what releases, naming the task and the cause, is `missing-fact`,
-repaired by the task's own `(needs interrupt-source)`, or `unsupported-profile` where the analysis cannot admit the source. A
+repaired by the task's own `(needs interrupt-source)`, or `unsupported-profile` where the analysis cannot admit the source. That
+comes first, since what a run would cost means nothing until it can run. A
 duration or a hyperperiod past 64 bits of ticks is `unsupported-profile`, rather than approximated, and so is a run of more than
 `2^20` releases and arrivals, which nobody could read: periods of `1 ms` and `2305843009213693951 ms` both fit, and that run would
 never end. A plan that is not what its inputs lower to is `tool-failure`: `crates/archogen-emit` accepts a plan only by lowering it
@@ -142,15 +143,18 @@ that claimed to be reproducible. Refusing costs a user one re-run; accepting cos
 every file is written. So `DIR` is at every moment a whole package or absent, and a refused build leaves it as it found it: a
 refusal of the description creates nothing, and an earlier build stays.
 
-⛔ **A build deletes nothing it did not write.** It removes only the stage this very run made, and an earlier build exactly as a
-build wrote it: every file `provenance.json` lists unchanged, and nothing else there but cargo's own `target/` and `Cargo.lock`. A
-directory holding anything more, a generated file you edited, a link named by `--out`, and anything standing at `DIR.building` or
-`DIR.replaced` are all refused, and left alone. Your changes belong in the description, not in the output.
+⛔ **A build deletes nothing it did not write.** It removes the stage this very run made, and of an earlier build each file
+`provenance.json` lists, one by one and only if still as written, then the directories that held them where that leaves them empty.
+An earlier build must be exactly a build's before any of that: a directory holding anything more, an empty one included, a generated
+file you edited, a link named by `--out`, and anything standing at `DIR.building` or `DIR.replaced` are all refused, and left alone.
+Your changes belong in the description, not in the output. What building and looking at a package leave at its top, `target`,
+`Cargo.lock` and `.DS_Store`, is neither judged nor deleted: it moves to the new package, so a rebuild keeps cargo's work.
 
-The one thing it leaves behind on purpose: where the checker refuses the search's plan, or its record does not hold together,
+Two things it leaves behind on purpose. Where the checker refuses the search's plan, or its record does not hold together,
 `DIR.building` keeps the assignment and the record, for the report that disagreement deserves, and the next build refuses until
-someone has looked at it. If an old build cannot be removed once the new one stands, the new one is in place, and the command says
-the old one waits at `DIR.replaced`.
+someone has looked at it. And what could not go from an earlier build, or appeared while the build ran, stays at `DIR.replaced`, with
+the new package already in place and the command naming what stayed. A directory of yours keeps its mode. No sync call is made, so
+none of this claims anything across a power loss.
 
 **Nothing in it depends on where it was built.** A provenance entry names a source relative to the description, so the same
 description in two directories, built into two others, gives the same bytes. A test compares them, for one file and for a module
@@ -180,8 +184,9 @@ build/heartbeat: the search's plan for system `heartbeat` is the one this build 
   experimental: one requirement of one system, over a description's own blocks and platforms; completed by M3.7
 ```
 
-It holds every file of the build to the digest `provenance.json` lists first. A build with a file edited, whose description no
-longer gives its plan, or whose record does not accept that plan from the checker it names is `stale-input`, and the command prints
+It holds the build to what `archogen build` holds an earlier one to first: every listed file and the provenance itself unchanged, and
+nothing else there. A build that fails that, whose description no longer gives its plan, or whose record does not accept that plan
+from the checker it names is `stale-input`, and the command prints
 no account of a plan it did not write: the search can only speak for its own. ⚠️ A digest catches an edit and a stale file, never a
 forger: whoever can write the directory can rewrite the list too. A request that misses, a requirement nobody writes, is `usage`, as
 of any description.

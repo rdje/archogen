@@ -1,4 +1,4 @@
-archogen-build-provenance/3
+archogen-build-provenance/4
 acceptance: string
 checker: string
 description: string
@@ -18,4 +18,5 @@ generator.sha256: string
 generator.version: string
 plan: string
 result: string
+self: string
 system: string

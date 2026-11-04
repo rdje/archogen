@@ -14,9 +14,24 @@ fn main() -> ExitCode {
     let mut stdout = std::io::stdout().lock();
     let mut stderr = std::io::stderr().lock();
 
+    // `std::env::args` panics on an argument that is no text, and exit 101 is a code no status has.
+    let args: Result<Vec<String>, _> = std::env::args_os()
+        .skip(1)
+        .map(std::ffi::OsString::into_string)
+        .collect();
+    let Ok(args) = args else {
+        let usage = archogen_cli::Status::Usage;
+        let _ = writeln!(
+            stderr,
+            "archogen: {}: an argument is not UTF-8",
+            usage.slug()
+        );
+        let _ = writeln!(stderr, "  hint: give paths and names this tool can print");
+        return ExitCode::from(u8::try_from(usage.code()).unwrap_or(2));
+    };
     let mut stdin = std::io::stdin().lock();
     let status = archogen_cli::run_with_input(
-        std::env::args().skip(1),
+        args,
         &mut stdin,
         &sibling::Installed,
         &mut stdout,

@@ -47,7 +47,7 @@ fn kinds(sources: &mut SourceMap) -> Registry {
 /// A description's inputs to a build, as `archogen build` makes them: the search's assignment, the checker's result.
 struct Build {
     sources: SourceMap,
-    language: Vec<String>,
+    language: Vec<(String, String)>,
     kinds: Registry,
     program: Program,
     assignment: String,
@@ -129,7 +129,12 @@ fn build_of(text: &str) -> Build {
             "docs/semantics/kinds/core.eadl",
             "docs/semantics/kinds/os-rt.eadl",
         ]
-        .map(str::to_owned)
+        .map(|path| {
+            (
+                path.to_owned(),
+                fs::read_to_string(root().join(path)).expect("a kind module"),
+            )
+        })
         .to_vec(),
         kinds,
         program,
@@ -380,6 +385,56 @@ fn a_run_past_what_the_playground_takes_is_refused_saying_so() {
 }
 
 #[test]
+fn a_run_of_exactly_what_the_playground_takes_is_built() {
+    // The bound's edge, both sides: `1 ms` against `1048575 ms` is 2^20 releases and arrivals, and one more is refused.
+    let emitted = build_of(&periodic(&[("a", "1 ms"), ("b", "1048575 ms")]))
+        .emitted()
+        .expect("emitted");
+    assert_eq!(emitted.horizon, 1_048_575);
+    let refusal = build_of(&periodic(&[("a", "1 ms"), ("b", "1048576 ms")]))
+        .emitted()
+        .expect_err("refused");
+    assert!(
+        refusal.message.contains("is 1048577 releases"),
+        "{}",
+        refusal.message
+    );
+}
+
+#[test]
+fn a_task_nothing_can_release_is_said_whatever_its_separation_would_cost() {
+    // Its cost would be refused too, and the cause and its repair are what the author needs.
+    let text = periodic(&[("a", "1 ms")]).replace(
+        "  (requires (uses console.write))",
+        "  (task chime (min-separation 2097152 ms) (deadline 2097152 ms) (priority 2) (uses console.write))\n  (requires (uses console.write))",
+    );
+    let refusal = build_of(&text).emitted().expect_err("refused");
+    assert_eq!(refusal.code, "missing-fact", "{}", refusal.message);
+    assert!(
+        refusal.message.contains("task `chime`"),
+        "{}",
+        refusal.message
+    );
+}
+
+#[test]
+fn a_description_may_lie_where_a_definition_is_named() {
+    // Only the language's own text is left out of what a build records: the same name with your text is yours.
+    let build = build_of(&fixture("worked-heartbeat"));
+    let mut language = build.language.clone();
+    language[0].0 = "description.eadl".to_owned();
+    let inputs = Inputs {
+        language: &language,
+        ..build.inputs(Acceptance::CheckedByFront)
+    };
+    let emitted = emit(&inputs, generator()).expect("emitted");
+    assert!(emitted
+        .files
+        .iter()
+        .any(|f| f.path == "description/description.eadl"));
+}
+
+#[test]
 fn a_generated_manifest_writes_the_engine_s_edition() {
     // The copies are text to the generator, so nothing compiles them against the engine's own manifest but this.
     let root_manifest = fs::read_to_string(root().join("Cargo.toml")).expect("the workspace's");
@@ -499,7 +554,7 @@ fn provenance_says_what_each_table_entry_came_from() {
     let provenance = file(&emitted, "provenance.json");
     assert!(
         provenance.contains("\"description\": \"description.eadl\"")
-            && provenance.contains("\"format\": \"archogen-build-provenance/3\""),
+            && provenance.contains("\"format\": \"archogen-build-provenance/4\""),
         "{provenance}"
     );
     assert!(

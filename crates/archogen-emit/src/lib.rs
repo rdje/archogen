@@ -21,7 +21,7 @@ use eadl_model::check::resolved_declarations;
 use eadl_model::kind::Registry;
 
 /// The format of `provenance.json`.
-pub const PROVENANCE_FORMAT: &str = "archogen-build-provenance/3";
+pub const PROVENANCE_FORMAT: &str = "archogen-build-provenance/4";
 
 /// The provenance's name in a package.
 pub const PROVENANCE_FILE: &str = "provenance.json";
@@ -31,6 +31,26 @@ pub const ASSIGNMENT_FILE: &str = "assignment.eadl";
 
 /// The checker's result record's name in a package.
 pub const RESULT_FILE: &str = "plan-check.json";
+
+/// What stands for a provenance's own digest while it is taken: its `self` member, which covers the rest of its text.
+const SELF_BLANK: &str = "sha256:0000000000000000000000000000000000000000000000000000000000000000";
+
+/// Whether a provenance's text is what its own digest says: an edit shows, and a forger rewriting the digest too does not.
+#[must_use]
+pub fn provenance_is_whole(text: &str) -> bool {
+    const MEMBER: &str = "\"self\": \"";
+    let Some(start) = text.find(MEMBER).map(|at| at + MEMBER.len()) else {
+        return false;
+    };
+    let Some(end) = start
+        .checked_add(SELF_BLANK.len())
+        .filter(|end| text.is_char_boundary(*end) && *end <= text.len())
+    else {
+        return false;
+    };
+    let blanked = format!("{}{SELF_BLANK}{}", &text[..start], &text[end..]);
+    text[start..end] == format!("sha256:{}", Digest::of(blanked.as_bytes()).hex())
+}
 
 /// The most timer releases and source arrivals a run of the hosted playground takes: a hyperperiod has no bound of its
 /// own, and one that fits `u64` can still be a run that never ends (the record's §3).
@@ -76,8 +96,9 @@ pub struct Inputs<'a> {
     pub sources: &'a SourceMap,
     /// The description's name among them, which a provenance entry names each source relative to.
     pub description: &'a str,
-    /// The names among them of the language's own definitions, which every build holds in its generator and none records.
-    pub language: &'a [String],
+    /// The language's own definitions among them, each its name and its text, which every build holds in its generator
+    /// and none records. By both: a description of yours may lie at a path a definition is named by.
+    pub language: &'a [(String, String)],
     /// The assignment record, as the text written.
     pub assignment: &'a str,
     /// The configuration checker's result record for it, as the text written.
@@ -219,67 +240,59 @@ fn silent(contents: &Contents, route: &Route) -> Option<&'static str> {
     }
 }
 
-/// The tick: the least common multiple of every duration's denominator (the record's §2).
-fn tick(contents: &Contents) -> Result<Ticks, Refusal> {
-    let mut per_second = 1_u64;
-    let mut take = |what: &str, seconds: eadl_model::rational::Rational| {
-        let denominator = u64::try_from(seconds.denominator()).map_err(|_| past_ticks(what))?;
-        per_second = lcm(per_second, denominator).ok_or_else(|| past_ticks(what))?;
-        Ok::<(), Refusal>(())
-    };
+/// What the run repeats, each by what a refusal would call it: the period of each task the timer releases, and the separation
+/// of each source that arrives. A task a source releases repeats only as that source does, so its own minimum separation
+/// is no part of the run; nor is a deadline or a jitter, which no table holds (the record's §2 and §3).
+fn repeating(contents: &Contents) -> Vec<(String, eadl_model::rational::Rational)> {
+    let mut out = Vec::new();
     for task in &contents.tasks {
-        let what = format!("a duration of task `{}`", task.name);
-        let (Release::Period(release) | Release::MinSeparation(release)) = task.release;
-        take(&what, release)?;
-        take(&what, task.deadline)?;
-        take(&what, task.jitter)?;
+        if let (Trigger::Timer, Release::Period(period)) = (&task.released_by, task.release) {
+            out.push((format!("task `{}`'s period", task.name), period));
+        }
     }
     for route in &contents.routes {
-        if let Separation::Of(separation) = route.separation {
-            take(&format!("{}'s separation", route_name(route)), separation)?;
+        if let (Item::Source(_), None, Separation::Of(separation)) =
+            (&route.item, silent(contents, route), route.separation)
+        {
+            out.push((format!("{}'s separation", route_name(route)), separation));
         }
+    }
+    out
+}
+
+/// The tick: the least common multiple of the denominators of what the run repeats (the record's §2).
+fn tick(contents: &Contents) -> Result<Ticks, Refusal> {
+    let mut per_second = 1_u64;
+    for (what, seconds) in repeating(contents) {
+        let denominator = u64::try_from(seconds.denominator()).map_err(|_| past_ticks(&what))?;
+        per_second = lcm(per_second, denominator).ok_or_else(|| past_ticks(&what))?;
     }
     Ok(Ticks { per_second })
 }
 
-/// One hyperperiod in ticks, of every release and arrival the run holds, and what it costs: the horizon, within
-/// [`MOST_RELEASES`] (the record's §3).
+/// One hyperperiod in ticks of what the run repeats, within [`MOST_RELEASES`] (the record's §3).
 fn horizon_of(contents: &Contents, ticks: &Ticks) -> Result<u64, Refusal> {
-    let past_horizon = |what: &str| {
-        refuse(
-            "unsupported-profile",
-            format!(
-                "one hyperperiod of this plan, with {what}, does not fit this build's integer ticks: choose periods with a \
-                 smaller common multiple"
-            ),
-        )
-    };
-    // What repeats, in ticks, and whether the run counts it: a task a source releases repeats at its separation, and its
-    // arrivals are its source's.
-    let mut repeating: Vec<(String, u64, bool)> = Vec::new();
-    for task in &contents.tasks {
-        let what = format!("task `{}`'s release", task.name);
-        let (Release::Period(release) | Release::MinSeparation(release)) = task.release;
-        let timer = matches!(task.released_by, Trigger::Timer);
-        repeating.push((what.clone(), ticks.of(&what, release)?, timer));
-    }
-    for route in &contents.routes {
-        if silent(contents, route).is_some() {
-            continue;
-        }
-        if let Separation::Of(separation) = route.separation {
-            let what = format!("{}'s separation", route_name(route));
-            repeating.push((what.clone(), ticks.of(&what, separation)?, true));
-        }
+    let mut each = Vec::new();
+    for (what, seconds) in repeating(contents) {
+        let value = ticks.of(&what, seconds)?;
+        each.push((what, value));
     }
     let mut horizon = 1_u64;
-    for (what, value, _) in &repeating {
-        horizon = lcm(horizon, *value).ok_or_else(|| past_horizon(what))?;
+    for (what, value) in &each {
+        horizon = lcm(horizon, *value).ok_or_else(|| {
+            refuse(
+                "unsupported-profile",
+                format!(
+                    "one hyperperiod of this plan, with {what}, does not fit this build's integer ticks: choose periods \
+                     with a smaller common multiple"
+                ),
+            )
+        })?;
     }
-    let releases = repeating
+    let releases = each
         .iter()
-        .filter(|(_, value, counted)| *counted && *value > 0)
-        .fold(0_u64, |total, (_, value, _)| {
+        .filter(|(_, value)| *value > 0)
+        .fold(0_u64, |total, (_, value)| {
             total.saturating_add(horizon / value)
         });
     if releases > MOST_RELEASES {
@@ -695,6 +708,7 @@ fn provenance(
     };
     let mut out = String::from("{\n");
     out.push_str(&format!("  \"format\": {},\n", quote(PROVENANCE_FORMAT)));
+    out.push_str(&format!("  \"self\": {},\n", quote(SELF_BLANK)));
     out.push_str(&format!("  \"system\": {},\n", quote(&contents.system)));
     out.push_str(&format!("  \"description\": {},\n", quote(description)));
     out.push_str(&format!(
@@ -752,7 +766,9 @@ fn provenance(
         ));
     }
     out.push_str("  ]\n}\n");
-    out
+    // Taken over all of the above with the member blank, as `provenance_is_whole` takes it.
+    let own = format!("sha256:{}", Digest::of(out.as_bytes()).hex());
+    out.replacen(SELF_BLANK, &own, 1)
 }
 
 /// The files of the system `inputs` describe.
@@ -777,6 +793,12 @@ pub fn emit(inputs: &Inputs<'_>, generator: Generator) -> Result<Emitted, Refusa
         ));
     }
     let contents = lowered.plan.contents();
+    // A task nothing can release is said first: what a run would cost means nothing until it can run (`RTP-H1`).
+    for task in &contents.tasks {
+        if let Trigger::Unknown(cause) = &task.released_by {
+            return Err(unknown_trigger(&task.name, cause));
+        }
+    }
     let ticks = tick(contents)?;
     let horizon = horizon_of(contents, &ticks)?;
     let experimental = inputs.acceptance == Acceptance::TakenAsText;
@@ -819,7 +841,11 @@ pub fn emit(inputs: &Inputs<'_>, generator: Generator) -> Result<Emitted, Refusa
     // each however many import it, so a later command reads what this build read (`archogen explain`; the record's §1).
     let mut recorded = std::collections::BTreeSet::new();
     for source in inputs.sources.iter() {
-        if inputs.language.contains(&source.name) {
+        if inputs
+            .language
+            .iter()
+            .any(|(name, text)| *name == source.name && *text == source.text)
+        {
             continue;
         }
         let name = relative_to_description(inputs.description, &source.name);
@@ -876,9 +902,13 @@ mod tests {
     /// The sporadic golden's plan, with one edit: the emitter accepts no plan it did not lower, so what the lowering
     /// never writes is reached here.
     fn plan(edit: impl Fn(&str) -> String) -> Contents {
-        let path = concat!(
-            env!("CARGO_MANIFEST_DIR"),
-            "/../archogen-plan/tests/goldens/sporadic.plan"
+        golden("sporadic", edit)
+    }
+
+    fn golden(name: &str, edit: impl Fn(&str) -> String) -> Contents {
+        let path = format!(
+            "{}/../archogen-plan/tests/goldens/{name}.plan",
+            env!("CARGO_MANIFEST_DIR")
         );
         read(&edit(&std::fs::read_to_string(path).expect("the golden"))).expect("a plan")
     }
@@ -941,29 +971,77 @@ mod tests {
 
     #[test]
     fn a_duration_or_a_horizon_past_the_ticks_is_refused_naming_what() {
-        // Each of two primes fits, and their least common multiple does not.
-        let contents = plan(|text| {
-            text.replace(
-                "(min-separation 1/100 s)",
-                "(min-separation 18446744073709551557 s)",
-            )
+        // A period past the ticks, and a source's separation.
+        let contents = golden("heartbeat", |text| {
+            text.replace("(period 3/100 s)", "(period 18446744073709551557 s)")
         });
         let ticks = tick(&contents).expect("a tick");
         let refusal = horizon_of(&contents, &ticks).expect_err("refused");
         assert_eq!(refusal.code, "unsupported-profile");
         assert!(
-            refusal.message.contains("task `s`'s release"),
+            refusal.message.contains("task `chime`'s period"),
             "{}",
             refusal.message
         );
         let contents =
-            plan(|text| text.replace("(separation 1/50 s)", "(separation 9223372036854775783 s)"));
+            plan(|text| text.replace("(separation 1/50 s)", "(separation 36893488147419103232 s)"));
         let ticks = tick(&contents).expect("a tick");
         let refusal = horizon_of(&contents, &ticks).expect_err("refused");
         assert!(
             refusal.message.contains("source `dev.e`"),
             "{}",
             refusal.message
+        );
+        // Each of two primes fits, and their least common multiple does not.
+        let contents = golden("heartbeat", |text| {
+            text.replace("(period 1/100 s)", "(period 4294967311 s)")
+                .replace("(period 3/100 s)", "(period 4294967357 s)")
+        });
+        let ticks = tick(&contents).expect("a tick");
+        let refusal = horizon_of(&contents, &ticks).expect_err("refused");
+        assert!(
+            refusal.message.contains("one hyperperiod of this plan"),
+            "{}",
+            refusal.message
+        );
+    }
+
+    #[test]
+    fn only_what_the_run_repeats_sets_its_tick_and_its_horizon() {
+        // A deadline in nanoseconds, which no table holds, moves neither.
+        let contents = golden("heartbeat", |text| {
+            text.replace("(deadline 1/100 s)", "(deadline 1/1000000000 s)")
+        });
+        assert_eq!(tick(&contents).expect("a tick").per_second, 100);
+        // A task a source releases repeats only as the source does: its own minimum separation is no part of the run.
+        let contents =
+            plan(|text| text.replace("(min-separation 1/100 s)", "(min-separation 7/1000 s)"));
+        let ticks = tick(&contents).expect("a tick");
+        assert_eq!(ticks.per_second, 50);
+        assert_eq!(horizon_of(&contents, &ticks).expect("a horizon"), 1);
+        // A source that does not arrive does not either.
+        let contents =
+            plan(|text| text.replace("(enabled timer (source dev.e))", "(enabled timer)"));
+        assert_eq!(tick(&contents).expect("a tick").per_second, 1);
+    }
+
+    #[test]
+    fn a_provenance_is_whole_only_as_it_was_written() {
+        let blank = format!(
+            "{{\n  \"self\": \"{}\",\n  \"a\": 1\n}}\n",
+            super::SELF_BLANK
+        );
+        let own = format!("sha256:{}", Digest::of(blank.as_bytes()).hex());
+        let written = blank.replacen(super::SELF_BLANK, &own, 1);
+        assert!(super::provenance_is_whole(&written));
+        assert!(!super::provenance_is_whole(
+            &written.replace("\"a\": 1", "\"a\": 2")
+        ));
+        assert!(!super::provenance_is_whole(&blank), "a blank is no digest");
+        assert!(!super::provenance_is_whole("{}"), "no member");
+        assert!(
+            !super::provenance_is_whole("{\"self\": \"short\"}"),
+            "too short to hold one"
         );
     }
 
