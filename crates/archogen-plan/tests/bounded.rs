@@ -106,16 +106,17 @@
 //! Each system is run as the engine runs it, as `common::lowered` does: the language's check, the search, the `/2`
 //! writer, and the lowering. **Every `archogen-assignment/2` record the search writes is judged by the configuration
 //! checker**, `archogen_plan_check::check::plan_file`, as `crates/eadl-resolve/tests/plan.rs` judges one, and a record
-//! it refuses is a finding naming that record — but for the classes the reading derives and holds by count
-//! (`CHECKER_HELD`), each record of them refused with the one finding of the one shape it carries: a system's side the
-//! search reads apart, the search's defect (`M3.4`; model §7 rule 4, §8 rule 1); and, after round 23, a binding of a
-//! task's text two tasks of one name carry, which the checker reads as the first's, emptied when `M1.50` has the
-//! language refuse such a system. On each the lowering is still held to the reading while it does not read the
+//! it refuses is a finding naming that record — but for the class the reading derives and holds by count
+//! (`CHECKER_HELD`), each record of it refused with the one finding of the one shape it carries: after round 23, a
+//! binding of a task's text two tasks of one name carry, which the checker reads as the first's, emptied when `M1.50`
+//! has the language refuse such a system. On it the lowering is still held to the reading while it does not read the
 //! checker's result record, its third input; once it does, §1 refuses each of those systems `tool-failure`, "naming
-//! both verdicts", before anything is lowered (R16-R2). **The records binding a task's own source rule 16 does not
-//! admit**, which no search writes, are a class of their own (`RULE_16_RECORD`), neither a finding nor one of
-//! `CHECKER_HELD`: each is judged by the configuration checker and lowered, and each refused by both, the codes
-//! agreeing. Each plan is held to an **independent reading** of
+//! both verdicts", before anything is lowered (R16-R2). **A system's side that contradicts itself, read whole**, is the
+//! search's to refuse, `invalid-description` (`SEARCH_READS_THE_SIDE_WHOLE`; model §7 rule 4, §8 rule 1; `RTP-H20`): no
+//! record of it reaches the checker, and a record the search wrote for one would be a finding. **The records binding a
+//! task's own source rule 16 does not admit**, which no search writes, are a class of their own (`RULE_16_RECORD`),
+//! neither a finding nor one of `CHECKER_HELD`: each is judged by the configuration checker and lowered, and each
+//! refused by both, the codes agreeing. Each plan is held to an **independent reading** of
 //! `docs/decisions/decision_runtime-plan.md`, written below as plain, unoptimised Rust from the record's text alone,
 //! each rule citing the section it transcribes.
 //!
@@ -3331,7 +3332,11 @@ impl OnRoute {
 /// `(relative-delay false)`. So §1's receivers are each "bound to its provider itself by a binding that takes a channel
 /// (model §8 rule 2)", never by a binding that takes none — one a timer route names through an instance, or one the route
 /// does not name, beside one programming an alarm there — §2.6's code a timer route runs is a node bound for "a consumed
-/// fact", and §2.9's multiplexed node is one "that takes a channel", a consumed fact at `false` taking none.
+/// fact", and §2.9's multiplexed node is one "that takes a channel", a consumed fact at `false` taking none. The
+/// system's own level at `false` beside a task programming an alarm is no such system: the system's side, read whole,
+/// contradicts itself, and the search refuses it ([`SEARCH_READS_THE_SIDE_WHOLE`]). Beside `s` programming one, or a
+/// task receiving an expiry, it stands, as `s` at `false` does beside a task programming one, a service being a side of
+/// its own.
 fn bound_otherwise_on_a_route() -> Vec<Case> {
     const T: [OnRoute; 7] = [
         OnRoute::Nothing,
@@ -3454,7 +3459,9 @@ impl OfSource {
 /// those but both; and a service `e` that `u` uses, declared or not, requiring `dev`'s interrupt or `(interrupt-source
 /// false)`. So §1's periodic refusal takes a task "bound itself for `interrupt-source`, its requirement met by `true`",
 /// in runtime order past one bound to the same block for another fact, and a binding at `false` is no route and
-/// releases no task.
+/// releases no task. The system's own level at `false` beside `t` or `p` requiring `dev`'s interrupt is no such system:
+/// the system's side, read whole, contradicts itself, and the search refuses it ([`SEARCH_READS_THE_SIDE_WHOLE`]). `e`
+/// at `false` beside them stands, a service being a side of its own.
 fn periodic_bound_otherwise() -> Vec<Case> {
     const T: [OfSource; 5] = [
         OfSource::Nothing,
@@ -11181,70 +11188,40 @@ fn refusal_disagrees(due: &Due, refusal: &Refusal, description: &Description) ->
     (!wrong.is_empty()).then(|| wrong.join("; "))
 }
 
-/// The class of the systems whose record the configuration checker refuses because the search reads one system's side
-/// apart, held by name and count rather than as a finding: the defect is the search's, leaf `M3.4`'s, neither the
-/// runtime plan record's nor the lowering's. Model §8 rule 1: "Two tasks of one system are two requesters, though §7
-/// reads them as one side"; §7 rule 4: "Every `requires`, `needs` and `uses` a declaration writes ... is read as one
-/// side, so a contradiction split across two clauses is one: constraints on one fact that no value satisfies together
-/// are `invalid-description`". The search refuses such a contradiction inside one requester's clauses, but reads the
-/// system's own level and each task as sides apart, so it writes a record for a system whose own level writes `(f
-/// false)` while a task of it needs `f`, and the checker (`archogen-plan-check`) refuses it. When `M3.4` reads the
-/// system's side whole, the search refuses these systems itself, this class empties, and the universes holding it move
-/// from judged to unresolved.
+/// The systems whose side, read whole, contradicts itself, which the search refuses `invalid-description`: no record
+/// written, so nothing for the configuration checker to judge and nothing to lower. Model §8 rule 1: "Two tasks of one
+/// system are two requesters, though §7 reads them as one side"; §7 rule 4: "Every `requires`, `needs` and `uses` a
+/// declaration writes, at the positions §2's presence reads, is read as one side, so a contradiction split across two
+/// clauses is one: constraints on one fact that no value satisfies together are `invalid-description`". The reading
+/// derives the fact from the description alone ([`fact_the_side_contradicts`]), and a system it names is this class
+/// only where the search gives that verdict: a record written for one, or another verdict, is a finding. `RTP-H20` is
+/// what this holds, "so that the configuration checker refuses no record the search writes for that reason".
+const SEARCH_READS_THE_SIDE_WHOLE: &str =
+    "the search refuses, `invalid-description`, a system's side that contradicts itself, read whole";
+
+/// The class of the systems whose record the configuration checker refuses because it reads a binding of a task's text,
+/// `(task SYSTEM NAME)`, which two tasks carry, as one of the first declared: held by name and count rather than as a
+/// finding — the record states no verdict of the checker's on such a record, and hands only the language's refusal on
+/// (`RTP-H23`). §1 refuses the system: "the system declares two tasks of one name: every rule keyed by a requester's
+/// name ... would read the two as one, against the reference's §7 rule 6, a name declared once, "never merged and never
+/// resolved by order"". The checker resolves the text by order: a later task of the name bound for a fact the first
+/// requires nothing of is refused `tool-failure`, "the plan binds `FACT` for the task `NAME` of `SYSTEM`, which
+/// requires nothing of it", where the first so bound is accepted — round 23's finding in the lowering's rebuild
+/// (R23-D1: "with only the second binding, a false "does not rebuild""), in the checker. When `M1.50` has the language
+/// refuse two tasks of one name, these systems move to rejected and the class empties.
 ///
 /// ⚠️ **Until then, these systems' outcomes are the lowering's without its third input** (round 16, R16-R2). The
 /// lowering takes "the configuration checker's result record, `archogen-result/1`, for that assignment and that
 /// program" (§1, its third input), whose intake is unbuilt (R16-R6: `M4.1.4`'s production half), so the harness lowers
 /// the record alone and the lowering is held to the reading on these systems, plan or refusal. Once the lowering reads
-/// the result record, the checker's refusal reaches it, and §1 refuses each of these systems before anything is
-/// lowered — "its status is not `ok`: `tool-failure`, naming both verdicts, the generator having accepted what the
-/// checker refused" — ahead of every refusal of the record's tasks and of every plan: the class's systems then move,
-/// in each universe holding it, from lowered or refused as the reading says to refused `tool-failure`, and this
-/// checker reads the result record with them.
-const CHECKER_REFUSES: &str =
-    "checker refuses: a system's side the search reads apart (M3.4); `tool-failure` once \
-                               the lowering reads the checker's result (§1)";
-
-/// Whether the configuration checker's refusal is the one [`CHECKER_REFUSES`] holds, and nothing beside it: the status
-/// `invalid-description`, one finding, of its check (2), `plan-description` — "the checker's own rules refuse a
-/// description the language's passes accept" (`docs/book/src/plan-check.md`) — naming the system whose side it is and
-/// saying "two constraints on `FACT` that no value satisfies together", as `M4.1.13`'s routing evidence to `M3.4` quotes
-/// it, for the fact the reading derives (round 20, R20-R7: the class had taken any `invalid-description` refusal
-/// naming the fact).
-fn the_one_contradiction(refused: &Checked, system: &str, fact: &str) -> bool {
-    match refused.findings.as_slice() {
-        [(code, message)] => {
-            refused.status == "invalid-description"
-                && code == "plan-description"
-                && message.contains(&format!("`{system}`"))
-                && message.contains(&format!(
-                    "two constraints on `{fact}` that no value satisfies together"
-                ))
-        }
-        _ => false,
-    }
-}
-
-/// The class of the systems whose record the configuration checker refuses because it reads a binding of a task's text,
-/// `(task SYSTEM NAME)`, which two tasks carry, as one of the first declared: held by name and count rather than as a
-/// finding, as [`CHECKER_REFUSES`] is — the record states no verdict of the checker's on such a record, and hands only
-/// the language's refusal on (`RTP-H23`). §1 refuses the system: "the system declares two tasks of one name: every rule
-/// keyed by a requester's name ... would read the two as one, against the reference's §7 rule 6, a name declared once,
-/// "never merged and never resolved by order"". The checker resolves the text by order: a later task of the name bound
-/// for a fact the first requires nothing of is refused `tool-failure`, "the plan binds `FACT` for the task `NAME` of
-/// `SYSTEM`, which requires nothing of it", where the first so bound is accepted — round 23's finding in the lowering's
-/// rebuild (R23-D1: "with only the second binding, a false "does not rebuild""), in the checker. When `M1.50` has the
-/// language refuse two tasks of one name, these systems move to rejected and the class empties.
-///
-/// ⚠️ As with [`CHECKER_REFUSES`], the lowering is held to the reading on these systems while it does not read the
-/// checker's result record, its third input. Once it does, §1's "its status is not `ok`: `tool-failure`, naming both
-/// verdicts", which comes before the bullet of two tasks of one name, refuses them.
+/// the result record, §1's "its status is not `ok`: `tool-failure`, naming both verdicts", which comes before the
+/// bullet of two tasks of one name, refuses them, and this checker reads the result record with them.
 const CHECKER_READS_THE_FIRST: &str =
     "checker refuses: a binding of a text two tasks carry, read as the first's (M1.50); `tool-failure` naming both \
      verdicts once the lowering reads the checker's result (§1)";
 
 /// The classes of records the configuration checker refuses that a universe holds by count.
-const CHECKER_HELD: [&str; 2] = [CHECKER_REFUSES, CHECKER_READS_THE_FIRST];
+const CHECKER_HELD: [&str; 1] = [CHECKER_READS_THE_FIRST];
 
 /// A binding the reading expects the checker to read as the first task's of its name: of `(task SYSTEM NAME)`, a name
 /// two tasks carry, for a fact the first task declared with it requires nothing of — its name and the fact.
@@ -11289,7 +11266,7 @@ fn the_first_of_a_name(refused: &Checked, system: &str, name: &str, fact: &str) 
 
 /// The fact on which the lowered system's side, read whole — its own level's clauses and its tasks' (model §8 rule 1;
 /// §7 rule 4) — requires both `true` and `false`, a requirement `(needs f)` or `(f true)` beside `(f false)`.
-fn side_read_apart(description: &Description) -> Option<String> {
+fn fact_the_side_contradicts(description: &Description) -> Option<String> {
     let mut values: BTreeMap<String, BTreeSet<bool>> = BTreeMap::new();
     for side in std::iter::once(&description.own).chain(description.tasks.iter().map(|t| &t.side)) {
         for fact in &side.needs {
@@ -11374,6 +11351,16 @@ fn outcome_of_the_search(universe: &str, case: &Case, keep: bool) -> (Outcome, O
     let rule_16 = names_distinct(&case.description)
         .then(|| rule_16_search(&case.description))
         .flatten();
+    // Model §7 rule 4 and §8 rule 1: a system's side that contradicts itself, read whole, is `invalid-description`
+    // whatever could be bound for it, so it has no record for rule 16 to judge ([`SEARCH_READS_THE_SIDE_WHOLE`]).
+    let contradicted = fact_the_side_contradicts(&case.description);
+    let reads_whole = |fact: &str| {
+        format!(
+            "`{}`'s side, read whole, requires `{fact}` both `true` and `false`: `invalid-description` (model §7 rule \
+             4; §8 rule 1)",
+            case.description.system
+        )
+    };
     let (record, program, checker, lowered) = match flow(&text, &case.description.system) {
         Flow::Rejected(verdict) => {
             out.class = "rejected";
@@ -11382,7 +11369,17 @@ fn outcome_of_the_search(universe: &str, case: &Case, keep: bool) -> (Outcome, O
         }
         Flow::Unresolved(verdict) => {
             out.class = "unresolved";
-            if let Some(code) = rule_16 {
+            if let Some(fact) = &contradicted {
+                if verdict == "InvalidDescription" {
+                    out.classes.insert(SEARCH_READS_THE_SIDE_WHOLE);
+                } else {
+                    out.findings.push(format!(
+                        "== {universe}: {}\n-- the description\n{text}-- the search refuses it `{verdict}`, where {}\n",
+                        case.label,
+                        reads_whole(fact)
+                    ));
+                }
+            } else if let Some(code) = rule_16 {
                 if verdict == verdict_written(code) {
                     out.classes.insert(if code == "unsupported-profile" {
                         RULE_16_SEARCH_CONFLICT
@@ -11423,27 +11420,25 @@ fn outcome_of_the_search(universe: &str, case: &Case, keep: bool) -> (Outcome, O
             ),
         ));
     }
-    // The checker's verdict, against what the reading derives of it: every record accepted, but where the system's side
-    // read whole contradicts itself, which the checker refuses with the one finding of that one shape
-    // ([`CHECKER_REFUSES`], [`the_one_contradiction`]), and where it reads a binding of a text two tasks carry as the
-    // first's ([`CHECKER_READS_THE_FIRST`], [`the_first_of_a_name`]).
+    if let Some(fact) = &contradicted {
+        out.findings.push(reproducer(
+            "",
+            &format!("-- the search resolves it, where {}\n", reads_whole(fact)),
+        ));
+    }
+    // The checker's verdict, against what the reading derives of it: every record accepted, but where it reads a
+    // binding of a text two tasks carry as the first's ([`CHECKER_READS_THE_FIRST`], [`the_first_of_a_name`]).
     out.checker_refused = checker.is_some();
-    let apart = side_read_apart(&case.description);
     let first = read_as_the_first(&case.description, &binds_of(&record));
-    let held = match (&checker, &apart) {
-        (Some(refused), Some(fact))
-            if the_one_contradiction(refused, &case.description.system, fact) =>
-        {
-            Some(CHECKER_REFUSES)
-        }
-        (Some(refused), _)
+    let held = match &checker {
+        Some(refused)
             if first.as_ref().is_some_and(|(name, fact)| {
                 the_first_of_a_name(refused, &case.description.system, name, fact)
             }) =>
         {
             Some(CHECKER_READS_THE_FIRST)
         }
-        (Some(refused), _) => {
+        Some(refused) => {
             out.findings.push(reproducer(
                 "",
                 &format!(
@@ -11452,18 +11447,7 @@ fn outcome_of_the_search(universe: &str, case: &Case, keep: bool) -> (Outcome, O
             ));
             None
         }
-        (None, Some(fact)) => {
-            out.findings.push(reproducer(
-                "",
-                &format!(
-                    "-- the configuration checker accepts the record, and `{}`'s side, read whole, requires `{fact}` \
-                     both `true` and `false` (model §7 rule 4; §8 rule 1)\n",
-                    case.description.system
-                ),
-            ));
-            None
-        }
-        (None, None) => None,
+        None => None,
     };
     let due = refusal_the_record_gives(&case.description, &binds_of(&record));
     match lowered {
@@ -13690,12 +13674,6 @@ fn bound_to_a_timer_route_s_provider_by_a_binding_taking_no_channel() {
         "the language refuses a task's constraint clause: {:?}",
         tally.verdicts
     );
-    // Held, not findings: the 64 whose own level writes `(relative-delay false)` beside a task needing `relative-delay`
-    // (8 of the 18 choices of `t` and `u` the language accepts, 4 of `s`, 2 orders), whose record the configuration
-    // checker refuses `invalid-description` — the search's defect, `M3.4`'s ([`CHECKER_REFUSES`]; model §7 rule 4, §8
-    // rule 1). Every other record it accepts; the lowering, which does not read the checker's result yet, is held to
-    // the reading on these too, and once it reads it they move to `tool-failure` (§1; R16-R2).
-    assert_eq!(tally.checker_refused, 64);
     // Each count read from what each requester requires, as the label writes it: a timer route at `d` wherever a task,
     // the system's own level or `s` takes a channel there, itself or through an instance over `d`, naming those bound
     // for an alarm and the requesters of each instance; a task or the system's own level bound to `d` for its output
@@ -13717,17 +13695,42 @@ fn bound_to_a_timer_route_s_provider_by_a_binding_taking_no_channel() {
     let receives = |v: &str| ["AlarmShared", "ExpiryShared"].contains(&v);
     let output = |v: &str| ["Shared", "WakeShared", "AlarmShared", "ExpiryShared"].contains(&v);
     let rejected = |c: &Case| of(c, "t") == "False";
+    // Unresolved: the 64 whose own level writes `(relative-delay false)` beside a task needing `relative-delay` (8 of
+    // the 18 choices of `t` and `u` the language accepts: `t` programming an alarm with each of 3 `u`, `u` with each of
+    // 6 `t`, the one where both do counted once; 4 of `s`, 2 orders), each `invalid-description`, no value satisfying
+    // the side read whole ([`SEARCH_READS_THE_SIDE_WHOLE`]; model §7 rule 4, §8 rule 1; `RTP-H20`). So the
+    // configuration checker judges none of them, and accepts every record it does judge.
+    let contradicted = |c: &Case| {
+        !rejected(c)
+            && of(c, "own") == "False"
+            && (of(c, "t") == "AlarmShared" || of(c, "u") == "AlarmShared")
+    };
+    let refused_by_search: BTreeMap<String, String> = cases
+        .iter()
+        .filter(|c| contradicted(c))
+        .map(|c| (c.label.clone(), "InvalidDescription".to_string()))
+        .collect();
+    assert_eq!(refused_by_search.len(), 64);
+    assert_eq!(
+        tally.unresolved_systems, refused_by_search,
+        "the search resolves no plan where the system's side, read whole, contradicts itself"
+    );
+    assert_eq!(tally.checker_refused, 0);
+    let resolved = |c: &Case| !rejected(c) && !contradicted(c);
     let receivers = |c: &Case| {
         ["t", "u", "own"]
             .iter()
             .filter(|w| receives(&of(c, w)))
             .count()
     };
-    let lowered = |c: &Case| !rejected(c) && receivers(c) == 0;
-    let refused = |c: &Case| !rejected(c) && receivers(c) > 0;
+    // Lowered: the 320 with no receiver, 4 of `t`, 2 of `u`, 5 of the system's own level, 4 of `s`, 2 orders; a task
+    // programming an alarm is a receiver, so none of them is among the 64. Refused: the 1_008 the language accepts,
+    // less those 320 and the 64: 624, each naming its receivers (§1).
+    let lowered = |c: &Case| resolved(c) && receivers(c) == 0;
+    let refused = |c: &Case| resolved(c) && receivers(c) > 0;
     let route = |c: &Case| ["t", "u", "own", "s"].iter().any(|w| channel(&of(c, w)));
     let keyed = |c: &Case, task: bool, named: bool| {
-        !rejected(c)
+        resolved(c)
             && route(c)
             && ["t", "u", "own"].iter().any(|w| {
                 let v = of(c, w);
@@ -13735,7 +13738,7 @@ fn bound_to_a_timer_route_s_provider_by_a_binding_taking_no_channel() {
             })
     };
     let beside = |c: &Case| {
-        !rejected(c)
+        resolved(c)
             && route(c)
             && ["t", "u", "own"].iter().any(|w| {
                 let v = of(c, w);
@@ -13752,12 +13755,10 @@ fn bound_to_a_timer_route_s_provider_by_a_binding_taking_no_channel() {
     hold(
         "bound otherwise on a route",
         &tally,
-        (1_176, 320, 168, 0, 688),
+        (1_176, 320, 168, 64, 624),
         &[
-            exactly(CHECKER_REFUSES, 64),
-            counted(CHECKER_REFUSES, &cases, |c| {
-                !rejected(c) && of(c, "own") == "False" && (of(c, "t") == "AlarmShared" || of(c, "u") == "AlarmShared")
-            }),
+            exactly(SEARCH_READS_THE_SIDE_WHOLE, 64),
+            counted(SEARCH_READS_THE_SIDE_WHOLE, &cases, contradicted),
             counted(
                 "bound otherwise: a task a timer route names, bound to its provider for a fact taking no channel",
                 &cases,
@@ -13801,9 +13802,9 @@ fn bound_to_a_timer_route_s_provider_by_a_binding_taking_no_channel() {
                 &cases,
                 |c| refused(c) && ["t", "own"].iter().any(|w| of(c, w) == "ExpiryShared"),
             ),
-            counted("receivers: one", &cases, |c| !rejected(c) && receivers(c) == 1),
-            counted("receivers: two", &cases, |c| !rejected(c) && receivers(c) == 2),
-            counted("receivers: three", &cases, |c| !rejected(c) && receivers(c) == 3),
+            counted("receivers: one", &cases, |c| resolved(c) && receivers(c) == 1),
+            counted("receivers: two", &cases, |c| resolved(c) && receivers(c) == 2),
+            counted("receivers: three", &cases, |c| resolved(c) && receivers(c) == 3),
             counted("receivers: tasks and the system's own level", &cases, |c| {
                 refused(c) && receives(&of(c, "own")) && (receives(&of(c, "t")) || receives(&of(c, "u")))
             }),
@@ -13839,12 +13840,6 @@ fn a_periodic_task_bound_to_a_source_s_block_for_another_fact() {
         "the language refuses a task's constraint clause: {:?}",
         tally.verdicts
     );
-    // Held, not findings: the 72 whose own level writes `(interrupt-source false)` beside `t` or `p` needing
-    // `interrupt-source` (12 of the 16 choices of `t` and `p` the language accepts, 3 of `e`, 2 orders), whose record
-    // the configuration checker refuses `invalid-description` — the search's defect, `M3.4`'s ([`CHECKER_REFUSES`];
-    // model §7 rule 4, §8 rule 1). Every other record it accepts; the lowering, which does not read the checker's
-    // result yet, is held to the reading on these too, and once it reads it they move to `tool-failure` (§1; R16-R2).
-    assert_eq!(tally.checker_refused, 72);
     // Each count read from what each requester requires, as the label writes it: §1's bullet over tasks named on the
     // first periodic task in runtime order bound for `interrupt-source` itself, `p` first or `t`, beside the other bound
     // to `dev` for `debug-port` or for both; and, lowered, `u` released by `dev`'s 20 ms where `e` handles it.
@@ -13869,18 +13864,39 @@ fn a_periodic_task_bound_to_a_source_s_block_for_another_fact() {
         }
     };
     let named = |c: &Case| order(c).into_iter().find(|w| source(&of(c, w)));
-    let refused = |c: &Case| !rejected(c) && named(c).is_some();
-    let lowered = |c: &Case| !rejected(c) && named(c).is_none();
+    // Unresolved: the 72 whose own level writes `(interrupt-source false)` beside `t` or `p` needing `interrupt-source`
+    // (12 of the 16 choices of `t` and `p` the language accepts, all but the 4 where neither is `Source` or `Both`; 3
+    // of `e`, 2 orders), each `invalid-description`, no value satisfying the side read whole
+    // ([`SEARCH_READS_THE_SIDE_WHOLE`]; model §7 rule 4, §8 rule 1; `RTP-H20`). So the configuration checker judges
+    // none of them, and accepts every record it does judge.
+    let contradicted = |c: &Case| !rejected(c) && of(c, "own") == "False" && named(c).is_some();
+    let refused_by_search: BTreeMap<String, String> = cases
+        .iter()
+        .filter(|c| contradicted(c))
+        .map(|c| (c.label.clone(), "InvalidDescription".to_string()))
+        .collect();
+    assert_eq!(refused_by_search.len(), 72);
+    assert_eq!(
+        tally.unresolved_systems, refused_by_search,
+        "the search resolves no plan where the system's side, read whole, contradicts itself"
+    );
+    assert_eq!(tally.checker_refused, 0);
+    let resolved = |c: &Case| !rejected(c) && !contradicted(c);
+    // Lowered: the 96 where neither `t` nor `p` requires the interrupt, 4 choices of them, 4 of the system's own level,
+    // 3 of `e`, 2 orders. Refused: the 12 choices of them where one does, 3 of the system's own level, all but `false`,
+    // 3 of `e`, 2 orders: 216.
+    let refused = |c: &Case| resolved(c) && named(c).is_some();
+    let lowered = |c: &Case| resolved(c) && named(c).is_none();
     hold(
         "periodic bound otherwise",
         &tally,
-        (480, 96, 96, 0, 288),
+        (480, 96, 96, 72, 216),
         &[
-            counted(CHECKER_REFUSES, &cases, |c| refused(c) && of(c, "own") == "False"),
-            exactly(CHECKER_REFUSES, 72),
+            counted(SEARCH_READS_THE_SIDE_WHOLE, &cases, contradicted),
+            exactly(SEARCH_READS_THE_SIDE_WHOLE, 72),
             counted("refusal: a periodic task bound to a source itself", &cases, refused),
             counted("periodic: a periodic task bound to a source's block for another fact", &cases, |c| {
-                !rejected(c) && (other(&of(c, "t")) || other(&of(c, "p")))
+                resolved(c) && (other(&of(c, "t")) || other(&of(c, "p")))
             }),
             counted(
                 "periodic: one bound to the source's block otherwise first in runtime order, the one bound for \
@@ -13889,17 +13905,17 @@ fn a_periodic_task_bound_to_a_source_s_block_for_another_fact() {
                 |c| refused(c) && named(c) == Some(order(c)[1]) && other(&of(c, order(c)[0])),
             ),
             counted("periodic: the one named bound to the source's block for another fact too", &cases, |c| {
-                named(c).is_some_and(|w| of(c, w) == "Both") && !rejected(c)
+                named(c).is_some_and(|w| of(c, w) == "Both") && resolved(c)
             }),
             counted(
                 "task bullet: the first ill-formed task in runtime order named, a later one ill-formed too",
                 &cases,
-                |c| !rejected(c) && source(&of(c, "t")) && source(&of(c, "p")),
+                |c| resolved(c) && source(&of(c, "t")) && source(&of(c, "p")),
             ),
             counted(
                 "task bullet: a task declared earlier ill-formed too, after the one named in runtime order",
                 &cases,
-                |c| !rejected(c) && source(&of(c, "t")) && source(&of(c, "p")) && order(c)[0] == "p",
+                |c| resolved(c) && source(&of(c, "t")) && source(&of(c, "p")) && order(c)[0] == "p",
             ),
             counted("bound otherwise: a requester bound for `interrupt-source` at `false`, no route", &cases, |c| {
                 lowered(c) && (of(c, "own") == "False" || of(c, "e") == "False")

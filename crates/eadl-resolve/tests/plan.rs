@@ -303,6 +303,51 @@ fn the_search_and_the_checker_refuse_a_bare_region_alike() {
     }
 }
 
+/// Model §7 rule 4 and §8 rule 1 (`RTP-H20`): a system's own level and its tasks are requesters apart and one side, so
+/// the search refuses a contradiction between them, or between two tasks, and not what is only written twice. The
+/// configuration checker's reading is its check (5), which needs a plan and so has none to read here: until this leaf
+/// the runtime plan's bounded checker held the two readings apart by a class of records the checker refused.
+#[test]
+fn the_search_reads_a_system_s_side_whole() {
+    let v = vocabulary();
+    let task = |name: &str, side: &str| {
+        format!("(task {name} (period 10 ms) (deadline 10 ms) (deadline-from release) (priority 1) {side})")
+    };
+    for (case, own, tasks, expected) in [
+        (
+            "its own level against a task",
+            "(requires (observable-output false))",
+            task("t", "(needs observable-output)"),
+            "invalid-description",
+        ),
+        (
+            "two tasks",
+            "",
+            format!(
+                "{} {}",
+                task("a", "(requires (observable-output false))"),
+                task("b", "(needs observable-output)")
+            ),
+            "invalid-description",
+        ),
+        (
+            "written twice alike",
+            "(needs observable-output)",
+            task("t", "(needs observable-output)"),
+            "ok",
+        ),
+    ] {
+        let text = format!(
+            "(defmodule app.case\n  (version 1 0)\n\
+             (defblock dev (offers (observable-output true) (reachable-at-privilege machine)))\n\
+             (defplatform soc (offers (core-count 1 tick) (reachable-at-privilege machine)) (requires (uses dev)))\n\
+             (defsystem s {own} {tasks} (platform (uses soc))))"
+        );
+        let (by_search, said, _, _) = both_readings(&text, &v);
+        assert_eq!(by_search, expected, "{case}: {said:#?}");
+    }
+}
+
 /// Model §8 rule 5 (`M4.1.20`), a size past the exact arithmetic: both readings refuse `unsupported-profile` a decimal too
 /// precise to hold exactly, and `invalid-description` a size that is no whole number of bytes or names no unit.
 #[test]

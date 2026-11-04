@@ -327,6 +327,22 @@ fn what_the_model_refuses_to_read_is_the_description_s_status() {
         verdict.findings[0].message.contains("`idle.hook`"),
         "{verdict:?}"
     );
+    // A system's own level against one of its tasks: requesters apart, and one side (model §8 rule 1, §7 rule 4). The
+    // search refuses this itself since `RTP-H20`, so no plan reaches here through it; held here for a record that does.
+    let split = DESCRIPTION.replace(
+        "(requires (uses idle.hook))",
+        "(requires (uses idle.hook) (relative-delay false))",
+    );
+    let (sources, program) = elaborated(&split);
+    let verdict = checked(&sources, &program, &plan(&program)).unwrap_err();
+    assert_eq!(verdict.status, Status::InvalidDescription, "{verdict:?}");
+    assert_eq!(verdict.findings[0].code, PLAN_DESCRIPTION);
+    assert!(
+        verdict.findings[0]
+            .message
+            .contains("two constraints on `relative-delay` that no value satisfies together"),
+        "{verdict:?}"
+    );
 }
 
 /// Each declaration of a file, those of a module's body among them.

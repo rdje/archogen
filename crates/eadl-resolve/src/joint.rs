@@ -103,6 +103,9 @@ pub fn requesters(
     if decl.head() != Some("defsystem") {
         return Ok(vec![requester(decl, name, kind, vocabulary)?]);
     }
+    // Two tasks of one system are two requesters, though §7 reads them as one side (model §8 rule 1): a contradiction
+    // between its own level and a task, or between two tasks, is one (§7 rule 4; `RTP-H20`).
+    requirement::read_side(decl, vocabulary)?;
     let (tasks, own): (Vec<&Form>, Vec<&Form>) = decl
         .items()
         .iter()
