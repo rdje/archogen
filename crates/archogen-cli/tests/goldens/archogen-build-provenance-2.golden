@@ -1,6 +1,7 @@
-archogen-build-provenance/1
+archogen-build-provenance/2
 acceptance: string
 checker: string
+description: string
 entries[].generated.file: string
 entries[].generated.line: number
 entries[].plan: string

@@ -95,9 +95,9 @@ fn build_and_list() -> BTreeSet<String> {
 
 /// A count written as a word or in digits.
 fn count_of(word: &str) -> Option<usize> {
-    const WORDS: [&str; 12] = [
+    const WORDS: [&str; 15] = [
         "one", "two", "three", "four", "five", "six", "seven", "eight", "nine", "ten", "eleven",
-        "twelve",
+        "twelve", "thirteen", "fourteen", "fifteen",
     ];
     let word = word.trim_matches(|c: char| !c.is_ascii_alphanumeric());
     if let Ok(n) = word.parse() {

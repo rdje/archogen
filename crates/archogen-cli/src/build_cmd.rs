@@ -21,7 +21,7 @@ use std::path::{Path, PathBuf};
 
 use archogen_api::{Elaborated, Limits, Plan, Resolve, Response};
 use archogen_digest::Digest;
-use archogen_emit::{emit, Emitted, Inputs, PROVENANCE_FORMAT};
+use archogen_emit::{emit, Emitted, Inputs};
 use archogen_plan::{lower_checked, Acceptance, Generator, Refusal};
 
 use crate::check_cmd::{ask_with, report_not_judged};
@@ -156,7 +156,7 @@ fn place_for(out_dir: &str) -> Result<PathBuf, Failed> {
     };
     let empty = entries.count() == 0;
     let earlier_build = std::fs::read_to_string(dir.join("provenance.json"))
-        .is_ok_and(|text| text.contains(&format!("\"format\": \"{PROVENANCE_FORMAT}\"")));
+        .is_ok_and(|text| text.contains("\"format\": \"archogen-build-provenance/"));
     if empty || earlier_build {
         Ok(dir)
     } else {
@@ -205,10 +205,15 @@ impl Build<'_> {
             acceptance,
         )
         .map_err(Failed::Refused)?;
+        let language: Vec<String> = archogen_api::kind_modules()
+            .into_iter()
+            .map(|(name, _)| name)
+            .collect();
         let inputs = Inputs {
             program,
             sources: &self.response.sources,
             description: self.path,
+            language: &language,
             assignment: &self.plan.text,
             result: &checked.text,
             plan: lowered.plan.text(),

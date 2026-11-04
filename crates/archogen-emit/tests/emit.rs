@@ -47,6 +47,7 @@ fn kinds(sources: &mut SourceMap) -> Registry {
 /// A description's inputs to a build, as `archogen build` makes them: the search's assignment, the checker's result.
 struct Build {
     sources: SourceMap,
+    language: Vec<String>,
     kinds: Registry,
     program: Program,
     assignment: String,
@@ -124,6 +125,12 @@ fn build_of(text: &str) -> Build {
     .map_or_else(|_| String::new(), |lowered| lowered.plan.text().to_owned());
     Build {
         sources,
+        language: [
+            "docs/semantics/kinds/core.eadl",
+            "docs/semantics/kinds/os-rt.eadl",
+        ]
+        .map(str::to_owned)
+        .to_vec(),
         kinds,
         program,
         assignment,
@@ -138,6 +145,7 @@ impl Build {
             program: &self.program,
             sources: &self.sources,
             description: "description.eadl",
+            language: &self.language,
             assignment: &self.assignment,
             result: &self.result,
             plan: &self.plan,
@@ -359,7 +367,8 @@ fn provenance_says_what_each_table_entry_came_from() {
         .expect("emitted");
     let provenance = file(&emitted, "provenance.json");
     assert!(
-        provenance.contains("\"format\": \"archogen-build-provenance/1\""),
+        provenance.contains("\"description\": \"description.eadl\"")
+            && provenance.contains("\"format\": \"archogen-build-provenance/2\""),
         "{provenance}"
     );
     assert!(

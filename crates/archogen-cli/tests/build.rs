@@ -106,6 +106,7 @@ fn a_description_becomes_a_package_that_says_what_it_did_not_do() {
         [
             "Cargo.toml",
             "assignment.eadl",
+            "description/system.eadl",
             "plan-check.json",
             "plan.txt",
             "provenance.json",
@@ -119,7 +120,7 @@ fn a_description_becomes_a_package_that_says_what_it_did_not_do() {
         ]
     );
     assert!(out.contains("generated `system-heartbeat` into"), "{out}");
-    assert!(out.contains("12 file(s): "), "{out}");
+    assert!(out.contains("13 file(s): "), "{out}");
     assert!(
         out.contains("checked by `archogen-plan-check`: accepted"),
         "{out}"
@@ -615,6 +616,17 @@ fn the_chapter_shows_what_the_command_says_and_what_the_package_prints() {
             "cargo run --quiet --manifest-path build/heartbeat/Cargo.toml"
         )
     );
+    let (status, explained, err) = explain(&dir.display().to_string());
+    assert_eq!(status, Status::Ok, "{err}");
+    assert_eq!(
+        spell(&explained, &description, HEARTBEAT)
+            .lines()
+            .collect::<Vec<_>>(),
+        shown(
+            &chapter,
+            "archogen explain build/heartbeat --requirement observable-output"
+        )
+    );
     let refused = "examples/s0-heartbeat/system-unsupported.eadl";
     let (status, _, err) = build(&example(refused), &scratch("chapter-refused").join("out"));
     assert_eq!(status.code(), 11, "{err}");
@@ -626,4 +638,182 @@ fn the_chapter_shows_what_the_command_says_and_what_the_package_prints() {
             "archogen build examples/s0-heartbeat/system-unsupported.eadl --out build/x"
         )
     );
+}
+
+/// `archogen explain` of `target`, for `observable-output`.
+fn explain(target: &str) -> (Status, String, String) {
+    invoke(
+        &["explain", target, "--requirement", "observable-output"],
+        &NoLaunch,
+    )
+}
+
+#[test]
+fn a_build_is_explained_as_its_description_is_and_its_plan_compared() {
+    let dir = scratch("explain").join("out");
+    let description = example(HEARTBEAT);
+    let (status, _, err) = build(&description, &dir);
+    assert_eq!(status, Status::Ok, "{err}");
+    let (of_description, said, err) = explain(&description);
+    assert_eq!(of_description, Status::Ok, "{err}");
+    let build_dir = dir.display().to_string();
+    let (of_build, out, err) = explain(&build_dir);
+    assert_eq!(of_build, Status::Ok, "{err}");
+    // The same account, of the same text, under the build's copy of it.
+    let recorded = dir.join("description/system.eadl").display().to_string();
+    let account = |text: &str, path: &str| -> Vec<String> {
+        text.replace(path, "SYSTEM")
+            .lines()
+            .filter(|line| !line.contains("the plan of system") && !line.contains("experimental"))
+            .map(str::to_owned)
+            .collect()
+    };
+    assert_eq!(account(&said, &description), account(&out, &recorded));
+    let held = Digest::of(&fs::read(dir.join("assignment.eadl")).expect("the assignment"));
+    assert!(
+        out.contains(&format!(
+            "is the one this build holds, {held}, which `archogen-plan-check` accepted"
+        )),
+        "{out}"
+    );
+    assert!(!out.contains("unchecked"), "{out}");
+}
+
+#[test]
+#[cfg_attr(
+    miri,
+    ignore = "runs cargo as a child process, which Miri does not support"
+)]
+fn a_module_tree_is_recorded_whole_built_run_and_explained_from_the_build() {
+    let dir = scratch("modules").join("out");
+    let root = example("crates/archogen-plan/tests/corpus/modules/app.main.eadl");
+    let (status, out, err) = build(&root, &dir);
+    assert_eq!(status, Status::Ok, "{err}");
+    let recorded: Vec<String> = snapshot(&dir)
+        .into_keys()
+        .filter(|file| file.starts_with("description/"))
+        .collect();
+    assert_eq!(
+        recorded,
+        [
+            "description/app.main.eadl",
+            "description/hw.dev.eadl",
+            "description/os.svc.eadl"
+        ]
+    );
+    assert!(
+        out.contains("is released by the source `hw.dev.e`"),
+        "{out}"
+    );
+    assert!(
+        run_package(&dir).contains(" release s\n"),
+        "the source's task was never released"
+    );
+    // Its modules read from the build, its plan the build's, its names qualified as the plan writes them.
+    let (status, said, err) = invoke(
+        &[
+            "explain",
+            &dir.display().to_string(),
+            "--requirement",
+            "relative-delay",
+        ],
+        &NoLaunch,
+    );
+    assert_eq!(status, Status::Ok, "{err}");
+    assert!(said.contains("is the one this build holds"), "{said}");
+    assert!(said.contains("bound to `hw.timer.d`"), "{said}");
+}
+
+#[test]
+fn a_build_whose_description_or_plan_moved_is_stale_and_gets_no_account() {
+    let root = scratch("stale");
+    let dir = root.join("out");
+    let (status, _, err) = build(&example(HEARTBEAT), &dir);
+    assert_eq!(status, Status::Ok, "{err}");
+    let target = dir.display().to_string();
+    let assignment = dir.join("assignment.eadl");
+    let plan = fs::read_to_string(&assignment).expect("the assignment");
+    fs::write(&assignment, format!("{plan}; edited\n")).expect("written");
+    let (status, out, err) = explain(&target);
+    assert_eq!(status, Status::StaleInput, "{err}");
+    assert!(err.contains("holds the plan"), "{err}");
+    assert!(
+        out.is_empty(),
+        "no account of a plan the search did not write: {out}"
+    );
+    fs::write(&assignment, &plan).expect("restored");
+
+    let recorded = dir.join("description/system.eadl");
+    let text = fs::read_to_string(&recorded).expect("the description");
+    let changed = text.replacen("(period 30 ms)", "(period 20 ms)", 1);
+    assert_ne!(changed, text, "nothing was changed");
+    // That one no longer checks, its deadline past its period; the changed fixture checks, and gives another plan.
+    fs::write(&recorded, &changed).expect("written");
+    let (status, out, err) = explain(&target);
+    assert_eq!(status, Status::StaleInput, "{err}");
+    assert!(out.is_empty(), "{out}");
+    let other = fs::read_to_string(example("examples/s0-heartbeat/system-changed.eadl"))
+        .expect("the fixture");
+    fs::write(&recorded, other).expect("written");
+    let (status, out, err) = explain(&target);
+    assert_eq!(status, Status::StaleInput, "{err}");
+    assert!(err.contains("holds the plan"), "{err}");
+    assert!(out.is_empty(), "{out}");
+    fs::write(&recorded, &text).expect("restored");
+
+    // A record that judged another plan, or refused it, is no acceptance of this one.
+    let record = dir.join(RECORD);
+    let accepted = fs::read_to_string(&record).expect("the record");
+    let other = Record::read(accepted.as_bytes(), accepted.len()).expect("a record");
+    let refusing = Record::new(
+        other.producer().clone(),
+        Subject {
+            program: other.subject().program,
+            judged: Judged::Plan(Digest::of(b"another plan")),
+        },
+        other.profile().to_owned(),
+        Status::Ok,
+        Vec::new(),
+    )
+    .expect("a record");
+    fs::write(&record, refusing.write()).expect("written");
+    let (status, _, err) = explain(&target);
+    assert_eq!(status, Status::StaleInput, "{err}");
+    assert!(err.contains("does not accept that plan"), "{err}");
+    fs::write(&record, &accepted).expect("restored");
+    assert_eq!(explain(&target).0, Status::Ok);
+}
+
+#[test]
+fn a_directory_that_is_no_build_is_a_usage_error_naming_what_it_lacks() {
+    let root = scratch("not-a-build");
+    let target = root.display().to_string();
+    let (status, out, err) = explain(&target);
+    assert_eq!(status, Status::Usage, "{err}");
+    assert!(err.contains("`provenance.json`"), "{err}");
+    assert!(err.contains("a directory `archogen build` wrote"), "{err}");
+    assert!(out.is_empty(), "{out}");
+
+    let dir = root.join("out");
+    let (status, _, err) = build(&example(HEARTBEAT), &dir);
+    assert_eq!(status, Status::Ok, "{err}");
+    let provenance = dir.join("provenance.json");
+    let text = fs::read_to_string(&provenance).expect("provenance");
+    let target = dir.display().to_string();
+    // A name that would leave the build is never followed.
+    let outside = text.replace(
+        "\"description\": \"system.eadl\"",
+        "\"description\": \"../../secret.eadl\"",
+    );
+    assert_ne!(outside, text);
+    fs::write(&provenance, outside).expect("written");
+    let (status, _, err) = explain(&target);
+    assert_eq!(status, Status::Usage, "{err}");
+    assert!(err.contains("lies outside the build"), "{err}");
+    // A format this engine does not read is said, never guessed at.
+    let older = text.replace("archogen-build-provenance/2", "archogen-build-provenance/1");
+    fs::write(&provenance, older).expect("written");
+    let (status, _, err) = explain(&target);
+    assert_eq!(status, Status::Usage, "{err}");
+    assert!(err.contains("build it again"), "{err}");
 }

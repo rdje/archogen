@@ -206,6 +206,11 @@ impl SourceMap {
         Ok(id)
     }
 
+    /// Every source, in the order they were added.
+    pub fn iter(&self) -> impl Iterator<Item = &Source> {
+        self.sources.iter()
+    }
+
     /// The source behind an id.
     #[must_use]
     pub fn get(&self, id: SourceId) -> Option<&Source> {

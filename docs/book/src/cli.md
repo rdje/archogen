@@ -38,7 +38,7 @@ COMMANDS:
     build       generate, assemble and build a complete system and its simulator   [experimental — the hosted playground: the plan's releases run, and no job holds application code; completed by leaf M4.12]
     analyze     run an analysis for one named property over a build   [unimplemented — tracked by leaf M2.21.2]
     verify      run a verification tier over a build   [unimplemented — tracked by leaf M4.11]
-    explain     explain how one requirement was realized, or why it could not be   [experimental — one requirement of one system, read from a description over its own blocks and platforms, not yet from a build; completed by leaf M4.2]
+    explain     explain how one requirement was realized, or why it could not be   [experimental — one requirement of one system, over a description's own blocks and platforms; completed by leaf M3.7]
     replay      replay a recorded failure manifest and check its identity   [unimplemented — tracked by leaf M4.7]
     mcp         serve the engine API to an agent over MCP, on standard input and output
 ```
@@ -152,14 +152,14 @@ $ archogen explain system.eadl --requirement observable-output
   `host.playground` leaves it undescribed
   bound to `console.uart` by the search's plan
 system.eadl: the plan of system `heartbeat` is the search's, unchecked: `archogen resolve` runs the configuration checker over the plan it writes
-  experimental: one requirement of one system, read from a description over its own blocks and platforms, not yet from a build; completed by M4.2
+  experimental: one requirement of one system, over a description's own blocks and platforms; completed by M3.7
 ```
 
 When no plan is written it says why — `no provider meets it`, with the search's own diagnostic, or `met alone`, with
 what stopped the search — on standard error as `archogen resolve` prints it, and exits with the same verdict. A fact
 no requester of the system requires is `usage`, its hint listing the requirements the system writes. It runs no
-checker and claims none: the plan it explains is the one `archogen resolve --unchecked` writes. §10.2's form reads a
-build, which `archogen build` writes; that form is `M4.2.3.2`'s.
+checker and claims none: the plan it explains is the one `archogen resolve --unchecked` writes. Given a directory
+`archogen build` wrote, it reads that build, §10.2's form ([Building a system](building.md)).
 
 **The checkers are programs of their own** (ruled `2026-10-22`, findings §16 (a); built by `M3.5.1.4`, `M3.5.6` and
 `M2.21`). The configuration checker is `archogen-plan-check` and the scheduling checker `archogen-analyze`,

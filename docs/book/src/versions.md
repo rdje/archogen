@@ -237,10 +237,10 @@ their versioned readers and permanent refusal controls enforce their local contr
 | Field | Value |
 | --- | --- |
 | Surface | what a generated system says it was lowered from, and what each of its table entries came from: `provenance.json`, beside the plan's text |
-| Version | `archogen-build-provenance/1` |
+| Version | `archogen-build-provenance/2` — `/2` added the name of the description the build records (`M4.2.3.2`), a commit after `/1`, which no reader had met |
 | Declared at | `const:crates/archogen-emit/src/lib.rs:PROVENANCE_FORMAT` |
 | Changes when | a member is added, removed or reinterpreted |
-| Pinned by | its shape — every key path and the kind of value at it — frozen in `crates/archogen-cli/tests/goldens/archogen-build-provenance-1.golden` and compared by `crates/archogen-cli/tests/format_golden.rs`, a golden never being rewritten; each entry followed from both ends by `crates/archogen-cli/tests/build.rs` |
+| Pinned by | its shape — every key path and the kind of value at it — frozen in `crates/archogen-cli/tests/goldens/archogen-build-provenance-2.golden` and compared by `crates/archogen-cli/tests/format_golden.rs`, a golden never being rewritten; each entry followed from both ends by `crates/archogen-cli/tests/build.rs` |
 | Keeps | a generated table entry can be followed back to the plan's line and the description's form |
 
 ## `wasm-request-format`

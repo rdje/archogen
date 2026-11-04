@@ -332,7 +332,7 @@ pub const COMMANDS: &[CommandSpec] = &[
         summary: "explain how one requirement was realized, or why it could not be",
         positionals: &[PositionalSpec {
             name: "DESCRIPTION",
-            help: "path to the eADL system description",
+            help: "path to the eADL system description, or to a build `archogen build` wrote",
         }],
         options: &[
             PROFILE,
@@ -365,10 +365,10 @@ pub const COMMANDS: &[CommandSpec] = &[
         ],
         sibling: None,
         // The search's own account over a description (leaf `M3.4.13.2`), offered by the engine API and the MCP server;
-        // §10.2's form reads a build, which `archogen build` writes and `M4.2` completes.
+        // on the command line, of a build too (leaf `M4.2.3.2`).
         maturity: Maturity::Experimental {
-            scope: "one requirement of one system, read from a description over its own blocks and platforms, not yet from a build",
-            completed_by: "M4.2",
+            scope: "one requirement of one system, over a description's own blocks and platforms",
+            completed_by: "M3.7",
         },
         exposure: Exposure::Tool,
     },

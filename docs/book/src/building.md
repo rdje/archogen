@@ -27,7 +27,7 @@ The description is the two periodic tasks of [A tour of archogen](tour.md):
 ```console
 $ archogen build examples/s0-heartbeat/system.eadl --out build/heartbeat
 examples/s0-heartbeat/system.eadl: generated `system-heartbeat` into build/heartbeat
-  12 file(s): Cargo.toml, src/main.rs, rt-core/Cargo.toml, sim-playground/Cargo.toml, rt-core/src/lib.rs, rt-core/src/scheduler.rs, rt-core/src/fault.rs, sim-playground/src/lib.rs, plan.txt, provenance.json, assignment.eadl, plan-check.json
+  13 file(s): Cargo.toml, src/main.rs, rt-core/Cargo.toml, sim-playground/Cargo.toml, rt-core/src/lib.rs, rt-core/src/scheduler.rs, rt-core/src/fault.rs, sim-playground/src/lib.rs, plan.txt, provenance.json, description/system.eadl, assignment.eadl, plan-check.json
   checked by `archogen-plan-check`: accepted (build/heartbeat/plan-check.json)
   2 task(s), a run of 3 tick(s) of 1/100 s
   experimental: the hosted playground: the plan's releases run, and no job holds application code; completed by M4.12
@@ -83,7 +83,7 @@ plan's are 10 ms and 30 ms, so it is 1/100 s.
 
 ## What is in the package
 
-Twelve files, and only one of them is generated in any interesting sense:
+Thirteen files, and only one of them is generated in any interesting sense:
 
 | File | What it is |
 | --- | --- |
@@ -97,6 +97,7 @@ Twelve files, and only one of them is generated in any interesting sense:
 | `sim-playground/src/lib.rs` | the engine's simulator, byte for byte |
 | `plan.txt` | the runtime plan's canonical text |
 | `provenance.json` | what the plan was lowered from, and what each table entry came from |
+| `description/system.eadl` | the description it was made from, with every module it imports beside it |
 | `assignment.eadl` | the assignment the search wrote, which the checker judged |
 | `plan-check.json` | the checker's result record for it |
 
@@ -152,6 +153,23 @@ wasm module and the [MCP](ledger.md#mcp-specification) server offer no build, an
 that can run the checker. What `build` asks of the engine API is what the search already holds: the plan and what it was written
 from.
 
+**A build can be asked about later.** It records the description it was made from, so `archogen explain` reads a build as §10.2
+writes it, explaining what that description requires and comparing the search's plan with the one the build holds:
+
+```console
+$ archogen explain build/heartbeat --requirement observable-output
+`observable-output` required by `console.write`
+  written at build/heartbeat/description/system.eadl:32:20
+  `console.uart` meets it
+  `host.playground` leaves it undescribed
+  bound to `console.uart` by the search's plan
+build/heartbeat: the plan of system `heartbeat` is the one this build holds, sha256:e77556b645eea31dda156903d6ddf570d5f5fea1f7ad6e167a4eca7467bd6280, which `archogen-plan-check` accepted
+  experimental: one requirement of one system, over a description's own blocks and platforms; completed by M3.7
+```
+
+A build whose description no longer gives its plan, because it was edited or a different engine searches otherwise, is
+`stale-input`, and the command prints no account of a plan it did not write: the search can only speak for its own.
+
 **The two programs together.** `crates/archogen-cli/tests/common/mod.rs` runs the checker's own judgement in the test's process,
 so a test sees a real plan past the real rules. `scripts/resolve_installed.sh`, in the `integration` tier, runs the real
 executables from a real install, and builds and runs the package they write ([Verifying the toolchain](verification.md)).
@@ -168,4 +186,4 @@ nothing to release it, is refused now for what it is: a missing fact of the desc
 A generated system runs its releases and nothing else. No job holds application code until `M4.12`'s inputs exist, so a trace says
 nothing about what a task does or how long it takes. The plan is `(complete no)`, and it lists what is owed. Nothing here is a
 timing result, which is [the scheduling checker's](analysis.md) to give under its own assumptions, and nothing says the hosted
-playground behaves like hardware: it models no device yet (`M4.3`). `archogen explain` does not read a build yet (`M4.2.3.2`).
+playground behaves like hardware: it models no device yet (`M4.3`).

@@ -21,7 +21,7 @@ use eadl_model::check::resolved_declarations;
 use eadl_model::kind::Registry;
 
 /// The format of `provenance.json`.
-pub const PROVENANCE_FORMAT: &str = "archogen-build-provenance/1";
+pub const PROVENANCE_FORMAT: &str = "archogen-build-provenance/2";
 
 /// The engine's sources every generated system holds, by the path each takes there, byte for byte.
 ///
@@ -63,6 +63,8 @@ pub struct Inputs<'a> {
     pub sources: &'a SourceMap,
     /// The description's name among them, which a provenance entry names each source relative to.
     pub description: &'a str,
+    /// The names among them of the language's own definitions, which every build holds in its generator and none records.
+    pub language: &'a [String],
     /// The assignment record, as the text written.
     pub assignment: &'a str,
     /// The configuration checker's result record for it, as the text written.
@@ -545,7 +547,12 @@ fn main_rs(
 }
 
 /// `provenance.json`: what the plan was lowered from, and what each table entry came from (the record's §1; §10.1).
-fn provenance(lowered: &Lowered, contents: &Contents, entries: &[Entry]) -> String {
+fn provenance(
+    lowered: &Lowered,
+    contents: &Contents,
+    description: &str,
+    entries: &[Entry],
+) -> String {
     let quote = |text: &str| {
         let mut out = String::new();
         archogen_json::write_string(&mut out, text);
@@ -554,6 +561,7 @@ fn provenance(lowered: &Lowered, contents: &Contents, entries: &[Entry]) -> Stri
     let mut out = String::from("{\n");
     out.push_str(&format!("  \"format\": {},\n", quote(PROVENANCE_FORMAT)));
     out.push_str(&format!("  \"system\": {},\n", quote(&contents.system)));
+    out.push_str(&format!("  \"description\": {},\n", quote(description)));
     out.push_str(&format!(
         "  \"plan\": {},\n",
         quote(&format!("sha256:{}", lowered.plan.sha256().hex()))
@@ -680,8 +688,28 @@ pub fn emit(inputs: &Inputs<'_>, generator: Generator) -> Result<Emitted, Refusa
     });
     files.push(File {
         path: "provenance.json".to_owned(),
-        contents: provenance(&lowered, contents, &entries),
+        contents: provenance(
+            &lowered,
+            contents,
+            &relative_to_description(inputs.description, inputs.description),
+            &entries,
+        ),
     });
+    // What it was made from: the description and every module it imports, under the names they import each other by, so a
+    // later command reads what this build read (`archogen explain`; the record's §1).
+    files.extend(
+        inputs
+            .sources
+            .iter()
+            .filter(|source| !inputs.language.contains(&source.name))
+            .map(|source| File {
+                path: format!(
+                    "description/{}",
+                    relative_to_description(inputs.description, &source.name)
+                ),
+                contents: source.text.clone(),
+            }),
+    );
     let source_triggers = contents
         .tasks
         .iter()

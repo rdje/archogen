@@ -25,12 +25,15 @@ rt-core/                   crates/rt-core's sources, byte for byte, under a gene
 sim-playground/            crates/sim-playground's sources, byte for byte, under a generated manifest
 plan.txt                   the runtime plan's canonical text
 provenance.json            what the plan was lowered from, and what each table entry came from
+description/                the description and every module it imports, under the names they import each other by
 assignment.eadl            the assignment the search wrote, which the checker judged
 plan-check.json            the checker's result record for it
 ```
 
 The last two are the command's, §5: the emitter takes them as inputs and writes neither. Nothing in the package depends on
 where it was built or on the path it was given: a provenance entry names a source by its place relative to the description.
+A build records what it was made from so that a later command reads what it read: `archogen explain` of a build, by §10.2,
+explains that description and holds the search's plan equal to the one the build holds, or says `stale-input`.
 
 Behavior is copied and never generated: what `src/main.rs` adds is data. So the code that runs is code the engine compiles
 and tests, as `ROADMAP.md` §1.1 admits ("copied or linked components") and as S0 did, and a test holds each copy byte for
