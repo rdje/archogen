@@ -45,8 +45,8 @@ No composite ever takes the maximum of things its definition adds.
 | the completion path | `completion` | catalog: timing cost `completion` | from the job's last instruction of its own code to the decided switch that follows, the scheduling decision included; a primitive the job's code ends by tail-calling is charged here and as a primitive, which over-counts and never under-counts (the fault contract's completion, R14 227) |
 | the completion path's masked run | `masked.completion` | catalog: timing cost `masked.completion` | the longest contiguous masked stretch in the completion path, up to the decided switch. The transition that follows it is added by `L`, as it is today |
 | the task's own code | `C_i^app` | application, per task | the most one job executes of the task's own code, from its first instruction after the transition in to its last. It excludes every primitive's execution and every service, and includes the application's own instrumentation |
-| how often it calls each primitive | `n_{i,p}` | application, per task | the most calls to `p` one job makes: §7.3's "allowed OS calls", with a count; a call into a node's generated code is listed so too (§7) |
-| the task's masked runs | for each run `r` and each way `e` it can end: `CS_{i,r,e}^app` and `n_{r,e,p}` | application, per task | a run is a stretch from a `mask` call to an `unmask` call that ends it, or to the job's completion when none does. A run that ends at `unmask` on one path and at completion on another has both endings. For each ending, `CS_{i,r,e}^app` is the most the task's own code executes from the `mask` to that ending, and `n_{r,e,p}` counts the calls to each primitive on the way, other than the `mask` and `unmask` that delimit it |
+| how often it calls each primitive | `n_{i,p}` | application, per task | the most calls to `p` one job makes: §7.3's "allowed OS calls", with a count; a call into a node's generated code is listed so too (§7). The list has a §7.3 category (§6) |
+| the task's masked runs | for each run `r` and each way `e` it can end: `CS_{i,r,e}^app` and `n_{r,e,p}` | application, per task | a run is a stretch from a `mask` call to an `unmask` call that ends it, or to the job's completion when none does. A run that ends at `unmask` on one path and at completion on another has both endings. For each ending, `CS_{i,r,e}^app` is the most the task's own code executes from the `mask` to that ending, and `n_{r,e,p}` counts the calls to each primitive on the way, other than the `mask` and `unmask` that delimit it. The list has a §7.3 category (§6) |
 | the order among sources | `ahead(x)` for two sources | plan | a strict order over the declared sources, the interrupt controller's as the plan configures it: its priorities, with its own rule for ties. The plan also states that every declared source is deliverable, its priority above the controller's threshold, since an enabled source that is never taken has no bound |
 | where the timer stands | `ahead(x)` between the timer and a source | catalog: hardware fact `external-before-timer` (§2) | `yes`: every source is taken before the timer when both are pending; `no`: the timer before every source, admitted only with the port fact `one-claim-per-trap` (§2) |
 
@@ -301,7 +301,7 @@ everything that runs inside it:
   over-covers.
 - **A run ending at completion** holds the same, but in place of `unmask` it holds the completion path, masked up
   to the decided switch. `L`'s `+ S` then covers the switch.
-- **The runs the application declares are all its runs,** for three reasons:
+- **The runs the application declares are all its runs,** the list's completeness being its claim, under that list's category (§6), for three reasons:
   - the application's declaration that each task masks only through the runtime API makes its masked stretches
     start only at a `mask` call;
   - `pending-taken-after-unmask` keeps stretches split by an `unmask` apart;
@@ -428,6 +428,13 @@ This record names what §12 gains; the catalog record's own review checks the wo
     analytically established, externally supplied, observed maximum, assumed. `ROADMAP.md` §7.3 lists the four
     categories without ranking them, so the order is this record's choice. The catalog record leaves evidence
     strength to the analysis to state (its §7).
+  - **A task's list of calls and its list of masked runs are parts of that order, though they add nothing** (added
+    `2026-11-04`, `M2.31`). Each is the application's claim of what one job calls or runs masked, and of what it does
+    not, and §7.3 asks a category of every bound. `C_i` reads the list of calls. `CS_i` reads both, since which
+    `masked.p` and which runs its largest is taken over rests on them, and what rests on `CS_i` inherits it. The
+    list with no call in it counts the same: it still says the job makes none. Each list carries one category, the
+    weakest of what backs it, a run's `CS_{i,r,e}^app` keeping its own, and the conclusion names each list. A category
+    that cannot be read leaves what reads it undeclared, as the next rule says of any part.
   - §7.3's rule stands: an observed maximum with a safety factor remains an empirical assumption "unless a valid
     argument establishes a bound".
   - The description's periods, deadlines and release jitters, and the plan's order, are requirements and
@@ -559,6 +566,8 @@ the runtime API named so, not as one of the variant's task facts, each checked b
 `M2.25`'s on the same day widens the caller's declaration for a service's application code from every `J` to every
 composite, as its row's reasoning has it; no verdict moves, and `compose.rs` stops naming a task's `C` and `CS` as
 values when the declaration cannot be read.
+`M2.31`'s on `2026-11-04`, §6's lists with a category, was reviewed by a context that did not write it, which found no
+defect (the leaf's evidence); no value moves, and a category lowers only where a list's is the weakest part.
 `M2.30`'s on `2026-11-04`, the runtime's own data in `leaves-interrupt-hardware-alone` and in `runtime-discipline.<id>`'s
 roles, was reviewed by contexts that did not write it (the leaf's evidence); no verdict moves, `compose.rs` reading both
 facts by name.

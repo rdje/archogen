@@ -144,7 +144,9 @@ fn task(
         },
         own_code: own,
         calls: Vec::new(),
+        calls_evidence: Some(Evidence::Analytical),
         runs: Vec::new(),
+        runs_evidence: Some(Evidence::Analytical),
     }
 }
 
@@ -260,7 +262,7 @@ fn a_task_s_cost_and_masked_section_are_the_sum_and_the_maximum_the_record_says(
         "C of task `a` = 13 (an observed maximum, the weakest of its parts): C^app = 5 (the application: an \
          observed maximum) + api.mask = 1 (the catalog: analytically established) + api.unmask = 1 (the catalog: \
          analytically established) + 2 × api.spin = 2 (the catalog: analytically established) + completion = 2 \
-         (the catalog: analytically established)"
+         (the catalog: analytically established) + its list of calls (the application: analytically established)"
     );
     let cs = rendered(&composition, "CS of task `a`");
     assert!(
@@ -276,7 +278,13 @@ fn a_task_s_cost_and_masked_section_are_the_sum_and_the_maximum_the_record_says(
         cs.contains("; masked.spin = 3 [masked.spin = 3 (the catalog: analytically established)]"),
         "{cs}"
     );
-    assert!(cs.ends_with("; masked.completion = 1 [masked.completion = 1 (the catalog: analytically established)]"), "{cs}");
+    assert!(cs.ends_with(
+            "; masked.completion = 1 [masked.completion = 1 (the catalog: analytically established)]; the lists it \
+             is taken over = 0 [its list of calls (the application: analytically established) + its list of masked \
+             runs (the application: analytically established)]"
+        ),
+        "{cs}"
+    );
     assert_eq!(
         rendered(&composition, "L (the longest masked run)"),
         "L (the longest masked run) = 8 (analytically established, the weakest of its parts): the largest of CS \
@@ -1126,6 +1134,99 @@ fn a_sources_service_comes_from_its_record_or_from_the_caller_and_needs_a_record
         ]
     );
     assert_eq!(composition.stops.unsupported, vec!["`one-request-per-arrival.uart` is declared `no`, outside what the composition covers (record §6)".to_owned()]);
+}
+
+#[test]
+fn a_weak_list_of_calls_or_of_runs_lowers_every_composite_resting_on_it() {
+    // `M2.31`: the list is the application's claim of what a job calls, and of what it does not. So it counts with no
+    // entry in it, and however strong the catalog's costs of the calls it does list are.
+    let (kernel, platform, mut analytical) = fixture_a();
+    analytical.tasks[0].own_code = v(5);
+    let held = compose(&kernel, &platform, &analytical, &[]);
+    let evidence = |composition: &Composition| {
+        let task = &composition.tasks[0];
+        (
+            task.computation.expect("C").evidence,
+            task.masked_section.expect("CS").evidence,
+            task.jitter_release.expect("J").evidence,
+        )
+    };
+    let all = |e| (e, e, e);
+    assert_eq!(evidence(&held), all(Evidence::Analytical));
+
+    let mut calls = analytical.clone();
+    calls.tasks[0].calls_evidence = Some(Evidence::Assumed);
+    let lowered = compose(&kernel, &platform, &calls, &[]);
+    assert_eq!(
+        evidence(&lowered),
+        all(Evidence::Assumed),
+        "C sums over the list, CS takes `masked.p` over it, and a J waits out that masked run"
+    );
+    assert_eq!(
+        lowered.tasks[0].computation.expect("C").value,
+        held.tasks[0].computation.expect("C").value,
+        "and it adds nothing"
+    );
+    assert_eq!(
+        lowered.tasks[0].masked_section.expect("CS").value,
+        held.tasks[0].masked_section.expect("CS").value
+    );
+    assert!(
+        rendered(&lowered, "C of task `a`")
+            .ends_with("+ its list of calls (the application: assumed)"),
+        "{}",
+        rendered(&lowered, "C of task `a`")
+    );
+
+    // With no call listed, the list still says the job makes none.
+    let mut none = calls.clone();
+    none.tasks[0].calls.clear();
+    let lowered = compose(&kernel, &platform, &none, &[]);
+    assert_eq!(evidence(&lowered), all(Evidence::Assumed));
+
+    // A weak list of runs lowers CS and what rests on it, and not C, whose sum does not read it; with no run listed too.
+    let mut runs = analytical.clone();
+    runs.tasks[0].runs_evidence = Some(Evidence::ObservedMaximum);
+    let observed = (
+        Evidence::Analytical,
+        Evidence::ObservedMaximum,
+        Evidence::ObservedMaximum,
+    );
+    let lowered = compose(&kernel, &platform, &runs, &[]);
+    assert_eq!(evidence(&lowered), observed);
+    assert!(rendered(&lowered, "CS of task `a`")
+        .contains("its list of masked runs (the application: an observed maximum)"));
+    runs.tasks[0].runs.clear();
+    assert_eq!(evidence(&compose(&kernel, &platform, &runs, &[])), observed);
+}
+
+#[test]
+fn a_list_s_category_that_cannot_be_read_leaves_what_rests_on_it_undeclared() {
+    // `M2.31`, record §6: a part that cannot be read. The plan owes the category apart from the counts, so one can come
+    // without the other, and no caller has to invent it.
+    let (kernel, platform, mut application) = fixture_a();
+    application.tasks[0].calls_evidence = None;
+    let composition = compose(&kernel, &platform, &application, &[]);
+    assert!(composition.tasks[0].computation.is_none());
+    assert!(composition.tasks[0].masked_section.is_none());
+    assert!(
+        composition
+            .stops
+            .unresolved
+            .iter()
+            .any(|stop| stop.contains("the category of its list of calls, of task `a`")),
+        "{:?}",
+        composition.stops
+    );
+
+    let (kernel, platform, mut application) = fixture_a();
+    application.tasks[0].runs_evidence = None;
+    let composition = compose(&kernel, &platform, &application, &[]);
+    assert!(
+        composition.tasks[0].computation.is_some(),
+        "C does not read it"
+    );
+    assert!(composition.tasks[0].masked_section.is_none());
 }
 
 #[test]

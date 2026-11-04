@@ -71,7 +71,8 @@ pub struct Part {
     /// Who supplies it.
     pub owner: Owner,
     /// How many times it is charged: `n_{i,p}` for a primitive, `2` for `δ` in a `B_x`, the services counted at
-    /// the fixed point for a queued interrupt, else `1`.
+    /// the fixed point for a queued interrupt, else `1`; `0` for a task's list of calls or of masked runs, which adds
+    /// nothing and is weighed by its category alone (record §6).
     pub times: u128,
     /// Its value, once.
     pub value: u128,
@@ -81,6 +82,14 @@ pub struct Part {
 
 impl Part {
     fn render(&self) -> String {
+        if let (0, Some(evidence)) = (self.times, self.evidence) {
+            return format!(
+                "{} ({}: {})",
+                self.symbol,
+                self.owner.words(),
+                evidence.words()
+            );
+        }
         let times = if self.times == 1 {
             String::new()
         } else {
@@ -237,6 +246,11 @@ pub struct Kernel {
     pub discipline: Vec<(String, Option<bool>)>,
 }
 
+/// A task's list of its calls, as a conclusion names it (record §6).
+const LIST_OF_CALLS: &str = "its list of calls";
+/// A task's list of its masked runs, as a conclusion names it (record §6).
+const LIST_OF_RUNS: &str = "its list of masked runs";
+
 /// `n_{i,p}` or `n_{r,e,p}`: the most calls one job, or one run, makes to a primitive (record §1).
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Calls {
@@ -287,8 +301,15 @@ pub struct TaskParts {
     pub own_code: Option<Value>,
     /// `n_{i,p}` for each primitive the task calls. Two entries for one primitive are added, which over-counts.
     pub calls: Vec<Calls>,
+    /// The §7.3 category of that list, what it leaves out as much as what it counts (record §6); `None` when it
+    /// cannot be read, which leaves `C` and `CS` undeclared.
+    pub calls_evidence: Option<Evidence>,
     /// Every masked run, with each way it can end.
     pub runs: Vec<Run>,
+    /// The §7.3 category of that list and of the `n_{r,e,p}` it holds, what it leaves out as much as what it counts
+    /// (record §6); each run's `CS_{i,r,e}^app` carries its own. `None` when it cannot be read, which leaves `CS`
+    /// undeclared.
+    pub runs_evidence: Option<Evidence>,
 }
 
 /// The application's parts and declarations (record §1 and §2).
@@ -514,6 +535,23 @@ impl Sum {
             complete: true,
             weakest: Evidence::Analytical,
         }
+    }
+
+    /// Weigh a list of the application's: it adds nothing, and its category counts (record §6); a category that could
+    /// not be read leaves the sum incomplete, as a part without a value does.
+    fn weigh(&mut self, symbol: &str, read: Option<Value>) {
+        let Some(Value { evidence, .. }) = read else {
+            self.complete = false;
+            return;
+        };
+        self.weakest = weaker(self.weakest, evidence);
+        self.parts.push(Part {
+            symbol: symbol.to_owned(),
+            owner: Owner::Application,
+            times: 0,
+            value: 0,
+            evidence: Some(evidence),
+        });
     }
 
     /// Add `times` × a part; a part without a value leaves the sum incomplete.
@@ -766,6 +804,21 @@ impl Composer<'_> {
 
     /// `api.<p>` or `masked.<p>` (record §5); a primitive the catalog does not cost, or one named `completion`,
     /// leaves `needs` undeclared (record §6).
+    /// A task's list's category, as a part of no value, or the finding that it cannot be read (record §6).
+    fn list(
+        &mut self,
+        evidence: Option<Evidence>,
+        symbol: &str,
+        task: &TaskParts,
+        needs: &str,
+    ) -> Option<Value> {
+        self.part(
+            evidence.map(|evidence| Value { value: 0, evidence }),
+            &format!("the category of {symbol}, of task `{}`", task.id),
+            needs,
+        )
+    }
+
     fn primitive(&mut self, name: &str, masked: bool, needs: &str) -> Option<Value> {
         if name == COMPLETION {
             self.out.stops.unresolved.push(format!(
@@ -847,6 +900,10 @@ impl Composer<'_> {
         }
         let completion = self.part(self.kernel.completion, COMPLETION, &what);
         sum.add(completion, COMPLETION, Owner::Catalog, 1);
+        sum.weigh(
+            LIST_OF_CALLS,
+            self.list(task.calls_evidence, LIST_OF_CALLS, task, &what),
+        );
         match finish_sum(sum) {
             Formed::Value(value, evidence, terms) => {
                 Some(self.composite(&what, value, evidence, Rule::Sum, terms))
@@ -934,6 +991,17 @@ impl Composer<'_> {
             1,
         );
         maximum.alternative(&format!("masked.{COMPLETION}"), sum);
+        // Which primitives and runs the largest is taken over rests on the two lists, the calls' `masked.p` among it.
+        let mut lists = Sum::new();
+        lists.weigh(
+            LIST_OF_CALLS,
+            self.list(task.calls_evidence, LIST_OF_CALLS, task, &what),
+        );
+        lists.weigh(
+            LIST_OF_RUNS,
+            self.list(task.runs_evidence, LIST_OF_RUNS, task, &what),
+        );
+        maximum.alternative("the lists it is taken over", lists);
         match maximum.finish() {
             Formed::Value(value, evidence, terms) => (
                 Some(self.composite(&what, value, evidence, Rule::Maximum, terms)),

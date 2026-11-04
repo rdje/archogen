@@ -266,7 +266,10 @@ service and before a source's each include what no single party knows: kernel co
 application's own code, and the services the plan's interrupt order queues ahead. Each such composite input is added
 up as `docs/specs/catalog/decision_runtime-composite-inputs.md` says — a sum where the definition adds, the longest
 where it takes a maximum, a least fixed point for a queue — under the facts that record states, and the conclusion
-names it with every part, its owner and its evidence category, the whole being as weak as its weakest part. Where the
+names it with every part, its owner and its evidence category, the whole being as weak as its weakest part. A task's
+own lists count among those parts (`M2.31`): how many calls one job makes, and which masked runs it has, are the
+application's claims, including the claim that there are no others, so a list that is only observed lowers the composite
+to an observed maximum though it adds nothing to the sum. Where the
 composition cannot finish — a part or fact that cannot be read, a fact declared `no`, a queue that never settles, an
 overflow, a step budget — the set gets the verdict the record gives that stop, and no task of it is reported as
 holding. Hand-derived fixtures check every rule, and sixteen deliberate breakages, one rule removed each, are all
