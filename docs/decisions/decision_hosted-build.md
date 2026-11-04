@@ -3,7 +3,7 @@
 - **Type:** `decision`
 - **Date:** `2026-11-04`
 - **Status:** `active` — written by leaf `M4.2.1`; built ahead of its review as its executable form
-  (`decision_executable-design-reviews.md`)
+  (`decision_executable-design-reviews.md`); under review, `## Review`
 - **External sources:** none: this record decides how the engine's own parts fit together
 - **Owner / source:** leaves `M4.2` and `M4.3` (`docs/tasks/M4.md`), carrying `RTP-H1`, `RTP-H2`, `RTP-H3` and `RTP-H9` of
   [[decision_runtime-plan]]; `ROADMAP.md` §6.3 and §10.1 steps 6 to 8.
@@ -30,10 +30,13 @@ assignment.eadl            the assignment the search wrote, which the checker ju
 plan-check.json            the checker's result record for it
 ```
 
-The last two are the command's, §5: the emitter takes them as inputs and writes neither. Nothing in the package depends on
-where it was built or on the path it was given: a provenance entry names a source by its place relative to the description.
-A build records what it was made from so that a later command reads what it read: `archogen explain` of a build, by §10.2,
-explains that description and holds the search's plan equal to the one the build holds, or says `stale-input`.
+No byte of the package depends on the directory its description lies in or on where it goes: a provenance entry names a source
+by its place relative to the description, whose own file name is part of what is recorded. A build records what it was made from
+so that a later command reads what it read: `archogen explain` of a build, by §10.2, holds its files to their digests, explains
+that description, and holds the search's plan equal to the one the build holds and to what its checker's record accepted, or says
+`stale-input`. `provenance.json` lists every other file with its digest, and each table entry with its generated line and its
+line in the plan, and for a task its form in the description. A digest catches an edit and a stale file, never a forger: whoever
+can write the directory can rewrite the list.
 
 Behavior is copied and never generated: what `src/main.rs` adds is data. So the code that runs is code the engine compiles
 and tests, as `ROADMAP.md` §1.1 admits ("copied or linked components") and as S0 did, and a test holds each copy byte for
@@ -45,13 +48,16 @@ compile time would be, to the trust inventory, a program of two roles (`trust-sh
 implementation's role package, and it reads the compiler's own record of what a build read. So the sources are text in the
 emitter's own package, each read by an admitted `include_str!`, never compiled by the generator and never run by it. What this
 costs is a second tree a change of the runtime must refresh, and the test says how. ⚠️ What it does not change is the fact the
-inventory's rule exists for: the generator holds the implementation's text, as data, and the admissions name that.
+inventory's rule exists for: the generator holds the implementation's text, as data, and the admissions name that. The admissions
+hash `COPIES`'s extent and not the copied bytes, so that test is the only thing binding them. And since the generator cannot compile
+against the runtime, a table it writes is first compiled when the package is: tests build and run each shape of table.
 
 ### 2. Time is exact
 
-A plan's durations are exact rationals, so the tables hold integer **ticks** of `1/L` s, `L` the least common multiple of
-every duration's denominator in the plan. Nothing rounds. A plan whose ticks would not fit `u64` is refused
-`unsupported-profile`, naming the duration, rather than approximated.
+A plan's durations are exact rationals, so the tables hold integer **ticks** of `1/L` s, `L` the least common multiple of the
+denominators of its tasks' periods, separations, deadlines and jitters and of its routes' separations. Nothing rounds. A tick, a
+release or a separation that would not fit `u64`, and a hyperperiod of them that would not, is refused `unsupported-profile`,
+naming what, rather than approximated.
 
 ### 3. The simulator
 
@@ -76,8 +82,13 @@ longer bodies all the same, so preemption, masking and overrun are exercised now
 
 **A run names its scenario.** The horizon is one hyperperiod of every period and every separation the plan states. Each
 source whose separation is stated arrives at exactly that separation from time zero, the densest the plan allows. One whose
-separation is `unknown` or `absent` does not arrive, and the trace's header says so: a run never claims what it did not
-exercise. **The trace** is `archogen-playground-trace/1`, one line an event, its time exact.
+separation is zero, `unknown` or `absent`, or that the plan does not enable, does not arrive, and the trace's header says so: a run
+never claims what it did not exercise. **The trace** is `archogen-playground-trace/1`, one line an event, its time exact.
+
+**A run is bounded.** A hyperperiod that fits `u64` can still be a run nobody could read: `1 ms` against `2305843009213693951 ms`
+never ends. So a plan whose one hyperperiod holds more than `2^20` timer releases and source arrivals is refused
+`unsupported-profile`, naming the count, rather than cut short; a run of a part of a hyperperiod, named as such, is a scenario
+`M4.3` may add.
 
 ### 4. The emitter
 
@@ -85,7 +96,7 @@ exercise. **The trace** is `archogen-playground-trace/1`, one line an event, its
 result record and the plan's text, and **accepts the plan only by lowering it again from those inputs and comparing bytes**
 (`RTP-H3`). What it then refuses, each naming the task:
 - `(released-by (unknown CAUSE))`: `missing-fact` or `unsupported-profile`, as `RTP-H1` gives each cause;
-- a duration past `u64` ticks (§2): `unsupported-profile`.
+- a duration or a hyperperiod past `u64` ticks (§2), and a run past its bound (§3): `unsupported-profile`.
 
 A plan whose acceptance was taken as text is built marked experimental, in `provenance.json` and in the trace's header. No
 front reaches that today, since the only build is the command line's, which runs the checker (§5); the rule stands for the
@@ -102,11 +113,20 @@ engine API, the wasm module and the [MCP](../book/src/ledger.md#mcp-specificatio
 needs of the engine API is only what the search already holds: the elaborated program and the kinds, beside the plan
 (`Resolution::elaborated`).
 
-**The package lands whole.** The command builds it in `DIR.building`, beside `DIR`, and renames it into place once every file
-is written, so a refused build leaves `DIR` as it found it: a refusal of the description creates nothing, and an earlier build
-stays. It replaces an earlier `DIR` only if that holds a package's `provenance.json`, and refuses any other directory that is
-not empty, since it deletes nothing it did not write. Where the checker refuses the search's plan, two programs disagree about
-one input, so `DIR.building` stays, holding the assignment and the record to report.
+**The package lands whole, and a build deletes nothing it did not write.** The command builds it in `DIR.building`, beside `DIR`,
+and moves it into place by two renames once every file is written, so `DIR` is at every moment a whole package or absent, and a
+failed second rename restores what was there. A refused build leaves `DIR` as it found it: a refusal of the description creates
+nothing, and an earlier build stays. It removes only:
+- the stage this very run made, which it makes by a call that fails if anything stands there;
+- an earlier build as a build wrote it: every file its `provenance.json` lists unchanged, nothing else in it but cargo's own
+  `target/` and `Cargo.lock`.
+
+Anything else is refused and left alone: a directory that holds anything more, a build with a file edited, a link or a file named
+by `--out`, and anything standing at `DIR.building` or `DIR.replaced`, which is another run's. Where the checker refuses the
+search's plan, or its record does not hold together with its exit code or with what the front computed, two programs disagree about
+one input, so `DIR.building` stays, holding the assignment and the record to report, and refuses the next build until someone has
+looked. If an earlier build cannot be removed once the new one stands, as with a read-only directory in it, the new package is
+in place, and the command says the old one waits at `DIR.replaced`.
 
 ### 6. What S0 keeps, and when it goes
 
@@ -133,3 +153,12 @@ moved by its leaf.
   `M4.2.3.2` `archogen explain` on a build; `M4.2.3.3` the review; `M4.2.4` S0's retirement.
 - A change that moves a generated file for the same inputs moves `archogen-playground-trace/1` or its emitter's identity, as
   `docs/book/src/versions.md` registers them.
+
+## Review
+
+| Round | Findings | Defects | Verdict |
+| --- | --- | --- | --- |
+| 1 | 15 | 10 (H1-1 to H1-10), beside 4 gaps and 1 of wording | `2026-11-04`, not acceptable — answered: a build deletes nothing it did not write, by a list of what it wrote and a stage only this run makes; two renames; every disagreement keeps its record; `explain` holds a build to its digests and a request that misses is `usage`; a zero separation named; a run bounded |
+
+The rounds, each finding and its answer, are in
+[`docs/reviews/decision_hosted-build-reviews.md`](../reviews/decision_hosted-build-reviews.md).

@@ -12,6 +12,7 @@
 //! the caller's streams, so the whole surface is testable without a process.
 
 pub mod build_cmd;
+pub mod built;
 pub mod check_cmd;
 pub mod cli;
 pub mod consume;

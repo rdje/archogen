@@ -1,4 +1,4 @@
-archogen-build-provenance/2
+archogen-build-provenance/3
 acceptance: string
 checker: string
 description: string
@@ -8,8 +8,11 @@ entries[].plan: string
 entries[].source.column: number
 entries[].source.file: string
 entries[].source.line: number
+entries[].source: null
 entries[].table: string
 experimental: bool
+files[].path: string
+files[].sha256: string
 format: string
 generator.sha256: string
 generator.version: string

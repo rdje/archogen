@@ -548,25 +548,35 @@ fn clean_build_dir(case: &str, attempt: u32) -> PathBuf {
 }
 
 /// Every generated file's bytes, so "no generated file is edited" can be checked rather than
-/// promised.
+/// promised. What cargo adds in building it, `target/` and `Cargo.lock`, is not generated.
 fn snapshot(dir: &Path) -> Vec<(String, Vec<u8>)> {
-    [
-        "Cargo.toml",
-        "src/main.rs",
-        "rt-core/src/scheduler.rs",
-        "sim-playground/src/lib.rs",
-        "plan.txt",
-        "provenance.json",
-    ]
-    .iter()
-    .map(|name| {
-        (
-            (*name).to_string(),
-            std::fs::read(dir.join(name))
-                .unwrap_or_else(|e| panic!("{name} was not generated: {e}")),
-        )
-    })
-    .collect()
+    let mut files = Vec::new();
+    let mut pending = vec![dir.to_path_buf()];
+    while let Some(next) = pending.pop() {
+        for entry in std::fs::read_dir(&next).expect("readable").flatten() {
+            let path = entry.path();
+            let name = path
+                .strip_prefix(dir)
+                .expect("under the build")
+                .display()
+                .to_string();
+            if name == "target" || name == "Cargo.lock" {
+                continue;
+            }
+            if path.is_dir() {
+                pending.push(path);
+            } else {
+                files.push((name, std::fs::read(&path).expect("readable")));
+            }
+        }
+    }
+    files.sort();
+    assert!(
+        files.iter().any(|(name, _)| name == "src/main.rs") && files.len() > 10,
+        "{} holds no package",
+        dir.display()
+    );
+    files
 }
 
 /// What the trace a generated system printed observes, in the form of `examples/s0-heartbeat/README.md`'s contract: the

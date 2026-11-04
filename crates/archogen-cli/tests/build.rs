@@ -190,6 +190,22 @@ fn one_description_is_one_package_wherever_it_lies_and_wherever_it_goes() {
     let provenance = fs::read_to_string(first_out.join("provenance.json")).expect("provenance");
     let scratch_root = root.display().to_string();
     assert!(!provenance.contains(&scratch_root), "{provenance}");
+
+    // A module tree too, each of its files where it lies, and imported by more than one: recorded once.
+    let tree = repo_root().join("crates/archogen-plan/tests/corpus/modules");
+    let (one, two) = (root.join("tree/one"), root.join("tree/deeper/two"));
+    for home in [&one, &two] {
+        fs::create_dir_all(home).expect("a directory");
+        for name in ["app.main.eadl", "hw.dev.eadl", "os.svc.eadl"] {
+            fs::copy(tree.join(name), home.join(name)).expect("copied");
+        }
+    }
+    let (one_out, two_out) = (root.join("tree-one"), root.join("elsewhere/tree-two"));
+    for (home, out) in [(&one, &one_out), (&two, &two_out)] {
+        let (status, _, err) = build(&home.join("app.main.eadl").display().to_string(), out);
+        assert_eq!(status, Status::Ok, "{err}");
+    }
+    assert_eq!(snapshot(&one_out), snapshot(&two_out));
 }
 
 #[test]
@@ -302,7 +318,6 @@ fn a_task_a_source_releases_is_reported() {
     let (status, out, err) = build(&copy.display().to_string(), &dir);
     assert_eq!(status, Status::Ok, "{err}");
     assert!(out.contains("is released by the source `"), "{out}");
-    assert!(out.contains(", as the plan infers"), "{out}");
     assert!(
         !err.contains("experimental: the checker's acceptance"),
         "{err}"
@@ -350,10 +365,13 @@ fn a_build_with_no_checker_to_run_generates_nothing() {
     assert!(!dir.exists() && !scratch_has_stage(&dir));
 }
 
-/// A checker that refuses every plan it is shown, as `archogen-plan-check` refuses a corrupted one.
-struct Refusing;
+/// A checker that writes a record of `status` about every plan it is shown, and exits with `code`.
+struct Answering {
+    status: Status,
+    code: i32,
+}
 
-impl Launch for Refusing {
+impl Launch for Answering {
     fn launch(
         &self,
         program: &str,
@@ -378,56 +396,77 @@ impl Launch for Refusing {
                 judged: Judged::Plan(Digest::of(text.as_bytes())),
             },
             profile.clone(),
-            Status::ToolFailure,
-            vec![Finding {
-                code: "plan-unsatisfied".to_owned(),
-                severity: Severity::Error,
-                message: "a binding the relation does not satisfy".to_owned(),
-                primary: Label {
-                    source: "plan".to_owned(),
-                    line: 5,
-                    column: 1,
-                    message: "here".to_owned(),
-                },
-                secondary: Vec::new(),
-                repair: "resolve again".to_owned(),
-            }],
+            self.status,
+            refusing_findings(self.status),
         )
         .expect("a record");
         fs::write(result, record.write()).expect("the record written");
         Ok(Launched {
-            ended: Ended::Code(Status::ToolFailure.code()),
+            ended: Ended::Code(self.code),
             sha256: checker_digest(),
             front: front_digest(),
         })
     }
 }
 
+/// What a record refusing with `status` must hold.
+fn refusing_findings(status: Status) -> Vec<Finding> {
+    if status == Status::Ok {
+        return Vec::new();
+    }
+    vec![Finding {
+        code: "plan-unsatisfied".to_owned(),
+        severity: Severity::Error,
+        message: "a binding the relation does not satisfy".to_owned(),
+        primary: Label {
+            source: "plan".to_owned(),
+            line: 5,
+            column: 1,
+            message: "here".to_owned(),
+        },
+        secondary: Vec::new(),
+        repair: "resolve again".to_owned(),
+    }]
+}
+
 #[test]
-fn a_checker_refusing_the_search_s_plan_leaves_what_a_report_needs_and_no_package() {
-    let dir = scratch("disagreed").join("out");
-    let (status, out, err) = invoke(
-        &[
-            "build",
-            &example(HEARTBEAT),
-            "--out",
-            &dir.display().to_string(),
-        ],
-        &Refusing,
-    );
-    assert_eq!(status, Status::ToolFailure, "{err}");
-    assert!(err.contains("the search and the checker disagree"), "{err}");
-    assert!(out.is_empty(), "{out}");
-    assert!(!dir.exists(), "a refused plan was placed");
-    let mut stage = dir.as_os_str().to_owned();
-    stage.push(".building");
-    let stage = PathBuf::from(stage);
-    assert!(stage.join("assignment.eadl").is_file());
-    assert!(stage.join(RECORD).is_file());
-    assert!(
-        !stage.join("Cargo.toml").exists(),
-        "a refused plan was emitted"
-    );
+fn whatever_way_the_checker_disagrees_leaves_what_a_report_needs_and_no_package() {
+    // Each route: it refuses; it finds the description wanting, which the generator did not; its two channels differ.
+    for (case, status, code) in [
+        ("refuses", Status::ToolFailure, Status::ToolFailure.code()),
+        (
+            "wanting",
+            Status::InvalidDescription,
+            Status::InvalidDescription.code(),
+        ),
+        ("channels", Status::Ok, 1),
+    ] {
+        let dir = scratch(case).join("out");
+        let (built, out, err) = invoke(
+            &[
+                "build",
+                &example(HEARTBEAT),
+                "--out",
+                &dir.display().to_string(),
+            ],
+            &Answering { status, code },
+        );
+        assert_eq!(built, Status::ToolFailure, "{case}: {err}");
+        assert!(out.is_empty(), "{case}: {out}");
+        assert!(!dir.exists(), "{case}: a refused plan was placed");
+        let stage = beside(&dir, ".building");
+        assert!(stage.join("assignment.eadl").is_file(), "{case}");
+        assert!(stage.join(RECORD).is_file(), "{case}");
+        assert!(
+            !stage.join("Cargo.toml").exists(),
+            "{case}: a refused plan was emitted"
+        );
+        assert!(err.contains(".building"), "{case}: {err}");
+        // It is there to be read, so the next build does not take it for its own.
+        let (again, _, err) = build(&example(HEARTBEAT), &dir);
+        assert_eq!(again, Status::Usage, "{case}: {err}");
+        assert!(stage.join(RECORD).is_file(), "{case}");
+    }
 }
 
 #[test]
@@ -436,14 +475,14 @@ fn an_earlier_build_is_replaced_and_stays_when_the_next_is_refused() {
     let dir = root.join("out");
     let (status, _, err) = build(&example(HEARTBEAT), &dir);
     assert_eq!(status, Status::Ok, "{err}");
-    // A file of the earlier build's that this one does not write goes with it.
-    fs::write(dir.join("stale.txt"), "from an earlier build").expect("written");
+    // What building the package leaves is a build's too.
+    fs::create_dir_all(dir.join("target/debug")).expect("a directory");
+    fs::write(dir.join("target/debug/heartbeat"), "cargo's").expect("written");
+    fs::write(dir.join("Cargo.lock"), "cargo's").expect("written");
     let (status, _, err) = build(&example("examples/s0-heartbeat/system-changed.eadl"), &dir);
     assert_eq!(status, Status::Ok, "{err}");
-    assert!(
-        !dir.join("stale.txt").exists(),
-        "the earlier build was not replaced"
-    );
+    assert!(!dir.join("target").exists() && !dir.join("Cargo.lock").exists());
+    assert!(!scratch_has_stage(&dir) && !beside(&dir, ".replaced").exists());
     let replaced = snapshot(&dir);
     let (status, _, err) = build(
         &example("examples/s0-heartbeat/system-unsupported.eadl"),
@@ -458,13 +497,22 @@ fn an_earlier_build_is_replaced_and_stays_when_the_next_is_refused() {
     assert!(!scratch_has_stage(&dir));
 }
 
+/// `dir`'s name with `suffix`, the place beside it.
+fn beside(dir: &Path, suffix: &str) -> PathBuf {
+    let mut name = dir.as_os_str().to_owned();
+    name.push(suffix);
+    PathBuf::from(name)
+}
+
 #[test]
-fn a_directory_that_is_no_build_is_refused_and_left_alone() {
+fn a_build_deletes_nothing_it_did_not_write() {
     let root = scratch("foreign");
-    let dir = root.join("out");
+    let description = example(HEARTBEAT);
+    // A directory holding anything, and a file: refused, and left alone.
+    let dir = root.join("notes");
     fs::create_dir_all(&dir).expect("a directory");
     fs::write(dir.join("notes.txt"), "mine").expect("written");
-    let (status, out, err) = build(&example(HEARTBEAT), &dir);
+    let (status, out, err) = build(&description, &dir);
     assert_eq!(status, Status::Usage, "{err}");
     assert!(
         err.contains("a build deletes nothing it did not write"),
@@ -476,17 +524,186 @@ fn a_directory_that_is_no_build_is_refused_and_left_alone() {
         "mine"
     );
     assert!(!scratch_has_stage(&dir));
-
-    // A file where the directory would go is no directory, and an empty directory takes the build.
     let file = root.join("file");
     fs::write(&file, "mine").expect("written");
-    let (status, _, err) = build(&example(HEARTBEAT), &file);
+    let (status, _, err) = build(&description, &file);
     assert_eq!(status, Status::Usage, "{err}");
     assert_eq!(fs::read_to_string(&file).expect("kept"), "mine");
+
+    // A build's own provenance beside a file of mine is no build: it lists what it wrote.
+    let earlier = root.join("earlier");
+    let (status, _, err) = build(&description, &earlier);
+    assert_eq!(status, Status::Ok, "{err}");
+    let copied = root.join("copied");
+    fs::create_dir_all(&copied).expect("a directory");
+    fs::copy(
+        earlier.join("provenance.json"),
+        copied.join("provenance.json"),
+    )
+    .expect("copied");
+    fs::write(copied.join("thesis.txt"), "mine").expect("written");
+    let (status, _, err) = build(&description, &copied);
+    assert_eq!(status, Status::Usage, "{err}");
+    assert_eq!(
+        fs::read_to_string(copied.join("thesis.txt")).expect("kept"),
+        "mine"
+    );
+
+    // Mine beside an earlier build, a file of it edited, and my description kept in it: each refused, each left alone.
+    fs::write(earlier.join("thesis.txt"), "mine").expect("written");
+    let (status, _, err) = build(&description, &earlier);
+    assert_eq!(status, Status::Usage, "{err}");
+    assert!(
+        err.contains("`thesis.txt` is no file a build wrote"),
+        "{err}"
+    );
+    assert_eq!(
+        fs::read_to_string(earlier.join("thesis.txt")).expect("kept"),
+        "mine"
+    );
+    fs::remove_file(earlier.join("thesis.txt")).expect("removed");
+    let main = earlier.join("src/main.rs");
+    let generated = fs::read_to_string(&main).expect("the tables");
+    fs::write(&main, format!("{generated}// mine\n")).expect("written");
+    let (status, _, err) = build(&description, &earlier);
+    assert_eq!(status, Status::Usage, "{err}");
+    assert!(
+        err.contains("`src/main.rs` has changed since the build wrote it"),
+        "{err}"
+    );
+    assert!(fs::read_to_string(&main)
+        .expect("kept")
+        .ends_with("// mine\n"));
+    fs::write(&main, generated).expect("restored");
+    let text = fs::read_to_string(&description).expect("the description");
+    let mine = earlier.join("sys.eadl");
+    fs::write(&mine, &text).expect("written");
+    let (status, _, err) = build(&mine.display().to_string(), &earlier);
+    assert_eq!(status, Status::Usage, "{err}");
+    assert!(mine.is_file(), "the description was deleted");
+    fs::remove_file(&mine).expect("removed");
+
+    // The description a build recorded, built back into that build, is what it was.
+    let recorded = earlier
+        .join("description/system.eadl")
+        .display()
+        .to_string();
+    let (status, _, err) = build(&recorded, &earlier);
+    assert_eq!(status, Status::Ok, "{err}");
+
+    // An empty directory takes a build.
     let empty = root.join("empty");
     fs::create_dir_all(&empty).expect("a directory");
-    let (status, _, err) = build(&example(HEARTBEAT), &empty);
+    let (status, _, err) = build(&description, &empty);
     assert_eq!(status, Status::Ok, "{err}");
+}
+
+#[test]
+fn a_stage_some_other_run_left_is_refused_and_left_alone() {
+    let root = scratch("stages");
+    let description = example(HEARTBEAT);
+    // Anything standing at either name beside `DIR`: mine, a build of that name, a description.
+    for suffix in [".building", ".replaced"] {
+        let dir = root.join(format!("mine{suffix}-case"));
+        let other = beside(&dir, suffix);
+        fs::create_dir_all(&other).expect("a directory");
+        fs::write(other.join("notes.txt"), "mine").expect("written");
+        let (status, _, err) = build(&description, &dir);
+        assert_eq!(status, Status::Usage, "{err}");
+        assert!(
+            err.contains("a build deletes nothing it did not write"),
+            "{err}"
+        );
+        assert_eq!(
+            fs::read_to_string(other.join("notes.txt")).expect("kept"),
+            "mine"
+        );
+        assert!(!dir.exists());
+    }
+    let dir = root.join("x");
+    let first = root.join("x.building");
+    let (status, _, err) = build(&description, &first);
+    assert_eq!(status, Status::Ok, "{err}");
+    let (status, _, err) = build(&description, &dir);
+    assert_eq!(status, Status::Usage, "{err}");
+    assert!(
+        first.join("Cargo.toml").is_file(),
+        "a build named like a stage was deleted"
+    );
+    let held = first.join("sys.eadl");
+    fs::write(
+        &held,
+        fs::read_to_string(&description).expect("the description"),
+    )
+    .expect("written");
+    let (status, _, err) = build(&held.display().to_string(), &dir);
+    assert_eq!(status, Status::Usage, "{err}");
+    assert!(held.is_file(), "the description was deleted");
+}
+
+#[test]
+#[cfg(unix)]
+fn a_link_is_no_place_for_a_build() {
+    let root = scratch("link");
+    let real = root.join("real");
+    fs::create_dir_all(&real).expect("a directory");
+    let link = root.join("link");
+    std::os::unix::fs::symlink(&real, &link).expect("a link");
+    let (status, _, err) = build(&example(HEARTBEAT), &link);
+    assert_eq!(status, Status::Usage, "{err}");
+    assert!(err.contains("name the directory itself"), "{err}");
+    assert!(fs::symlink_metadata(&link)
+        .expect("kept")
+        .file_type()
+        .is_symlink());
+    assert_eq!(fs::read_dir(&real).expect("a directory").count(), 0);
+}
+
+#[test]
+#[cfg(unix)]
+fn what_stands_in_the_way_of_removing_an_earlier_build_leaves_the_new_one_whole() {
+    use std::os::unix::fs::PermissionsExt;
+    let dir = scratch("in-the-way").join("out");
+    let description = example(HEARTBEAT);
+    let (status, _, err) = build(&description, &dir);
+    assert_eq!(status, Status::Ok, "{err}");
+    let locked = dir.join("rt-core");
+    fs::set_permissions(&locked, fs::Permissions::from_mode(0o555)).expect("read-only");
+    let (status, _, err) = build(&description, &dir);
+    let replaced = beside(&dir, ".replaced");
+    let held = replaced.join("rt-core");
+    if held.exists() {
+        fs::set_permissions(&held, fs::Permissions::from_mode(0o755)).expect("writable");
+    }
+    fs::set_permissions(dir.join("rt-core"), fs::Permissions::from_mode(0o755)).expect("writable");
+    assert_eq!(status, Status::Ok, "{err}");
+    let (again, _, _) = (Status::Ok, (), ());
+    assert_eq!(again, Status::Ok);
+    assert!(dir.join("src/main.rs").is_file() && dir.join("provenance.json").is_file());
+    let held_on = replaced.exists();
+    // Running as root, nothing stands in the way, and there is nothing to say.
+    assert_eq!(held_on, err.contains("the earlier one stays at"), "{err}");
+    if held_on {
+        // That is left for its owner to look at, and the next build says so rather than delete it.
+        let (status, _, err) = build(&description, &dir);
+        assert_eq!(status, Status::Usage, "{err}");
+        assert!(err.contains(".replaced exists"), "{err}");
+    }
+}
+
+#[test]
+fn a_refused_build_leaves_no_directory_it_made_to_reach_its_place() {
+    let root = scratch("deep");
+    let dir = root.join("a/b/c");
+    let (status, _, err) = build(
+        &example("examples/s0-heartbeat/system-unsupported.eadl"),
+        &dir,
+    );
+    assert_eq!(status, Status::MissingFact, "{err}");
+    assert!(!root.join("a").exists());
+    let (status, _, err) = build(&example(HEARTBEAT), &dir);
+    assert_eq!(status, Status::Ok, "{err}");
+    assert!(dir.join("Cargo.toml").is_file());
 }
 
 #[test]
@@ -518,59 +735,118 @@ fn line_at(entry: &Value, path: [&str; 2]) -> usize {
     usize::try_from(number.as_i64().expect("a line")).expect("a line")
 }
 
+/// The text `entry` holds at `name`.
+fn text_at<'v>(entry: &'v Value, name: &str) -> &'v str {
+    entry
+        .get(name)
+        .and_then(Value::as_str)
+        .unwrap_or_else(|| panic!("no `{name}` in {entry:?}"))
+}
+
 #[test]
-fn every_provenance_entry_resolves_from_both_ends() {
+fn every_table_entry_resolves_from_both_ends() {
     // ⭐ The failure to fear is not an absent entry but one that points somewhere wrong, which sends a reader somewhere
-    // confidently. So each task's is followed to the generated line and to the description's form.
+    // confidently. So each is followed to its generated line and to the plan's, and a task's to the description's form.
     let root = scratch("provenance");
-    let dir = root.join("out");
-    let description = example(HEARTBEAT);
-    let (status, _, err) = build(&description, &dir);
-    assert_eq!(status, Status::Ok, "{err}");
-    let text = fs::read_to_string(dir.join("provenance.json")).expect("provenance");
-    let value = archogen_json::read(text.as_bytes(), text.len()).expect("JSON");
-    let main = fs::read_to_string(dir.join("src/main.rs")).expect("the tables");
-    let source = fs::read_to_string(&description).expect("the description");
-    let Some(Value::Array(entries)) = value.get("entries") else {
-        panic!("no entries in {text}");
-    };
-    let mut tasks = 0;
-    for entry in entries {
-        let table = entry.get("table").and_then(Value::as_str).expect("a table");
-        let at = main
-            .lines()
-            .nth(line_at(entry, ["generated", "line"]) - 1)
-            .expect("the generated line");
-        if !table.starts_with("TASKS[") {
-            continue;
+    for (case, relative, tasks, sources, steps) in [
+        ("heartbeat", HEARTBEAT, 2, 0, 2),
+        (
+            "modules",
+            "crates/archogen-plan/tests/corpus/modules/app.main.eadl",
+            2,
+            1,
+            4,
+        ),
+    ] {
+        let dir = root.join(case);
+        let description = example(relative);
+        let (status, _, err) = build(&description, &dir);
+        assert_eq!(status, Status::Ok, "{err}");
+        let text = fs::read_to_string(dir.join("provenance.json")).expect("provenance");
+        let value = archogen_json::read(text.as_bytes(), text.len()).expect("JSON");
+        let main = fs::read_to_string(dir.join("src/main.rs")).expect("the tables");
+        let plan = fs::read_to_string(dir.join("plan.txt")).expect("the plan");
+        let Some(Value::Array(entries)) = value.get("entries") else {
+            panic!("no entries in {text}");
+        };
+        let (mut seen_tasks, mut seen_sources, mut seen_steps) = (0, 0, 0);
+        for entry in entries {
+            let table = text_at(entry, "table");
+            let at = main
+                .lines()
+                .nth(line_at(entry, ["generated", "line"]) - 1)
+                .expect("the generated line");
+            let line = text_at(entry, "plan");
+            assert!(
+                plan.lines().any(|held| held == line),
+                "{table}: `{line}` is not the plan's"
+            );
+            if table.starts_with("TASKS[") {
+                seen_tasks += 1;
+                // The generated line names the task, and the plan's line and the description's form must name the same.
+                let name = at
+                    .split("name: \"")
+                    .nth(1)
+                    .and_then(|rest| rest.split('"').next())
+                    .unwrap_or_else(|| panic!("{table}: {at}"));
+                assert!(line.contains(&format!(" {name}) ")), "{table}: {line}");
+                let origin = entry.get("source").expect("a source");
+                let form = dir.join("description").join(text_at(origin, "file"));
+                let form = fs::read_to_string(form).expect("the recorded source");
+                let form = form
+                    .lines()
+                    .nth(line_at(entry, ["source", "line"]) - 1)
+                    .expect("the source line");
+                assert!(form.contains(&format!("(task {name}")), "{table}: {form}");
+            } else if table.starts_with("SOURCES[") {
+                seen_sources += 1;
+                let name = at
+                    .split("name: \"")
+                    .nth(1)
+                    .and_then(|rest| rest.split('"').next())
+                    .unwrap_or_else(|| panic!("{table}: {at}"));
+                assert!(
+                    line.starts_with("(route ") && line.contains(&format!("(source {name})")),
+                    "{table}: {line}"
+                );
+            } else {
+                assert!(table.starts_with("INITIALISATION["), "{table}");
+                seen_steps += 1;
+                assert!(line.starts_with("(step "), "{table}: {line}");
+                for node in line.trim_end_matches(')').split(' ').skip(2) {
+                    assert!(at.contains(&format!("\"{node}\"")), "{table}: {at}");
+                }
+            }
         }
-        tasks += 1;
-        // The generated line names the task, and the plan's line and the description's form must name the same one.
-        let name = at
-            .split("name: \"")
-            .nth(1)
-            .and_then(|rest| rest.split('"').next())
-            .unwrap_or_else(|| panic!("{table}: {at}"));
-        let plan = entry
-            .get("plan")
-            .and_then(Value::as_str)
-            .expect("a plan line");
-        assert!(
-            plan.contains(&format!("(task heartbeat {name})")),
-            "{table}: {plan}"
+        assert_eq!(
+            (seen_tasks, seen_sources, seen_steps),
+            (tasks, sources, steps),
+            "{case}"
         );
-        let file = entry
-            .get("source")
-            .and_then(|origin| origin.get("file"))
-            .and_then(Value::as_str);
-        assert_eq!(file, Some("system.eadl"), "{table}");
-        let form = source
-            .lines()
-            .nth(line_at(entry, ["source", "line"]) - 1)
-            .expect("the source line");
-        assert!(form.contains(&format!("(task {name}")), "{table}: {form}");
+        // And every other file of the package is listed, with what it holds.
+        let Some(Value::Array(files)) = value.get("files") else {
+            panic!("no files in {text}");
+        };
+        let listed: BTreeMap<String, String> = files
+            .iter()
+            .map(|file| {
+                (
+                    text_at(file, "path").to_owned(),
+                    text_at(file, "sha256").to_owned(),
+                )
+            })
+            .collect();
+        let mut written = snapshot(&dir);
+        assert!(written.remove("provenance.json").is_some());
+        assert_eq!(listed.len(), written.len(), "{case}");
+        for (name, bytes) in written {
+            assert_eq!(
+                listed.get(&name),
+                Some(&Digest::of(&bytes).to_string()),
+                "{name}"
+            );
+        }
     }
-    assert_eq!(tasks, 2);
 }
 
 /// The lines the chapter shows after `$ {command}`, up to the next command or the block's end.
@@ -664,7 +940,11 @@ fn a_build_is_explained_as_its_description_is_and_its_plan_compared() {
     let account = |text: &str, path: &str| -> Vec<String> {
         text.replace(path, "SYSTEM")
             .lines()
-            .filter(|line| !line.contains("the plan of system") && !line.contains("experimental"))
+            .filter(|line| {
+                !line.contains("plan of system")
+                    && !line.contains("plan for system")
+                    && !line.contains("experimental")
+            })
             .map(str::to_owned)
             .collect()
     };
@@ -672,7 +952,7 @@ fn a_build_is_explained_as_its_description_is_and_its_plan_compared() {
     let held = Digest::of(&fs::read(dir.join("assignment.eadl")).expect("the assignment"));
     assert!(
         out.contains(&format!(
-            "is the one this build holds, {held}, which `archogen-plan-check` accepted"
+            "is the one this build holds, assignment {held}, which `archogen-plan-check` accepted"
         )),
         "{out}"
     );
@@ -724,64 +1004,208 @@ fn a_module_tree_is_recorded_whole_built_run_and_explained_from_the_build() {
     assert!(said.contains("bound to `hw.timer.d`"), "{said}");
 }
 
-#[test]
-fn a_build_whose_description_or_plan_moved_is_stale_and_gets_no_account() {
-    let root = scratch("stale");
-    let dir = root.join("out");
-    let (status, _, err) = build(&example(HEARTBEAT), &dir);
-    assert_eq!(status, Status::Ok, "{err}");
-    let target = dir.display().to_string();
-    let assignment = dir.join("assignment.eadl");
-    let plan = fs::read_to_string(&assignment).expect("the assignment");
-    fs::write(&assignment, format!("{plan}; edited\n")).expect("written");
-    let (status, out, err) = explain(&target);
-    assert_eq!(status, Status::StaleInput, "{err}");
-    assert!(err.contains("holds the plan"), "{err}");
+/// A build's file rewritten and its provenance kept in step, as an engine that wrote it would have: what is left to catch
+/// it is the search and the record, the digests catching only an edit.
+fn rewrite_in_step(dir: &Path, name: &str, contents: &str) {
+    let file = dir.join(name);
+    let before = Digest::of(&fs::read(&file).expect("the file"));
+    fs::write(&file, contents).expect("written");
+    let provenance = dir.join("provenance.json");
+    let text = fs::read_to_string(&provenance).expect("provenance");
+    let moved = text.replace(
+        &before.to_string(),
+        &Digest::of(contents.as_bytes()).to_string(),
+    );
+    assert_ne!(moved, text, "`{name}` is not listed");
+    fs::write(&provenance, moved).expect("written");
+}
+
+/// What `explain` of `target` says of a build it must not speak for: the error stream.
+fn stale(target: &str) -> String {
+    let (status, out, err) = explain(target);
+    assert_eq!(status, Status::StaleInput, "{out}{err}");
     assert!(
         out.is_empty(),
         "no account of a plan the search did not write: {out}"
     );
-    fs::write(&assignment, &plan).expect("restored");
+    assert!(err.contains("hint: run `archogen build` again"), "{err}");
+    err
+}
 
-    let recorded = dir.join("description/system.eadl");
-    let text = fs::read_to_string(&recorded).expect("the description");
-    let changed = text.replacen("(period 30 ms)", "(period 20 ms)", 1);
-    assert_ne!(changed, text, "nothing was changed");
-    // That one no longer checks, its deadline past its period; the changed fixture checks, and gives another plan.
-    fs::write(&recorded, &changed).expect("written");
-    let (status, out, err) = explain(&target);
-    assert_eq!(status, Status::StaleInput, "{err}");
-    assert!(out.is_empty(), "{out}");
+#[test]
+fn a_file_of_a_build_edited_since_is_stale_whichever_file_it_is() {
+    for name in [
+        "src/main.rs",
+        "plan.txt",
+        "assignment.eadl",
+        "plan-check.json",
+        "description/system.eadl",
+        "rt-core/src/scheduler.rs",
+    ] {
+        let dir = scratch("edited").join("out");
+        let (status, _, err) = build(&example(HEARTBEAT), &dir);
+        assert_eq!(status, Status::Ok, "{err}");
+        let file = dir.join(name);
+        let text = fs::read_to_string(&file).expect("the file");
+        fs::write(&file, format!("{text} ")).expect("written");
+        let err = stale(&dir.display().to_string());
+        assert!(
+            err.contains(&format!("`{name}` has changed since the build wrote it")),
+            "{err}"
+        );
+    }
+    // A link in place of a file it wrote is no file it wrote, whatever it points at.
+    #[cfg(unix)]
+    {
+        let dir = scratch("edited-link").join("out");
+        let (status, _, err) = build(&example(HEARTBEAT), &dir);
+        assert_eq!(status, Status::Ok, "{err}");
+        let file = dir.join("description/system.eadl");
+        fs::remove_file(&file).expect("removed");
+        std::os::unix::fs::symlink(example(HEARTBEAT), &file).expect("a link");
+        let err = stale(&dir.display().to_string());
+        assert!(err.contains("is no file the build wrote"), "{err}");
+    }
+}
+
+#[test]
+fn a_build_whose_description_gives_another_plan_or_none_is_stale_and_gets_no_account() {
+    let description = fs::read_to_string(example(HEARTBEAT)).expect("the description");
+    let recorded = "description/system.eadl";
+    let fresh = |case: &str| {
+        let dir = scratch(case).join("out");
+        let (status, _, err) = build(&example(HEARTBEAT), &dir);
+        assert_eq!(status, Status::Ok, "{err}");
+        dir
+    };
+    // Another plan: a description that checks, and resolves to another assignment.
+    let dir = fresh("stale-other");
     let other = fs::read_to_string(example("examples/s0-heartbeat/system-changed.eadl"))
         .expect("the fixture");
-    fs::write(&recorded, other).expect("written");
-    let (status, out, err) = explain(&target);
-    assert_eq!(status, Status::StaleInput, "{err}");
-    assert!(err.contains("holds the plan"), "{err}");
-    assert!(out.is_empty(), "{out}");
-    fs::write(&recorded, &text).expect("restored");
+    rewrite_in_step(&dir, recorded, &other);
+    let err = stale(&dir.display().to_string());
+    assert!(err.contains("holds the assignment"), "{err}");
+    // No plan: the check refuses it now, its deadline past its period.
+    let dir = fresh("stale-refused");
+    let refused = description.replacen("(period 30 ms)", "(period 20 ms)", 1);
+    assert_ne!(refused, description, "nothing was changed");
+    rewrite_in_step(&dir, recorded, &refused);
+    let err = stale(&dir.display().to_string());
+    assert!(err.contains("resolves to none today"), "{err}");
+    assert!(err.contains("error["), "the reason is said: {err}");
+    // No plan: a requirement beside the one asked about has no provider, and nothing is said of the one asked about.
+    let dir = fresh("stale-unmet");
+    let unmet = description.replacen(
+        "(requires (needs observable-output))",
+        "(requires (needs observable-output) (needs relative-delay))",
+        1,
+    );
+    assert_ne!(unmet, description, "nothing was changed");
+    rewrite_in_step(&dir, recorded, &unmet);
+    let err = stale(&dir.display().to_string());
+    assert!(err.contains("resolves to none today"), "{err}");
+}
 
-    // A record that judged another plan, or refused it, is no acceptance of this one.
-    let record = dir.join(RECORD);
-    let accepted = fs::read_to_string(&record).expect("the record");
-    let other = Record::read(accepted.as_bytes(), accepted.len()).expect("a record");
-    let refusing = Record::new(
-        other.producer().clone(),
-        Subject {
-            program: other.subject().program,
-            judged: Judged::Plan(Digest::of(b"another plan")),
-        },
-        other.profile().to_owned(),
-        Status::Ok,
-        Vec::new(),
-    )
-    .expect("a record");
-    fs::write(&record, refusing.write()).expect("written");
-    let (status, _, err) = explain(&target);
-    assert_eq!(status, Status::StaleInput, "{err}");
-    assert!(err.contains("does not accept that plan"), "{err}");
-    fs::write(&record, &accepted).expect("restored");
-    assert_eq!(explain(&target).0, Status::Ok);
+#[test]
+fn a_record_that_does_not_accept_this_plan_from_this_checker_is_stale() {
+    let fresh = |case: &str| {
+        let dir = scratch(case).join("out");
+        let (status, _, err) = build(&example(HEARTBEAT), &dir);
+        assert_eq!(status, Status::Ok, "{err}");
+        let accepted = fs::read_to_string(dir.join(RECORD)).expect("the record");
+        let record = Record::read(accepted.as_bytes(), accepted.len()).expect("a record");
+        (dir, record)
+    };
+    type Edit = fn(&Record, &mut Producer, &mut Subject) -> (Status, Vec<Finding>);
+    let cases: [(&str, Edit); 4] = [
+        ("another-plan", |_, _, subject| {
+            subject.judged = Judged::Plan(Digest::of(b"another plan"));
+            (Status::Ok, Vec::new())
+        }),
+        ("another-program", |_, _, subject| {
+            subject.program = Digest::of(b"another program");
+            (Status::Ok, Vec::new())
+        }),
+        ("another-producer", |_, producer, _| {
+            producer.name = "nobody".to_owned();
+            (Status::Ok, Vec::new())
+        }),
+        ("refusing", |_, _, _| {
+            (Status::ToolFailure, refusing_findings(Status::ToolFailure))
+        }),
+    ];
+    for (case, change) in cases {
+        let (dir, record) = fresh(case);
+        let mut producer = record.producer().clone();
+        let mut subject = *record.subject();
+        let (status, findings) = change(&record, &mut producer, &mut subject);
+        let edited = Record::new(
+            producer,
+            subject,
+            record.profile().to_owned(),
+            status,
+            findings,
+        )
+        .expect("a record");
+        rewrite_in_step(&dir, RECORD, &edited.write());
+        let err = stale(&dir.display().to_string());
+        assert!(
+            err.contains("does not accept that assignment"),
+            "{case}: {err}"
+        );
+    }
+}
+
+#[test]
+fn a_request_that_misses_is_a_usage_error_of_a_healthy_build() {
+    let dir = scratch("misses").join("out");
+    let (status, _, err) = build(&example(HEARTBEAT), &dir);
+    assert_eq!(status, Status::Ok, "{err}");
+    let target = dir.display().to_string();
+    for args in [
+        vec!["explain", &target, "--requirement", "no-such-fact"],
+        vec![
+            "explain",
+            &target,
+            "--requirement",
+            "observable-output",
+            "--task",
+            "nobody",
+        ],
+        vec![
+            "explain",
+            &target,
+            "--requirement",
+            "observable-output",
+            "--requester",
+            "nobody",
+        ],
+        vec![
+            "explain",
+            &target,
+            "--requirement",
+            "observable-output",
+            "--system",
+            "other",
+        ],
+    ] {
+        let (status, _, err) = invoke(&args, &NoLaunch);
+        assert_eq!(status, Status::Usage, "{args:?}: {err}");
+        assert!(!err.contains("stale-input"), "{args:?}: {err}");
+    }
+    // The system it was built for may be named.
+    let (status, _, err) = invoke(
+        &[
+            "explain",
+            &target,
+            "--requirement",
+            "observable-output",
+            "--system",
+            "heartbeat",
+        ],
+        &NoLaunch,
+    );
+    assert_eq!(status, Status::Ok, "{err}");
 }
 
 #[test]
@@ -800,20 +1224,29 @@ fn a_directory_that_is_no_build_is_a_usage_error_naming_what_it_lacks() {
     let provenance = dir.join("provenance.json");
     let text = fs::read_to_string(&provenance).expect("provenance");
     let target = dir.display().to_string();
-    // A name that would leave the build is never followed.
-    let outside = text.replace(
-        "\"description\": \"system.eadl\"",
-        "\"description\": \"../../secret.eadl\"",
-    );
-    assert_ne!(outside, text);
-    fs::write(&provenance, outside).expect("written");
-    let (status, _, err) = explain(&target);
-    assert_eq!(status, Status::Usage, "{err}");
-    assert!(err.contains("lies outside the build"), "{err}");
+    // A name that would leave the build is never followed, for its description or a file it lists.
+    for (old, new) in [
+        (
+            "\"description\": \"system.eadl\"",
+            "\"description\": \"../../secret.eadl\"",
+        ),
+        ("\"path\": \"plan.txt\"", "\"path\": \"../plan.txt\""),
+    ] {
+        let outside = text.replace(old, new);
+        assert_ne!(outside, text, "{old}");
+        fs::write(&provenance, outside).expect("written");
+        let (status, _, err) = explain(&target);
+        assert_eq!(status, Status::Usage, "{err}");
+        assert!(err.contains("lies outside the build"), "{err}");
+    }
     // A format this engine does not read is said, never guessed at.
-    let older = text.replace("archogen-build-provenance/2", "archogen-build-provenance/1");
+    let older = text.replace(
+        archogen_emit::PROVENANCE_FORMAT,
+        "archogen-build-provenance/1",
+    );
+    assert_ne!(older, text);
     fs::write(&provenance, older).expect("written");
     let (status, _, err) = explain(&target);
     assert_eq!(status, Status::Usage, "{err}");
-    assert!(err.contains("build it again"), "{err}");
+    assert!(err.contains("this engine reads"), "{err}");
 }

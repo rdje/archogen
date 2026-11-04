@@ -27,7 +27,7 @@ use crate::status::Status;
 pub const PLAN_CHECKER: &str = "archogen-plan-check";
 
 /// The record's name in the front's own directory.
-pub const RECORD: &str = "plan-check.json";
+pub const RECORD: &str = archogen_emit::RESULT_FILE;
 
 /// The most of a record the front reads.
 const RECORD_LIMIT: usize = 1 << 20;

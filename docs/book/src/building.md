@@ -15,8 +15,9 @@ when, and that is all it can show.
 > **In one minute, for engineers.** `crates/archogen-cli/src/build_cmd.rs`: the engine API's `resolve`, the installed
 > `archogen-plan-check` over the plan it wrote, `archogen_plan::lower_checked` on its acceptance, then
 > `archogen_emit::emit`, which accepts the plan only by lowering it again and comparing bytes. Behavior is copied and never
-> generated: the package holds `rt-core` and `sim-playground` byte for byte beside tables of exact integer ticks. It lands whole
-> or not at all, and no byte of it depends on where it was built. It stays off the programmatic surface, by `ROADMAP.md` §10.4.
+> generated: the package holds `rt-core` and `sim-playground` byte for byte beside tables of exact integer ticks. `--out` is at
+> every moment a whole package or absent, a build deletes nothing it did not write, and no byte of the package depends on the
+> directory its description lies in or on where it goes. It stays off the programmatic surface, by `ROADMAP.md` §10.4.
 > The design is `docs/decisions/decision_hosted-build.md`. The system's own behavior is held by `crates/archogen-cli/tests/functional_fixtures.rs`,
 > against observations frozen before any generator existed.
 
@@ -27,7 +28,7 @@ The description is the two periodic tasks of [A tour of archogen](tour.md):
 ```console
 $ archogen build examples/s0-heartbeat/system.eadl --out build/heartbeat
 examples/s0-heartbeat/system.eadl: generated `system-heartbeat` into build/heartbeat
-  13 file(s): Cargo.toml, src/main.rs, rt-core/Cargo.toml, sim-playground/Cargo.toml, rt-core/src/lib.rs, rt-core/src/scheduler.rs, rt-core/src/fault.rs, sim-playground/src/lib.rs, plan.txt, provenance.json, description/system.eadl, assignment.eadl, plan-check.json
+  13 file(s): Cargo.toml, src/main.rs, rt-core/Cargo.toml, sim-playground/Cargo.toml, rt-core/src/lib.rs, rt-core/src/scheduler.rs, rt-core/src/fault.rs, sim-playground/src/lib.rs, plan.txt, description/system.eadl, assignment.eadl, plan-check.json, provenance.json
   checked by `archogen-plan-check`: accepted (build/heartbeat/plan-check.json)
   2 task(s), a run of 3 tick(s) of 1/100 s
   experimental: the hosted playground: the plan's releases run, and no job holds application code; completed by M4.12
@@ -96,7 +97,7 @@ Thirteen files, and only one of them is generated in any interesting sense:
 | `sim-playground/Cargo.toml` | a generated manifest |
 | `sim-playground/src/lib.rs` | the engine's simulator, byte for byte |
 | `plan.txt` | the runtime plan's canonical text |
-| `provenance.json` | what the plan was lowered from, and what each table entry came from |
+| `provenance.json` | what the plan was lowered from, what each table entry came from, and every other file with its digest |
 | `description/system.eadl` | the description it was made from, with every module it imports beside it |
 | `assignment.eadl` | the assignment the search wrote, which the checker judged |
 | `plan-check.json` | the checker's result record for it |
@@ -112,16 +113,19 @@ is code the engine compiles and tests, and `crates/archogen-emit/tests/emit.rs` 
 | --- | --- | --- |
 | 1 | the profile, then `--locked` | the invocation cannot be honored |
 | 2 | the engine API's `resolve`: the check, then the search | the description, or what it asks of its hardware: the same verdict `archogen check` or `archogen resolve` gives |
-| 3 | the installed `archogen-plan-check` | two programs disagree about one input, so `tool-failure` |
-| 4 | the lowering and the emitter | what this format cannot yet express |
-| 5 | writing the package | the output directory |
+| 3 | `--out`, and what stands beside it | the place: `usage`, before anything is written |
+| 4 | the installed `archogen-plan-check` | two programs disagree about one input, so `tool-failure` |
+| 5 | the lowering and the emitter | what this format cannot yet express |
+| 6 | writing the package | the output directory |
 
 There is one frontend, so `build` can never accept what `check` refuses.
 
 **What the emitter refuses.** A task the plan cannot say what releases, naming the task and the cause, is `missing-fact`,
 repaired by the task's own `(needs interrupt-source)`, or `unsupported-profile` where the analysis cannot admit the source. A
-duration past 64 bits of ticks is `unsupported-profile`, rather than approximated. A plan that is not what its inputs lower to is
-`tool-failure`: `crates/archogen-emit` accepts a plan only by lowering it again from the same inputs and comparing bytes.
+duration or a hyperperiod past 64 bits of ticks is `unsupported-profile`, rather than approximated, and so is a run of more than
+`2^20` releases and arrivals, which nobody could read: periods of `1 ms` and `2305843009213693951 ms` both fit, and that run would
+never end. A plan that is not what its inputs lower to is `tool-failure`: `crates/archogen-emit` accepts a plan only by lowering it
+again from the same inputs and comparing bytes.
 
 ```console
 $ archogen build examples/s0-heartbeat/system-unsupported.eadl --out build/x
@@ -134,18 +138,27 @@ $ echo $?
 data to compare against until `M4.7`. Accepting the flag would hand someone who asked for a reproducible build an ordinary one
 that claimed to be reproducible. Refusing costs a user one re-run; accepting costs them a belief. It exits `20`, `unimplemented`.
 
-**Where the package lands.** The command builds it in `DIR.building`, beside `DIR`, and renames it into place once every file is
-written. So a refused build leaves `DIR` as it found it: a refusal of the description creates nothing, and an earlier build stays.
-It replaces an earlier `DIR` only if that holds a build's `provenance.json`, and refuses any other directory that is not empty,
-because a build deletes nothing it did not write. The one thing it leaves behind on purpose: where the checker refuses the
-search's plan, `DIR.building` keeps the assignment and the record, for the report that disagreement deserves.
+**Where the package lands.** The command builds it in `DIR.building`, beside `DIR`, and moves it into place by two renames once
+every file is written. So `DIR` is at every moment a whole package or absent, and a refused build leaves it as it found it: a
+refusal of the description creates nothing, and an earlier build stays.
+
+⛔ **A build deletes nothing it did not write.** It removes only the stage this very run made, and an earlier build exactly as a
+build wrote it: every file `provenance.json` lists unchanged, and nothing else there but cargo's own `target/` and `Cargo.lock`. A
+directory holding anything more, a generated file you edited, a link named by `--out`, and anything standing at `DIR.building` or
+`DIR.replaced` are all refused, and left alone. Your changes belong in the description, not in the output.
+
+The one thing it leaves behind on purpose: where the checker refuses the search's plan, or its record does not hold together,
+`DIR.building` keeps the assignment and the record, for the report that disagreement deserves, and the next build refuses until
+someone has looked at it. If an old build cannot be removed once the new one stands, the new one is in place, and the command says
+the old one waits at `DIR.replaced`.
 
 **Nothing in it depends on where it was built.** A provenance entry names a source relative to the description, so the same
-description at two paths, built into two directories, gives the same bytes. A test compares them.
+description in two directories, built into two others, gives the same bytes. A test compares them, for one file and for a module
+tree. The description's own file name is recorded, so a renamed copy is a different package.
 
-**Where each entry came from.** `provenance.json` follows each table entry to its line in `src/main.rs`, its line in the plan, and
-its form in the description. The failure to fear is not a missing entry but one that points somewhere wrong, which sends a reader
-somewhere confidently. So `crates/archogen-cli/tests/build.rs` follows every task's entry from both ends.
+**Where each entry came from.** `provenance.json` follows each table entry to its line in `src/main.rs` and its line in the plan,
+and a task's to its form in the description. The failure to fear is not a missing entry but one that points somewhere wrong, which
+sends a reader somewhere confidently. So `crates/archogen-cli/tests/build.rs` follows every entry from both ends, and counts them.
 
 **The command line alone.** `ROADMAP.md` §10.4 rules generation outside the programmatic interface: it writes a crate tree, and
 exposing it would give a remote consumer a filesystem authority the rest of the surface does not need. So the engine API, the
@@ -163,12 +176,15 @@ $ archogen explain build/heartbeat --requirement observable-output
   `console.uart` meets it
   `host.playground` leaves it undescribed
   bound to `console.uart` by the search's plan
-build/heartbeat: the plan of system `heartbeat` is the one this build holds, sha256:e77556b645eea31dda156903d6ddf570d5f5fea1f7ad6e167a4eca7467bd6280, which `archogen-plan-check` accepted
+build/heartbeat: the search's plan for system `heartbeat` is the one this build holds, assignment sha256:e77556b645eea31dda156903d6ddf570d5f5fea1f7ad6e167a4eca7467bd6280, which `archogen-plan-check` accepted
   experimental: one requirement of one system, over a description's own blocks and platforms; completed by M3.7
 ```
 
-A build whose description no longer gives its plan, because it was edited or a different engine searches otherwise, is
-`stale-input`, and the command prints no account of a plan it did not write: the search can only speak for its own.
+It holds every file of the build to the digest `provenance.json` lists first. A build with a file edited, whose description no
+longer gives its plan, or whose record does not accept that plan from the checker it names is `stale-input`, and the command prints
+no account of a plan it did not write: the search can only speak for its own. ⚠️ A digest catches an edit and a stale file, never a
+forger: whoever can write the directory can rewrite the list too. A request that misses, a requirement nobody writes, is `usage`, as
+of any description.
 
 **The two programs together.** `crates/archogen-cli/tests/common/mod.rs` runs the checker's own judgement in the test's process,
 so a test sees a real plan past the real rules. `scripts/resolve_installed.sh`, in the `integration` tier, runs the real

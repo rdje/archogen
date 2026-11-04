@@ -116,7 +116,7 @@ pub const RT_STATIC_UP_V1: Profile = Profile {
                 },
                 Part {
                     rule: "one execution context runs at a time",
-                    stage: Stage::Later { stage: "build", owner: "M4.2" },
+                    stage: Stage::Tier("the `focused` tier's `tests` step: `crates/sim-playground/tests/harness.rs`, the hosted playground running one job at a time and nesting no interrupt"),
                 },
             ],
         },

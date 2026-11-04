@@ -202,7 +202,7 @@ fn run(emitted: &Emitted, name: &str) -> String {
 }
 
 #[test]
-fn a_generated_system_builds_runs_and_writes_its_exact_trace() {
+fn a_generated_system_builds_runs_and_writes_its_releases_in_order() {
     let emitted = build_of(&fixture("worked-heartbeat"))
         .emitted()
         .expect("emitted");
@@ -263,17 +263,143 @@ fn emitting_twice_writes_the_same_bytes() {
     );
 }
 
+/// A system of periodic tasks over one console, each by its name and its period as written.
+fn periodic(tasks: &[(&str, &str)]) -> String {
+    let mut text = String::from(
+        "(eadl-version eadl/1)\n\
+         (defblock console.uart (offers (observable-output true) (reachable-at-privilege machine)))\n\
+         (defplatform host.playground (offers (core-count 1 tick) (reachable-at-privilege machine)) (requires (uses console.uart)))\n\
+         (defservice console.write (requires (needs observable-output)))\n\
+         (defsystem periodic\n",
+    );
+    for (rank, (name, period)) in tasks.iter().enumerate() {
+        text.push_str(&format!(
+            "  (task {name} (period {period}) (deadline {period}) (priority {}) (uses console.write))\n",
+            rank + 1
+        ));
+    }
+    text.push_str("  (requires (uses console.write))\n  (platform (uses host.playground)))\n");
+    text
+}
+
 #[test]
-fn a_task_a_source_releases_is_reported_and_runs_at_its_stated_separation() {
-    let emitted = build_of(&fixture("sporadic")).emitted().expect("emitted");
-    assert!(!emitted.source_triggers.is_empty());
-    let trace = run(&emitted, "sporadic");
-    let (task, source) = &emitted.source_triggers[0];
-    assert!(
-        trace.contains(&format!(" pending source {source}\n")),
+fn a_source_arrives_at_its_stated_separation_and_releases_its_task_at_each_arrival() {
+    // A periodic task of four separations, so the run holds four arrivals, and they can be counted.
+    let text = "(eadl-version eadl/1)\n\
+         (defblock dev.e (offers (interrupt-source true) (min-arrival-separation 10 ms) (reachable-at-privilege machine)))\n\
+         (defblock console.uart (offers (observable-output true) (reachable-at-privilege machine)))\n\
+         (defplatform soc.e (offers (core-count 1 tick) (reachable-at-privilege machine)) (requires (uses dev.e console.uart)))\n\
+         (defservice evt (requires (needs interrupt-source)))\n\
+         (defservice console.write (requires (needs observable-output)))\n\
+         (defsystem arrivals\n\
+           (task s (min-separation 10 ms) (deadline 10 ms) (priority 1) (uses evt))\n\
+           (task p (period 40 ms) (deadline 40 ms) (priority 2) (uses console.write))\n\
+           (requires (uses evt console.write))\n\
+           (platform (uses soc.e)))\n";
+    let emitted = build_of(text).emitted().expect("emitted");
+    assert_eq!(
+        emitted.source_triggers,
+        [("s".to_owned(), "dev.e".to_owned())]
+    );
+    assert_eq!(emitted.horizon, 4);
+    let trace = run(&emitted, "arrivals");
+    let at = |what: &str| -> Vec<&str> {
+        trace
+            .lines()
+            .filter(|line| line.ends_with(what))
+            .map(|line| line.split(" s ").next().expect("a time"))
+            .collect()
+    };
+    assert_eq!(
+        at(" pending source dev.e"),
+        ["0", "1/100", "1/50", "3/100"],
         "{trace}"
     );
-    assert!(trace.contains(&format!(" release {task}\n")), "{trace}");
+    assert_eq!(at(" release s"), ["0", "1/100", "1/50", "3/100"], "{trace}");
+    assert_eq!(at(" release p"), ["0"], "{trace}");
+}
+
+#[test]
+fn a_source_that_does_not_arrive_is_said_not_to() {
+    // Whatever keeps it silent, the trace names it: a run never claims what it did not exercise (`RTP-H9`). The lib's unit
+    // test holds a route the plan does not enable, which no plan the lowering writes has.
+    let name = "zero-source-separation";
+    let emitted = build_of(&fixture(name)).emitted().expect("emitted");
+    let trace = run(&emitted, name);
+    assert!(
+        trace.contains("states a separation of zero, so it does not arrive"),
+        "{trace}"
+    );
+    assert!(!trace.contains(" pending source "), "{trace}");
+}
+
+#[test]
+fn a_period_of_no_whole_millisecond_is_exact() {
+    // S0's `whole-millisecond-periods` is over: the tick is what the plan's durations need.
+    let emitted = build_of(&periodic(&[("fast", "250 us"), ("slow", "1 ms")]))
+        .emitted()
+        .expect("emitted");
+    assert_eq!(emitted.ticks_per_second, 4000);
+    assert_eq!(emitted.horizon, 4);
+    let trace = run(&emitted, "sub-millisecond");
+    assert!(trace.contains("3/4000 s release fast\n"), "{trace}");
+    assert_eq!(trace.matches(" release fast\n").count(), 4, "{trace}");
+    assert_eq!(trace.matches(" release slow\n").count(), 1, "{trace}");
+}
+
+#[test]
+fn ranks_with_gaps_reach_the_scheduler_and_boot() {
+    // The scheduler built with `from_eadl_ranks`, each slot the plan's index (`RTP-H1`): a table it refused would exit 70.
+    let emitted = build_of(&fixture("rank-gaps")).emitted().expect("emitted");
+    let trace = run(&emitted, "rank-gaps");
+    assert!(trace.contains(" release "), "{trace}");
+}
+
+#[test]
+fn a_run_past_what_the_playground_takes_is_refused_saying_so() {
+    // Each period fits, and their hyperperiod is one too; it is a billion ticks of a run that would never be read.
+    let refusal = build_of(&periodic(&[
+        ("a", "1 ms"),
+        ("b", "1009 ms"),
+        ("c", "1013 ms"),
+        ("d", "1019 ms"),
+    ]))
+    .emitted()
+    .expect_err("refused");
+    assert_eq!(refusal.code, "unsupported-profile");
+    assert!(
+        refusal.message.contains("more than the 1048576"),
+        "{}",
+        refusal.message
+    );
+    assert!(
+        refusal.message.contains("releases and arrivals"),
+        "{}",
+        refusal.message
+    );
+}
+
+#[test]
+fn a_generated_manifest_writes_the_engine_s_edition() {
+    // The copies are text to the generator, so nothing compiles them against the engine's own manifest but this.
+    let root_manifest = fs::read_to_string(root().join("Cargo.toml")).expect("the workspace's");
+    let emitted = build_of(&fixture("worked-heartbeat"))
+        .emitted()
+        .expect("emitted");
+    for name in [
+        "Cargo.toml",
+        "rt-core/Cargo.toml",
+        "sim-playground/Cargo.toml",
+    ] {
+        assert!(
+            file(&emitted, name).contains("edition = \"2021\""),
+            "{name}"
+        );
+    }
+    assert!(
+        root_manifest.contains("edition = \"2021\""),
+        "the engine moved its edition"
+    );
 }
 
 #[test]
@@ -346,6 +472,11 @@ fn each_copy_is_the_engine_s_source_byte_for_byte_and_none_is_left_out() {
              ARCHOGEN_BLESS_COPIES=1 cargo test -p archogen-emit --test emit, and rerun"
         );
     }
+    // A copy is compiled in, so a refresh proves nothing until this test is built again: it never passes.
+    assert!(
+        !refresh,
+        "every copy refreshed: rerun without ARCHOGEN_BLESS_COPIES, which compiles them in and compares them"
+    );
     for krate in ["rt-core", "sim-playground"] {
         for entry in fs::read_dir(root().join("crates").join(krate).join("src")).expect("a crate") {
             let path = format!(
@@ -368,7 +499,7 @@ fn provenance_says_what_each_table_entry_came_from() {
     let provenance = file(&emitted, "provenance.json");
     assert!(
         provenance.contains("\"description\": \"description.eadl\"")
-            && provenance.contains("\"format\": \"archogen-build-provenance/2\""),
+            && provenance.contains("\"format\": \"archogen-build-provenance/3\""),
         "{provenance}"
     );
     assert!(

@@ -11,105 +11,107 @@
 //! ⭐ **It claims no check.** The plan it explains is the search's; `archogen resolve` runs the configuration checker
 //! over the plan it writes, and this command says so rather than run one.
 //!
-//! ⭐ **It reads a build too**, §10.2's form (leaf `M4.2.3.2`): given a directory `archogen build` wrote, it explains the
-//! description that build records, and holds the search's plan for it equal to the plan the build holds, by its digest,
-//! and to what the build's checker record judged. A build that holds another plan is `stale-input`, and no account of it
-//! is printed: the search can only speak for the plan it writes. Reading a directory is the command line's alone: the
-//! engine API and the MCP server take a description as text (`ROADMAP.md` §10.4).
+//! ⭐ **It reads a build too**, §10.2's form (leaf `M4.2.3.2`): given a directory `archogen build` wrote, it holds the
+//! build's files to the digests it recorded, explains the description it records, and holds the search's plan equal to
+//! the plan the build holds and to what its checker's record accepted. A build that fails any of that is `stale-input`,
+//! and no account is printed: the search can only speak for the plan it writes. Reading a directory is the command
+//! line's alone: the engine API and the MCP server take a description as text (`ROADMAP.md` §10.4).
 //!
 //! ⚠️ **Experimental.** It explains the search over a description's own blocks and platforms, as `archogen resolve` does.
 
 use std::io::Write;
-use std::path::{Component, Path};
+use std::path::Path;
 
-use archogen_api::{Account, Explain, Limits, Response, Span};
+use archogen_api::{Account, Explain, Limits, Plan, Response, Span};
 use archogen_digest::Digest;
-use archogen_emit::PROVENANCE_FORMAT;
-use archogen_json::Value;
+use archogen_emit::ASSIGNMENT_FILE;
 use archogen_outcome::record::{Judged, Record};
 
+use crate::built::Built;
 use crate::check_cmd::{ask_with, report_not_judged};
 use crate::cli::Parsed;
 use crate::consume::{PLAN_CHECKER, RECORD};
 use crate::spec::Maturity;
 use crate::status::Status;
 
-/// The most of a build's provenance or record the command reads.
+/// The most of a build's record the command reads.
 const RECORD_LIMIT: usize = 1 << 24;
 
-/// What a build records of what it was made from (`docs/decisions/decision_hosted-build.md` §1).
-struct Built {
-    /// Its description, inside the build.
+/// A build, as `archogen explain` speaks for it.
+struct Asked {
+    /// What it records of itself.
+    built: Built,
+    /// Its description, inside it.
     description: String,
-    /// The system it was built for.
-    system: String,
     /// The assignment the search wrote.
     assignment: String,
     /// The checker's record for it.
     record: Record,
 }
 
-impl Built {
-    /// What `dir` records, or what it is instead: the repair is always to give a description or a build.
-    fn read(dir: &str) -> Result<Self, String> {
+/// Why a directory cannot be spoken for.
+enum Unasked {
+    /// It is no build this engine reads: the repair is to give a description or a build.
+    NoBuild(String),
+    /// It is one, and not as it was written.
+    Altered(String),
+}
+
+impl Asked {
+    /// What `dir` records, each file held to its digest before anything reads it.
+    fn read(dir: &str) -> Result<Self, Unasked> {
         let root = Path::new(dir);
-        let bytes = std::fs::read(root.join("provenance.json"))
-            .map_err(|error| format!("{dir} is a directory, and its `provenance.json`: {error}"))?;
-        let provenance = archogen_json::read(&bytes, RECORD_LIMIT)
-            .map_err(|refusal| format!("{dir}/provenance.json does not read: {refusal}"))?;
-        let text = |name: &str| {
-            provenance
-                .get(name)
-                .and_then(Value::as_str)
-                .map(str::to_owned)
-                .ok_or_else(|| format!("{dir}/provenance.json names no `{name}`"))
-        };
-        let format = text("format")?;
-        if format != PROVENANCE_FORMAT {
-            return Err(format!(
-                "{dir} is a build of `{format}`, and this engine reads `{PROVENANCE_FORMAT}`: build it again"
-            ));
+        let built = Built::read(root).map_err(Unasked::NoBuild)?;
+        if let Some(why) = built.edited(root) {
+            return Err(Unasked::Altered(format!(
+                "the build {dir} is not as it was written: {why}"
+            )));
         }
-        // A provenance entry is text anyone may have edited, so it stays inside the build it names.
-        let name = text("description")?;
-        if !Path::new(&name)
-            .components()
-            .all(|part| matches!(part, Component::Normal(_)))
-        {
-            return Err(format!(
-                "{dir}/provenance.json names the description `{name}`, which lies outside the build"
-            ));
-        }
-        let assignment = std::fs::read_to_string(root.join("assignment.eadl"))
-            .map_err(|error| format!("{dir}/assignment.eadl: {error}"))?;
-        let record =
-            std::fs::read(root.join(RECORD)).map_err(|error| format!("{dir}/{RECORD}: {error}"))?;
+        let no_build = |message: String| Unasked::NoBuild(message);
+        let assignment = std::fs::read_to_string(root.join(ASSIGNMENT_FILE))
+            .map_err(|error| no_build(format!("{dir}/{ASSIGNMENT_FILE}: {error}")))?;
+        let record = std::fs::read(root.join(RECORD))
+            .map_err(|error| no_build(format!("{dir}/{RECORD}: {error}")))?;
         let record = Record::read(&record, RECORD_LIMIT)
-            .map_err(|refusal| format!("{dir}/{RECORD} does not read: {refusal}"))?;
+            .map_err(|refusal| no_build(format!("{dir}/{RECORD} does not read: {refusal}")))?;
         Ok(Self {
-            description: root.join("description").join(name).display().to_string(),
-            system: text("system")?,
+            description: root
+                .join("description")
+                .join(&built.description)
+                .display()
+                .to_string(),
+            built,
             assignment,
             record,
         })
     }
 
-    /// Why the search's plan for this build's description is not the plan the build holds, if it is not.
-    fn stale(&self, plan: &str, dir: &str) -> Option<String> {
+    /// Why the search's plan for this build's description is not the plan the build holds, or not what its checker
+    /// accepted, if either is so. As far as digests go, which catch an edit and never a forger (`crate::built`).
+    fn stale(&self, plan: &Plan, dir: &str) -> Option<String> {
         let held = Digest::of(self.assignment.as_bytes());
-        let searched = Digest::of(plan.as_bytes());
+        let searched = Digest::of(plan.text.as_bytes());
         if held != searched {
             return Some(format!(
-                "the build {dir} holds the plan {held}, and its description resolves to {searched}: \
-                 it was edited, or an engine that searches otherwise built it"
+                "the build {dir} holds the assignment {held}, and its description resolves to {searched}: an engine \
+                 that searches otherwise built it"
             ));
         }
-        if !self.record.accepts() || self.record.subject().judged != Judged::Plan(held) {
-            return Some(format!(
-                "the build {dir} holds the plan {held}, and its `{RECORD}` does not accept that plan"
-            ));
-        }
-        None
+        let producer = self.record.producer();
+        let subject = self.record.subject();
+        let program = Digest::parse(&format!("sha256:{}", plan.program));
+        let accepted = self.record.accepts()
+            && subject.judged == Judged::Plan(held)
+            && Some(subject.program) == program
+            && producer.name == PLAN_CHECKER
+            && producer.sha256 == self.built.checker;
+        (!accepted).then(|| {
+            format!(
+                "the build {dir} holds the assignment {held}, and its `{RECORD}` does not accept that assignment from \
+                 `{PLAN_CHECKER}` {}",
+                self.built.checker
+            )
+        })
     }
 }
 
@@ -121,9 +123,14 @@ pub fn run(parsed: &Parsed, out: &mut dyn Write, err: &mut dyn Write) -> Status 
         .expect("the parser guarantees the positional");
     // A directory is a build: there is no other directory a description can be.
     let built = if Path::new(given).is_dir() {
-        match Built::read(given) {
+        match Asked::read(given) {
             Ok(built) => Some(built),
-            Err(message) => {
+            Err(Unasked::Altered(message)) => {
+                let _ = writeln!(err, "archogen: {}: {message}", Status::StaleInput.slug());
+                let _ = writeln!(err, "  hint: run `archogen build` again");
+                return Status::StaleInput;
+            }
+            Err(Unasked::NoBuild(message)) => {
                 let _ = writeln!(err, "archogen: {}: {message}", Status::Usage.slug());
                 let _ = writeln!(
                     err,
@@ -135,11 +142,29 @@ pub fn run(parsed: &Parsed, out: &mut dyn Write, err: &mut dyn Write) -> Status 
     } else {
         None
     };
+    if let Some(built) = &built {
+        if let Some(asked) = parsed
+            .value("system")
+            .filter(|asked| *asked != built.built.system)
+        {
+            let _ = writeln!(
+                err,
+                "archogen: {}: {given} is a build of system `{}`, not `{asked}`",
+                Status::Usage.slug(),
+                built.built.system
+            );
+            let _ = writeln!(
+                err,
+                "  hint: leave out `--system`: a build holds one system"
+            );
+            return Status::Usage;
+        }
+    }
     let path = built.as_ref().map_or(given, |built| &built.description);
     let explain = Explain {
         system: parsed
             .value("system")
-            .or_else(|| built.as_ref().map(|built| built.system.as_str())),
+            .or_else(|| built.as_ref().map(|built| built.built.system.as_str())),
         fact: parsed
             .value("requirement")
             .expect("the parser guarantees `--requirement` is required"),
@@ -158,30 +183,26 @@ pub fn run(parsed: &Parsed, out: &mut dyn Write, err: &mut dyn Write) -> Status 
         Err(status) => return status,
     };
     let response = &explanation.response;
-    // A build's description that no longer gives the build's plan: the search cannot speak for the plan it holds.
-    if let (Some(built), Some(plan)) = (&built, &explanation.plan) {
-        if let Some(message) = built.stale(&plan.text, given) {
+    // The search can only speak for the plan it writes, so a build it does not write gets no account. A request that
+    // misses, a requirement nobody writes, is `usage` of a healthy build, and is answered as of any description.
+    if let Some(built) = &built {
+        let stale = match &explanation.plan {
+            Some(plan) => built.stale(plan, given),
+            None if response.status == Status::Usage => None,
+            None => Some(format!(
+                "the build {given} holds an assignment, and its description resolves to none today"
+            )),
+        };
+        if let Some(message) = stale {
+            let _ = write!(err, "{}", response.render_diagnostics());
             let _ = writeln!(err, "archogen: {}: {message}", Status::StaleInput.slug());
             let _ = writeln!(err, "  hint: run `archogen build` again");
             return Status::StaleInput;
         }
     }
-    // What it answers of a build whose description gives no plan today: stale, whatever else stands in the way.
-    let answer = |status: Status, err: &mut dyn Write| {
-        if built.is_none() {
-            return status;
-        }
-        let _ = writeln!(
-            err,
-            "archogen: {}: the build {given} holds a plan, and its description resolves to none today",
-            Status::StaleInput.slug()
-        );
-        Status::StaleInput
-    };
     if explanation.accounts.is_empty() {
         if response.judged.is_none() {
-            let status = report_not_judged(response, err);
-            return answer(status, err);
+            return report_not_judged(response, err);
         }
         let _ = write!(err, "{}", response.render_diagnostics());
         let _ = writeln!(
@@ -190,7 +211,7 @@ pub fn run(parsed: &Parsed, out: &mut dyn Write, err: &mut dyn Write) -> Status 
             response.status.slug(),
             response.diagnostics.len()
         );
-        return answer(response.status, err);
+        return response.status;
     }
     let system = explanation.plan.as_ref().map(|plan| plan.system.as_str());
     for account in &explanation.accounts {
@@ -201,12 +222,13 @@ pub fn run(parsed: &Parsed, out: &mut dyn Write, err: &mut dyn Write) -> Status 
         for note in &response.notes {
             let _ = writeln!(err, "archogen: {}: {note}", response.status.slug());
         }
-        return answer(response.status, err);
+        return response.status;
     };
     if built.is_some() {
         let _ = writeln!(
             out,
-            "{given}: the plan of system `{}` is the one this build holds, {}, which `{PLAN_CHECKER}` accepted",
+            "{given}: the search's plan for system `{}` is the one this build holds, assignment {}, which \
+             `{PLAN_CHECKER}` accepted",
             plan.system,
             Digest::of(plan.text.as_bytes())
         );

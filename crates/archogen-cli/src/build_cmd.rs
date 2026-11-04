@@ -11,7 +11,8 @@
 //!    is the command line's alone (`ROADMAP.md` §10.4).
 //! 4. Lower on its acceptance ([`archogen_plan::lower_checked`]) and emit ([`archogen_emit::emit`]), which lowers again and
 //!    compares bytes.
-//! 5. Write the package in `DIR.building` and rename it into place, so it lands whole or not at all.
+//! 5. Write the package in `DIR.building` and rename it into place, so `DIR` is at every moment a whole package or
+//!    absent ([`Place`]).
 //!
 //! ⛔ **Never a programmatic operation.** §10.4 rules that generation writes a crate tree and stays a human or CI action,
 //! so nothing else reaches this file: the command table excludes it, and only the command line holds a launcher.
@@ -21,9 +22,10 @@ use std::path::{Path, PathBuf};
 
 use archogen_api::{Elaborated, Limits, Plan, Resolve, Response};
 use archogen_digest::Digest;
-use archogen_emit::{emit, Emitted, Inputs};
+use archogen_emit::{emit, Emitted, Inputs, ASSIGNMENT_FILE};
 use archogen_plan::{lower_checked, Acceptance, Generator, Refusal};
 
+use crate::built::Built;
 use crate::check_cmd::{ask_with, report_not_judged};
 use crate::cli::Parsed;
 use crate::consume::{self, Checked, Expected};
@@ -31,9 +33,6 @@ use crate::launch::Launch;
 use crate::resolve_cmd::print_owed;
 use crate::spec::Maturity;
 use crate::status::Status;
-
-/// The assignment's name in the package, which the checker judges there.
-const ASSIGNMENT: &str = "assignment.eadl";
 
 /// Run `archogen build`.
 pub fn run(
@@ -99,81 +98,214 @@ pub fn run(
         );
         return response.status;
     };
-    let dir = match place_for(out_dir) {
-        Ok(dir) => dir,
-        Err(refusal) => return refused(&refusal, path, err),
+    let place = match Place::for_out(out_dir) {
+        Ok(place) => place,
+        Err(failed) => return refused(&failed, path, err),
     };
-    let stage = building(&dir);
+    if let Err(failed) = place.open() {
+        return refused(&failed, path, err);
+    }
     let built = Build {
         path,
         response,
         plan,
         elaborated,
-        stage: &stage,
+        stage: &place.stage,
     };
     let emitted = match built.generate(launcher, err) {
         Ok(emitted) => emitted,
-        Err(failed) => return failed.report(&stage, path, err),
+        Err(failed) => {
+            if !failed.keeps_the_stage() {
+                place.abandon();
+            }
+            return refused(&failed, path, err);
+        }
     };
-    if let Err(error) = place(&stage, &dir) {
-        let _ = std::fs::remove_dir_all(&stage);
-        let _ = writeln!(
-            err,
-            "archogen: {}: cannot put the generated package in place at {}: {error}",
-            Status::ToolFailure.slug(),
-            dir.display()
-        );
-        let _ = writeln!(
-            err,
-            "  hint: give `--out` a writable directory on the same filesystem as the project"
-        );
-        return Status::ToolFailure;
+    match place.land() {
+        Ok(leftover) => {
+            if let Some(error) = leftover {
+                let _ = writeln!(
+                    err,
+                    "archogen: the package is in place, and the earlier one stays at {}: {error}; remove it",
+                    place.replaced.display()
+                );
+            }
+        }
+        Err(error) => {
+            place.abandon();
+            let _ = writeln!(
+                err,
+                "archogen: {}: cannot put the generated package in place at {}: {error}",
+                Status::ToolFailure.slug(),
+                place.dir.display()
+            );
+            let _ = writeln!(
+                err,
+                "  hint: give `--out` a writable directory on the same filesystem as the project"
+            );
+            return Status::ToolFailure;
+        }
     }
-    report(parsed, path, &dir, plan, &emitted, out);
+    report(parsed, path, &place.dir, plan, &emitted, out);
     Status::Ok
 }
 
-/// `out_dir` as the place a package goes, or why it cannot: a path naming a directory of its own, which is absent, empty
-/// or an earlier build's. A build deletes nothing it did not write.
-fn place_for(out_dir: &str) -> Result<PathBuf, Failed> {
-    // Without a trailing separator, so `DIR.building` lies beside `DIR` and not in it.
-    let dir = Path::new(out_dir).components().as_path().to_path_buf();
-    if dir.file_name().is_none() {
-        return Err(Failed::Usage(
-            format!("`--out {out_dir}` names no directory of its own"),
-            "name a directory to hold the generated package".to_owned(),
-        ));
-    }
-    let entries = match std::fs::read_dir(&dir) {
-        Ok(entries) => entries,
-        Err(error) if error.kind() == std::io::ErrorKind::NotFound => return Ok(dir),
-        Err(error) => {
-            return Err(Failed::Usage(
-                format!("cannot use `--out {out_dir}`: {error}"),
-                "name a directory to hold the generated package".to_owned(),
-            ))
-        }
-    };
-    let empty = entries.count() == 0;
-    let earlier_build = std::fs::read_to_string(dir.join("provenance.json"))
-        .is_ok_and(|text| text.contains("\"format\": \"archogen-build-provenance/"));
-    if empty || earlier_build {
-        Ok(dir)
-    } else {
-        Err(Failed::Usage(
-            format!(
-                "`--out {out_dir}` holds files and no earlier build, and a build deletes nothing it did not write"
-            ),
-            "name a new directory, or an earlier build's".to_owned(),
-        ))
-    }
+/// Where a package goes: `dir`, by way of a stage beside it, so that it lands whole.
+///
+/// ⛔ **A build deletes nothing it did not write.** It removes only a stage this very run made, and an earlier build that
+/// [`Built`] finds exactly as a build wrote it: every file listed and unchanged, nothing unlisted. Anything else is
+/// refused and left alone, a stage some other run left among it: a run that stopped, or the report of a disagreement,
+/// which is not this run's to delete.
+struct Place {
+    dir: PathBuf,
+    stage: PathBuf,
+    /// Where an earlier build waits between the two renames.
+    replaced: PathBuf,
+    /// Whether something stands at `dir`.
+    occupied: bool,
+    /// The directories this run must make to reach `dir`, innermost first.
+    made: Vec<PathBuf>,
 }
 
-/// Where the package is written before it lands at `dir`: beside it, so the rename stays on one filesystem.
-fn building(dir: &Path) -> PathBuf {
-    let mut stage = dir.as_os_str().to_owned();
-    stage.push(".building");
-    PathBuf::from(stage)
+impl Place {
+    /// `out_dir` as a place, or why it is none.
+    fn for_out(out_dir: &str) -> Result<Self, Failed> {
+        let usage = |message: String, repair: &str| Failed::Usage(message, repair.to_owned());
+        // Without a trailing separator, so the stage lies beside `dir` and not in it.
+        let dir = Path::new(out_dir).components().as_path().to_path_buf();
+        if dir.file_name().is_none() {
+            return Err(usage(
+                format!("`--out {out_dir}` names no directory of its own"),
+                "name a directory to hold the generated package",
+            ));
+        }
+        let beside = |suffix: &str| {
+            let mut name = dir.as_os_str().to_owned();
+            name.push(suffix);
+            PathBuf::from(name)
+        };
+        let (stage, replaced) = (beside(".building"), beside(".replaced"));
+        for other in [&stage, &replaced] {
+            if std::fs::symlink_metadata(other).is_ok() {
+                return Err(usage(
+                    format!(
+                        "{} exists, left by a build that stopped or holding the report of a disagreement, and a build \
+                         deletes nothing it did not write",
+                        other.display()
+                    ),
+                    "look at it, and move or remove it; or name another directory",
+                ));
+            }
+        }
+        let occupied = match std::fs::symlink_metadata(&dir) {
+            Err(error) if error.kind() == std::io::ErrorKind::NotFound => false,
+            Err(error) => {
+                return Err(usage(
+                    format!("cannot use `--out {out_dir}`: {error}"),
+                    "name a directory to hold the generated package",
+                ))
+            }
+            // A rename would move a link away and leave what it points at as it was.
+            Ok(meta) if !meta.is_dir() => {
+                return Err(usage(
+                    format!(
+                        "`--out {out_dir}` is no directory, and a build replaces only a directory"
+                    ),
+                    "name the directory itself, not a file or a link to it",
+                ))
+            }
+            Ok(_) => true,
+        };
+        if occupied {
+            let empty = std::fs::read_dir(&dir)
+                .map_err(|error| {
+                    usage(
+                        format!("cannot use `--out {out_dir}`: {error}"),
+                        "name another directory",
+                    )
+                })?
+                .next()
+                .is_none();
+            if !empty {
+                Self::earlier_build(&dir).map_err(|why| {
+                    usage(
+                        format!(
+                            "`--out {out_dir}` is not an earlier build as a build wrote it, and a build deletes nothing \
+                             it did not write: {why}"
+                        ),
+                        "name a new directory, or move what is yours out of it",
+                    )
+                })?;
+            }
+        }
+        let mut made = Vec::new();
+        let mut parent = dir.parent();
+        while let Some(up) = parent.filter(|up| !up.as_os_str().is_empty() && !up.exists()) {
+            made.push(up.to_path_buf());
+            parent = up.parent();
+        }
+        Ok(Self {
+            dir,
+            stage,
+            replaced,
+            occupied,
+            made,
+        })
+    }
+
+    /// Why `dir` is not exactly a build's, if it is not.
+    fn earlier_build(dir: &Path) -> Result<(), String> {
+        let built = Built::read(dir)?;
+        match built.edited(dir).or_else(|| built.foreign(dir)) {
+            Some(why) => Err(why),
+            None => Ok(()),
+        }
+    }
+
+    /// The stage made, by this run alone: a stage that appears meanwhile is another run's.
+    fn open(&self) -> Result<(), Failed> {
+        let opened = self
+            .stage
+            .parent()
+            .filter(|parent| !parent.as_os_str().is_empty())
+            .map_or(Ok(()), std::fs::create_dir_all)
+            .and_then(|()| std::fs::create_dir(&self.stage));
+        opened.map_err(|error| {
+            Failed::Tool(format!(
+                "cannot make the directory {}: {error}",
+                self.stage.display()
+            ))
+        })
+    }
+
+    /// The stage gone, with whatever this run made to reach it that stayed empty.
+    fn abandon(&self) {
+        let _ = std::fs::remove_dir_all(&self.stage);
+        for made in &self.made {
+            let _ = std::fs::remove_dir(made);
+        }
+    }
+
+    /// The package in place, and any trouble removing what it replaced, which leaves the new package standing. Two
+    /// renames, so `dir` is at every moment a whole package or absent, and an earlier build is restored if the second
+    /// fails.
+    fn land(&self) -> std::io::Result<Option<std::io::Error>> {
+        if self.occupied {
+            std::fs::rename(&self.dir, &self.replaced)?;
+        }
+        if let Err(error) = std::fs::rename(&self.stage, &self.dir) {
+            if self.occupied {
+                let _ = std::fs::rename(&self.replaced, &self.dir);
+            }
+            return Err(error);
+        }
+        if self.occupied {
+            if let Err(error) = std::fs::remove_dir_all(&self.replaced) {
+                return Ok(Some(error));
+            }
+        }
+        Ok(None)
+    }
 }
 
 /// What one build reads.
@@ -227,19 +359,9 @@ impl Build<'_> {
         Ok(emitted)
     }
 
-    /// The stage made anew, the assignment written there and the installed checker run over it.
+    /// The assignment written in the stage, and the installed checker run over it.
     fn checked(&self, launcher: &dyn Launch, err: &mut dyn Write) -> Result<Checked, Failed> {
-        match std::fs::remove_dir_all(self.stage) {
-            Ok(()) => {}
-            Err(error) if error.kind() == std::io::ErrorKind::NotFound => {}
-            Err(error) => {
-                return Err(Failed::Tool(format!(
-                    "cannot remove the earlier {}: {error}",
-                    self.stage.display()
-                )))
-            }
-        }
-        let assignment = self.stage.join(ASSIGNMENT);
+        let assignment = self.stage.join(ASSIGNMENT_FILE);
         write_file(&assignment, &self.plan.text).map_err(Failed::Tool)?;
         let program = Digest::parse(&format!("sha256:{}", self.plan.program)).ok_or_else(|| {
             Failed::Tool(format!(
@@ -261,7 +383,9 @@ impl Build<'_> {
             profile,
         };
         let checked =
-            consume::check_plan(launcher, &expected, self.stage, err).map_err(Failed::Unchecked)?;
+            consume::check_plan(launcher, &expected, self.stage, err).map_err(|refusal| {
+                Failed::Unchecked(refusal, self.stage.join(consume::RECORD).exists())
+            })?;
         if checked.record.status() != Status::Ok {
             return Err(Failed::Disagreed(Box::new(checked)));
         }
@@ -273,8 +397,8 @@ impl Build<'_> {
 enum Failed {
     /// The lowering or the emitter refused.
     Refused(Refusal),
-    /// The checker's run did not hold together, or could not happen.
-    Unchecked(crate::cli::Refusal),
+    /// The checker's run did not hold together, or could not happen; whether it left a record to report.
+    Unchecked(crate::cli::Refusal, bool),
     /// The checker refused the plan the search wrote, so two programs disagree about one input.
     Disagreed(Box<Checked>),
     /// A file could not be written.
@@ -284,12 +408,9 @@ enum Failed {
 }
 
 impl Failed {
-    /// Say so; the stage goes, unless it holds what a report of the disagreement needs. The status.
-    fn report(self, stage: &Path, path: &str, err: &mut dyn Write) -> Status {
-        if !matches!(self, Self::Disagreed(_)) {
-            let _ = std::fs::remove_dir_all(stage);
-        }
-        refused(&self, path, err)
+    /// Whether the stage holds what a report of a disagreement needs: the assignment, and the record the checker left.
+    const fn keeps_the_stage(&self) -> bool {
+        matches!(self, Self::Disagreed(_) | Self::Unchecked(_, true))
     }
 }
 
@@ -306,7 +427,7 @@ fn refused(failed: &Failed, path: &str, err: &mut dyn Write) -> Status {
             );
             status
         }
-        Failed::Unchecked(refusal) => {
+        Failed::Unchecked(refusal, kept) => {
             let _ = writeln!(
                 err,
                 "archogen: {}: {} — nothing was generated from {path}",
@@ -314,6 +435,12 @@ fn refused(failed: &Failed, path: &str, err: &mut dyn Write) -> Status {
                 refusal.message
             );
             let _ = writeln!(err, "  hint: {}", refusal.repair);
+            if *kept {
+                let _ = writeln!(
+                    err,
+                    "  the assignment and the record stay in the build's `.building` directory, for that report"
+                );
+            }
             refusal.status
         }
         Failed::Disagreed(checked) => {
@@ -363,16 +490,6 @@ fn write_file(file: &Path, contents: &str) -> Result<(), String> {
         .map_err(|error| format!("cannot write {}: {error}", file.display()))
 }
 
-/// The stage renamed to `dir`, whatever [`place_for`] admitted there gone first.
-fn place(stage: &Path, dir: &Path) -> std::io::Result<()> {
-    match std::fs::remove_dir_all(dir) {
-        Ok(()) => {}
-        Err(error) if error.kind() == std::io::ErrorKind::NotFound => {}
-        Err(error) => return Err(error),
-    }
-    std::fs::rename(stage, dir)
-}
-
 /// What was built, what it holds and what it did not do.
 fn report(
     parsed: &Parsed,
@@ -388,9 +505,7 @@ fn report(
         emitted.package,
         dir.display()
     );
-    let mut files: Vec<&str> = emitted.files.iter().map(|f| f.path.as_str()).collect();
-    files.push(ASSIGNMENT);
-    files.push(consume::RECORD);
+    let files: Vec<&str> = emitted.files.iter().map(|f| f.path.as_str()).collect();
     let _ = writeln!(out, "  {} file(s): {}", files.len(), files.join(", "));
     let _ = writeln!(
         out,
@@ -404,10 +519,7 @@ fn report(
         emitted.tasks, emitted.horizon, emitted.ticks_per_second
     );
     for (task, source) in &emitted.source_triggers {
-        let _ = writeln!(
-            out,
-            "  task `{task}` is released by the source `{source}`, as the plan infers"
-        );
+        let _ = writeln!(out, "  task `{task}` is released by the source `{source}`");
     }
     print_owed(plan, out);
     if let Maturity::Experimental {
