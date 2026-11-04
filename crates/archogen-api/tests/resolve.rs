@@ -109,6 +109,42 @@ fn a_module_tree_of_several_instances_resolves_its_names_qualified() {
 }
 
 #[test]
+fn a_declaration_named_like_a_fact_in_a_module_tree_is_refused_as_a_plain_one_is() {
+    // `RTP-H21`: flattened, it reads `hw.wrap-behavior` and no fact, where the configuration checker refuses the plan.
+    let app = "(defmodule app (version 1 0) (import hw (as hw)) (export s)
+  (defsystem s (task t (period 10 ms) (deadline 10 ms) (deadline-from release) (priority 1)) (platform (uses hw.soc))))";
+    for (case, composed) in [
+        ("composed", "(requires (uses wrap-behavior))"),
+        ("composed by nothing", ""),
+    ] {
+        let hw = MemoryModules::new().with(
+            "hw",
+            &format!(
+                "(defmodule hw (version 1 0) (export soc)
+  (defblock wrap-behavior (offers (core-count 1 tick) (reachable-at-privilege machine)))
+  (defplatform soc (offers (core-count 1 tick) (reachable-at-privilege machine)) {composed}))"
+            ),
+        );
+        let resolution = ask(app, &hw, UNCHECKED);
+        assert_eq!(
+            resolution.response.status,
+            Status::InvalidDescription,
+            "{case}"
+        );
+        assert!(resolution.plan.is_none(), "{case}");
+        assert!(
+            resolution
+                .response
+                .diagnostics
+                .iter()
+                .any(|d| d.message.contains("`wrap-behavior`") && d.code == "invalid-description"),
+            "{case}: {:?}",
+            resolution.response.diagnostics
+        );
+    }
+}
+
+#[test]
 fn every_answer_that_is_no_plan_says_why() {
     let two =
         format!("{PLAIN}(defsystem t (requires (uses console.write)) (platform (uses soc)))\n");

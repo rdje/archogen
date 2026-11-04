@@ -20,6 +20,7 @@ use eadl_model::check::{resolved_declarations, shipped_registry};
 use eadl_model::profile::{self, Profile};
 use eadl_resolve::adapter::Catalog;
 use eadl_resolve::plan;
+use eadl_resolve::requirement::program_declarations_named_like_facts;
 use eadl_resolve::search::{search, Limits as Budget, Policy, Search};
 use eadl_resolve::vocabulary::Vocabulary;
 
@@ -245,6 +246,21 @@ pub(crate) fn prepare<T>(
             Vec::new(),
         )));
     };
+    // A module tree reaches the search with its names qualified, where a declaration named like a fact no longer reads
+    // as one: its local names are judged here, as the search judges a plain description's (`SR-H4`, `RTP-H21`).
+    let named = program_declarations_named_like_facts(&program, &vocabulary);
+    if !named.is_empty() {
+        return Err(Box::new(Response::not_judged(
+            Status::InvalidDescription,
+            response.sources,
+            vec![format!(
+                "{} declares a name the vocabulary holds, so its system cannot be resolved — no plan was written",
+                request.name
+            )],
+            None,
+            named.iter().map(|refusal| refusal.diagnostic()).collect(),
+        )));
+    }
     // The engine's adapters, which the search may bind where the description's own providers do not hold (leaf
     // `M3.2.3.2`, `docs/specs/adapters/decision_engine-adapters.md` §3).
     let Ok(adapters) = Catalog::shipped(&mut vocabulary_sources, &vocabulary) else {
