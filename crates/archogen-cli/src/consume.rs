@@ -47,11 +47,22 @@ pub struct Expected<'a> {
     pub profile: &'a str,
 }
 
+/// What the front believes of one run of the checker.
+#[derive(Debug, Clone)]
+pub struct Checked {
+    /// The record: its status the checker's verdict on the plan, `ok`, or `tool-failure` for a plan the rules refuse,
+    /// which is a corrupted plan (`ROADMAP.md` §5.5).
+    pub record: Record,
+    /// The record's text, as the checker wrote it, which a build's lowering reads again and names by its digest.
+    pub text: String,
+    /// The sha256 of the front that ran the checker, as the launcher verified it.
+    pub front: Digest,
+}
+
 /// Run the configuration checker through `launcher` over the plan `expected` names, its record written in `dir`, a
 /// directory of the front's own under the command's output; its standard error relayed to `err`.
 ///
-/// Returns a record the front can believe: its status the checker's verdict on the plan — `ok`, or `tool-failure` for
-/// a plan the rules refuse, which is a corrupted plan (`ROADMAP.md` §5.5).
+/// Returns what the front can believe of that run ([`Checked`]).
 ///
 /// # Errors
 ///
@@ -61,7 +72,7 @@ pub fn check_plan(
     expected: &Expected<'_>,
     dir: &Path,
     err: &mut dyn Write,
-) -> Result<Record, Refusal> {
+) -> Result<Checked, Refusal> {
     let record_file = place_record(dir)?;
     let description = absolute(expected.description, "the description")?;
     let plan = absolute(expected.plan, "the plan")?;
@@ -85,7 +96,7 @@ pub fn check_plan(
             )))
         }
     };
-    let record = read_record(&record_file, code)?;
+    let (record, text) = read_record(&record_file, code)?;
     let mut disagree = Vec::new();
     if record.status().code() != code {
         disagree.push(format!(
@@ -129,7 +140,11 @@ pub fn check_plan(
         )));
     }
     match record.status() {
-        Status::Ok | Status::ToolFailure => Ok(record),
+        Status::Ok | Status::ToolFailure => Ok(Checked {
+            record,
+            text,
+            front: launched.front,
+        }),
         status @ (Status::StaleInput
         | Status::InvalidDescription
         | Status::MissingFact
@@ -193,8 +208,8 @@ fn absolute(file: &Path, what: &str) -> Result<PathBuf, Refusal> {
     })
 }
 
-/// The record at `file`, which the checker that exited with `code` wrote.
-fn read_record(file: &Path, code: i32) -> Result<Record, Refusal> {
+/// The record at `file`, which the checker that exited with `code` wrote, and its text.
+fn read_record(file: &Path, code: i32) -> Result<(Record, String), Refusal> {
     let mut bytes = Vec::new();
     let read = std::fs::File::open(file).and_then(|opened| {
         opened
@@ -202,12 +217,22 @@ fn read_record(file: &Path, code: i32) -> Result<Record, Refusal> {
             .read_to_end(&mut bytes)
     });
     match read {
-        Ok(_) => Record::read(&bytes, RECORD_LIMIT).map_err(|refusal| {
-            fault(format!(
-                "`{PLAN_CHECKER}`'s record {}: {refusal}",
-                file.display()
-            ))
-        }),
+        Ok(_) => {
+            let record = Record::read(&bytes, RECORD_LIMIT).map_err(|refusal| {
+                fault(format!(
+                    "`{PLAN_CHECKER}`'s record {}: {refusal}",
+                    file.display()
+                ))
+            })?;
+            // A record that reads is JSON, so this holds; a text that does not is the checker's fault all the same.
+            let text = String::from_utf8(bytes).map_err(|error| {
+                fault(format!(
+                    "`{PLAN_CHECKER}`'s record {}: {error}",
+                    file.display()
+                ))
+            })?;
+            Ok((record, text))
+        }
         Err(error) if error.kind() == std::io::ErrorKind::NotFound => Err(fault(format!(
             "`{PLAN_CHECKER}` exited with {code} and wrote no record, so nothing was judged"
         ))),

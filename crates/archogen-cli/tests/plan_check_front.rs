@@ -42,6 +42,7 @@ impl Launch for Fake {
         self.answer.clone().map(|ended| Launched {
             ended,
             sha256: Digest::of(b"the sibling"),
+            front: Digest::of(b"the front"),
         })
     }
 }

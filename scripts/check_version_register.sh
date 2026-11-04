@@ -91,7 +91,8 @@ declared() {
       while IFS=$'\t' read -r name value; do printf 'const:%s:%s\t%s\n' "$f" "$name" "$value"; done
     printf '%s\n' "$text" | sed -nE 's/^[[:space:]]*id: "([a-z0-9-]+-v[0-9]+)",.*/\1/p' |
       while IFS= read -r id; do printf 'profile:%s:%s\t%s\n' "$f" "$id" "$id"; done
-  done < <(git ls-files -- 'crates/*/src/*.rs' 'crates/*/src/**/*.rs')
+  # A copy under the emitter is text a generated system holds, and its source is what declares (leaf `M4.2.3.1`).
+  done < <(git ls-files -- 'crates/*/src/*.rs' 'crates/*/src/**/*.rs' ':(exclude)crates/archogen-emit/copies/*')
   local versions
   versions="$(members | while IFS= read -r d; do
     awk '/^\[package\]/{p=1; next} /^\[/{p=0} p && /^version[[:space:]]*=/{print; exit}' "$d/Cargo.toml" |
@@ -195,6 +196,9 @@ self_test() {
   arm "a format bumped without its entry is refused" 1 "the code says 'thing/2'"
   fresh; printf 'pub const WIRE: &str = "wire/1";\n' >> "$work/crates/a/src/lib.rs"
   arm "a new format identifier with no entry is refused" 1 "const:crates/a/src/lib.rs:WIRE = 'wire/1'"
+  fresh; mkdir -p "$work/crates/archogen-emit/copies/a/src"; cp "$work/crates/a/src/lib.rs" "$work/crates/archogen-emit/copies/a/src/lib.rs"
+  git -C "$work" add -A >/dev/null 2>&1
+  arm "a copy under the emitter declares nothing" 0 ""
   fresh; printf 'pub const PLAN_VERSION: &str = "2.0.0";\n' >> "$work/crates/b/src/lib.rs"
   arm "a new version constant with no entry is refused" 1 "const:crates/b/src/lib.rs:PLAN_VERSION = '2.0.0'"
   fresh; sed -i.bak 's/minor: 1 }/minor: 2 }/' "$work/crates/b/src/lib.rs"; rm -f "$work/crates/b/src/lib.rs.bak"

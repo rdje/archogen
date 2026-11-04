@@ -1,0 +1,171 @@
+# Building a system
+
+## The idea, in plain words
+
+`archogen build` takes a description and writes a small project you can compile and run. To get there it walks the whole
+pipeline this book describes, in order: the language checks the description, the search chooses which part serves each need, a
+second program checks that choice, the choice is lowered into a [runtime plan](runtime-plan.md), and the plan is turned into
+source files. It stops at the first step that says no. Nobody edits the output, and nothing is fetched from the network.
+
+What you get today is honest but modest. The project holds the engine's real scheduler, on the [hosted
+playground](targets.md), driven by tables made from the plan. But nothing yet supplies the application's own code, so each
+task's job is empty. Running it is a dress rehearsal with the cues called and no actors on stage: you see which task is released
+when, and that is all it can show.
+
+> **In one minute, for engineers.** `crates/archogen-cli/src/build_cmd.rs`: the engine API's `resolve`, the installed
+> `archogen-plan-check` over the plan it wrote, `archogen_plan::lower_checked` on its acceptance, then
+> `archogen_emit::emit`, which accepts the plan only by lowering it again and comparing bytes. Behavior is copied and never
+> generated: the package holds `rt-core` and `sim-playground` byte for byte beside tables of exact integer ticks. It lands whole
+> or not at all, and no byte of it depends on where it was built. It stays off the programmatic surface, by `ROADMAP.md` §10.4.
+> The design is `docs/decisions/decision_hosted-build.md`. The system's own behavior is held by `crates/archogen-cli/tests/functional_fixtures.rs`,
+> against observations frozen before any generator existed.
+
+## A worked example
+
+The description is the two periodic tasks of [A tour of archogen](tour.md):
+
+```console
+$ archogen build examples/s0-heartbeat/system.eadl --out build/heartbeat
+examples/s0-heartbeat/system.eadl: generated `system-heartbeat` into build/heartbeat
+  12 file(s): Cargo.toml, src/main.rs, rt-core/Cargo.toml, sim-playground/Cargo.toml, rt-core/src/lib.rs, rt-core/src/scheduler.rs, rt-core/src/fault.rs, sim-playground/src/lib.rs, plan.txt, provenance.json, assignment.eadl, plan-check.json
+  checked by `archogen-plan-check`: accepted (build/heartbeat/plan-check.json)
+  2 task(s), a run of 3 tick(s) of 1/100 s
+  experimental: the hosted playground: the plan's releases run, and no job holds application code; completed by M4.12
+    the plan is not complete: what it owes is unmet, and a run establishes no property. See `archogen help build`.
+  next: cargo run --manifest-path build/heartbeat/Cargo.toml
+```
+
+The checker's own verdict line reaches standard error as it runs. A task a source releases gets a line of its own, saying which
+source the plan inferred. Run what it wrote:
+
+```console
+$ cargo run --quiet --manifest-path build/heartbeat/Cargo.toml
+; archogen-playground-trace/1
+; system heartbeat
+; plan sha256:390fb545f810c644ba38a4341dc4a158f2d586d3c728dea3879867e0fd529fa2
+; scenario one hyperperiod, 3 ticks of 1/100 s; each source at its stated separation, from time zero
+; no job runs application code: each body is empty, so only the releases are informative
+; the plan is not complete: what it owes is unmet, and this run establishes no property
+0 s initialised 1 console.uart
+0 s initialised 2 console.write
+0 s enabled
+0 s timer-programmed 0
+0 s pending timer
+0 s entry timer
+0 s release beat
+0 s release chime
+0 s timer-programmed 1
+0 s exit timer
+0 s start beat
+0 s complete beat
+0 s start chime
+0 s complete chime
+1/100 s pending timer
+1/100 s entry timer
+1/100 s release beat
+1/100 s timer-programmed 2
+1/100 s exit timer
+1/100 s start beat
+1/100 s complete beat
+1/50 s pending timer
+1/50 s entry timer
+1/50 s release beat
+1/50 s exit timer
+1/50 s start beat
+1/50 s complete beat
+```
+
+Reading it from the top: the lines beginning `;` say what the trace is, which plan it ran and what it did not exercise. The
+parts start in the plan's order, with the serial port before the service that writes to it. Then the timer fires, `beat` and
+`chime` are released in rank order, and each job starts and completes at one instant, because its body is empty. Times are exact
+fractions of a second, so `1/50 s` is 20 ms and no rounding can creep in. The tick is derived from the plan's durations: this
+plan's are 10 ms and 30 ms, so it is 1/100 s.
+
+## What is in the package
+
+Twelve files, and only one of them is generated in any interesting sense:
+
+| File | What it is |
+| --- | --- |
+| `Cargo.toml` | the system's package and its workspace; every dependency is a relative path, so it builds wherever it is put |
+| `src/main.rs` | **the only specialized code**: the plan as tables, and the call that runs them |
+| `rt-core/Cargo.toml` | a generated manifest |
+| `rt-core/src/lib.rs` | the engine's scheduler, byte for byte |
+| `rt-core/src/scheduler.rs` | the engine's scheduler, byte for byte |
+| `rt-core/src/fault.rs` | the engine's fault path, byte for byte |
+| `sim-playground/Cargo.toml` | a generated manifest |
+| `sim-playground/src/lib.rs` | the engine's simulator, byte for byte |
+| `plan.txt` | the runtime plan's canonical text |
+| `provenance.json` | what the plan was lowered from, and what each table entry came from |
+| `assignment.eadl` | the assignment the search wrote, which the checker judged |
+| `plan-check.json` | the checker's result record for it |
+
+⭐ **Generation writes a table, never behavior.** A generated scheduler would be a second scheduler nobody tested. What runs here
+is code the engine compiles and tests, and `crates/archogen-emit/tests/emit.rs` holds each copy byte for byte to its source.
+
+## The rules
+
+**The order is the contract**, and the first step that refuses is the answer:
+
+| Step | Who | A refusal means |
+| --- | --- | --- |
+| 1 | the profile, then `--locked` | the invocation cannot be honored |
+| 2 | the engine API's `resolve`: the check, then the search | the description, or what it asks of its hardware: the same verdict `archogen check` or `archogen resolve` gives |
+| 3 | the installed `archogen-plan-check` | two programs disagree about one input, so `tool-failure` |
+| 4 | the lowering and the emitter | what this format cannot yet express |
+| 5 | writing the package | the output directory |
+
+There is one frontend, so `build` can never accept what `check` refuses.
+
+**What the emitter refuses.** A task the plan cannot say what releases, naming the task and the cause, is `missing-fact`,
+repaired by the task's own `(needs interrupt-source)`, or `unsupported-profile` where the analysis cannot admit the source. A
+duration past 64 bits of ticks is `unsupported-profile`, rather than approximated. A plan that is not what its inputs lower to is
+`tool-failure`: `crates/archogen-emit` accepts a plan only by lowering it again from the same inputs and comparing bytes.
+
+```console
+$ archogen build examples/s0-heartbeat/system-unsupported.eadl --out build/x
+archogen: missing-fact: the plan cannot say what releases task `chime`, `unreached`: write the task's own `(needs interrupt-source)`, so the search binds it a source at least as far apart — nothing was generated from examples/s0-heartbeat/system-unsupported.eadl
+$ echo $?
+11
+```
+
+**`--locked` is refused, not ignored.** Its contract is to fail on any missing or mismatched locked input, and there is no lock
+data to compare against until `M4.7`. Accepting the flag would hand someone who asked for a reproducible build an ordinary one
+that claimed to be reproducible. Refusing costs a user one re-run; accepting costs them a belief. It exits `20`, `unimplemented`.
+
+**Where the package lands.** The command builds it in `DIR.building`, beside `DIR`, and renames it into place once every file is
+written. So a refused build leaves `DIR` as it found it: a refusal of the description creates nothing, and an earlier build stays.
+It replaces an earlier `DIR` only if that holds a build's `provenance.json`, and refuses any other directory that is not empty,
+because a build deletes nothing it did not write. The one thing it leaves behind on purpose: where the checker refuses the
+search's plan, `DIR.building` keeps the assignment and the record, for the report that disagreement deserves.
+
+**Nothing in it depends on where it was built.** A provenance entry names a source relative to the description, so the same
+description at two paths, built into two directories, gives the same bytes. A test compares them.
+
+**Where each entry came from.** `provenance.json` follows each table entry to its line in `src/main.rs`, its line in the plan, and
+its form in the description. The failure to fear is not a missing entry but one that points somewhere wrong, which sends a reader
+somewhere confidently. So `crates/archogen-cli/tests/build.rs` follows every task's entry from both ends.
+
+**The command line alone.** `ROADMAP.md` §10.4 rules generation outside the programmatic interface: it writes a crate tree, and
+exposing it would give a remote consumer a filesystem authority the rest of the surface does not need. So the engine API, the
+wasm module and the [MCP](ledger.md#mcp-specification) server offer no build, and only the `archogen` executable holds a launcher
+that can run the checker. What `build` asks of the engine API is what the search already holds: the plan and what it was written
+from.
+
+**The two programs together.** `crates/archogen-cli/tests/common/mod.rs` runs the checker's own judgement in the test's process,
+so a test sees a real plan past the real rules. `scripts/resolve_installed.sh`, in the `integration` tier, runs the real
+executables from a real install, and builds and runs the package they write ([Verifying the toolchain](verification.md)).
+
+## S0's fixtures, through this path
+
+The observations [the S0 path](s0.md) froze before any generator existed still hold, byte for byte: `crates/archogen-cli/tests/functional_fixtures.rs`
+generates each system from a clean directory, compiles it, runs it, reads the releases out of its trace and compares them with
+the frozen file. One moved, with its reason in its own header. The task S0 could only call unsupported, a minimum separation with
+nothing to release it, is refused now for what it is: a missing fact of the description.
+
+## What this does not establish
+
+A generated system runs its releases and nothing else. No job holds application code until `M4.12`'s inputs exist, so a trace says
+nothing about what a task does or how long it takes. The plan is `(complete no)`, and it lists what is owed. Nothing here is a
+timing result, which is [the scheduling checker's](analysis.md) to give under its own assumptions, and nothing says the hosted
+playground behaves like hardware: it models no device yet (`M4.3`). `archogen explain` does not read a build yet (`M4.2.3.2`).

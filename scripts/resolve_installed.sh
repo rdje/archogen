@@ -9,7 +9,9 @@
 #   - the plan written, the front launching the install's `archogen-plan-check`, which accepts it, its record in
 #     `<plan>.check/`;
 #   - for a plan through an engine adapter, the plan binding an instance and the command saying the plan is
-#     conditional on what it owes (record §9).
+#     conditional on what it owes (record §9);
+#   - for a plan through the description's own providers, that install's `archogen build` too, and the package it writes
+#     built offline and run, its trace saying what it is (leaf `M4.2.3.1`, decision_hosted-build.md §5).
 # THE POPULATION: examples/s0-heartbeat/system.eadl, a plan through the description's own providers; and
 # crates/eadl-resolve/tests/search/adapter-deadline-over-delay.eadl and adapter-epoch-extender.eadl, a plan through
 # each kind of the shipped adapter catalog.
@@ -54,6 +56,23 @@ run_cases() {
         note "$path: the plan binds an engine adapter, and the command does not say it is conditional"; fail=1; continue
       fi
     fi
+    if [ "$shape" = own ]; then
+      local package="$out/$(basename "$path" .eadl).package" trace
+      rm -rf "$package" "$package.building"
+      said="$("$install/archogen" build "$path" --out "$package" 2>&1)"; rc=$?
+      if [ "$rc" -ne 0 ]; then
+        note "$path: \`archogen build\` exited $rc, not 0"; printf '%s\n' "$said" | sed -n '1,6p' | sed 's/^/    /' >&2
+        fail=1; continue
+      fi
+      if ! trace="$(CARGO_TARGET_DIR="$package/target" cargo run --quiet --offline --manifest-path "$package/Cargo.toml" 2>&1)"; then
+        note "$path: the package the install generated did not build and run"; printf '%s\n' "$trace" | sed -n '1,6p' | sed 's/^/    /' >&2
+        fail=1; continue
+      fi
+      if ! grep -qF '; archogen-playground-trace/1' <<< "$trace" || ! grep -qF ' release ' <<< "$trace"; then
+        note "$path: the package ran, and printed no trace of a release"; fail=1; continue
+      fi
+      echo "  ✅ $path: built by the install, and the package it generated ran"
+    fi
     echo "  ✅ $path: resolved, and accepted by the install's checker"
   done
   return "$fail"
@@ -86,6 +105,17 @@ self_test() {
     cat > "$work/install/archogen" <<'SH'
 #!/usr/bin/env bash
 path="$2"; plan="$4"
+if [ "$1" = build ]; then
+  [ "${MODE:-}" = no-build ] && { echo "archogen: missing-fact: nothing was generated" >&2; exit 11; }
+  mkdir -p "$plan/src"
+  printf '[package]\nname = "stub"\nversion = "0.1.0"\nedition = "2021"\n\n[workspace]\n' > "$plan/Cargo.toml"
+  case "${MODE:-}" in
+    no-compile) echo 'not rust' > "$plan/src/main.rs" ;;
+    no-trace) echo 'fn main() {}' > "$plan/src/main.rs" ;;
+    *) printf 'fn main() {\n    println!("; archogen-playground-trace/1");\n    println!("0 s release t");\n}\n' > "$plan/src/main.rs" ;;
+  esac
+  exit 0
+fi
 case "$path" in *adapter-*) bind='(bind r f (adapter k p))' ;; *) bind='(bind r f p)' ;; esac
 [ "${MODE:-}" = no-adapter ] && bind='(bind r f p)'
 printf '%s\n' "$bind" > "$plan"
@@ -114,6 +144,9 @@ SH
   stub; arm "a plan with no check record is a failure" no-record 1 "the plan or its check record is missing"
   stub; arm "an adapter fixture whose plan binds no adapter is a failure" no-adapter 1 "the plan binds no engine adapter"
   stub; arm "a plan through an adapter not said to be conditional is a failure" unconditional 1 "does not say it is conditional"
+  stub; arm "a build the install refuses is a failure" no-build 1 "\`archogen build\` exited 11"
+  stub; arm "a generated package that does not compile is a failure" no-compile 1 "did not build and run"
+  stub; arm "a generated package printing no trace is a failure" no-trace 1 "printed no trace of a release"
   stub; rm -f "$work/install/archogen"
   arm "an install holding no front is refused before anything runs" "" 2 "holds no \`archogen\` to run"
   rm -rf "$work"

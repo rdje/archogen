@@ -128,6 +128,7 @@ impl Launch for Checker {
         Ok(Launched {
             ended: Ended::Code(status.code()),
             sha256: verified(),
+            front: Digest::of(b"the front that ran it"),
         })
     }
 }

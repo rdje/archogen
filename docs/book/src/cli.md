@@ -12,7 +12,7 @@ script what kind of problem it was, using the same verdicts a person reads.
 > **In one minute, for engineers.** The command surface is `ROADMAP.md` §10.2's interface target, declared once in
 > `crates/archogen-cli/src/spec.rs`, from which the help text and the parser are derived, with a three-state
 > maturity per command (built, experimental, unimplemented with its owning leaf) and, for the programmatic surface,
-> whether it is offered as a tool. `check` is built; `build` is experimental over the S0 path; the rest name their
+> whether it is offered as a tool. `check` is built; `build` is experimental, on the hosted playground; the rest name their
 > owners. `archogen mcp`, §10.4's server, offers the tools to an agent over [MCP](ledger.md#mcp-specification). Exit codes map totally from the verdicts;
 > diagnostics carry spans and repairs.
 
@@ -35,7 +35,7 @@ COMMANDS:
     check       elaborate and type-check a description against a profile
     resolve     resolve providers and resources into an independently checked build plan   [experimental — one system of a description, over its own blocks and platforms; completed by leaf M3.7]
     plan-check  check a resolved plan against its description, by the independent configuration checker
-    build       generate, assemble and build a complete system and its simulator   [experimental — the S0 path: one fixed realization, periodic releases, hosted playground; completed by leaf M4.2]
+    build       generate, assemble and build a complete system and its simulator   [experimental — the hosted playground: the plan's releases run, and no job holds application code; completed by leaf M4.12]
     analyze     run an analysis for one named property over a build   [unimplemented — tracked by leaf M2.21.2]
     verify      run a verification tier over a build   [unimplemented — tracked by leaf M4.11]
     explain     explain how one requirement was realized, or why it could not be   [experimental — one requirement of one system, read from a description over its own blocks and platforms, not yet from a build; completed by leaf M4.2]
@@ -52,7 +52,7 @@ COMMANDS:
 | `archogen check <DESCRIPTION> [--profile <PROFILE>]` | elaborate and type-check a description against a profile | **built** — a description is one file or a module tree; see [Checking a description](checking.md) and [Modules and composition](modules.md) |
 | `archogen resolve <DESCRIPTION> [--profile <P>] [--locked] --out <PLAN> [--unchecked] [--system <NAME>]` | resolve providers and resources into an independently checked build plan | **experimental** — one system of a description, a module tree among them, over its own blocks and platforms, the plan checked by `archogen-plan-check`; `--locked` refused until `M4.7`; `M3.7` adds the catalog's providers, completing it |
 | `archogen plan-check <DESCRIPTION> <PLAN>` | check a resolved plan against its description, by the independent configuration checker | **built** — runs the configuration checker's own executable, `archogen-plan-check`, from an install, its arguments handed over unparsed; see [Checking a plan](plan-check.md) |
-| `archogen build <DESCRIPTION> [--profile <P>] --out <DIR>` | generate, assemble and build a complete system and its simulator | **experimental** — the S0 path only, see [The S0 early generation path](s0.md); leaf `M4.2` completes it |
+| `archogen build <DESCRIPTION> [--profile <P>] --out <DIR> [--system <NAME>]` | generate, assemble and build a complete system and its simulator | **experimental** — the hosted playground, see [Building a system](building.md); leaf `M4.12` completes it |
 | `archogen analyze <BUILD> --property <PROPERTY>` | run an analysis for one named property | leaf `M2.21.2` |
 | `archogen verify <BUILD> --tier <TIER>` | run a verification tier | leaf `M4.11` |
 | `archogen explain <DESCRIPTION> [--profile <P>] --requirement <FACT> [--requester <NAME>] [--task <NAME>] [--system <NAME>]` | explain how one requirement was realized, or why it could not be | **experimental** — one system of a description, over its own blocks and platforms, the search's own account, its plan unchecked (leaf `M3.4.13.2`); §10.2's form reads a build, which `M4.2` completes |
@@ -67,22 +67,21 @@ until leaf `M1.29.1`; then it stated the two halves apart while only one was tru
 (`M1.29.2`); two legs in `crates/archogen-cli/tests/module_files.rs` couple each word to its capability,
 so the sentence can neither run ahead of the code nor lag behind it.
 
-`build` **runs, but over a narrower path than its §10.2 contract**, and the
+`build` **runs, but short of its §10.2 contract**, and the
 surface has a third state to say so rather than lying in either direction:
 
 ```console
 $ archogen help build | tail -5
 STATUS: EXPERIMENTAL
-    This command runs, but only over the S0 path: one fixed realization, periodic releases, hosted playground.
+    This command runs, but only over the hosted playground: the plan's releases run, and no job holds application code.
     Its output carries no timing, assurance, or OS-completeness claim. Completing it
-    to the ROADMAP.md §10.2 contract is task-tree leaf M4.2
+    to the ROADMAP.md §10.2 contract is task-tree leaf M4.12
     (see docs/TASK_TREE.md).
 ```
 
 Two states would have forced a choice between two false statements. Marking it *built* promises
 "a complete system and its simulator"; marking it *unimplemented* denies a command that works,
-and a help text that lies about a gap teaches users to stop reading it. `ROADMAP.md` §12 S0
-settles it by requiring the early generation path's output to be marked experimental.
+and a help text that lies about a gap teaches users to stop reading it.
 
 The commands not built yet say so precisely:
 
@@ -160,7 +159,7 @@ When no plan is written it says why — `no provider meets it`, with the search'
 what stopped the search — on standard error as `archogen resolve` prints it, and exits with the same verdict. A fact
 no requester of the system requires is `usage`, its hint listing the requirements the system writes. It runs no
 checker and claims none: the plan it explains is the one `archogen resolve --unchecked` writes. §10.2's form reads a
-build, which `archogen build` writes; that form is `M4.2`'s.
+build, which `archogen build` writes; that form is `M4.2.3.2`'s.
 
 **The checkers are programs of their own** (ruled `2026-10-22`, findings §16 (a); built by `M3.5.1.4`, `M3.5.6` and
 `M2.21`). The configuration checker is `archogen-plan-check` and the scheduling checker `archogen-analyze`,

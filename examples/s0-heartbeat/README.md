@@ -7,7 +7,7 @@ the early executable generation path. Owned by task-tree [`S0`](../../docs/tasks
 | --- | --- | --- | --- |
 | [`system.eadl`](system.eadl) | base | `0` accepted | `0` + the observation in [`expected/system.txt`](expected/system.txt) |
 | [`system-changed.eadl`](system-changed.eadl) | one parameter changed | `0` accepted | `0` + the observation in [`expected/system-changed.txt`](expected/system-changed.txt) |
-| [`system-unsupported.eadl`](system-unsupported.eadl) | no engine realization | `0` accepted | `12` refusal, per [`expected/system-unsupported.txt`](expected/system-unsupported.txt) |
+| [`system-unsupported.eadl`](system-unsupported.eadl) | nothing releases a sporadic task | `0` accepted | `11` refusal, per [`expected/system-unsupported.txt`](expected/system-unsupported.txt) |
 
 Every number in the right-hand column is **frozen**, and was written before any emitter existed.
 That ordering is the whole point of the corpus, so it is a fact of the commit history rather
@@ -17,7 +17,7 @@ had been frozen — compared with `diff`, not by eye.
 
 ## The observation contract
 
-What a generated S0 system does is the **engine's** decision, not the description's. These are
+What a generated system is observed to do is the **engine's** decision, not the description's. `crates/archogen-cli/tests/functional_fixtures.rs` reads these lines out of the trace a generated system prints. These are
 the rules the frozen observations were derived from, stated once so a reader can check every
 expected file by hand:
 
@@ -31,9 +31,9 @@ expected file by hand:
    [`decision_priority-comparison-direction`](../../docs/decisions/decision_priority-comparison-direction.md).
 4. **Form.** One `system <name>` line, one `release <t> ms <task>` line per release, and a
    closing `summary hyperperiod <H> ms releases <N>` line.
-5. **Refusal.** A task that declares `min-separation` instead of `period` has no derivable
-   release schedule, and the build is refused with `unsupported-profile` (exit `12`) naming the
-   missing engine capability.
+5. **Refusal.** A task that declares `min-separation` instead of `period`, with nothing to release
+   it, has no derivable release schedule, and the build is refused with `missing-fact` (exit `11`)
+   naming its repair. S0 said `unsupported-profile` here, having no event source to model.
 
 ⛔ **These are release events, not an execution trace.** A release is a workload fact that
 follows from the description; when a task actually *runs* is a scheduling result, and S0

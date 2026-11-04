@@ -36,7 +36,7 @@ RECORD="docs/decisions/decision_s0-retirement.md"
 CRATE="crates/archogen-s0"
 # The only files permitted to import the prototype. A new entry here is a deliberate decision to
 # widen the blast radius of something scheduled for deletion.
-ALLOWED_CONSUMERS='^crates/archogen-cli/src/build_cmd\.rs$|^crates/archogen-cli/tests/s0_[a-z]+\.rs$'
+ALLOWED_CONSUMERS='^crates/archogen-cli/tests/s0_[a-z]+\.rs$'
 
 fail=0
 note() { printf 'S0-RETIREMENT: %s\n' "$1" >&2; fail=1; }
@@ -136,7 +136,7 @@ if [ "${1:-}" = "--self-test" ]; then
 
   # Arm 2: a row naming a leaf no tree declares.
   arms=$((arms + 1))
-  sed -E 's/^(\| `no-lock-data` \|[^|]*\| )`M4\.1`/\1`M9.9`/' "$RECORD" > "$tmp/record.new"
+  sed -E 's/^(\| `periodic-releases-only` \|[^|]*\| )`M4\.3`/\1`M9.9`/' "$RECORD" > "$tmp/record.new"
   cp "$tmp/record.new" "$RECORD"
   if "$0" 2>/dev/null; then
     echo "SELF-TEST: arm 2 did not fail on a leaf no tree declares" >&2
@@ -147,7 +147,7 @@ if [ "${1:-}" = "--self-test" ]; then
 
   # Arm 3: a row whose marker no longer exists in the source.
   arms=$((arms + 1))
-  sed -E 's/^\| `no-lock-data`/| `no-such-assumption`/' "$RECORD" > "$tmp/record.new"
+  sed -E 's/^\| `periodic-releases-only`/| `no-such-assumption`/' "$RECORD" > "$tmp/record.new"
   cp "$tmp/record.new" "$RECORD"
   if "$0" 2>/dev/null; then
     echo "SELF-TEST: arm 3 did not fail on a row with no marker" >&2

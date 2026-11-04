@@ -11,8 +11,8 @@ microcontroller board on your desk.
 > rests on.
 
 > **In one minute, for engineers.** Today: `archogen check` admits or refuses a description against
-> `rt-static-up-v1`; `archogen build` runs the experimental S0 path, generating a hosted Rust program whose
-> output a test compares byte for byte with an expectation frozen before the generator existed. Underneath:
+> `rt-static-up-v1`; `archogen build` goes through the checked runtime plan, generating a hosted Rust program whose
+> releases a test compares byte for byte with an expectation frozen before any generator existed. Underneath:
 > `rt-core`, a `no_std` scheduler state machine agreeing with an independently derived model; the fault
 > contract under independent review; response-time analysis; a content-addressed catalog. On an emulated
 > RISC-V machine a hand-written program takes timer interrupts; nothing generated runs there yet. Ahead:
@@ -65,10 +65,10 @@ style: eADL describes *what* is required, and the engine decides *how*
 `archogen check` reads the description against the supported profile, `rt-static-up-v1`, and
 either accepts it or says exactly what is wrong and how to fix it ([Checking a description](checking.md)).
 
-`archogen build` then generates a system. Today that is the **S0 path** ([The S0 early generation
-path](s0.md)): a small Rust program — a `main`, a runtime, the `console.write` service — plus a
-provenance file naming what it was generated from. Run it, and it prints the schedule over one
-hyperperiod, the 30 ms after which the pattern repeats:
+`archogen build` then generates a system ([Building a system](building.md)): a small Rust project holding
+the engine's own scheduler and simulator, tables made from a checked plan, and a provenance file naming what
+each came from. Run it, and it prints a trace. What that trace observes is the schedule over one hyperperiod,
+the 30 ms after which the pattern repeats:
 
 <!-- verbatim: examples/s0-heartbeat/expected/system.txt -->
 ```text
@@ -83,16 +83,16 @@ summary hyperperiod 30 ms releases 4
 At 0 ms both tasks are released, and `beat` comes first because it outranks `chime`. `beat` runs
 again at 10 and 20 ms; `chime`'s next release is at 30 ms, the start of the next hyperperiod.
 
-⭐ **This output was written down before the generator existed.** It is the frozen expectation
-`examples/s0-heartbeat/expected/system.txt`, committed with its rationale while no line of the
-emitter had been written. A test — F28's, in `crates/archogen-cli/tests/s0_oracle.rs` — generates
-the program from a clean directory, compiles it, runs it and compares what it prints with that
+⭐ **This was written down before any generator existed.** It is the frozen expectation
+`examples/s0-heartbeat/expected/system.txt`, committed with its rationale while no line of an
+emitter had been written. A test — F28's, in `crates/archogen-cli/tests/functional_fixtures.rs` — generates
+the program from a clean directory, compiles it, runs it and compares what it observes with that
 file, byte for byte; and `crates/archogen-cli/tests/book_tour.rs` compares this chapter's copies
 of both files with the files themselves.
 
 ## 3. What is real underneath, today
 
-The S0 program is a rehearsal. The parts of the real system are being built and checked one at a
+That program is a rehearsal: no task holds any code of its own yet. The parts of the real system are being built and checked one at a
 time:
 
 - **The runtime's core**, `rt-core` ([The runtime](runtime.md)): the fixed-priority scheduler and

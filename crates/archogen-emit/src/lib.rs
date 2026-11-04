@@ -24,22 +24,27 @@ use eadl_model::kind::Registry;
 pub const PROVENANCE_FORMAT: &str = "archogen-build-provenance/1";
 
 /// The engine's sources every generated system holds, by the path each takes there, byte for byte.
+///
+/// ⛔ **This package's own copies, under `copies/`, held to their sources by `tests/emit.rs`.** The generator never reads
+/// a file of `rt-core`, the implementation's role package: a build that did would be a program of two roles to the trust
+/// inventory (`trust-shared-program`). Here the runtime is text the generator writes out and never compiles
+/// (`docs/decisions/decision_hosted-build.md` §1).
 const COPIES: [(&str, &str); 4] = [
     (
         "rt-core/src/lib.rs",
-        include_str!("../../rt-core/src/lib.rs"),
+        include_str!("../copies/rt-core/src/lib.rs"),
     ),
     (
         "rt-core/src/scheduler.rs",
-        include_str!("../../rt-core/src/scheduler.rs"),
+        include_str!("../copies/rt-core/src/scheduler.rs"),
     ),
     (
         "rt-core/src/fault.rs",
-        include_str!("../../rt-core/src/fault.rs"),
+        include_str!("../copies/rt-core/src/fault.rs"),
     ),
     (
         "sim-playground/src/lib.rs",
-        include_str!("../../sim-playground/src/lib.rs"),
+        include_str!("../copies/sim-playground/src/lib.rs"),
     ),
 ];
 
@@ -56,6 +61,8 @@ pub struct Inputs<'a> {
     pub program: &'a Program,
     /// The sources its spans point into.
     pub sources: &'a SourceMap,
+    /// The description's name among them, which a provenance entry names each source relative to.
+    pub description: &'a str,
     /// The assignment record, as the text written.
     pub assignment: &'a str,
     /// The configuration checker's result record for it, as the text written.
@@ -322,9 +329,25 @@ fn task_places(inputs: &Inputs<'_>, system: &str) -> Vec<(String, String, u32, u
             let name = task.items().get(1).and_then(Form::as_symbol)?.to_owned();
             let source = inputs.sources.get(task.span().source)?;
             let position = source.position(task.span().start);
-            Some((name, source.name.clone(), position.line, position.column))
+            let file = relative_to_description(inputs.description, &source.name);
+            Some((name, file, position.line, position.column))
         })
         .collect()
+}
+
+/// `name`, a source's path as its caller gave it, relative to the description's directory: nothing a package holds
+/// depends on where it was built. A module outside that directory is named by its file alone.
+fn relative_to_description(description: &str, name: &str) -> String {
+    let directory = description
+        .rfind('/')
+        .map_or("", |slash| &description[..=slash]);
+    let inside = name
+        .strip_prefix(directory)
+        .filter(|rest| !rest.starts_with("../"));
+    inside.map_or_else(
+        || name.rsplit('/').next().unwrap_or(name).to_owned(),
+        str::to_owned,
+    )
 }
 
 /// `src/main.rs`, and each table entry's provenance.
@@ -629,7 +652,7 @@ pub fn emit(inputs: &Inputs<'_>, generator: Generator) -> Result<Emitted, Refusa
         experimental,
     )?;
     let package = package_name(&contents.system);
-    let mut files = vec![
+    let mut files = Vec::from([
         File {
             path: "Cargo.toml".to_owned(),
             contents: root_manifest(&package),
@@ -646,7 +669,7 @@ pub fn emit(inputs: &Inputs<'_>, generator: Generator) -> Result<Emitted, Refusa
             path: "sim-playground/Cargo.toml".to_owned(),
             contents: copied_manifest("sim-playground", "rt-core = { path = \"../rt-core\" }\n"),
         },
-    ];
+    ]);
     files.extend(COPIES.iter().map(|(path, contents)| File {
         path: (*path).to_owned(),
         contents: (*contents).to_owned(),

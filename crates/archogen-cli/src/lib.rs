@@ -7,7 +7,7 @@
 //!
 //! No semantics live here. Each command arm is a thin translation between the command line and
 //! the crate that does the work — [`check_cmd`] runs `eadl_model::check`, [`build_cmd`] runs the
-//! experimental S0 realization in `archogen_s0` — and its job is to map a result onto the exit
+//! lowering and the emitter on what the search and the checker made — and its job is to map a result onto the exit
 //! code contract without adding a judgement of its own. `run` returns a [`Status`] and writes to
 //! the caller's streams, so the whole surface is testable without a process.
 
@@ -148,7 +148,7 @@ fn dispatch(
     }
     match spec.name {
         "check" => return check_cmd::run(parsed, out, err),
-        "build" => return build_cmd::run(parsed, out, err),
+        "build" => return build_cmd::run(parsed, launcher, out, err),
         "resolve" => return resolve_cmd::run(parsed, launcher, out, err),
         "explain" => return explain_cmd::run(parsed, out, err),
         "mcp" => {

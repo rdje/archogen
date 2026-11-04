@@ -25,12 +25,24 @@ rt-core/                   crates/rt-core's sources, byte for byte, under a gene
 sim-playground/            crates/sim-playground's sources, byte for byte, under a generated manifest
 plan.txt                   the runtime plan's canonical text
 provenance.json            what the plan was lowered from, and what each table entry came from
+assignment.eadl            the assignment the search wrote, which the checker judged
+plan-check.json            the checker's result record for it
 ```
+
+The last two are the command's, §5: the emitter takes them as inputs and writes neither. Nothing in the package depends on
+where it was built or on the path it was given: a provenance entry names a source by its place relative to the description.
 
 Behavior is copied and never generated: what `src/main.rs` adds is data. So the code that runs is code the engine compiles
 and tests, as `ROADMAP.md` §1.1 admits ("copied or linked components") and as S0 did, and a test holds each copy byte for
 byte to its source. A path dependency on the checkout would tie the output to the place it was built, and a registry
 dependency would need the network, which §10.3 keeps out of a build.
+
+**The emitter holds its own copies**, under `crates/archogen-emit/copies/`. A generator that read a file of `crates/rt-core` at
+compile time would be, to the trust inventory, a program of two roles (`trust-shared-program`), since `rt-core` is the
+implementation's role package, and it reads the compiler's own record of what a build read. So the sources are text in the
+emitter's own package, each read by an admitted `include_str!`, never compiled by the generator and never run by it. What this
+costs is a second tree a change of the runtime must refresh, and the test says how. ⚠️ What it does not change is the fact the
+inventory's rule exists for: the generator holds the implementation's text, as data, and the admissions name that.
 
 ### 2. Time is exact
 
@@ -72,20 +84,34 @@ result record and the plan's text, and **accepts the plan only by lowering it ag
 - `(released-by (unknown CAUSE))`: `missing-fact` or `unsupported-profile`, as `RTP-H1` gives each cause;
 - a duration past `u64` ticks (§2): `unsupported-profile`.
 
-A plan whose acceptance was taken as text is built marked experimental, in `provenance.json` and in the trace's header.
+A plan whose acceptance was taken as text is built marked experimental, in `provenance.json` and in the trace's header. No
+front reaches that today, since the only build is the command line's, which runs the checker (§5); the rule stands for the
+next front that takes a result it did not run.
 
 ### 5. The command
 
 `archogen build DESCRIPTION --out DIR [--system NAME] [--profile P]` checks the description, searches, runs the installed
 configuration checker on the plan it wrote, lowers on its acceptance, emits, and writes the package. `--locked` stays refused
-until `M4.7`. It says what it did not do: that no job holds application code, and that the plan is `(complete no)`. The engine
-API and the [MCP](../book/src/ledger.md#mcp-specification) tool, which run no checker, take a result record as text and so build only marked experimental (§4).
+until `M4.7`. It says what it did not do: that no job holds application code, and that the plan is `(complete no)`.
+
+**The command line alone.** `ROADMAP.md` §10.4 rules that system generation is outside the programmatic interface, so the
+engine API, the wasm module and the [MCP](../book/src/ledger.md#mcp-specification) server offer no build. What the command
+needs of the engine API is only what the search already holds: the elaborated program and the kinds, beside the plan
+(`Resolution::elaborated`).
+
+**The package lands whole.** The command builds it in `DIR.building`, beside `DIR`, and renames it into place once every file
+is written, so a refused build leaves `DIR` as it found it: a refusal of the description creates nothing, and an earlier build
+stays. It replaces an earlier `DIR` only if that holds a package's `provenance.json`, and refuses any other directory that is
+not empty, since it deletes nothing it did not write. Where the checker refuses the search's plan, two programs disagree about
+one input, so `DIR.building` stays, holding the assignment and the record to report.
 
 ### 6. What S0 keeps, and when it goes
 
 S0's frozen expected observations are functional fixtures of the system's behavior, and §12 M4 asks that they run through the
-supported path. So a test holds each one's releases equal to the new trace's. Then `crates/archogen-s0` is deleted, and each
-assumption the retirement record lists is discharged or moved by its leaf.
+supported path. So a test holds each one's releases equal to the new trace's. The one fixture S0 refused, a task with a
+minimum separation and no source, stays refused, as `missing-fact` now that the plan can say why, where S0 could only call the
+capability unsupported. Then `crates/archogen-s0` is deleted, and each assumption the retirement record lists is discharged or
+moved by its leaf.
 
 ## Why
 
@@ -100,7 +126,7 @@ assumption the retirement record lists is discharged or moved by its leaf.
 
 ## How to apply
 
-- `M4.3.1` builds the simulator; `M4.2.2` the emitter; `M4.2.3` the command, its faces and the book; `M4.2.4` S0's fixtures
-  through the supported path and S0's retirement.
+- `M4.3.1` builds the simulator; `M4.2.2` the emitter; `M4.2.3.1` the command, S0's fixtures through it and the book;
+  `M4.2.3.2` `archogen explain` on a build; `M4.2.3.3` the review; `M4.2.4` S0's retirement.
 - A change that moves a generated file for the same inputs moves `archogen-playground-trace/1` or its emitter's identity, as
   `docs/book/src/versions.md` registers them.

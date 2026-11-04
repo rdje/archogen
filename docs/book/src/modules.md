@@ -74,7 +74,7 @@ Two rules decide what an import reads, and both are normative (`docs/semantics/r
 After elaboration the tree's declarations go through **every pass a single description gets** — the same
 code, in the same order ([Checking a description](checking.md)) — once two more rules have said what their
 names mean. They are the subject of [Names carry their whole path](#names-carry-their-whole-path) below.
-`archogen build` answers a module file exactly as `check` does, and then meets the S0 path's own limits.
+`archogen build` answers a module file exactly as `check` does, and then meets the search's and the emitter's own limits.
 
 Still open, owned by leaf `M1.29.4`: module **parameters** reach no declaration yet — a `(with …)`
 binding is recorded and used by nothing.

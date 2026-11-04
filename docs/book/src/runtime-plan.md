@@ -123,32 +123,9 @@ each is held to its digest, and a change that would move one is a new format num
 
 ## From a plan to a generated system
 
-`crates/archogen-emit` turns a plan into the files of a package that builds and runs by itself, with nothing fetched:
-
-```text
-Cargo.toml                 the system's package, and its workspace
-src/main.rs                the tables specialized from the plan, and a call of the simulator
-rt-core/                   the engine's scheduler, byte for byte
-sim-playground/            the engine's simulator, byte for byte
-plan.txt                   the plan's text
-provenance.json            what it was lowered from, and what each table entry came from
-```
-
-Behavior is copied, never generated: the only specialized code is data, so what runs is code the engine compiles and tests,
-and a test holds each copy to its source. A plan is accepted only by lowering it again from the same inputs and comparing
-bytes, so a plan that reached the emitter by any route is what the checked inputs make, or nothing is generated. It also
-refuses a task the plan cannot say what releases, naming the task and the cause. Running the package prints a trace that
-opens by saying what it is and what it did not do (`crates/sim-playground`; see [Where generated systems run](targets.md)):
-
-```text
-; archogen-playground-trace/1
-; system heartbeat
-; plan sha256:390fb545…
-; scenario one hyperperiod, 3 ticks of 1/100 s; …
-; no job runs application code: …
-; the plan is not complete: …
-0 s initialised 1 console.uart
-```
+`crates/archogen-emit` turns a plan into the files of a package that builds and runs by itself, and `archogen build` is the
+command that does it ([Building a system](building.md)). A plan is accepted only by lowering it again from the same inputs and
+comparing bytes, so a plan that reached the emitter by any route is what the checked inputs make, or nothing is generated.
 
 ## What this does not establish
 

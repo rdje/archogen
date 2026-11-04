@@ -266,14 +266,19 @@ pub const COMMANDS: &[CommandSpec] = &[
                 help: "the dedicated output directory for generated artifacts",
                 required: true,
             },
+            OptionSpec {
+                long: "system",
+                value: Some("NAME"),
+                help: "the system to build, when the description declares several",
+                required: false,
+            },
         ],
-        // ⚠️ Runs today over the S0 path only (leaf `S0.3`): one fixed engine-owned realization,
-        // periodic releases, the hosted playground. §12 S0 requires that output to be marked
-        // experimental, so the surface marks the command.
+        // ⚠️ The hosted playground only (`docs/decisions/decision_hosted-build.md`): every job's body is empty until
+        // `M4.12`'s inputs give it code, so what a build runs is its releases.
         sibling: None,
         maturity: Maturity::Experimental {
-            scope: "the S0 path: one fixed realization, periodic releases, hosted playground",
-            completed_by: "M4.2",
+            scope: "the hosted playground: the plan's releases run, and no job holds application code",
+            completed_by: "M4.12",
         },
         exposure: Exposure::Excluded {
             reason: "ROADMAP.md §10.4: both builds are outside the programmatic interface",
@@ -580,8 +585,8 @@ mod tests {
         let build = command("build").expect("build exists");
         let tag = build.maturity.tag();
         assert!(tag.contains("experimental"), "{tag}");
-        assert!(tag.contains("S0"), "{tag}");
-        assert!(tag.contains("M4.2"), "{tag}");
+        assert!(tag.contains("no job holds application code"), "{tag}");
+        assert!(tag.contains("M4.12"), "{tag}");
     }
 
     #[test]

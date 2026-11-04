@@ -33,6 +33,7 @@ a change that leaves it stale, so it is never edited by hand.
 - A third reader — [Verifying the toolchain](verification.md#a-third-reader)
 - A tier has three outcomes, not two — [Verifying the toolchain](verification.md#a-tier-has-three-outcomes-not-two)
 - A worked example — [The runtime plan: what the generated system is told](runtime-plan.md#a-worked-example)
+- A worked example — [Building a system](building.md#a-worked-example)
 - **ABI** — [definition](glossary.md), [The boundary: functionality versus implementation](boundary.md), [What this
   project relies on from outside](ledger.md)
 - Absence is reported, never skipped — [Where generated systems run](targets.md#absence-is-reported-never-skipped)
@@ -50,10 +51,11 @@ a change that leaves it stale, so it is never edited by hand.
 - An example that runs — [The engine API](engine-api.md#an-example-that-runs)
 - analysis-model — [What is versioned, and what changing it costs](versions.md#analysis-model)
 - **API** — [definition](glossary.md), [Matching an offer to a requirement](matching.md), [Generated-sources test
-  adequacy](trust-adequacy.md), [The runtime: decisions, not actions](runtime.md), [The archogen command line](cli.md),
-  [The engine API](engine-api.md), [Verifying the toolchain](verification.md), [What this project relies on from
-  outside](ledger.md), [What is versioned, and what changing it costs](versions.md), [Annex B: The checks that keep the
-  repository honest](annex-repository.md), [Annex C: Trust proof records](annex-trust-proofs.md)
+  adequacy](trust-adequacy.md), [The runtime: decisions, not actions](runtime.md), [Building a system](building.md),
+  [The archogen command line](cli.md), [The engine API](engine-api.md), [Verifying the toolchain](verification.md),
+  [What this project relies on from outside](ledger.md), [What is versioned, and what changing it costs](versions.md),
+  [Annex B: The checks that keep the repository honest](annex-repository.md), [Annex C: Trust proof
+  records](annex-trust-proofs.md)
 - Approved disposable fixture verification — [Annex C: Trust proof
   records](annex-trust-proofs.md#approved-disposable-fixture-verification)
 - Artifact hash checks under escaped paths — [Annex C: Trust proof
@@ -84,7 +86,6 @@ a change that leaves it stale, so it is never edited by hand.
 - **BSD** — [definition](glossary.md), [Verifying the toolchain](verification.md), [Annex B: The checks that keep the
   repository honest](annex-repository.md)
 - build-provenance-format — [What is versioned, and what changing it costs](versions.md#build-provenance-format)
-- Building one — [The S0 early generation path](s0.md#building-one)
 
 ## C
 
@@ -261,10 +262,10 @@ a change that leaves it stale, so it is never edited by hand.
   description](checking.md), [What a report may claim](evidence.md), [Matching an offer to a requirement](matching.md),
   [Checking a plan](plan-check.md), [Where the engine's knowledge comes from: the catalog](catalog.md), [Checks that
   must not share a mistake: the trust gate](trust.md), [The runtime plan: what the generated system is
-  told](runtime-plan.md), [The runtime: decisions, not actions](runtime.md), [The S0 early generation path](s0.md),
-  [Where generated systems run](targets.md), [The archogen command line](cli.md), [The engine API](engine-api.md),
-  [Verifying the toolchain](verification.md), [What is versioned, and what changing it costs](versions.md), [Annex B:
-  The checks that keep the repository honest](annex-repository.md), [Annex C: Trust proof
+  told](runtime-plan.md), [The runtime: decisions, not actions](runtime.md), [Building a system](building.md), [The S0
+  early generation path](s0.md), [Where generated systems run](targets.md), [The archogen command line](cli.md), [The
+  engine API](engine-api.md), [Verifying the toolchain](verification.md), [What is versioned, and what changing it
+  costs](versions.md), [Annex B: The checks that keep the repository honest](annex-repository.md), [Annex C: Trust proof
   records](annex-trust-proofs.md)
 - Diagnostic cohort integration checkpoint — [Annex C: Trust proof
   records](annex-trust-proofs.md#diagnostic-cohort-integration-checkpoint)
@@ -331,9 +332,10 @@ a change that leaves it stale, so it is never edited by hand.
 - **fault** — [definition](glossary.md), [A tour: from a description to a board](tour.md), [Checking a
   plan](plan-check.md), [What the scheduling checker establishes](analysis.md), [Where the engine's knowledge comes
   from: the catalog](catalog.md), [Checks that must not share a mistake: the trust gate](trust.md), [The runtime:
-  decisions, not actions](runtime.md), [Verifying the toolchain](verification.md), [What this project relies on from
-  outside](ledger.md), [Annex A: The runtime's rules in detail](annex-runtime.md), [Annex B: The checks that keep the
-  repository honest](annex-repository.md), [Annex C: Trust proof records](annex-trust-proofs.md)
+  decisions, not actions](runtime.md), [Building a system](building.md), [Verifying the toolchain](verification.md),
+  [What this project relies on from outside](ledger.md), [Annex A: The runtime's rules in detail](annex-runtime.md),
+  [Annex B: The checks that keep the repository honest](annex-repository.md), [Annex C: Trust proof
+  records](annex-trust-proofs.md)
 - Faults in detail — [Annex A: The runtime's rules in detail](annex-runtime.md#faults-in-detail)
 - Figure registration for literal fences — [Annex C: Trust proof
   records](annex-trust-proofs.md#figure-registration-for-literal-fences)
@@ -405,8 +407,8 @@ a change that leaves it stale, so it is never edited by hand.
 
 ## I
 
-- **ID** — [definition](glossary.md), [The S0 early generation path](s0.md), [Verifying the toolchain](verification.md),
-  [Annex C: Trust proof records](annex-trust-proofs.md)
+- **ID** — [definition](glossary.md), [Verifying the toolchain](verification.md), [Annex C: Trust proof
+  records](annex-trust-proofs.md)
 - In a browser — [Checking a plan](plan-check.md#in-a-browser)
 - Incremental matcher reasons — [Annex C: Trust proof records](annex-trust-proofs.md#incremental-matcher-reasons)
 - Initial cache and current-reason assessment — [Annex C: Trust proof
@@ -446,10 +448,10 @@ a change that leaves it stale, so it is never edited by hand.
 - **job** — [definition](glossary.md), [Introduction](introduction.md), [The supported profile](profile.md), [Checking a
   plan](plan-check.md), [What the scheduling checker establishes](analysis.md), [Where the engine's knowledge comes
   from: the catalog](catalog.md), [The runtime plan: what the generated system is told](runtime-plan.md), [The runtime:
-  decisions, not actions](runtime.md), [Where generated systems run](targets.md), [Verifying the
-  toolchain](verification.md), [What this project relies on from outside](ledger.md), [Annex A: The runtime's rules in
-  detail](annex-runtime.md), [Annex B: The checks that keep the repository honest](annex-repository.md), [Annex C: Trust
-  proof records](annex-trust-proofs.md)
+  decisions, not actions](runtime.md), [Building a system](building.md), [The S0 early generation path](s0.md), [Where
+  generated systems run](targets.md), [Verifying the toolchain](verification.md), [What this project relies on from
+  outside](ledger.md), [Annex A: The runtime's rules in detail](annex-runtime.md), [Annex B: The checks that keep the
+  repository honest](annex-repository.md), [Annex C: Trust proof records](annex-trust-proofs.md)
 - Joint rules — [Matching an offer to a requirement](matching.md#joint-rules)
 - **JSON** — [definition](glossary.md), [Checking a plan](plan-check.md), [Checks that must not share a mistake: the
   trust gate](trust.md), [Generated-sources test adequacy](trust-adequacy.md), [The engine API](engine-api.md),
@@ -477,7 +479,6 @@ a change that leaves it stale, so it is never edited by hand.
 - linux-timekeeping — [What this project relies on from outside](ledger.md#linux-timekeeping)
 - **LLVM** — [definition](glossary.md), [Annex C: Trust proof records](annex-trust-proofs.md)
 - Local build storage — [Where the engine's knowledge comes from: the catalog](catalog.md#local-build-storage)
-- --locked is refused, not ignored — [The S0 early generation path](s0.md#--locked-is-refused-not-ignored)
 - **LTO** — [definition](glossary.md), [Annex C: Trust proof records](annex-trust-proofs.md)
 
 ## M
@@ -485,8 +486,9 @@ a change that leaves it stale, so it is never edited by hand.
 - Masking — [The runtime: decisions, not actions](runtime.md#masking)
 - **MB** — [definition](glossary.md), [The engine API](engine-api.md)
 - **MCP** — [definition](glossary.md), [Matching an offer to a requirement](matching.md), [Checking a
-  plan](plan-check.md), [The archogen command line](cli.md), [The engine API](engine-api.md), [Verifying the
-  toolchain](verification.md), [What is versioned, and what changing it costs](versions.md)
+  plan](plan-check.md), [Building a system](building.md), [The archogen command line](cli.md), [The engine
+  API](engine-api.md), [Verifying the toolchain](verification.md), [What is versioned, and what changing it
+  costs](versions.md)
 - mcp-specification — [What this project relies on from outside](ledger.md#mcp-specification)
 - mdbook — [What this project relies on from outside](ledger.md#mdbook)
 - **MEI** — [definition](glossary.md), [What this project relies on from outside](ledger.md)
@@ -580,9 +582,9 @@ a change that leaves it stale, so it is never edited by hand.
 - **port** — [definition](glossary.md), [Introduction](introduction.md), [A tour: from a description to a
   board](tour.md), [Presence, absence, and relevance](presence.md), [Refinement](refinement.md), [Checking a
   plan](plan-check.md), [Where the engine's knowledge comes from: the catalog](catalog.md), [The runtime plan: what the
-  generated system is told](runtime-plan.md), [The runtime: decisions, not actions](runtime.md), [Where generated
-  systems run](targets.md), [Verifying the toolchain](verification.md), [What this project relies on from
-  outside](ledger.md), [Annex A: The runtime's rules in detail](annex-runtime.md)
+  generated system is told](runtime-plan.md), [The runtime: decisions, not actions](runtime.md), [Building a
+  system](building.md), [Where generated systems run](targets.md), [Verifying the toolchain](verification.md), [What
+  this project relies on from outside](ledger.md), [Annex A: The runtime's rules in detail](annex-runtime.md)
 - **POSIX** — [definition](glossary.md), [A tour: from a description to a board](tour.md), [The supported
   profile](profile.md)
 - Postrepair caller checkpoint — [Annex C: Trust proof records](annex-trust-proofs.md#postrepair-caller-checkpoint)
@@ -606,20 +608,20 @@ a change that leaves it stale, so it is never edited by hand.
   workload](workload.md), [Checking a description](checking.md), [Matching an offer to a requirement](matching.md),
   [Checking a plan](plan-check.md), [Where the engine's knowledge comes from: the catalog](catalog.md), [Checks that
   must not share a mistake: the trust gate](trust.md), [The runtime plan: what the generated system is
-  told](runtime-plan.md), [The runtime: decisions, not actions](runtime.md), [The S0 early generation path](s0.md),
-  [Where generated systems run](targets.md), [The archogen command line](cli.md), [The engine API](engine-api.md), [What
-  this project relies on from outside](ledger.md), [What is versioned, and what changing it costs](versions.md), [Annex
-  A: The runtime's rules in detail](annex-runtime.md), [Annex B: The checks that keep the repository
-  honest](annex-repository.md), [Annex C: Trust proof records](annex-trust-proofs.md)
+  told](runtime-plan.md), [The runtime: decisions, not actions](runtime.md), [Building a system](building.md), [The S0
+  early generation path](s0.md), [Where generated systems run](targets.md), [The archogen command line](cli.md), [The
+  engine API](engine-api.md), [What this project relies on from outside](ledger.md), [What is versioned, and what
+  changing it costs](versions.md), [Annex A: The runtime's rules in detail](annex-runtime.md), [Annex B: The checks that
+  keep the repository honest](annex-repository.md), [Annex C: Trust proof records](annex-trust-proofs.md)
 - **PROGRAM** — [definition](glossary.md), [Annex C: Trust proof records](annex-trust-proofs.md)
 - Promised narrowing spellings — [Generated-sources test adequacy](trust-adequacy.md#promised-narrowing-spellings)
 - Proved environment-tail removal — [Annex C: Trust proof
   records](annex-trust-proofs.md#proved-environment-tail-removal)
 - **provenance** — [definition](glossary.md), [A tour: from a description to a board](tour.md), [What a report may
   claim](evidence.md), [Checks that must not share a mistake: the trust gate](trust.md), [Generated-sources test
-  adequacy](trust-adequacy.md), [The runtime plan: what the generated system is told](runtime-plan.md), [The S0 early
-  generation path](s0.md), [What is versioned, and what changing it costs](versions.md), [Annex C: Trust proof
-  records](annex-trust-proofs.md)
+  adequacy](trust-adequacy.md), [The runtime plan: what the generated system is told](runtime-plan.md), [Building a
+  system](building.md), [The S0 early generation path](s0.md), [What is versioned, and what changing it
+  costs](versions.md), [Annex C: Trust proof records](annex-trust-proofs.md)
 - provenance-format — [What is versioned, and what changing it costs](versions.md#provenance-format)
 - **provider** — [definition](glossary.md), [Introduction](introduction.md), [The boundary: functionality versus
   implementation](boundary.md), [Presence, absence, and relevance](presence.md), [Matching an offer to a
@@ -665,11 +667,11 @@ a change that leaves it stale, so it is never edited by hand.
   workload](workload.md), [Checking a description](checking.md), [Matching an offer to a requirement](matching.md),
   [What the scheduling checker establishes](analysis.md), [Where the engine's knowledge comes from: the
   catalog](catalog.md), [Checks that must not share a mistake: the trust gate](trust.md), [The runtime plan: what the
-  generated system is told](runtime-plan.md), [The runtime: decisions, not actions](runtime.md), [The S0 early
-  generation path](s0.md), [Where generated systems run](targets.md), [Verifying the toolchain](verification.md), [What
-  this project relies on from outside](ledger.md), [What is versioned, and what changing it costs](versions.md), [Annex
-  A: The runtime's rules in detail](annex-runtime.md), [Annex B: The checks that keep the repository
-  honest](annex-repository.md), [Annex C: Trust proof records](annex-trust-proofs.md)
+  generated system is told](runtime-plan.md), [The runtime: decisions, not actions](runtime.md), [Building a
+  system](building.md), [The S0 early generation path](s0.md), [Where generated systems run](targets.md), [Verifying the
+  toolchain](verification.md), [What this project relies on from outside](ledger.md), [What is versioned, and what
+  changing it costs](versions.md), [Annex A: The runtime's rules in detail](annex-runtime.md), [Annex B: The checks that
+  keep the repository honest](annex-repository.md), [Annex C: Trust proof records](annex-trust-proofs.md)
 - Relevance decides whether an unknown matters — [Presence, absence, and
   relevance](presence.md#relevance-decides-whether-an-unknown-matters)
 - Remaining diagnostic-producer assessment — [Annex C: Trust proof
@@ -708,10 +710,11 @@ a change that leaves it stale, so it is never edited by hand.
   requirement](matching.md), [Checking a plan](plan-check.md), [What the scheduling checker establishes](analysis.md),
   [Where the engine's knowledge comes from: the catalog](catalog.md), [Checks that must not share a mistake: the trust
   gate](trust.md), [The runtime plan: what the generated system is told](runtime-plan.md), [The runtime: decisions, not
-  actions](runtime.md), [Where generated systems run](targets.md), [The engine API](engine-api.md), [Verifying the
-  toolchain](verification.md), [What this project relies on from outside](ledger.md), [What is versioned, and what
-  changing it costs](versions.md), [Annex A: The runtime's rules in detail](annex-runtime.md), [Annex B: The checks that
-  keep the repository honest](annex-repository.md), [Annex C: Trust proof records](annex-trust-proofs.md)
+  actions](runtime.md), [Building a system](building.md), [The S0 early generation path](s0.md), [Where generated
+  systems run](targets.md), [The engine API](engine-api.md), [Verifying the toolchain](verification.md), [What this
+  project relies on from outside](ledger.md), [What is versioned, and what changing it costs](versions.md), [Annex A:
+  The runtime's rules in detail](annex-runtime.md), [Annex B: The checks that keep the repository
+  honest](annex-repository.md), [Annex C: Trust proof records](annex-trust-proofs.md)
 - runtime-analysis-model — [What is versioned, and what changing it costs](versions.md#runtime-analysis-model)
 - runtime-plan-format — [What is versioned, and what changing it costs](versions.md#runtime-plan-format)
 - rust-reference — [What this project relies on from outside](ledger.md#rust-reference)
@@ -722,6 +725,7 @@ a change that leaves it stale, so it is never edited by hand.
 
 ## S
 
+- S0's fixtures, through this path — [Building a system](building.md#s0s-fixtures-through-this-path)
 - Scratch stays on this volume — [Annex B: The checks that keep the repository
   honest](annex-repository.md#scratch-stays-on-this-volume)
 - **SEI** — [definition](glossary.md), [What this project relies on from outside](ledger.md)
@@ -776,10 +780,10 @@ a change that leaves it stale, so it is never edited by hand.
   description](checking.md), [Matching an offer to a requirement](matching.md), [Checking a plan](plan-check.md), [What
   the scheduling checker establishes](analysis.md), [Where the engine's knowledge comes from: the catalog](catalog.md),
   [Checks that must not share a mistake: the trust gate](trust.md), [The runtime plan: what the generated system is
-  told](runtime-plan.md), [The runtime: decisions, not actions](runtime.md), [The S0 early generation path](s0.md),
-  [Verifying the toolchain](verification.md), [What this project relies on from outside](ledger.md), [What is versioned,
-  and what changing it costs](versions.md), [Annex A: The runtime's rules in detail](annex-runtime.md), [Annex B: The
-  checks that keep the repository honest](annex-repository.md), [Annex C: Trust proof records](annex-trust-proofs.md)
+  told](runtime-plan.md), [The runtime: decisions, not actions](runtime.md), [Building a system](building.md), [The S0
+  early generation path](s0.md), [Verifying the toolchain](verification.md), [What this project relies on from
+  outside](ledger.md), [Annex A: The runtime's rules in detail](annex-runtime.md), [Annex B: The checks that keep the
+  repository honest](annex-repository.md), [Annex C: Trust proof records](annex-trust-proofs.md)
 - Test-flag naming query controls — [Annex C: Trust proof
   records](annex-trust-proofs.md#test-flag-naming-query-controls)
 - The admitted task model, enforced — [Describing a workload](workload.md#the-admitted-task-model-enforced)
@@ -826,6 +830,7 @@ a change that leaves it stale, so it is never edited by hand.
 - The reference generated from the code — [The engine API](engine-api.md#the-reference-generated-from-the-code)
 - The roots — [Checks that must not share a mistake: the trust gate](trust.md#the-roots)
 - The rules — [The runtime plan: what the generated system is told](runtime-plan.md#the-rules)
+- The rules — [Building a system](building.md#the-rules)
 - The run's order — [Checks that must not share a mistake: the trust gate](trust.md#the-runs-order)
 - The sealed set — [The use cases](usecases.md#the-sealed-set)
 - The search — [Matching an offer to a requirement](matching.md#the-search)
@@ -902,6 +907,7 @@ a change that leaves it stale, so it is never edited by hand.
 - What is deliberately absent — [The runtime: decisions, not actions](runtime.md#what-is-deliberately-absent)
 - What is frozen, and what a digest can prove — [Verifying the
   toolchain](verification.md#what-is-frozen-and-what-a-digest-can-prove)
+- What is in the package — [Building a system](building.md#what-is-in-the-package)
 - What is not claimed — [Matching an offer to a requirement](matching.md#what-is-not-claimed)
 - What is outside it — [The engine API](engine-api.md#what-is-outside-it)
 - What is still owed — [What the scheduling checker establishes](analysis.md#what-is-still-owed)
@@ -914,6 +920,7 @@ a change that leaves it stale, so it is never edited by hand.
 - What it is not — [Checks that must not share a mistake: the trust gate](trust.md#what-it-is-not)
 - What it may be used for, and what it may not — [What the scheduling checker
   establishes](analysis.md#what-it-may-be-used-for-and-what-it-may-not)
+- What it wrote, and where that went — [The S0 early generation path](s0.md#what-it-wrote-and-where-that-went)
 - What keeps a value, and what keeps a guarantee —
   [Refinement](refinement.md#what-keeps-a-value-and-what-keeps-a-guarantee)
 - What one request may cost — [The engine API](engine-api.md#what-one-request-may-cost)
@@ -928,13 +935,13 @@ a change that leaves it stale, so it is never edited by hand.
 - What the tests step is a suite *of* — [Verifying the toolchain](verification.md#what-the-tests-step-is-a-suite-of)
 - What this does not establish — [The runtime plan: what the generated system is
   told](runtime-plan.md#what-this-does-not-establish)
+- What this does not establish — [Building a system](building.md#what-this-does-not-establish)
 - What this is not — [Presence, absence, and relevance](presence.md#what-this-is-not)
 - What this project does not claim — [Introduction](introduction.md#what-this-project-does-not-claim)
 - What you can run today — [Modules and composition](modules.md#what-you-can-run-today)
 - When a push is due — [Verifying the toolchain](verification.md#when-a-push-is-due)
 - When something goes wrong — [The runtime: decisions, not actions](runtime.md#when-something-goes-wrong)
 - When the description is broken — [The S0 early generation path](s0.md#when-the-description-is-broken)
-- Where each declaration came from — [The S0 early generation path](s0.md#where-each-declaration-came-from)
 - Where it lives — [Presence, absence, and relevance](presence.md#where-it-lives)
 - Where it lives — [Checking a plan](plan-check.md#where-it-lives)
 - Where it lives — [What the scheduling checker establishes](analysis.md#where-it-lives)

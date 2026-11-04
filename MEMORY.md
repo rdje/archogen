@@ -15,7 +15,7 @@
 - **Project:** archogen — the eADL → OS generation toolchain (`ROADMAP.md` revision 2.0).
 - **Active tree:** `M4` → frontier `M4.1`, the accepted runtime plan, the model's amendments done (`M4.1.2`): `/1` for
   the hosted playground; `PROGRAM` → `PROGRAM.34`, the director's.
-- **Next action:** `M4.2.3`, `archogen build` on the plan, the emitter's first caller; then `.4`, S0's retirement. The
+- **Next action:** `M4.2.3.2`, `archogen explain` on a build; `.3`, the design's fresh review; then `M4.2.4`, S0's retirement. The
   runtime plan's design is accepted (`M4.1.1` done).
   `M4.4.1`, the device correspondence, before `M4.1.7`. `M3.2.7` and `M3.5.9`, full verification, wait for the
   features (doctrine 22).

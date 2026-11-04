@@ -7,7 +7,7 @@
   (role generator)
   (package "crates/archogen-cli")
   (target bin archogen)
-  (role-packages "crates/archogen-cli" "crates/archogen-api" "crates/archogen-plan" "crates/archogen-s0" "crates/eadl-resolve")
+  (role-packages "crates/archogen-cli" "crates/archogen-api" "crates/archogen-emit" "crates/archogen-plan" "crates/eadl-resolve")
   (invokes configuration-checker)
   (installed "archogen-install.json"))
 
@@ -313,28 +313,28 @@
   (reason "crates/archogen-cli/src/spec.rs:334: embeds `ROADMAP.md` as text, which the command specification quotes"))
 
 (defadmit
-  (file "crates/archogen-s0/src/emit.rs")
+  (file "crates/archogen-emit/src/lib.rs")
   (rule "include_str")
-  (sha256 "fc9dffd54da3be9007d6d2e99859ca40bf1ad3f147c429ffa92bc1ec32587191")
-  (reason "crates/archogen-s0/src/emit.rs:37: embeds an S0 runtime template as text, which the S0 generator writes out"))
+  (sha256 "e8f55252591e1d6bff4d709f13b9c13f4f7e206243f2ef92986d4e4a50c19a4a")
+  (reason "crates/archogen-emit/src/lib.rs:35: embeds its copy of rt-core/src/lib.rs as text, which a generated system holds; crates/archogen-emit/tests/emit.rs holds it to its source"))
 
 (defadmit
-  (file "crates/archogen-s0/src/emit.rs")
+  (file "crates/archogen-emit/src/lib.rs")
   (rule "include_str")
-  (sha256 "fc9dffd54da3be9007d6d2e99859ca40bf1ad3f147c429ffa92bc1ec32587191")
-  (reason "crates/archogen-s0/src/emit.rs:38: embeds an S0 runtime template as text, which the S0 generator writes out"))
+  (sha256 "e8f55252591e1d6bff4d709f13b9c13f4f7e206243f2ef92986d4e4a50c19a4a")
+  (reason "crates/archogen-emit/src/lib.rs:39: embeds its copy of rt-core/src/scheduler.rs as text, which a generated system holds; crates/archogen-emit/tests/emit.rs holds it to its source"))
 
 (defadmit
-  (file "crates/archogen-s0/src/emit.rs")
+  (file "crates/archogen-emit/src/lib.rs")
   (rule "include_str")
-  (sha256 "d80c207fbd441ffc00937558acd6ab7b203e421c1b8b93d00e401cebd569c178")
-  (reason "crates/archogen-s0/src/emit.rs:282: embeds an S0 runtime template as text, which the S0 generator writes out"))
+  (sha256 "e8f55252591e1d6bff4d709f13b9c13f4f7e206243f2ef92986d4e4a50c19a4a")
+  (reason "crates/archogen-emit/src/lib.rs:43: embeds its copy of rt-core/src/fault.rs as text, which a generated system holds; crates/archogen-emit/tests/emit.rs holds it to its source"))
 
 (defadmit
-  (file "crates/archogen-s0/src/emit.rs")
+  (file "crates/archogen-emit/src/lib.rs")
   (rule "include_str")
-  (sha256 "0c47b7f562d8011c88e828abb606a166f194aa56feeb9a218ff993630b41b165")
-  (reason "crates/archogen-s0/src/emit.rs:283: embeds an S0 runtime template as text, which the S0 generator writes out"))
+  (sha256 "e8f55252591e1d6bff4d709f13b9c13f4f7e206243f2ef92986d4e4a50c19a4a")
+  (reason "crates/archogen-emit/src/lib.rs:47: embeds its copy of sim-playground/src/lib.rs as text, which a generated system holds; crates/archogen-emit/tests/emit.rs holds it to its source"))
 
 (defadmit
   (file "crates/archogen-wasm/Cargo.toml")

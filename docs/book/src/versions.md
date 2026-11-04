@@ -86,7 +86,7 @@ their versioned readers and permanent refusal controls enforce their local contr
 | Version | `0.1.0` |
 | Declared at | `const:crates/archogen-s0/src/provenance.rs:REALIZATION_VERSION` |
 | Changes when | the observation contract changes, since each frozen expectation in `examples/s0-heartbeat/expected/` holds for one contract |
-| Pinned by | the frozen observations, compared by `crates/archogen-cli/tests/s0_oracle.rs` |
+| Pinned by | nothing since `M4.2.3.1`, when no command reached it; `M4.2.4` retires it, and the frozen observations now judge the supported path, in `crates/archogen-cli/tests/functional_fixtures.rs` |
 | Keeps | the same description built by this entry gives the same observation |
 
 ## `provenance-format`
@@ -97,7 +97,7 @@ their versioned readers and permanent refusal controls enforce their local contr
 | Version | `archogen-provenance/1` |
 | Declared at | `const:crates/archogen-s0/src/provenance.rs:FORMAT` |
 | Changes when | a field is added, removed or reinterpreted. A consumer that does not recognize the identifier must refuse rather than guess |
-| Pinned by | its shape — every key path and the kind of value at it — frozen in `crates/archogen-cli/tests/goldens/archogen-provenance-1.golden` and compared by `crates/archogen-cli/tests/format_golden.rs`; a golden is never rewritten, so a shape change fails until the identifier moves |
+| Pinned by | its shape, frozen in `crates/archogen-cli/tests/goldens/archogen-provenance-1.golden` and compared by nothing since `M4.2.3.1`, when no command wrote it any longer; `M4.2.4` retires it |
 | Keeps | an artifact labelled `archogen-provenance/1` means the same to every reader of `/1` |
 
 ## `catalog-rules`
@@ -149,7 +149,7 @@ their versioned readers and permanent refusal controls enforce their local contr
 | Field | Value |
 | --- | --- |
 | Surface | the engine API: the one contract every consumer judges a description through, the CLI today and the wasm and [MCP](ledger.md#mcp-specification) bindings to come ([The engine API](engine-api.md)) |
-| Version | `1.7` — `1.0` fixed `2026-09-30` when leaf `API.3` closed; `1.1` added the response's engine version (`API.4.1`); `1.2` added `check_with` and its `Limits` (`API.4.2`); `1.3` added the status `stale-input`, the vocabulary growing (`M3.5.1.1`); `1.4` added the operation `resolve`, the search alone (`M3.4.4`); `1.5` added the operation `explain`, one requirement's account (`M3.4.13.2`); `1.6` added the definition `defadapter`, a file of the engine's adapter catalog answered as the language's own (`M3.2.2`); `1.7` added the plan's `obligations`, what a plan binding an engine adapter owes (`M3.2.6.1`) |
+| Version | `1.8` — `1.0` fixed `2026-09-30` when leaf `API.3` closed; `1.1` added the response's engine version (`API.4.1`); `1.2` added `check_with` and its `Limits` (`API.4.2`); `1.3` added the status `stale-input`, the vocabulary growing (`M3.5.1.1`); `1.4` added the operation `resolve`, the search alone (`M3.4.4`); `1.5` added the operation `explain`, one requirement's account (`M3.4.13.2`); `1.6` added the definition `defadapter`, a file of the engine's adapter catalog answered as the language's own (`M3.2.2`); `1.7` added the plan's `obligations`, what a plan binding an engine adapter owes (`M3.2.6.1`); `1.8` added the resolution's `elaborated`, what a plan was written from, for the command line's build (`M4.2.3.1`) |
 | Declared at | `const:crates/archogen-api/src/lib.rs:VERSION` |
 | Changes when | an operation or a response field is added, which is a minor; an operation or a field removed, or a field given a new meaning, which is a new major |
 | Pinned by | the exhaustive reading of `Response` and `Judgement` in `crates/archogen-api/tests/check.rs`, which stops compiling when a field is added or removed and names the version its shape belongs to; the three parity legs of `crates/archogen-cli/tests/api_parity.rs`. The bump itself is the author's act: nothing can tell a new field from a renamed one |
@@ -240,7 +240,7 @@ their versioned readers and permanent refusal controls enforce their local contr
 | Version | `archogen-build-provenance/1` |
 | Declared at | `const:crates/archogen-emit/src/lib.rs:PROVENANCE_FORMAT` |
 | Changes when | a member is added, removed or reinterpreted |
-| Pinned by | `crates/archogen-emit/tests/emit.rs`, which reads it from both ends: the generated line holds the entry, and the source line the task |
+| Pinned by | its shape — every key path and the kind of value at it — frozen in `crates/archogen-cli/tests/goldens/archogen-build-provenance-1.golden` and compared by `crates/archogen-cli/tests/format_golden.rs`, a golden never being rewritten; each entry followed from both ends by `crates/archogen-cli/tests/build.rs` |
 | Keeps | a generated table entry can be followed back to the plan's line and the description's form |
 
 ## `wasm-request-format`

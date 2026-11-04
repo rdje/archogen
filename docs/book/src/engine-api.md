@@ -126,12 +126,12 @@ one judged and refused, and one the API does not judge.
 
 ```console
 $ cargo run -q -p archogen-api --example in_memory
-api 1.7 · engine 0.1.0 · status ok
+api 1.8 · engine 0.1.0 · status ok
   judged under eadl/1, profile rt-static-up-v1: 1 declaration(s)
-api 1.7 · engine 0.1.0 · status invalid-description
+api 1.8 · engine 0.1.0 · status invalid-description
   judged under eadl/1, profile rt-static-up-v1: 1 declaration(s)
   quantity-unknown-unit: `parsec` is not a known unit
-api 1.7 · engine 0.1.0 · status unsupported-profile
+api 1.8 · engine 0.1.0 · status unsupported-profile
   not judged: `rt-dynamic-mp` is not a supported profile
 ```
 
@@ -193,7 +193,7 @@ to a small multiple of its request.
 
 - **The command line judges nothing itself.** None of its production code names the engine's
   checking entry points. `archogen check`, `archogen build`, `archogen resolve` and `archogen explain` read the file,
-  ask the API, and print its answer; `resolve` then writes the plan and runs the checker, which no API may.
+  ask the API, and print its answer; `resolve` and `build` then write the plan and run the checker, which no API may.
 - **The API offers exactly the commands that run**, less the ones §10.4 keeps out. Each exclusion
   names its reason.
 - **They say the same thing.** Over every description in the repository, the command line's exit
@@ -324,8 +324,8 @@ module themselves.
 ### What is outside it
 
 - **`archogen build`.** Generation writes a crate tree. §10.4 keeps it a human or CI action, since a
-  remote consumer does not need that authority. `build` asks the API whether a description checks,
-  and generates only from an accepted one.
+  remote consumer does not need that authority. `build` asks the API's `resolve` for a plan and for what it was
+  written from (API `1.8`, `Resolution::elaborated`), and generates only from one the checker accepted.
 - **`archogen verify`.** It runs verification tiers, which drive a toolchain and an emulator. It
   needs its own ruling before it is exposed, and is not exposed by analogy.
 - **The commands not built yet.** They are no operation. The command table

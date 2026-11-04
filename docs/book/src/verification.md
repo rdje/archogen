@@ -731,7 +731,9 @@ the generator wrote in the same process. The `resolve-installed` step runs the t
   them ([The command line](cli.md));
 - it runs that install's `archogen resolve`, checked, over the heartbeat, `examples/s0-heartbeat/system.eadl`,
   resolved through its own providers, and the two adapter fixtures of `crates/eadl-resolve/tests/search/`, each
-  resolved through one kind of the engine's adapter catalog.
+  resolved through one kind of the engine's adapter catalog;
+- for the heartbeat, it also runs that install's `archogen build`, and builds and runs the package it writes
+  ([Building a system](building.md)).
 
 Each plan must be written, the install's `archogen-plan-check` must accept it, and its record must sit beside it in
 `<plan>.check/`. A plan through an adapter must bind the instance, and the command must say the plan is conditional
@@ -771,7 +773,7 @@ new one cannot go unrecorded (`PROGRAM.60`).
 archogen describes, checks and generates, and it executes nothing. `archogen build` writes a crate and stops.
 Nothing in the product compiles, links or runs what it wrote. That is the property that makes it safe to hand
 archogen to an agent that did not write the description. One exception is made, for the person at the command line
-alone: `archogen plan-check` runs the configuration checker, `archogen-plan-check`, a program of its own, as git runs
+alone: `archogen plan-check`, `archogen resolve` and `archogen build` run the configuration checker, `archogen-plan-check`, a program of its own, as git runs
 its sibling commands (`ROADMAP.md` §10.2). The code that starts it is one file, `crates/archogen-cli/src/sibling.rs`,
 which only the `archogen` executable's `main.rs` declares and hands to the command line; the library, the engine API,
 the browser module and the [MCP](ledger.md#mcp-specification) server hold a launcher that runs nothing, so no agent driving archogen through them can
@@ -825,7 +827,7 @@ of it.
 | `docs/semantics/boundary` | the controlling boundary — functionality versus implementation — in paired accept/reject cases, each carrying its verdict in a comment header that **F27** reads |
 | `docs/semantics/cases` | the worked semantic cases, each declaring the §5.5 verdict it expects in its own header, so a driver that computed the expectation could not agree with itself |
 | `docs/semantics/kinds` | the `defkind` modules the registry is built from, which makes the language's own definitions conformance cases of the language |
-| `examples` | the descriptions a reader copies, checked end to end and — for the S0 fixture — built and run |
+| `examples` | the descriptions a reader copies, checked end to end and — for the heartbeat — built and run |
 
 ⭐ **The manifest carries no count.** A size is a property of the roots, so the roots are where it is
 measured: a leg pins the population and refuses an empty one, and the chapters that publish a figure

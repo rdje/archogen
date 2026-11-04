@@ -150,7 +150,7 @@ pub fn run(
         plan_sha256: Digest::of(plan.text.as_bytes()),
         profile,
     };
-    match consume::check_plan(launcher, &expected, &dir, err) {
+    match consume::check_plan(launcher, &expected, &dir, err).map(|checked| checked.record) {
         Ok(record) if record.status() == Status::Ok => {
             let _ = writeln!(
                 out,

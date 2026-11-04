@@ -28,8 +28,14 @@ archogen-outcome = { path = "../archogen-outcome" }
 # The MCP server's framing, which each role's server shares (leaf `M3.5.1.6.1`).
 archogen-transport = { path = "../archogen-transport" }
 archogen-json = { path = "../archogen-json" }
-archogen-s0 = { path = "../archogen-s0" }
+# The build: a checked assignment lowered, and the plan turned into a package (leaf `M4.2.3.1`).
+archogen-emit = { path = "../archogen-emit" }
+archogen-plan = { path = "../archogen-plan" }
 # The response's encoding, so the MCP server answers the bytes the wasm binding does (leaf `API.6.4`).
 archogen-wasm = { path = "../archogen-wasm" }
 eadl-front = { path = "../eadl-front" }
 eadl-model = { path = "../eadl-model" }
+
+[dev-dependencies]
+# Each build test's result record, written by the checker's own judgement in this process (`tests/common/mod.rs`).
+archogen-plan-check = { path = "../archogen-plan-check" }

@@ -1,37 +1,25 @@
-//! The S0 oracle: what the generated `heartbeat` system must be observed to do.
+//! S0's functional fixtures through the supported path (`ROADMAP.md` §12 M4; `docs/decisions/decision_hosted-build.md` §6):
+//! what the generated `heartbeat` system must be observed to do.
 //!
-//! `ROADMAP.md` §12 S0 requires this file to exist **before** the thing it judges:
+//! This was the S0 oracle, and `ROADMAP.md` §12 S0 required it to exist **before** the thing it judged:
 //!
 //! > Before generating, write an independent expected-output assertion for this limited
 //! > behavior. […] Changing only a comment or embedding a prebuilt output without consuming the
 //! > functional input does not satisfy the gate.
 //!
-//! So the independence claim is structural rather than promised. The emitter does not exist
-//! when this lands (leaf `S0.1`; the emitter is `S0.3`), so the frozen observations in
-//! `examples/s0-heartbeat/expected/` cannot have been read off it. And this file lives in
-//! `tests/`, which Rust cannot link into a library — no future emitter can call the derivation
-//! below, however convenient that would be. It must be written from the contract in
-//! `examples/s0-heartbeat/README.md`.
+//! So the independence claim is structural rather than promised. No emitter existed when the frozen observations in
+//! `examples/s0-heartbeat/expected/` landed (leaf `S0.1`), and none of today's did until `M4.2.2`, so they cannot have
+//! been read off it. And this file lives in `tests/`, which Rust cannot link into a library, so no emitter can call the
+//! derivation below, however convenient: it is written from the contract in `examples/s0-heartbeat/README.md`.
 //!
-//! # What is asserted, and when
+//! ⭐ **What moved at `M4.2.3.1`.** The same frozen bytes, now compared with what a system generated through the search,
+//! the checker and the lowering observes. Its trace is `archogen-playground-trace/1`, so [`observation_of`] reads the
+//! releases out of it into the contract's form; the fixtures hold what is observed, not how it is printed. One frozen
+//! file moved, with its reason in its own header: the case S0 refused as `unsupported-profile`.
 //!
-//! | Assertion | Assertable |
-//! |---|---|
-//! | the three fixtures are accepted by `archogen check` | now |
-//! | each frozen observation follows from its description | now |
-//! | the unsupported fixture has no derivable observation | now |
-//! | the changed case observes something materially different | now |
-//! | `archogen build` reaches each case's frozen exit code | now (leaf `S0.3`) |
-//! | the generated executable actually prints the observation | now — **F28** (leaf `S0.4`) |
-//!
-//! Until `S0.3`, the last two rows were held by a tripwire that pinned `archogen build` at
-//! `unimplemented` and failed the moment it became real — which is how they came to be written
-//! rather than quietly inherited.
-//!
-//! ⛔ **Note what this file never does: read the generated Rust.** Every assertion here is about
-//! the *observable* — an exit code, and soon the bytes the program prints. An assertion like
-//! "the generated file contains `HORIZON_MS = 30`" would be written in the generator's own
-//! vocabulary and would survive any change that kept the spelling and broke the meaning.
+//! ⛔ **Note what this file never does: read the generated Rust.** Every assertion here is about the *observable*: an exit
+//! code, and the bytes the program prints. An assertion like "the generated file contains `HORIZON_MS = 30`" would be
+//! written in the generator's own vocabulary and would survive any change that kept the spelling and broke the meaning.
 //!
 //! # Disclosed shared dependency (§4.4)
 //!
@@ -40,11 +28,14 @@
 //! accepted, named dependency: building a second parser to avoid it would contradict §4.1
 //! ("do not build a second incompatible parser") and would be the more dangerous kind of green.
 
+mod common;
+
 use std::collections::BTreeMap;
 use std::path::{Path, PathBuf};
 use std::process::Command;
 
-use archogen_cli::{run, Status};
+use archogen_cli::Status;
+use common::Checker;
 use eadl_front::{read, Form, SourceMap};
 
 /// The three cases of the corpus, as `(description, expected observation)`.
@@ -126,8 +117,8 @@ fn derive(forms: &[Form]) -> Derived {
         if clause_value(task, "period").is_none() && clause_value(task, "min-separation").is_some()
         {
             return Derived::Refusal {
-                code: "unsupported-profile",
-                names: "min-separation".to_string(),
+                code: "missing-fact",
+                names: "interrupt-source".to_string(),
             };
         }
         let period = whole_milliseconds(task, "period");
@@ -313,12 +304,8 @@ fn load_expectation(relative: &str) -> Expectation {
 
 /// Run one `archogen` invocation against a repo-root-relative description.
 fn invoke(args: &[&str]) -> (Status, String) {
-    let mut out: Vec<u8> = Vec::new();
-    let mut err: Vec<u8> = Vec::new();
-    let status = run(args.iter().map(|s| (*s).to_string()), &mut out, &mut err);
-    let mut text = String::from_utf8(out).expect("utf-8 stdout");
-    text.push_str(&String::from_utf8(err).expect("utf-8 stderr"));
-    (status, text)
+    let (status, out, err) = common::invoke(args, &Checker);
+    (status, out + &err)
 }
 
 fn absolute(relative: &str) -> String {
@@ -358,11 +345,10 @@ fn every_expected_file_declares_the_whole_schema() {
             "{expected}: a refusal has no standard output, and an observation is not empty"
         );
         if observation == "refusal" {
-            for key in ["diagnostic-code", "names", "missing-capability", "owner"] {
+            for key in ["diagnostic-code", "names"] {
                 assert!(
                     expectation.headers.contains_key(key),
-                    "{expected}: a refusal must record `{key}:` — §5.4 requires the missing \
-                     engine capability to be named, not the request declared impossible"
+                    "{expected}: a refusal must record `{key}:`, so the repair it names is held"
                 );
             }
         }
@@ -427,7 +413,7 @@ fn the_unsupported_case_has_no_derivable_observation() {
     assert_eq!(code, expectation.header("diagnostic-code"));
     assert_eq!(names, expectation.header("names"));
     assert_eq!(
-        Status::UnsupportedProfile.code(),
+        Status::MissingFact.code(),
         expectation.exit("build-exit"),
         "the frozen exit code must be the one the status vocabulary assigns"
     );
@@ -542,11 +528,6 @@ fn every_fixture_builds_to_its_frozen_exit_code() {
                 "{description}: the refusal must name `{}`\n{output}",
                 expectation.header("names")
             );
-            assert!(
-                output.contains(expectation.header("owner")),
-                "{description}: the refusal must name the leaf that supplies the missing \
-                 capability\n{output}"
-            );
         }
     }
 }
@@ -572,8 +553,9 @@ fn snapshot(dir: &Path) -> Vec<(String, Vec<u8>)> {
     [
         "Cargo.toml",
         "src/main.rs",
-        "src/rt.rs",
-        "src/service.rs",
+        "rt-core/src/scheduler.rs",
+        "sim-playground/src/lib.rs",
+        "plan.txt",
         "provenance.json",
     ]
     .iter()
@@ -587,7 +569,53 @@ fn snapshot(dir: &Path) -> Vec<(String, Vec<u8>)> {
     .collect()
 }
 
-/// Generate, compile and run one description; return what it printed to standard output.
+/// What the trace a generated system printed observes, in the form of `examples/s0-heartbeat/README.md`'s contract: the
+/// system, its releases and the run's length. The trace's own form is `archogen-playground-trace/1`; these fixtures hold
+/// what it says, not how, so they outlive it.
+fn observation_of(trace: &str) -> String {
+    let header = |prefix: &str| {
+        trace
+            .lines()
+            .find_map(|line| line.strip_prefix(prefix))
+            .unwrap_or_else(|| panic!("no `{prefix}` in {trace}"))
+    };
+    // `3 ticks of 1/100 s; …`, exact, as a whole number of milliseconds.
+    let scenario = header("; scenario one hyperperiod, ");
+    let mut words = scenario.split(' ');
+    let ticks: i64 = words.next().expect("a count").parse().expect("a count");
+    assert_eq!(words.next(), Some("ticks"), "{scenario}");
+    assert_eq!(words.next(), Some("of"), "{scenario}");
+    let tick = words.next().expect("a tick");
+    let hyperperiod = milliseconds(tick) * ticks;
+    let mut observed = format!("system {}\n", header("; system "));
+    let mut releases = 0;
+    for line in trace.lines().filter(|line| !line.starts_with(';')) {
+        if let Some((at, task)) = line.split_once(" release ") {
+            let at = at.strip_suffix(" s").expect("a time in seconds");
+            observed.push_str(&format!("release {} ms {task}\n", milliseconds(at)));
+            releases += 1;
+        }
+    }
+    observed.push_str(&format!(
+        "summary hyperperiod {hyperperiod} ms releases {releases}\n"
+    ));
+    observed
+}
+
+/// An exact time in seconds, `0`, `3` or `1/100`, as whole milliseconds, which every period of this corpus is.
+fn milliseconds(seconds: &str) -> i64 {
+    let (numerator, denominator) = seconds.split_once('/').unwrap_or((seconds, "1"));
+    let numerator: i64 = numerator.parse().expect("a numerator");
+    let denominator: i64 = denominator.parse().expect("a denominator");
+    assert_eq!(
+        numerator * 1000 % denominator,
+        0,
+        "{seconds} s is no whole number of milliseconds"
+    );
+    numerator * 1000 / denominator
+}
+
+/// Generate, compile and run one description; return what the trace it printed observes.
 fn generate_compile_run(description: &str, dir: &Path) -> String {
     let (status, output) = invoke(&[
         "build",
@@ -609,6 +637,7 @@ fn generate_compile_run(description: &str, dir: &Path) -> String {
     let run = Command::new(env!("CARGO"))
         .arg("run")
         .arg("--quiet")
+        .arg("--offline")
         .arg("--manifest-path")
         .arg(dir.join("Cargo.toml"))
         // Its own target directory: the generated crate must not share, or contend for the lock
@@ -630,7 +659,7 @@ fn generate_compile_run(description: &str, dir: &Path) -> String {
         "{description}: a generated file changed between generation and execution"
     );
 
-    String::from_utf8(run.stdout).expect("utf-8 stdout")
+    observation_of(&String::from_utf8(run.stdout).expect("utf-8 stdout"))
 }
 
 #[test]
@@ -677,12 +706,11 @@ fn f28_the_unsupported_request_is_rejected_with_a_diagnostic() {
          mistake for output",
         dir.display()
     );
-    for token in [expectation.header("names"), expectation.header("owner")] {
-        assert!(
-            output.contains(token),
-            "the refusal must name `{token}`\n{output}"
-        );
-    }
+    let token = expectation.header("names");
+    assert!(
+        output.contains(token),
+        "the refusal must name `{token}`\n{output}"
+    );
 }
 
 #[test]
@@ -728,8 +756,8 @@ const NON_HARMONIC: &str = "examples/s0-heartbeat/system-non-harmonic.eadl";
 fn f28_a_non_harmonic_task_set_separates_the_hyperperiod_from_the_longest_period() {
     // ⛔ THE THREE F28 CASES CANNOT SEE THIS. Their periods are 10 and 30, then 10 and 20 — both
     // harmonic, so `lcm` equals `max` and a realization returning the longest period passes the
-    // whole gate. Measured, not supposed: mutating `lcm` to `max` in `crates/archogen-s0` left
-    // all twelve oracle tests green.
+    // whole gate. Measured at leaf `S0.4`, on S0's realization: mutating `lcm` to `max` left all
+    // twelve oracle tests green.
     //
     // With 10 against 15 the two answers are 30 and 15, and the trace interleaves.
     //

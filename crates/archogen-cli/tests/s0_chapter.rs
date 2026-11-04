@@ -10,20 +10,24 @@
 //! - every "<count> descriptions" in the chapter, spelled out or in digits, with the `.eadl` files in the
 //!   directory — except the sentences in [`HISTORY`], which are true of the commit they name;
 //! - the corpus table, one row per description, by name;
-//! - the "<count> files" figure and the table beneath it, with what `archogen build` actually writes.
+//! - the "<count> files" figure of `docs/book/src/building.md`, and the table beneath it, with what `archogen build`
+//!   actually writes.
 //!
 //! The arms are the `M1.24` shape: each feeds a violation-returning function the prose that was actually wrong,
 //! and pins the violation **count**, so a gate that over-reports fails its own arms.
+
+mod common;
 
 use std::collections::BTreeSet;
 use std::path::{Path, PathBuf};
 use std::sync::OnceLock;
 
-use archogen_cli::run;
-
 /// `include_str!`, so a chapter that moves or is deleted stops this crate compiling instead of gating nothing.
 const CHAPTER: &str = include_str!("../../../docs/book/src/s0.md");
 const CHAPTER_PATH: &str = "docs/book/src/s0.md";
+/// The chapter that shows what a build writes.
+const BUILDING: &str = include_str!("../../../docs/book/src/building.md");
+const BUILDING_PATH: &str = "docs/book/src/building.md";
 const CORPUS: &str = "examples/s0-heartbeat";
 
 /// Sentences that state a figure true of the commit they name, not of today. Listed, never inferred from the
@@ -62,24 +66,17 @@ fn measured_emitted_files() -> &'static BTreeSet<String> {
 fn build_and_list() -> BTreeSet<String> {
     let dir = Path::new(env!("CARGO_TARGET_TMPDIR")).join("s0-chapter");
     let _ = std::fs::remove_dir_all(&dir);
-    let (mut out, mut err) = (Vec::new(), Vec::new());
     let source = repo_root().join(CORPUS).join("system.eadl");
-    let status = run(
-        [
-            "build".to_string(),
-            source.display().to_string(),
-            "--out".to_string(),
-            dir.display().to_string(),
+    let (status, _, err) = common::invoke(
+        &[
+            "build",
+            &source.display().to_string(),
+            "--out",
+            &dir.display().to_string(),
         ],
-        &mut out,
-        &mut err,
+        &common::Checker,
     );
-    assert_eq!(
-        status.code(),
-        0,
-        "the base description must build: {}",
-        String::from_utf8_lossy(&err)
-    );
+    assert_eq!(status.code(), 0, "the base description must build: {err}");
     let mut files = BTreeSet::new();
     let mut pending = vec![dir.clone()];
     while let Some(next) = pending.pop() {
@@ -208,12 +205,14 @@ fn file_violations(chapter: &str, emitted: &BTreeSet<String>) -> Vec<String> {
     let mut wrong = Vec::new();
     let found = figures(chapter, "files");
     if found.is_empty() {
-        wrong.push(format!("{CHAPTER_PATH} states no count of generated files"));
+        wrong.push(format!(
+            "{BUILDING_PATH} states no count of generated files"
+        ));
     }
     for (line, n) in found {
         if n != emitted.len() {
             wrong.push(format!(
-                "{CHAPTER_PATH}:{line} says {n} files, and `archogen build` writes {} — {:?}",
+                "{BUILDING_PATH}:{line} says {n} files, and `archogen build` writes {} — {:?}",
                 emitted.len(),
                 emitted
             ));
@@ -225,7 +224,7 @@ fn file_violations(chapter: &str, emitted: &BTreeSet<String>) -> Vec<String> {
         .collect();
     if &rows != emitted {
         wrong.push(format!(
-            "{CHAPTER_PATH}'s file table lists {rows:?}, and `archogen build` writes {emitted:?}"
+            "{BUILDING_PATH}'s file table lists {rows:?}, and `archogen build` writes {emitted:?}"
         ));
     }
     wrong
@@ -234,10 +233,10 @@ fn file_violations(chapter: &str, emitted: &BTreeSet<String>) -> Vec<String> {
 #[test]
 fn the_chapter_states_what_the_corpus_and_the_build_measure() {
     let mut wrong = description_violations(CHAPTER, &measured_descriptions());
-    wrong.extend(file_violations(CHAPTER, measured_emitted_files()));
+    wrong.extend(file_violations(BUILDING, measured_emitted_files()));
     assert!(
         wrong.is_empty(),
-        "{} way(s) the S0 chapter disagrees with what it describes:\n\n{}",
+        "{} way(s) the chapters disagree with what they describe:\n\n{}",
         wrong.len(),
         wrong.join("\n\n")
     );
@@ -315,7 +314,7 @@ fn arm_4_a_chapter_that_stops_counting_is_reported_rather_than_skipped() {
 #[test]
 fn arm_5_the_file_figure_and_table_follow_the_build() {
     let emitted = measured_emitted_files();
-    assert!(file_violations(CHAPTER, emitted).is_empty());
+    assert!(file_violations(BUILDING, emitted).is_empty());
     let fewer: BTreeSet<String> = emitted
         .iter()
         .filter(|f| *f != "provenance.json")
@@ -323,10 +322,10 @@ fn arm_5_the_file_figure_and_table_follow_the_build() {
         .collect();
     // A build that stopped writing provenance: the figure and the table are both now wrong.
     assert_eq!(
-        file_violations(CHAPTER, &fewer).len(),
+        file_violations(BUILDING, &fewer).len(),
         2,
         "{:?}",
-        file_violations(CHAPTER, &fewer)
+        file_violations(BUILDING, &fewer)
     );
 }
 

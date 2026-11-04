@@ -34,8 +34,8 @@ workspace member with none.
   outcome vocabulary and the stable exit-code contract; `src/cli.rs` is the dependency-free
   parser and help renderer. `src/check_cmd.rs` and `src/build_cmd.rs` are thin translations onto
   the crates that do the work.
-- `crates/archogen-s0/` — ⛔ **the temporary S0 realization, and everything in it is meant to be
-  deleted** (§12 S0: "no hidden special-case generator is grandfathered into the release"). It is
+- `crates/archogen-s0/` — ⛔ **the temporary S0 realization, reached by no command since `M4.2.3.1`
+  and deleted by `M4.2.4`** (§12 S0: "no hidden special-case generator is grandfathered into the release"). It is
   deliberately not named `archogen-plan`/`archogen-emit`, the §4.2 names `M4` builds under.
   `interpret.rs` turns a checked description into a `Plan` and refuses in two families — inputs
   that describe no buildable system, and requests the engine cannot realize, the second naming
@@ -86,7 +86,8 @@ workspace member with none.
   order for one instant, the trace `archogen-playground-trace/1`. Copied into each generated system.
 - `crates/archogen-emit/` — the emitter (§4.2, §10.1 step 6): a checked plan into the files of a
   package, with no I/O. ⛔ A plan is accepted only by lowering it again and comparing bytes. What it
-  specializes is data; behavior is `rt-core` and `sim-playground` copied, each held to its source.
+  specializes is data; behavior is `rt-core` and `sim-playground` copied under `copies/`, each held
+  to its source. `archogen build`, `crates/archogen-cli/src/build_cmd.rs`, is its one caller.
 - `crates/archogen-api/` — the engine API (§10.4), one transport-neutral contract: a description
   as text plus a profile in, a `Response` out. The command line, the wasm binding and the MCP
   server consume it. ⭐ Every response carries a `Status`, which is never absent and has no default.

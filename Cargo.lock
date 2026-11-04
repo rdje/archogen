@@ -27,10 +27,12 @@ version = "0.1.0"
 dependencies = [
  "archogen-api",
  "archogen-digest",
+ "archogen-emit",
  "archogen-install",
  "archogen-json",
  "archogen-outcome",
- "archogen-s0",
+ "archogen-plan",
+ "archogen-plan-check",
  "archogen-transport",
  "archogen-wasm",
  "eadl-front",

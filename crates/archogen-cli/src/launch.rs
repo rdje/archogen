@@ -30,6 +30,9 @@ pub struct Launched {
     pub ended: Ended,
     /// The sha256 of the file that ran, as the install's manifest gives it and the front checked it.
     pub sha256: Digest,
+    /// The sha256 of the front that ran it, as the install's manifest gives it and the front checked it: the generator
+    /// a build names (`TI-H14`).
+    pub front: Digest,
 }
 
 /// Why the front did not run a sibling: what it could not vouch for or could not do, and the repair.

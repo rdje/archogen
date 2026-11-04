@@ -98,6 +98,7 @@ impl Launch for Fake {
         self.ends.clone().map(|ended| Launched {
             ended,
             sha256: verified(),
+            front: Digest::of(b"the front that ran it"),
         })
     }
 }
@@ -141,7 +142,15 @@ impl Case {
             profile: "rt-static-up-v1",
         };
         let mut err = Vec::new();
-        let result = check_plan(fake, &expected, &self.dir.join("out/check"), &mut err);
+        let result =
+            check_plan(fake, &expected, &self.dir.join("out/check"), &mut err).map(|checked| {
+                // What a build reads back of the run: the record's bytes as written, and the front that ran it.
+                let written =
+                    std::fs::read_to_string(self.dir.join("out/check").join(RECORD)).unwrap();
+                assert_eq!(checked.text, written);
+                assert_eq!(checked.front, Digest::of(b"the front that ran it"));
+                checked.record
+            });
         (result, String::from_utf8(err).unwrap())
     }
 }

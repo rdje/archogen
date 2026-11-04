@@ -32,7 +32,6 @@ exist.
 | `fixed-observation-format` | the `system` / `release` / `summary` line format is fixed inside the engine and is not the §6.3 observation event set | `M4.3` |
 | `stdout-is-observable-output` | `observable-output` is realized by writing to standard output, with no device model behind it | `M4.3` |
 | `single-fixed-realization` | one realization is selected unconditionally; there is no candidate enumeration and no provider search | `M3.1` |
-| `no-lock-data` | no lock data is emitted, so `--locked` is refused rather than honored | `M4.7` |
 | `plan-is-not-independently-checked` | the plan the emitter consumes is the one the interpreter produced; nothing re-validates it against the description | `M3.5` |
 | `catalog-record-is-a-stub` | `provenance.json`'s `realization` carries four of §9's fourteen catalog fields | `M2.7` |
 | `no-assurance-report` | no per-property report is produced; the build makes no claim of any kind | `M4.8` |
@@ -57,9 +56,10 @@ invisible a milestone later. Three properties make that harder here:
    like a prototype. `archogen-s0` reads as temporary in every backtrace and every `Cargo.toml`.
 2. **The assumptions are marked at the line that makes them**, not only listed in a document. A
    list drifts from the code; a marker cannot be moved without touching the code it annotates.
-3. **The prototype may not acquire consumers.** The check enforces that only
-   `crates/archogen-cli/src/build_cmd.rs` and the S0 tests import it, so M4 cannot build on it by
-   accident — which is what "grandfathered" would actually look like in practice.
+3. **The prototype may not acquire consumers.** The check enforces that only the S0 tests may
+   import it (`crates/archogen-cli/src/build_cmd.rs` did until `M4.2.3.1` moved the command onto
+   the plan), so M4 cannot build on it by accident — which is what "grandfathered" would actually
+   look like in practice.
 
 ⚠️ **Honest limit.** None of this forces an author to *write* a marker when they hard-code
 something new. It makes an unmarked assumption a thing someone chose not to record rather than a

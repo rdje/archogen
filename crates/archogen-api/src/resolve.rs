@@ -17,6 +17,7 @@
 
 use eadl_front::{Form, Program, SourceMap};
 use eadl_model::check::{resolved_declarations, shipped_registry};
+use eadl_model::kind::Registry;
 use eadl_model::profile::{self, Profile};
 use eadl_resolve::adapter::Catalog;
 use eadl_resolve::plan;
@@ -93,6 +94,19 @@ pub struct Resolution {
     pub response: Response,
     /// The plan, present exactly when `response` is `ok`.
     pub plan: Option<Plan>,
+    /// What the plan was written from, present exactly when it is: for the command line's build, which lowers it.
+    pub elaborated: Option<Elaborated>,
+}
+
+/// What a plan was written from, beside it (API `1.8`): what the build's lowering takes, and the one place it comes
+/// from, so no consumer elaborates or loads the language's definitions itself. Its spans point into the response's
+/// sources.
+#[derive(Debug, Clone)]
+pub struct Elaborated {
+    /// The elaborated program the plan's digest was taken of.
+    pub program: Program,
+    /// The kinds the description was judged against.
+    pub kinds: Registry,
 }
 
 /// Resolve `request`'s description within `limits`, as `resolve` asks.
@@ -101,6 +115,7 @@ pub fn resolve_with(request: &Request<'_>, resolve: &Resolve<'_>, limits: Limits
     let refused = |response: Response| Resolution {
         response,
         plan: None,
+        elaborated: None,
     };
     if !resolve.unchecked {
         return refused(Response::not_judged(
@@ -141,6 +156,8 @@ pub(crate) struct Ready<'a> {
     pub(crate) response: Response,
     /// The program a plan's digest is taken of.
     pub(crate) program: &'a Program,
+    /// The kinds the description was judged against.
+    pub(crate) kinds: &'a Registry,
     /// One description's declarations, as the language checks it.
     pub(crate) declarations: &'a [Form],
     /// The system searched.
@@ -234,10 +251,11 @@ pub(crate) fn prepare<T>(
         }
     };
     let mut vocabulary_sources = SourceMap::new();
-    let vocabulary = shipped_registry(&mut vocabulary_sources, &kind_modules())
-        .ok()
-        .and_then(|registry| Vocabulary::shipped(&mut vocabulary_sources, &registry).ok());
-    let Some(vocabulary) = vocabulary else {
+    let kinds = shipped_registry(&mut vocabulary_sources, &kind_modules()).ok();
+    let vocabulary = kinds
+        .as_ref()
+        .and_then(|registry| Vocabulary::shipped(&mut vocabulary_sources, registry).ok());
+    let (Some(kinds), Some(vocabulary)) = (kinds, vocabulary) else {
         return Err(Box::new(Response::not_judged(
             Status::ToolFailure,
             response.sources,
@@ -279,6 +297,7 @@ pub(crate) fn prepare<T>(
     Ok(then(Ready {
         response,
         program: &program,
+        kinds: &kinds,
         declarations,
         system,
         vocabulary: &vocabulary,
@@ -336,6 +355,7 @@ pub(crate) fn concluded(request: &Request<'_>, ready: Ready<'_>, found: Search) 
             diagnostics,
         ),
         plan: None,
+        elaborated: None,
     };
     match found {
         Search::Resolved(resolution) => {
@@ -349,6 +369,10 @@ pub(crate) fn concluded(request: &Request<'_>, ready: Ready<'_>, found: Search) 
                     program: digest,
                     bindings: resolution.bindings.len(),
                     obligations,
+                }),
+                elaborated: Some(Elaborated {
+                    program: ready.program.clone(),
+                    kinds: ready.kinds.clone(),
                 }),
                 response: ready.response,
             }

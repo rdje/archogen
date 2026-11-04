@@ -123,6 +123,7 @@ impl Launch for Installed {
                 None => Ended::Abnormally(output.status.to_string()),
             },
             sha256: entry.sha256,
+            front: manifest.front().sha256,
         })
     }
 }

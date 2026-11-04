@@ -62,7 +62,7 @@ pub use archogen_outcome::{Status, Version};
 pub use eadl_front::{Diagnostic, Form, MemoryModules, ModuleSource, SourceId, SourceMap, Span};
 pub use eadl_model::check::Closure;
 pub use explain::{explain_with, Account, Answer, Explain, Explanation};
-pub use resolve::{resolve_with, Owed, Owes, Plan, Resolution, Resolve};
+pub use resolve::{resolve_with, Elaborated, Owed, Owes, Plan, Resolution, Resolve};
 pub use status::verdict_status;
 
 /// This API's version: apart from the language's (`eadl/1`) and the profiles', as `ROADMAP.md` §15 requires.
@@ -76,9 +76,10 @@ pub use status::verdict_status;
 /// vocabulary growing (leaf `M3.5.1.1`); `1.4` added the operation `resolve`, [`resolve_with`], the search alone (leaf
 /// `M3.4.4`); `1.5` added the operation `explain`, [`explain_with`], one requirement's account (leaf `M3.4.13.2`);
 /// `1.6` added [`Definition::Adapter`], the definitions growing as `1.3`'s statuses did (leaf `M3.2.2`); `1.7` added
-/// [`Plan::obligations`], what a plan binding an engine adapter owes (leaf `M3.2.6.1`).
+/// [`Plan::obligations`], what a plan binding an engine adapter owes (leaf `M3.2.6.1`); `1.8` added
+/// [`Resolution::elaborated`], what a plan was written from, for the command line's build (leaf `M4.2.3.1`).
 /// `docs/book/src/versions.md` registers it.
-pub const VERSION: Version = Version { major: 1, minor: 7 };
+pub const VERSION: Version = Version { major: 1, minor: 8 };
 
 /// The engine version: the one the workspace's members share, which `archogen --version` reports and
 /// `docs/book/src/versions.md` registers as `engine`. With [`VERSION`] it names the build a response came from

@@ -137,6 +137,7 @@ impl Build {
         Inputs {
             program: &self.program,
             sources: &self.sources,
+            description: "description.eadl",
             assignment: &self.assignment,
             result: &self.result,
             plan: &self.plan,
@@ -318,12 +319,23 @@ fn a_task_the_plan_cannot_say_what_releases_is_refused_with_its_cause_s_code() {
 
 #[test]
 fn each_copy_is_the_engine_s_source_byte_for_byte_and_none_is_left_out() {
+    // Moved with what it copies, deliberately: the change that moves the runtime moves what every generated system holds.
+    let refresh = std::env::var_os("ARCHOGEN_BLESS_COPIES").is_some();
     for (path, contents) in copies() {
-        let source = root().join("crates").join(path);
-        assert_eq!(
-            fs::read_to_string(&source).expect("the engine's source"),
-            *contents,
-            "{path}"
+        let source =
+            fs::read_to_string(root().join("crates").join(path)).expect("the engine's source");
+        if refresh {
+            fs::write(
+                root().join("crates/archogen-emit/copies").join(path),
+                &source,
+            )
+            .expect("the copy");
+            continue;
+        }
+        assert!(
+            source == *contents,
+            "`crates/archogen-emit/copies/{path}` is not `crates/{path}`: refresh every copy with \
+             ARCHOGEN_BLESS_COPIES=1 cargo test -p archogen-emit --test emit, and rerun"
         );
     }
     for krate in ["rt-core", "sim-playground"] {
