@@ -871,7 +871,7 @@ mdBook that is the director's window into the project.
   Commit: `ARCHOGEN-PROGRAM-1163 (leaf PROGRAM.127.5)`
 
 - ID: `PROGRAM.127.6`
-  Status: `pending` — round 6, a fresh reader over round 5's answer, looking hardest at what stopping a whole job now takes with it, and where the reader of a command and the shell can still part. It closes on a round that finds no defect, and a form written to go round the guard is a stated limit, not a defect.
+  Status: `pending` — round 6, a fresh reader over round 5's answer, looking hardest at what stopping a whole job now takes with it, and where the reader of a command and the shell can still part. It closes on a round that finds no defect, and a form written to go round the guard is a stated limit, not a defect. Paused `2026-11-05` at the director's word, until the director says to go on.
 
 - ID: `PROGRAM.128`
   Status: `done` — `2026-11-05`: by the director's word, "If you ever need new CPU, DSP, MCU, BOARD, ISA or in general digital chip PDF just look here", naming `chipdoc`'s `AGENTS.md`. The record, its index row, the book's ledger and a `TOOLBOX.md` row now start any chip document's need there. Reading it corrected three things of ours: the record and the ledger still said `REQ-007` was `requested`, fulfilled `2026-09-30`; the ledger said the corpus was off this volume; and the record said what is adopted is copied here, where most of the corpus may not be republished and this repository is public, so a fact and its citation are copied and never a document. A documents-only leaf.
@@ -1037,6 +1037,7 @@ leaf's outcome is its row in the Commit Log below, and a sealed leaf's full reco
 | `PROGRAM.127.3` | `ARCHOGEN-PROGRAM-1160 (leaf PROGRAM.127.3)` | **the host guard's review, round 3 answered**: a helper passed over only while small, so a job an agent's shell execs is held; `pkill` judged by its own stage; a read is a read, each tool's writing options its own; growth over a window; everyday commands no longer refused |
 | `PROGRAM.127.4` | `ARCHOGEN-PROGRAM-1161 (leaf PROGRAM.127.4)` | **the host guard's review, round 4 answered by method**: the lists of names are gone; a host's line goes by what a process holds and a disk's by what it writes; the hook refuses only what it cannot read, stopping by a name, and a heavy command with no room |
 | `PROGRAM.127.5` | `ARCHOGEN-PROGRAM-1163 (leaf PROGRAM.127.5)` | **the host guard's review, round 5 answered by method**: a job is what is judged and stopped; each line judges alone and they add up; the hook reads a command by the shell's grammar, held to the real shell, and tells a stop without refusing anything |
+| `PROGRAM.127.6` | `ARCHOGEN-PROGRAM-1164 (leaf PROGRAM.127.6)` | **paused at the director's word**, at a clean tree, before round 6 began: the resume pointer and the leaf say to wait |
 | `PROGRAM.128` | `ARCHOGEN-PROGRAM-1162 (leaf PROGRAM.128)` | **a chip's document starts at `chipdoc`'s `AGENTS.md`**, the director's word: the record, its index row, the ledger and `TOOLBOX.md`; `REQ-007` fulfilled, the corpus on this volume, and a document never copied into this public repository, each corrected |
 
 ## Changelog
