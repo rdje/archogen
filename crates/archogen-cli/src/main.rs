@@ -11,7 +11,7 @@ use std::process::ExitCode;
 mod sibling;
 
 fn main() -> ExitCode {
-    let mut stdout = std::io::stdout().lock();
+    let mut stdout = archogen_cli::Watched::new(std::io::stdout().lock());
     let mut stderr = std::io::stderr().lock();
 
     // `std::env::args` panics on an argument that is no text, and exit 101 is a code no status has.
@@ -39,8 +39,11 @@ fn main() -> ExitCode {
     );
 
     // Flush explicitly: a locked stdout is flushed on drop, and a drop-time failure would be
-    // discarded, turning a truncated report into a silent success.
-    if stdout.flush().is_err() || stderr.flush().is_err() {
+    // discarded, turning a truncated report into a silent success. A write that failed earlier
+    // counts too, since a command drops each line's error, and a failed line may leave nothing
+    // for this flush to fail on.
+    let flushed = stdout.flush();
+    if flushed.is_err() || stdout.failed() || stderr.flush().is_err() {
         let failure = archogen_cli::unwritten(&mut stderr);
         return ExitCode::from(u8::try_from(failure.code()).unwrap_or(70));
     }

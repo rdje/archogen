@@ -124,33 +124,41 @@ there now is. A refused build leaves `DIR` as it found it: a refusal of the desc
 What it removes is exactly:
 - on a refusal, the stage this very run made, which it makes by a call that fails if anything stands there, with anything put in it
   while it runs, and the parents it made to reach it, if they stayed empty. A stage that could not be made is not this run's, so only
-  those parents go. Once the package lands, what was put in the stage is in the package, and the next build names it;
+  those parents go. Once the package lands, what was put in the stage is in the package: the next build names it, or carries it on if
+  it lies under a name a build carries;
 - of an earlier build, each file its `provenance.json` lists, one by one and only if still the regular file it wrote, reached through
   real directories, and the provenance itself on the same terms, then each directory that held them where that leaves it empty;
 - an empty directory at `DIR`. A mount point fails safe, at the first rename.
 
-The new package takes the mode of what it replaces, last, once nothing more is carried to it. Until then the stage closes what that mode
-closes, from the moment it is made, with its owner able to write: so a directory closed to its owner's writes, a `555` or a `500`, takes
-a package and keeps that mode. What goes aside is opened to its owner the same way, for what is carried and removed from it, and what
-stays there takes back its mode.
+The new package takes the mode of what it replaces, last, once nothing more is carried to it, that mode held again just before the first
+rename, so a directory closed while the build ran keeps what it was closed to. Until then the stage closes what that mode closes, from
+the call that makes it, with its owner able to write: so a directory closed to its owner's writes, a `555` or a `500`, takes a package and
+keeps that mode, and the command says that cargo cannot run in it until it is opened. What goes aside is opened to its owner the same
+way, for what is carried and removed from it, and what stays there takes back its mode.
 
 Before any of that, an earlier build must be exactly a build's: every listed file unchanged, its provenance whole, and nothing else
 in it, an empty directory or a link included. What `target`, `Cargo.lock` and `.DS_Store` name at its top, which building a package
-and looking at it leave, is neither judged nor deleted: it is moved to the new package. Anything else is `usage`, and left alone: a
-directory that holds anything more, a build with a file edited, a link or a file named by `--out`, a path that goes back through a
-name that may not exist yet, a name with no room for `.building` beside it, and anything standing at `DIR.building` or `DIR.replaced`,
-which this run did not make. Only a name found absent is absent: anything else that stops the path being read is the refusal.
+and looking at it leave, is neither judged nor deleted: it is moved to the new package, unless the stage came to hold that name, when it
+stays at `DIR.replaced` and the command names it. Anything else is `usage`, and left alone: a directory that holds anything more, a
+build with a file edited, a link or a file named by `--out`, a path that goes back through a name that may not exist yet, a directory
+this user cannot read and search, since a package there could not be read, a name with no room for `.building` beside it, a path with
+no room for what a build writes beneath it, and anything standing at `DIR.building` or `DIR.replaced`, which this run did not make. Only
+a name found absent is absent: anything else that stops the path being read is the refusal, and so is whatever stops the stage being
+made, nothing yet being written.
 
 Where the checker refuses the search's plan, or its record does not hold together with its exit code or with what the front
 computed, two programs disagree about one input, so `DIR.building` stays, holding the assignment and the record to report, and
 refuses the next build until someone has looked. What could not go from an earlier build, or appeared in it while the build ran, stays
 at `DIR.replaced` with the new package already in place, and the command names it. What came while it ran to `DIR`, where nothing stood,
-or to `DIR.replaced` is another thing: nothing is placed, what came is left alone, and the refusal, `tool-failure`, says to look at it.
-So does one that finds what stood at `DIR` gone. No sync call is made, so none of this claims anything across a power loss.
+or to `DIR.replaced` where something stood at `DIR`, so the name is needed, is another thing: nothing is placed, what came is left alone,
+and the refusal, `tool-failure`, says to look at it. So does one that finds what stood at `DIR` gone. Where nothing stood at `DIR` a build
+needs no `DIR.replaced`, so one that comes is no bar, and the next build names it. No sync call is made, so none of this claims anything
+across a power loss.
 
-**A report that cannot be written** is `tool-failure`, for every command, and the executable says so on standard error: standard output
-taking nothing is not a result anyone read. What the command did stands, so a package it placed is in place, and the code says only
-that its report did not arrive.
+**A report that cannot be written** is `tool-failure`, for every command, and the executable says so on standard error: any write to
+standard output that fails, at any byte of the report. What the command did stands, so a package it placed is in place, and the code says
+only that its report did not arrive. ⚠️ A failure is what it can see. The Rust runtime gives a stream closed before the run `/dev/null`,
+and takes a stream open only for reading as one that wrote, so for those nothing fails, nothing is said, and the code is the command's own.
 
 ⚠️ **What it does not hold against.** `std` has no rename that refuses to replace and no directory-relative open, so each path is held
 again just before it is used, and not at the moment itself. Another program working in the same directory in that instant could have an
@@ -190,6 +198,7 @@ capability unsupported. Then the S0 crate was deleted (`M4.2.4`), and the retire
 | 2 | 12 | 4 (H2-1 to H2-4), beside 7 gaps and 1 of wording | `2026-11-04`, not acceptable — answered: removal by the list, what cargo leaves carried, an empty directory no build's; the unknown cause first; provenance's own digest; `explain` asks what `build` asks; the tick and the hyperperiod of what the run repeats |
 | 3 | 9 | 1 (R3-1), beside 5 gaps and 3 of wording | `2026-11-04`, not acceptable — answered: removal holds each path as the judgement does; a stage private from the first; what comes meanwhile refused; a linked description's imports found where the front finds them; what `std` cannot hold, stated |
 | 4 | 5 | 2 (R4-1, R4-2), beside 3 of wording | `2026-11-05`, not acceptable — answered: a directory closed to its owner's writes takes a package, the exact mode last; only `NotFound` is absence, and a failed stage takes its parents with it; each refusal its own repair; what the guarantee excludes, said where it is stated |
+| 5 | 11 | 4 (R5-1, R5-2, R5-3, R5-5), beside 4 gaps and 3 of wording | `2026-11-05`, not acceptable — answered: a stream that remembers any failed write, every route one; what a stream closed before the run cannot show, stated; whatever stops the place opening is `usage`, by its cause; a carried name no bar to what came; the stage's mode from the call that makes it, and held again at landing; a directory that cannot be read refused |
 
 The rounds, each finding and its answer, are in
 [`docs/reviews/decision_hosted-build-reviews.md`](../reviews/decision_hosted-build-reviews.md).

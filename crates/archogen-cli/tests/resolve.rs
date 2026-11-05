@@ -201,19 +201,41 @@ fn a_plan_that_cannot_land_leaves_nothing_beside_it_and_takes_nothing_it_did_not
     let part = dir.join("a-directory.part");
     let checker = Checker::answering(Answer::Record(Status::Ok));
     let (status, _, err) = resolve(&[&heartbeat(), "--out", at.to_str().unwrap()], &checker);
-    assert_eq!(status, Status::ToolFailure, "{err}");
-    assert!(err.contains("cannot write the plan"), "{err}");
+    assert_eq!(status, Status::Usage, "{err}");
+    assert!(err.contains("is a directory"), "{err}");
+    assert!(err.contains("hint: name the file"), "{err}");
     assert!(!part.exists(), "{err}");
     assert!(at.join("mine").is_dir());
-    // What stands at the name beside it is not this run's: refused, named and left alone.
+    // What names no file of its own is `usage` too, whatever it would have failed with.
+    let with_slash = format!("{}/", dir.join("not-yet").display());
+    for name in [".", "", &with_slash] {
+        let (status, _, err) = resolve(&[&heartbeat(), "--out", name], &checker);
+        assert_eq!(status, Status::Usage, "{name}: {err}");
+        assert!(err.contains("names no file"), "{name}: {err}");
+    }
+    assert!(!dir.join("not-yet").exists());
+    // What stands at `PATH.part` is not this run's: refused, named, with what to do, and left alone.
     let plan = dir.join("plan.json");
     let part = dir.join("plan.json.part");
     std::fs::write(&part, "mine").expect("written");
     let (status, _, err) = resolve(&[&heartbeat(), "--out", plan.to_str().unwrap()], &checker);
-    assert_eq!(status, Status::ToolFailure, "{err}");
-    assert!(err.contains("plan.json.part"), "{err}");
+    assert_eq!(status, Status::Usage, "{err}");
+    assert!(err.contains("plan.json.part exists"), "{err}");
+    assert!(err.contains("hint: look at it"), "{err}");
     assert_eq!(std::fs::read_to_string(&part).expect("kept"), "mine");
     assert!(!plan.exists());
+    // No room for `.part`: `usage`, and the parents it made gone.
+    let long = dir.join("a/b").join("x".repeat(252));
+    let (status, _, err) = resolve(&[&heartbeat(), "--out", long.to_str().unwrap()], &checker);
+    assert_eq!(status, Status::Usage, "{err}");
+    assert!(err.contains("room in its name"), "{err}");
+    assert!(!dir.join("a").exists(), "the parents it made stayed");
+    // A plan over what stands at the name itself: that is what naming an output asks.
+    let named = dir.join("named.json");
+    std::fs::write(&named, "mine").expect("written");
+    let (status, _, err) = resolve(&[&heartbeat(), "--out", named.to_str().unwrap()], &checker);
+    assert_eq!(status, Status::Ok, "{err}");
+    assert_ne!(std::fs::read_to_string(&named).expect("written"), "mine");
 }
 
 #[test]

@@ -66,14 +66,14 @@ where
     S: Into<String>,
 {
     match cli::parse(args) {
-        Ok(Invocation::Help(None)) => emit(out, err, &cli::help_overview()),
+        Ok(Invocation::Help(None)) => emit(out, &cli::help_overview()),
         Ok(Invocation::Help(Some(name))) => match spec::command(name).and_then(|spec| spec.sibling)
         {
             // A sibling's help is its own: the front holds none of its options to describe.
             Some(program) => sibling(program, &["--help".to_owned()], launcher, out, err),
-            None => emit(out, err, &cli::help_command(name)),
+            None => emit(out, &cli::help_command(name)),
         },
-        Ok(Invocation::Version) => emit(out, err, &format!("archogen {VERSION}\n")),
+        Ok(Invocation::Version) => emit(out, &format!("archogen {VERSION}\n")),
         Ok(Invocation::Run(parsed)) => dispatch(&parsed, input, launcher, out, err),
         Err(refusal) => report(err, &refusal),
     }
@@ -108,11 +108,54 @@ fn sibling(
     report(err, &refusal)
 }
 
-fn emit(out: &mut dyn Write, err: &mut dyn Write, text: &str) -> Status {
+fn emit(out: &mut dyn Write, text: &str) -> Status {
     if write!(out, "{text}").is_err() {
-        return unwritten(err);
+        return Status::ToolFailure;
     }
     Status::Ok
+}
+
+/// A stream that remembers a write that failed. A command prints line after line and drops each line's error, so a report cut
+/// at its last line, which goes straight through a line buffer and leaves nothing for a later flush to fail on, would look whole.
+/// Held here, every route is one: what the executable exits with reads this.
+pub struct Watched<W> {
+    inner: W,
+    failed: bool,
+}
+
+impl<W: Write> Watched<W> {
+    /// `inner`, watched.
+    pub const fn new(inner: W) -> Self {
+        Self {
+            inner,
+            failed: false,
+        }
+    }
+
+    /// Whether any write or flush has failed.
+    pub const fn failed(&self) -> bool {
+        self.failed
+    }
+
+    /// Note how a write went, an interrupted one being retried and so no failure.
+    fn note<T>(&mut self, result: std::io::Result<T>) -> std::io::Result<T> {
+        if let Err(error) = &result {
+            self.failed |= error.kind() != std::io::ErrorKind::Interrupted;
+        }
+        result
+    }
+}
+
+impl<W: Write> Write for Watched<W> {
+    fn write(&mut self, bytes: &[u8]) -> std::io::Result<usize> {
+        let written = self.inner.write(bytes);
+        self.note(written)
+    }
+
+    fn flush(&mut self) -> std::io::Result<()> {
+        let flushed = self.inner.flush();
+        self.note(flushed)
+    }
 }
 
 /// Say that standard output could not take the report, the exit code that follows from it: it is said, since a code alone
@@ -123,6 +166,10 @@ pub fn unwritten(err: &mut dyn Write) -> Status {
         err,
         "archogen: {}: the report could not be written whole, so the exit code is this one; what the command did stands, a package it placed among it",
         failure.slug()
+    );
+    let _ = writeln!(
+        err,
+        "  hint: give standard output somewhere that takes it, and run the command again for its report"
     );
     failure
 }
@@ -451,6 +498,5 @@ mod tests {
         let status = run(["--help"].map(String::from), &mut out, &mut err);
         assert_eq!(status, Status::ToolFailure);
         assert_eq!(status.code(), 70);
-        assert!(String::from_utf8_lossy(&err).contains("could not be written whole"));
     }
 }

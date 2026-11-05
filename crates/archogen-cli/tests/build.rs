@@ -14,7 +14,7 @@ use std::process::Command;
 
 use archogen_cli::consume::{PLAN_CHECKER, RECORD};
 use archogen_cli::launch::{Ended, Launch, Launched, NoLaunch, Unlaunched};
-use archogen_cli::Status;
+use archogen_cli::{Status, Watched};
 use archogen_digest::Digest;
 use archogen_json::Value;
 use archogen_outcome::record::{Finding, Judged, Label, Producer, Record, Severity, Subject};
@@ -1082,6 +1082,44 @@ fn set_mode(dir: &Path, mode: u32) {
     fs::set_permissions(dir, fs::Permissions::from_mode(mode)).expect("its mode");
 }
 
+/// Whether a closed mode binds whoever runs this: not for root, for whom a closed directory still takes a file.
+#[cfg(unix)]
+fn modes_bind(root: &Path) -> bool {
+    let closed = root.join("does-a-mode-bind");
+    let _reopened = Reopened(vec![closed.clone()]);
+    fs::create_dir_all(&closed).expect("a directory");
+    set_mode(&closed, 0o555);
+    fs::write(closed.join("a-file"), "").is_err()
+}
+
+/// A path under `root` of exactly `length` bytes, in names short enough to take a suffix.
+fn a_path_of_length(root: &Path, length: usize) -> PathBuf {
+    let mut path = root.to_path_buf();
+    let mut left = length - root.as_os_str().len();
+    while left > 0 {
+        let name = (left - 1).min(200);
+        if left - 1 - name == 1 {
+            // A remainder of one byte would be a separator and no name.
+            path.push("x".repeat(name - 1));
+            left -= name;
+        } else {
+            path.push("x".repeat(name));
+            left -= name + 1;
+        }
+    }
+    path
+}
+
+/// The length at which this host first refuses a path by its length alone, whatever the path names.
+fn path_limit(root: &Path) -> usize {
+    (root.as_os_str().len() + 10..1 << 16)
+        .find(|length| {
+            fs::symlink_metadata(a_path_of_length(root, *length))
+                .is_err_and(|error| error.kind() == std::io::ErrorKind::InvalidFilename)
+        })
+        .expect("a path this long is too long")
+}
+
 #[test]
 #[cfg(unix)]
 fn a_directory_closed_to_its_owner_s_writes_takes_a_package_and_keeps_its_mode() {
@@ -1139,7 +1177,8 @@ fn what_stays_of_an_earlier_build_keeps_the_mode_it_had() {
     let (status, _, err) = build(&description, &dir);
     assert_eq!(status, Status::Ok, "{err}");
     assert_eq!(mode_of(&dir), 0o555, "{err}");
-    // Running as root, nothing stands in the way, and nothing stays.
+    // Only where a mode binds nobody, as root, does nothing stand in the way.
+    assert_eq!(aside.exists(), modes_bind(&root), "{err}");
     if aside.exists() {
         assert_eq!(mode_of(&aside), 0o555, "{err}");
         assert!(err.contains("rt-core/src/"), "{err}");
@@ -1150,7 +1189,27 @@ fn what_stays_of_an_earlier_build_keeps_the_mode_it_had() {
 
 #[test]
 #[cfg(unix)]
-fn a_stage_closes_from_the_first_what_the_mode_it_will_take_closes_its_owner_able_to_write() {
+fn a_stage_closes_while_it_runs_what_the_mode_it_will_take_closes_its_owner_able_to_write() {
+    // Read while the checker runs, and not only of the stage a refused run leaves. That it holds from the very call that makes
+    // it is `make_dir`'s: no test sees between that call and the next.
+    let dir = scratch("stage-while-it-runs").join("out");
+    let _reopened = Reopened(vec![dir.clone()]);
+    fs::create_dir(&dir).expect("a directory");
+    set_mode(&dir, 0o550);
+    let (status, _, err) = invoke(
+        &[
+            "build",
+            &example(HEARTBEAT),
+            "--out",
+            &dir.display().to_string(),
+        ],
+        &Changing {
+            change: |dir| assert_eq!(mode_of(&beside(dir, ".building")), 0o750),
+            dir: dir.clone(),
+        },
+    );
+    assert_eq!(status, Status::Ok, "{err}");
+    assert_eq!(mode_of(&dir), 0o550, "{err}");
     for (mode, stage) in [(0o555, 0o755), (0o550, 0o750), (0o500, 0o700)] {
         let dir = scratch(&format!("stage-{mode:o}")).join("out");
         let _reopened = Reopened(vec![dir.clone()]);
@@ -1175,6 +1234,258 @@ fn a_stage_closes_from_the_first_what_the_mode_it_will_take_closes_its_owner_abl
             mode,
             "a refused build touched what stood there"
         );
+    }
+}
+
+#[test]
+#[cfg(unix)]
+fn a_directory_closed_while_a_build_runs_keeps_what_it_was_closed_to() {
+    let description = example(HEARTBEAT);
+    for mode in [0o700, 0o500] {
+        let dir = scratch(&format!("closed-meanwhile-{mode:o}")).join("out");
+        let _reopened = Reopened(vec![dir.clone()]);
+        let (status, _, err) = build(&description, &dir);
+        assert_eq!(status, Status::Ok, "{err}");
+        set_mode(&dir, 0o755);
+        let change: fn(&Path) = if mode == 0o700 {
+            |dir| set_mode(dir, 0o700)
+        } else {
+            |dir| set_mode(dir, 0o500)
+        };
+        let (status, _, err) = invoke(
+            &["build", &description, "--out", &dir.display().to_string()],
+            &Changing {
+                change,
+                dir: dir.clone(),
+            },
+        );
+        assert_eq!(status, Status::Ok, "{err}");
+        assert_eq!(mode_of(&dir), mode, "a directory closed meanwhile reopened");
+    }
+}
+
+#[test]
+#[cfg(unix)]
+fn a_directory_this_user_cannot_read_and_search_is_refused_saying_what_opens_it() {
+    let root = scratch("unsearchable");
+    if !modes_bind(&root) {
+        return;
+    }
+    let description = example(HEARTBEAT);
+    for mode in [0o600, 0o400, 0o666, 0o300, 0o000] {
+        let dir = root.join(format!("out-{mode:o}"));
+        let _reopened = Reopened(vec![dir.clone()]);
+        fs::create_dir(&dir).expect("a directory");
+        set_mode(&dir, mode);
+        let (status, out, err) = build(&description, &dir);
+        assert_eq!(status, Status::Usage, "{mode:o}: {err}");
+        assert!(err.contains("chmod u+rx"), "{mode:o}: {err}");
+        assert!(!out.contains("next: cargo run"), "{mode:o}: {out}");
+        assert_eq!(mode_of(&dir), mode, "a refused build touched it");
+        assert!(!beside(&dir, ".building").exists(), "{mode:o}: {err}");
+    }
+    // The next line says what a closed package needs before it can be run, and what is open has no such line.
+    let dir = root.join("closed");
+    let _reopened = Reopened(vec![dir.clone()]);
+    fs::create_dir(&dir).expect("a directory");
+    set_mode(&dir, 0o555);
+    let (status, out, err) = build(&description, &dir);
+    assert_eq!(status, Status::Ok, "{err}");
+    assert!(out.contains("open it before running it"), "{out}");
+    let (status, out, err) = build(&description, &root.join("open"));
+    assert_eq!(status, Status::Ok, "{err}");
+    assert!(!out.contains("open it before running it"), "{out}");
+}
+
+#[test]
+#[cfg(unix)]
+fn a_place_that_cannot_be_opened_is_a_usage_error_saying_why() {
+    let root = scratch("unopenable");
+    let description = example(HEARTBEAT);
+    // A link to nothing on the way: the message names the link's directory, and not a path nothing can stand at.
+    let link = root.join("dangling");
+    std::os::unix::fs::symlink("nowhere", &link).expect("a link");
+    let (status, _, err) = build(&description, &link.join("x"));
+    assert_eq!(status, Status::Usage, "{err}");
+    assert!(err.contains("where `--out` lies"), "{err}");
+    assert!(err.contains("a link to nothing"), "{err}");
+    assert!(fs::symlink_metadata(&link).expect("kept").is_symlink());
+    // A file on the way: nothing about room in a name.
+    let file = root.join("a-file");
+    fs::write(&file, "mine").expect("written");
+    let (status, _, err) = build(&description, &file.join("x"));
+    assert_eq!(status, Status::Usage, "{err}");
+    assert!(err.contains("is no directory"), "{err}");
+    assert!(!err.contains("room in its name"), "{err}");
+    assert_eq!(fs::read_to_string(&file).expect("kept"), "mine");
+    // A parent closed to this user, where a mode binds: nothing is run, nothing made.
+    if modes_bind(&root) {
+        let closed = root.join("closed");
+        let _reopened = Reopened(vec![closed.clone()]);
+        fs::create_dir(&closed).expect("a directory");
+        set_mode(&closed, 0o555);
+        let (status, _, err) = build(&description, &closed.join("a/x"));
+        assert_eq!(status, Status::Usage, "{err}");
+        assert!(err.contains("reach and write"), "{err}");
+        assert_eq!(fs::read_dir(&closed).expect("a directory").count(), 0);
+    }
+}
+
+#[test]
+fn a_path_with_no_room_for_what_a_build_writes_beneath_it_is_refused_before_anything_runs() {
+    let root = scratch("no-depth");
+    let limit = path_limit(&root);
+    let description = example(HEARTBEAT);
+    // Room for the stage's own name, and for its record, and none for the longest file a build writes.
+    let dir = a_path_of_length(&root, limit - 20);
+    let (status, _, err) = build(&description, &dir);
+    assert_eq!(status, Status::Usage, "{err}");
+    assert!(err.contains("leaves no room in a path"), "{err}");
+    assert!(err.contains("nearer the root"), "{err}");
+    assert_eq!(
+        fs::read_dir(&root).expect("a directory").count(),
+        0,
+        "it made something"
+    );
+    // With room for that, it builds.
+    let dir = a_path_of_length(&root, limit - 60);
+    let (status, _, err) = build(&description, &dir);
+    assert_eq!(status, Status::Ok, "{err}");
+    assert!(dir.join("Cargo.toml").is_file());
+}
+
+#[test]
+fn a_carried_name_stays_aside_rather_than_replace_what_came_in_the_stage() {
+    let dir = scratch("carried-over").join("out");
+    let description = example(HEARTBEAT);
+    let (status, _, err) = build(&description, &dir);
+    assert_eq!(status, Status::Ok, "{err}");
+    fs::write(dir.join("Cargo.lock"), "earlier").expect("written");
+    let (status, _, err) = invoke(
+        &["build", &description, "--out", &dir.display().to_string()],
+        &Changing {
+            change: |dir| {
+                fs::write(beside(dir, ".building").join("Cargo.lock"), "mine").expect("written")
+            },
+            dir: dir.clone(),
+        },
+    );
+    assert_eq!(status, Status::Ok, "{err}");
+    assert_eq!(
+        fs::read_to_string(dir.join("Cargo.lock")).expect("landed"),
+        "mine"
+    );
+    assert_eq!(
+        fs::read_to_string(beside(&dir, ".replaced").join("Cargo.lock")).expect("kept"),
+        "earlier"
+    );
+    assert!(err.contains("Cargo.lock"), "{err}");
+}
+
+#[test]
+fn what_comes_under_a_carried_name_in_the_stage_is_carried_on_and_not_named() {
+    let dir = scratch("carried-on").join("out");
+    let description = example(HEARTBEAT);
+    let (status, _, err) = invoke(
+        &["build", &description, "--out", &dir.display().to_string()],
+        &Changing {
+            change: |dir| {
+                let target = beside(dir, ".building").join("target");
+                fs::create_dir(&target).expect("a directory");
+                fs::write(target.join("mine.txt"), "mine").expect("written");
+            },
+            dir: dir.clone(),
+        },
+    );
+    assert_eq!(status, Status::Ok, "{err}");
+    let (status, _, err) = build(&description, &dir);
+    assert_eq!(status, Status::Ok, "{err}");
+    assert_eq!(
+        fs::read_to_string(dir.join("target/mine.txt")).expect("carried"),
+        "mine"
+    );
+}
+
+#[test]
+fn a_replaced_name_that_comes_where_nothing_stood_is_no_bar_and_the_next_build_names_it() {
+    let dir = scratch("replaced-beside-nothing").join("out");
+    let description = example(HEARTBEAT);
+    let (status, _, err) = invoke(
+        &["build", &description, "--out", &dir.display().to_string()],
+        &Changing {
+            change: |dir| fs::create_dir(beside(dir, ".replaced")).expect("a directory"),
+            dir: dir.clone(),
+        },
+    );
+    assert_eq!(status, Status::Ok, "{err}");
+    assert!(dir.join("Cargo.toml").is_file(), "{err}");
+    let (status, _, err) = build(&description, &dir);
+    assert_eq!(status, Status::Usage, "{err}");
+    assert!(err.contains(".replaced exists"), "{err}");
+    assert!(beside(&dir, ".replaced").is_dir());
+}
+
+/// A writer with room for so many bytes, as a full disk or a file limit leaves one: what fits goes, then every write fails.
+struct Cut {
+    room: usize,
+}
+
+impl Write for Cut {
+    fn write(&mut self, bytes: &[u8]) -> std::io::Result<usize> {
+        if self.room == 0 && !bytes.is_empty() {
+            return Err(std::io::Error::other("no room"));
+        }
+        let taken = bytes.len().min(self.room);
+        self.room -= taken;
+        Ok(taken)
+    }
+
+    fn flush(&mut self) -> std::io::Result<()> {
+        Ok(())
+    }
+}
+
+#[test]
+fn a_report_cut_at_any_byte_is_noticed_by_what_the_executable_reads() {
+    let description = example(HEARTBEAT);
+    let commands: [&[&str]; 3] = [&["--version"], &["help", "build"], &["check", &description]];
+    for args in commands {
+        let run = |room: usize| {
+            let mut out = Watched::new(Cut { room });
+            let mut err = Vec::new();
+            archogen_cli::run(args.iter().map(ToString::to_string), &mut out, &mut err);
+            out.failed()
+        };
+        let whole = {
+            let mut out = Vec::new();
+            let mut err = Vec::new();
+            archogen_cli::run(args.iter().map(ToString::to_string), &mut out, &mut err);
+            out.len()
+        };
+        assert!(whole > 0, "{args:?}");
+        assert!(!run(whole), "{args:?}: a whole report noted as cut");
+        for room in 0..whole {
+            assert!(
+                run(room),
+                "{args:?}: cut after {room} of {whole} bytes, unnoticed"
+            );
+        }
+    }
+}
+
+#[test]
+#[cfg(unix)]
+fn a_stream_closed_before_the_run_looks_whole_to_any_rust_program() {
+    // What the record states and cannot change: the runtime gives a stream closed at its start `/dev/null`, and takes a stream
+    // open only for reading as one that wrote. Nothing fails, so nothing is said, and the code is the command's own.
+    let exe = env!("CARGO_BIN_EXE_archogen");
+    for script in [r#""$0" --version >&-"#, r#""$0" --version 1</dev/null"#] {
+        let output = Command::new("sh")
+            .args(["-c", script, exe])
+            .output()
+            .expect("the shell runs");
+        assert_eq!(output.status.code(), Some(0), "{script}: {output:?}");
+        assert!(output.stderr.is_empty(), "{script}: {output:?}");
     }
 }
 
@@ -1216,10 +1527,13 @@ fn a_report_that_cannot_be_written_is_said_and_is_the_exit_code() {
             Some(Status::ToolFailure.code()),
             "{output:?}"
         );
-        assert!(
-            String::from_utf8_lossy(&output.stderr).contains("could not be written whole"),
+        let said = String::from_utf8_lossy(&output.stderr);
+        assert_eq!(
+            said.matches("could not be written whole").count(),
+            1,
             "{output:?}"
         );
+        assert!(said.contains("hint: give standard output"), "{output:?}");
     }
 }
 
@@ -1267,7 +1581,8 @@ fn what_stands_in_the_way_of_removing_an_earlier_build_leaves_the_new_one_whole(
     }
     assert_eq!(status, Status::Ok, "{err}");
     assert_eq!(clean, snapshot(&dir), "the new package is not whole");
-    // Running as root, nothing stands in the way, and there is nothing to say.
+    // Only where a mode binds nobody, as root, does nothing stand in the way.
+    assert_eq!(held_on, modes_bind(&root), "{err}");
     assert_eq!(held_on, err.contains("keeps what could not go"), "{err}");
     if held_on {
         // It names what stays, and the next build refuses rather than delete it.

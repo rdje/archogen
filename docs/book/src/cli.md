@@ -137,7 +137,10 @@ it means (leaf `M3.2.6.1`, [The engine API](engine-api.md#the-second-operation-r
 its record written in `plan.json.check/`, and the command's status is the checker's verdict. A description the search
 cannot resolve writes no plan and exits with the search's verdict — `periodic-three` is `missing-fact` today, its
 timer offering a width and no modulus and its policy's constraints waiting on the catalog — and `--locked` is refused
-until lock data exists (`M4.7`). `--system` names the system when a description declares several.
+until lock data exists (`M4.7`). `--system` names the system when a description declares several. The plan lands whole,
+written first at `PLAN.part` and renamed over a file or a link standing at `PLAN`, as an output you name is. A place it cannot
+use is `usage`: a directory, a name with no file in it, or a `PLAN.part` it did not write, which a run that stopped may have left and
+which it leaves alone. If it cannot land, what it wrote goes, with the directories it made.
 
 `archogen explain` (leaf `M3.4.13.2`) says what the search did with one requirement: `--requirement` names the fact,
 and `--requester` or `--task` narrows it to one requester's; without either, each requester of the system requiring
@@ -210,8 +213,9 @@ any description:
 
 `tool-failure` sits with the diagnostic results because §5.5 defines it there, but it shares
 its code with nothing: a toolchain that failed has not produced a valid system, and must
-never be readable as one. A report standard output could not take is one too, for every command, whatever
-the verdict was and with what the command did left standing, and it says so on standard error. `unimplemented` is temporary — it disappears command by command as
+never be readable as one. A write to standard output that fails is one too, for every command, whatever
+the verdict was and with what the command did left standing, and it says so on standard error ([Building a system](building.md)
+says what it cannot see). `unimplemented` is temporary — it disappears command by command as
 the owning leaves land. `stale-input` is permanent: a checker answers it when what it was handed was not made
 together, and it says nothing about the system either.
 

@@ -23,7 +23,7 @@ use std::path::{Component, Path, PathBuf};
 
 use archogen_api::{Elaborated, Limits, Plan, Resolve, Response};
 use archogen_digest::Digest;
-use archogen_emit::{emit, Emitted, Inputs, ASSIGNMENT_FILE};
+use archogen_emit::{copies, emit, Emitted, Inputs, ASSIGNMENT_FILE, PROVENANCE_FILE};
 use archogen_plan::{lower_checked, Acceptance, Generator, Refusal};
 
 use crate::built::{Built, CARRIED};
@@ -31,12 +31,12 @@ use crate::check_cmd::{ask_with, report_not_judged};
 use crate::cli::Parsed;
 use crate::consume::{self, Checked, Expected};
 use crate::launch::Launch;
-use crate::resolve_cmd::print_owed;
+use crate::resolve_cmd::{missing_parents, place_repair, print_owed};
 use crate::spec::Maturity;
 use crate::status::Status;
 
-/// The repair for a name with no room for what a build needs beside it, or that lies where this user cannot reach.
-const ROOM: &str = "name a directory with room in its name for `.building` and `.replaced`, in a place this user can reach";
+/// The repair for a path with no room for what a build writes beneath it.
+const DEEPER: &str = "name a directory nearer the root";
 
 /// Run `archogen build`.
 pub fn run(
@@ -176,6 +176,37 @@ fn owner_writes(mode: &Permissions) -> Permissions {
     writable
 }
 
+/// A directory made by a call that fails if anything stands there, and no more open than `mode` from that call on, the umask
+/// narrowing it until the mode is given exactly: so there is no moment at which it holds more open than `mode` would.
+#[cfg(unix)]
+fn make_dir(path: &Path, mode: Option<&Permissions>) -> std::io::Result<()> {
+    use std::os::unix::fs::{DirBuilderExt, PermissionsExt};
+    let mut builder = std::fs::DirBuilder::new();
+    if let Some(mode) = mode {
+        builder.mode(mode.mode() & 0o7777);
+    }
+    builder.create(path)
+}
+
+/// A directory made by a call that fails if anything stands there; a platform with no owner's bits has nothing to narrow.
+#[cfg(not(unix))]
+fn make_dir(path: &Path, _mode: Option<&Permissions>) -> std::io::Result<()> {
+    std::fs::create_dir(path)
+}
+
+/// Whether `mode` closes a directory to its owner's writes.
+#[cfg(unix)]
+fn closed_to_owner(mode: &Permissions) -> bool {
+    use std::os::unix::fs::PermissionsExt;
+    mode.mode() & 0o200 == 0
+}
+
+/// Whether `mode` closes a directory to writes, as far as a platform with no owner's bits can say it.
+#[cfg(not(unix))]
+fn closed_to_owner(mode: &Permissions) -> bool {
+    mode.readonly()
+}
+
 /// What a package's landing leaves to say, the package standing either way.
 struct Landed {
     /// What stays at `DIR.replaced`, named.
@@ -214,7 +245,8 @@ impl Unplaced {
             ),
             Self::Renaming(error) => (
                 error.to_string(),
-                "give `--out` a directory whose parent can be written, and no mount point".to_owned(),
+                "a build renames `--out`, so check its parent's permissions, that it is no mount point, and any flag on either"
+                    .to_owned(),
             ),
             Self::Stranded { error, again } => (
                 format!(
@@ -240,7 +272,8 @@ impl Unplaced {
 /// where that leaves them empty. So whatever appears meanwhile in what it replaces, or is edited, stays, and the command says
 /// so. What [`crate::built::CARRIED`] names is moved to the new package. Anything else is refused and left alone, a stage some
 /// other run left among it: a run that stopped, or the report of a disagreement, which is not this run's to delete. What is put
-/// in the stage while it runs lands with the package, the stage being the package.
+/// in the stage while it runs lands with the package, the stage being the package, and a carried name stays aside rather than
+/// replace it.
 ///
 /// ⚠️ **What this does not hold against.** `std` has no rename that refuses to replace, and no directory-relative open, so each
 /// path is held again just before it is used and not at the moment itself. Another program, working in the same directory in that
@@ -310,7 +343,7 @@ impl Place {
                             "cannot use {}, which `--out {out_dir}` needs beside it: {error}",
                             other.display()
                         ),
-                        ROOM,
+                        place_repair(&error),
                     ))
                 }
                 Ok(_) => {
@@ -342,15 +375,25 @@ impl Place {
                 ))
             }
             Ok(meta) => {
-                let empty = std::fs::read_dir(&dir)
-                    .map_err(|error| {
-                        usage(
-                            format!("cannot use `--out {out_dir}`: {error}"),
-                            "name another directory",
-                        )
-                    })?
-                    .next()
-                    .is_none();
+                // A package here must be read, so a directory this user cannot read and search is refused as that, and
+                // not as a build that is not one. What opens it is its owner's, since it would keep that mode.
+                let closed = |error: std::io::Error| {
+                    let repair = if error.kind() == ErrorKind::PermissionDenied {
+                        "open it with `chmod u+rx`, or name another directory"
+                    } else {
+                        "name another directory"
+                    };
+                    usage(
+                        format!("cannot read and search `--out {out_dir}`, and a package there could not be read: {error}"),
+                        repair,
+                    )
+                };
+                let empty = std::fs::read_dir(&dir).map_err(closed)?.next().is_none();
+                if let Err(error) = std::fs::symlink_metadata(dir.join(PROVENANCE_FILE)) {
+                    if error.kind() != ErrorKind::NotFound {
+                        return Err(closed(error));
+                    }
+                }
                 let earlier = if empty {
                     None
                 } else {
@@ -367,12 +410,25 @@ impl Place {
                 Some((meta.permissions(), earlier))
             }
         };
-        let mut made = Vec::new();
-        let mut parent = dir.parent();
-        while let Some(up) = parent.filter(|up| !up.as_os_str().is_empty() && !up.exists()) {
-            made.push(up.to_path_buf());
-            parent = up.parent();
+        // What a build writes beneath the stage needs room in a path too, and the checker is handed its record's path whole.
+        let deepest = copies()
+            .iter()
+            .map(|(path, _)| *path)
+            .max_by_key(|path| path.len())
+            .unwrap_or_default();
+        if let Err(error) = std::path::absolute(&stage)
+            .and_then(|stage| std::fs::symlink_metadata(stage.join(deepest)))
+        {
+            if error.kind() == ErrorKind::InvalidFilename {
+                return Err(usage(
+                    format!(
+                        "`--out {out_dir}` leaves no room in a path for what a build writes beneath it, `{deepest}`: {error}"
+                    ),
+                    DEEPER,
+                ));
+            }
         }
+        let made = missing_parents(&dir);
         Ok(Self {
             dir,
             stage,
@@ -395,35 +451,36 @@ impl Place {
     /// mode of what it will replace closes, since it holds what a private directory would keep private, its owner able to
     /// write: that mode comes last ([`Self::land`]), and a directory closed to its owner's writes still takes a package.
     ///
-    /// A name too long for its stage can first be seen here when the parents it lies under do not exist yet, since a path
-    /// is read only as far as its first missing name.
+    /// Whatever stops it is the place's, so `usage`, nothing yet being written. A name too long for its stage can first be seen
+    /// here when the parents it lies under do not exist yet, since a path is read only as far as its first missing name.
     fn open(&self) -> Result<(), Failed> {
-        let failed = |error: std::io::Error| {
-            let message = format!(
-                "cannot make the directory {}: {error}",
-                self.stage.display()
-            );
-            if error.kind() == ErrorKind::InvalidFilename {
-                Failed::Usage(message, ROOM.to_owned())
-            } else {
-                Failed::Tool(message)
-            }
+        let refused = |what: String, error: &std::io::Error| {
+            Failed::Usage(format!("{what}: {error}"), place_repair(error).to_owned())
         };
-        let made = self
+        if let Some(parent) = self
             .stage
             .parent()
             .filter(|parent| !parent.as_os_str().is_empty())
-            .map_or(Ok(()), std::fs::create_dir_all)
-            .and_then(|()| std::fs::create_dir(&self.stage));
-        if let Err(error) = made {
+        {
+            if let Err(error) = std::fs::create_dir_all(parent) {
+                self.unmake();
+                return Err(refused(
+                    format!("cannot make {}, where `--out` lies", parent.display()),
+                    &error,
+                ));
+            }
+        }
+        let shown = || format!("cannot make the directory {}", self.stage.display());
+        let mode = self.occupied.as_ref().map(|(mode, _)| owner_writes(mode));
+        if let Err(error) = make_dir(&self.stage, mode.as_ref()) {
             // Never the stage: this call did not make it, so it is not this run's.
             self.unmake();
-            return Err(failed(error));
+            return Err(refused(shown(), &error));
         }
-        if let Some((mode, _)) = &self.occupied {
-            if let Err(error) = std::fs::set_permissions(&self.stage, owner_writes(mode)) {
+        if let Some(mode) = mode {
+            if let Err(error) = std::fs::set_permissions(&self.stage, mode) {
                 self.abandon();
-                return Err(failed(error));
+                return Err(refused(shown(), &error));
             }
         }
         Ok(())
@@ -447,7 +504,7 @@ impl Place {
     /// it replaced goes as [`Place`] says, and it takes that mode last, on every way out, once nothing more is carried to it.
     fn land(&self) -> Result<Landed, Unplaced> {
         // Held again, the checker having run since: a rename would silently replace an empty directory that came meanwhile.
-        let Some((mode, earlier)) = &self.occupied else {
+        let Some((judged, earlier)) = &self.occupied else {
             if std::fs::symlink_metadata(&self.dir).is_ok() {
                 return Err(Unplaced::Appeared(self.dir.clone()));
             }
@@ -460,6 +517,12 @@ impl Place {
         if std::fs::symlink_metadata(&self.replaced).is_ok() {
             return Err(Unplaced::Appeared(self.replaced.clone()));
         }
+        // Its mode held again too, since its owner may have closed it while the build ran, and the stage closed as it is.
+        let mode = std::fs::symlink_metadata(&self.dir)
+            .ok()
+            .filter(std::fs::Metadata::is_dir)
+            .map_or_else(|| judged.clone(), |meta| meta.permissions());
+        let _ = std::fs::set_permissions(&self.stage, owner_writes(&mode));
         std::fs::rename(&self.dir, &self.replaced).map_err(Unplaced::Renaming)?;
         if let Err(error) = std::fs::rename(&self.stage, &self.dir) {
             return Err(match std::fs::rename(&self.replaced, &self.dir) {
@@ -467,8 +530,8 @@ impl Place {
                 Err(again) => Unplaced::Stranded { error, again },
             });
         }
-        let kept = self.clear_aside(mode, earlier.as_ref());
-        let unmoded = std::fs::set_permissions(&self.dir, mode.clone()).err();
+        let kept = self.clear_aside(&mode, earlier.as_ref());
+        let unmoded = std::fs::set_permissions(&self.dir, mode).err();
         Ok(Landed { kept, unmoded })
     }
 
@@ -484,9 +547,10 @@ impl Place {
         }
         let _ = std::fs::set_permissions(&self.replaced, owner_writes(mode));
         for name in CARRIED {
-            let from = self.replaced.join(name);
-            if std::fs::symlink_metadata(&from).is_ok() {
-                let _ = std::fs::rename(&from, self.dir.join(name));
+            let (from, to) = (self.replaced.join(name), self.dir.join(name));
+            // What came in the stage under that name is the package's, and a rename would replace it: this stays aside.
+            if std::fs::symlink_metadata(&from).is_ok() && std::fs::symlink_metadata(&to).is_err() {
+                let _ = std::fs::rename(&from, &to);
             }
         }
         if let Some(earlier) = earlier {
@@ -583,7 +647,7 @@ impl Build<'_> {
         };
         let emitted = emit(&inputs, generator).map_err(Failed::Refused)?;
         for file in &emitted.files {
-            write_file(&self.stage.join(&file.path), &file.contents).map_err(Failed::Tool)?;
+            write_file(&self.stage.join(&file.path), &file.contents)?;
         }
         Ok(emitted)
     }
@@ -591,7 +655,7 @@ impl Build<'_> {
     /// The assignment written in the stage, and the installed checker run over it.
     fn checked(&self, launcher: &dyn Launch, err: &mut dyn Write) -> Result<Checked, Failed> {
         let assignment = self.stage.join(ASSIGNMENT_FILE);
-        write_file(&assignment, &self.plan.text).map_err(Failed::Tool)?;
+        write_file(&assignment, &self.plan.text)?;
         let program = Digest::parse(&format!("sha256:{}", self.plan.program)).ok_or_else(|| {
             Failed::Tool(format!(
                 "the engine named the program by `{}`, which is no digest",
@@ -697,7 +761,7 @@ fn refused(failed: &Failed, path: &str, err: &mut dyn Write) -> Status {
             );
             let _ = writeln!(
                 err,
-                "  hint: give `--out` a directory whose parent can be written"
+                "  hint: check that its disk has room, and that nothing else moved or closed the build's `.building` directory"
             );
             Status::ToolFailure
         }
@@ -709,14 +773,25 @@ fn refused(failed: &Failed, path: &str, err: &mut dyn Write) -> Status {
     }
 }
 
-/// `contents` written at `file`, its directory made.
-fn write_file(file: &Path, contents: &str) -> Result<(), String> {
+/// `contents` written at `file`, its directory made. A name a module brought that leaves no room in a path is the place's.
+fn write_file(file: &Path, contents: &str) -> Result<(), Failed> {
+    let failed = |what: String, error: std::io::Error| {
+        if error.kind() == ErrorKind::InvalidFilename {
+            Failed::Usage(format!("{what}: {error}"), DEEPER.to_owned())
+        } else {
+            Failed::Tool(format!("{what}: {error}"))
+        }
+    };
     if let Some(parent) = file.parent() {
-        std::fs::create_dir_all(parent)
-            .map_err(|error| format!("cannot make the directory {}: {error}", parent.display()))?;
+        std::fs::create_dir_all(parent).map_err(|error| {
+            failed(
+                format!("cannot make the directory {}", parent.display()),
+                error,
+            )
+        })?;
     }
     std::fs::write(file, contents)
-        .map_err(|error| format!("cannot write {}: {error}", file.display()))
+        .map_err(|error| failed(format!("cannot write {}", file.display()), error))
 }
 
 /// What was built, what it holds and what it did not do.
@@ -762,6 +837,12 @@ fn report(
         out,
         "    the plan is not complete: what it owes is unmet, and a run establishes no property. See `archogen help build`."
     );
+    if std::fs::symlink_metadata(dir).is_ok_and(|meta| closed_to_owner(&meta.permissions())) {
+        let _ = writeln!(
+            out,
+            "  its mode closes it to its owner's writes, and cargo writes `target` and `Cargo.lock` in it: open it before running it"
+        );
+    }
     let _ = writeln!(
         out,
         "  next: cargo run --manifest-path {}/Cargo.toml",
