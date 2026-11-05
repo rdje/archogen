@@ -222,3 +222,23 @@ Said, and left as it stands: a group moving, a real full disk, a read-only files
 | R9-16 | wording | the `--result` rule was only in §5 and an error message | In `plan-check.md` and `--help` |
 
 Said, and left as it stands: a real full disk, a read-only filesystem, a mount point, another user's or a sticky directory, a group moving, and Linux's `/proc/self/fd` route stayed unmeasured. A module edited in the instant between the front's reading it again and the checker's starting is the stated limit's.
+
+**Round 10** — `2026-11-05`: not acceptable, 13 findings, 2 defects, the fewest yet. Its reader ran 334 descriptions checked and unchecked, 190 plans of 1,415 lines each resolved over itself, and 1,330 resolves over seven ways of naming a description, and found `is_a_plan` refusing no plan the engine writes and `reads_again` nothing it should accept. All 53 plan rows and 43 build rows held on the real command.
+
+| # | Kind | Finding | Answer |
+| --- | --- | --- | --- |
+| R10-1 | defect | `is_a_plan`, round 9's answer, looked only at how a line began and ended: a comment after a form, `(note …)`, two forms on one line and prose in parentheses were all replaced at exit 0 | No shape can answer this, so it no longer tries: `archogen_api::is_a_plan` asks the generator's own reader of the format, `eadl_resolve::plan::read`, which takes only the canonical text. Row `a-plan-with-notes-in-it` runs seven shapes, and a test re-resolves every plan the corpora write. A plan of another format is now no plan either, as a record of one is no record |
+| R10-2 | defect | older: the stage swapped for a real directory was removed on the refusal route, with what it held: `abandon` checked nothing. Needs another program | `abandon` holds the stage by what it is, in both commands. Row `stage-replaced` in both tables; the race on the real command kept what came in all 46 runs where it acted |
+| R10-3 | gap | `--result` naming no file, or in a closed parent, exited 70 with no repair | Naming no file is `usage`; the other says what to check |
+| R10-4 | gap | an empty record at a closed mode was taken unread, and the new record kept that mode | It is read like any other, and refused: row `record-unreadable` |
+| R10-5 | gap | a module with no room in its absolute path reached a bogus report | Every source is named as the checker will be handed it. Measured on an install with the reader's two files from a 1,012-byte working directory: `resolve` and `build` exit 2 with a true repair, `check` and `--unchecked` exit 0. No row, its fixture needing a tree of its own |
+| R10-6 | gap | `--unchecked` refused a name with no room for a `.check` it does not need | A name too long to stand holds no record, and no checker's name needs room without a checker. Row `no-room-check-unchecked` |
+| R10-7 | gap | `Built::edited` read a whole listed file to refuse it | Past the most a build writes it is changed, and is not read. A test at a sparse terabyte |
+| R10-8 | gap | a failed restore of the earlier record was dropped. Needs another program | Said, naming where it is |
+| R10-9 | gap | fixtures weaker than their rows | `flagged-plan-unchecked` holds the plan, `came-in-stage` the record and what the next run says, `disagreed` the assignment |
+| R10-10 | route | `build` had no rows for what `cli.md` gained | Rows `reads-differently` and `a-module-that-reads-once`, and step 4 says modules too |
+| R10-11 | route | what happens during `resolve` | Row `plan-edited-meanwhile` |
+| R10-12 | wording | "private until it lands" was false for a record in `PLAN.check` | Made true rather than reworded: it takes its mode in the stage, before it moves |
+| R10-13 | wording | "A build replaces exactly a build" against row `empty`; "known by how it begins" in a test | Both corrected |
+
+Said, and left as it stands: a real full disk, a read-only filesystem, a mount point, another user's or a sticky directory, a group moving, and Linux stayed unmeasured.

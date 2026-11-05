@@ -136,15 +136,15 @@ between them, round after round, and a table a test runs cannot. The designs the
   reached through real directories; `target`, `Cargo.lock` and `.DS_Store` at its top, which building and looking at a package leave, move
   to the new package, or stay aside if the stage came to hold that name.
 - **A private stage**, mode `700`, with its files created and never written over or through, and the directory itself held by what it is
-  until it lands. Whatever `DIR` lets others do, its mode closes it to them; a name a package writes that something else fills is refused,
+  until it lands, and on the way out: what has come to stand at its name is not this run's to remove. Whatever `DIR` lets others do, its mode closes it to them; a name a package writes that something else fills is refused,
   and the stage kept. The package takes the mode and the group of what it replaces last, read again just before the first rename; where
   nothing stood it takes what a new directory takes there, which alone needs a directory made at that mode, empty, for the instant before
   it is closed. An access control list a parent passes down is no mode, and applies to the stage.
-- **An output replaces only what its own kind wrote.** A build replaces exactly a build, a plan only a plan or an empty file, and a record
+- **An output replaces only what its own kind wrote.** A build replaces exactly a build or an empty directory, a plan only a plan or an empty file, and a record
   only a record or an empty file, the checker's `--result` among them, and what replaces a file keeps its mode. Asking "is this what it was
-  read from" found a new loophole each round, `/dev/fd/N` the last; asking "is this ours" has no such door. A plan is known by how it reads:
-  text that begins as a plan does, every line one form, so a file of notes is none, and a plan with a comment added is none, as a build with
-  a file edited is no build. An edit within a form is not seen: the checker is what reads a plan.
+  read from" found a new loophole each round, `/dev/fd/N` the last; asking "is this ours" has no such door. A plan is known by the engine's
+  own reader of the format, which takes only the text the search writes, as a build is known by what it lists: so anything written in a plan
+  makes it none, in any place, as a file edited makes a build none. A forger who writes a whole canonical plan is not held against.
 - **A plan judged before it lands.** `archogen resolve` writes all it writes in `PLAN.part`, a private directory where the checker judges it,
   and moves it out only on acceptance, or under `--unchecked`: the record first, taking its name with the earlier one held aside, as the steps
   that find a mode or a flag in the way, then the plan. Each step undoes only what the ones before it moved. So what stands at either name
@@ -204,6 +204,7 @@ capability unsupported. Then the S0 crate was deleted (`M4.2.4`), and the retire
 | 7 | 22 | 8 (R7-1 to R7-8), beside 9 routes no row named, 2 gaps and 3 of wording | `2026-11-05`, not acceptable — answered: `resolve` judges at `PLAN.part` and lands only on acceptance, and refuses to replace what its description was read from; a description the checker cannot read again refused; the stage held by what it is; the checker's own `.part` created, never written through; each named route a row |
 | 8 | 19 | 9 (R8-1 to R8-9), beside 2 routes no row named, 3 gaps and 5 of wording | `2026-11-05`, not acceptable — answered by one principle: an output replaces only what its own kind wrote, for a plan, a record and the checker's `--result`; everything a run writes kept in one private stage until it lands, the record moved first so that a plan cannot land to be refused after |
 | 9 | 16 | 6 (R9-1 to R9-6), beside 5 gaps, 3 routes no row named and 2 of wording | `2026-11-05`, not acceptable — answered: a plan known by how it reads, not by how it begins; a landing whose each step undoes only what it moved, the record taking its name before the plan moves; a record the command cannot read refused, not taken as none; every source held to reading the same again |
+| 10 | 13 | 2 (R10-1, R10-2), beside 7 gaps, 2 routes no row named and 2 of wording | `2026-11-05`, not acceptable — answered: a plan known by the engine's own reader of the format, which takes only what the search writes; a stage held by what it is on the way out too; a question of a module's room, of a closed record and of a name with no room each answered as it is |
 
 The rounds, each finding and its answer, are in
 [`docs/reviews/decision_hosted-build-reviews.md`](../reviews/decision_hosted-build-reviews.md).

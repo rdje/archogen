@@ -469,6 +469,7 @@ fn a_result_keeps_the_mode_of_what_it_replaces_and_a_bad_place_is_refused_before
         &dir.join("missing/result.json"),
         "no directory this user can reach",
     );
+    bad(&dir.join("names-no-file/"), "names no file of its own");
     std::fs::write(dir.join("stale.json.part"), "mine").unwrap();
     bad(&dir.join("stale.json"), "where the result is written first");
     assert_eq!(

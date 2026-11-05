@@ -77,9 +77,10 @@ pub use status::verdict_status;
 /// `M3.4.4`); `1.5` added the operation `explain`, [`explain_with`], one requirement's account (leaf `M3.4.13.2`);
 /// `1.6` added [`Definition::Adapter`], the definitions growing as `1.3`'s statuses did (leaf `M3.2.2`); `1.7` added
 /// [`Plan::obligations`], what a plan binding an engine adapter owes (leaf `M3.2.6.1`); `1.8` added
-/// [`Resolution::elaborated`], what a plan was written from, for the command line's build (leaf `M4.2.3.1`).
+/// [`Resolution::elaborated`], what a plan was written from, for the command line's build (leaf `M4.2.3.1`); `1.9` added
+/// [`is_a_plan`], which the command line asks before a plan replaces what stands at its name (leaf `M4.2.3.3.10`).
 /// `docs/book/src/versions.md` registers it.
-pub const VERSION: Version = Version { major: 1, minor: 8 };
+pub const VERSION: Version = Version { major: 1, minor: 9 };
 
 /// The engine version: the one the workspace's members share, which `archogen --version` reports and
 /// `docs/book/src/versions.md` registers as `engine`. With [`VERSION`] it names the build a response came from
@@ -116,6 +117,14 @@ pub fn kind_modules() -> Vec<(String, String)> {
         .iter()
         .map(|(name, text)| ((*name).to_string(), (*text).to_string()))
         .collect()
+}
+
+/// Whether `text` is an assignment record exactly as the search writes it (API `1.9`): read by the generator's own reader of the
+/// format, which accepts only the canonical text, so a file with anything written in it is none, a comment in any place among them.
+/// What may replace an earlier plan asks this, an output replacing only what its own kind wrote.
+#[must_use]
+pub fn is_a_plan(text: &str) -> bool {
+    eadl_resolve::plan::read(text).is_ok()
 }
 
 /// The default budget for one request: 1 MiB of text, the description and every module elaboration loads

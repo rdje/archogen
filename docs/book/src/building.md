@@ -118,7 +118,7 @@ is code the engine compiles and tests, and `crates/archogen-emit/tests/emit.rs` 
 | 1 | the profile, then `--locked` | the invocation cannot be honored |
 | 2 | the engine API's `resolve`: the check, then the search | the description, or what it asks of its hardware: the same verdict `archogen check` or `archogen resolve` gives |
 | 3 | `--out`, and what stands beside it | the place: `usage`, before anything is written, and the table below says which |
-| 4 | the installed `archogen-plan-check` | it could not judge, or two programs disagree about one input: `tool-failure`; or the description cannot be handed to it as a file, by a name it can read: `usage` |
+| 4 | the installed `archogen-plan-check` | it could not judge, or two programs disagree about one input: `tool-failure`; or the description or a module cannot be handed to it as a file, by a name it can read: `usage` |
 | 5 | the lowering and the emitter | what this format cannot yet express |
 | 6 | writing and landing the package | the output directory: `tool-failure`, or `usage` where a name a module brought leaves no room in a path |
 
@@ -188,6 +188,8 @@ the rule: what it says is run, and a route it does not name is promised nothing 
 | `link-loop-on-the-way` | a loop of links among `--out`'s parents | `usage` | `name another place` | the links |
 | `closed-parent` | a parent this user cannot write | `usage` | `reach and write` | the parent, empty |
 | `reads-once` | a description that is no regular file, such as a pipe or `<(…)`, which the checker would read again | `usage` | `no regular file` | nothing made |
+| `reads-differently` | a description that reads differently the second time, such as `/dev/stdin` from a file | `usage` | `reads differently` | nothing made |
+| `a-module-that-reads-once` | a module that is no regular file | `usage` | `no regular file` | nothing made |
 | `no-checker` | no install beside the command, so no checker can be run | `tool-failure` | `has no install manifest` | nothing made |
 | `absent` | nothing | `ok` | `generated` | the package, at what a new directory takes there |
 | `empty` | an empty directory | `ok` | `generated` | the package, at that directory's mode |
@@ -205,6 +207,7 @@ the rule: what it says is run, and a route it does not name is promised nothing 
 | `filled-in-stage` | while it runs, something fills a name the package writes | `tool-failure` | `came in the stage` | the stage, with what came; no package |
 | `linked-in-stage` | while it runs, a link stands where the package writes a directory | `tool-failure` | `came in the stage` | the stage; what the link points at, untouched |
 | `stage-swapped` | while it runs, the stage is swapped for a link | `tool-failure` | `came in the stage` | the link and what it points at; no package |
+| `stage-replaced` | while it runs, another directory comes to stand at the stage's name | `tool-failure` | `wrote no record` | that directory, with what it holds; no package |
 | `stage-gone` | while it runs, the stage is removed | `tool-failure` | `wrote no record` | nothing |
 | `parent-closed-meanwhile` | while it runs, `--out`'s parent is closed | `tool-failure` | `a build renames` | no package; the stage, which it says could not be removed |
 | `carried-in-stage` | while it runs, the stage comes to hold a name a build carries, an earlier build holding it too | `ok` | `keeps what could not go` | the package with what came; the earlier one at `DIR.replaced` |

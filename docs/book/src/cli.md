@@ -142,9 +142,9 @@ until lock data exists (`M4.7`). `--system` names the system when a description 
 **An output replaces only what its own kind wrote.** Everything a run writes stays in a private directory, `PLAN.part`, where the
 checker judges it, and it lands only on acceptance, or under `--unchecked`: the record in `PLAN.check/`, then the plan at `PLAN`. So what
 stands at either name stands until there is a plan that may replace it, and a plan replaces only a plan or an empty file, a record only a
-record or an empty file. A plan is known by how it reads: text that begins as a plan does, every line one form. So a description, a module,
-a file of notes or a plan with a comment added is no plan, however it is named, and an edit within a form is not seen: the checker is what
-reads a plan. `crates/archogen-cli/src/place.rs` is how this command and
+record or an empty file. A plan is known by the engine's own reader of the format, which takes only the text the search writes. So a
+description, a module, a file of notes, a plan with anything written in it and a plan of another format are all no plan, however each is
+named. `crates/archogen-cli/src/place.rs` is how this command and
 `archogen build` read a place, and [Building a system](building.md) has `build`'s table. Each row below is a fixture of
 `crates/archogen-cli/tests/resolve.rs`, which runs it; a row with no fixture, or a fixture with no row, fails. A route it does not name is
 promised nothing and worth reporting. ⚠️ As for a build, the standard library has no rename that refuses to replace, so each path is held
@@ -162,7 +162,7 @@ again just before it is used, and in that instant what stands there is what is u
 | `a-link` | a link at `PLAN` | `usage` | `is a link` | the link, and what it points at |
 | `a-pipe` | what is no file at `PLAN` | `usage` | `is no file` | it |
 | `no-plan` | a file at `PLAN` that is no plan | `usage` | `is no plan` | the file |
-| `a-plan-with-notes-in-it` | a plan someone has added a comment to | `usage` | `is no plan` | the file, with its notes |
+| `a-plan-with-notes-in-it` | a plan with anything written in it, in any place, or of another format | `usage` | `is no plan` | the file, with its notes |
 | `closed-to-reads` | a file at `PLAN` this user cannot read, so nothing can tell it is a plan | `usage` | `to tell it is a plan` | the file |
 | `its-own-description` | the description itself at `PLAN`, with `--unchecked` or without it | `usage` | `is no plan` | the description |
 | `its-own-description-by-a-descriptor` | the description at `PLAN`, itself given as `/dev/fd/3` | `usage` | `is no plan` | the description |
@@ -187,9 +187,12 @@ again just before it is used, and in that instant what stands there is what is u
 | `flagged-record` | a flag on the earlier record, where the platform has flags | `tool-failure` | `cannot move the earlier record` | the plan and the record as they were; nothing this run wrote |
 | `came-in-stage` | while the checker runs, something comes in the stage beside the plan | `ok` | `holding what came in it` | the plan and its record; what came in `PLAN.part`, which the next run names |
 | `stage-swapped` | while the checker runs, the stage is swapped for a link | `tool-failure` | `no longer the directory this run made` | what stood at `PLAN`; the link |
+| `stage-replaced` | while the checker runs, another directory comes to stand at the stage's name | `tool-failure` | `wrote no record` | what stood at `PLAN`; that directory, with what it holds |
+| `plan-edited-meanwhile` | while the checker runs, the plan it is judging is edited | `tool-failure` | `changed while the plan was judged` | what stood at `PLAN`; the stage, to be looked at |
 | `check-stands-unchecked` | a file at `PLAN.check`, with `--unchecked` | `ok` | `resolved system` | the plan, and that file |
 | `no-room-name` | a name with no room for what goes beside it | `usage` | `too long` | nothing made |
 | `no-room-check` | a name with room for `.part` and none for `.check` | `usage` | `too long` | any plan at `PLAN` |
+| `no-room-check-unchecked` | a name with no room for `.check`, with `--unchecked`, which needs none | `ok` | `resolved system` | the plan |
 | `no-room-record` | a path with no room for what the checker writes, as it is handed the path | `usage` | `leaves no room in a path` | nothing made |
 | `closed-parent` | a parent this user cannot write | `usage` | `reach and write` | the parent, empty |
 | `file-on-the-way` | a file among `PLAN`'s parents | `usage` | `is no directory` | the file |

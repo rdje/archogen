@@ -68,7 +68,7 @@ a change that leaves it stale, so it is never edited by hand.
   decisions, not actions](runtime.md), [Verifying the toolchain](verification.md), [What this project relies on from
   outside](ledger.md), [Annex C: Trust proof records](annex-trust-proofs.md)
 - **assignment record** — [definition](glossary.md), [Checking a plan](plan-check.md), [The runtime plan: what the
-  generated system is told](runtime-plan.md)
+  generated system is told](runtime-plan.md), [The engine API](engine-api.md)
 - assignment-format — [What is versioned, and what changing it costs](versions.md#assignment-format)
 - **AUTOSAR** — [definition](glossary.md), [A tour: from a description to a board](tour.md), [What this project relies
   on from outside](ledger.md)

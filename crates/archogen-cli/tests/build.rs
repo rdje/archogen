@@ -1468,6 +1468,23 @@ fn a_report_cut_at_any_byte_is_noticed_by_what_the_executable_reads() {
 }
 
 #[test]
+fn a_listed_file_grown_past_any_build_s_is_changed_and_is_not_read_to_find_that_out() {
+    let dir = scratch("grown").join("out");
+    let description = example(HEARTBEAT);
+    let (status, _, err) = build(&description, &dir);
+    assert_eq!(status, Status::Ok, "{err}");
+    let grown = fs::OpenOptions::new()
+        .write(true)
+        .open(dir.join("plan.txt"))
+        .expect("opened");
+    grown.set_len(1 << 40).expect("a sparse file");
+    drop(grown);
+    let (status, _, err) = build(&description, &dir);
+    assert_eq!(status, Status::Usage, "{err}");
+    assert!(err.contains("has changed"), "{err}");
+}
+
+#[test]
 fn the_next_line_is_one_a_shell_can_follow() {
     let dir = scratch("next-line").join("my dir");
     let (status, out, err) = build(&example(HEARTBEAT), &dir);
@@ -1889,6 +1906,55 @@ fn out_routes() -> Vec<(&'static str, Route)> {
             assert!(!dir.exists() && !beside(&dir, ".building").exists());
             outcome
         }),
+        ("reads-differently", |root| {
+            // `/dev/stdin` reads empty the second time here; where a platform reopens it, this route is not taken.
+            if !cfg!(target_os = "macos") {
+                return None;
+            }
+            fs::copy(example(HEARTBEAT), root.join("s.eadl")).expect("copied");
+            let output = Command::new("sh")
+                .arg("-c")
+                .arg("\"$0\" build /dev/stdin --out x < s.eadl")
+                .arg(env!("CARGO_BIN_EXE_archogen"))
+                .current_dir(root)
+                .output()
+                .expect("the shell runs");
+            assert!(!root.join("x").exists() && !root.join("x.building").exists());
+            assert_eq!(
+                output.status.code(),
+                Some(Status::Usage.code()),
+                "{output:?}"
+            );
+            Some((
+                Status::Usage,
+                String::from_utf8_lossy(&output.stderr).to_string(),
+            ))
+        }),
+        ("a-module-that-reads-once", |root| {
+            let corpus = repo_root().join("crates/archogen-plan/tests/corpus/modules");
+            for entry in fs::read_dir(&corpus).expect("the corpus") {
+                let entry = entry.expect("an entry");
+                fs::copy(entry.path(), root.join(entry.file_name())).expect("copied");
+            }
+            let module = root.join("hw.dev.eadl");
+            let text = fs::read(&module).expect("read");
+            fs::remove_file(&module).expect("removed");
+            let made = Command::new("mkfifo")
+                .arg(&module)
+                .status()
+                .expect("mkfifo runs");
+            assert!(made.success());
+            let writer = module.clone();
+            let feeding = std::thread::spawn(move || fs::write(writer, text));
+            let dir = root.join("x");
+            let outcome = said(build(
+                &root.join("app.main.eadl").display().to_string(),
+                &dir,
+            ));
+            feeding.join().expect("the writer").expect("written");
+            assert!(!dir.exists() && !beside(&dir, ".building").exists());
+            outcome
+        }),
         ("no-checker", |root| {
             // The real executable, and no install beside it.
             let dir = root.join("x");
@@ -2062,6 +2128,23 @@ fn out_routes() -> Vec<(&'static str, Route)> {
             assert!(root.join("moved").is_dir());
             outcome
         }),
+        ("stage-replaced", |root| {
+            // Another directory now at the stage's name, this run's gone from under it: what came is not this run's to remove.
+            let dir = root.join("x");
+            let outcome = build_after(&dir, |dir| {
+                let stage = beside(dir, ".building");
+                let moved = dir.parent().expect("a parent").join("moved");
+                fs::rename(&stage, moved).expect("moved");
+                fs::create_dir(&stage).expect("a directory");
+                fs::write(stage.join("mine.txt"), "mine").expect("written");
+            });
+            assert_eq!(
+                fs::read_to_string(beside(&dir, ".building").join("mine.txt")).expect("kept"),
+                "mine"
+            );
+            assert!(!dir.exists());
+            outcome
+        }),
         ("stage-gone", |root| {
             let dir = root.join("x");
             let outcome = build_after(&dir, |dir| {
@@ -2178,6 +2261,7 @@ fn out_routes() -> Vec<(&'static str, Route)> {
                 },
             ));
             assert!(beside(&dir, ".building").join(RECORD).is_file());
+            assert!(beside(&dir, ".building").join("assignment.eadl").is_file());
             assert!(!dir.exists());
             outcome
         }),

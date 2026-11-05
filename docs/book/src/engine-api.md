@@ -126,17 +126,21 @@ one judged and refused, and one the API does not judge.
 
 ```console
 $ cargo run -q -p archogen-api --example in_memory
-api 1.8 · engine 0.1.0 · status ok
+api 1.9 · engine 0.1.0 · status ok
   judged under eadl/1, profile rt-static-up-v1: 1 declaration(s)
-api 1.8 · engine 0.1.0 · status invalid-description
+api 1.9 · engine 0.1.0 · status invalid-description
   judged under eadl/1, profile rt-static-up-v1: 1 declaration(s)
   quantity-unknown-unit: `parsec` is not a known unit
-api 1.8 · engine 0.1.0 · status unsupported-profile
+api 1.9 · engine 0.1.0 · status unsupported-profile
   not judged: `rt-dynamic-mp` is not a supported profile
 ```
 
 `crates/archogen-api/tests/book_example.rs` runs the example and compares its output with the block
 above, so this page cannot go on showing output the API no longer gives.
+
+`is_a_plan` (API `1.9`) says whether a text is an assignment record exactly as the search writes it, read by the generator's own reader of
+the format. It is what the command line asks before a plan replaces what stands at its name, and it judges nothing of the plan's worth, which
+is the checker's.
 
 ### The version and what it promises
 

@@ -220,6 +220,8 @@ fn reads_again(sources: &SourceMap) -> Result<(), Refusal> {
                 as_a_file,
             ));
         }
+        // The checker reads a module beside the description, by a whole path that may have no room.
+        absolute(file, &source.name)?;
         if !std::fs::read(file).is_ok_and(|again| again == source.text.as_bytes()) {
             return Err(refused(
                 format!(

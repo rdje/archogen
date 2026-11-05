@@ -240,7 +240,7 @@ fn a_description_that_does_not_read_gets_the_read_pass_verdict() {
 
 #[test]
 fn the_version_and_the_operations_are_declared() {
-    assert_eq!(VERSION.to_string(), "1.8");
+    assert_eq!(VERSION.to_string(), "1.9");
     assert_eq!(OPERATIONS, ["check", "resolve", "explain"]);
 }
 

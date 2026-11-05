@@ -61,6 +61,10 @@ enum Answer {
     Stray,
     /// It accepted, and the stage it wrote in was swapped for a link to where it went.
     Swapping,
+    /// It accepted, and the plan it judged was edited.
+    Editing,
+    /// It wrote its record, and another directory came to stand at the stage's name, the record gone with what moved.
+    Replacing,
 }
 
 /// A launcher standing in for `archogen-plan-check`: it reads the plan the front names, writes a record about it where
@@ -97,7 +101,11 @@ impl Launch for Checker {
                 })
             }
             Answer::Record(status) => status,
-            Answer::Unsound | Answer::Stray | Answer::Swapping => Status::Ok,
+            Answer::Unsound
+            | Answer::Stray
+            | Answer::Swapping
+            | Answer::Editing
+            | Answer::Replacing => Status::Ok,
             Answer::Closing(ref dir) => {
                 #[cfg(unix)]
                 {
@@ -158,6 +166,12 @@ impl Launch for Checker {
         let stage = Path::new(result).parent().expect("a stage");
         match self.answer {
             Answer::Stray => std::fs::write(stage.join("mine.txt"), "mine").expect("written"),
+            Answer::Editing => std::fs::write(stage.join("plan"), "mine").expect("written"),
+            Answer::Replacing => {
+                std::fs::rename(stage, stage.with_extension("moved")).expect("moved");
+                std::fs::create_dir(stage).expect("a directory");
+                std::fs::write(stage.join("mine.txt"), "mine").expect("written");
+            }
             #[cfg(unix)]
             Answer::Swapping => {
                 let moved = stage.with_extension("moved");
@@ -272,8 +286,9 @@ fn modes_bind(root: &Path) -> bool {
     binds
 }
 
-/// What an earlier plan looks like: what a plan may replace is known by how it begins.
-const AN_EARLIER_PLAN: &str = "(format \"archogen-assignment/2\")\n(system earlier)\n";
+/// An earlier plan, as the engine's own reader of the format takes one.
+const AN_EARLIER_PLAN: &str = "(format \"archogen-assignment/2\")\n(profile rt-static-up-v1)\n(system earlier)\n\
+     (program \"0000000000000000000000000000000000000000000000000000000000000000\")\n(adapters adapters/1)\n";
 
 /// An earlier plan at `plan`.
 #[cfg(unix)]
@@ -359,12 +374,27 @@ fn plan_routes() -> Vec<(&'static str, Route)> {
             outcome
         }),
         ("a-plan-with-notes-in-it", |root| {
-            // It begins as a plan does, and someone has written in it: what they wrote is theirs.
+            // Every shape notes can take: what is written in a plan is someone's, wherever it is.
             let plan = root.join("p");
-            let notes = "(format \"archogen-assignment/2\")\n; three weeks of notes\n";
-            std::fs::write(&plan, notes).expect("written");
-            let outcome = resolve_at(&plan.display().to_string(), &[]);
-            assert_eq!(std::fs::read_to_string(&plan).expect("kept"), notes);
+            let mut outcome = None;
+            for notes in [
+                format!("{AN_EARLIER_PLAN}; three weeks of notes\n"),
+                format!("; three weeks of notes\n{AN_EARLIER_PLAN}"),
+                AN_EARLIER_PLAN.replace(
+                    "(system earlier)",
+                    "(system earlier) ; chosen by hand (see Ana)",
+                ),
+                format!("{AN_EARLIER_PLAN}(note three weeks of them)\n"),
+                AN_EARLIER_PLAN.replace(")\n(adapters", ") (adapters"),
+                "(format \"archogen-assignment/2\")\n(my notes, in parentheses)\n".to_owned(),
+                "(format \"archogen-assignment/1\")\n".to_owned(),
+            ] {
+                std::fs::write(&plan, &notes).expect("written");
+                outcome = resolve_at(&plan.display().to_string(), &[]);
+                assert_eq!(std::fs::read_to_string(&plan).expect("kept"), notes);
+                let (status, _) = outcome.as_ref().expect("the route runs");
+                assert_eq!(*status, Status::Usage, "{notes}");
+            }
             outcome
         }),
         ("closed-to-reads", |root| {
@@ -679,6 +709,7 @@ fn plan_routes() -> Vec<(&'static str, Route)> {
             if !modes_bind(root) {
                 return None;
             }
+            // A record this user cannot read, or an empty file at such a mode, whose mode the new record would otherwise take.
             let plan = root.join("p");
             a_checked_plan(&plan);
             let before = std::fs::read(&plan).expect("read");
@@ -689,6 +720,14 @@ fn plan_routes() -> Vec<(&'static str, Route)> {
             std::fs::set_permissions(&record, std::fs::Permissions::from_mode(0o600))
                 .expect("its mode");
             assert_eq!(std::fs::read(&plan).expect("kept"), before);
+            std::fs::write(&record, "").expect("emptied");
+            std::fs::set_permissions(&record, std::fs::Permissions::from_mode(0o000))
+                .expect("its mode");
+            let (status, said) = resolve_at(&plan.display().to_string(), &[])?;
+            std::fs::set_permissions(&record, std::fs::Permissions::from_mode(0o600))
+                .expect("its mode");
+            assert_eq!(status, Status::Usage, "{said}");
+            assert!(said.contains("cannot read"), "{said}");
             outcome
         }),
         ("a-record-keeps-its-mode", |root| {
@@ -754,11 +793,13 @@ fn plan_routes() -> Vec<(&'static str, Route)> {
             if !flagged.is_ok_and(|status| status.success()) {
                 return None;
             }
+            let before = std::fs::read(&plan).expect("read");
             let outcome = resolve_at(&plan.display().to_string(), &["--unchecked"]);
             let _ = std::process::Command::new("chflags")
                 .arg("nouchg")
                 .arg(&plan)
                 .status();
+            assert_eq!(std::fs::read(&plan).expect("kept"), before);
             assert_eq!(
                 std::fs::read_to_string(root.join("p.check/plan-check.json.part")).expect("kept"),
                 "mine"
@@ -804,6 +845,49 @@ fn plan_routes() -> Vec<(&'static str, Route)> {
                 Answer::Stray,
             );
             assert!(plan.is_file());
+            assert!(root.join("p.check/plan-check.json").is_file());
+            assert_eq!(
+                std::fs::read_to_string(root.join("p.part/mine.txt")).expect("kept"),
+                "mine"
+            );
+            let (status, said) = resolve_at(&plan.display().to_string(), &[])?;
+            assert_eq!(status, Status::Usage, "{said}");
+            assert!(said.contains("p.part exists"), "{said}");
+            outcome
+        }),
+        ("plan-edited-meanwhile", |root| {
+            let plan = root.join("p");
+            an_earlier_plan(&plan);
+            let outcome = resolve_of(
+                &heartbeat(),
+                &plan.display().to_string(),
+                &[],
+                Answer::Editing,
+            );
+            assert_eq!(
+                std::fs::read_to_string(&plan).expect("kept"),
+                AN_EARLIER_PLAN
+            );
+            assert_eq!(
+                std::fs::read_to_string(root.join("p.part/plan")).expect("kept"),
+                "mine"
+            );
+            outcome
+        }),
+        ("stage-replaced", |root| {
+            // Another directory now at the stage's name, this run's gone from under it: what came is not this run's to remove.
+            let plan = root.join("p");
+            an_earlier_plan(&plan);
+            let outcome = resolve_of(
+                &heartbeat(),
+                &plan.display().to_string(),
+                &[],
+                Answer::Replacing,
+            );
+            assert_eq!(
+                std::fs::read_to_string(&plan).expect("kept"),
+                AN_EARLIER_PLAN
+            );
             assert_eq!(
                 std::fs::read_to_string(root.join("p.part/mine.txt")).expect("kept"),
                 "mine"
@@ -852,6 +936,13 @@ fn plan_routes() -> Vec<(&'static str, Route)> {
                 std::fs::read_to_string(&plan).expect("kept"),
                 AN_EARLIER_PLAN
             );
+            outcome
+        }),
+        ("no-room-check-unchecked", |root| {
+            // `--unchecked` needs no `.check`, so a name with no room for one is no refusal.
+            let plan = root.join("x".repeat(250));
+            let outcome = resolve_at(&plan.display().to_string(), &["--unchecked"]);
+            assert!(plan.is_file());
             outcome
         }),
         ("no-room-record", |root| {
@@ -1079,6 +1170,41 @@ fn plan_routes() -> Vec<(&'static str, Route)> {
             Some((status, said))
         }),
     ]
+}
+
+#[test]
+fn every_plan_the_engine_writes_is_a_plan_the_next_run_may_replace() {
+    // The reader is the engine's own, so its writer's every form is exercised here: a plain one, a module tree, adapters.
+    let dir = scratch();
+    let mut plans = 0;
+    for corpus in [
+        "crates/eadl-resolve/tests/search",
+        "crates/archogen-plan/tests/corpus",
+    ] {
+        for entry in std::fs::read_dir(root().join(corpus)).expect("the corpus") {
+            let description = entry.expect("an entry").path();
+            if description
+                .extension()
+                .is_none_or(|extension| extension != "eadl")
+            {
+                continue;
+            }
+            let name = description.display().to_string();
+            let plan = dir.join(format!("plan-{plans}"));
+            let out = plan.display().to_string();
+            let unchecked = ["--unchecked"];
+            let (first, _) = resolve_of(&name, &out, &unchecked, Answer::Record(Status::Ok))
+                .expect("the route runs");
+            if first != Status::Ok {
+                continue;
+            }
+            plans += 1;
+            let (again, said) = resolve_of(&name, &out, &unchecked, Answer::Record(Status::Ok))
+                .expect("the route runs");
+            assert_eq!(again, Status::Ok, "{name}: {said}");
+        }
+    }
+    assert!(plans > 10, "only {plans} plans were written");
 }
 
 #[test]

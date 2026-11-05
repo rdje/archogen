@@ -19,6 +19,9 @@ use archogen_json::Value;
 /// The most of a provenance the command reads.
 const LIMIT: u64 = 1 << 24;
 
+/// The most a file a build wrote can hold, a description and its modules the largest of them.
+const FILE_AT_MOST: u64 = 1 << 26;
+
 /// What building a package leaves at its top, cargo's or the desktop's, and no build wrote: a build neither judges them nor
 /// deletes them, and carries them to the package that replaces it.
 pub const CARRIED: [&str; 3] = ["target", "Cargo.lock", ".DS_Store"];
@@ -144,6 +147,10 @@ impl Built {
         self.files.iter().find_map(|(name, digest)| {
             let file = dir.join(name);
             match std::fs::symlink_metadata(&file) {
+                // Larger than any file a build writes is changed, and is not read to find that out.
+                Ok(meta) if meta.is_file() && meta.len() > FILE_AT_MOST => {
+                    return Some(format!("`{name}` has changed since the build wrote it"))
+                }
                 Ok(meta) if meta.is_file() => {}
                 Ok(_) => return Some(format!("`{name}` is no file the build wrote")),
                 Err(error) => return Some(format!("`{name}`: {error}")),

@@ -141,10 +141,7 @@ pub fn run(
             }
         }
         Err(unplaced) => {
-            // A stage that is no longer this run's is left as it stands: what is at that name now is not this run's to remove.
-            if !matches!(unplaced, Unplaced::StageGone) {
-                place.abandon();
-            }
+            place.abandon();
             let (why, repair) = unplaced.said(&place);
             let _ = writeln!(
                 err,
@@ -411,12 +408,12 @@ impl Place {
         match make_stage(&self.stage, self.occupied.is_none()) {
             Ok(fresh) => self.fresh = fresh,
             Err(error) => {
-                // Never the stage, if this call did not make it: then it is not this run's.
-                if error.kind() == ErrorKind::AlreadyExists {
-                    self.unmake();
-                } else {
-                    self.abandon();
+                // Never the stage, if this call did not make it: then it is not this run's. One it made and could not close is
+                // empty, and goes only if it still is.
+                if error.kind() != ErrorKind::AlreadyExists {
+                    let _ = std::fs::remove_dir(&self.stage);
                 }
+                self.unmake();
                 return Err(Failed::Usage(
                     format!(
                         "cannot make the directory {}: {error}",
@@ -446,7 +443,10 @@ impl Place {
 
     /// The stage gone, with whatever this run made to reach it that stayed empty.
     fn abandon(&self) {
-        let _ = std::fs::remove_dir_all(&self.stage);
+        // Only what this run made: what has come to stand at that name since is not this run's to remove.
+        if place::identity(&self.stage) == self.made_stage {
+            let _ = std::fs::remove_dir_all(&self.stage);
+        }
         self.unmake();
     }
 

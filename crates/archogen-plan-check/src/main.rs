@@ -289,7 +289,12 @@ fn run(
             .map_err(|error| format!("cannot write the result record on standard output: {error}")),
     };
     if let Err(why) = written {
-        return refuse(err, Status::ToolFailure, &why);
+        let refused = refuse(err, Status::ToolFailure, &why);
+        let _ = writeln!(
+            err,
+            "  hint: check that its directory can be written and its disk has room; or name another file"
+        );
+        return refused;
     }
     let _ = writeln!(
         err,
@@ -330,6 +335,15 @@ const RECORD_AT_MOST: u64 = 1 << 20;
 /// link is not followed. Only a name found absent is absent.
 fn replaceable(file: &Path) -> Result<(), String> {
     let shown = file.display();
+    let written = file.as_os_str().as_encoded_bytes();
+    if file.file_name().is_none()
+        || written
+            .last()
+            .is_some_and(|last| std::path::is_separator(char::from(*last)))
+        || written.ends_with(b"/.")
+    {
+        return Err(format!("`--result {shown}` names no file of its own"));
+    }
     let mut part = file.as_os_str().to_owned();
     part.push(".part");
     match std::fs::symlink_metadata(&part) {
