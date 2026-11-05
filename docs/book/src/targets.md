@@ -43,14 +43,15 @@ one trace, and two runs can be compared byte for byte:
 ```text
 0 s pending timer
 0 s entry timer
-0 s release beat
-0 s release chime
-0 s timer-programmed 1
+0 s release beat nominal 0 s
+0 s release chime nominal 0 s
+0 s timer-programmed 1/100 s
 0 s exit timer
 0 s start beat
 0 s complete beat
 0 s start chime
 0 s complete chime
+0 s idle
 1/100 s pending timer
 ```
 
@@ -61,6 +62,11 @@ decides; then the running job goes on. While a job holds interrupts masked, an a
 the unmask, before the job's next instruction, even if that is its last. A job's body is data, a list of *run this long*, *mask*, *unmask*. Until an application's own inputs exist, a
 generated system's bodies are empty, so its jobs start and complete at one instant, and only the releases are informative;
 the simulator's own tests run longer bodies, so preemption, masking and overrun are held today.
+
+When something goes wrong the trace says so in the words the fault paths' record, `docs/profiles/rt-static-up-v1-faults-observation.md`,
+fixes, so a hosted run and a target's can be compared: `1/50 s fault overrun late skip-late-job nominal 1/50 s` is one late job abandoned,
+that release becoming the task's next job, with no separate `release` line. A task that leaves the schedule says `fault` once, and its
+later releases say nothing. A halt says its kind, its case and whom it was attributed to, and nothing follows it.
 
 ## The precise rules
 

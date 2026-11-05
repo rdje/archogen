@@ -13,7 +13,7 @@
 //! derivation below, however convenient: it is written from the contract in `examples/s0-heartbeat/README.md`.
 //!
 //! ⭐ **What moved at `M4.2.3.1`.** The same frozen bytes, now compared with what a system generated through the search,
-//! the checker and the lowering observes. Its trace is `archogen-playground-trace/2`, so [`observation_of`] reads the
+//! the checker and the lowering observes. Its trace is `archogen-playground-trace/3`, so [`observation_of`] reads the
 //! releases out of it into the contract's form; the fixtures hold what is observed, not how it is printed. One frozen
 //! file moved, with its reason in its own header: the case S0 refused as `unsupported-profile`.
 //!
@@ -580,7 +580,7 @@ fn snapshot(dir: &Path) -> Vec<(String, Vec<u8>)> {
 }
 
 /// What the trace a generated system printed observes, in the form of `examples/s0-heartbeat/README.md`'s contract: the
-/// system, its releases and the run's length. The trace's own form is `archogen-playground-trace/2`; these fixtures hold
+/// system, its releases and the run's length. The trace's own form is `archogen-playground-trace/3`; these fixtures hold
 /// what it says, not how, so they outlive it.
 fn observation_of(trace: &str) -> String {
     let header = |prefix: &str| {
@@ -602,6 +602,7 @@ fn observation_of(trace: &str) -> String {
     for line in trace.lines().filter(|line| !line.starts_with(';')) {
         if let Some((at, task)) = line.split_once(" release ") {
             let at = at.strip_suffix(" s").expect("a time in seconds");
+            let task = task.split(' ').next().expect("a task");
             observed.push_str(&format!("release {} ms {task}\n", milliseconds(at)));
             releases += 1;
         }

@@ -15,10 +15,10 @@
 
 #![forbid(unsafe_code)]
 
-use rt_core::{Decision, OverrunPolicy, Scheduler, TaskState, Transition};
+use rt_core::{Decision, Fatal, Fault, OverrunPolicy, Scheduler, TaskState, Transition};
 
 /// The trace's format, as [`Stamped`]'s `Display` writes it.
-pub const TRACE_FORMAT: &str = "archogen-playground-trace/2";
+pub const TRACE_FORMAT: &str = "archogen-playground-trace/3";
 
 /// One step of a job's body.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -90,7 +90,42 @@ pub enum Interrupt<'a> {
     Source(&'a str),
 }
 
-/// What a run observes: §6.3's events, those a system of this harness can raise.
+/// What a task's overrun policy did (`docs/profiles/rt-static-up-v1-faults-observation.md` §2).
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum Outcome {
+    /// The late job is abandoned, and the release that found it is the task's next job.
+    SkipLateJob,
+    /// The task leaves the schedule.
+    Fault,
+}
+
+/// A fatal fault's kind and what it carries, its tasks by name.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum FatalKind<'a> {
+    /// An overrun a rule made fatal.
+    Overrun {
+        /// The task that overran.
+        task: &'a str,
+    },
+    /// A stack guard touched.
+    StackGuard {
+        /// Whose guard: a task's, or none for the interrupt stack's.
+        guard: Option<&'a str>,
+    },
+    /// A trap the runtime does not model.
+    UnexpectedTrap {
+        /// The architecture's cause, uninterpreted.
+        cause: u64,
+    },
+    /// An assertion failure, the contract's `InvariantViolated`.
+    InvariantViolated {
+        /// Which case of the observation record's §4 item 5.
+        invariant: &'static str,
+    },
+}
+
+/// What a run observes: §6.3's events, those a system of this harness can raise, with the fields
+/// `docs/profiles/rt-static-up-v1-faults-observation.md` §2 fixes on the fault paths.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum Event<'a> {
     /// A node initialised, in a step of the plan.
@@ -114,7 +149,12 @@ pub enum Event<'a> {
     /// An interrupt's service left.
     InterruptExit(Interrupt<'a>),
     /// A task released.
-    Release(&'a str),
+    Release {
+        /// The task.
+        task: &'a str,
+        /// For a timer-released task, the release's nominal instant, in ticks.
+        nominal: Option<u64>,
+    },
     /// A job started.
     Start(&'a str),
     /// A running job preempted.
@@ -127,12 +167,28 @@ pub enum Event<'a> {
     Mask(&'a str),
     /// A job unmasked interrupts.
     Unmask(&'a str),
-    /// A task overran, its job abandoned for the next.
-    JobSkipped(&'a str),
-    /// A task overran and left the schedule.
-    Faulted(&'a str),
-    /// The runtime halted.
-    Halted,
+    /// Idle's first instruction after a transition into it; a trap that returns to idle stamps none.
+    Idle,
+    /// A release found its task owing a job: one event, and no `Release` beside it.
+    Overrun {
+        /// The task.
+        task: &'a str,
+        /// What its policy did.
+        outcome: Outcome,
+        /// For a timer-released task, the triggering release's nominal instant, in ticks.
+        nominal: Option<u64>,
+    },
+    /// The runtime halted, with what its fatal handler keeps.
+    Fatal {
+        /// The fault, which carries its kind.
+        kind: FatalKind<'a>,
+        /// The task it is attributed to, if a task's code raised it.
+        attributed: Option<&'a str>,
+        /// The task whose job a fault raised in kernel context interrupted.
+        interrupted: Option<&'a str>,
+        /// Whether a rule escalated a containable fault.
+        escalated: bool,
+    },
 }
 
 /// An event with its instant, as the trace writes a line.
@@ -154,15 +210,35 @@ const fn gcd(mut a: u64, mut b: u64) -> u64 {
     a
 }
 
-impl core::fmt::Display for Stamped<'_> {
+/// `at` ticks as exact seconds.
+struct Seconds {
+    at: u64,
+    ticks_per_second: u64,
+}
+
+impl core::fmt::Display for Seconds {
     fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
         let divisor = gcd(self.at, self.ticks_per_second).max(1);
         let (numerator, denominator) = (self.at / divisor, self.ticks_per_second / divisor);
         if denominator == 1 {
-            write!(f, "{numerator} s ")?;
+            write!(f, "{numerator} s")
         } else {
-            write!(f, "{numerator}/{denominator} s ")?;
+            write!(f, "{numerator}/{denominator} s")
         }
+    }
+}
+
+impl core::fmt::Display for Stamped<'_> {
+    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+        let seconds = |at: u64| Seconds {
+            at,
+            ticks_per_second: self.ticks_per_second,
+        };
+        let nominal = |f: &mut core::fmt::Formatter<'_>, at: Option<u64>| match at {
+            Some(at) => write!(f, " nominal {}", seconds(at)),
+            None => Ok(()),
+        };
+        write!(f, "{} ", seconds(self.at))?;
         let interrupt = |interrupt: Interrupt<'_>| match interrupt {
             Interrupt::Timer => "timer".to_owned(),
             Interrupt::Source(name) => format!("source {name}"),
@@ -170,20 +246,62 @@ impl core::fmt::Display for Stamped<'_> {
         match self.event {
             Event::Initialised { step, node } => write!(f, "initialised {step} {node}"),
             Event::Enabled => write!(f, "enabled"),
-            Event::TimerProgrammed { at } => write!(f, "timer-programmed {at}"),
+            Event::TimerProgrammed { at } => write!(f, "timer-programmed {}", seconds(at)),
             Event::InterruptPending(i) => write!(f, "pending {}", interrupt(i)),
             Event::InterruptEntry(i) => write!(f, "entry {}", interrupt(i)),
             Event::InterruptExit(i) => write!(f, "exit {}", interrupt(i)),
-            Event::Release(task) => write!(f, "release {task}"),
+            Event::Release { task, nominal: at } => {
+                write!(f, "release {task}")?;
+                nominal(f, at)
+            }
             Event::Start(task) => write!(f, "start {task}"),
             Event::Preempt(task) => write!(f, "preempt {task}"),
             Event::Resume(task) => write!(f, "resume {task}"),
             Event::Complete(task) => write!(f, "complete {task}"),
             Event::Mask(task) => write!(f, "mask {task}"),
             Event::Unmask(task) => write!(f, "unmask {task}"),
-            Event::JobSkipped(task) => write!(f, "job-skipped {task}"),
-            Event::Faulted(task) => write!(f, "faulted {task}"),
-            Event::Halted => write!(f, "halted"),
+            Event::Idle => write!(f, "idle"),
+            Event::Overrun {
+                task,
+                outcome,
+                nominal: at,
+            } => {
+                let outcome = match outcome {
+                    Outcome::SkipLateJob => "skip-late-job",
+                    Outcome::Fault => "fault",
+                };
+                write!(f, "fault overrun {task} {outcome}")?;
+                nominal(f, at)
+            }
+            Event::Fatal {
+                kind,
+                attributed,
+                interrupted,
+                escalated,
+            } => {
+                match kind {
+                    FatalKind::Overrun { task } => write!(f, "fault overrun {task} halted")?,
+                    FatalKind::StackGuard { guard: Some(task) } => {
+                        write!(f, "fault stack-guard {task}")?;
+                    }
+                    FatalKind::StackGuard { guard: None } => {
+                        write!(f, "fault stack-guard interrupt-stack")?;
+                    }
+                    FatalKind::UnexpectedTrap { cause } => {
+                        write!(f, "fault unexpected-trap {cause}")?;
+                    }
+                    FatalKind::InvariantViolated { invariant } => {
+                        write!(f, "fault invariant-violated {invariant}")?;
+                    }
+                }
+                if let Some(task) = attributed {
+                    write!(f, " attributed {task}")?;
+                }
+                if let Some(task) = interrupted {
+                    write!(f, " interrupted {task}")?;
+                }
+                write!(f, " escalated {}", if escalated { "yes" } else { "no" })
+            }
         }
     }
 }
@@ -234,6 +352,8 @@ struct Run<'s, 'o, const N: usize> {
     timer_pending: bool,
     /// Whether the hardware is masked.
     masked: bool,
+    /// Whether idle has been entered and nothing has run since, so that a trap returning to it stamps no entry.
+    idle: bool,
     now: u64,
 }
 
@@ -267,6 +387,7 @@ impl<'s, 'o, const N: usize> Run<'s, 'o, N> {
             pending: vec![false; system.sources.len()],
             timer_pending: false,
             masked: false,
+            idle: false,
             now: 0,
         })
     }
@@ -383,7 +504,7 @@ impl<'s, 'o, const N: usize> Run<'s, 'o, N> {
                 let name = system.sources[place].name;
                 self.emit(Event::InterruptEntry(Interrupt::Source(name)));
                 for (task, spec) in system.tasks.iter().enumerate() {
-                    if spec.trigger == Trigger::Source(place) && self.release(task) {
+                    if spec.trigger == Trigger::Source(place) && self.release(task, None) {
                         return true;
                     }
                 }
@@ -395,8 +516,9 @@ impl<'s, 'o, const N: usize> Run<'s, 'o, N> {
                     if let Trigger::Timer(period) = spec.trigger {
                         // A release masked past its instant is late, and its next stays nominal, each owed one taken.
                         while self.releases[task] <= self.now {
-                            self.releases[task] = self.releases[task].saturating_add(period.max(1));
-                            if self.release(task) {
+                            let nominal = self.releases[task];
+                            self.releases[task] = nominal.saturating_add(period.max(1));
+                            if self.release(task, Some(nominal)) {
                                 return true;
                             }
                         }
@@ -412,27 +534,42 @@ impl<'s, 'o, const N: usize> Run<'s, 'o, N> {
         }
     }
 
-    /// `task` released, as `rt-core` decides. True where the runtime halted.
-    fn release(&mut self, task: usize) -> bool {
+    /// `task` released, as `rt-core` decides, the events the observation record's §5 maps each answer to. True where the
+    /// runtime halted.
+    fn release(&mut self, task: usize, nominal: Option<u64>) -> bool {
         let name = self.system.tasks[task].name;
+        // Any release of a task already faulted is discarded, and produces no event.
+        let discarded = self.scheduler.state(task) == TaskState::Faulted;
         match self.scheduler.release(task) {
             Transition::Released { .. } => {
                 self.jobs[task] = Job::default();
-                self.emit(Event::Release(name));
+                self.emit(Event::Release {
+                    task: name,
+                    nominal,
+                });
                 false
             }
             Transition::JobSkipped { .. } => {
                 self.jobs[task] = Job::default();
-                self.emit(Event::JobSkipped(name));
-                self.emit(Event::Release(name));
+                self.emit(Event::Overrun {
+                    task: name,
+                    outcome: Outcome::SkipLateJob,
+                    nominal,
+                });
                 false
             }
             Transition::Faulted { .. } => {
-                self.emit(Event::Faulted(name));
+                if !discarded {
+                    self.emit(Event::Overrun {
+                        task: name,
+                        outcome: Outcome::Fault,
+                        nominal,
+                    });
+                }
                 false
             }
-            Transition::Halted { .. } => {
-                self.emit(Event::Halted);
+            Transition::Halted { fatal } => {
+                self.halted(fatal);
                 true
             }
             // No service runs with the depth raised, so nothing is ever latched; a completion is no release's.
@@ -442,10 +579,45 @@ impl<'s, 'o, const N: usize> Run<'s, 'o, N> {
         }
     }
 
+    /// The halt's first report, as the fatal handler keeps it: the plan names the tasks, and `rt-core` holds the rest.
+    fn halted(&mut self, fatal: Fatal) {
+        let tasks = self.system.tasks;
+        let named = |task: Option<usize>| task.map(|task| tasks[task].name);
+        let kind = match fatal.fault {
+            Fault::Overrun { task } => FatalKind::Overrun {
+                task: tasks[task].name,
+            },
+            Fault::StackGuard { task } => FatalKind::StackGuard { guard: named(task) },
+            Fault::UnexpectedTrap { cause } => FatalKind::UnexpectedTrap { cause },
+            Fault::InvariantViolated { invariant } => FatalKind::InvariantViolated { invariant },
+        };
+        self.emit(Event::Fatal {
+            kind,
+            attributed: named(fatal.task),
+            interrupted: named(fatal.interrupted),
+            escalated: fatal.escalated,
+        });
+    }
+
+    /// What a refused `mask` or `unmask` raised: the decision says why, a refusal being the same for every halt.
+    fn refused(&mut self) -> Advance {
+        if let Decision::Halt { fatal } = self.scheduler.decide() {
+            self.halted(fatal);
+        }
+        Advance::Halted
+    }
+
     /// The scheduling decision, and its switch. True where the runtime halted.
     fn decide(&mut self) -> bool {
         match self.scheduler.decide() {
-            Decision::Idle | Decision::Continue { .. } => false,
+            Decision::Continue { .. } => false,
+            Decision::Idle => {
+                if !self.idle {
+                    self.idle = true;
+                    self.emit(Event::Idle);
+                }
+                false
+            }
             Decision::Dispatch { to } => {
                 self.enter(to);
                 false
@@ -455,8 +627,8 @@ impl<'s, 'o, const N: usize> Run<'s, 'o, N> {
                 self.enter(to);
                 false
             }
-            Decision::Halt { .. } => {
-                self.emit(Event::Halted);
+            Decision::Halt { fatal } => {
+                self.halted(fatal);
                 true
             }
         }
@@ -464,6 +636,7 @@ impl<'s, 'o, const N: usize> Run<'s, 'o, N> {
 
     /// The transition into `task`: its job's start, or its preempted job's resumption.
     fn enter(&mut self, task: usize) {
+        self.idle = false;
         let name = self.system.tasks[task].name;
         if self.jobs[task].started {
             self.emit(Event::Resume(name));
@@ -495,8 +668,8 @@ impl<'s, 'o, const N: usize> Run<'s, 'o, N> {
         match body.get(job.step).copied() {
             None => {
                 let (completed, _) = self.scheduler.complete(task);
-                if let Transition::Halted { .. } = completed {
-                    self.emit(Event::Halted);
+                if let Transition::Halted { fatal } = completed {
+                    self.halted(fatal);
                     return Advance::Halted;
                 }
                 self.masked = false;
@@ -506,22 +679,23 @@ impl<'s, 'o, const N: usize> Run<'s, 'o, N> {
             }
             Some(Step::Mask) => {
                 self.masked = true;
-                if self.scheduler.mask().is_err() {
-                    self.emit(Event::Halted);
-                    return Advance::Halted;
-                }
+                let refused = self.scheduler.mask().is_err();
                 self.jobs[task].step += 1;
+                // Each one that runs is shown, one that raises an assertion failure among them.
                 self.emit(Event::Mask(name));
+                if refused {
+                    return self.refused();
+                }
                 Advance::Stepped
             }
             Some(Step::Unmask) => {
-                if self.scheduler.unmask().is_err() {
-                    self.emit(Event::Halted);
-                    return Advance::Halted;
-                }
+                let refused = self.scheduler.unmask().is_err();
                 self.masked = self.scheduler.is_masked();
                 self.jobs[task].step += 1;
                 self.emit(Event::Unmask(name));
+                if refused {
+                    return self.refused();
+                }
                 Advance::Stepped
             }
             Some(Step::Run(ticks)) => {

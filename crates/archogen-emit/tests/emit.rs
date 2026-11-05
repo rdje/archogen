@@ -223,7 +223,7 @@ fn a_generated_system_builds_runs_and_writes_its_releases_in_order() {
             "0 s initialised 1 console.uart",
             "0 s initialised 2 console.write",
             "0 s enabled",
-            "0 s timer-programmed 0",
+            "0 s timer-programmed 0 s",
             "0 s pending timer",
         ]
     );
@@ -235,15 +235,15 @@ fn a_generated_system_builds_runs_and_writes_its_releases_in_order() {
     assert_eq!(
         releases,
         [
-            "0 s release beat",
-            "0 s release chime",
-            "1/100 s release beat",
-            "1/50 s release beat"
+            "0 s release beat nominal 0 s",
+            "0 s release chime nominal 0 s",
+            "1/100 s release beat nominal 1/100 s",
+            "1/50 s release beat nominal 1/50 s"
         ]
     );
     // It says what it is, and what it did not do.
     assert!(
-        trace.starts_with("; archogen-playground-trace/2\n; system heartbeat\n; plan sha256:"),
+        trace.starts_with("; archogen-playground-trace/3\n; system heartbeat\n; plan sha256:"),
         "{trace}"
     );
     assert!(trace.contains("; no job runs application code"), "{trace}");
@@ -321,7 +321,7 @@ fn a_source_arrives_at_its_stated_separation_and_releases_its_task_at_each_arriv
         "{trace}"
     );
     assert_eq!(at(" release s"), ["0", "1/100", "1/50", "3/100"], "{trace}");
-    assert_eq!(at(" release p"), ["0"], "{trace}");
+    assert_eq!(at(" release p nominal 0 s"), ["0"], "{trace}");
 }
 
 #[test]
@@ -354,9 +354,12 @@ fn a_period_of_no_whole_millisecond_is_exact() {
     assert_eq!(emitted.ticks_per_second, 4000);
     assert_eq!(emitted.horizon, 4);
     let trace = run(&emitted, "sub-millisecond");
-    assert!(trace.contains("3/4000 s release fast\n"), "{trace}");
-    assert_eq!(trace.matches(" release fast\n").count(), 4, "{trace}");
-    assert_eq!(trace.matches(" release slow\n").count(), 1, "{trace}");
+    assert!(
+        trace.contains("3/4000 s release fast nominal 3/4000 s\n"),
+        "{trace}"
+    );
+    assert_eq!(trace.matches(" release fast ").count(), 4, "{trace}");
+    assert_eq!(trace.matches(" release slow ").count(), 1, "{trace}");
 }
 
 #[test]

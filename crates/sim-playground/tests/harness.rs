@@ -51,30 +51,33 @@ fn two_empty_jobs_on_the_timer_are_the_heartbeat_s_trace() {
         lines,
         [
             "0 s enabled",
-            "0 s timer-programmed 0",
+            "0 s timer-programmed 0 s",
             "0 s pending timer",
             "0 s entry timer",
-            "0 s release beat",
-            "0 s release chime",
-            "0 s timer-programmed 1",
+            "0 s release beat nominal 0 s",
+            "0 s release chime nominal 0 s",
+            "0 s timer-programmed 1/100 s",
             "0 s exit timer",
             "0 s start beat",
             "0 s complete beat",
             "0 s start chime",
             "0 s complete chime",
+            "0 s idle",
             "1/100 s pending timer",
             "1/100 s entry timer",
-            "1/100 s release beat",
-            "1/100 s timer-programmed 2",
+            "1/100 s release beat nominal 1/100 s",
+            "1/100 s timer-programmed 1/50 s",
             "1/100 s exit timer",
             "1/100 s start beat",
             "1/100 s complete beat",
+            "1/100 s idle",
             "1/50 s pending timer",
             "1/50 s entry timer",
-            "1/50 s release beat",
+            "1/50 s release beat nominal 1/50 s",
             "1/50 s exit timer",
             "1/50 s start beat",
             "1/50 s complete beat",
+            "1/50 s idle",
         ]
     );
 }
@@ -151,13 +154,13 @@ fn a_masked_run_holds_the_interrupt_pending_to_its_unmask_and_the_release_is_lat
     assert!(at("1/25 s unmask low") < at("1/25 s entry timer"));
     // Two nominal instants passed under the mask, each release taken: the first job has not run when the second is due, so
     // the second is the first's overrun, and `high` runs under `Fault`.
-    assert_eq!(
-        lines.iter().filter(|l| *l == "1/25 s release high").count(),
-        1,
+    // Each is stamped when it is observed, and says the instant it was due.
+    assert!(
+        lines.contains(&"1/25 s release high nominal 1/50 s".to_owned()),
         "{lines:#?}"
     );
     assert!(
-        lines.contains(&"1/25 s faulted high".to_owned()),
+        lines.contains(&"1/25 s fault overrun high fault nominal 1/25 s".to_owned()),
         "{lines:#?}"
     );
 }
@@ -182,15 +185,15 @@ fn a_job_finishing_at_a_release_s_instant_completes_before_that_release() {
         let (ended, lines) = trace::<1>(&system(&tasks, &[], 20));
         assert_eq!(ended, Ended::Horizon, "{lines:#?}");
         let completes = lines.iter().position(|l| l == "1/10 s complete a");
-        let releases = lines.iter().position(|l| l == "1/10 s release a");
+        let releases = lines
+            .iter()
+            .position(|l| l == "1/10 s release a nominal 1/10 s");
         assert!(
             completes.is_some() && completes < releases,
             "{body:?}: {lines:#?}"
         );
         assert!(
-            !lines
-                .iter()
-                .any(|l| l.contains("job-skipped") || l.contains("faulted")),
+            !lines.iter().any(|l| l.contains(" fault ")),
             "{body:?}: a job that filled its period read as an overrun: {lines:#?}"
         );
     }
@@ -201,7 +204,10 @@ fn a_job_with_time_left_at_a_release_s_instant_still_overruns() {
     let body = [Step::Run(11)];
     let tasks = [timer("a", 1, 10, &body)];
     let (_, lines) = trace::<1>(&system(&tasks, &[], 20));
-    assert!(lines.contains(&"1/10 s faulted a".to_owned()), "{lines:#?}");
+    assert!(
+        lines.contains(&"1/10 s fault overrun a fault nominal 1/10 s".to_owned()),
+        "{lines:#?}"
+    );
     assert!(
         !lines.contains(&"1/10 s complete a".to_owned()),
         "{lines:#?}"
@@ -219,6 +225,59 @@ fn an_unmask_that_lets_an_interrupt_in_takes_it_before_the_job_s_next_step() {
     assert_eq!(at_unmask.first().copied(), Some("unmask a"), "{lines:#?}");
     assert_eq!(at_unmask.get(1).copied(), Some("entry timer"), "{lines:#?}");
     assert!(!at_unmask.contains(&"complete a"), "{lines:#?}");
+}
+
+#[test]
+fn idle_is_stamped_on_a_transition_into_it_and_not_on_a_trap_that_returns_to_it() {
+    // Nothing is ever released, so a run begins and stays in idle: one entry. A source's task runs once, and then idle again.
+    let sources = [Source {
+        name: "s",
+        separation: Some(2),
+    }];
+    let tasks = [Task {
+        name: "on-s",
+        rank: 1,
+        policy: OverrunPolicy::Fault,
+        trigger: Trigger::Source(0),
+        body: &[],
+    }];
+    let (_, lines) = trace::<1>(&system(&tasks, &sources, 3));
+    assert_eq!(
+        lines.iter().filter(|l| l.ends_with(" idle")).count(),
+        2,
+        "{lines:#?}"
+    );
+    // A trap that releases nothing returns to idle and stamps no entry: a timer task already faulted.
+    let tasks = [
+        timer("late", 1, 1, &[Step::Run(100)]),
+        Task {
+            name: "on-s",
+            rank: 2,
+            policy: OverrunPolicy::Fault,
+            trigger: Trigger::Source(0),
+            body: &[],
+        },
+    ];
+    let (_, lines) = trace::<2>(&system(&tasks, &[], 4));
+    assert_eq!(
+        lines.iter().filter(|l| l.ends_with(" idle")).count(),
+        1,
+        "{lines:#?}"
+    );
+}
+
+#[test]
+fn a_fatal_fault_says_its_kind_its_case_and_nothing_follows_it() {
+    let tasks = [timer("a", 1, 2, &[Step::Unmask])];
+    let (ended, lines) = trace::<1>(&system(&tasks, &[], 4));
+    assert_eq!(ended, Ended::Halted, "{lines:#?}");
+    let last = lines.last().expect("a line");
+    assert!(
+        last.starts_with("0 s fault invariant-violated "),
+        "{lines:#?}"
+    );
+    assert!(last.ends_with(" escalated no"), "{lines:#?}");
+    assert_eq!(lines[lines.len() - 2], "0 s unmask a", "{lines:#?}");
 }
 
 #[test]
@@ -324,7 +383,22 @@ fn an_overrun_under_fault_leaves_the_schedule_and_the_others_go_on() {
     let (ended, lines) = trace::<2>(&system(&tasks, &[], 4));
     assert_eq!(ended, Ended::Horizon, "{lines:#?}");
     assert!(
-        lines.contains(&"1/100 s faulted late".to_owned()),
+        lines.contains(&"1/100 s fault overrun late fault nominal 1/100 s".to_owned()),
+        "{lines:#?}"
+    );
+    // The first is the task's last: every later release is discarded, and produces no event.
+    assert_eq!(
+        lines
+            .iter()
+            .filter(|l| l.contains(" fault overrun late"))
+            .count(),
+        1,
+        "{lines:#?}"
+    );
+    assert!(
+        !lines
+            .iter()
+            .any(|l| l.contains("release late nominal 1/50 s")),
         "{lines:#?}"
     );
     assert!(
@@ -340,12 +414,23 @@ fn an_overrun_under_skip_late_job_abandons_it_and_the_release_is_the_next_job() 
         ..timer("late", 1, 2, &[Step::Run(3)])
     }];
     let (_, lines) = trace::<1>(&system(&tasks, &[], 5));
+    // One `fault` event, and no `release` event: the observation record's §2.
     assert!(
-        lines.contains(&"1/50 s job-skipped late".to_owned()),
+        lines.contains(&"1/50 s fault overrun late skip-late-job nominal 1/50 s".to_owned()),
         "{lines:#?}"
     );
     assert!(
-        lines.contains(&"1/50 s release late".to_owned()),
+        !lines.iter().any(|l| l.starts_with("1/50 s release late")),
+        "{lines:#?}"
+    );
+    // Its later `start` is an ordinary one, the new job's.
+    assert_eq!(
+        lines.iter().filter(|l| l.ends_with(" start late")).count(),
+        3,
+        "{lines:#?}"
+    );
+    assert!(
+        !lines.iter().any(|l| l.contains("resume late")),
         "{lines:#?}"
     );
 }

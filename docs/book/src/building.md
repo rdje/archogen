@@ -41,7 +41,7 @@ source the plan inferred. Run what it wrote:
 
 ```console
 $ cargo run --quiet --manifest-path build/heartbeat/Cargo.toml
-; archogen-playground-trace/2
+; archogen-playground-trace/3
 ; system heartbeat
 ; plan sha256:390fb545f810c644ba38a4341dc4a158f2d586d3c728dea3879867e0fd529fa2
 ; scenario one hyperperiod, 3 ticks of 1/100 s; each source at its stated separation, from time zero
@@ -50,35 +50,39 @@ $ cargo run --quiet --manifest-path build/heartbeat/Cargo.toml
 0 s initialised 1 console.uart
 0 s initialised 2 console.write
 0 s enabled
-0 s timer-programmed 0
+0 s timer-programmed 0 s
 0 s pending timer
 0 s entry timer
-0 s release beat
-0 s release chime
-0 s timer-programmed 1
+0 s release beat nominal 0 s
+0 s release chime nominal 0 s
+0 s timer-programmed 1/100 s
 0 s exit timer
 0 s start beat
 0 s complete beat
 0 s start chime
 0 s complete chime
+0 s idle
 1/100 s pending timer
 1/100 s entry timer
-1/100 s release beat
-1/100 s timer-programmed 2
+1/100 s release beat nominal 1/100 s
+1/100 s timer-programmed 1/50 s
 1/100 s exit timer
 1/100 s start beat
 1/100 s complete beat
+1/100 s idle
 1/50 s pending timer
 1/50 s entry timer
-1/50 s release beat
+1/50 s release beat nominal 1/50 s
 1/50 s exit timer
 1/50 s start beat
 1/50 s complete beat
+1/50 s idle
 ```
 
 Reading it from the top: the lines beginning `;` say what the trace is, which plan it ran and what it did not exercise. The
 parts start in the plan's order, with the serial port before the service that writes to it. Then the timer fires, `beat` and
-`chime` are released in rank order, and each job starts and completes at one instant, because its body is empty. Times are exact
+`chime` are released in rank order, each with the instant it was due, and each job starts and completes at one instant, because its
+body is empty. `idle` marks the moment nothing is left to run. Times are exact
 fractions of a second, so `1/50 s` is 20 ms and no rounding can creep in. The tick is derived from what the run repeats: here
 periods of 10 ms and 30 ms, so it is 1/100 s.
 

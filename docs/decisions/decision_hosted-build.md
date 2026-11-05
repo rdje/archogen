@@ -88,7 +88,11 @@ longer bodies all the same, so preemption, masking and overrun are exercised now
 **A run names its scenario.** The horizon is one hyperperiod of what the run repeats (§2). Each
 source whose separation is stated arrives at exactly that separation from time zero, the densest the plan allows. One whose
 separation is zero, `unknown` or `absent`, or that the plan does not enable, does not arrive, and the trace's header says so: a run
-never claims what it did not exercise. **The trace** is `archogen-playground-trace/2`, one line an event, its time exact.
+never claims what it did not exercise. **The trace** is `archogen-playground-trace/3`, one line an event, its time exact, its events on
+the fault paths the ones [`rt-static-up-v1-faults-observation.md`](../profiles/rt-static-up-v1-faults-observation.md) §2 fixes: an
+overrun one `fault` and no `release`, a task already faulted nothing, a timer-released release its nominal instant, and idle entry
+stamped only on a transition into it. Each `mask` and `unmask` that runs is shown, one that raises an assertion failure among them, and
+a halt's `fault` holds what `rt-core` keeps, its first report the only one. What its §4 still needs is `M4.9`'s.
 
 **A run is bounded.** A hyperperiod that fits `u64` can still be a run nobody could read: `1 ms` against `2305843009213693951 ms`
 never ends. So a plan whose one hyperperiod holds more than `2^20` timer releases and source arrivals is refused

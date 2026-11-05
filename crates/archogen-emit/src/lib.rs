@@ -409,7 +409,7 @@ fn header(
 
 /// The trace format this emitter's generated `main` writes.
 const fn sim_format() -> &'static str {
-    "archogen-playground-trace/2"
+    "archogen-playground-trace/3"
 }
 
 /// One line of a generated table, with where it came from.

@@ -70,7 +70,7 @@ workspace member with none.
   each held to its digest with no bless.
 - `crates/sim-playground/` — the hosted playground's deterministic event harness (§6.3) over
   `rt-core`, with no I/O: a system as data, a job's body as steps, an observer for each event, one
-  order for one instant, the trace `archogen-playground-trace/2`. Copied into each generated system.
+  order for one instant, the trace `archogen-playground-trace/3`. Copied into each generated system.
 - `crates/archogen-emit/` — the emitter (§4.2, §10.1 step 6): a checked plan into the files of a
   package, with no I/O. ⛔ A plan is accepted only by lowering it again and comparing bytes. What it
   specializes is data; behavior is `rt-core` and `sim-playground` copied under `copies/`, each held

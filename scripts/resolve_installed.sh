@@ -68,7 +68,7 @@ run_cases() {
         note "$path: the package the install generated did not build and run"; printf '%s\n' "$trace" | sed -n '1,6p' | sed 's/^/    /' >&2
         fail=1; continue
       fi
-      if ! grep -qF '; archogen-playground-trace/2' <<< "$trace" || ! grep -qF ' release ' <<< "$trace"; then
+      if ! grep -qF '; archogen-playground-trace/3' <<< "$trace" || ! grep -qF ' release ' <<< "$trace"; then
         note "$path: the package ran, and printed no trace of a release"; fail=1; continue
       fi
       echo "  ✅ $path: built by the install, and the package it generated ran"
@@ -112,7 +112,7 @@ if [ "$1" = build ]; then
   case "${MODE:-}" in
     no-compile) echo 'not rust' > "$plan/src/main.rs" ;;
     no-trace) echo 'fn main() {}' > "$plan/src/main.rs" ;;
-    *) printf 'fn main() {\n    println!("; archogen-playground-trace/2");\n    println!("0 s release t");\n}\n' > "$plan/src/main.rs" ;;
+    *) printf 'fn main() {\n    println!("; archogen-playground-trace/3");\n    println!("0 s release t");\n}\n' > "$plan/src/main.rs" ;;
   esac
   exit 0
 fi

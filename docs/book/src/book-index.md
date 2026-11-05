@@ -331,10 +331,10 @@ a change that leaves it stale, so it is never edited by hand.
 - **fault** — [definition](glossary.md), [A tour: from a description to a board](tour.md), [Checking a
   plan](plan-check.md), [What the scheduling checker establishes](analysis.md), [Where the engine's knowledge comes
   from: the catalog](catalog.md), [Checks that must not share a mistake: the trust gate](trust.md), [The runtime:
-  decisions, not actions](runtime.md), [Building a system](building.md), [Verifying the toolchain](verification.md),
-  [What this project relies on from outside](ledger.md), [Annex A: The runtime's rules in detail](annex-runtime.md),
-  [Annex B: The checks that keep the repository honest](annex-repository.md), [Annex C: Trust proof
-  records](annex-trust-proofs.md)
+  decisions, not actions](runtime.md), [Building a system](building.md), [Where generated systems run](targets.md),
+  [Verifying the toolchain](verification.md), [What this project relies on from outside](ledger.md), [What is versioned,
+  and what changing it costs](versions.md), [Annex A: The runtime's rules in detail](annex-runtime.md), [Annex B: The
+  checks that keep the repository honest](annex-repository.md), [Annex C: Trust proof records](annex-trust-proofs.md)
 - Faults in detail — [Annex A: The runtime's rules in detail](annex-runtime.md#faults-in-detail)
 - Figure registration for literal fences — [Annex C: Trust proof
   records](annex-trust-proofs.md#figure-registration-for-literal-fences)
@@ -374,8 +374,8 @@ a change that leaves it stale, so it is never edited by hand.
 
 ## H
 
-- **halt** — [definition](glossary.md), [The runtime: decisions, not actions](runtime.md), [Annex A: The runtime's rules
-  in detail](annex-runtime.md)
+- **halt** — [definition](glossary.md), [The runtime: decisions, not actions](runtime.md), [Where generated systems
+  run](targets.md), [Annex A: The runtime's rules in detail](annex-runtime.md)
 - Hashes: what a review is a review of — [Where the engine's knowledge comes from: the
   catalog](catalog.md#hashes-what-a-review-is-a-review-of)
 - **HEAD** — [definition](glossary.md), [Annex C: Trust proof records](annex-trust-proofs.md)
@@ -780,9 +780,10 @@ a change that leaves it stale, so it is never edited by hand.
   the scheduling checker establishes](analysis.md), [Where the engine's knowledge comes from: the catalog](catalog.md),
   [Checks that must not share a mistake: the trust gate](trust.md), [The runtime plan: what the generated system is
   told](runtime-plan.md), [The runtime: decisions, not actions](runtime.md), [Building a system](building.md), [The S0
-  early generation path](s0.md), [Verifying the toolchain](verification.md), [What this project relies on from
-  outside](ledger.md), [Annex A: The runtime's rules in detail](annex-runtime.md), [Annex B: The checks that keep the
-  repository honest](annex-repository.md), [Annex C: Trust proof records](annex-trust-proofs.md)
+  early generation path](s0.md), [Where generated systems run](targets.md), [Verifying the toolchain](verification.md),
+  [What this project relies on from outside](ledger.md), [Annex A: The runtime's rules in detail](annex-runtime.md),
+  [Annex B: The checks that keep the repository honest](annex-repository.md), [Annex C: Trust proof
+  records](annex-trust-proofs.md)
 - Test-flag naming query controls — [Annex C: Trust proof
   records](annex-trust-proofs.md#test-flag-naming-query-controls)
 - The admitted task model, enforced — [Describing a workload](workload.md#the-admitted-task-model-enforced)
