@@ -3,7 +3,7 @@
 - version: eadl/1
 - date: 2026-11-04
 - leaf: M1.42 (`docs/tasks/M1.md`)
-- status: pending
+- status: applied
 - constructs: docs/semantics/model.md#4-a-profile-admits-a-workload-or-says-what-it-would-take
 - invalidates: a description whose task writes a `period`, `min-separation`, `deadline` or `jitter` that is not a time, or a `period` or `min-separation` of zero; the tracked ones are named below
 

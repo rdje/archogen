@@ -15,15 +15,14 @@
 - **Project:** archogen — the eADL → OS generation toolchain (`ROADMAP.md` revision 2.0).
 - **Active tree:** `M4` → frontier `M4.1`, the accepted runtime plan, the model's amendments done (`M4.1.2`): `/1` for
   the hosted playground; `PROGRAM` → `PROGRAM.34`, the director's.
-- **Next action:** answer `M4.2.3.3.4`, round 4 of the hosted build's review, its findings in the leaf, flipping
-  `docs/semantics/migrations/eadl-1-a-task-s-durations-are-times.md` to `applied` in that commit; then round 5; then `M4.3`'s remainder. The
-  runtime plan's design is accepted (`M4.1.1` done).
+- **Next action:** answer `M4.2.3.3.4`, round 4 of the hosted build's review, its findings in the leaf; then round 5; then
+  `M4.3`'s remainder. The runtime plan's design is accepted (`M4.1.1` done).
   `M4.4.1`, the device correspondence, before `M4.1.7`. `M3.2.7` and `M3.5.9`, full verification, wait for the
   features (doctrine 22).
   After the first batch, runner leaves `M3.5.3.2`, `M3.5.5.7.4`, `M3.5.1.4.5`, `M3.5.1.6.6`; `M3.4.7` waits on `M3.7`.
   `main` is protected: a push is a batch, `scripts/open_batch.sh` (`COMMIT.md` step 2), at the ruled cadence or to
   restore CI; the director merges, and the first merge is premise 3's named commit (`M2.7.6.6.5`). No other branches.
-  The next artifact cleanup is due after `2026-11-04T21:42` UTC (`PROGRAM.123` ran the twenty-first).
+  The next artifact cleanup is due after `2026-11-06T00:05` UTC (`PROGRAM.126` ran the twenty-second).
   **Mutation testing is stopped** until the functionality is locked
   (`decision_mutation-testing-after-completion.md`, `2026-10-21`): every pending `M3.6.9` leaf and `PROGRAM.78` are
   `blocked`; every decision advances the project first. `M3.6.9.6.3.2.2.15.2.1.8.2` stays owned, a suspected defect.
