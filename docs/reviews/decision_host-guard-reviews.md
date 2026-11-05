@@ -90,3 +90,26 @@ Said, and left as it stands: its reader could not run the census against the rea
 | G3-20 | wording | "the first check starts the watcher", and "during this work" left in a log line | Both said as they are |
 
 Said, and left as it stands: its reader could not run a real `make`, a commit's compile, a real VS Code terminal, a real Codex or Kimi command, real pressure levels, the true idle and blind times, the census against the real watcher, or `onFailure` with a real crash.
+
+**Round 4** — `2026-11-05`: not acceptable, 16 findings, 6 defects, after 15, 12 and 5. No longer converging, and most of the last three rounds' findings came from lists kept by hand: what is a read, which small tools to spare, what a person works in. Each list had edges, and each answer added to one. So this round's answer is by method: the lists are gone. A host's line goes by what a process holds, a disk's by what it writes, and the hook refuses only three things. That answers some findings by removing what they were about, and the next reader should look hardest at what the removal let through. Its measurements held again: RAM by hand 59.28%, by the guard 59.29%; a job under `run` ended rightly on each signal; `TaskStop` left nothing behind. Round 3's 1.7% of a core did not hold: it measured 6.1% far from the lines and 19.7% near them, children included.
+
+| # | Kind | Finding | Answer |
+| --- | --- | --- | --- |
+| G4-1 | defect | `kill "$(pgrep …)"`, backticks, a loop and a variable all passed, the very act the record blames | `kill` with `pgrep` anywhere in the command, double quotes read since they still run what is inside, unless the search names this root |
+| G4-2 | defect | a job of many small processes directly under an agent was passed over whole, past the danger line and every ceiling | No process is passed over for whose child it is. A ceiling is reached even when a host's line finds nothing to stop |
+| G4-3 | defect | at a disk floor a small tool doing the writing was left, as a `cat` feeding on itself | A disk's line goes by what each process wrote since the last sample |
+| G4-4 | defect | with writes failing, the watcher did not stop the job and died | Its bookkeeping cannot raise, and its streams no longer go to the volume |
+| G4-5 | defect | two `make`s waited on each other until `--wait` ended, each taking the other for a build | `make` is no sign of a job, only what builds or a started `run` |
+| G4-6 | defect | `sed -n` and `find` passed the hook and the watcher then stopped them | Nothing that holds little is stopped at a host's line, and there are no reads to keep in step |
+| G4-7 | gap | a worktree or submodule inside another checkout took that project as its root and its processes as ours | The nearest checkout is the root |
+| G4-8 | gap | after `cargo clean` a stop could be told to nobody, a lost place read as a new session, and `run` sought past a replaced log | A session with no place is told what was stopped lately, and `run` reads a replaced log whole |
+| G4-9 | gap | what was passed over still counted as worth stopping, so a tiny job was stopped for helpers' bulk | Nothing small is stopped at a host's line |
+| G4-10 | gap | a refused handoff left the watcher off, reads not restarting it | Every command restarts it now |
+| G4-11 | gap | at a stop line "wait for room" could not be done: `sleep` itself was refused | Refused no longer: only a heavy command is |
+| G4-12 | gap | "what a person works in" was a short list | No list: what holds little stays. What holds a quarter of a GiB does not, which is stated |
+| G4-13 | gap | an interpreter job naming a data file after an agent was spared | Only a path with no extension counts as a program |
+| G4-14 | gap | with `ps` slower than 5 s, `status` called a live watcher gone and `stop` did nothing | Read from the lock on the root and the executable, with no `ps` |
+| G4-15 | wording | "a read is always let through" was false for a `\|` in quotes | There are no reads now, and that command runs |
+| G4-16 | wording | `kill $(cat job.pid)` was refused as by a name, and a pattern naming the root held for `pkill` alone | By a pid passes, in either quoting, and a search naming this root passes |
+
+Said, and left as it stands: its reader could not run a real `make`, a commit's compile, a real full volume, real pressure levels, the true idle and blind times, the census against the real watcher, a real Codex, Kimi or VS Code, two live harness sessions, or `onFailure` with a real crash.

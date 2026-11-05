@@ -847,7 +847,19 @@ mdBook that is the director's window into the project.
   Commit: `ARCHOGEN-PROGRAM-1160 (leaf PROGRAM.127.3)`
 
 - ID: `PROGRAM.127.4`
-  Status: `pending` — round 4, a fresh reader over round 3's answers, on ordinary work. It closes on a round that finds no defect, and a form written to go round the guard is a stated limit, not a defect.
+  Status: `done` — `2026-11-05`: round 4, a fresh reader on ordinary work: 16 findings, 6 defects, no longer converging. Most came from lists kept by hand, so they are gone: a host's line goes by what a process holds, a disk's by what it writes, and the hook refuses only what it cannot read, stopping by a name, and a heavy command with no room. The findings and each answer are in `docs/reviews/decision_host-guard-reviews.md`.
+
+  **Acceptance checklist (`DOCTRINE_ENFORCEMENT.md`):**
+  - [x] **REPRODUCE / ISSUE** — the reader's rigs on `36b2eebf`, `target/m4260/work/exp_hook.py`: `kill "$(pgrep -x rustc)"` → hook `exit 0`, against `kill $(pgrep -x rustc)` → `exit 2`; `exp_cat.py`, a disk floor: `cat FIFO > data` still growing, 2 to 10 MiB, its shell stopped; `exp_make.py`: two `make`s with `--wait 32`, both `exit 75`, neither having run.
+  - [x] **ROOT CAUSE (WHY + WHERE)** — `git grep -n 'SPARED_WHEN_SMALL = ' 36b2eebf -- scripts/host_guard.py` and `git grep -n 'READERS = ' 36b2eebf -- scripts/host_guard.py` → two lists of names, kept apart, deciding what may run and what may be stopped; each round's findings fell on their edges or on the gap between them, and each answer lengthened them.
+  - [x] **FIX** — `scripts/host_guard.py`, rewritten without those lists; `scripts/selftest_host_guard.py`; the record's account of what is stopped and refused, and its limits, its `## Review`; `docs/reviews/decision_host-guard-reviews.md` and its index.
+  - [x] **ADDRESSED (verified)** — `python3 scripts/selftest_host_guard.py` → `host-guard self-test: 270 passed, 0 failed, 0 not run`, exit 0, each finding a case: `kill "$(pgrep -x rustc)"`, backticks, a loop, a variable and a pipe refused, `kill "$(cat job.pid)"` and a search naming this root let through; at the danger line a small `git`, `rm`, `vim`, `sed`, `find` and their shell left, every build stopped, what holds memory stopped, and the largest when only together they hold it; at a disk floor a small writer and every build stopped, what is not writing left; the watcher stopping what it should with no write possible; two `make`s taking turns; a worktree inside another checkout its own root; a session that lost its place told; a `run` saying why with its log replaced; a light command and `sleep` run at every line, a heavy one refused
+  - [x] **NO REGRESSION** — `bash scripts/check_host_guard.sh` → `host-guard: OK`, exit 0, and `bash scripts/check_doctrines.sh` on the staged tree naming only the focused stamp; `make focused` → `tier focused: passed — 3 passed, 0 failed`, on the staged tree, through the guard.
+  - [x] **LOCKSTEP** — the record, the review history and its index, these leaves and the Commit Log.
+  Commit: `ARCHOGEN-PROGRAM-1161 (leaf PROGRAM.127.4)`
+
+- ID: `PROGRAM.127.5`
+  Status: `pending` — round 5, a fresh reader over round 4's rewrite, looking hardest at what removing the lists let through. It closes on a round that finds no defect, and a form written to go round the guard is a stated limit, not a defect. Paused `2026-11-05` at the director's word, until the director says to go on.
 
 ## Roadmap coverage map
 
@@ -1006,6 +1018,7 @@ leaf's outcome is its row in the Commit Log below, and a sealed leaf's full reco
 | `PROGRAM.127.1` | `ARCHOGEN-PROGRAM-1158 (leaf PROGRAM.127.1)` | **the host guard's review, round 1 answered**: a process is ours only by what it shows of itself, so another project's build is left alone; the watcher survives its own trouble and says when it is blind; nothing rides in on a read |
 | `PROGRAM.127.2` | `ARCHOGEN-PROGRAM-1159 (leaf PROGRAM.127.2)` | **the host guard's review, round 2 answered**: a terminal known by being told no command; a root exactly itself; one job at a time by what the process table shows; nothing by a name across the host; said to be a guard against accident, no sandbox |
 | `PROGRAM.127.3` | `ARCHOGEN-PROGRAM-1160 (leaf PROGRAM.127.3)` | **the host guard's review, round 3 answered**: a helper passed over only while small, so a job an agent's shell execs is held; `pkill` judged by its own stage; a read is a read, each tool's writing options its own; growth over a window; everyday commands no longer refused |
+| `PROGRAM.127.4` | `ARCHOGEN-PROGRAM-1161 (leaf PROGRAM.127.4)` | **the host guard's review, round 4 answered by method**: the lists of names are gone; a host's line goes by what a process holds and a disk's by what it writes; the hook refuses only what it cannot read, stopping by a name, and a heavy command with no room |
 
 ## Changelog
 
@@ -1062,3 +1075,5 @@ leaf's outcome is its row in the Commit Log below, and a sealed leaf's full reco
 - `2026-11-05`: `PROGRAM.127.2` done: the guard's round 2, twenty-three findings answered; `PROGRAM.127.3` filed for round 3.
 
 - `2026-11-05`: `PROGRAM.127.3` done: the guard's round 3, twenty findings answered; `PROGRAM.127.4` filed for round 4.
+
+- `2026-11-05`: `PROGRAM.127.4` done: the guard's round 4, sixteen findings answered by removing its lists; `PROGRAM.127.5` filed for round 5.

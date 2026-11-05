@@ -14,7 +14,7 @@ No bootstrap read includes this directory.
 
 | Review history | Design record | Rounds | Status |
 | --- | --- | --- | --- |
-| [`decision_host-guard-reviews.md`](decision_host-guard-reviews.md) | [`decision_host-guard.md`](../decisions/decision_host-guard.md) | 3 | open |
+| [`decision_host-guard-reviews.md`](decision_host-guard-reviews.md) | [`decision_host-guard.md`](../decisions/decision_host-guard.md) | 4 | open |
 | [`decision_hosted-build-reviews.md`](decision_hosted-build-reviews.md) | [`decision_hosted-build.md`](../decisions/decision_hosted-build.md) | 11 | open |
 | [`decision_catalog-records-reviews.md`](decision_catalog-records-reviews.md) | [`decision_catalog-records.md`](../specs/catalog/decision_catalog-records.md) | 16 | closed: the record met its closure rule on round 16 (`M2.7.1`) |
 | [`decision_decisions-folder-ceiling-reviews.md`](decision_decisions-folder-ceiling-reviews.md) | [`decision_decisions-folder-ceiling.md`](../decisions/decision_decisions-folder-ceiling.md) | 1 | closed: answered before the raise landed (`PROGRAM.38`) |
