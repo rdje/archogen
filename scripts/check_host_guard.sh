@@ -53,42 +53,69 @@ if {"start_used_percent", "stop_used_percent", "panic_used_percent"} <= limits.k
     if not limits["start_used_percent"] < limits["stop_used_percent"] < limits["panic_used_percent"]:
         breaches.append("the lines must rise: start, then stop, then everything of ours stopped")
 
-# Everything `make` compiles or tests goes through it, by what each recipe line runs, however it is written. `cargo fmt` neither.
+# Everything `make` compiles or tests goes through it. These recipes are written out rather than read for what they might mean: a loose reading of a shell line
+# was passed by `cargo fmt && cargo test`. Changing one means changing it here too, in a commit that says why.
 makefile = (root / "Makefile").read_text(encoding="utf-8")
-if not re.search(r"^GUARD\s*:?=.*scripts/host_guard\.py\s+run\b", makefile, re.M):
-    breaches.append("the Makefile's `GUARD` does not run scripts/host_guard.py")
-HEAVY = re.compile(r"(?<![\w./-])(?:\S*/)?(?:cargo|rustc|mdbook|build_book\.sh|check_doctrines\.sh)(?![\w.-])|\$\(CARGO\)")
-recipe = None
+if not re.search(r"^GUARD\s*:=\s*python3 -I -B scripts/host_guard\.py run --wait \d+ --\s*$", makefile, re.M):
+    breaches.append("the Makefile's `GUARD` is not `python3 -I -B scripts/host_guard.py run --wait SECONDS --`")
+RECIPES = {
+    "focused": ["$(GUARD) cargo xtask verify --tier focused"],
+    "integration": ["$(GUARD) cargo xtask verify --tier integration"],
+    "tiers": ["$(GUARD) cargo xtask verify --list"],
+    "gate": ["$(GUARD) scripts/check_doctrines.sh"],
+    "check": ["cargo fmt --all -- --check", "$(GUARD) cargo clippy --all-targets --all-features -- -D warnings", "$(GUARD) cargo test --all"],
+    "fmt": ["cargo fmt --all"],
+    "clippy": ["$(GUARD) cargo clippy --all-targets --all-features -- -D warnings"],
+    "test": ["$(GUARD) cargo test --all"],
+    "book": ["$(GUARD) scripts/build_book.sh"],
+}
+found = {}
+target = None
 for line in makefile.splitlines():
-    if not line.startswith("\t"):
-        found = re.match(r"([a-zA-Z_-]+):", line)
-        recipe = found.group(1) if found else recipe
+    if line.startswith("\t"):
+        found.setdefault(target, []).append(line.strip())
         continue
-    command = line.strip().lstrip("@-")
-    # A line that only prints runs nothing, whatever it says.
-    if re.fullmatch(r'echo\s+"[^"]*"', command):
-        continue
-    if HEAVY.search(command) and not command.startswith("$(GUARD)") and not re.match(r"cargo fmt\b", command):
-        breaches.append(f"Makefile `{recipe}` runs `{command}` outside the guard: write it `$(GUARD) {command}`")
+    if re.match(r"\s*(?:\.RECIPEPREFIX|-?include)\b", line):
+        breaches.append(f"the Makefile says `{line.strip()}`, so what it runs cannot be read from it")
+    named = re.match(r"([a-zA-Z_-]+)\s*:(?!=)(.*)", line)
+    if named:
+        target = named.group(1)
+        if ";" in named.group(2):
+            breaches.append(f"Makefile `{target}` writes its recipe on its target's line")
+for name, recipe in RECIPES.items():
+    if found.get(name) != recipe:
+        breaches.append(f"Makefile `{name}` runs {found.get(name)}, and this check holds it to {recipe}")
+HEAVY = re.compile(r"(?<![\w./-])(?:\S*/)?(?:cargo|rustc|mdbook|build_book\.sh|check_doctrines\.sh)(?![\w.-])")
+for name, recipe in found.items():
+    if name not in RECIPES:
+        for command in recipe:
+            bare = command.lstrip("@-")
+            if HEAVY.search(bare) and not re.fullmatch(r'echo\s+"[^"]*"', bare):
+                breaches.append(f"Makefile `{name}` runs `{command}`, which this check does not hold")
 
-# Every shell command an agent runs here is checked first, a subagent's too.
+# Every shell command an agent runs here is checked first, a subagent's too, by exactly this, and nothing turns it off or lets it go by.
+EXPECTED = 'python3 -I -B "$CLAUDE_PROJECT_DIR/scripts/host_guard.py" hook'
 settings = root / ".claude" / "settings.json"
 try:
-    hooks = json.loads(settings.read_text(encoding="utf-8")).get("hooks", {}).get("PreToolUse", [])
+    loaded = json.loads(settings.read_text(encoding="utf-8"))
 except (OSError, ValueError) as error:
-    hooks = []
+    loaded = {}
     breaches.append(f".claude/settings.json does not read: {error}")
+if loaded.get("disableAllHooks"):
+    breaches.append(".claude/settings.json turns every hook off")
 held = [
     hook
-    for entry in hooks
+    for entry in loaded.get("hooks", {}).get("PreToolUse", [])
     if entry.get("matcher") == "Bash"
     for hook in entry.get("hooks", [])
-    if "host_guard.py" in hook.get("command", "") and hook.get("command", "").rstrip().endswith("hook")
+    if hook.get("command") == EXPECTED
 ]
 if not held:
-    breaches.append(".claude/settings.json runs no `host_guard.py hook` before a shell command")
+    breaches.append(f".claude/settings.json does not run `{EXPECTED}` before a shell command")
 elif held[0].get("onFailure") != "block":
     breaches.append("the hook must block when it cannot run: a guard that fails open is no guard")
+elif held[0].get("async"):
+    breaches.append("the hook runs in the background, where it refuses nothing")
 elif not held[0].get("timeout"):
     breaches.append("the hook states no timeout, so one that hangs would hang every command")
 

@@ -823,7 +823,19 @@ mdBook that is the director's window into the project.
   Commit: `ARCHOGEN-PROGRAM-1158 (leaf PROGRAM.127.1)`
 
 - ID: `PROGRAM.127.2`
-  Status: `pending` — round 2, a fresh reader over round 1's answers, trying hardest on what is ours and on failing open. It closes on a round that finds no defect.
+  Status: `done` — `2026-11-05`: round 2, a fresh reader over round 1's answers: 23 findings, 12 defects, narrower than round 1's. A terminal's shell with no dash still counted as ours, and "one job at a time" failed four ways. The record now says what the guard is: against accident, no sandbox. The findings and each answer are in `docs/reviews/decision_host-guard-reviews.md`.
+
+  **Acceptance checklist (`DOCTRINE_ENFORCEMENT.md`):**
+  - [x] **REPRODUCE / ISSUE** — the reader's rigs on `a6733960`, `target/m4258/work/exp_ours.py O2`: `/bin/zsh -f -il` in scratch root `S` running a build in another directory, panic line tightened there → the shell and the build gone, while `exec -a -zsh` stayed up; `exp_run.py R1`: `ps` failing under `run` → `exit 1`, a `CalledProcessError`, and `sleep 60` still up; `exp_reads.py`: `pkill -x rustc` read as a read, `rc 0`.
+  - [x] **ROOT CAUSE (WHY + WHERE)** — `git grep -n 'process.name.startswith("-") and' a6733960 -- scripts/host_guard.py` → a terminal known only by a dash, and `git grep -n 'f"--root {text}" in p.command' a6733960 -- scripts/host_guard.py` → a root known by a substring: each decided by what a process is called; `git grep -n 'table = processes()' a6733960 -- scripts/host_guard.py` → the blind path needing the very table it had lost.
+  - [x] **FIX** — `scripts/host_guard.py`, `scripts/selftest_host_guard.py`, `scripts/check_host_guard.sh`; the record's account of what is ours, what is spared and its limits, its `## Review`; `docs/reviews/decision_host-guard-reviews.md` and its index.
+  - [x] **ADDRESSED (verified)** — `python3 scripts/selftest_host_guard.py` → `host-guard self-test: 232 passed, 0 failed, 0 not run`, exit 0, each finding a case: four real shells with no dash left, and a build elsewhere under one; another root whose name begins the same left, its job and its watcher; a helper's children left; `rm` going on when its shell stops; a small `git` passed over; one job at a time with its lock removed, an environment forged and its `run` killed; a `run` that goes blind ending its job; a `run` from another directory counted; unreadable input refused in ten shapes; `pkill -x rustc` refused, a pattern naming this root allowed; a `ps` answering nothing or cut short read as blindness; a future `sampled` not fresh; a replaced log told
+  - [x] **NO REGRESSION** — `bash scripts/check_host_guard.sh` → `host-guard: OK`, exit 0, and `bash scripts/check_doctrines.sh` on the staged tree naming only the focused stamp; `make focused` → `tier focused: passed — 3 passed, 0 failed`, on the staged tree, through the guard.
+  - [x] **LOCKSTEP** — the record, the review history and its index, these leaves and the Commit Log.
+  Commit: `ARCHOGEN-PROGRAM-1159 (leaf PROGRAM.127.2)`
+
+- ID: `PROGRAM.127.3`
+  Status: `pending` — round 3, a fresh reader over round 2's answers. It closes on a round that finds no defect, and a form written to go round the guard is a stated limit, not a defect.
 
 ## Roadmap coverage map
 
@@ -980,6 +992,7 @@ leaf's outcome is its row in the Commit Log below, and a sealed leaf's full reco
 | `PROGRAM.126` | `ARCHOGEN-PROGRAM-1143 (leaf PROGRAM.126)` | **twenty-second daily artifact cleanup**: the main debug incremental cache, 30872 files / 3821526631 bytes, removed after `handoff: OK` |
 | `PROGRAM.127` | `ARCHOGEN-PROGRAM-1157 (leaf PROGRAM.127)` | **the host guard**: the machine is shared and holds 24 GB, so a watcher stops this repository's processes before the director's RAM lines, never another project's; `make` and every agent's shell command go through it |
 | `PROGRAM.127.1` | `ARCHOGEN-PROGRAM-1158 (leaf PROGRAM.127.1)` | **the host guard's review, round 1 answered**: a process is ours only by what it shows of itself, so another project's build is left alone; the watcher survives its own trouble and says when it is blind; nothing rides in on a read |
+| `PROGRAM.127.2` | `ARCHOGEN-PROGRAM-1159 (leaf PROGRAM.127.2)` | **the host guard's review, round 2 answered**: a terminal known by being told no command; a root exactly itself; one job at a time by what the process table shows; nothing by a name across the host; said to be a guard against accident, no sandbox |
 
 ## Changelog
 
@@ -1032,3 +1045,5 @@ leaf's outcome is its row in the Commit Log below, and a sealed leaf's full reco
 - `2026-11-05`: `PROGRAM.127` done: the host guard, by the director's instruction; its review `PROGRAM.127.1` filed.
 
 - `2026-11-05`: `PROGRAM.127.1` done: the guard's round 1, twenty-five findings answered; `PROGRAM.127.2` filed for round 2.
+
+- `2026-11-05`: `PROGRAM.127.2` done: the guard's round 2, twenty-three findings answered; `PROGRAM.127.3` filed for round 3.

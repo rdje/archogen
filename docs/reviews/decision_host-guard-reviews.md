@@ -33,3 +33,33 @@ The independent review of [`docs/decisions/decision_host-guard.md`](../decisions
 | G1-25 | gap | a session rooted elsewhere gets no hook. Unverified | Said in the record: project settings are per project |
 
 Said, and left as it stands: a detached process that shows nothing here, a jump between two samples, and the host's safety from other projects were confirmed as the record states them. Its reader could not run the census against the real watcher, real pressure, `onFailure` with a real crash, or the true 600-second idle time.
+
+**Round 2** — `2026-11-05`: not acceptable, 23 findings, 12 defects. The measurements and the watcher's survival held: RAM by hand from `vm_stat` 57.31% and by the guard 57.31%; a second watcher exits at once even with its state removed; with state read-only the stop still happens and `status` says blind; a real `git` under a stopped hook left no lock. What broke was the edges of what is ours, `run` going blind, and what a read may carry. From this round the record says what it is: a guard against accident, not a sandbox, so a form written to go round it is a stated limit where closing it costs more than it is worth.
+
+| # | Kind | Finding | Answer |
+| --- | --- | --- | --- |
+| G2-1 | defect | a real interactive or login shell with no dash on its name counted as ours, and so did a build elsewhere under it | A shell told neither a command nor a script is a terminal, whatever its name, and vouches for nothing |
+| G2-2 | defect | `--root` was a substring, so root `A-other` counted as `A`'s, its job stopped and its watcher ended | A root is exactly itself, on the command line and in `stop` |
+| G2-3 | defect | with `ps` failing or hanging, `run` died with a traceback or hung, and its job went on | The job has its own session and is ended with no table to read; `ps` has a timeout; nothing there may raise |
+| G2-4 | defect | a helper's own children were stopped | What an agent's helper starts is its own. One started through a shell is stated as taken for a job |
+| G2-5 | defect | the hook let `rm` and reads through, then the watcher killed them | A small tool is passed over, `rm` among them, so disk can be freed. That the shell around a read may be stopped at the danger line is stated |
+| G2-6 | defect | one job at a time failed four ways: lock removed, environment forged, `run` killed, and the hook blind to a job not named as a build | By what the process table shows, no environment, and the job holds the lock too; the hook refuses beside any `run` of ours |
+| G2-7 | defect | a `run` from another directory was not recognised, so its job was unwatched | A `run` always says its root on its command line, re-executing itself if it must |
+| G2-8 | defect | the hook passed input it could not read | Refused, each shape a case |
+| G2-9 | defect | a small `git` that was our largest was stopped at the stop line | It is passed over for the next worth stopping |
+| G2-10 | defect | a blind watcher left while a job ran | It keeps what it last saw |
+| G2-11 | defect | commands rode through `is_read`: a flag, a function, a path, `export PATH`, `sort -o`, `git diff --output` | Bare names only, no function or subshell, a named few settings, options that write refused. What remains is deliberate, and the record says it is no sandbox |
+| G2-12 | defect | `HOST-GUARD` passed `cargo fmt && cargo test`, an included file, `disableAllHooks`, `async` and a mere mention of the hook | The recipes and the hook's command are written out in the check and compared whole. Its reader seeded these on a copy to test a sentence; none is kept as a mutant |
+| G2-13 | gap | a root spelt in another case saw nothing, on this case-insensitive volume | A root is spelt as the volume spells it |
+| G2-14 | gap | `git commit` can compile outside `run` | Stated, and the watcher holds it |
+| G2-15 | gap | `pkill`, `kill` and `stop` passed at any line, `pkill -f rustc` being the very act the record blames | `pkill` and `killall` are refused unless the pattern names this repository; `kill` takes pids; `stop` is no read |
+| G2-16 | gap | a `ps` answering nothing or cut short looked healthy | A table that does not hold its reader is blindness |
+| G2-17 | gap | a `sampled` time in the future passed as fresh | Either way counts |
+| G2-18 | gap | `status` and bookkeeping broke on binary or deep files, and read whole logs | They read past it, the log is bounded and rotated |
+| G2-19 | gap | with `seen` past a replaced log, a stop went untold | It starts again |
+| G2-20 | gap | an interpreter's flag hid an agent's script | The first few paths it names are searched too |
+| G2-21 | gap | an assignment of a path ending in `/archogen` counted as heavy | A program counts only where a command stands |
+| G2-22 | wording | `status` named stops only among its last five lines | The last few stops, whatever came after |
+| G2-23 | wording | "lost during this work" counted anyone's writes | Said as it is |
+
+Said, and left as it stands: its reader could not run the census against the real watcher, real pressure levels, the true idle and blind times, a commit's compile, a real terminal in an IDE or a real tool server, or `onFailure` with a real crash.

@@ -18,7 +18,8 @@ each process's footprint. On any other system it watches nothing and says so.
 
 What it stops is only ever this repository's, by what each process shows of itself: its working directory or its executable under the root,
 or having been started by a process that shows so. A process merely mentioning the path is not ours, and an agent or a terminal here vouches
-for nothing it started. Never another project's, never by a program's name across the host, never an agent, a terminal or the harness's helpers.
+for nothing it started. Never another project's, never by a program's name across the host, never an agent, a terminal, or what an agent runs
+for itself. It guards against accident, not against an agent set on going round it.
 """
 
 from __future__ import annotations
@@ -62,7 +63,7 @@ class Limits:
     # Disk: what must stay free where this repository writes and where the host swaps, and what one job may take.
     stop_repo_free_gib: float = 100.0
     stop_boot_free_gib: float = 30.0
-    stop_disk_growth_gib: float = 50.0
+    stop_disk_growth_gib: float = 50.0  # lost on the volume while ours runs, whoever wrote it: nothing cheap can say who did
     # Under this much of ours, stopping it would not help the host: the pressure is someone else's.
     worth_stopping_gib: float = 0.25
     # A watcher that has not read the host for this long is not watching, however alive it looks.
@@ -231,6 +232,13 @@ class Process:
         return ""
 
     @property
+    def paths_named(self) -> list[str]:
+        """The files an interpreter's first arguments point at, by name: a flag may take a value, and hide its script behind it."""
+        if not self.script:
+            return []
+        return [os.path.basename(word) for word in self.command.split()[1:7] if "/" in word]
+
+    @property
     def label(self) -> str:
         return f"{self.name} {self.script}" if self.script else self.name
 
@@ -277,6 +285,9 @@ def processes() -> list[Process]:
         pid = int(parts[0])
         held = NATIVE.footprint(pid)
         table.append(Process(pid, int(parts[1]), parts[5], NATIVE.cwd(pid), NATIVE.exe(pid), int(parts[4]) * 1024 if held is None else held))
+    # A table that does not hold the one reading it is not the table: `ps` answering nothing, or cut short, must read as blind and never as calm.
+    if not any(process.pid == os.getpid() for process in table):
+        raise ValueError("`ps` does not list the process reading it")
     return table
 
 
@@ -287,23 +298,66 @@ INFRASTRUCTURE = {"login", "sshd", "tmux", "screen", "iTerm2", "Terminal", "Code
 APPLICATION = ("/Applications/", "/System/", "/usr/libexec/", "/usr/sbin/")
 GUARD_PROCESS = re.compile(r"^\S*[Pp]ython\S*\s+(?:-\S+\s+)*\S*host_guard\.py(?:\s|$)")
 # Small, and stopping them frees nothing: a `git` could leave a lock or a half-written index behind, and these others are how a host in trouble is looked at.
-SPARED_WHEN_SMALL = {"git", "ps", "top", "sysctl", "vm_stat", "df", "du", "lsof", "memory_pressure"}
+# `rm` so that disk can be freed: its shell may be stopped around it, and it finishes.
+SPARED_WHEN_SMALL = {
+    "git", "ps", "top", "sysctl", "vm_stat", "df", "du", "lsof", "memory_pressure", "rm", "cat", "grep", "ugrep", "sort", "uniq", "head", "tail", "cut", "wc", "tr", "ls",
+    "stat", "date", "uptime", "pgrep", "kill",
+}
 
 
 def is_agent(process: Process) -> bool:
-    return any(AGENT.search(word) for word in (process.name, os.path.basename(process.exe), process.script))
+    return any(AGENT.search(word) for word in (process.name, os.path.basename(process.exe), process.script, *process.paths_named))
+
+
+def is_terminal_shell(process: Process) -> bool:
+    """A shell someone or something types into, which vouches for nothing it starts: a login shell by its dash, or any shell told neither a command
+    (`-c`, `-lc`) nor a script. A shell running a command or a script is a job."""
+    name = process.name
+    if name.startswith("-"):
+        return name[1:] in SHELLS
+    if name not in SHELLS:
+        return False
+    rest = process.command[len(process.exe) :] if process.exe and process.command.startswith(process.exe) else process.command.partition(" ")[2]
+    for word in rest.split():
+        if not word.startswith("-") or re.fullmatch(r"-\w*c\w*", word):
+            return False
+    return True
+
+
+def names_root(command: str, root: str) -> bool:
+    """Whether a guard's command line says `--root` is exactly this root, and not one whose name merely begins the same."""
+    return re.search(r"--root\s+" + re.escape(root) + r"(?:\s|$)", command) is not None
+
+
+def is_run_of(process: Process, root: str) -> bool:
+    return bool(GUARD_PROCESS.search(process.command)) and re.search(r"host_guard\.py\s+run(?:\s|$)", process.command) is not None and names_root(process.command, root)
+
+
+def line_of(table: list[Process], pid: int) -> set[int]:
+    """`pid` and its parents, up the table."""
+    by_pid = {process.pid: process for process in table}
+    line: set[int] = set()
+    while pid in by_pid and pid not in line:
+        line.add(pid)
+        pid = by_pid[pid].ppid
+    return line
 
 
 def protected(process: Process, by_pid: dict[int, Process]) -> bool:
-    if process.name in INFRASTRUCTURE or is_agent(process) or GUARD_PROCESS.search(process.command):
-        return True
-    if process.name.startswith("-") and process.name[1:] in SHELLS:  # a login shell
+    if process.name in INFRASTRUCTURE or is_agent(process) or is_terminal_shell(process) or GUARD_PROCESS.search(process.command):
         return True
     if process.command.startswith(APPLICATION) or process.exe.startswith(APPLICATION):
         return True
-    # What an agent runs for itself, an MCP server, is not a job. What it runs as a command goes through a shell.
-    parent = by_pid.get(process.ppid)
-    return parent is not None and is_agent(parent) and process.name not in SHELLS
+    # What an agent runs for itself, a server for its tools and all that server starts, is not a job. What it runs as a command goes through a shell.
+    at, steps = process, 0
+    while steps < 64:
+        parent = by_pid.get(at.ppid)
+        if parent is None:
+            return False
+        if is_agent(parent):
+            return at.name not in SHELLS
+        at, steps = parent, steps + 1
+    return False
 
 
 def children_of(table: list[Process]) -> dict[int, list[int]]:
@@ -323,22 +377,13 @@ def ours(table: list[Process], root: Path, me: int) -> list[Process]:
     under = lambda path: path == text or path.startswith(text + os.sep)
     spared = {process.pid for process in table if protected(process, by_pid)}
     found = {p.pid for p in table if p.pid not in spared and (under(p.cwd) or under(p.exe))}
-    runs = [
-        p.pid
-        for p in table
-        if GUARD_PROCESS.search(p.command) and re.search(r"host_guard\.py\s+run(?:\s|$)", p.command) and (under(p.cwd) or f"--root {text}" in p.command)
-    ]
-    todo = list(found) + runs
+    todo = list(found) + [p.pid for p in table if is_run_of(p, text)]
     while todo:
         for child in children.get(todo.pop(), []):
             if child not in found and child not in spared:
                 found.add(child)
                 todo.append(child)
-    line = set()
-    at = me
-    while at in by_pid and at not in line:
-        line.add(at)
-        at = by_pid[at].ppid
+    line = line_of(table, me)
     return sorted((by_pid[pid] for pid in found if pid not in line), key=lambda process: process.bytes, reverse=True)
 
 
@@ -393,11 +438,17 @@ def stop(pids: list[int], seconds: float = 1.0) -> None:
 # ---- the watcher
 
 
+LOG_AT_MOST = 1 << 20  # What it keeps, and the most any read of it can cost.
+
+
 def record(root: Path, **event) -> None:
     """Write down what happened. Never raises: a watcher must not die of its own bookkeeping, `target/` removed by `cargo clean` among the causes."""
     event["at"] = time.strftime("%Y-%m-%dT%H:%M:%S")
     try:
-        with open(state_dir(root) / "events.log", "a", encoding="utf-8") as log:
+        path = state_dir(root) / "events.log"
+        if size_of(path) > LOG_AT_MOST:
+            os.replace(path, path.with_suffix(".log.1"))
+        with open(path, "a", encoding="utf-8") as log:
             log.write(json.dumps(event) + "\n")
     except OSError as error:
         print(f"host-guard: cannot record {event.get('kind')}: {error}", file=sys.stderr)
@@ -421,14 +472,15 @@ def judged(reading: Reading, mine: list[Process], limits: Limits, baseline: Read
     everything.extend(disk_reasons(reading, limits))
     if baseline and baseline.repo_free_gib - reading.repo_free_gib > limits.stop_disk_growth_gib:
         everything.append(f"the repository's volume lost {baseline.repo_free_gib - reading.repo_free_gib:.1f} GiB during this work, over {limits.stop_disk_growth_gib:.1f}")
+    able = [p for p in mine if not small_and_spared(p, limits)]
     if everything:
-        return [p for p in mine if not small_and_spared(p, limits)], everything, False
+        return able, everything, False
     if len(mine) > limits.processes:
-        return mine[: len(mine) - int(limits.processes)], [f"{len(mine)} processes of ours, over {limits.processes:.0f}"], False
-    if mine and mine[0].bytes > limits.one_process_gib * GIB:
-        return [mine[0]], [f"one process of ours holds {mine[0].bytes / GIB:.2f} GiB, over {limits.one_process_gib:.2f}"], False
-    if total > limits.all_processes_gib * GIB:
-        return [mine[0]], [f"our processes hold {total / GIB:.2f} GiB, over {limits.all_processes_gib:.2f}"], False
+        return able[: len(mine) - int(limits.processes)], [f"{len(mine)} processes of ours, over {limits.processes:.0f}"], False
+    if able and able[0].bytes > limits.one_process_gib * GIB:
+        return [able[0]], [f"one process of ours holds {able[0].bytes / GIB:.2f} GiB, over {limits.one_process_gib:.2f}"], False
+    if able and total > limits.all_processes_gib * GIB:
+        return [able[0]], [f"our processes hold {total / GIB:.2f} GiB, over {limits.all_processes_gib:.2f}"], False
     if reading.used_percent >= limits.stop_used_percent:
         host.append(f"RAM use is {reading.used_percent:.0f}%, at the {limits.stop_used_percent:.0f}% stop line")
     if reading.pressure_level >= limits.stop_pressure_level:
@@ -437,9 +489,9 @@ def judged(reading: Reading, mine: list[Process], limits: Limits, baseline: Read
         host.append(f"swap grew {reading.swap_used_gib - baseline.swap_used_gib:.1f} GiB during this work, over {limits.stop_swap_growth_gib:.1f}")
     if not host:
         return [], [], False
-    if total < limits.worth_stopping_gib * GIB:
+    if total < limits.worth_stopping_gib * GIB or not able:
         return [], host, True
-    return [mine[0]], host, False
+    return [able[0]], host, False
 
 
 def largest_on_host(table: list[Process], count: int = 5) -> list[dict]:
@@ -456,11 +508,11 @@ def note_peak(root: Path, reading: Reading, ours_bytes: int) -> None:
         try:
             peak = json.loads(path.read_text())
             peak = {name: float(peak[name]) for name in now}
-        except (OSError, ValueError, TypeError, KeyError):
+        except Exception:  # A file in any state, nested too deep to parse among them.
             peak = dict.fromkeys(now, 0.0)
         if any(now[name] > peak[name] for name in now):
             path.write_text(json.dumps({name: max(now[name], peak[name]) for name in now}))
-    except OSError as error:
+    except Exception as error:
         print(f"host-guard: cannot note the peak: {error}", file=sys.stderr)
 
 
@@ -514,9 +566,9 @@ def watch(root: Path, limits: Limits, once: bool, idle_seconds: float = 600.0) -
     except OSError:
         pass
     os.chdir("/")
-    baseline, said, unread_said, last_seen = None, [0.0], 0.0, time.monotonic()
+    baseline, said, unread_said, last_seen, busy = None, [0.0], 0.0, time.monotonic(), False
     while True:
-        near, busy = True, False
+        near = True
         try:
             reading, baseline, mine = sample(root, limits, baseline, said)
             near = reading.used_percent >= limits.start_used_percent
@@ -548,14 +600,18 @@ def watcher_pid(root: Path) -> int | None:
         pid = int((state_path(root) / "watch.pid").read_text())
     except (OSError, ValueError):
         return None
-    shown = subprocess.run(["ps", "-ww", "-o", "command=", "-p", str(pid)], capture_output=True, text=True, errors="replace").stdout
-    return pid if GUARD_PROCESS.search(shown) and re.search(r"host_guard\.py\s+watch\b", shown) and f"--root {root}" in shown else None
+    try:
+        shown = subprocess.run(["ps", "-ww", "-o", "command=", "-p", str(pid)], capture_output=True, text=True, errors="replace", timeout=5).stdout
+    except (OSError, subprocess.SubprocessError):
+        return None
+    return pid if GUARD_PROCESS.search(shown) and re.search(r"host_guard\.py\s+watch\b", shown) and names_root(shown, str(root)) else None
 
 
 def healthy(root: Path, limits: Limits) -> bool:
     """Whether a watcher has read the host lately: alive is not enough, since one that cannot read the process table stops nothing."""
     try:
-        return time.time() - (state_path(root) / "sampled").stat().st_mtime < limits.watcher_stale_seconds
+        # Either way: a time in the future, a clock set back, is no proof of having looked.
+        return abs(time.time() - (state_path(root) / "sampled").stat().st_mtime) < limits.watcher_stale_seconds
     except OSError:
         return False
 
@@ -581,8 +637,11 @@ def unseen(root: Path) -> list[dict]:
     except (OSError, ValueError):
         start = 0
     end = size_of(log)
-    if end <= start:
+    if end < start:  # A log replaced or rotated: all of it is new.
+        start = 0
+    if end == start:
         return []
+    start = max(start, end - LOG_AT_MOST)
     with open(log, "rb") as lines:
         lines.seek(start)
         text = lines.read()
@@ -614,21 +673,26 @@ def said_of(event: dict) -> str:
 # What may use real memory or write much, where a command stands, so that the word in a message or a search is not taken for one. `cargo fmt` is
 # neither. This is a courtesy to the host, not its guard: what reaches past it the watcher still holds, and the record says so.
 BEFORE = r"(?:^|[;&|({`'\"\n]|\b(?:do|then|else|if|while|until|env|nohup|xargs|sudo|command|bash|sh)\s|!\s)\s*(?:\w+=\S*\s+)*(?:(?:timeout\s+\S+|nice(?:\s+-n\s*\S+)?|time|exec)\s+)*"
-HEAVY = re.compile(BEFORE + r"(?:\S*/)?(?:cargo(?!\s+fmt\b)[\w-]*|g?make|rustc|mdbook|qemu-system\S*|archogen|archogen-plan-check|build_book\.sh)(?=[\s;&|)'\"`]|$)|/install/archogen")
+HEAVY = re.compile(BEFORE + r"(?:[^\s=]*/)?(?:cargo(?!\s+fmt\b)[\w-]*|g?make|rustc|mdbook|qemu-system\S*|archogen|archogen-plan-check|build_book\.sh)(?=[\s;&|)'\"`]|$)|/install/archogen")
 BUILDERS = {"cargo", "rustc", "make", "gmake"}
-# What is safe at any line, since a host in trouble must stay readable and it must be possible to free disk. Each stage of a command must be one.
+KILL_BY_NAME = re.compile(r"(?:^|[;&|(\n]|\s)(?:pkill|killall)(?=\s)")
+# What is safe at any line, since a host in trouble must stay readable and it must be possible to free disk. Each stage of a command must be one, by
+# its bare name. `pkill` is not among them: killing by a name is the one act this record blames for stopping another project's build.
 READERS = {
     "ps", "pgrep", "sysctl", "vm_stat", "df", "du", "lsof", "memory_pressure", "uptime", "sort", "uniq", "head", "tail", "grep", "cut", "wc", "tr",
-    "cat", "ls", "stat", "date", "echo", "printf", "true", ":", "cd", "export", "kill", "pkill", "rm",
+    "cat", "ls", "stat", "date", "echo", "printf", "true", ":", "cd", "rm",
 }
-GUARD_READS = {"status", "check", "ensure", "stop"}
+GUARD_READS = {"status", "check", "ensure"}
+SCRATCH_SETTINGS = re.compile(r"(?:TMPDIR|TMP|TEMP|CARGO_HOME|XDG_CACHE_HOME|R)=")
+WRITES_OR_SPENDS = re.compile(r"-o\b|-S\b|--output|--compress-program|--no-index|--ext-diff")
 
 
 def is_read(command: str) -> bool:
-    """Whether every stage of `command` only reads the host, frees disk, or stops what is ours. Nothing may ride in: no substitution, no background,
-    no redirection but away from the screen. Quotes are not parsed, so a `|` inside one refuses a read, which is the safe way to be wrong."""
+    """Whether every stage of `command` only reads the host or frees disk. No substitution, function, subshell, background or redirection but away from the
+    screen. Quotes are not parsed, so a `|` inside one refuses a read, which is the safe way to be wrong. This keeps accident out, and not an agent set on
+    going round it: a program of the same name earlier on the path is not looked for."""
     text = re.sub(r"\s*\d?>\s*/dev/null|\s*\d>&\d", " ", command)
-    if re.search(r"[<>`]|\$\(", text) or re.search(r"(?<!&)&(?!&)", text):
+    if re.search(r"[<>`(){}]|\$\(", text) or re.search(r"(?<!&)&(?!&)", text):
         return False
     said = False
     for stage in re.split(r"\|\||&&|[;|\n]", text):
@@ -636,18 +700,24 @@ def is_read(command: str) -> bool:
         if not words:
             continue
         said = True
-        head = os.path.basename(words[0])
+        head, rest = words[0], words[1:]
+        if any(WRITES_OR_SPENDS.match(word) for word in rest):
+            return False
         if head in READERS:
             continue
-        if head == "top" and "-l" in words:
+        if head == "top" and "-l" in rest:
             continue
-        if head == "mkdir" and all(w == "-p" or "target/" in w for w in words[1:]):
+        if head == "kill" and all(re.fullmatch(r"-\w+|\d+", word) for word in rest):
             continue
-        if head == "git" and len(words) > 1 and words[1] in ("status", "log", "diff"):
+        if head == "export" and all(SCRATCH_SETTINGS.match(word) for word in rest):
             continue
-        if head.startswith("python"):
-            rest = [w for w in words[1:] if not w.startswith("-")]
-            if len(rest) >= 2 and os.path.basename(rest[0]) == "host_guard.py" and rest[1] in GUARD_READS:
+        if head == "mkdir" and all(word == "-p" or "target/" in word for word in rest):
+            continue
+        if head == "git" and rest and rest[0] in ("status", "log", "diff"):
+            continue
+        if os.path.basename(head).startswith("python"):
+            given = [word for word in rest if word not in ("-I", "-B", "-E", "-s")]
+            if len(given) >= 2 and os.path.basename(given[0]) == "host_guard.py" and given[1] in GUARD_READS and not given[0].startswith("-"):
                 continue
         return False
     return said
@@ -660,7 +730,20 @@ def code_of(command: str) -> str:
 
 
 def heavy_running(root: Path) -> list[Process]:
-    return [p for p in ours(processes(), root, os.getpid()) if p.name in BUILDERS]
+    """What of ours is a heavy job now: a build, or another `run` whose job has started. A `run` still waiting its turn has started nothing, and only looks at the host."""
+    table = processes()
+    me = os.getpid()
+    text = str(root)
+    line = line_of(table, me)
+    children = children_of(table)
+    by_pid = {process.pid: process for process in table}
+    running = [p for p in ours(table, root, me) if p.name in BUILDERS]
+    for process in table:
+        if process.pid not in line and is_run_of(process, text):
+            # The watcher it may have started is its child too, and no job.
+            if any(by_pid[pid].name not in SPARED_WHEN_SMALL and not GUARD_PROCESS.search(by_pid[pid].command) for pid in children.get(process.pid, []) if pid in by_pid):
+                running.append(process)
+    return running
 
 
 def run(root: Path, limits: Limits, command: list[str], wait_seconds: float = 0.0) -> int:
@@ -671,20 +754,23 @@ def run(root: Path, limits: Limits, command: list[str], wait_seconds: float = 0.
     for event in unseen(root):
         print(f"host-guard: {said_of(event)}", file=sys.stderr)
     ensure(root)
-    nested = os.environ.get("HOST_GUARD_JOB") == str(root)
+    # A job nested in its own `run` is no rival. That is read from the process table, so no environment can claim it.
+    table = processes()
+    by_pid = {process.pid: process for process in table}
+    nested = any(is_run_of(by_pid[pid], str(root)) for pid in line_of(table, os.getpid()) - {os.getpid()})
     job_lock = open(state / "job.lock", "a")
     begun = time.monotonic()
 
     def why_not() -> list[str]:
         try:
             reasons = start_reasons(read_host(root), limits)
+            if nested:
+                return reasons
+            running = heavy_running(root)
         except Exception as error:
             return [f"the host cannot be read, so nothing says this is safe: {error}"]
-        if nested:
-            return reasons
-        running = heavy_running(root)
         if running:
-            reasons.append(f"one heavy job at a time, and {running[0].name} (pid {running[0].pid}) is running")
+            reasons.append(f"one heavy job at a time, and {running[0].label} (pid {running[0].pid}) is running")
         try:
             fcntl.flock(job_lock, fcntl.LOCK_EX | fcntl.LOCK_NB)
         except OSError:
@@ -706,11 +792,19 @@ def run(root: Path, limits: Limits, command: list[str], wait_seconds: float = 0.
     jobs = str(max(2, (os.cpu_count() or 4) // 3))
     env.setdefault("CARGO_BUILD_JOBS", jobs)
     env.setdefault("RUST_TEST_THREADS", jobs)
-    env["HOST_GUARD_JOB"] = str(root)
     logged = size_of(state / "events.log")
-    # At least this low, however many guards a job is nested in.
-    job = subprocess.Popen(command, env=env, preexec_fn=lambda: os.nice(max(0, 10 - os.nice(0))))
-    signal.signal(signal.SIGTERM, lambda *_: job.terminate())
+    # In a session of its own, so that all of it can be stopped with no process table to read. The job holds the lock too, so it keeps its turn if this process
+    # is killed. At least this low a priority, however many guards it is nested in.
+    job = subprocess.Popen(command, env=env, start_new_session=True, pass_fds=(job_lock.fileno(),), preexec_fn=lambda: os.nice(max(0, 10 - os.nice(0))))
+
+    def to_job(number: int, *_: object) -> None:
+        try:
+            os.killpg(job.pid, number)
+        except OSError:
+            pass
+
+    for number in (signal.SIGTERM, signal.SIGINT, signal.SIGHUP):
+        signal.signal(number, to_job)
     blind_since = None
     while True:
         try:
@@ -718,12 +812,11 @@ def run(root: Path, limits: Limits, command: list[str], wait_seconds: float = 0.
             break
         except subprocess.TimeoutExpired:
             pass
-        # An unwatched job is what this exists to prevent: keep a watcher running, and end the job if none can see.
+        # An unwatched job is what this exists to prevent: keep a watcher running, and end the job if none can see. Nothing here may raise past that.
         try:
             ensure(root)
-            state_dir(root)
-            (state_path(root) / "heartbeat").touch()
-        except OSError:
+            (state_dir(root) / "heartbeat").touch()
+        except Exception:
             pass
         if healthy(root, limits):
             blind_since = None
@@ -731,14 +824,18 @@ def run(root: Path, limits: Limits, command: list[str], wait_seconds: float = 0.
             blind_since = blind_since if blind_since is not None else time.monotonic()
             if time.monotonic() - blind_since > limits.watcher_stale_seconds:
                 print("host-guard: no watcher can read the host, so this job is unwatched: stopping it", file=sys.stderr)
-                table = processes()
-                stop(tree_of(job.pid, table, limits))
+                to_job(signal.SIGTERM)
+                try:
+                    job.wait(timeout=2)
+                except subprocess.TimeoutExpired:
+                    pass
+                to_job(signal.SIGKILL)
                 job.wait()
                 return UNCLEAR
     try:
         with open(state_path(root) / "events.log", "rb") as lines:
             lines.seek(logged)
-            text = lines.read()
+            text = lines.read(LOG_AT_MOST)
     except OSError:
         text = b""
     for line in text.splitlines():
@@ -755,10 +852,13 @@ def hook(root: Path, limits: Limits) -> int:
     """Exit 2 refuses the command, and what it prints goes to the agent. Anything it cannot do refuses, but never a read, so a broken guard can be
     looked at and its state removed."""
     try:
-        command = json.load(sys.stdin).get("tool_input", {}).get("command", "")
-    except (ValueError, AttributeError):
-        command = ""
-    if command and is_read(command):
+        command = json.load(sys.stdin)["tool_input"]["command"]
+        if not isinstance(command, str) or not command.strip():
+            raise ValueError("no command")
+    except Exception as error:
+        print(f"host-guard: refused: this cannot be read as a command to judge: {error!r}", file=sys.stderr)
+        return 2
+    if is_read(command):
         return 0
     try:
         return judge_command(root, limits, command)
@@ -768,6 +868,9 @@ def hook(root: Path, limits: Limits) -> int:
 
 
 def judge_command(root: Path, limits: Limits, command: str) -> int:
+    if KILL_BY_NAME.search(code_of(command)) and str(root) not in command:
+        print("host-guard: refused: never by a program's name across the host, which can stop another project's work. Stop what is ours by its pid, or name this repository's path in the pattern.", file=sys.stderr)
+        return 2
     ensure(root)
     state = state_dir(root)
     (state / "heartbeat").touch()
@@ -820,22 +923,50 @@ def status(root: Path, limits: Limits) -> int:
     pid = watcher_pid(root)
     print(("watcher: running, and reading the host" if healthy(root, limits) else "watcher: running, and BLIND: it has not read the host lately") if pid else "watcher: not running")
     try:
-        print(f"peak since its start: {(state / 'peak.json').read_text()}")
+        print(f"peak since its start: {(state / 'peak.json').read_text(errors='replace')}")
     except OSError:
         pass
     try:
-        lines = (state / "events.log").read_bytes().splitlines()[-5:]
+        with open(state / "events.log", "rb") as log:
+            log.seek(max(0, size_of(state / "events.log") - LOG_AT_MOST))
+            lines = log.read().splitlines()
     except OSError:
         lines = []
+    events = []
     for line in lines:
         try:
             event = json.loads(line)
-            print(said_of(event) if event.get("kind") == "stopped" else f"{event.get('at')}: {event.get('kind')}: {event.get('reasons', event.get('error'))}; largest: {[(h['name'], h['gib']) for h in event.get('largest', [])[:3]]}")
-        except (ValueError, AttributeError, KeyError, TypeError):
+        except ValueError:
+            continue
+        if isinstance(event, dict):
+            events.append(event)
+    # What was stopped is what it is asked: the last few of those, however many other lines came after.
+    for event in [e for e in events if e.get("kind") == "stopped"][-3:]:
+        try:
+            print(said_of(event))
+        except (AttributeError, KeyError, TypeError):
             print("a line of the log does not read")
+    for event in [e for e in events if e.get("kind") != "stopped"][-2:]:
+        print(f"{event.get('at')}: {event.get('kind')}: {event.get('reasons', event.get('error'))}")
     reasons = start_reasons(reading, limits)
     print("a heavy job may start" if not reasons else f"a heavy job may not start: {'; '.join(reasons)}")
     return 0
+
+
+def canonical(root: Path) -> Path:
+    """A root as the volume spells it. This volume ignores case, and what the kernel says of a process's directory does not: spelt otherwise, nothing would be ours."""
+    resolved = root.resolve()
+    try:
+        fd = os.open(str(resolved), os.O_RDONLY)
+    except OSError:
+        return resolved
+    try:
+        spelt = fcntl.fcntl(fd, fcntl.F_GETPATH, bytes(1024)).split(b"\0", 1)[0].decode()
+    except (OSError, ValueError):
+        return resolved
+    finally:
+        os.close(fd)
+    return Path(spelt) if spelt.lower() == str(resolved).lower() else resolved
 
 
 def main(argv: list[str]) -> int:
@@ -849,7 +980,7 @@ def main(argv: list[str]) -> int:
             return subprocess.run(command).returncode
         print("host-guard: this reads macOS only", file=sys.stderr)
         return 0 if verb == "hook" else 2
-    root, overrides, once, wait_seconds = repository_root(), {}, False, 0.0
+    root, overrides, once, wait_seconds, named = repository_root(), {}, False, 0.0, False
     while args and args[0] in ("--root", "--limits", "--once", "--wait"):
         flag = args.pop(0)
         if flag == "--once":
@@ -857,9 +988,13 @@ def main(argv: list[str]) -> int:
         elif flag == "--wait":
             wait_seconds = float(args.pop(0))
         elif flag == "--root":
-            root = Path(args.pop(0)).resolve()
+            root, named = Path(args.pop(0)), True
         else:
             overrides = json.loads(args.pop(0))
+    root = canonical(root)
+    # A `run` says whose it is on its command line, which is how the watcher knows its job is ours, wherever it was started from.
+    if verb == "run" and not named:
+        os.execv(sys.executable, [sys.executable, "-I", "-B", str(Path(__file__).resolve()), "run", "--root", str(root), *argv[1:]])
     try:
         limits = tightened(overrides)
     except ValueError as error:

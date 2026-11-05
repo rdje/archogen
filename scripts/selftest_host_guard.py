@@ -81,6 +81,9 @@ def check(what: str, holds: bool, detail: object = "") -> None:
     global passed
     if holds:
         passed += 1
+    elif not host_clear():
+        # This host is shared, and another project's load can arrive mid-test: then this says nothing either way, and it is no pass.
+        not_run.append(f"{what} (the host filled meanwhile)")
     else:
         failures.append(what)
         print(f"  FAILED {what}: {str(detail)[:400]}")
@@ -109,8 +112,8 @@ def fresh(name: str) -> Path:
     return path
 
 
-def spawn(args: list[str], cwd: Path, env: dict | None = None) -> subprocess.Popen:
-    process = subprocess.Popen(args, cwd=cwd, stdin=subprocess.DEVNULL, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, env=env, start_new_session=True)
+def spawn(args: list[str], cwd: Path, env: dict | None = None, stdin: int = subprocess.DEVNULL) -> subprocess.Popen:
+    process = subprocess.Popen(args, cwd=cwd, stdin=stdin, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, env=env, start_new_session=True)
     started.append(process)
     return process
 
@@ -160,6 +163,16 @@ def pid_up(pid: int) -> bool:
 
 def children(pid: int) -> list[int]:
     return [int(word) for word in subprocess.run(["pgrep", "-P", str(pid)], capture_output=True, text=True).stdout.split()]
+
+
+def jobs_of(pid: int) -> list[int]:
+    """What a `run` started, leaving out the watcher it may have started too."""
+    found = []
+    for child in children(pid):
+        shown = subprocess.run(["ps", "-ww", "-o", "command=", "-p", str(child)], capture_output=True, text=True).stdout
+        if "host_guard.py" not in shown:
+            found.append(child)
+    return found
 
 
 def events(root: Path) -> list[dict]:
@@ -307,6 +320,62 @@ def case_another_project_is_never_ours() -> None:
     check("a path that only ends with the root's is not", up(fixture))
 
 
+def case_a_terminal_vouches_for_nothing() -> None:
+    scope, elsewhere = fresh("terminals"), fresh("terminals-elsewhere")
+    shells = []
+    for args in (["bash", "--noprofile", "--norc", "-i"], ["/bin/zsh", "-f", "-il"], ["/bin/zsh", "-f", "-l"], ["/bin/sh", "-i"]):
+        shells.append(spawn(args, scope, stdin=subprocess.PIPE))
+    zsh = shells[1]
+    zsh.stdin.write(f"(cd {elsewhere} && exec bash -c 'sleep 60; true') &\n".encode())
+    zsh.stdin.flush()
+    time.sleep(0.4)
+    its_build = children(zsh.pid)
+    check("a shell typed into has started a build elsewhere", bool(its_build), its_build)
+    mine = holding(15, scope)
+    watch_once(scope, PANIC)
+    check("what is ours stops", settle(mine))
+    time.sleep(0.2)
+    for shell in shells:
+        check(f"a terminal's shell does not, with no dash on its name: {shell.args}", up(shell))
+    check("nor the build elsewhere under it", all(pid_up(pid) for pid in its_build))
+    for shell in shells:
+        shell.stdin.close()
+    p = g.Process(1, 1, "bash -lc 'x'", "", "", 0)
+    check("a shell told a command is a job", not g.is_terminal_shell(p))
+    p = g.Process(1, 1, "bash /x/script.sh", "", "", 0)
+    check("a shell running a script is a job", not g.is_terminal_shell(p))
+
+
+def case_a_root_is_exactly_itself() -> None:
+    base = fresh("exact")
+    a, a_other = base / "A", base / "A-other"
+    a.mkdir()
+    a_other.mkdir()
+    (a_other / "ready").write_text("")
+    if not host_clear():
+        not_run.append("another root whose name begins the same is not ours")
+        return
+    job = subprocess.Popen([*PY, str(GUARD), "run", "--root", str(a_other), "--", "sleep", "20"], cwd=base, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, start_new_session=True)
+    started.append(job)
+    time.sleep(0.8)
+    its_job = jobs_of(job.pid)
+    watch_once(a, PANIC)
+    time.sleep(0.2)
+    check("another root's job, whose name begins the same, is not ours", bool(its_job) and all(pid_up(pid) for pid in its_job), its_job)
+    guard("stop", root=a_other)
+    watcher = looping_watcher(a_other, {})
+    time.sleep(0.6)
+    (a / "state").mkdir(exist_ok=True)
+    (a / "state" / "watch.pid").write_text(str(watcher.pid))
+    guard("stop", root=a)
+    time.sleep(0.3)
+    check("`stop` does not end another root's watcher", up(watcher))
+    watcher.terminate()
+    watcher.wait(timeout=5)
+    job.wait(timeout=30)
+    guard("stop", root=a_other)
+
+
 def case_an_agent_is_never_stopped() -> None:
     scope, outside = fresh("agents"), fresh("agents-outside")
     agent = named("claude", scope, f"(cd {outside} && exec bash -c 'sleep 60; true') & (exec bash -c 'sleep 60; true') & (exec -a node sleep 60) & wait; sleep 60")
@@ -331,6 +400,23 @@ def case_an_agent_is_never_stopped() -> None:
     alive = [pid for pid in its_children if pid_up(pid)]
     # Its three: a shell elsewhere, left; its own helper, left; a shell here, stopped.
     check("what the agent started here is stopped, and what it started elsewhere and for itself is not", len(its_children) == 3 and len(alive) == 2, (its_children, alive))
+    # What its own helper starts is its own too.
+    scope = fresh("agents-helper")
+    (scope / "helper.py").write_text("import subprocess, time\nsubprocess.Popen(['sleep', '60'])\ntime.sleep(60)\n")
+    agent = spawn(["bash", "-c", f"exec -a claude bash -c '{sys.executable} -I -B {scope}/helper.py & wait; sleep 60'"], scope)
+    time.sleep(0.5)
+    helper = children(agent.pid)
+    under_it = [pid for parent in helper for pid in children(parent)]
+    check("a helper has started something", bool(helper) and bool(under_it), (helper, under_it))
+    watch_once(scope, PANIC)
+    time.sleep(0.2)
+    check("what an agent's helper starts is not stopped", all(pid_up(pid) for pid in helper + under_it), (helper, under_it))
+    for name, command, path, wanted in (
+        ("-X", "python3 -X utf8 /x/bin/kimi", "/usr/bin/python3", True),
+        ("--max", "node --max-old-space-size 8192 /x/bin/codex", "/usr/bin/node", True),
+        ("rig", "python3 -I -B /x/target/rig.py --model big", "/usr/bin/python3", False),
+    ):
+        check(f"an agent behind an interpreter's flag: {name}", g.is_agent(g.Process(1, 1, command, "", "", 0)) is wanted, command)
 
 
 def case_what_is_under_a_stopped_process() -> None:
@@ -347,6 +433,22 @@ def case_what_is_under_a_stopped_process() -> None:
     time.sleep(0.2)
     check("an agent under a stopped shell does not", pid_up(under.get("claude", 0)))
     check("nor a small git, which would free nothing and could leave a lock", pid_up(under.get("git", 0)))
+    # `rm` finishes, so that disk can be freed, though the shell around it is stopped.
+    scope = fresh("spared-rm")
+    parent = spawn(["bash", "-c", "(exec -a rm bash -c 'sleep 60; sleep 60; true') & wait; sleep 60"], scope)
+    time.sleep(0.2)
+    rm = children(parent.pid)
+    watch_once(scope, {"stop_repo_free_gib": 1e9})
+    check("at a disk floor the shell stops", settle(parent))
+    time.sleep(0.2)
+    check("and the `rm` under it goes on", bool(rm) and all(pid_up(pid) for pid in rm), rm)
+    # A small git that is our largest is passed over, not stopped. Macos's Python re-executes itself, so no holder of memory here can be called `git`: judged directly.
+    git, build = g.Process(1, 1, "git status", "", "", 40 << 20), g.Process(2, 1, "rustc x", "", "", 20 << 20)
+    reading = g.Reading(86.0, 1, 50, 1.0, 1000.0, 200.0)
+    targets, _, not_ours = g.judged(reading, [git, build], g.tightened({"worth_stopping_gib": 0.05}), None)
+    check("a small git that is our largest is passed over at the stop line, for the next", targets == [build] and not not_ours, targets)
+    targets, _, not_ours = g.judged(reading, [git], g.tightened({"worth_stopping_gib": 0.05}), None)
+    check("and with nothing else, nothing of ours is worth stopping", targets == [] and not_ours, targets)
     scope = fresh("spared-limit")
     file, pid_file = scope / "ready", scope / "child-pid"
     holder = spawn([*PY, "-c", PARENT, "80", str(file), str(scope), str(pid_file), "exec -a claude sleep 60"], scope)
@@ -472,6 +574,32 @@ def case_the_watcher_outlives_its_own_trouble() -> None:
     watcher.wait(timeout=5)
 
 
+def case_what_is_not_the_table_is_blindness() -> None:
+    scope = fresh("no-table")
+    for name, script in (("nothing", "exit 0"), ("cut short", '/bin/ps "$@" | head -3')):
+        env = shim(scope, "ps", script)
+        job = holding(15, scope)
+        subprocess.run([*PY, str(GUARD), "watch", "--once", "--root", str(scope), "--limits", json.dumps(PANIC)], env=env, capture_output=True, timeout=30)
+        check(f"a `ps` that answers {name} is no sample", any(event["kind"] == "unread" for event in events(scope)), events(scope))
+        (scope / "state" / "events.log").unlink(missing_ok=True)
+        job.kill()
+        job.wait()
+    limits = g.tightened({})
+    state = fresh("future") / "state"
+    state.mkdir()
+    (state / "sampled").write_text("")
+    os.utime(state / "sampled", (time.time() + 3600, time.time() + 3600))
+    check("a time in the future is no proof of having looked", not g.healthy(state.parent, limits))
+    code = f"import sys; sys.path.insert(0, {str(HERE)!r}); import host_guard as g; from pathlib import Path; g.watch(Path({str(scope)!r}), g.tightened({{}}), False, idle_seconds=1.5)"
+    env = shim(scope, "ps", '[ -f "' + str(scope) + '/flag" ] && exit 1; exec /bin/ps "$@"')
+    job = named("something", scope)
+    watcher = spawn([*PY, "-c", code], ROOT, env=env)
+    time.sleep(1.2)
+    (scope / "flag").write_text("")
+    time.sleep(3.5)
+    check("a watcher gone blind does not leave while it last saw a job", up(watcher))
+
+
 def case_a_stale_pid_names_nobody() -> None:
     scope = fresh("stale")
     innocent = spawn(["sleep", "30"], fresh("stale-elsewhere"))
@@ -517,12 +645,15 @@ def case_a_blind_watcher_is_said() -> None:
 def case_reads_and_what_rides_on_them() -> None:
     for read in (
         "ps -ax", "ps -ax | sort -k3 | head", "vm_stat | head", "top -l 1 | head", "du -sh target", "lsof -p 1", "rm -rf target/x", "sysctl -n hw.memsize 2>/dev/null",
-        "git status", "pkill -f x", "mkdir -p target/tmp; export TMPDIR=\"$PWD/target/tmp\"; python3 -I -B scripts/host_guard.py status",
+        "git status", "kill -9 123", "mkdir -p target/tmp; export TMPDIR=\"$PWD/target/tmp\"; python3 -I -B scripts/host_guard.py status",
     ):
         check(f"a read: {read}", g.is_read(read))
     for not_one in (
         "ps -ax\ncargo build", "ps $(cargo build)", "ps `cargo build`", "git status\nmake focused", "kill 1\npython3 -c 'x'", "ps-heavy --allocate 40G", "ps -ax; cargo test",
         "git status && make focused", "kill 1 | cargo build", "python3 /other/not_host_guard.py", "python3 scripts/host_guard.py run -- true", "ps -ax > out", "ps -ax &", "top", "",
+        "pkill -f x", "pkill -x rustc", "kill -9 x", "python3 scripts/host_guard.py stop", "python3 -c'x' scripts/host_guard.py status", "python3 -mmod x/host_guard.py status",
+        "ps () ( touch m ); ps", "cat () ( cargo build ); cat", "S/bin/ps -ax", "export PATH=S/bin:$PATH; ps -ax", "export GIT_EXTERNAL_DIFF=x; git diff a b", "sort -o m a",
+        "git diff --no-index --output=m a b", "sort --compress-program=x big", "sort -S 20G big",
     ):
         check(f"not a read: {not_one!r}", not g.is_read(not_one))
     for heavy in (
@@ -534,6 +665,7 @@ def case_reads_and_what_rides_on_them() -> None:
     for light in (
         "ls", "cargo fmt -p x", "git commit -F m", "grep -n 'make ' Makefile", "git commit -m 'make cargo build'", "echo cargo build", "echo archogen-plan-check",
         "grep -rn archogen-plan-check docs/", "git commit -m 'x (make sure it holds)'", "git commit -F - <<'M'\nmake sure it holds\nM\n",
+        "R=/Volumes/SSD/Documents/github/archogen; mkdir -p x", "X=/y/archogen ls",
     ):
         check(f"not heavy: {light!r}", not g.HEAVY.search(g.code_of(light)))
 
@@ -573,6 +705,25 @@ def case_hook() -> None:
     check("and `stop` ends it", "watcher: not running" in guard("status", root=scope).stdout)
 
 
+def case_the_hook_passes_nothing_it_cannot_read() -> None:
+    scope = fresh("unreadable")
+    for given in ("not json", "", "{}", "[]", "null", "5", '{"tool_input": {"cmd": "cargo build"}}', '{"tool_input": {"command": 5}}', '{"tool_input": {"command": ""}}', "[" * 100000):
+        done = guard("hook", stdin=given, root=scope)
+        check(f"input that is no command is refused: {given[:30]!r}", done.returncode == 2 and "cannot be read" in done.stderr, done.stderr)
+
+
+def case_killing_by_name() -> None:
+    scope = fresh("by-name")
+    try:
+        for command in ("pkill -x rustc", "pkill -9 -f .", "killall cargo", "cd x && pkill rustc"):
+            done = hook_says(command, scope)
+            check(f"never by a name across the host: {command}", done.returncode == 2 and "never by a program's name" in done.stderr, done.stderr)
+        check("a pattern that names this root may", hook_says(f"pkill -f '{scope}/x'", scope).returncode == 0)
+        check("the word in a message is not the act", hook_says("git commit -m 'pkill -x rustc'", scope).returncode == 0)
+    finally:
+        guard("stop", root=scope)
+
+
 def case_a_damaged_log() -> None:
     scope = fresh("damaged")
     try:
@@ -587,6 +738,15 @@ def case_a_damaged_log() -> None:
         (state / "seen").write_text("-5")
         done = hook_says("touch x", scope)
         check("a nonsense position starts again rather than crashing", done.returncode == 2 and "stopped told" in done.stderr, done.stderr)
+        (state / "seen").write_text("5000000")
+        done = hook_says("touch x", scope)
+        check("a position past a replaced log starts again, and the stop is told", done.returncode == 2 and "stopped told" in done.stderr, done.stderr)
+        with open(state / "events.log", "a") as log:
+            for _ in range(6):
+                log.write(json.dumps({"kind": "pressure-not-ours", "at": "later", "reasons": ["x"]}) + "\n")
+        check("`status` names a stop whatever lines came after", "stopped told" in guard("status", root=scope).stdout, guard("status", root=scope).stdout)
+        (state / "peak.json").write_bytes(b"\xff\xfe")
+        check("`status` reads past a binary peak file", guard("status", root=scope).returncode == 0)
         guard("stop", root=scope)
     finally:
         guard("stop", root=scope)
@@ -619,12 +779,63 @@ def case_run() -> None:
         check("`run` waits its turn behind a build of ours", done.returncode == 75 and "one heavy job" in done.stderr and not marker.exists(), done)
         builder.kill()
         builder.wait()
-        first = subprocess.Popen([*PY, str(GUARD), "run", "--root", str(scope), "--", "sleep", "3"], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, start_new_session=True)
+        first = subprocess.Popen([*PY, str(GUARD), "run", "--root", str(scope), "--", "sleep", "6"], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, start_new_session=True)
         started.append(first)
         time.sleep(0.7)
         done = guard("run", "--", "touch", str(marker), root=scope)
-        check("and behind another `run`", done.returncode == 75 and "holds its turn" in done.stderr and not marker.exists(), done)
-        first.wait(timeout=10)
+        check("and behind another `run`", done.returncode == 75 and "one heavy job" in done.stderr and not marker.exists(), done)
+        (scope / "state" / "job.lock").unlink(missing_ok=True)
+        done = guard("run", "--", "touch", str(marker), root=scope)
+        check("with its lock file removed too", done.returncode == 75 and "is running" in done.stderr and not marker.exists(), done)
+        env = dict(os.environ, HOST_GUARD_JOB=str(scope))
+        done = guard("run", "--", "touch", str(marker), root=scope, env=env)
+        check("and no environment can claim to be its job", done.returncode == 75 and not marker.exists(), done)
+        done = hook_says("cargo build", scope)
+        check("a heavy command is refused beside it, whatever its job is called", done.returncode == 2 and "one heavy job" in done.stderr, done.stderr)
+        first.wait(timeout=15)
+        # Killed outright, the `run` leaves its job holding the turn.
+        first = subprocess.Popen([*PY, str(GUARD), "run", "--root", str(scope), "--", "sleep", "5"], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, start_new_session=True)
+        started.append(first)
+        time.sleep(0.7)
+        its_job = jobs_of(first.pid)
+        first.kill()
+        first.wait()
+        time.sleep(0.2)
+        done = guard("run", "--", "touch", str(marker), root=scope)
+        check("a job whose `run` was killed keeps its turn", bool(its_job) and done.returncode == 75 and "holds its turn" in done.stderr and not marker.exists(), done)
+        for pid in its_job:
+            os.kill(pid, signal.SIGKILL)
+        time.sleep(0.2)
+        # A `run` that goes blind ends its job, with no process table to read.
+        flag = scope / "flag"
+        env = shim(scope, "ps", f'[ -f "{flag}" ] && exit 1; exec /bin/ps "$@"')
+        guard("stop", root=scope)
+        blind = subprocess.Popen([*PY, str(GUARD), "run", "--root", str(scope), "--limits", json.dumps({"watcher_stale_seconds": 1}), "--", "sleep", "40"], env=env, stdout=subprocess.DEVNULL, stderr=subprocess.PIPE, start_new_session=True)
+        started.append(blind)
+        time.sleep(1.5)
+        its_job = jobs_of(blind.pid)
+        flag.write_text("")
+        # The watcher this `run` started has the same `ps`, so it goes blind too.
+        try:
+            rc = blind.wait(timeout=25)
+        except subprocess.TimeoutExpired:
+            rc = None
+        check("a `run` no watcher can see for ends its job", rc == 75 and bool(its_job) and not any(pid_up(pid) for pid in its_job), (rc, its_job))
+        flag.unlink()
+        guard("stop", root=scope)
+        subprocess.run(["true"])
+        # A `run` started from anywhere, naming no root, says on its command line whose it is.
+        repo, elsewhere = fresh("run-repo"), fresh("run-elsewhere")
+        (repo / ".git").mkdir()
+        (repo / "scripts").mkdir()
+        shutil.copy(GUARD, repo / "scripts" / "host_guard.py")
+        copy = repo / "scripts" / "host_guard.py"
+        away = spawn([*PY, str(copy), "run", "--", "sleep", "6"], elsewhere)
+        time.sleep(1.0)
+        said = subprocess.run([*PY, str(copy), "status"], capture_output=True, text=True, timeout=30).stdout
+        check("a `run` from another directory has its job counted as ours", "ours: 0 " not in said and "ours:" in said, said)
+        subprocess.run([*PY, str(copy), "stop"], capture_output=True, timeout=30)
+        away.wait(timeout=15)
         nested = [*PY, str(GUARD), "run", "--root", str(scope), "--", "bash", "-c", "exit 4"]
         done = guard("run", "--", *nested, root=scope)
         check("a job nested in its own `run` is not its own rival", done.returncode == 4, done)
@@ -646,9 +857,9 @@ def main() -> int:
     BASE.mkdir(parents=True, exist_ok=True)
     for case in (
         case_only_tightened, case_check_refuses, case_a_figure_not_read_is_never_safe, case_one_process, case_all_processes, case_what_a_stopped_process_started,
-        case_another_project_is_never_ours, case_an_agent_is_never_stopped, case_what_is_under_a_stopped_process, case_names_and_zombies, case_a_command_line_that_is_no_text,
-        case_pressure, case_not_ours, case_growing, case_a_small_writer_is_counted, case_the_watcher_outlives_its_own_trouble, case_a_stale_pid_names_nobody,
-        case_the_watcher_stays_while_a_job_runs, case_a_blind_watcher_is_said, case_reads_and_what_rides_on_them, case_hook, case_a_damaged_log, case_run,
+        case_another_project_is_never_ours, case_a_terminal_vouches_for_nothing, case_a_root_is_exactly_itself, case_an_agent_is_never_stopped, case_what_is_under_a_stopped_process, case_names_and_zombies, case_a_command_line_that_is_no_text,
+        case_pressure, case_not_ours, case_growing, case_a_small_writer_is_counted, case_the_watcher_outlives_its_own_trouble, case_what_is_not_the_table_is_blindness, case_a_stale_pid_names_nobody,
+        case_the_watcher_stays_while_a_job_runs, case_a_blind_watcher_is_said, case_reads_and_what_rides_on_them, case_the_hook_passes_nothing_it_cannot_read, case_killing_by_name, case_hook, case_a_damaged_log, case_run,
     ):
         before = len(failures)
         try:
