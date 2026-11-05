@@ -2083,6 +2083,8 @@ fn out_routes() -> Vec<(&'static str, Route)> {
             });
             assert!(!dir.exists());
             assert!(beside(&dir, ".building").is_dir());
+            let said = outcome.as_ref().map_or("", |(_, said)| said.as_str());
+            assert!(said.contains("could not be removed"), "{said}");
             outcome
         }),
         ("filled-in-stage", |root| {

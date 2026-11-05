@@ -25,7 +25,7 @@
 //! message per line on standard input and output until the input ends; its records name the same producer, the file
 //! that runs, read once when it starts.
 
-use std::io::{BufRead, Write};
+use std::io::{BufRead, Read, Write};
 use std::path::{Path, PathBuf};
 use std::process::ExitCode;
 
@@ -51,7 +51,8 @@ usage: archogen-plan-check [--profile ID] [--result PATH] [--] DESCRIPTION PLAN
 
   DESCRIPTION      the eADL description, a module or a plain description
   PLAN             the assignment record the search wrote for it, archogen-assignment/2
-  --result PATH    where the result record, archogen-result/1, is written; without it, on standard output
+  --result PATH    where the result record, archogen-result/1, is written; without it, on standard output. It replaces
+                   only an empty file or a record this engine reads, and keeps its mode
   --               every argument after it is a path, even one that begins with `-`
   --profile ID     the profile the plan was resolved under (default: rt-static-up-v1)
   --mcp            serve the same check as the MCP tool `plan-check`, which takes the texts rather than paths: one
@@ -321,45 +322,87 @@ fn render(err: &mut dyn Write, findings: &[Finding]) {
     }
 }
 
-/// Whether what stands at `--result` is what a result may replace: nothing, an empty file, or a record. Anything else may be
-/// someone's, the description or the plan among them, so it is refused before anything is judged, and a link is not followed.
+/// The most of what stands at `--result` it reads, to tell it is a record.
+const RECORD_AT_MOST: u64 = 1 << 20;
+
+/// Whether `--result` can take a result: what stands there nothing, an empty file or a record this engine reads, and what goes beside
+/// it free. Anything else may be someone's, the description or the plan among them, so it is refused before anything is judged, and a
+/// link is not followed. Only a name found absent is absent.
 fn replaceable(file: &Path) -> Result<(), String> {
-    let Ok(meta) = std::fs::symlink_metadata(file) else {
-        return Ok(());
-    };
     let shown = file.display();
+    let mut part = file.as_os_str().to_owned();
+    part.push(".part");
+    match std::fs::symlink_metadata(&part) {
+        Err(error) if error.kind() == std::io::ErrorKind::NotFound => {}
+        Err(error) => return Err(format!("cannot use `--result {shown}`: {error}")),
+        Ok(_) => {
+            return Err(format!(
+                "{shown}.part stands, where the result is written first: a run that stopped may have left it, so look at it, and move or remove it"
+            ))
+        }
+    }
+    if let Some(parent) = file
+        .parent()
+        .filter(|parent| !parent.as_os_str().is_empty())
+    {
+        if !std::fs::metadata(parent).is_ok_and(|meta| meta.is_dir()) {
+            return Err(format!(
+                "cannot use `--result {shown}`: {} is no directory this user can reach",
+                parent.display()
+            ));
+        }
+    }
+    let meta = match std::fs::symlink_metadata(file) {
+        Err(error) if error.kind() == std::io::ErrorKind::NotFound => return Ok(()),
+        Err(error) => return Err(format!("cannot use `--result {shown}`: {error}")),
+        Ok(meta) => meta,
+    };
     let no_record = || {
-        format!(
-            "{shown} stands at `--result` and is no record, and a result replaces only a record"
-        )
+        format!("{shown} stands at `--result` and is no record this engine reads, and a result replaces only a record")
     };
     if !meta.is_file() {
         return Err(no_record());
     }
-    let bytes = std::fs::read(file).map_err(|error| format!("cannot read {shown}: {error}"))?;
-    if bytes.is_empty() || Record::read(&bytes, 1 << 20).is_ok() {
+    let mut bytes = Vec::new();
+    std::fs::File::open(file)
+        .and_then(|opened| opened.take(RECORD_AT_MOST + 1).read_to_end(&mut bytes))
+        .map_err(|error| format!("cannot read {shown}: {error}"))?;
+    let within = bytes.len() as u64 <= RECORD_AT_MOST;
+    if bytes.is_empty() || (within && Record::read(&bytes, 1 << 20).is_ok()) {
         Ok(())
     } else {
         Err(no_record())
     }
 }
 
-/// Write `text` at `path` whole: beside it, in a file this run makes, then renamed into place. What already stands beside it is
-/// not this run's, so it is refused and left alone, and a link there is never written through.
+/// Write `text` at `path` whole: beside it, in a file this run makes, then renamed into place, keeping the mode of the file it
+/// replaces, private until it does. What already stands beside it is not this run's, so it is refused and left alone, and a link
+/// there is never written through.
 fn write(path: &Path, text: &str) -> std::io::Result<()> {
     let mut part = path.as_os_str().to_owned();
     part.push(".part");
     let part = PathBuf::from(part);
-    let mut file = std::fs::OpenOptions::new()
-        .write(true)
-        .create_new(true)
-        .open(&part)
-        .map_err(|error| {
-            std::io::Error::new(error.kind(), format!("{}: {error}", part.display()))
-        })?;
+    let replacing = std::fs::symlink_metadata(path)
+        .ok()
+        .filter(std::fs::Metadata::is_file);
+    let mut options = std::fs::OpenOptions::new();
+    options.write(true).create_new(true);
+    #[cfg(unix)]
+    if replacing.is_some() {
+        use std::os::unix::fs::OpenOptionsExt;
+        options.mode(0o600);
+    }
+    let mut file = options.open(&part).map_err(|error| {
+        std::io::Error::new(error.kind(), format!("{}: {error}", part.display()))
+    })?;
     let written = file.write_all(text.as_bytes());
     drop(file);
-    let placed = written.and_then(|()| std::fs::rename(&part, path));
+    let placed = written
+        .and_then(|()| match &replacing {
+            Some(meta) => std::fs::set_permissions(&part, meta.permissions()),
+            None => Ok(()),
+        })
+        .and_then(|()| std::fs::rename(&part, path));
     if placed.is_err() {
         let _ = std::fs::remove_file(&part);
     }

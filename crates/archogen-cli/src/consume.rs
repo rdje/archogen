@@ -16,6 +16,8 @@
 use std::io::{Read, Write};
 use std::path::{Path, PathBuf};
 
+use archogen_api::SourceMap;
+
 use archogen_digest::Digest;
 use archogen_outcome::record::{Judged, Record};
 
@@ -33,6 +35,9 @@ pub const RECORD: &str = archogen_emit::RESULT_FILE;
 /// into place (`crates/archogen-plan-check/src/main.rs`).
 pub const RECORD_PART: &str = "plan-check.json.part";
 
+/// Where an earlier record waits while a new one takes its name, so it can go back.
+pub const RECORD_EARLIER: &str = "plan-check.json.earlier";
+
 /// The most of a record the front reads.
 const RECORD_LIMIT: usize = 1 << 20;
 
@@ -41,8 +46,8 @@ const RECORD_LIMIT: usize = 1 << 20;
 pub struct Expected<'a> {
     /// The description, as the front read it.
     pub description: &'a Path,
-    /// Its text, as the front read it, which the checker must be able to read again.
-    pub text: Option<&'a str>,
+    /// What the front read, which the checker must be able to read again: the description and every module.
+    pub sources: Option<&'a SourceMap>,
     /// The plan the front wrote for it.
     pub plan: &'a Path,
     /// The digest of the elaborated program the description became, as the front computed it.
@@ -93,18 +98,8 @@ pub fn check_plan(
         });
     }
     let description = absolute(expected.description, "the description")?;
-    // A regular file can still read differently: `/dev/stdin` reads empty the second time, and so would the checker.
-    if let Some(text) = expected.text {
-        if !std::fs::read(&description).is_ok_and(|again| again == text.as_bytes()) {
-            return Err(Refusal {
-                status: Status::Usage,
-                message: format!(
-                    "the checker reads the description again, and {} now reads differently from what the front read",
-                    expected.description.display()
-                ),
-                repair: "give the description as a file nothing is changing, or say `--unchecked` where the command has it".to_owned(),
-            });
-        }
+    if let Some(sources) = expected.sources {
+        reads_again(sources)?;
     }
     let plan = absolute(expected.plan, "the plan")?;
     let args: Vec<String> = vec![
@@ -196,11 +191,60 @@ pub fn check_plan(
     }
 }
 
-/// Whether `file` reads as a checker's record.
-#[must_use]
-pub fn is_record(file: &Path) -> bool {
-    std::fs::symlink_metadata(file).is_ok_and(|meta| meta.is_file())
-        && std::fs::read(file).is_ok_and(|bytes| Record::read(&bytes, RECORD_LIMIT).is_ok())
+/// That the checker, reading what the front read again, will read the same: each source a regular file with the same bytes.
+/// A pipe would read empty or never end, and `/dev/stdin` reads empty the second time. The engine's own kind modules come from no
+/// file, so a source that is one of those, name and text, is passed over.
+fn reads_again(sources: &SourceMap) -> Result<(), Refusal> {
+    let kinds = archogen_api::kind_modules();
+    let refused = |message: String, repair: &str| Refusal {
+        status: Status::Usage,
+        message,
+        repair: repair.to_owned(),
+    };
+    let as_a_file =
+        "give it as a file nothing is changing, or say `--unchecked` where the command has it";
+    for source in sources.iter() {
+        if kinds
+            .iter()
+            .any(|(name, text)| *name == source.name && *text == source.text)
+        {
+            continue;
+        }
+        let file = Path::new(&source.name);
+        if !std::fs::metadata(file).is_ok_and(|meta| meta.is_file()) {
+            return Err(refused(
+                format!(
+                    "the checker reads {} again, and it is no regular file, which could read differently or never end",
+                    source.name
+                ),
+                as_a_file,
+            ));
+        }
+        if !std::fs::read(file).is_ok_and(|again| again == source.text.as_bytes()) {
+            return Err(refused(
+                format!(
+                    "the checker reads {} again, and it now reads differently from what the front read",
+                    source.name
+                ),
+                as_a_file,
+            ));
+        }
+    }
+    Ok(())
+}
+
+/// Whether `file` reads as a checker's record, read within the bound a record has. What could not be read is an error and no
+/// answer: refusing it is the caller's, since it cannot say.
+///
+/// # Errors
+///
+/// What stopped it reading the file.
+pub fn reads_as_record(file: &Path) -> std::io::Result<bool> {
+    let mut bytes = Vec::new();
+    std::fs::File::open(file)?
+        .take(u64::try_from(RECORD_LIMIT).unwrap_or(u64::MAX) + 1)
+        .read_to_end(&mut bytes)?;
+    Ok(bytes.len() <= RECORD_LIMIT && Record::read(&bytes, RECORD_LIMIT).is_ok())
 }
 
 /// The record's place in `dir`, the directory made and any earlier record there removed, so none is taken for this

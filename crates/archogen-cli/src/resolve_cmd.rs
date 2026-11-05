@@ -110,13 +110,36 @@ pub fn run(
         let _ = writeln!(err, "  hint: {}", unwritten.repair);
         unwritten.status
     };
-    let landing = match Landing::judge(out_name, !unchecked) {
+    let mut landing = match Landing::judge(out_name, !unchecked) {
         Ok(landing) => landing,
         Err(unwritten) => return refused(unwritten, err),
     };
     if let Err(unwritten) = landing.open(&plan.text) {
         return refused(unwritten, err);
     }
+    let landing = landing;
+    // A landing refused may leave the stage, and the next run refuses while it stands, so that is said.
+    let land = |checked: bool, err: &mut dyn Write| -> Option<Status> {
+        match landing.land(&plan.text, checked) {
+            Ok(said) => {
+                for line in said {
+                    let _ = writeln!(err, "archogen: {line}");
+                }
+                None
+            }
+            Err(unwritten) => {
+                let status = refused(unwritten, err);
+                if landing.stage.exists() {
+                    let _ = writeln!(
+                        err,
+                        "  {} stays, and the next run refuses while it stands: look at it, and remove it",
+                        landing.stage.display()
+                    );
+                }
+                Some(status)
+            }
+        }
+    };
     let plan_in_stage = landing.plan_in_stage();
     // What it says once the plan stands: so a command that refuses never said it wrote one.
     let said = |out: &mut dyn Write| {
@@ -138,9 +161,8 @@ pub fn run(
         }
     };
     if unchecked {
-        match landing.land(&plan.text, false) {
-            Ok(unkept) => landing.warn(unkept, err),
-            Err(unwritten) => return refused(unwritten, err),
+        if let Some(status) = land(false, err) {
+            return status;
         }
         said(out);
         let _ = writeln!(
@@ -162,11 +184,7 @@ pub fn run(
     };
     let expected = Expected {
         description: Path::new(path),
-        text: response
-            .sources
-            .iter()
-            .find(|source| source.name == *path)
-            .map(|source| source.text.as_str()),
+        sources: Some(&response.sources),
         plan: &plan_in_stage,
         program,
         plan_sha256: Digest::of(plan.text.as_bytes()),
@@ -178,9 +196,8 @@ pub fn run(
         .map(|checked| checked.record)
     {
         Ok(record) if record.status() == Status::Ok => {
-            match landing.land(&plan.text, true) {
-                Ok(unkept) => landing.warn(unkept, err),
-                Err(unwritten) => return refused(unwritten, err),
+            if let Some(status) = land(true, err) {
+                return status;
             }
             said(out);
             let _ = writeln!(
@@ -281,8 +298,23 @@ impl From<place::Refused> for Unwritten {
 /// What a plan is written as in its stage, whatever it will be named.
 const PLAN_IN_STAGE: &str = "plan";
 
-/// What begins a plan: what a plan may replace is known by this, as `crate::built` knows a build by what it lists.
-const A_PLAN_BEGINS: &[u8] = b"(format \"archogen-assignment/";
+/// What begins a plan.
+const A_PLAN_BEGINS: &str = "(format \"archogen-assignment/";
+
+/// The most of what stands at `--out` it reads, to tell it is a plan: far more than any plan holds.
+const A_PLAN_AT_MOST: u64 = 1 << 24;
+
+/// Whether `bytes` are a plan as this engine writes one: text that begins so, every line one form. So a file of notes is none, and a
+/// plan with a comment added is none: it is what someone edited, as a build with a file edited is no build. An edit within a form is
+/// not seen, as `crate::built` says a digest cannot see a forger: the checker is what reads a plan.
+fn is_a_plan(bytes: &[u8]) -> bool {
+    std::str::from_utf8(bytes).is_ok_and(|text| {
+        text.starts_with(A_PLAN_BEGINS)
+            && text
+                .lines()
+                .all(|line| line.starts_with('(') && line.ends_with(')'))
+    })
+}
 
 /// Where a plan goes, the place judged. What each route does is `docs/book/src/cli.md`'s table, which `tests/resolve.rs` runs: this
 /// says it nowhere else. Everything a run writes stays in `stage`, private to its owner, until the plan may land, so what stands at
@@ -293,6 +325,8 @@ struct Landing {
     check: PathBuf,
     /// The directories this run made to reach `file`, innermost first.
     made: Vec<PathBuf>,
+    /// The directory this run made as the stage, told apart from one that comes to stand at its name.
+    made_stage: Option<(u64, u64)>,
 }
 
 impl Landing {
@@ -330,14 +364,23 @@ impl Landing {
         place::make_parents(&file).map_err(|refused| unmake(refused.into()))?;
         place::room(&stage, consume::RECORD_PART, out).map_err(|refused| unmake(refused.into()))?;
         if checked {
-            place::room(&check, consume::RECORD_PART, out)
+            place::room(&check, consume::RECORD_EARLIER, out)
                 .map_err(|refused| unmake(refused.into()))?;
+            for waiting in [consume::RECORD_PART, consume::RECORD_EARLIER] {
+                place::free(
+                    &check.join(waiting),
+                    out,
+                    "and a record waits there on its way: a run that stopped may have left it",
+                )
+                .map_err(|refused| unmake(refused.into()))?;
+            }
         }
         Ok(Self {
             file,
             stage,
             check,
             made,
+            made_stage: None,
         })
     }
 
@@ -347,7 +390,7 @@ impl Landing {
     }
 
     /// The stage made, by this run alone, and `text` written in it.
-    fn open(&self, text: &str) -> Result<(), Unwritten> {
+    fn open(&mut self, text: &str) -> Result<(), Unwritten> {
         place::make_private(&self.stage).map_err(|error| {
             place::unmake(&self.made);
             usage(
@@ -358,6 +401,7 @@ impl Landing {
                 place::repair(&error),
             )
         })?;
+        self.made_stage = place::identity(&self.stage);
         std::fs::write(self.plan_in_stage(), text).map_err(|error| {
             self.abandon();
             Unwritten {
@@ -368,65 +412,122 @@ impl Landing {
         })
     }
 
-    /// The plan in place, and with `checked` its record beside it, each path held again just before it is used, or nothing
-    /// changed. What goes first is the one step that can tell whether the record's directory takes a record, so a plan does not
-    /// land to be refused after. What it could not keep of what it replaced, if anything, is the answer.
-    fn land(&self, text: &str, checked: bool) -> Result<Option<std::io::Error>, Unwritten> {
-        let refused = |what: String, repair: &str| {
-            self.abandon();
-            Unwritten {
-                status: Status::ToolFailure,
-                message: what,
-                repair: repair.to_owned(),
-            }
+    /// An earlier record standing at the record's name, whose mode the new one takes and which goes aside until the plan stands. With
+    /// `checked` that is whatever `record_replaceable` has let stand; without, only what reads as a record, since only that would read
+    /// as this plan's, and never through a link. Asked and not answerable is a refusal, since it cannot say what it would leave.
+    fn earlier_record(&self, checked: bool) -> Result<Option<std::fs::Metadata>, Unwritten> {
+        let unanswerable = |what: &Path, error: &std::io::Error| {
+            usage(
+                format!(
+                    "cannot tell whether an earlier record stands at {}: {error}",
+                    what.display()
+                ),
+                "open it, or name another file",
+            )
         };
+        match std::fs::symlink_metadata(&self.check) {
+            Err(error) if error.kind() == ErrorKind::NotFound => return Ok(None),
+            Err(error) => return Err(unanswerable(&self.check, &error)),
+            Ok(meta) if !meta.is_dir() => return Ok(None),
+            Ok(_) => {}
+        }
+        let record = self.check.join(consume::RECORD);
+        let meta = match std::fs::symlink_metadata(&record) {
+            Err(error) if error.kind() == ErrorKind::NotFound => return Ok(None),
+            Err(error) => return Err(unanswerable(&self.check, &error)),
+            Ok(meta) if !meta.is_file() => return Ok(None),
+            Ok(meta) => meta,
+        };
+        if checked {
+            return Ok(Some(meta));
+        }
+        match consume::reads_as_record(&record) {
+            Ok(true) => Ok(Some(meta)),
+            Ok(false) => Ok(None),
+            Err(error) => Err(unanswerable(&record, &error)),
+        }
+    }
+
+    /// The plan in place, and with `checked` its record beside it, each path held again just before it is used, or nothing changed:
+    /// each step undoes only what the ones before it moved. The record goes first, since a flag or a mode that stops it is found
+    /// then, and the plan last, so a plan does not land to be refused after. What is worth saying, if anything, is the answer.
+    fn land(&self, text: &str, checked: bool) -> Result<Vec<String>, Unwritten> {
         let plan = self.plan_in_stage();
-        // What is judged is what lands.
+        // A stage no longer this run's, or a plan no longer what was judged, is what something else wrote, so it stays to be looked at.
+        let came = |message: String| Unwritten {
+            status: Status::ToolFailure,
+            message,
+            repair: "look at it, and at what else writes there".to_owned(),
+        };
+        if place::identity(&self.stage) != self.made_stage {
+            return Err(came(format!(
+                "{} is no longer the directory this run made",
+                self.stage.display()
+            )));
+        }
         if !std::fs::read(&plan).is_ok_and(|bytes| bytes == text.as_bytes()) {
-            return Err(Unwritten {
-                status: Status::ToolFailure,
-                message: format!("{} changed while the plan was judged", plan.display()),
-                repair: "look at it, and at what else writes there, then remove it".to_owned(),
-            });
+            return Err(came(format!(
+                "{} changed while the plan was judged",
+                plan.display()
+            )));
         }
         let out = self.file.display().to_string();
         let replacing = replaceable(&self.file, &out).inspect_err(|_| self.abandon())?;
+        if checked {
+            record_replaceable(&self.check, &out).inspect_err(|_| self.abandon())?;
+        }
+        let earlier = self
+            .earlier_record(checked)
+            .inspect_err(|_| self.abandon())?;
         let record = self.check.join(consume::RECORD);
-        let aside = self.check.join(consume::RECORD_PART);
-        let check_was_free = std::fs::symlink_metadata(&self.check).is_err();
-        let undo = || {
-            let _ = std::fs::remove_file(&aside);
+        let new = self.check.join(consume::RECORD_PART);
+        let old = self.check.join(consume::RECORD_EARLIER);
+        for (waiting, used) in [(&new, checked), (&old, earlier.is_some())] {
+            if used {
+                place::free(
+                    waiting,
+                    &out,
+                    "and a record waits there on its way: a run that stopped may have left it",
+                )
+                .map_err(|refused| {
+                    self.abandon();
+                    Unwritten::from(refused)
+                })?;
+            }
+        }
+        let check_was_free = checked && std::fs::symlink_metadata(&self.check).is_err();
+        // What the steps so far have moved, and the way back from each.
+        let (mut moved_in, mut moved_out, mut placed) = (false, false, false);
+        let undo = |moved_in: bool, moved_out: bool, placed: bool| {
+            if placed {
+                let _ = std::fs::remove_file(&record);
+            } else if moved_in {
+                let _ = std::fs::remove_file(&new);
+            }
+            if moved_out {
+                let _ = std::fs::rename(&old, &record);
+            }
             if check_was_free {
                 let _ = std::fs::remove_dir(&self.check);
             }
+            self.abandon();
         };
-        // `aside` holds the record on its way in, or an earlier one on its way out, so either can go back.
-        // Asked of a real directory: `is_record` holds the last name to no link, and a link at `check` is on the way to it.
-        let earlier = !checked
-            && std::fs::symlink_metadata(&self.check).is_ok_and(|meta| meta.is_dir())
-            && consume::is_record(&record);
-        if checked || earlier {
-            place::free(
-                &aside,
-                &out,
-                "and a record is moved there on its way: a run that stopped may have left it",
-            )
-            .map_err(|refused| {
-                self.abandon();
-                Unwritten::from(refused)
-            })?;
-        }
+        let failed = |what: String, repair: &str| Unwritten {
+            status: Status::ToolFailure,
+            message: what,
+            repair: repair.to_owned(),
+        };
+        let mut said = Vec::new();
         if checked {
-            record_replaceable(&self.check, &out).inspect_err(|_| self.abandon())?;
             let moved = if check_was_free {
                 std::fs::create_dir(&self.check)
             } else {
                 Ok(())
             }
-            .and_then(|()| std::fs::rename(self.stage.join(consume::RECORD), &aside));
+            .and_then(|()| std::fs::rename(self.stage.join(consume::RECORD), &new));
             if let Err(error) = moved {
-                undo();
-                return Err(refused(
+                undo(moved_in, moved_out, placed);
+                return Err(failed(
                     format!(
                         "cannot put the checker's record in {}: {error}",
                         self.check.display()
@@ -434,58 +535,66 @@ impl Landing {
                     place::repair(&error),
                 ));
             }
-        } else if earlier {
-            if let Err(error) = std::fs::rename(&record, &aside) {
-                return Err(refused(
+            moved_in = true;
+        }
+        if earlier.is_some() {
+            if let Err(error) = std::fs::rename(&record, &old) {
+                undo(moved_in, moved_out, placed);
+                return Err(failed(
                     format!(
-                        "cannot move the earlier record {}, which would read as this plan's: {error}",
+                        "cannot move the earlier record {}: {error}",
                         record.display()
                     ),
-                    place::repair(&error),
+                    "check its mode, and any flag on it",
+                ));
+            }
+            moved_out = true;
+        }
+        if checked {
+            if let Some(from) = &earlier {
+                if let Err(why) = place::take_over(&new, from) {
+                    said.push(format!(
+                        "the record at {} could not take the mode or the group of the one it replaced: {why}",
+                        record.display()
+                    ));
+                }
+            }
+            if let Err(error) = std::fs::rename(&new, &record) {
+                undo(moved_in, moved_out, placed);
+                return Err(failed(
+                    format!(
+                        "cannot give the checker's record its name at {}: {error}",
+                        record.display()
+                    ),
+                    "check any flag on it",
+                ));
+            }
+            placed = true;
+        }
+        if let Some(from) = &replacing {
+            if let Err(why) = place::take_over(&plan, from) {
+                said.push(format!(
+                    "the plan at {out} could not take the mode or the group of what it replaced: {why}"
                 ));
             }
         }
-        let unkept = replacing
-            .as_ref()
-            .and_then(|from| place::take_over(&plan, from).err());
         if let Err(error) = std::fs::rename(&plan, &self.file) {
-            if earlier {
-                let _ = std::fs::rename(&aside, &record);
-            } else {
-                undo();
-            }
-            return Err(refused(
+            undo(moved_in, moved_out, placed);
+            return Err(failed(
                 format!("cannot write the plan {out}: {error}"),
                 "check that what stands at that name can be replaced, and any flag on it",
             ));
         }
-        if checked {
-            if let Err(error) = std::fs::rename(&aside, &record) {
-                return Err(Unwritten {
-                    status: Status::ToolFailure,
-                    message: format!(
-                        "the plan is in place, and its record could not take its name at {}: {error}",
-                        record.display()
-                    ),
-                    repair: format!("the record is at {}: move it there", aside.display()),
-                });
-            }
-        } else if earlier {
-            let _ = std::fs::remove_file(&aside);
+        if moved_out {
+            let _ = std::fs::remove_file(&old);
         }
-        let _ = std::fs::remove_dir(&self.stage);
-        Ok(unkept)
-    }
-
-    /// Say what the plan could not keep of what it replaced.
-    fn warn(&self, unkept: Option<std::io::Error>, err: &mut dyn Write) {
-        if let Some(why) = unkept {
-            let _ = writeln!(
-                err,
-                "archogen: the plan is in place at {}, and could not take the mode or the group of what it replaced: {why}",
-                self.file.display()
-            );
+        if std::fs::remove_dir(&self.stage).is_err() {
+            said.push(format!(
+                "the plan is in place, and {} stays, holding what came in it, and the next run refuses while it stands: look at it, and remove it",
+                self.stage.display()
+            ));
         }
+        Ok(said)
     }
 
     /// What this run wrote gone, with the directories it made where they stayed empty.
@@ -536,29 +645,34 @@ fn replaceable(file: &Path, out: &str) -> Result<Option<std::fs::Metadata>, Unwr
             name_a_file,
         ));
     }
-    let mut begins = vec![0; A_PLAN_BEGINS.len()];
-    let read = std::fs::File::open(file).and_then(|mut opened| {
-        let mut filled = 0;
-        while filled < begins.len() {
-            match opened.read(&mut begins[filled..])? {
-                0 => break,
-                count => filled += count,
-            }
-        }
-        Ok(filled)
-    });
+    let mut bytes = Vec::new();
+    let read = std::fs::File::open(file)
+        .and_then(|opened| opened.take(A_PLAN_AT_MOST + 1).read_to_end(&mut bytes));
     match read {
         Err(error) => Err(usage(
             format!("cannot read `--out {out}`, to tell it is a plan: {error}"),
             "open it, or name another file",
         )),
         Ok(0) => Ok(Some(meta)),
-        Ok(filled) if filled == begins.len() && begins == A_PLAN_BEGINS => Ok(Some(meta)),
+        Ok(_) if bytes.len() as u64 <= A_PLAN_AT_MOST && is_a_plan(&bytes) => Ok(Some(meta)),
         Ok(_) => Err(usage(
-            format!("`--out {out}` is no plan, and a plan replaces only a plan or an empty file"),
+            format!(
+                "`--out {out}` is no plan as this engine writes one, and a plan replaces only a plan or an empty file"
+            ),
             "name another file, or move what stands there",
         )),
     }
+}
+
+/// What stands at the record's name that a record may not replace.
+fn no_record(record: &Path) -> Unwritten {
+    usage(
+        format!(
+            "{} stands where the checker's record goes, and is no record this engine reads",
+            record.display()
+        ),
+        "look at it, and move or remove it; or name another file, or say `--unchecked`",
+    )
 }
 
 /// Whether the checker's record can go at `check`: nothing there, or a directory holding nothing at the record's name, or an empty
@@ -593,13 +707,15 @@ fn record_replaceable(check: &Path, out: &str) -> Result<(), Unwritten> {
             format!("cannot use {}: {error}", record.display()),
             place::repair(&error),
         )),
-        Ok(meta) if meta.is_file() && (meta.len() == 0 || consume::is_record(&record)) => Ok(()),
-        Ok(_) => Err(usage(
-            format!(
-                "{} stands where the checker's record goes, and is no record",
-                record.display()
-            ),
-            "look at it, and move or remove it; or name another file, or say `--unchecked`",
-        )),
+        Ok(meta) if meta.is_file() && meta.len() == 0 => Ok(()),
+        Ok(meta) if meta.is_file() => match consume::reads_as_record(&record) {
+            Ok(true) => Ok(()),
+            Ok(false) => Err(no_record(&record)),
+            Err(error) => Err(usage(
+                format!("cannot read {}: {error}", record.display()),
+                "open it, or name another file",
+            )),
+        },
+        Ok(_) => Err(no_record(&record)),
     }
 }

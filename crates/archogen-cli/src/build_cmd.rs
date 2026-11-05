@@ -637,12 +637,7 @@ impl Build<'_> {
             .expect("a plan is written for a judged description");
         let expected = Expected {
             description: Path::new(self.path),
-            text: self
-                .response
-                .sources
-                .iter()
-                .find(|source| source.name == self.path)
-                .map(|source| source.text.as_str()),
+            sources: Some(&self.response.sources),
             plan: &assignment,
             program,
             plan_sha256: Digest::of(self.plan.text.as_bytes()),

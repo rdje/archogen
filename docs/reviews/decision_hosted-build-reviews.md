@@ -199,3 +199,26 @@ Said, and left as it stands: a mount point, a real full disk, a read-only filesy
 | R8-19 | wording | `room` called every error too long; the checker's error named the wrong file | Each repair by its kind; it names the `.part` |
 
 Said, and left as it stands: a group moving, a real full disk, a read-only filesystem, a mount point and another user's directory stayed unmeasured. A failed `chown` of a plan's group is now a warning, the plan standing, as a build's is: reading only, on this volume.
+
+**Round 9** — `2026-11-05`: not acceptable, 16 findings, 6 defects, R9-1 and R9-2 losing a user's bytes and each needing no other program. The principle's main claim held: no description or module can be mistaken for a plan. Its reader ran about 530 commands on an install of `7cf7a353`, and every row of both tables matched on the real command. R8-1, R8-2, R8-5, R8-7, R8-9 and R8-4's first half held. R9-1, R9-2 and R9-4 were measured again on that install before they were answered, each behaving as the reader said.
+
+| # | Kind | Finding | Answer |
+| --- | --- | --- | --- |
+| R9-1 | defect | any file beginning with the 29 bytes of a plan's first line counted as a plan and was replaced at exit 0, a plan with three weeks of notes in it among them | A plan is known by how it reads: text that begins so, every line one form, within a bound. So notes, prose and binary after the prefix are no plan. Row `a-plan-with-notes-in-it`. An edit within a form is not seen, and the chapter says so |
+| R9-2 | defect | a failed landing under `--unchecked` deleted `plan-check.json.part`, which this run neither wrote nor checked, through a link too | `land` now tracks what each step moved, and undoes only that. Row `flagged-plan-unchecked` |
+| R9-3 | defect | `--unchecked` over a `.check` that cannot be searched left the earlier `ok` record beside a plan it did not judge, at exit 0: an error was read as "no record" | `reads_as_record` returns the error, and an unanswerable question is a refusal, nothing moved. Rows `check-unsearchable-unchecked` and `record-unreadable` |
+| R9-4 | defect | a plan could land and then be refused, a record's name flagged leaving the new plan beside the earlier record | The record takes its name before the plan moves, the earlier one held aside to go back. Row `flagged-record` |
+| R9-5 | defect | a description at a shipped kind module's path was falsely refused, the search finding the kind module first | The comparison is of every source against its own name and text, a kind module passed over by both |
+| R9-6 | defect | older: the guards covered the description and not its modules: a module that is a pipe hung, and a link to a descriptor gave a bogus report | Every source held to being a regular file that reads the same. Row `a-module-that-reads-once` |
+| R9-7 | gap | a whole file read just to refuse it: 1 GiB sparse, 1.08 GB of memory | Each read within its bound |
+| R9-8 | gap | a record did not keep the mode of what it replaces, though a plan does | It does, private until it lands, for `--result` and for `PLAN.check`. Row `a-record-keeps-its-mode` and a test of the real executable |
+| R9-9 | gap | `--result` took any error as absence, then exit 70 after the whole judgement, and a stale `.part` blocked with no repair | Only a name found absent is absent; a parent that is no directory and a stale `.part` are `usage` before anything is judged, a test of each |
+| R9-10 | gap | not reachable yet: a record of another format called "no record" | "No record this engine reads", in both places |
+| R9-11 | gap | fixtures weaker than their rows | `check-reused` from an earlier record of another description; `check-a-link-unchecked` holds the link; `parent-closed-meanwhile` the words |
+| R9-12 | route | "reads differently" had no row and no test | Row `reads-differently`, where the platform's `/dev/stdin` reads so |
+| R9-13 | route | `.part` waiting, `.check` closed, a flag on `PLAN` | Rows `a-record-waiting`, `check-closed`, `flagged-plan`; a waiting name is now found before the checker runs |
+| R9-14 | route | a stage swapped or holding a stray file left a `.part` unsaid | Held by what it is, as a build's is, and it says what stays. Rows `stage-swapped` and `came-in-stage` |
+| R9-15 | wording | `cli.md` and §5 disagreed on an empty record; "lands only on acceptance" ignored `--unchecked` | Both said as they are |
+| R9-16 | wording | the `--result` rule was only in §5 and an error message | In `plan-check.md` and `--help` |
+
+Said, and left as it stands: a real full disk, a read-only filesystem, a mount point, another user's or a sticky directory, a group moving, and Linux's `/proc/self/fd` route stayed unmeasured. A module edited in the instant between the front's reading it again and the checker's starting is the stated limit's.

@@ -57,6 +57,10 @@ enum Answer {
     Unsound,
     /// It accepted, and this directory was closed as it did.
     Closing(PathBuf),
+    /// It accepted, and something came in the stage beside its record.
+    Stray,
+    /// It accepted, and the stage it wrote in was swapped for a link to where it went.
+    Swapping,
 }
 
 /// A launcher standing in for `archogen-plan-check`: it reads the plan the front names, writes a record about it where
@@ -93,7 +97,7 @@ impl Launch for Checker {
                 })
             }
             Answer::Record(status) => status,
-            Answer::Unsound => Status::Ok,
+            Answer::Unsound | Answer::Stray | Answer::Swapping => Status::Ok,
             Answer::Closing(ref dir) => {
                 #[cfg(unix)]
                 {
@@ -151,6 +155,17 @@ impl Launch for Checker {
         )
         .expect("a record");
         std::fs::write(result, record.write()).expect("the record written");
+        let stage = Path::new(result).parent().expect("a stage");
+        match self.answer {
+            Answer::Stray => std::fs::write(stage.join("mine.txt"), "mine").expect("written"),
+            #[cfg(unix)]
+            Answer::Swapping => {
+                let moved = stage.with_extension("moved");
+                std::fs::rename(stage, &moved).expect("moved");
+                std::os::unix::fs::symlink(&moved, stage).expect("a link");
+            }
+            _ => {}
+        }
         let _ = writeln!(err, "{PLAN_CHECKER}: {}", status.slug());
         Ok(Launched {
             ended: Ended::Code(if matches!(self.answer, Answer::Unsound) {
@@ -258,7 +273,7 @@ fn modes_bind(root: &Path) -> bool {
 }
 
 /// What an earlier plan looks like: what a plan may replace is known by how it begins.
-const AN_EARLIER_PLAN: &str = "(format \"archogen-assignment/2\")\n; earlier\n";
+const AN_EARLIER_PLAN: &str = "(format \"archogen-assignment/2\")\n(system earlier)\n";
 
 /// An earlier plan at `plan`.
 #[cfg(unix)]
@@ -343,6 +358,15 @@ fn plan_routes() -> Vec<(&'static str, Route)> {
             assert!(!root.join("p.part").exists() && !root.join("p.check").exists());
             outcome
         }),
+        ("a-plan-with-notes-in-it", |root| {
+            // It begins as a plan does, and someone has written in it: what they wrote is theirs.
+            let plan = root.join("p");
+            let notes = "(format \"archogen-assignment/2\")\n; three weeks of notes\n";
+            std::fs::write(&plan, notes).expect("written");
+            let outcome = resolve_at(&plan.display().to_string(), &[]);
+            assert_eq!(std::fs::read_to_string(&plan).expect("kept"), notes);
+            outcome
+        }),
         ("closed-to-reads", |root| {
             use std::os::unix::fs::PermissionsExt;
             if !modes_bind(root) {
@@ -412,6 +436,56 @@ fn plan_routes() -> Vec<(&'static str, Route)> {
                 Answer::Record(Status::Ok),
             );
             assert_eq!(std::fs::read(&module).expect("kept"), before);
+            outcome
+        }),
+        ("reads-differently", |root| {
+            // `/dev/stdin` reads empty the second time here; where a platform reopens it, this route is not taken.
+            if !cfg!(target_os = "macos") {
+                return None;
+            }
+            std::fs::copy(heartbeat(), root.join("s.eadl")).expect("copied");
+            let output = std::process::Command::new("sh")
+                .arg("-c")
+                .arg("\"$0\" resolve /dev/stdin --out p < s.eadl")
+                .arg(env!("CARGO_BIN_EXE_archogen"))
+                .current_dir(root)
+                .output()
+                .expect("the shell runs");
+            assert!(!root.join("p").exists() && !root.join("p.part").exists());
+            assert_eq!(
+                output.status.code(),
+                Some(Status::Usage.code()),
+                "{output:?}"
+            );
+            Some((
+                Status::Usage,
+                String::from_utf8_lossy(&output.stderr).to_string(),
+            ))
+        }),
+        ("a-module-that-reads-once", |root| {
+            let corpus = crate::root().join("crates/archogen-plan/tests/corpus/modules");
+            for entry in std::fs::read_dir(&corpus).expect("the corpus") {
+                let entry = entry.expect("an entry");
+                std::fs::copy(entry.path(), root.join(entry.file_name())).expect("copied");
+            }
+            let module = root.join("hw.dev.eadl");
+            let text = std::fs::read(&module).expect("read");
+            std::fs::remove_file(&module).expect("removed");
+            let made = std::process::Command::new("mkfifo")
+                .arg(&module)
+                .status()
+                .expect("mkfifo runs");
+            assert!(made.success());
+            let writer = module.clone();
+            let feeding = std::thread::spawn(move || std::fs::write(writer, text));
+            let outcome = resolve_of(
+                &root.join("app.main.eadl").display().to_string(),
+                &root.join("p").display().to_string(),
+                &[],
+                Answer::Record(Status::Ok),
+            );
+            feeding.join().expect("the writer").expect("written");
+            assert!(!root.join("p").exists() && !root.join("p.part").exists());
             outcome
         }),
         ("reads-once", |root| {
@@ -498,6 +572,9 @@ fn plan_routes() -> Vec<(&'static str, Route)> {
                 std::fs::read(root.join("other/plan-check.json")).expect("kept"),
                 kept
             );
+            assert!(std::fs::symlink_metadata(root.join("p.check"))
+                .expect("kept")
+                .is_symlink());
             outcome
         }),
         ("record-no-record", |root| {
@@ -522,15 +599,233 @@ fn plan_routes() -> Vec<(&'static str, Route)> {
             outcome
         }),
         ("check-reused", |root| {
+            // An earlier record of another description, so that one left in place could not pass for the new one.
             let plan = root.join("p");
-            let record = a_checked_plan(&plan);
+            let other =
+                crate::root().join("crates/eadl-resolve/tests/search/adapter-epoch-extender.eadl");
+            let (status, said) = resolve_of(
+                &other.display().to_string(),
+                &plan.display().to_string(),
+                &[],
+                Answer::Record(Status::Ok),
+            )?;
+            assert_eq!(status, Status::Ok, "{said}");
+            let record = std::fs::read(root.join("p.check/plan-check.json")).expect("its record");
             std::fs::write(root.join("p.check/mine.txt"), "mine").expect("written");
             let outcome = resolve_at(&plan.display().to_string(), &[]);
-            assert_eq!(
+            assert_ne!(
                 std::fs::read(root.join("p.check/plan-check.json")).expect("written"),
                 record
             );
             assert!(root.join("p.check/mine.txt").is_file());
+            assert!(!root.join("p.check/plan-check.json.part").exists());
+            assert!(!root.join("p.check/plan-check.json.earlier").exists());
+            outcome
+        }),
+        ("a-record-waiting", |root| {
+            std::fs::create_dir(root.join("p.check")).expect("a directory");
+            std::fs::write(root.join("p.check/plan-check.json.part"), "mine").expect("written");
+            let outcome = resolve_at(&root.join("p").display().to_string(), &[]);
+            assert_eq!(
+                std::fs::read_to_string(root.join("p.check/plan-check.json.part")).expect("kept"),
+                "mine"
+            );
+            assert!(!root.join("p").exists());
+            outcome
+        }),
+        ("check-closed", |root| {
+            use std::os::unix::fs::PermissionsExt;
+            if !modes_bind(root) {
+                return None;
+            }
+            let plan = root.join("p");
+            an_earlier_plan(&plan);
+            std::fs::create_dir(root.join("p.check")).expect("a directory");
+            std::fs::set_permissions(root.join("p.check"), std::fs::Permissions::from_mode(0o555))
+                .expect("its mode");
+            let outcome = resolve_at(&plan.display().to_string(), &[]);
+            std::fs::set_permissions(root.join("p.check"), std::fs::Permissions::from_mode(0o755))
+                .expect("its mode");
+            assert_eq!(
+                std::fs::read_to_string(&plan).expect("kept"),
+                AN_EARLIER_PLAN
+            );
+            assert!(!root.join("p.part").exists());
+            outcome
+        }),
+        ("check-unsearchable-unchecked", |root| {
+            use std::os::unix::fs::PermissionsExt;
+            if !modes_bind(root) {
+                return None;
+            }
+            // It cannot tell what it would leave beside the plan, so nothing moves.
+            let plan = root.join("p");
+            let record = a_checked_plan(&plan);
+            let before = std::fs::read(&plan).expect("read");
+            std::fs::set_permissions(root.join("p.check"), std::fs::Permissions::from_mode(0o000))
+                .expect("its mode");
+            let outcome = resolve_at(&plan.display().to_string(), &["--unchecked"]);
+            std::fs::set_permissions(root.join("p.check"), std::fs::Permissions::from_mode(0o755))
+                .expect("its mode");
+            assert_eq!(std::fs::read(&plan).expect("kept"), before);
+            assert_eq!(
+                std::fs::read(root.join("p.check/plan-check.json")).expect("kept"),
+                record
+            );
+            outcome
+        }),
+        ("record-unreadable", |root| {
+            use std::os::unix::fs::PermissionsExt;
+            if !modes_bind(root) {
+                return None;
+            }
+            let plan = root.join("p");
+            a_checked_plan(&plan);
+            let before = std::fs::read(&plan).expect("read");
+            let record = root.join("p.check/plan-check.json");
+            std::fs::set_permissions(&record, std::fs::Permissions::from_mode(0o000))
+                .expect("its mode");
+            let outcome = resolve_at(&plan.display().to_string(), &[]);
+            std::fs::set_permissions(&record, std::fs::Permissions::from_mode(0o600))
+                .expect("its mode");
+            assert_eq!(std::fs::read(&plan).expect("kept"), before);
+            outcome
+        }),
+        ("a-record-keeps-its-mode", |root| {
+            use std::os::unix::fs::PermissionsExt;
+            let plan = root.join("p");
+            a_checked_plan(&plan);
+            let record = root.join("p.check/plan-check.json");
+            std::fs::set_permissions(&record, std::fs::Permissions::from_mode(0o600))
+                .expect("its mode");
+            let outcome = resolve_at(&plan.display().to_string(), &[]);
+            let kept = std::fs::metadata(&record)
+                .expect("it stands")
+                .permissions()
+                .mode();
+            assert_eq!(kept & 0o777, 0o600);
+            outcome
+        }),
+        ("flagged-plan", |root| {
+            // A flag stops the last step alone, and every step before it goes back. `chflags` is not on every platform.
+            let plan = root.join("p");
+            let record = a_checked_plan(&plan);
+            let before = std::fs::read(&plan).expect("read");
+            let flagged = std::process::Command::new("chflags")
+                .arg("uchg")
+                .arg(&plan)
+                .status();
+            if !flagged.is_ok_and(|status| status.success()) {
+                return None;
+            }
+            let other =
+                crate::root().join("crates/eadl-resolve/tests/search/adapter-epoch-extender.eadl");
+            let outcome = resolve_of(
+                &other.display().to_string(),
+                &plan.display().to_string(),
+                &[],
+                Answer::Record(Status::Ok),
+            );
+            let _ = std::process::Command::new("chflags")
+                .arg("nouchg")
+                .arg(&plan)
+                .status();
+            assert_eq!(std::fs::read(&plan).expect("kept"), before);
+            assert_eq!(
+                std::fs::read(root.join("p.check/plan-check.json")).expect("kept"),
+                record
+            );
+            assert!(!root.join("p.part").exists());
+            assert!(!root.join("p.check/plan-check.json.part").exists());
+            assert!(!root.join("p.check/plan-check.json.earlier").exists());
+            outcome
+        }),
+        ("flagged-plan-unchecked", |root| {
+            // What this run did not write stays, a file at the name a record waits at among it.
+            let plan = root.join("p");
+            let (status, said) = resolve_at(&plan.display().to_string(), &["--unchecked"])?;
+            assert_eq!(status, Status::Ok, "{said}");
+            std::fs::create_dir(root.join("p.check")).expect("a directory");
+            std::fs::write(root.join("p.check/plan-check.json.part"), "mine").expect("written");
+            let flagged = std::process::Command::new("chflags")
+                .arg("uchg")
+                .arg(&plan)
+                .status();
+            if !flagged.is_ok_and(|status| status.success()) {
+                return None;
+            }
+            let outcome = resolve_at(&plan.display().to_string(), &["--unchecked"]);
+            let _ = std::process::Command::new("chflags")
+                .arg("nouchg")
+                .arg(&plan)
+                .status();
+            assert_eq!(
+                std::fs::read_to_string(root.join("p.check/plan-check.json.part")).expect("kept"),
+                "mine"
+            );
+            outcome
+        }),
+        ("flagged-record", |root| {
+            // The record's own name found closed before the plan moves: a plan does not land to be refused after.
+            let plan = root.join("p");
+            let record = a_checked_plan(&plan);
+            let before = std::fs::read(&plan).expect("read");
+            let name = root.join("p.check/plan-check.json");
+            let flagged = std::process::Command::new("chflags")
+                .arg("uchg")
+                .arg(&name)
+                .status();
+            if !flagged.is_ok_and(|status| status.success()) {
+                return None;
+            }
+            let other =
+                crate::root().join("crates/eadl-resolve/tests/search/adapter-epoch-extender.eadl");
+            let outcome = resolve_of(
+                &other.display().to_string(),
+                &plan.display().to_string(),
+                &[],
+                Answer::Record(Status::Ok),
+            );
+            let _ = std::process::Command::new("chflags")
+                .arg("nouchg")
+                .arg(&name)
+                .status();
+            assert_eq!(std::fs::read(&plan).expect("kept"), before);
+            assert_eq!(std::fs::read(&name).expect("kept"), record);
+            assert!(!root.join("p.part").exists());
+            outcome
+        }),
+        ("came-in-stage", |root| {
+            let plan = root.join("p");
+            let outcome = resolve_of(
+                &heartbeat(),
+                &plan.display().to_string(),
+                &[],
+                Answer::Stray,
+            );
+            assert!(plan.is_file());
+            assert_eq!(
+                std::fs::read_to_string(root.join("p.part/mine.txt")).expect("kept"),
+                "mine"
+            );
+            outcome
+        }),
+        ("stage-swapped", |root| {
+            let plan = root.join("p");
+            an_earlier_plan(&plan);
+            let outcome = resolve_of(
+                &heartbeat(),
+                &plan.display().to_string(),
+                &[],
+                Answer::Swapping,
+            );
+            assert_eq!(
+                std::fs::read_to_string(&plan).expect("kept"),
+                AN_EARLIER_PLAN
+            );
+            assert!(std::fs::symlink_metadata(root.join("p.part"))
+                .expect("kept")
+                .is_symlink());
             outcome
         }),
         ("check-stands-unchecked", |root| {

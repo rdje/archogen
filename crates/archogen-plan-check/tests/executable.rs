@@ -376,7 +376,7 @@ fn what_stands_beside_the_record_is_refused_and_a_link_there_is_never_written_th
         description.to_str().unwrap(),
         plan.to_str().unwrap(),
     ]);
-    assert_eq!(output.status.code(), Some(70), "{output:?}");
+    assert_eq!(output.status.code(), Some(2), "{output:?}");
     assert_eq!(std::fs::read_to_string(&mine).expect("kept"), "mine");
     assert!(std::fs::symlink_metadata(dir.join("result.json.part"))
         .expect("kept")
@@ -430,4 +430,49 @@ fn a_result_replaces_only_a_record_and_never_what_it_was_read_from() {
     ]);
     assert_ne!(output.status.code(), Some(2), "{output:?}");
     assert!(std::fs::metadata(&empty).expect("it stands").len() > 0);
+}
+
+#[test]
+#[cfg(unix)]
+fn a_result_keeps_the_mode_of_what_it_replaces_and_a_bad_place_is_refused_before_anything_is_judged(
+) {
+    use std::os::unix::fs::PermissionsExt;
+    let dir = scratch();
+    let description = dir.join("system.eadl");
+    std::fs::write(&description, PLAIN).unwrap();
+    let the_plan = plan(&description, "console.write", "console.uart");
+    let (code, _, _) = check(&description, &the_plan);
+    assert_eq!(code, 0);
+    let result = dir.join("result.json");
+    std::fs::set_permissions(&result, std::fs::Permissions::from_mode(0o600)).unwrap();
+    let (code, _, _) = check(&description, &the_plan);
+    assert_eq!(code, 0);
+    let kept = std::fs::metadata(&result).unwrap().permissions().mode();
+    assert_eq!(kept & 0o777, 0o600);
+    // Each of these is `usage`, a repair in its words, where it was once a tool failure after the whole judgement.
+    let plan_path = dir.join("plan.eadl");
+    let bad = |at: &Path, words: &str| {
+        let output = run(&[
+            "--result",
+            at.to_str().unwrap(),
+            "--",
+            description.to_str().unwrap(),
+            plan_path.to_str().unwrap(),
+        ]);
+        assert_eq!(output.status.code(), Some(2), "{at:?}: {output:?}");
+        assert!(
+            String::from_utf8_lossy(&output.stderr).contains(words),
+            "{at:?}: {output:?}"
+        );
+    };
+    bad(
+        &dir.join("missing/result.json"),
+        "no directory this user can reach",
+    );
+    std::fs::write(dir.join("stale.json.part"), "mine").unwrap();
+    bad(&dir.join("stale.json"), "where the result is written first");
+    assert_eq!(
+        std::fs::read_to_string(dir.join("stale.json.part")).unwrap(),
+        "mine"
+    );
 }
