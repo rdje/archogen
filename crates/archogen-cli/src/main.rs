@@ -41,9 +41,9 @@ fn main() -> ExitCode {
     // Flush explicitly: a locked stdout is flushed on drop, and a drop-time failure would be
     // discarded, turning a truncated report into a silent success. A write that failed earlier
     // counts too, since a command drops each line's error, and a failed line may leave nothing
-    // for this flush to fail on.
+    // for this flush to fail on. A standard error that fails changes nothing: there is nowhere left to say it.
     let flushed = stdout.flush();
-    if flushed.is_err() || stdout.failed() || stderr.flush().is_err() {
+    if flushed.is_err() || stdout.failed() {
         let failure = archogen_cli::unwritten(&mut stderr);
         return ExitCode::from(u8::try_from(failure.code()).unwrap_or(70));
     }

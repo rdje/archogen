@@ -137,10 +137,32 @@ it means (leaf `M3.2.6.1`, [The engine API](engine-api.md#the-second-operation-r
 its record written in `plan.json.check/`, and the command's status is the checker's verdict. A description the search
 cannot resolve writes no plan and exits with the search's verdict — `periodic-three` is `missing-fact` today, its
 timer offering a width and no modulus and its policy's constraints waiting on the catalog — and `--locked` is refused
-until lock data exists (`M4.7`). `--system` names the system when a description declares several. The plan lands whole,
-written first at `PLAN.part` and renamed over a file or a link standing at `PLAN`, as an output you name is. A place it cannot
-use is `usage`: a directory, a name with no file in it, or a `PLAN.part` it did not write, which a run that stopped may have left and
-which it leaves alone. If it cannot land, what it wrote goes, with the directories it made.
+until lock data exists (`M4.7`). `--system` names the system when a description declares several.
+
+The plan lands whole, written first at `PLAN.part` and renamed into place, with the place judged before anything moves, so a plan never
+lands to be refused after. If it cannot land, what it wrote goes, with the directories it made. Each row below is a fixture of
+`crates/archogen-cli/tests/resolve.rs`, which runs it; a row with no fixture, or a fixture with no row, fails. `crates/archogen-cli/src/place.rs`
+is how both this command and `archogen build` read a place, and [Building a system](building.md) has `build`'s table.
+
+<!-- machine-read: plan-routes -->
+| Route | What stands there | Status | It says | What is left |
+| --- | --- | --- | --- | --- |
+| `no-name` | `--out .` | `usage` | `names no file of its own` | nothing made |
+| `empty-name` | `--out ''` | `usage` | `names no file of its own` | nothing made |
+| `a-trailing-separator` | `--out q/` | `usage` | `names no file of its own` | nothing made |
+| `back-through` | `--out missing/../d` | `usage` | `goes back through a name` | nothing made |
+| `a-directory` | a directory at `PLAN` | `usage` | `is a directory` | the directory |
+| `part-stands` | anything at `PLAN.part`, which a run that stopped may have left | `usage` | `a plan is written there first` | it |
+| `check-stands` | a file at `PLAN.check`, where the checker's record goes | `usage` | `stands where the checker's record goes` | it, and any plan at `PLAN` |
+| `check-stands-unchecked` | a file at `PLAN.check`, with `--unchecked`, which writes no record | `ok` | `resolved system` | the plan, and that file |
+| `no-room-name` | a name with no room for what goes beside it | `usage` | `too long` | nothing made |
+| `no-room-check` | a name with room for `.part` and none for `.check` | `usage` | `too long` | any plan at `PLAN` |
+| `no-room-record` | a path with no room for what the checker writes beneath `PLAN.check`, as it is handed the path | `usage` | `leaves no room in a path` | nothing made |
+| `file-on-the-way` | a file among `PLAN`'s parents | `usage` | `is no directory` | the file |
+| `link-on-the-way` | a link to nothing among `PLAN`'s parents | `usage` | `a link to nothing` | the link |
+| `absent` | nothing | `ok` | `resolved system` | the plan, its directories made, and its record in `PLAN.check` |
+| `over-a-file` | a file at `PLAN` | `ok` | `resolved system` | the plan, at that file's mode |
+| `over-a-link` | a link at `PLAN` | `ok` | `resolved system` | the plan in the link's place; what it pointed at, untouched |
 
 `archogen explain` (leaf `M3.4.13.2`) says what the search did with one requirement: `--requirement` names the fact,
 and `--requester` or `--task` narrows it to one requester's; without either, each requester of the system requiring
@@ -214,8 +236,8 @@ any description:
 `tool-failure` sits with the diagnostic results because §5.5 defines it there, but it shares
 its code with nothing: a toolchain that failed has not produced a valid system, and must
 never be readable as one. A write to standard output that fails is one too, for every command, whatever
-the verdict was and with what the command did left standing, and it says so on standard error ([Building a system](building.md)
-says what it cannot see). `unimplemented` is temporary — it disappears command by command as
+the verdict was and with what the command did left standing, and it says so on standard error; a standard error nobody reads changes
+nothing ([Building a system](building.md) says what neither can see). `unimplemented` is temporary — it disappears command by command as
 the owning leaves land. `stale-input` is permanent: a checker answers it when what it was handed was not made
 together, and it says nothing about the system either.
 

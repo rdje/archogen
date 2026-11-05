@@ -4,6 +4,9 @@
 //! the command's status the checker's verdict, the downgrade `--unchecked` says it is, and every refusal before a plan
 //! exists writing none.
 
+#[allow(dead_code)]
+mod common;
+
 use std::cell::RefCell;
 use std::io::Write;
 use std::path::{Path, PathBuf};
@@ -228,7 +231,7 @@ fn a_plan_that_cannot_land_leaves_nothing_beside_it_and_takes_nothing_it_did_not
     let long = dir.join("a/b").join("x".repeat(252));
     let (status, _, err) = resolve(&[&heartbeat(), "--out", long.to_str().unwrap()], &checker);
     assert_eq!(status, Status::Usage, "{err}");
-    assert!(err.contains("room in its name"), "{err}");
+    assert!(err.contains("too long"), "{err}");
     assert!(!dir.join("a").exists(), "the parents it made stayed");
     // A plan over what stands at the name itself: that is what naming an output asks.
     let named = dir.join("named.json");
@@ -236,6 +239,171 @@ fn a_plan_that_cannot_land_leaves_nothing_beside_it_and_takes_nothing_it_did_not
     let (status, _, err) = resolve(&[&heartbeat(), "--out", named.to_str().unwrap()], &checker);
     assert_eq!(status, Status::Ok, "{err}");
     assert_ne!(std::fs::read_to_string(&named).expect("written"), "mine");
+}
+
+/// `archogen resolve` of the heartbeat at `plan`, with a checker that accepts, `extra` arguments added: its status, and all it said.
+fn resolve_at(plan: &str, extra: &[&str]) -> (Status, String) {
+    let checker = Checker::answering(Answer::Record(Status::Ok));
+    let mut args = vec![heartbeat()];
+    args.extend(["--out".to_owned(), plan.to_owned()]);
+    args.extend(extra.iter().map(ToString::to_string));
+    let args: Vec<&str> = args.iter().map(String::as_str).collect();
+    let (status, out, err) = resolve(&args, &checker);
+    (status, format!("{out}{err}"))
+}
+
+/// One route of `docs/book/src/cli.md`'s table: what it sets up under the directory it is given, runs and leaves.
+#[cfg(unix)]
+type Route = fn(&Path) -> (Status, String);
+
+/// Each route of that table, by the name its row gives it.
+#[cfg(unix)]
+fn plan_routes() -> Vec<(&'static str, Route)> {
+    vec![
+        ("no-name", |_| resolve_at(".", &[])),
+        ("empty-name", |_| resolve_at("", &[])),
+        ("a-trailing-separator", |root| {
+            let outcome = resolve_at(&format!("{}/", root.join("q").display()), &[]);
+            assert!(!root.join("q").exists());
+            outcome
+        }),
+        ("back-through", |root| {
+            std::fs::create_dir(root.join("d")).expect("a directory");
+            let outcome = resolve_at(&root.join("missing/../d").display().to_string(), &[]);
+            assert!(!root.join("missing").exists());
+            outcome
+        }),
+        ("a-directory", |root| {
+            std::fs::create_dir(root.join("d")).expect("a directory");
+            let outcome = resolve_at(&root.join("d").display().to_string(), &[]);
+            assert!(!root.join("d.part").exists());
+            outcome
+        }),
+        ("part-stands", |root| {
+            std::fs::write(root.join("p.part"), "mine").expect("written");
+            let outcome = resolve_at(&root.join("p").display().to_string(), &[]);
+            assert_eq!(
+                std::fs::read_to_string(root.join("p.part")).expect("kept"),
+                "mine"
+            );
+            assert!(!root.join("p").exists());
+            outcome
+        }),
+        ("check-stands", |root| {
+            std::fs::write(root.join("p"), "old").expect("written");
+            std::fs::write(root.join("p.check"), "mine").expect("written");
+            let outcome = resolve_at(&root.join("p").display().to_string(), &[]);
+            assert_eq!(
+                std::fs::read_to_string(root.join("p")).expect("kept"),
+                "old"
+            );
+            assert_eq!(
+                std::fs::read_to_string(root.join("p.check")).expect("kept"),
+                "mine"
+            );
+            outcome
+        }),
+        ("check-stands-unchecked", |root| {
+            std::fs::write(root.join("p.check"), "mine").expect("written");
+            let outcome = resolve_at(&root.join("p").display().to_string(), &["--unchecked"]);
+            assert!(root.join("p").is_file());
+            outcome
+        }),
+        ("no-room-name", |root| {
+            let long = root.join("a/b").join("x".repeat(252));
+            let outcome = resolve_at(&long.display().to_string(), &[]);
+            assert!(!root.join("a").exists());
+            outcome
+        }),
+        ("no-room-check", |root| {
+            std::fs::write(root.join("x".repeat(250)), "old").expect("written");
+            let outcome = resolve_at(&root.join("x".repeat(250)).display().to_string(), &[]);
+            assert_eq!(
+                std::fs::read_to_string(root.join("x".repeat(250))).expect("kept"),
+                "old"
+            );
+            outcome
+        }),
+        ("no-room-record", |root| {
+            // Room for the plan, for its directory and for its record, and none for the name the checker writes it at first.
+            let limit = common::path_limit(root);
+            let parent = common::a_path_of_length(root, limit - 26);
+            let outcome = resolve_at(&parent.join("p").display().to_string(), &[]);
+            assert_eq!(std::fs::read_dir(root).expect("a directory").count(), 0);
+            outcome
+        }),
+        ("file-on-the-way", |root| {
+            std::fs::write(root.join("f"), "mine").expect("written");
+            let outcome = resolve_at(&root.join("f/x").display().to_string(), &[]);
+            assert_eq!(
+                std::fs::read_to_string(root.join("f")).expect("kept"),
+                "mine"
+            );
+            outcome
+        }),
+        ("link-on-the-way", |root| {
+            std::os::unix::fs::symlink("nowhere", root.join("dangling")).expect("a link");
+            resolve_at(&root.join("dangling/x").display().to_string(), &[])
+        }),
+        ("absent", |root| {
+            let outcome = resolve_at(&root.join("a/b/p").display().to_string(), &[]);
+            assert!(root.join("a/b/p").is_file());
+            assert!(root.join("a/b/p.check").is_dir());
+            assert!(!root.join("a/b/p.part").exists());
+            outcome
+        }),
+        ("over-a-file", |root| {
+            use std::os::unix::fs::PermissionsExt;
+            std::fs::write(root.join("p"), "mine").expect("written");
+            std::fs::set_permissions(root.join("p"), std::fs::Permissions::from_mode(0o600))
+                .expect("its mode");
+            let outcome = resolve_at(&root.join("p").display().to_string(), &[]);
+            assert_ne!(
+                std::fs::read_to_string(root.join("p")).expect("written"),
+                "mine"
+            );
+            let mode = std::fs::metadata(root.join("p"))
+                .expect("it stands")
+                .permissions()
+                .mode();
+            assert_eq!(mode & 0o777, 0o600);
+            outcome
+        }),
+        ("over-a-link", |root| {
+            std::fs::write(root.join("target"), "mine").expect("written");
+            std::os::unix::fs::symlink(root.join("target"), root.join("p")).expect("a link");
+            let outcome = resolve_at(&root.join("p").display().to_string(), &[]);
+            assert!(!std::fs::symlink_metadata(root.join("p"))
+                .expect("it stands")
+                .is_symlink());
+            assert_eq!(
+                std::fs::read_to_string(root.join("target")).expect("kept"),
+                "mine"
+            );
+            outcome
+        }),
+    ]
+}
+
+#[test]
+#[cfg(unix)]
+fn every_route_of_out_does_what_the_chapter_s_table_says() {
+    let chapter =
+        std::fs::read_to_string(root().join("docs/book/src/cli.md")).expect("the chapter");
+    let rows = common::table_rows(&chapter, "plan-routes");
+    let routes = plan_routes();
+    let named: Vec<&str> = routes.iter().map(|(name, _)| *name).collect();
+    let listed: Vec<&str> = rows.iter().map(|row| row[0].as_str()).collect();
+    assert_eq!(listed, named, "the table's routes and the fixtures differ");
+    for (row, (name, route)) in rows.iter().zip(&routes) {
+        let (status, said) = route(&scratch());
+        assert_eq!(status.slug(), row[2], "`{name}`: {said}");
+        assert!(
+            said.contains(&row[3]),
+            "`{name}` does not say `{}`: {said}",
+            row[3]
+        );
+    }
 }
 
 #[test]

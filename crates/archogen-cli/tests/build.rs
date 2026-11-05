@@ -1092,34 +1092,6 @@ fn modes_bind(root: &Path) -> bool {
     fs::write(closed.join("a-file"), "").is_err()
 }
 
-/// A path under `root` of exactly `length` bytes, in names short enough to take a suffix.
-fn a_path_of_length(root: &Path, length: usize) -> PathBuf {
-    let mut path = root.to_path_buf();
-    let mut left = length - root.as_os_str().len();
-    while left > 0 {
-        let name = (left - 1).min(200);
-        if left - 1 - name == 1 {
-            // A remainder of one byte would be a separator and no name.
-            path.push("x".repeat(name - 1));
-            left -= name;
-        } else {
-            path.push("x".repeat(name));
-            left -= name + 1;
-        }
-    }
-    path
-}
-
-/// The length at which this host first refuses a path by its length alone, whatever the path names.
-fn path_limit(root: &Path) -> usize {
-    (root.as_os_str().len() + 10..1 << 16)
-        .find(|length| {
-            fs::symlink_metadata(a_path_of_length(root, *length))
-                .is_err_and(|error| error.kind() == std::io::ErrorKind::InvalidFilename)
-        })
-        .expect("a path this long is too long")
-}
-
 #[test]
 #[cfg(unix)]
 fn a_directory_closed_to_its_owner_s_writes_takes_a_package_and_keeps_its_mode() {
@@ -1189,13 +1161,13 @@ fn what_stays_of_an_earlier_build_keeps_the_mode_it_had() {
 
 #[test]
 #[cfg(unix)]
-fn a_stage_closes_while_it_runs_what_the_mode_it_will_take_closes_its_owner_able_to_write() {
+fn a_stage_is_private_to_its_owner_while_it_runs_whatever_the_mode_it_will_take() {
     // Read while the checker runs, and not only of the stage a refused run leaves. That it holds from the very call that makes
-    // it is `make_dir`'s: no test sees between that call and the next.
+    // it is `make_stage`'s: no test sees between that call and the next.
     let dir = scratch("stage-while-it-runs").join("out");
     let _reopened = Reopened(vec![dir.clone()]);
     fs::create_dir(&dir).expect("a directory");
-    set_mode(&dir, 0o550);
+    set_mode(&dir, 0o775);
     let (status, _, err) = invoke(
         &[
             "build",
@@ -1204,13 +1176,34 @@ fn a_stage_closes_while_it_runs_what_the_mode_it_will_take_closes_its_owner_able
             &dir.display().to_string(),
         ],
         &Changing {
-            change: |dir| assert_eq!(mode_of(&beside(dir, ".building")), 0o750),
+            change: |dir| assert_eq!(mode_of(&beside(dir, ".building")), 0o700),
             dir: dir.clone(),
         },
     );
     assert_eq!(status, Status::Ok, "{err}");
-    assert_eq!(mode_of(&dir), 0o550, "{err}");
-    for (mode, stage) in [(0o555, 0o755), (0o550, 0o750), (0o500, 0o700)] {
+    assert_eq!(mode_of(&dir), 0o775, "{err}");
+    // Where nothing stands, it is private until the package lands, and the package takes what a new directory takes there.
+    let root = scratch("stage-of-nothing");
+    fs::create_dir(root.join("a-new-directory")).expect("a directory");
+    let (status, _, err) = invoke(
+        &[
+            "build",
+            &example(HEARTBEAT),
+            "--out",
+            &root.join("out").display().to_string(),
+        ],
+        &Changing {
+            change: |dir| assert_eq!(mode_of(&beside(dir, ".building")), 0o700),
+            dir: root.join("out"),
+        },
+    );
+    assert_eq!(status, Status::Ok, "{err}");
+    assert_eq!(
+        mode_of(&root.join("out")),
+        mode_of(&root.join("a-new-directory"))
+    );
+    // A kept stage stays private, whatever it would have become.
+    for mode in [0o775, 0o555, 0o550, 0o500] {
         let dir = scratch(&format!("stage-{mode:o}")).join("out");
         let _reopened = Reopened(vec![dir.clone()]);
         fs::create_dir(&dir).expect("a directory");
@@ -1228,7 +1221,7 @@ fn a_stage_closes_while_it_runs_what_the_mode_it_will_take_closes_its_owner_able
             },
         );
         assert_eq!(status, Status::ToolFailure, "{err}");
-        assert_eq!(mode_of(&beside(&dir, ".building")), stage, "{err}");
+        assert_eq!(mode_of(&beside(&dir, ".building")), 0o700, "{err}");
         assert_eq!(
             mode_of(&dir),
             mode,
@@ -1291,10 +1284,10 @@ fn a_directory_this_user_cannot_read_and_search_is_refused_saying_what_opens_it(
     set_mode(&dir, 0o555);
     let (status, out, err) = build(&description, &dir);
     assert_eq!(status, Status::Ok, "{err}");
-    assert!(out.contains("open it before running it"), "{out}");
+    assert!(out.contains("open it if cargo stops"), "{out}");
     let (status, out, err) = build(&description, &root.join("open"));
     assert_eq!(status, Status::Ok, "{err}");
-    assert!(!out.contains("open it before running it"), "{out}");
+    assert!(!out.contains("open it if cargo stops"), "{out}");
 }
 
 #[test]
@@ -1316,7 +1309,7 @@ fn a_place_that_cannot_be_opened_is_a_usage_error_saying_why() {
     let (status, _, err) = build(&description, &file.join("x"));
     assert_eq!(status, Status::Usage, "{err}");
     assert!(err.contains("is no directory"), "{err}");
-    assert!(!err.contains("room in its name"), "{err}");
+    assert!(!err.contains("too long"), "{err}");
     assert_eq!(fs::read_to_string(&file).expect("kept"), "mine");
     // A parent closed to this user, where a mode binds: nothing is run, nothing made.
     if modes_bind(&root) {
@@ -1334,10 +1327,10 @@ fn a_place_that_cannot_be_opened_is_a_usage_error_saying_why() {
 #[test]
 fn a_path_with_no_room_for_what_a_build_writes_beneath_it_is_refused_before_anything_runs() {
     let root = scratch("no-depth");
-    let limit = path_limit(&root);
+    let limit = common::path_limit(&root);
     let description = example(HEARTBEAT);
     // Room for the stage's own name, and for its record, and none for the longest file a build writes.
-    let dir = a_path_of_length(&root, limit - 20);
+    let dir = common::a_path_of_length(&root, limit - 30);
     let (status, _, err) = build(&description, &dir);
     assert_eq!(status, Status::Usage, "{err}");
     assert!(err.contains("leaves no room in a path"), "{err}");
@@ -1345,10 +1338,10 @@ fn a_path_with_no_room_for_what_a_build_writes_beneath_it_is_refused_before_anyt
     assert_eq!(
         fs::read_dir(&root).expect("a directory").count(),
         0,
-        "it made something"
+        "it left something"
     );
     // With room for that, it builds.
-    let dir = a_path_of_length(&root, limit - 60);
+    let dir = common::a_path_of_length(&root, limit - 60);
     let (status, _, err) = build(&description, &dir);
     assert_eq!(status, Status::Ok, "{err}");
     assert!(dir.join("Cargo.toml").is_file());
@@ -1404,6 +1397,7 @@ fn what_comes_under_a_carried_name_in_the_stage_is_carried_on_and_not_named() {
         fs::read_to_string(dir.join("target/mine.txt")).expect("carried"),
         "mine"
     );
+    assert!(!err.contains("mine.txt"), "{err}");
 }
 
 #[test]
@@ -1474,6 +1468,524 @@ fn a_report_cut_at_any_byte_is_noticed_by_what_the_executable_reads() {
 }
 
 #[test]
+fn a_cut_report_of_any_command_leaves_its_own_exit_code_to_the_library() {
+    // What the library returns is the command's: `Watched` is how the executable learns the stream failed. So a verdict stays a
+    // verdict for whoever holds a stream of their own.
+    let mut out = Watched::new(Cut { room: 0 });
+    let mut err = Vec::new();
+    let status = archogen_cli::run(
+        ["check", &example("examples/s0-heartbeat/system.eadl")].map(String::from),
+        &mut out,
+        &mut err,
+    );
+    assert_eq!(status, Status::Ok);
+    assert!(out.failed());
+}
+
+#[test]
+fn a_standard_error_nobody_reads_changes_no_verdict() {
+    let root = scratch("unread-stderr");
+    let description = example(HEARTBEAT);
+    let dir = root.join("out");
+    let (mut out, mut err) = (Vec::new(), Cut { room: 0 });
+    let status = archogen_cli::run_with_input(
+        [
+            "build".to_owned(),
+            description.clone(),
+            "--out".to_owned(),
+            dir.display().to_string(),
+        ],
+        &mut std::io::empty(),
+        &Checker,
+        &mut out,
+        &mut err,
+    );
+    assert_eq!(status, Status::Ok);
+    assert!(dir.join("Cargo.toml").is_file());
+    assert!(!beside(&dir, ".building").exists());
+    // A refusal is the same refusal: `bogus` is `usage`, however its hint fares.
+    let mut err = Cut { room: 0 };
+    let status = archogen_cli::run(["bogus".to_owned()], &mut Vec::new(), &mut err);
+    assert_eq!(status, Status::Usage);
+}
+
+#[test]
+#[cfg(unix)]
+fn a_package_keeps_the_group_of_what_it_replaces_where_a_group_can_differ() {
+    use std::os::unix::fs::MetadataExt;
+    let root = scratch("group");
+    let dir = root.join("out");
+    fs::create_dir(&dir).expect("a directory");
+    let groups = Command::new("id").arg("-G").output().expect("id runs");
+    let groups = String::from_utf8_lossy(&groups.stdout).to_string();
+    let own = fs::metadata(&dir).expect("it stands").gid();
+    let other = groups
+        .split_whitespace()
+        .filter_map(|group| group.parse::<u32>().ok())
+        .find(|group| *group != own);
+    // A volume with owners disabled holds no other group, nor does a user of one: then there is nothing to keep.
+    let changed = other.is_some_and(|group| {
+        std::os::unix::fs::chown(&dir, None, Some(group)).is_ok()
+            && fs::metadata(&dir).expect("it stands").gid() == group
+    });
+    if !changed {
+        return;
+    }
+    let group = other.expect("one was found");
+    let (status, _, err) = build(&example(HEARTBEAT), &dir);
+    assert_eq!(status, Status::Ok, "{err}");
+    assert_eq!(fs::metadata(&dir).expect("it stands").gid(), group, "{err}");
+}
+
+#[test]
+#[cfg(unix)]
+fn a_path_read_through_dots_is_judged_by_where_it_lands_from_a_long_working_directory() {
+    let root = scratch("from-deep");
+    let limit = common::path_limit(&root);
+    let deep = common::a_path_of_length(&root, limit - 24);
+    fs::create_dir_all(&deep).expect("a deep directory");
+    // No install beside this executable, so its checker cannot run: but only after the place has been judged.
+    let output = Command::new(env!("CARGO_BIN_EXE_archogen"))
+        .args(["build", &example(HEARTBEAT), "--out"])
+        .arg(format!(
+            "{}/out",
+            std::iter::repeat_n("..", depth_below(&root, &deep))
+                .collect::<Vec<_>>()
+                .join("/")
+        ))
+        .current_dir(&deep)
+        .output()
+        .expect("the executable runs");
+    let said = String::from_utf8_lossy(&output.stderr);
+    assert!(!said.contains("leaves no room"), "{said}");
+    assert_eq!(
+        output.status.code(),
+        Some(Status::ToolFailure.code()),
+        "{said}"
+    );
+    assert!(said.contains("install"), "{said}");
+}
+
+/// How many names `deep` lies beneath `root`.
+#[cfg(unix)]
+fn depth_below(root: &Path, deep: &Path) -> usize {
+    deep.strip_prefix(root)
+        .expect("beneath")
+        .components()
+        .count()
+}
+
+#[test]
+#[cfg(unix)]
+fn a_description_too_long_for_the_checker_to_be_handed_is_refused_saying_so() {
+    let root = scratch("deep-description");
+    let limit = common::path_limit(&root);
+    let deep = common::a_path_of_length(&root, limit - 8);
+    fs::create_dir_all(&deep).expect("a deep directory");
+    let name = "s".repeat(12) + ".eadl";
+    let copied = Command::new("cp")
+        .arg(example(HEARTBEAT))
+        .arg(&name)
+        .current_dir(&deep)
+        .status()
+        .expect("cp runs");
+    assert!(copied.success());
+    let out = root
+        .parent()
+        .expect("a parent")
+        .join("deep-description-out");
+    let output = Command::new(env!("CARGO_BIN_EXE_archogen"))
+        .args(["build", &name, "--out"])
+        .arg(&out)
+        .current_dir(&deep)
+        .output()
+        .expect("the executable runs");
+    let said = String::from_utf8_lossy(&output.stderr);
+    assert_eq!(output.status.code(), Some(Status::Usage.code()), "{said}");
+    assert!(said.contains("by its whole path"), "{said}");
+    assert!(said.contains("nearer the root"), "{said}");
+    assert!(!said.contains("report it"), "{said}");
+    assert!(!out.exists());
+    assert!(!beside(&out, ".building").exists());
+}
+
+/// What one route of `--out` did: its status, and all it said.
+#[cfg(unix)]
+type Said = (Status, String);
+
+/// A route's outcome as the table compares it.
+#[cfg(unix)]
+fn said(outcome: (Status, String, String)) -> Option<Said> {
+    Some((outcome.0, format!("{}{}", outcome.1, outcome.2)))
+}
+
+/// `build` of the heartbeat at `dir`.
+#[cfg(unix)]
+fn build_at(dir: &Path) -> Option<Said> {
+    said(build(&example(HEARTBEAT), dir))
+}
+
+/// `build` of the heartbeat at `dir`, with `change` done while the checker runs.
+#[cfg(unix)]
+fn build_meddled(dir: &Path, change: fn(&Path)) -> Option<Said> {
+    said(invoke(
+        &[
+            "build",
+            &example(HEARTBEAT),
+            "--out",
+            &dir.display().to_string(),
+        ],
+        &Changing {
+            change,
+            dir: dir.to_path_buf(),
+        },
+    ))
+}
+
+/// An earlier build at `dir`.
+#[cfg(unix)]
+fn an_earlier_build(dir: &Path) {
+    let (status, _, err) = build(&example(HEARTBEAT), dir);
+    assert_eq!(status, Status::Ok, "{err}");
+}
+
+/// One route of the chapter's table: what it sets up under the directory it is given, runs and leaves, its status and what it says
+/// being the row's to judge. `None` where a closed mode binds nobody, so the route cannot be taken.
+#[cfg(unix)]
+type Route = fn(&Path) -> Option<Said>;
+
+/// Each route of that table, by the name its row gives it.
+#[cfg(unix)]
+fn out_routes() -> Vec<(&'static str, Route)> {
+    vec![
+        ("no-name", |_| {
+            said(invoke(
+                &["build", &example(HEARTBEAT), "--out", ".."],
+                &Checker,
+            ))
+        }),
+        ("back-through", |root| {
+            let outcome = build_at(&root.join("missing/../x"));
+            assert!(!root.join("missing").exists() && !root.join("x").exists());
+            outcome
+        }),
+        ("a-file", |root| {
+            let file = root.join("x");
+            fs::write(&file, "mine").expect("written");
+            let outcome = build_at(&file);
+            assert_eq!(fs::read_to_string(&file).expect("kept"), "mine");
+            outcome
+        }),
+        ("a-link", |root| {
+            let (real, link) = (root.join("real"), root.join("link"));
+            fs::create_dir(&real).expect("a directory");
+            std::os::unix::fs::symlink(&real, &link).expect("a link");
+            let outcome = build_at(&link);
+            assert!(fs::symlink_metadata(&link).expect("kept").is_symlink());
+            assert_eq!(fs::read_dir(&real).expect("a directory").count(), 0);
+            outcome
+        }),
+        ("closed", |root| {
+            if !modes_bind(root) {
+                return None;
+            }
+            let dir = root.join("x");
+            let _reopened = Reopened(vec![dir.clone()]);
+            fs::create_dir(&dir).expect("a directory");
+            set_mode(&dir, 0o600);
+            let outcome = build_at(&dir);
+            assert_eq!(mode_of(&dir), 0o600);
+            outcome
+        }),
+        ("not-a-build", |root| {
+            let dir = root.join("x");
+            fs::create_dir(&dir).expect("a directory");
+            fs::write(dir.join("notes.txt"), "mine").expect("written");
+            let outcome = build_at(&dir);
+            assert_eq!(
+                fs::read_to_string(dir.join("notes.txt")).expect("kept"),
+                "mine"
+            );
+            outcome
+        }),
+        ("edited", |root| {
+            let dir = root.join("x");
+            an_earlier_build(&dir);
+            fs::write(dir.join("plan.txt"), "mine").expect("written");
+            let outcome = build_at(&dir);
+            assert_eq!(
+                fs::read_to_string(dir.join("plan.txt")).expect("kept"),
+                "mine"
+            );
+            outcome
+        }),
+        ("closed-within", |root| {
+            if !modes_bind(root) {
+                return None;
+            }
+            let dir = root.join("x");
+            an_earlier_build(&dir);
+            let _reopened = Reopened(vec![dir.join("rt-core")]);
+            set_mode(&dir.join("rt-core"), 0o600);
+            let outcome = build_at(&dir);
+            assert_eq!(mode_of(&dir.join("rt-core")), 0o600);
+            outcome
+        }),
+        ("stage-stands", |root| {
+            let dir = root.join("x");
+            let other = beside(&dir, ".building");
+            fs::create_dir(&other).expect("a directory");
+            fs::write(other.join("notes.txt"), "mine").expect("written");
+            let outcome = build_at(&dir);
+            assert!(other.join("notes.txt").is_file() && !dir.exists());
+            outcome
+        }),
+        ("aside-stands", |root| {
+            let dir = root.join("x");
+            let other = beside(&dir, ".replaced");
+            fs::create_dir(&other).expect("a directory");
+            fs::write(other.join("notes.txt"), "mine").expect("written");
+            let outcome = build_at(&dir);
+            assert!(other.join("notes.txt").is_file() && !dir.exists());
+            outcome
+        }),
+        ("no-room-name", |root| {
+            let outcome = build_at(&root.join("a/b").join("x".repeat(250)));
+            assert_eq!(fs::read_dir(root).expect("a directory").count(), 0);
+            outcome
+        }),
+        ("no-room-path", |root| {
+            let limit = common::path_limit(root);
+            let outcome = build_at(&common::a_path_of_length(root, limit - 30));
+            assert_eq!(fs::read_dir(root).expect("a directory").count(), 0);
+            outcome
+        }),
+        ("file-on-the-way", |root| {
+            let file = root.join("f");
+            fs::write(&file, "mine").expect("written");
+            let outcome = build_at(&file.join("x"));
+            assert_eq!(fs::read_to_string(&file).expect("kept"), "mine");
+            outcome
+        }),
+        ("link-on-the-way", |root| {
+            let link = root.join("dangling");
+            std::os::unix::fs::symlink("nowhere", &link).expect("a link");
+            let outcome = build_at(&link.join("x"));
+            assert!(fs::symlink_metadata(&link).expect("kept").is_symlink());
+            outcome
+        }),
+        ("closed-parent", |root| {
+            if !modes_bind(root) {
+                return None;
+            }
+            let closed = root.join("closed");
+            let _reopened = Reopened(vec![closed.clone()]);
+            fs::create_dir(&closed).expect("a directory");
+            set_mode(&closed, 0o555);
+            let outcome = build_at(&closed.join("a/x"));
+            assert_eq!(fs::read_dir(&closed).expect("a directory").count(), 0);
+            outcome
+        }),
+        ("absent", |root| {
+            let dir = root.join("a/b");
+            fs::create_dir(root.join("new")).expect("a directory");
+            let outcome = build_at(&dir);
+            assert!(dir.join("Cargo.toml").is_file());
+            assert_eq!(mode_of(&dir), mode_of(&root.join("new")));
+            outcome
+        }),
+        ("empty", |root| {
+            let dir = root.join("x");
+            fs::create_dir(&dir).expect("a directory");
+            set_mode(&dir, 0o750);
+            let outcome = build_at(&dir);
+            assert!(dir.join("Cargo.toml").is_file());
+            assert_eq!(mode_of(&dir), 0o750);
+            outcome
+        }),
+        ("earlier", |root| {
+            let dir = root.join("x");
+            an_earlier_build(&dir);
+            fs::create_dir(dir.join("target")).expect("a directory");
+            fs::write(dir.join("target/kept.txt"), "cargo's").expect("written");
+            set_mode(&dir, 0o750);
+            let outcome = build_at(&dir);
+            assert_eq!(mode_of(&dir), 0o750);
+            assert!(dir.join("target/kept.txt").is_file());
+            assert!(!beside(&dir, ".replaced").exists());
+            outcome
+        }),
+        ("closed-to-writes", |root| {
+            let dir = root.join("x");
+            let _reopened = Reopened(vec![dir.clone()]);
+            fs::create_dir(&dir).expect("a directory");
+            set_mode(&dir, 0o555);
+            let outcome = build_at(&dir);
+            assert_eq!(mode_of(&dir), 0o555);
+            assert!(dir.join("Cargo.toml").is_file());
+            outcome
+        }),
+        ("came-at-out", |root| {
+            let dir = root.join("x");
+            let outcome = build_meddled(&dir, |dir| fs::create_dir(dir).expect("a directory"));
+            assert_eq!(fs::read_dir(&dir).expect("a directory").count(), 0);
+            assert!(!beside(&dir, ".building").exists());
+            outcome
+        }),
+        ("came-aside", |root| {
+            let dir = root.join("x");
+            an_earlier_build(&dir);
+            let outcome = build_meddled(&dir, |dir| {
+                fs::create_dir(beside(dir, ".replaced")).expect("a directory");
+            });
+            assert!(dir.join("Cargo.toml").is_file());
+            assert!(beside(&dir, ".replaced").is_dir());
+            assert!(!beside(&dir, ".building").exists());
+            outcome
+        }),
+        ("aside-not-needed", |root| {
+            let dir = root.join("x");
+            let outcome = build_meddled(&dir, |dir| {
+                fs::create_dir(beside(dir, ".replaced")).expect("a directory");
+            });
+            assert!(dir.join("Cargo.toml").is_file());
+            let (status, _, err) = build(&example(HEARTBEAT), &dir);
+            assert_eq!(status, Status::Usage, "{err}");
+            outcome
+        }),
+        ("gone", |root| {
+            let dir = root.join("x");
+            an_earlier_build(&dir);
+            let outcome = build_meddled(&dir, |dir| fs::remove_dir_all(dir).expect("removed"));
+            assert!(!dir.exists() && !beside(&dir, ".building").exists());
+            outcome
+        }),
+        ("came-in-earlier", |root| {
+            let dir = root.join("x");
+            an_earlier_build(&dir);
+            let outcome = build_meddled(&dir, |dir| {
+                fs::write(dir.join("thesis.txt"), "mine").expect("written");
+            });
+            assert!(beside(&dir, ".replaced").join("thesis.txt").is_file());
+            assert!(!dir.join("thesis.txt").exists());
+            assert!(dir.join("Cargo.toml").is_file());
+            outcome
+        }),
+        ("came-in-stage", |root| {
+            let dir = root.join("x");
+            let outcome = build_meddled(&dir, |dir| {
+                fs::write(beside(dir, ".building").join("mine.txt"), "mine").expect("written");
+            });
+            assert!(dir.join("mine.txt").is_file());
+            let (status, _, err) = build(&example(HEARTBEAT), &dir);
+            assert_eq!(status, Status::Usage, "{err}");
+            assert!(err.contains("`mine.txt`"), "{err}");
+            outcome
+        }),
+        ("filled-in-stage", |root| {
+            let dir = root.join("x");
+            let outcome = build_meddled(&dir, |dir| {
+                fs::write(beside(dir, ".building").join("plan.txt"), "mine").expect("written");
+            });
+            assert_eq!(
+                fs::read_to_string(beside(&dir, ".building").join("plan.txt")).expect("kept"),
+                "mine"
+            );
+            assert!(!dir.exists());
+            let (status, _, err) = build(&example(HEARTBEAT), &dir);
+            assert_eq!(status, Status::Usage, "{err}");
+            outcome
+        }),
+        ("linked-in-stage", |root| {
+            let dir = root.join("x");
+            let outcome = build_meddled(&dir, |dir| {
+                let elsewhere = dir.parent().expect("a parent").join("elsewhere");
+                fs::create_dir(&elsewhere).expect("a directory");
+                let link = beside(dir, ".building").join("rt-core");
+                std::os::unix::fs::symlink(elsewhere, link).expect("a link");
+            });
+            assert_eq!(
+                fs::read_dir(root.join("elsewhere"))
+                    .expect("a directory")
+                    .count(),
+                0,
+                "written through the link"
+            );
+            assert!(!dir.exists());
+            outcome
+        }),
+        ("carried-in-stage", |root| {
+            let dir = root.join("x");
+            an_earlier_build(&dir);
+            fs::write(dir.join("Cargo.lock"), "earlier").expect("written");
+            let outcome = build_meddled(&dir, |dir| {
+                fs::write(beside(dir, ".building").join("Cargo.lock"), "mine").expect("written");
+            });
+            assert_eq!(
+                fs::read_to_string(dir.join("Cargo.lock")).expect("landed"),
+                "mine"
+            );
+            assert_eq!(
+                fs::read_to_string(beside(&dir, ".replaced").join("Cargo.lock")).expect("kept"),
+                "earlier"
+            );
+            outcome
+        }),
+        ("closed-meanwhile", |root| {
+            let dir = root.join("x");
+            an_earlier_build(&dir);
+            set_mode(&dir, 0o755);
+            let outcome = build_meddled(&dir, |dir| set_mode(dir, 0o700));
+            assert_eq!(mode_of(&dir), 0o700);
+            outcome
+        }),
+        ("disagreed", |root| {
+            let dir = root.join("x");
+            let outcome = said(invoke(
+                &[
+                    "build",
+                    &example(HEARTBEAT),
+                    "--out",
+                    &dir.display().to_string(),
+                ],
+                &Answering {
+                    status: Status::ToolFailure,
+                    code: Status::ToolFailure.code(),
+                },
+            ));
+            assert!(beside(&dir, ".building").join(RECORD).is_file());
+            assert!(!dir.exists());
+            outcome
+        }),
+    ]
+}
+
+#[test]
+#[cfg(unix)]
+fn every_route_of_out_does_what_the_chapter_s_table_says() {
+    let chapter =
+        fs::read_to_string(repo_root().join("docs/book/src/building.md")).expect("the chapter");
+    let rows = common::table_rows(&chapter, "out-routes");
+    let routes = out_routes();
+    let named: Vec<&str> = routes.iter().map(|(name, _)| *name).collect();
+    let listed: Vec<&str> = rows.iter().map(|row| row[0].as_str()).collect();
+    // Both ways: a row no fixture runs states nothing, and a fixture no row names says nothing to the reader.
+    assert_eq!(listed, named, "the table's routes and the fixtures differ");
+    for (row, (name, route)) in rows.iter().zip(&routes) {
+        let root = scratch(&format!("route-{name}"));
+        let Some((status, said)) = route(&root) else {
+            continue;
+        };
+        assert_eq!(status.slug(), row[2], "`{name}`: {said}");
+        assert!(
+            said.contains(&row[3]),
+            "`{name}` does not say `{}`: {said}",
+            row[3]
+        );
+    }
+}
+
+#[test]
 #[cfg(unix)]
 fn a_stream_closed_before_the_run_looks_whole_to_any_rust_program() {
     // What the record states and cannot change: the runtime gives a stream closed at its start `/dev/null`, and takes a stream
@@ -1497,11 +2009,11 @@ fn a_name_with_no_room_for_its_stage_is_a_usage_error_and_leaves_nothing() {
     // Beside a parent that stands, the check reads it at once.
     let (status, _, err) = build(&description, &root.join(&long));
     assert_eq!(status, Status::Usage, "{err}");
-    assert!(err.contains("room in its name"), "{err}");
+    assert!(err.contains("too long"), "{err}");
     // Under parents that do not stand yet, a path reads as absent up to its first missing name, so only making it can tell.
     let (status, _, err) = build(&description, &root.join("a/b").join(&long));
     assert_eq!(status, Status::Usage, "{err}");
-    assert!(err.contains("room in its name"), "{err}");
+    assert!(err.contains("too long"), "{err}");
     assert_eq!(
         fs::read_dir(&root).expect("a directory").count(),
         0,
@@ -1511,7 +2023,7 @@ fn a_name_with_no_room_for_its_stage_is_a_usage_error_and_leaves_nothing() {
 
 #[test]
 fn a_report_that_cannot_be_written_is_said_and_is_the_exit_code() {
-    // `--version` fails as it writes, and `check` when the executable flushes: each route says so.
+    // `--version` fails in `emit`, and `check` in a line it drops: the executable reads both from `Watched`, and says it once.
     let description = example(HEARTBEAT);
     let check: [&str; 2] = ["check", &description];
     for args in [&["--version"][..], &check[..]] {
@@ -1529,7 +2041,7 @@ fn a_report_that_cannot_be_written_is_said_and_is_the_exit_code() {
         );
         let said = String::from_utf8_lossy(&output.stderr);
         assert_eq!(
-            said.matches("could not be written whole").count(),
+            said.matches("could not take what was written").count(),
             1,
             "{output:?}"
         );

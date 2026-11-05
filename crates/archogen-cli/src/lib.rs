@@ -19,6 +19,7 @@ pub mod consume;
 pub mod explain_cmd;
 pub mod launch;
 pub mod mcp;
+mod place;
 pub mod resolve_cmd;
 pub mod spec;
 pub mod status;
@@ -39,10 +40,10 @@ pub const VERSION: &str = env!("CARGO_PKG_VERSION");
 
 /// Run one invocation, writing normal output to `out` and diagnostics to `err`.
 ///
-/// Returns the [`Status`] the process should exit with. Errors from the writers are reported
-/// as [`Status::ToolFailure`]: a toolchain that cannot deliver its own output has not
-/// produced a result, and §5.5 forbids presenting that as a valid system. It runs no program: a command a sibling
-/// program answers is refused here, which only the `archogen` executable runs ([`launch`]).
+/// Returns the [`Status`] the process should exit with. A writer's error does not reach it, save `--help`'s and `--version`'s, whose
+/// whole output is that one write: a command drops each line's error, and whoever needs to know that `out` failed holds it in a
+/// [`Watched`], as the `archogen` executable does. A failing `err` changes nothing, having nothing else to say it on. It runs no
+/// program: a command a sibling program answers is refused here, which only the `archogen` executable runs ([`launch`]).
 pub fn run<A, S>(args: A, out: &mut dyn Write, err: &mut dyn Write) -> Status
 where
     A: IntoIterator<Item = S>,
@@ -158,18 +159,18 @@ impl<W: Write> Write for Watched<W> {
     }
 }
 
-/// Say that standard output could not take the report, the exit code that follows from it: it is said, since a code alone
-/// would not tell a reader that whatever the command did stands.
+/// Say that standard output failed, the exit code that follows from it: it is said, since a code alone would not tell a reader
+/// that whatever the command did stands.
 pub fn unwritten(err: &mut dyn Write) -> Status {
     let failure = Status::ToolFailure;
     let _ = writeln!(
         err,
-        "archogen: {}: the report could not be written whole, so the exit code is this one; what the command did stands, a package it placed among it",
+        "archogen: {}: standard output could not take what was written to it, so the exit code is this one; what the command did stands",
         failure.slug()
     );
     let _ = writeln!(
         err,
-        "  hint: give standard output somewhere that takes it, and run the command again for its report"
+        "  hint: give standard output somewhere that takes it, and run the command again"
     );
     failure
 }
@@ -177,16 +178,13 @@ pub fn unwritten(err: &mut dyn Write) -> Status {
 /// Print a refusal in the shape every archogen diagnostic uses: what happened, then what to
 /// do about it. §5.5 requires a concrete repair direction on every diagnostic.
 fn report(err: &mut dyn Write, refusal: &Refusal) -> Status {
-    let written = writeln!(
+    let _ = writeln!(
         err,
         "archogen: {}: {}",
         refusal.status.slug(),
         refusal.message
-    )
-    .and_then(|()| writeln!(err, "  hint: {}", refusal.repair));
-    if written.is_err() {
-        return Status::ToolFailure;
-    }
+    );
+    let _ = writeln!(err, "  hint: {}", refusal.repair);
     refusal.status
 }
 

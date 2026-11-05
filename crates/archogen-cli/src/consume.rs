@@ -29,6 +29,10 @@ pub const PLAN_CHECKER: &str = "archogen-plan-check";
 /// The record's name in the front's own directory.
 pub const RECORD: &str = archogen_emit::RESULT_FILE;
 
+/// The longest name the checker writes beneath the directory it is given: its record, written first beside itself and renamed
+/// into place (`crates/archogen-plan-check/src/main.rs`).
+pub const RECORD_PART: &str = "plan-check.json.part";
+
 /// The most of a record the front reads.
 const RECORD_LIMIT: usize = 1 << 20;
 
@@ -199,14 +203,24 @@ fn place_record(dir: &Path) -> Result<PathBuf, Refusal> {
 /// canonical, and its own name kept. A description that is a link is read through that link, so its imports are found beside
 /// it, where the front found them, and not beside what it points at.
 fn absolute(file: &Path, what: &str) -> Result<PathBuf, Refusal> {
+    let nearer = "run it from a directory nearer the root, or move what it names nearer it";
     let unnamed = |error: std::io::Error| {
-        failure(
-            format!(
-                "cannot name {what}, {}, absolutely: {error}",
-                file.display()
-            ),
-            "check that it exists and can be read".to_owned(),
-        )
+        let message = format!(
+            "cannot name {what}, {}, absolutely: {error}",
+            file.display()
+        );
+        if matches!(
+            error.kind(),
+            std::io::ErrorKind::NotFound | std::io::ErrorKind::PermissionDenied
+        ) {
+            failure(message, "check that it exists and can be read".to_owned())
+        } else {
+            Refusal {
+                status: Status::Usage,
+                message,
+                repair: nearer.to_owned(),
+            }
+        }
     };
     std::fs::metadata(file).map_err(unnamed)?;
     let Some(name) = file.file_name() else {
@@ -216,9 +230,21 @@ fn absolute(file: &Path, what: &str) -> Result<PathBuf, Refusal> {
         .parent()
         .filter(|parent| !parent.as_os_str().is_empty())
         .unwrap_or_else(|| Path::new("."));
-    std::fs::canonicalize(parent)
+    let named = std::fs::canonicalize(parent)
         .map(|parent| parent.join(name))
-        .map_err(unnamed)
+        .map_err(unnamed)?;
+    // It reads from here by a shorter name, and the checker is handed this one.
+    match std::fs::symlink_metadata(&named) {
+        Err(error) if error.kind() == std::io::ErrorKind::InvalidFilename => Err(Refusal {
+            status: Status::Usage,
+            message: format!(
+                "the checker is handed {what} by its whole path, and that is too long, {} seen from here: {error}",
+                file.display()
+            ),
+            repair: nearer.to_owned(),
+        }),
+        _ => Ok(named),
+    }
 }
 
 /// The record at `file`, which the checker that exited with `code` wrote, and its text.

@@ -28,6 +28,7 @@ use crate::check_cmd::{ask_with, report_not_judged};
 use crate::cli::Parsed;
 use crate::consume::{self, Expected};
 use crate::launch::Launch;
+use crate::place;
 use crate::spec::Maturity;
 use crate::status::Status;
 
@@ -42,11 +43,9 @@ pub fn run(
         .positionals
         .first()
         .expect("the parser guarantees the positional");
-    let plan_path = PathBuf::from(
-        parsed
-            .value("out")
-            .expect("the parser guarantees `--out` is required"),
-    );
+    let out_name = parsed
+        .value("out")
+        .expect("the parser guarantees `--out` is required");
     let refuse_locked = |err: &mut dyn Write| -> Option<Status> {
         if !parsed.flag("locked") {
             return None;
@@ -98,16 +97,19 @@ pub fn run(
         .as_ref()
         .map(|judged| judged.profile)
         .expect("a plan is written for a judged description");
-    if let Err(unwritten) = write_whole(&plan_path, &plan.text) {
-        let _ = writeln!(
-            err,
-            "archogen: {}: {}",
-            unwritten.status.slug(),
-            unwritten.message
-        );
-        let _ = writeln!(err, "  hint: {}", unwritten.repair);
-        return unwritten.status;
-    }
+    let plan_path = match write_whole(out_name, &plan.text, !parsed.flag("unchecked")) {
+        Ok(plan_path) => plan_path,
+        Err(unwritten) => {
+            let _ = writeln!(
+                err,
+                "archogen: {}: {}",
+                unwritten.status.slug(),
+                unwritten.message
+            );
+            let _ = writeln!(err, "  hint: {}", unwritten.repair);
+            return unwritten.status;
+        }
+    };
     let _ = writeln!(
         out,
         "{path}: resolved system `{}` against profile `{profile}` into {} ({} binding(s))",
@@ -141,9 +143,7 @@ pub fn run(
         );
         return Status::ToolFailure;
     };
-    let mut dir = plan_path.clone().into_os_string();
-    dir.push(".check");
-    let dir = PathBuf::from(dir);
+    let dir = place::beside(&plan_path, CHECK_SUFFIX);
     let expected = Expected {
         description: Path::new(path),
         plan: &plan_path,
@@ -215,36 +215,8 @@ pub(crate) fn print_owed(plan: &Plan, out: &mut dyn Write) {
     }
 }
 
-/// The directories that must be made to reach `path`, innermost first: only these are a run's to remove again.
-pub(crate) fn missing_parents(path: &Path) -> Vec<PathBuf> {
-    let mut missing = Vec::new();
-    let mut parent = path.parent();
-    while let Some(up) = parent.filter(|up| !up.as_os_str().is_empty()) {
-        if !std::fs::symlink_metadata(up).is_err_and(|error| error.kind() == ErrorKind::NotFound) {
-            break;
-        }
-        missing.push(up.to_path_buf());
-        parent = up.parent();
-    }
-    missing
-}
-
-/// The repair for a place an `--out` cannot use, by what stopped it.
-pub(crate) fn place_repair(error: &std::io::Error) -> &'static str {
-    match error.kind() {
-        ErrorKind::InvalidFilename => {
-            "leave room in its name for what goes beside it, `.building` and `.replaced` for a package, `.part` for a plan"
-        }
-        ErrorKind::NotADirectory => {
-            "a name on the way to it is no directory: name a path whose parents are directories"
-        }
-        ErrorKind::PermissionDenied => "name a place this user can reach and write",
-        ErrorKind::AlreadyExists => {
-            "a name on the way to it is a link to nothing, or something took it meanwhile: look at it, or name another place"
-        }
-        _ => "name another place",
-    }
-}
+/// What the checker's record lies under, beside the plan.
+const CHECK_SUFFIX: &str = ".check";
 
 /// Why a plan was not written.
 struct Unwritten {
@@ -253,88 +225,145 @@ struct Unwritten {
     repair: String,
 }
 
-/// Write `text` at `path` whole: its directory made, the text written at `PATH.part` and renamed into place, over a file or a
-/// link standing at `path`, as an output named by the user is. If it cannot land, what it wrote at `PATH.part` goes, with the
-/// parents it made. What already stands at `PATH.part` is not this run's: a run that stopped may have left it, so it is refused
-/// and left alone. A place it cannot use is `usage`, as `build`'s is.
-fn write_whole(path: &Path, text: &str) -> Result<(), Unwritten> {
-    let shown = path.display();
-    let place = |message: String, repair: &str| Unwritten {
+impl From<place::Refused> for Unwritten {
+    fn from(refused: place::Refused) -> Self {
+        Self {
+            status: Status::Usage,
+            message: refused.message,
+            repair: refused.repair,
+        }
+    }
+}
+
+/// The new file a plan is written in first, taking the mode of the file it will replace, if one stands there.
+#[cfg(unix)]
+fn create_part(
+    part: &Path,
+    replacing: Option<&std::fs::Metadata>,
+) -> std::io::Result<std::fs::File> {
+    use std::os::unix::fs::{OpenOptionsExt, PermissionsExt};
+    let mut options = std::fs::OpenOptions::new();
+    options.write(true).create_new(true);
+    if let Some(meta) = replacing {
+        options.mode(meta.permissions().mode() & 0o7777);
+    }
+    let file = options.open(part)?;
+    if let Some(meta) = replacing {
+        file.set_permissions(meta.permissions())?;
+    }
+    Ok(file)
+}
+
+/// The new file a plan is written in first; a platform with no owner's bits has no mode to keep.
+#[cfg(not(unix))]
+fn create_part(
+    part: &Path,
+    _replacing: Option<&std::fs::Metadata>,
+) -> std::io::Result<std::fs::File> {
+    std::fs::OpenOptions::new()
+        .write(true)
+        .create_new(true)
+        .open(part)
+}
+
+/// `text` written whole at what `out` names, and where that is. What each route does is `docs/book/src/cli.md`'s table, which
+/// `tests/resolve.rs` runs: this says it nowhere else. The place is judged whole before anything moves, the checker's record's
+/// place among it where it will run, so a plan never lands to be refused after.
+fn write_whole(out: &str, text: &str, checked: bool) -> Result<PathBuf, Unwritten> {
+    let name_a_file = "name the file to hold the plan";
+    let refused = |message: String, repair: &str| Unwritten {
         status: Status::Usage,
         message,
         repair: repair.to_owned(),
     };
-    let names_a_directory = path
-        .as_os_str()
-        .as_encoded_bytes()
+    if out
+        .as_bytes()
         .last()
-        .is_some_and(|last| std::path::is_separator(char::from(*last)));
-    if path.file_name().is_none() || names_a_directory {
-        return Err(place(
-            format!("`--out {shown}` names no file of its own"),
-            "name the file to hold the plan",
+        .is_some_and(|last| std::path::is_separator(char::from(*last)))
+    {
+        return Err(refused(
+            format!("`--out {out}` names no file of its own"),
+            name_a_file,
         ));
     }
-    if std::fs::symlink_metadata(path).is_ok_and(|meta| meta.is_dir()) {
-        return Err(place(
-            format!("`--out {shown}` is a directory, and a plan is a file"),
-            "name the file to hold the plan",
+    let path = place::read(out, "file", name_a_file)?;
+    let standing = std::fs::symlink_metadata(&path).ok();
+    if standing.as_ref().is_some_and(std::fs::Metadata::is_dir) {
+        return Err(refused(
+            format!("`--out {out}` is a directory, and a plan is a file"),
+            name_a_file,
         ));
     }
-    let made = missing_parents(path);
-    let unmake = || {
-        for dir in &made {
-            let _ = std::fs::remove_dir(dir);
+    let part = place::beside(&path, ".part");
+    place::free(
+        &part,
+        out,
+        "and a plan is written there first: a run that stopped may have left it",
+    )?;
+    let check = place::beside(&path, CHECK_SUFFIX);
+    if checked {
+        match std::fs::symlink_metadata(&check) {
+            Err(error) if error.kind() == ErrorKind::NotFound => {}
+            Err(error) => {
+                return Err(refused(
+                    format!(
+                        "cannot use {}, which `--out {out}` needs beside it: {error}",
+                        check.display()
+                    ),
+                    place::repair(&error),
+                ))
+            }
+            Ok(meta) if meta.is_dir() => {}
+            Ok(_) => {
+                return Err(refused(
+                    format!(
+                        "{} stands where the checker's record goes, and is no directory",
+                        check.display()
+                    ),
+                    "look at it, and move or remove it; or name another file, or say `--unchecked`",
+                ))
+            }
         }
+    }
+    let made = place::missing_parents(&path);
+    let unmake = |unwritten: Unwritten| {
+        place::unmake(&made);
+        unwritten
     };
-    if let Some(parent) = path.parent().filter(|p| !p.as_os_str().is_empty()) {
-        if let Err(error) = std::fs::create_dir_all(parent) {
-            unmake();
-            return Err(place(
-                format!(
-                    "cannot make {}, where `--out` lies: {error}",
-                    parent.display()
-                ),
-                place_repair(&error),
-            ));
-        }
+    place::make_parents(&path).map_err(|refused| unmake(refused.into()))?;
+    if checked {
+        place::room(&check, consume::RECORD_PART, out).map_err(|refused| unmake(refused.into()))?;
     }
-    let mut part = path.as_os_str().to_owned();
-    part.push(".part");
-    let part = PathBuf::from(part);
-    let opened = std::fs::OpenOptions::new()
-        .write(true)
-        .create_new(true)
-        .open(&part);
-    let mut file = opened.map_err(|error| {
-        unmake();
-        if error.kind() == ErrorKind::AlreadyExists {
-            place(
+    let replacing = standing.as_ref().filter(|meta| meta.is_file());
+    let mut file = create_part(&part, replacing).map_err(|error| {
+        unmake(if error.kind() == ErrorKind::AlreadyExists {
+            refused(
                 format!(
-                    "{} exists, and a plan is written there first: a run that stopped may have left it",
+                    "{} came while the plan was being written: a run alongside this one may have made it",
                     part.display()
                 ),
-                "look at it, and move or remove it; or name another file",
+                "look at it, and move or remove it; or name another place",
             )
         } else {
-            place(
+            refused(
                 format!("cannot write {}: {error}", part.display()),
-                place_repair(&error),
+                place::repair(&error),
             )
-        }
+        })
     })?;
     let written = file.write_all(text.as_bytes());
     drop(file);
+    let shown = path.display().to_string();
     written
-        .and_then(|()| std::fs::rename(&part, path))
+        .and_then(|()| std::fs::rename(&part, &path))
         .map_err(|error| {
             let _ = std::fs::remove_file(&part);
-            unmake();
-            Unwritten {
+            unmake(Unwritten {
                 status: Status::ToolFailure,
                 message: format!("cannot write the plan {shown}: {error}"),
                 repair: "check that its disk has room, and that what stands at that name can be replaced"
                     .to_owned(),
-            }
-        })
+            })
+        })?;
+    Ok(path)
 }

@@ -111,12 +111,10 @@ impl Launch for Installed {
                 )
             })?;
         drop(opened);
-        if out.write_all(&output.stdout).is_err() || err.write_all(&output.stderr).is_err() {
-            return Err(refused(
-                format!("cannot relay what `{program}` wrote"),
-                "check the streams `archogen` writes to",
-            ));
-        }
+        // Each goes on whatever became of the other, and neither decides anything: the program has judged, a lost report is
+        // noted where standard output is watched, and a standard error nobody reads loses only what it would have said.
+        let _ = out.write_all(&output.stdout);
+        let _ = err.write_all(&output.stderr);
         Ok(Launched {
             ended: match output.status.code() {
                 Some(code) => Ended::Code(code),

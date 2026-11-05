@@ -108,3 +108,37 @@ rig against an install of them.
 
 Said, and left as it stands: the mount point, a directory owned by another user and a failing `set_permissions` stayed unforced, as the reader
 could not run them. Cargo's own deeper paths under `target/` may still overflow a path a build fitted: that is cargo's, at `cargo run`.
+
+**Round 6** — `2026-11-05`: not acceptable, 17 findings, of which R6-1 needs no other program and blocked later builds, and R6-4 touches a
+user's bytes but needs another program writing in the stage. Its reader ran 92 commands against four kinds of stream, 1,365 truncation
+points, 48 modes, 240 builds under three umasks with about 7 million polls of the stage, 56 place cases beside the earlier rig's 51 and 25, and
+300 parallel builds. R5-2, R5-5 and R5-7 held, R5-1's limit is as stated, and a failing `set_permissions`, which round 5's history said stayed
+unforced, was forced in 40 racing runs and said each time.
+
+**The method changed with this round.** The rounds found 15, 12, 9, 5, 11 and 17: not converging, and most of round 6 was one shape, two
+commands reading a place differently and one rule told in several sentences that had drifted apart. So besides answering each finding, every
+route of `--out` is now a row of a table in the book that a test runs, both ways, and the record and the code state no route. A later finding
+of this kind lands on a row and a fixture, not on another sentence (`decision_executable-design-reviews.md`, items 3 and 5). The closure rule is
+unchanged.
+
+| # | Kind | Finding | Answer |
+| --- | --- | --- | --- |
+| R6-1 | defect | older than this commit: a standard error nobody reads failed the sibling's relay, so an accepted build stopped, left its stage and blocked every later one; what a failing standard error does varied by command | The relay goes on stream by stream and decides nothing: the program has judged. `report` returns the refusal's own status. So a standard error nobody reads changes nothing, for every command, and the chapter says so. A test of the real relay, and one of the build |
+| R6-2 | defect | the path probe read `std::path::absolute`, which keeps `..`, where the checker is handed a canonical path: `--out ../../../out` from a long working directory refused, and named absolutely built | Judged once the parents stand, canonically, by `place::room`, as `consume::absolute` names it. A test from a deep working directory |
+| R6-3 | defect | `resolve`'s `PLAN.check` lay outside its place: refused after the plan landed, as `tool-failure`, with false hints | The place is judged whole before anything moves, `.check` and room for its record among it. Rows `check-stands`, `check-stands-unchecked` and `no-room-check` hold the earlier plan untouched |
+| R6-4 | defect | what is put in the stage at a name the package writes was silently overwritten, and a link there written through, for the checker's whole run | The stage is private, `700`, so only the build's own user can reach it, and its files are created and its directories walked, never written over or through: what came is refused and the stage kept, what came in it. Rows `filled-in-stage` and `linked-in-stage` |
+| R6-5 | defect | `resolve` took `missing/../d`, which `build` refuses for this very reason | Both read a place by `place::read`. Row `back-through` |
+| R6-6 | wording | `resolve` with a file as a parent was told of a link to nothing | The same order as `build`: what goes beside it is read first, so it is `NotADirectory`. Row `file-on-the-way` |
+| R6-7 | wording | "leave room in its name" was false of a whole path too long and of a parent's name | The error cannot tell them apart, so the one repair names each cause and what to do |
+| R6-8 | gap | only `--out` was probed: a description too long from where it was named gets "report it", a bogus bug report | `consume::absolute` refuses `usage` where what it names has no room, and where it cannot be named at all. A test from a deep working directory |
+| R6-9 | wording | "is not an earlier build" of one with a directory unreadable one level down | Reworded to what is known: it cannot be told to be only what a build wrote. The repair adds opening it. Row `closed-within` |
+| R6-10 | wording | "cargo cannot run in it until you open it" is true only of a package with nothing carried | It says what cargo needs, and to open it if cargo stops on that |
+| R6-11 | wording | `unwritten` spoke of a report and a package to `archogen mcp`, which has neither | The sentence says only what holds of every command |
+| R6-12 | wording | `lib.rs`: "Errors from the writers are reported as `Status::ToolFailure`", false since `Watched` | Said as it is, and a test holds a library caller's verdict through a stream that fails |
+| R6-13 | gap | tests and comments holding less than stated: "not named" unasserted, no link in `resolve`'s test, the record's room miscounted, "`check` when the executable flushes" | Asserted, a row `over-a-link`, the arithmetic right at `limit - 30`, the comment corrected |
+| R6-14 | gap | older than this commit: `\|\|` in the relay lost what the sibling said on a working stream when the other failed | The same answer as R6-1, a test of each direction |
+| R6-15 | gap | a mode closed to reads while the build ran gave a `next:` line cargo could not follow, and no word | The line reads all three of the owner's bits |
+| R6-16 | gap | "A directory keeps its mode", and nothing else said: an access control list lost, a group likely lost, a private plan opened | The package keeps the group too, a test where a group can differ, which this volume cannot show. The chapter says a list, an owner and a flag are not kept. A plan takes the mode of the file it replaces |
+| R6-17 | wording | `chmod u+rx` cannot open a directory an access control list closes | The repair says "if its mode is what closes it" |
+
+Said, and left as it stands: a mount point, a full disk, a read-only filesystem and another user's directory stayed unmeasured, as `hdiutil` was refused and no second account exists. A write returning `Ok(0)` is unverified, no real stream being known to do it.

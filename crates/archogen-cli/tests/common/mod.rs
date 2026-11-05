@@ -6,7 +6,7 @@
 //! with a fake that writes the record it is told) do not. The executable's half is `scripts/resolve_installed.sh`'s.
 
 use std::io::Write;
-use std::path::Path;
+use std::path::{Path, PathBuf};
 
 use archogen_cli::consume::PLAN_CHECKER;
 use archogen_cli::launch::{Ended, Launch, Launched, Unlaunched};
@@ -15,6 +15,56 @@ use archogen_digest::Digest;
 use archogen_outcome::record::Producer;
 use archogen_plan_check::judgement::{judge, profile, Inputs};
 use eadl_front::DirectoryModules;
+
+/// The rows of the table in `chapter` after `<!-- machine-read: name -->`, each row its cells, code spans unwrapped, its header
+/// and its rule left out. Only the test binaries that hold a table to its chapter call it.
+#[allow(dead_code)]
+pub fn table_rows(chapter: &str, name: &str) -> Vec<Vec<String>> {
+    let marker = format!("<!-- machine-read: {name} -->");
+    let (_, after) = chapter.split_once(&marker).expect("the table's marker");
+    after
+        .lines()
+        .skip_while(|line| line.trim().is_empty())
+        .take_while(|line| line.starts_with('|'))
+        .skip(2)
+        .map(|row| {
+            row.trim_matches('|')
+                .split('|')
+                .map(|cell| cell.trim().trim_matches('`').to_owned())
+                .collect()
+        })
+        .collect()
+}
+
+/// A path under `root` of exactly `length` bytes, in names short enough to take a suffix.
+#[allow(dead_code)]
+pub fn a_path_of_length(root: &Path, length: usize) -> PathBuf {
+    let mut path = root.to_path_buf();
+    let mut left = length - root.as_os_str().len();
+    while left > 0 {
+        let name = (left - 1).min(200);
+        if left - 1 - name == 1 {
+            // A remainder of one byte would be a separator and no name.
+            path.push("x".repeat(name - 1));
+            left -= name;
+        } else {
+            path.push("x".repeat(name));
+            left -= name + 1;
+        }
+    }
+    path
+}
+
+/// The length at which this host first refuses a path by its length alone, whatever the path names.
+#[allow(dead_code)]
+pub fn path_limit(root: &Path) -> usize {
+    (root.as_os_str().len() + 10..1 << 16)
+        .find(|length| {
+            std::fs::symlink_metadata(a_path_of_length(root, *length))
+                .is_err_and(|error| error.kind() == std::io::ErrorKind::InvalidFilename)
+        })
+        .expect("a path this long is too long")
+}
 
 /// The configuration checker, judging in this process.
 pub struct Checker;

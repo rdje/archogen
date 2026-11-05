@@ -42,6 +42,8 @@ struct Spoil {
     no_sibling: bool,
     /// No manifest at all.
     no_manifest: bool,
+    /// The sibling's own text, in place of a copy of the front: a script that writes to both streams.
+    script: Option<&'static str>,
 }
 
 /// An install in a fresh directory: the front, the sibling and a manifest naming them, spoilt as `spoil` says; the
@@ -62,13 +64,24 @@ fn install(spoil: &Spoil) -> PathBuf {
         return dir.join("archogen");
     }
     let digest = Digest::of(&bytes);
+    if let Some(script) = spoil.script {
+        std::fs::write(dir.join(CHECKER), script).expect("a script placed");
+        #[cfg(unix)]
+        {
+            use std::os::unix::fs::PermissionsExt;
+            std::fs::set_permissions(dir.join(CHECKER), std::fs::Permissions::from_mode(0o755))
+                .expect("an executable script");
+        }
+    }
     let siblings = if spoil.no_sibling {
         Vec::new()
     } else {
         vec![Program {
             name: CHECKER.to_owned(),
             role: "configuration-checker".to_owned(),
-            sha256: digest,
+            sha256: spoil
+                .script
+                .map_or(digest, |script| Digest::of(script.as_bytes())),
         }]
     };
     let manifest = Manifest::new(
@@ -233,4 +246,35 @@ fn a_sibling_the_install_cannot_vouch_for_is_refused_before_it_runs() {
         text(&output.stderr)
     );
     assert!(output.stdout.is_empty(), "the sibling ran");
+}
+
+#[test]
+#[cfg(unix)]
+fn one_stream_failing_loses_the_other_nothing_and_the_sibling_s_code_stands() {
+    let front = install(&Spoil {
+        script: Some("#!/bin/sh\necho to-out\necho to-err >&2\nexit 15\n"),
+        ..Spoil::default()
+    });
+    // A standard output nobody reads: what the sibling said on standard error still arrives, and the lost report is said.
+    let (reader, writer) = std::io::pipe().expect("a pipe");
+    drop(reader);
+    let output = Command::new(&front)
+        .args(["plan-check", "a", "b"])
+        .stdout(writer)
+        .output()
+        .expect("the front runs");
+    let said = text(&output.stderr);
+    assert!(said.contains("to-err"), "{said}");
+    assert!(said.contains("could not take what was written"), "{said}");
+    assert_eq!(output.status.code(), Some(70), "{said}");
+    // A standard error nobody reads: what it said on standard output still arrives, and the sibling's code is the code.
+    let (reader, writer) = std::io::pipe().expect("a pipe");
+    drop(reader);
+    let output = Command::new(&front)
+        .args(["plan-check", "a", "b"])
+        .stderr(writer)
+        .output()
+        .expect("the front runs");
+    assert_eq!(text(&output.stdout).trim(), "to-out");
+    assert_eq!(output.status.code(), Some(15), "{output:?}");
 }

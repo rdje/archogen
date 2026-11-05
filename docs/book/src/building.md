@@ -15,10 +15,9 @@ when, and that is all it can show.
 > **In one minute, for engineers.** `crates/archogen-cli/src/build_cmd.rs`: the engine API's `resolve`, the installed
 > `archogen-plan-check` over the plan it wrote, `archogen_plan::lower_checked` on its acceptance, then
 > `archogen_emit::emit`, which accepts the plan only by lowering it again and comparing bytes. Behavior is copied and never
-> generated: the package holds `rt-core` and `sim-playground` byte for byte beside tables of exact integer ticks. `--out` holds at
-> every moment what stood there, nothing, or the whole package; a build deletes nothing it did not write but an empty `--out` and its
-> own stage, and no byte of the package depends on the directory its description lies in or on where it goes. It stays off the
-> programmatic surface, by `ROADMAP.md` §10.4.
+> generated: the package holds `rt-core` and `sim-playground` byte for byte beside tables of exact integer ticks. Where it lands, and
+> every way that can go, is one table a test runs, and no byte of the package depends on the directory its description lies in or on
+> where it goes. It stays off the programmatic surface, by `ROADMAP.md` §10.4.
 > The design is `docs/decisions/decision_hosted-build.md`. The system's own behavior is held by `crates/archogen-cli/tests/functional_fixtures.rs`,
 > against observations frozen before any generator existed.
 
@@ -114,7 +113,7 @@ is code the engine compiles and tests, and `crates/archogen-emit/tests/emit.rs` 
 | --- | --- | --- |
 | 1 | the profile, then `--locked` | the invocation cannot be honored |
 | 2 | the engine API's `resolve`: the check, then the search | the description, or what it asks of its hardware: the same verdict `archogen check` or `archogen resolve` gives |
-| 3 | `--out`, and what stands beside it | the place: `usage`, before anything is written, whatever stops it |
+| 3 | `--out`, and what stands beside it | the place: `usage`, before anything is written, whatever stops it, and the table below says which |
 | 4 | the installed `archogen-plan-check` | two programs disagree about one input, so `tool-failure` |
 | 5 | the lowering and the emitter | what this format cannot yet express |
 | 6 | writing the package | the output directory: `tool-failure`, or `usage` where a name a module brought leaves no room in a path |
@@ -141,48 +140,68 @@ $ echo $?
 data to compare against until `M4.7`. Accepting the flag would hand someone who asked for a reproducible build an ordinary one
 that claimed to be reproducible. Refusing costs a user one re-run; accepting costs them a belief. It exits `20`, `unimplemented`.
 
-**Where the package lands.** The command builds it in `DIR.building`, beside `DIR`, and moves it into place by two renames once
-every file is written. So `DIR` holds at every moment what stood there, nothing, or the whole package, and a refused build leaves it
-as it found it: a refusal of the description creates nothing, and an earlier build stays.
+**Where the package lands.** The command builds it in `DIR.building`, beside `DIR`, and moves it into place by two renames once every
+file is written. So `DIR` holds at every moment what stood there, nothing, or the whole package, and a refused build leaves it as it
+found it. Your changes belong in the description, not in the output.
 
-⛔ **A build deletes nothing it did not write**, but for an empty directory named by `--out`, which it takes. On a refusal it removes
-the stage this very run made, with anything put in it while it runs, and the parents it made to reach it where they stayed empty.
-When it lands, anything put in the stage is in the package: the next build names it, or carries it on if it lies under `target`,
-`Cargo.lock` or `.DS_Store`. Of an earlier build it removes each file
-`provenance.json` lists, one by one and only if still the regular file it wrote, then the directories that held them where that leaves
-them empty.
-An earlier build must be exactly a build's before any of that: a directory holding anything more, an empty directory within it
-included, a generated file you edited, a link named by `--out`, a directory you cannot read and search, a name with no room for
-`.building` beside it, a path with no room for what a build writes beneath it, and anything standing at `DIR.building` or
-`DIR.replaced` are all `usage`, and left alone.
-Your changes belong in the description, not in the output. What building and looking at a package leave at its top, `target`,
-`Cargo.lock` and `.DS_Store`, is neither judged nor deleted: it moves to the new package, so a rebuild keeps cargo's work. If the stage
-came to hold one of those names, what stood before stays at `DIR.replaced` and the command names it.
+⛔ **A build deletes nothing it did not write**, but for two things: an empty directory at `--out`, which it takes, and its own stage,
+which on a refusal goes with anything put in it, unless the build knows something else wrote there, when the stage stays. Of an earlier
+build it removes each file `provenance.json` lists, one by one and only if still the regular file it wrote, then the directories that
+held them where that leaves them empty. What building and looking at a package leave at its top, `target`, `Cargo.lock` and `.DS_Store`,
+is neither judged nor deleted: it moves to the new package, so a rebuild keeps cargo's work.
 
-**A directory keeps its mode.** The new package takes the mode of what it replaces, last, once nothing more is carried to it, that mode
-read again just before the package moves, so closing a directory while a build runs holds. The stage closes what that mode closes from
-the call that makes it, with you able to write. So a private directory stays private, and one closed to your own writes, a `555` or a
-`500`, takes a package and is closed again after. The command says that cargo cannot run in it until you open it, since cargo writes
-`target` and `Cargo.lock` there. What stays at `DIR.replaced` keeps the mode it had.
+**The stage is private to its owner**, mode `700`, from when it is made until the package lands, whatever `DIR` lets others do. Then the
+package takes the mode and the group of what it replaces, read again just before it moves, so closing a directory while a build runs
+holds; where nothing stood it takes what a new directory takes there. ⚠️ Those two are all it keeps. The standard library reads no access
+control list, owner or flag, so where one of those is what makes a directory private, a build there loses it.
 
-Two things it leaves behind on purpose. Where the checker refuses the search's plan, or its record does not hold together,
-`DIR.building` keeps the assignment and the record, for the report that disagreement deserves, and the next build refuses until
-someone has looked at it. And what could not go from an earlier build, or appeared in it while the build ran, stays at `DIR.replaced`,
-with the new package already in place and the command naming what stayed.
+**Every route `--out` can take.** Each row is a fixture of `crates/archogen-cli/tests/build.rs`, which sets the route up, runs it, holds
+what is left and compares the status and the words with the row. A row with no fixture, or a fixture with no row, fails. So this table is
+the rule, and nothing else states a route.
 
-What came while it ran to `DIR`, where nothing stood, or to `DIR.replaced` where something stood at `DIR`, is another thing: nothing is
-placed, what came is left alone, and the refusal, `tool-failure`, says to look at it. So does one that finds what stood at `DIR` gone.
-Where nothing stood at `DIR` a build needs no `DIR.replaced`, so one that comes is no bar, and the next build names it.
+<!-- machine-read: out-routes -->
+| Route | What stands there, or what happens | Status | It says | What is left |
+| --- | --- | --- | --- | --- |
+| `no-name` | `--out ..` | `usage` | `names no directory of its own` | nothing made |
+| `back-through` | `--out missing/../x`, which reads as absent until `missing` is made | `usage` | `goes back through a name` | nothing made |
+| `a-file` | a file at `--out` | `usage` | `is no directory` | the file |
+| `a-link` | a link at `--out` | `usage` | `is no directory` | the link, and what it points at |
+| `closed` | a directory this user cannot read and search | `usage` | `chmod u+rx` | it, at its mode |
+| `not-a-build` | a directory holding what no build wrote | `usage` | `a build deletes nothing it did not write` | all of it |
+| `edited` | an earlier build with a file edited | `usage` | `has changed since the build wrote it` | all of it |
+| `closed-within` | an earlier build with a directory this user cannot read | `usage` | `open what it could not read` | all of it |
+| `stage-stands` | anything at `DIR.building` | `usage` | `a build that stopped may have left it` | it |
+| `aside-stands` | anything at `DIR.replaced` | `usage` | `kept there what could not go` | it |
+| `no-room-name` | a name with no room for `.building` beside it | `usage` | `too long` | nothing made |
+| `no-room-path` | a path with no room for what a build writes beneath it, as the checker is handed it | `usage` | `leaves no room in a path` | nothing made |
+| `file-on-the-way` | a file among `--out`'s parents | `usage` | `is no directory` | the file |
+| `link-on-the-way` | a link to nothing among `--out`'s parents | `usage` | `a link to nothing` | the link |
+| `closed-parent` | a parent this user cannot write | `usage` | `reach and write` | the parent, empty |
+| `absent` | nothing | `ok` | `generated` | the package, at what a new directory takes there |
+| `empty` | an empty directory | `ok` | `generated` | the package, at that directory's mode |
+| `earlier` | an earlier build, with what cargo left | `ok` | `generated` | the package, at that mode, what cargo left moved to it |
+| `closed-to-writes` | a directory closed to its owner's writes, a `555` or a `500` | `ok` | `open it if cargo stops` | the package, closed as it was |
+| `came-at-out` | while it runs, something comes to `--out`, where nothing stood | `tool-failure` | `appeared while the build ran` | what came; no package |
+| `came-aside` | while it runs, something comes to `DIR.replaced`, an earlier build standing at `--out` | `tool-failure` | `appeared while the build ran` | what came, and the earlier build |
+| `aside-not-needed` | while it runs, something comes to `DIR.replaced`, nothing standing at `--out`, so the name is not needed | `ok` | `generated` | the package and what came, which the next build names |
+| `gone` | while it runs, what stood at `--out` goes | `tool-failure` | `moved or removed what the build was moving` | nothing |
+| `came-in-earlier` | while it runs, something comes into the earlier build | `ok` | `keeps what could not go` | the package; what came at `DIR.replaced` |
+| `came-in-stage` | while it runs, a new name comes in the stage | `ok` | `generated` | the package and what came, which the next build names, or carries on under a name a build carries |
+| `filled-in-stage` | while it runs, something fills a name the package writes | `tool-failure` | `came in the stage` | the stage, with what came; no package |
+| `linked-in-stage` | while it runs, a link stands where the package writes a directory | `tool-failure` | `came in the stage` | the stage; what the link points at, untouched |
+| `carried-in-stage` | while it runs, the stage comes to hold a name a build carries, an earlier build holding it too | `ok` | `keeps what could not go` | the package with what came; the earlier one at `DIR.replaced` |
+| `closed-meanwhile` | while it runs, the directory at `--out` is closed further | `ok` | `generated` | the package, at the mode it was closed to |
+| `disagreed` | the checker refuses the search's plan, or its record does not hold together | `tool-failure` | `refuses the plan the search wrote` | the stage, with the assignment and the record for the report |
 
-No sync call is made, so none of this claims anything across a power loss. ⚠️ Nor does any of it hold against another program working
-in the same directory at the same instant: the standard library has no rename that refuses to replace, so each path is held again just
-before it is used.
+No sync call is made, so none of this claims anything across a power loss. ⚠️ Nor does it hold against another program working in the same
+directory at the same instant: the standard library has no rename that refuses to replace and no directory-relative open, so each path is
+held again just before it is used, and in that instant what stands there is what is used.
 
-**A report that cannot be written.** If a write to standard output fails, at any byte of the report, the command says so on standard
-error and exits `70`, as every command does: a pipe nobody reads, a full disk. What it did stands, so the package is in place; the code
-says only that its report did not arrive. ⚠️ A failure is what it can see. The Rust runtime gives a stream closed before the run
-`/dev/null`, and takes a stream open only for reading as one that wrote, so `archogen build … >&-` exits with the command's own code
-and says nothing.
+**The two standard streams.** If a write to standard output fails, at any byte, the command says so on standard error and exits `70`,
+as every command does: a pipe nobody reads, a full disk. What it did stands, so a package it placed is in place. ⚠️ A failure is what it can
+see: the Rust runtime gives a stream closed before the run `/dev/null`, and takes a stream open only for reading as one that wrote, so
+`archogen build … >&-` exits with the command's own code and says nothing. A standard error nobody reads changes nothing: what it would have
+said is lost, and the command and its exit code are as they would have been.
 
 **Nothing in it depends on where it was built.** A provenance entry names a source relative to the description, so the same
 description in two directories, built into two others, gives the same bytes. A test compares them, for one file and for a module
