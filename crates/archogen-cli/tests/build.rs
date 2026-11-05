@@ -1890,18 +1890,23 @@ fn out_routes() -> Vec<(&'static str, Route)> {
             outcome
         }),
         ("no-checker", |root| {
+            // The real executable, and no install beside it.
             let dir = root.join("x");
-            let outcome = said(invoke(
-                &[
-                    "build",
-                    &example(HEARTBEAT),
-                    "--out",
-                    &dir.display().to_string(),
-                ],
-                &NoLaunch,
-            ));
+            let output = Command::new(env!("CARGO_BIN_EXE_archogen"))
+                .args(["build", &example(HEARTBEAT), "--out"])
+                .arg(&dir)
+                .output()
+                .expect("the executable runs");
             assert!(!dir.exists() && !beside(&dir, ".building").exists());
-            outcome
+            assert_eq!(
+                output.status.code(),
+                Some(Status::ToolFailure.code()),
+                "{output:?}"
+            );
+            Some((
+                Status::ToolFailure,
+                String::from_utf8_lossy(&output.stderr).to_string(),
+            ))
         }),
         ("absent", |root| {
             let dir = root.join("a/b");
@@ -1949,13 +1954,16 @@ fn out_routes() -> Vec<(&'static str, Route)> {
             outcome
         }),
         ("closed-to-writes", |root| {
-            let dir = root.join("x");
-            let _reopened = Reopened(vec![dir.clone()]);
-            fs::create_dir(&dir).expect("a directory");
-            set_mode(&dir, 0o555);
-            let outcome = build_at(&dir);
-            assert_eq!(mode_of(&dir), 0o555);
-            assert!(dir.join("Cargo.toml").is_file());
+            let mut outcome = None;
+            for mode in [0o555, 0o500] {
+                let dir = root.join(format!("x{mode:o}"));
+                let _reopened = Reopened(vec![dir.clone()]);
+                fs::create_dir(&dir).expect("a directory");
+                set_mode(&dir, mode);
+                outcome = build_at(&dir);
+                assert_eq!(mode_of(&dir), mode);
+                assert!(dir.join("Cargo.toml").is_file());
+            }
             outcome
         }),
         ("came-at-out", |root| {
@@ -2149,6 +2157,7 @@ fn out_routes() -> Vec<(&'static str, Route)> {
                 },
             ));
             assert!(beside(&dir, ".building").join(RECORD).is_file());
+            assert!(beside(&dir, ".building").join("assignment.eadl").is_file());
             assert!(!dir.exists());
             outcome
         }),

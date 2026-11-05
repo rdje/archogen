@@ -139,10 +139,14 @@ cannot resolve writes no plan and exits with the search's verdict — `periodic-
 timer offering a width and no modulus and its policy's constraints waiting on the catalog — and `--locked` is refused
 until lock data exists (`M4.7`). `--system` names the system when a description declares several.
 
-The plan is written at `PLAN.part`, which is what the checker judges, and it lands at `PLAN` only on acceptance, so whatever stands at
-`PLAN` stands until there is a plan that may replace it. Each row below is a fixture of
-`crates/archogen-cli/tests/resolve.rs`, which runs it; a row with no fixture, or a fixture with no row, fails. `crates/archogen-cli/src/place.rs`
-is how both this command and `archogen build` read a place, and [Building a system](building.md) has `build`'s table.
+**An output replaces only what its own kind wrote.** Everything a run writes stays in a private directory, `PLAN.part`, where the
+checker judges it, and it lands only on acceptance: the plan at `PLAN`, the record in `PLAN.check/`. So what stands at either name stands
+until there is a plan that may replace it, and a plan replaces only a plan or an empty file, a record only a record. A description, a
+module or anything else of yours at `PLAN` is no plan, however it is named. `crates/archogen-cli/src/place.rs` is how this command and
+`archogen build` read a place, and [Building a system](building.md) has `build`'s table. Each row below is a fixture of
+`crates/archogen-cli/tests/resolve.rs`, which runs it; a row with no fixture, or a fixture with no row, fails. A route it does not name is
+promised nothing and worth reporting. ⚠️ As for a build, the standard library has no rename that refuses to replace, so each path is held
+again just before it is used, and in that instant what stands there is what is used.
 
 <!-- machine-read: plan-routes -->
 | Route | What stands there | Status | It says | What is left |
@@ -153,29 +157,39 @@ is how both this command and `archogen build` read a place, and [Building a syst
 | `a-trailing-separator` | `--out q/` | `usage` | `names no file of its own` | nothing made |
 | `back-through` | `--out missing/../d` | `usage` | `goes back through a name` | nothing made |
 | `a-directory` | a directory at `PLAN` | `usage` | `is a directory` | the directory |
-| `a-pipe` | what is neither a file nor a link at `PLAN` | `usage` | `neither a file nor a link` | it |
-| `its-own-description` | the description itself at `PLAN`, with `--unchecked` or without it | `usage` | `this description was read from` | the description |
-| `its-own-description-by-a-link` | the description at `PLAN`, itself named by a link | `usage` | `this description was read from` | the description |
-| `a-module-it-imports` | a module the description imports at `PLAN` | `usage` | `this description was read from` | the module |
-| `reads-once` | a description that is no regular file, such as a pipe or `<(…)`, which the checker would read again | `usage` | `no regular file` | any plan at `PLAN` |
+| `a-link` | a link at `PLAN` | `usage` | `is a link` | the link, and what it points at |
+| `a-pipe` | what is no file at `PLAN` | `usage` | `is no file` | it |
+| `no-plan` | a file at `PLAN` that is no plan | `usage` | `is no plan` | the file |
+| `closed-to-reads` | a file at `PLAN` this user cannot read, so nothing can tell it is a plan | `usage` | `to tell it is a plan` | the file |
+| `its-own-description` | the description itself at `PLAN`, with `--unchecked` or without it | `usage` | `is no plan` | the description |
+| `its-own-description-by-a-descriptor` | the description at `PLAN`, itself given as `/dev/fd/3` | `usage` | `is no plan` | the description |
+| `a-module-it-imports` | a module the description imports at `PLAN` | `usage` | `is no plan` | the module |
+| `reads-once` | a description that is no regular file, such as a pipe or `<(…)`, which the checker would read again | `usage` | `no regular file` | any plan at `PLAN`, and its record |
 | `part-stands` | anything at `PLAN.part`, which a run that stopped may have left, or a refused one for a report | `usage` | `a plan is written there first` | it |
 | `check-stands` | a file at `PLAN.check`, where the checker's record goes | `usage` | `stands where the checker's record goes` | it, and any plan at `PLAN` |
-| `check-a-link` | a link at `PLAN.check` | `usage` | `stands where the checker's record goes` | it, and any plan at `PLAN` |
-| `check-reused` | a directory at `PLAN.check` | `ok` | `resolved system` | the plan; in that directory the record replaced, and all else as it was |
-| `check-stands-unchecked` | a file at `PLAN.check`, with `--unchecked`, which writes no record | `ok` | `resolved system` | the plan, and that file |
+| `check-a-link` | a link at `PLAN.check` | `usage` | `stands where the checker's record goes` | it, what it points at, and any plan at `PLAN` |
+| `check-a-link-unchecked` | a link at `PLAN.check`, with `--unchecked`, which writes no record | `ok` | `resolved system` | the plan; the link, and all it points at |
+| `record-no-record` | what is no record at `PLAN.check/plan-check.json` | `usage` | `is no record` | it |
+| `record-no-record-unchecked` | what is no record at that name, with `--unchecked` | `ok` | `resolved system` | the plan, and it |
+| `check-reused` | a directory at `PLAN.check` holding an earlier record | `ok` | `resolved system` | the plan; in that directory the record replaced, and all else as it was |
+| `check-stands-unchecked` | a file at `PLAN.check`, with `--unchecked` | `ok` | `resolved system` | the plan, and that file |
 | `no-room-name` | a name with no room for what goes beside it | `usage` | `too long` | nothing made |
 | `no-room-check` | a name with room for `.part` and none for `.check` | `usage` | `too long` | any plan at `PLAN` |
-| `no-room-record` | a path with no room for what the checker writes beneath `PLAN.check`, as it is handed the path | `usage` | `leaves no room in a path` | nothing made |
-| `file-on-the-way` | a file among `PLAN`'s parents | `usage` | `is no directory` | the file |
+| `no-room-record` | a path with no room for what the checker writes, as it is handed the path | `usage` | `leaves no room in a path` | nothing made |
 | `closed-parent` | a parent this user cannot write | `usage` | `reach and write` | the parent, empty |
+| `file-on-the-way` | a file among `PLAN`'s parents | `usage` | `is no directory` | the file |
 | `link-on-the-way` | a link to nothing among `PLAN`'s parents | `usage` | `a link to nothing` | the link |
+| `link-to-a-directory-on-the-way` | a link to a directory among `PLAN`'s parents | `ok` | `resolved system` | the plan, beneath what the link points at |
+| `link-loop-on-the-way` | a loop of links among `PLAN`'s parents | `usage` | `name another place` | the links |
 | `absent` | nothing | `ok` | `resolved system` | the plan, its directories made, and its record in `PLAN.check` |
-| `over-a-file` | a file at `PLAN`, at any mode | `ok` | `resolved system` | the plan, at that file's mode and group |
-| `over-a-link` | a link at `PLAN` | `ok` | `resolved system` | the plan in the link's place; what it pointed at, untouched |
+| `over-an-empty-file` | an empty file at `PLAN` | `ok` | `resolved system` | the plan |
+| `over-a-plan` | a plan at `PLAN`, its mode one this user can read | `ok` | `resolved system` | the plan, at that file's mode and group |
 | `unchecked-over-a-checked` | a checked plan at `PLAN`, with `--unchecked` | `ok` | `resolved system` | the plan; the earlier record gone, since it would read as this plan's |
-| `refused` | the checker refuses the plan | `tool-failure` | `refuses the plan the search wrote` | what stood at `PLAN`; the plan at `PLAN.part` and the record, for the report |
-| `no-record` | the checker runs and writes no record, as where `PLAN.check` cannot take one | `tool-failure` | `wrote no record` | what stood at `PLAN`; nothing this run wrote |
-| `no-checker` | no checker can be run | `tool-failure` | `no install beside the front` | what stood at `PLAN`; nothing this run wrote |
+| `refused` | the checker refuses the plan | `tool-failure` | `refuses the plan the search wrote` | what stood at `PLAN` and its record; the plan and this record in `PLAN.part`, for the report |
+| `record-unsound` | the checker's record does not hold together with what it did | `tool-failure` | `does not hold together` | what stood at `PLAN`; the plan and the record in `PLAN.part`, for the report |
+| `no-record` | the checker runs and writes no record | `tool-failure` | `wrote no record` | what stood at `PLAN` and its record; nothing this run wrote |
+| `no-checker` | no install beside the command, so no checker can be run | `tool-failure` | `has no install manifest` | what stood at `PLAN`; nothing this run wrote |
+| `closed-meanwhile` | the checker accepts, and `PLAN.check` can no longer take a record | `tool-failure` | `cannot put the checker's record` | what stood at `PLAN` and its record; nothing this run wrote |
 | `a-flag-as-its-value` | `--out --unchecked`, the parser taking the next word as `--out`'s value | `ok` | `resolved system` | a plan named `--unchecked` |
 
 `archogen explain` (leaf `M3.4.13.2`) says what the search did with one requirement: `--requirement` names the fact,

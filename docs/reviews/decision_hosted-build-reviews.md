@@ -171,3 +171,31 @@ Said, and left as it stands: a mount point, a full disk, a read-only filesystem 
 | R7-22 | wording | sentences against rows: step 3's "whatever stops it" against a flag on `--out`, step 4's "so `tool-failure`", "every route", and §5's "what the build's own user fills is refused" against `came-in-stage` | Each said as it is. "The routes" replaces "every route", and the chapter says a route no row names is promised nothing |
 
 Said, and left as it stands: a mount point, a real full disk, a read-only filesystem, another user's directory and names that are no text stayed unmeasured. A plan's group cannot be seen to move on this volume, owners being disabled. Its reader, its first rig still pointed at round 6's directory, created `target/m4237/run/a1` there against its brief, deleted exactly that and said so; nothing tracked moved.
+
+**Round 8** — `2026-11-05`: not acceptable, 19 findings, 9 defects, each with no other program acting; R8-1 to R8-4 can lose a user's bytes. Most trace to one cause: `resolve` decided what it might replace or remove by asking whether a thing was what the description was read from, and each way of asking had a door. Its reader ran about 216 commands on an install of `b32a4421`, and 29 of 30 and 42 of 43 rows held, the two exceptions words only. R7-2, R7-3, R7-5, R7-6, R7-8 for a real pipe, R7-11 to R7-16 and R7-19 held.
+
+**So the answer is one principle, and less code.** An output replaces only what its own kind wrote, which is what `build` already did: `same_file`, which round 7 added, is gone. Everything a run writes stays in one private stage until it lands, as a build's does.
+
+| # | Kind | Finding | Answer |
+| --- | --- | --- | --- |
+| R8-1 | defect | older: `plan-check --result` naming its own description or plan destroyed it at exit 0 | A result replaces only a record or an empty file, refused `usage` before anything is judged: a test of the real executable, over a description, a plan and a file of mine |
+| R8-2 | defect | a description standing at `PLAN.check/plan-check.json` was deleted, with a false reason | A record replaces only a record. Rows `record-no-record` and `record-no-record-unchecked` |
+| R8-3 | defect | `--unchecked` deleted through a link at `PLAN.check`, and a user's file of the record's name in a real directory | It clears only what reads as a record, through no link. Row `check-a-link-unchecked` |
+| R8-4 | defect | `/dev/fd/N` and `/dev/stdin` passed both of round 7's guards: `--unchecked` replaced the description, and a regular file read twice gave a bogus report | What stands at `PLAN` is no plan however the description is named: row `its-own-description-by-a-descriptor`. The front reads the description again as the checker will, and refuses `usage` where it reads differently |
+| R8-5 | defect | a run that judged nothing deleted the accepted plan's record | The record lands from the stage, so nothing beside `PLAN` moves until then. Rows `reads-once` and `no-record` hold it |
+| R8-6 | defect | a landing refused after acceptance left an `ok` record of a plan that exists nowhere | The record goes first, under a name of its own, and only takes its name once the plan stands; a landing refused puts everything back. Row `closed-meanwhile` |
+| R8-7 | defect | a record that could not be removed read as one that had been written, so `.part` stayed for a report that did not exist | There is no earlier record in a stage: the test reads the stage |
+| R8-8 | defect | `--unchecked` over a closed `.check` left the earlier `ok` record, silently | Moved aside before the plan lands, or the command refuses and nothing moves |
+| R8-9 | defect | a failed landing removed a user's empty `.check` | Only one this run made goes |
+| R8-10 | route | what comes during `resolve` | Each path held again before it lands, and what lands is what was judged, read back and compared. The limit is stated in `cli.md`. Needs another program |
+| R8-11 | route | the plan table's omissions | Rows `link-to-a-directory-on-the-way`, `link-loop-on-the-way` and `record-unsound`. A flag on `PLAN` is not portable to force, and the rest of its list follows from the principle |
+| R8-12 | gap | both `no-checker` rows quoted words the real command never prints, one from a test's fake | Each row runs the real executable, and quotes it |
+| R8-13 | gap | fixtures weaker than their rows | `closed-to-writes` at both modes, `check-stands-unchecked` and `check-a-link` asserting what they say, `record-unsound` the assignment; `no-record` holds the earlier record |
+| R8-14 | gap | older: a `next:` line with a leading dash read as a flag | `followable`, a pure function with a test of each case |
+| R8-15 | wording | "each path is held again" was false of `resolve` | Now true of it, and `cli.md` states the limit |
+| R8-16 | wording | "Every route" and "every way" against "a route they do not name" | Reworded |
+| R8-17 | wording | `resolve_cmd.rs`'s stated order stale, and `check_plan`'s `# Errors` | Rewritten to the design |
+| R8-18 | wording | "unless the build knows something else wrote there" against rows that keep a stage for a report | Says what the table says |
+| R8-19 | wording | `room` called every error too long; the checker's error named the wrong file | Each repair by its kind; it names the `.part` |
+
+Said, and left as it stands: a group moving, a real full disk, a read-only filesystem, a mount point and another user's directory stayed unmeasured. A failed `chown` of a plan's group is now a warning, the plan standing, as a build's is: reading only, on this volume.

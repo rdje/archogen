@@ -45,7 +45,7 @@ fn root() -> PathBuf {
 }
 
 /// How the fake checker answers: the status its record and its exit code give.
-#[derive(Clone, Copy)]
+#[derive(Clone)]
 enum Answer {
     /// A record of this status, and the exit code it carries.
     Record(Status),
@@ -53,6 +53,10 @@ enum Answer {
     Unlaunched,
     /// It ran and wrote no record, as when the place given it cannot take one.
     NoRecord,
+    /// A record whose status is not what it exits with.
+    Unsound,
+    /// It accepted, and this directory was closed as it did.
+    Closing(PathBuf),
 }
 
 /// A launcher standing in for `archogen-plan-check`: it reads the plan the front names, writes a record about it where
@@ -89,6 +93,17 @@ impl Launch for Checker {
                 })
             }
             Answer::Record(status) => status,
+            Answer::Unsound => Status::Ok,
+            Answer::Closing(ref dir) => {
+                #[cfg(unix)]
+                {
+                    use std::os::unix::fs::PermissionsExt;
+                    std::fs::set_permissions(dir, std::fs::Permissions::from_mode(0o555))
+                        .expect("its mode");
+                }
+                let _ = dir;
+                Status::Ok
+            }
             Answer::NoRecord => {
                 return Ok(Launched {
                     ended: Ended::Code(Status::ToolFailure.code()),
@@ -138,7 +153,11 @@ impl Launch for Checker {
         std::fs::write(result, record.write()).expect("the record written");
         let _ = writeln!(err, "{PLAN_CHECKER}: {}", status.slug());
         Ok(Launched {
-            ended: Ended::Code(status.code()),
+            ended: Ended::Code(if matches!(self.answer, Answer::Unsound) {
+                Status::ToolFailure.code()
+            } else {
+                status.code()
+            }),
             sha256: verified(),
             front: Digest::of(b"the front that ran it"),
         })
@@ -198,56 +217,10 @@ fn a_resolved_plan_is_checked_and_the_checker_s_verdict_is_the_status() {
     assert_eq!(asked.len(), 1);
     assert_eq!(asked[0][0..2], ["--profile", "rt-static-up-v1"]);
     assert!(
-        asked[0][3].ends_with("plan.json.check/plan-check.json"),
+        asked[0][3].ends_with("plan.json.part/plan-check.json"),
         "{:?}",
         asked[0]
     );
-}
-
-#[test]
-fn a_plan_that_cannot_land_leaves_nothing_beside_it_and_takes_nothing_it_did_not_write() {
-    let dir = scratch();
-    // A directory at `--out`: the rename fails, and what was written beside it goes.
-    let at = dir.join("a-directory");
-    std::fs::create_dir_all(at.join("mine")).expect("a directory");
-    let part = dir.join("a-directory.part");
-    let checker = Checker::answering(Answer::Record(Status::Ok));
-    let (status, _, err) = resolve(&[&heartbeat(), "--out", at.to_str().unwrap()], &checker);
-    assert_eq!(status, Status::Usage, "{err}");
-    assert!(err.contains("is a directory"), "{err}");
-    assert!(err.contains("hint: name the file"), "{err}");
-    assert!(!part.exists(), "{err}");
-    assert!(at.join("mine").is_dir());
-    // What names no file of its own is `usage` too, whatever it would have failed with.
-    let with_slash = format!("{}/", dir.join("not-yet").display());
-    for name in [".", "", &with_slash] {
-        let (status, _, err) = resolve(&[&heartbeat(), "--out", name], &checker);
-        assert_eq!(status, Status::Usage, "{name}: {err}");
-        assert!(err.contains("names no file"), "{name}: {err}");
-    }
-    assert!(!dir.join("not-yet").exists());
-    // What stands at `PATH.part` is not this run's: refused, named, with what to do, and left alone.
-    let plan = dir.join("plan.json");
-    let part = dir.join("plan.json.part");
-    std::fs::write(&part, "mine").expect("written");
-    let (status, _, err) = resolve(&[&heartbeat(), "--out", plan.to_str().unwrap()], &checker);
-    assert_eq!(status, Status::Usage, "{err}");
-    assert!(err.contains("plan.json.part exists"), "{err}");
-    assert!(err.contains("hint: look at it"), "{err}");
-    assert_eq!(std::fs::read_to_string(&part).expect("kept"), "mine");
-    assert!(!plan.exists());
-    // No room for `.part`: `usage`, and the parents it made gone.
-    let long = dir.join("a/b").join("x".repeat(252));
-    let (status, _, err) = resolve(&[&heartbeat(), "--out", long.to_str().unwrap()], &checker);
-    assert_eq!(status, Status::Usage, "{err}");
-    assert!(err.contains("too long"), "{err}");
-    assert!(!dir.join("a").exists(), "the parents it made stayed");
-    // A plan over what stands at the name itself: that is what naming an output asks.
-    let named = dir.join("named.json");
-    std::fs::write(&named, "mine").expect("written");
-    let (status, _, err) = resolve(&[&heartbeat(), "--out", named.to_str().unwrap()], &checker);
-    assert_eq!(status, Status::Ok, "{err}");
-    assert_ne!(std::fs::read_to_string(&named).expect("written"), "mine");
 }
 
 /// `archogen resolve` of `description` at `plan`, with a checker answering `answer`, `extra` arguments added: its status, and all
@@ -284,6 +257,25 @@ fn modes_bind(root: &Path) -> bool {
     binds
 }
 
+/// What an earlier plan looks like: what a plan may replace is known by how it begins.
+const AN_EARLIER_PLAN: &str = "(format \"archogen-assignment/2\")\n; earlier\n";
+
+/// An earlier plan at `plan`.
+#[cfg(unix)]
+fn an_earlier_plan(plan: &Path) {
+    std::fs::write(plan, AN_EARLIER_PLAN).expect("written");
+}
+
+/// A checked plan at `plan`, with its record, and that record's bytes.
+#[cfg(unix)]
+fn a_checked_plan(plan: &Path) -> Vec<u8> {
+    let (status, said) = resolve_at(&plan.display().to_string(), &[]).expect("the route runs");
+    assert_eq!(status, Status::Ok, "{said}");
+    let mut record = plan.as_os_str().to_owned();
+    record.push(".check/plan-check.json");
+    std::fs::read(PathBuf::from(record)).expect("its record")
+}
+
 /// One route of `docs/book/src/cli.md`'s table: what it sets up under the directory it is given, runs and leaves. `None` where a
 /// closed mode binds nobody, so the route cannot be taken.
 #[cfg(unix)]
@@ -317,6 +309,19 @@ fn plan_routes() -> Vec<(&'static str, Route)> {
             assert!(!root.join("d.part").exists());
             outcome
         }),
+        ("a-link", |root| {
+            std::fs::write(root.join("target"), "mine").expect("written");
+            std::os::unix::fs::symlink(root.join("target"), root.join("p")).expect("a link");
+            let outcome = resolve_at(&root.join("p").display().to_string(), &[]);
+            assert!(std::fs::symlink_metadata(root.join("p"))
+                .expect("kept")
+                .is_symlink());
+            assert_eq!(
+                std::fs::read_to_string(root.join("target")).expect("kept"),
+                "mine"
+            );
+            outcome
+        }),
         ("a-pipe", |root| {
             let pipe = root.join("p");
             let made = std::process::Command::new("mkfifo")
@@ -326,6 +331,34 @@ fn plan_routes() -> Vec<(&'static str, Route)> {
             assert!(made.success());
             let outcome = resolve_at(&pipe.display().to_string(), &[]);
             assert!(!std::fs::metadata(&pipe).expect("kept").is_file());
+            outcome
+        }),
+        ("no-plan", |root| {
+            std::fs::write(root.join("p"), "mine").expect("written");
+            let outcome = resolve_at(&root.join("p").display().to_string(), &[]);
+            assert_eq!(
+                std::fs::read_to_string(root.join("p")).expect("kept"),
+                "mine"
+            );
+            assert!(!root.join("p.part").exists() && !root.join("p.check").exists());
+            outcome
+        }),
+        ("closed-to-reads", |root| {
+            use std::os::unix::fs::PermissionsExt;
+            if !modes_bind(root) {
+                return None;
+            }
+            let plan = root.join("p");
+            an_earlier_plan(&plan);
+            std::fs::set_permissions(&plan, std::fs::Permissions::from_mode(0o000))
+                .expect("its mode");
+            let outcome = resolve_at(&plan.display().to_string(), &[]);
+            std::fs::set_permissions(&plan, std::fs::Permissions::from_mode(0o600))
+                .expect("its mode");
+            assert_eq!(
+                std::fs::read_to_string(&plan).expect("kept"),
+                AN_EARLIER_PLAN
+            );
             outcome
         }),
         ("its-own-description", |root| {
@@ -340,20 +373,28 @@ fn plan_routes() -> Vec<(&'static str, Route)> {
             }
             resolve_of(&name, &name, &[], Answer::Record(Status::Ok))
         }),
-        ("its-own-description-by-a-link", |root| {
+        ("its-own-description-by-a-descriptor", |root| {
+            // However the description is named, what stands at `--out` is no plan.
             let copy = root.join("s.eadl");
             std::fs::copy(heartbeat(), &copy).expect("copied");
             let before = std::fs::read(&copy).expect("read");
-            let link = root.join("l.eadl");
-            std::os::unix::fs::symlink(&copy, &link).expect("a link");
-            let outcome = resolve_of(
-                &link.display().to_string(),
-                &copy.display().to_string(),
-                &[],
-                Answer::Record(Status::Ok),
+            let output = std::process::Command::new("sh")
+                .arg("-c")
+                .arg("\"$0\" resolve /dev/fd/3 --out s.eadl --unchecked 3< s.eadl")
+                .arg(env!("CARGO_BIN_EXE_archogen"))
+                .current_dir(root)
+                .output()
+                .expect("the shell runs");
+            assert_eq!(std::fs::read(&copy).expect("kept"), before, "{output:?}");
+            assert_eq!(
+                output.status.code(),
+                Some(Status::Usage.code()),
+                "{output:?}"
             );
-            assert_eq!(std::fs::read(&copy).expect("kept"), before);
-            outcome
+            Some((
+                Status::Usage,
+                String::from_utf8_lossy(&output.stderr).to_string(),
+            ))
         }),
         ("a-module-it-imports", |root| {
             let corpus = crate::root().join("crates/archogen-plan/tests/corpus/modules");
@@ -380,19 +421,22 @@ fn plan_routes() -> Vec<(&'static str, Route)> {
                 .status()
                 .expect("mkfifo runs");
             assert!(made.success());
+            let plan = root.join("p");
+            let record = a_checked_plan(&plan);
             let (writer, text) = (pipe.clone(), std::fs::read(heartbeat()).expect("read"));
             let feeding = std::thread::spawn(move || std::fs::write(writer, text));
-            std::fs::write(root.join("p"), "old").expect("written");
+            let before = std::fs::read(&plan).expect("read");
             let outcome = resolve_of(
                 &pipe.display().to_string(),
-                &root.join("p").display().to_string(),
+                &plan.display().to_string(),
                 &[],
                 Answer::Record(Status::Ok),
             );
             feeding.join().expect("the writer").expect("written");
+            assert_eq!(std::fs::read(&plan).expect("kept"), before);
             assert_eq!(
-                std::fs::read_to_string(root.join("p")).expect("kept"),
-                "old"
+                std::fs::read(root.join("p.check/plan-check.json")).expect("kept"),
+                record
             );
             assert!(!root.join("p.part").exists());
             outcome
@@ -408,12 +452,12 @@ fn plan_routes() -> Vec<(&'static str, Route)> {
             outcome
         }),
         ("check-stands", |root| {
-            std::fs::write(root.join("p"), "old").expect("written");
+            an_earlier_plan(&root.join("p"));
             std::fs::write(root.join("p.check"), "mine").expect("written");
             let outcome = resolve_at(&root.join("p").display().to_string(), &[]);
             assert_eq!(
                 std::fs::read_to_string(root.join("p")).expect("kept"),
-                "old"
+                AN_EARLIER_PLAN
             );
             assert_eq!(
                 std::fs::read_to_string(root.join("p.check")).expect("kept"),
@@ -422,23 +466,69 @@ fn plan_routes() -> Vec<(&'static str, Route)> {
             outcome
         }),
         ("check-a-link", |root| {
-            std::fs::write(root.join("p"), "old").expect("written");
-            std::os::unix::fs::symlink("elsewhere", root.join("p.check")).expect("a link");
+            an_earlier_plan(&root.join("p"));
+            std::fs::create_dir(root.join("elsewhere")).expect("a directory");
+            std::os::unix::fs::symlink(root.join("elsewhere"), root.join("p.check"))
+                .expect("a link");
             let outcome = resolve_at(&root.join("p").display().to_string(), &[]);
+            assert!(std::fs::symlink_metadata(root.join("p.check"))
+                .expect("kept")
+                .is_symlink());
             assert_eq!(
                 std::fs::read_to_string(root.join("p")).expect("kept"),
-                "old"
+                AN_EARLIER_PLAN
+            );
+            assert_eq!(
+                std::fs::read_dir(root.join("elsewhere"))
+                    .expect("read")
+                    .count(),
+                0
             );
             outcome
         }),
-        ("check-reused", |root| {
+        ("check-a-link-unchecked", |root| {
+            // A link is not followed to clear anything: what it points at is not this run's.
+            std::fs::create_dir(root.join("other")).expect("a directory");
+            let kept = a_checked_plan(&root.join("first"));
+            std::fs::write(root.join("other/plan-check.json"), &kept).expect("written");
+            std::os::unix::fs::symlink(root.join("other"), root.join("p.check")).expect("a link");
+            let outcome = resolve_at(&root.join("p").display().to_string(), &["--unchecked"]);
+            assert!(root.join("p").is_file());
+            assert_eq!(
+                std::fs::read(root.join("other/plan-check.json")).expect("kept"),
+                kept
+            );
+            outcome
+        }),
+        ("record-no-record", |root| {
+            // A description kept where the record goes, for one.
             std::fs::create_dir(root.join("p.check")).expect("a directory");
-            std::fs::write(root.join("p.check/plan-check.json"), "old").expect("written");
-            std::fs::write(root.join("p.check/mine.txt"), "mine").expect("written");
+            let record = root.join("p.check/plan-check.json");
+            std::fs::copy(heartbeat(), &record).expect("copied");
+            let before = std::fs::read(&record).expect("read");
             let outcome = resolve_at(&root.join("p").display().to_string(), &[]);
-            assert_ne!(
-                std::fs::read_to_string(root.join("p.check/plan-check.json")).expect("written"),
-                "old"
+            assert_eq!(std::fs::read(&record).expect("kept"), before);
+            assert!(!root.join("p").exists());
+            outcome
+        }),
+        ("record-no-record-unchecked", |root| {
+            std::fs::create_dir(root.join("p.check")).expect("a directory");
+            let record = root.join("p.check/plan-check.json");
+            std::fs::copy(heartbeat(), &record).expect("copied");
+            let before = std::fs::read(&record).expect("read");
+            let outcome = resolve_at(&root.join("p").display().to_string(), &["--unchecked"]);
+            assert_eq!(std::fs::read(&record).expect("kept"), before);
+            assert!(root.join("p").is_file());
+            outcome
+        }),
+        ("check-reused", |root| {
+            let plan = root.join("p");
+            let record = a_checked_plan(&plan);
+            std::fs::write(root.join("p.check/mine.txt"), "mine").expect("written");
+            let outcome = resolve_at(&plan.display().to_string(), &[]);
+            assert_eq!(
+                std::fs::read(root.join("p.check/plan-check.json")).expect("written"),
+                record
             );
             assert!(root.join("p.check/mine.txt").is_file());
             outcome
@@ -447,6 +537,10 @@ fn plan_routes() -> Vec<(&'static str, Route)> {
             std::fs::write(root.join("p.check"), "mine").expect("written");
             let outcome = resolve_at(&root.join("p").display().to_string(), &["--unchecked"]);
             assert!(root.join("p").is_file());
+            assert_eq!(
+                std::fs::read_to_string(root.join("p.check")).expect("kept"),
+                "mine"
+            );
             outcome
         }),
         ("no-room-name", |root| {
@@ -456,11 +550,12 @@ fn plan_routes() -> Vec<(&'static str, Route)> {
             outcome
         }),
         ("no-room-check", |root| {
-            std::fs::write(root.join("x".repeat(250)), "old").expect("written");
-            let outcome = resolve_at(&root.join("x".repeat(250)).display().to_string(), &[]);
+            let plan = root.join("x".repeat(250));
+            an_earlier_plan(&plan);
+            let outcome = resolve_at(&plan.display().to_string(), &[]);
             assert_eq!(
-                std::fs::read_to_string(root.join("x".repeat(250))).expect("kept"),
-                "old"
+                std::fs::read_to_string(&plan).expect("kept"),
+                AN_EARLIER_PLAN
             );
             outcome
         }),
@@ -500,20 +595,37 @@ fn plan_routes() -> Vec<(&'static str, Route)> {
             std::os::unix::fs::symlink("nowhere", root.join("dangling")).expect("a link");
             resolve_at(&root.join("dangling/x").display().to_string(), &[])
         }),
+        ("link-to-a-directory-on-the-way", |root| {
+            std::fs::create_dir(root.join("real")).expect("a directory");
+            std::os::unix::fs::symlink(root.join("real"), root.join("link")).expect("a link");
+            let outcome = resolve_at(&root.join("link/p").display().to_string(), &[]);
+            assert!(root.join("real/p").is_file());
+            outcome
+        }),
+        ("link-loop-on-the-way", |root| {
+            std::os::unix::fs::symlink(root.join("b"), root.join("a")).expect("a link");
+            std::os::unix::fs::symlink(root.join("a"), root.join("b")).expect("a link");
+            resolve_at(&root.join("a/p").display().to_string(), &[])
+        }),
         ("absent", |root| {
             let outcome = resolve_at(&root.join("a/b/p").display().to_string(), &[]);
             assert!(root.join("a/b/p").is_file());
-            assert!(root.join("a/b/p.check").is_dir());
+            assert!(root.join("a/b/p.check/plan-check.json").is_file());
             assert!(!root.join("a/b/p.part").exists());
             outcome
         }),
-        ("over-a-file", |root| {
+        ("over-an-empty-file", |root| {
+            std::fs::write(root.join("p"), "").expect("written");
+            let outcome = resolve_at(&root.join("p").display().to_string(), &[]);
+            assert!(std::fs::metadata(root.join("p")).expect("it stands").len() > 0);
+            outcome
+        }),
+        ("over-a-plan", |root| {
             use std::os::unix::fs::PermissionsExt;
             let mut outcome = None;
-            // Any mode, one that closes it to its owner's reads among them: the checker reads the plan where it is first written.
-            for mode in [0o640, 0o600, 0o400, 0o000] {
+            for mode in [0o640, 0o600, 0o400] {
                 let plan = root.join(format!("p{mode:o}"));
-                std::fs::write(&plan, "mine").expect("written");
+                an_earlier_plan(&plan);
                 std::fs::set_permissions(&plan, std::fs::Permissions::from_mode(mode))
                     .expect("its mode");
                 outcome = resolve_at(&plan.display().to_string(), &[]);
@@ -522,65 +634,127 @@ fn plan_routes() -> Vec<(&'static str, Route)> {
                     .permissions()
                     .mode();
                 assert_eq!(kept & 0o777, mode);
-                std::fs::set_permissions(&plan, std::fs::Permissions::from_mode(0o600))
-                    .expect("its mode");
-                assert_ne!(std::fs::read_to_string(&plan).expect("written"), "mine");
+                assert_ne!(
+                    std::fs::read_to_string(&plan).expect("written"),
+                    AN_EARLIER_PLAN
+                );
             }
             outcome
         }),
         ("unchecked-over-a-checked", |root| {
-            let plan = root.join("p").display().to_string();
-            let (status, _) = resolve_at(&plan, &[])?;
-            assert_eq!(status, Status::Ok);
-            assert!(root.join("p.check/plan-check.json").is_file());
-            let outcome = resolve_at(&plan, &["--unchecked"]);
+            let plan = root.join("p");
+            a_checked_plan(&plan);
+            let outcome = resolve_at(&plan.display().to_string(), &["--unchecked"]);
             assert!(!root.join("p.check/plan-check.json").exists());
+            assert!(!root.join("p.check/plan-check.json.part").exists());
             outcome
         }),
         ("refused", |root| {
-            std::fs::write(root.join("p"), "old").expect("written");
+            let plan = root.join("p");
+            let record = a_checked_plan(&plan);
+            let before = std::fs::read(&plan).expect("read");
             let outcome = resolve_of(
                 &heartbeat(),
-                &root.join("p").display().to_string(),
+                &plan.display().to_string(),
                 &[],
                 Answer::Record(Status::ToolFailure),
             );
+            assert_eq!(std::fs::read(&plan).expect("kept"), before);
             assert_eq!(
-                std::fs::read_to_string(root.join("p")).expect("kept"),
-                "old"
+                std::fs::read(root.join("p.check/plan-check.json")).expect("kept"),
+                record
             );
-            assert!(root.join("p.part").is_file());
-            assert!(root.join("p.check/plan-check.json").is_file());
+            assert!(root.join("p.part/plan").is_file());
+            assert!(root.join("p.part/plan-check.json").is_file());
+            outcome
+        }),
+        ("record-unsound", |root| {
+            let plan = root.join("p");
+            an_earlier_plan(&plan);
+            let outcome = resolve_of(
+                &heartbeat(),
+                &plan.display().to_string(),
+                &[],
+                Answer::Unsound,
+            );
+            assert_eq!(
+                std::fs::read_to_string(&plan).expect("kept"),
+                AN_EARLIER_PLAN
+            );
+            assert!(root.join("p.part/plan").is_file());
+            assert!(root.join("p.part/plan-check.json").is_file());
             outcome
         }),
         ("no-record", |root| {
-            std::fs::write(root.join("p"), "old").expect("written");
+            let plan = root.join("p");
+            let record = a_checked_plan(&plan);
+            let before = std::fs::read(&plan).expect("read");
             let outcome = resolve_of(
                 &heartbeat(),
-                &root.join("p").display().to_string(),
+                &plan.display().to_string(),
                 &[],
                 Answer::NoRecord,
             );
+            assert_eq!(std::fs::read(&plan).expect("kept"), before);
             assert_eq!(
-                std::fs::read_to_string(root.join("p")).expect("kept"),
-                "old"
+                std::fs::read(root.join("p.check/plan-check.json")).expect("kept"),
+                record
             );
             assert!(!root.join("p.part").exists());
             outcome
         }),
         ("no-checker", |root| {
-            std::fs::write(root.join("p"), "old").expect("written");
-            let outcome = resolve_of(
-                &heartbeat(),
-                &root.join("p").display().to_string(),
-                &[],
-                Answer::Unlaunched,
-            );
+            // The real executable, and no install beside it.
+            let plan = root.join("p");
+            an_earlier_plan(&plan);
+            let output = std::process::Command::new(env!("CARGO_BIN_EXE_archogen"))
+                .args(["resolve", &heartbeat(), "--out"])
+                .arg(&plan)
+                .output()
+                .expect("the executable runs");
             assert_eq!(
-                std::fs::read_to_string(root.join("p")).expect("kept"),
-                "old"
+                std::fs::read_to_string(&plan).expect("kept"),
+                AN_EARLIER_PLAN
             );
             assert!(!root.join("p.part").exists() && !root.join("p.check").exists());
+            assert_eq!(
+                output.status.code(),
+                Some(Status::ToolFailure.code()),
+                "{output:?}"
+            );
+            Some((
+                Status::ToolFailure,
+                String::from_utf8_lossy(&output.stderr).to_string(),
+            ))
+        }),
+        ("closed-meanwhile", |root| {
+            use std::os::unix::fs::PermissionsExt;
+            if !modes_bind(root) {
+                return None;
+            }
+            // The checker has accepted, and the place cannot take what it accepted: neither name moves.
+            let parent = root.join("d");
+            std::fs::create_dir(&parent).expect("a directory");
+            let plan = parent.join("p");
+            let record = a_checked_plan(&plan);
+            let before = std::fs::read(&plan).expect("read");
+            let outcome = resolve_of(
+                &heartbeat(),
+                &plan.display().to_string(),
+                &[],
+                Answer::Closing(parent.join("p.check")),
+            );
+            std::fs::set_permissions(
+                parent.join("p.check"),
+                std::fs::Permissions::from_mode(0o755),
+            )
+            .expect("its mode");
+            assert_eq!(std::fs::read(&plan).expect("kept"), before);
+            assert_eq!(
+                std::fs::read(parent.join("p.check/plan-check.json")).expect("kept"),
+                record
+            );
+            assert!(!parent.join("p.part").exists());
             outcome
         }),
         ("a-flag-as-its-value", |root| {
@@ -608,19 +782,6 @@ fn plan_routes() -> Vec<(&'static str, Route)> {
                 Status::ToolFailure
             };
             Some((status, said))
-        }),
-        ("over-a-link", |root| {
-            std::fs::write(root.join("target"), "mine").expect("written");
-            std::os::unix::fs::symlink(root.join("target"), root.join("p")).expect("a link");
-            let outcome = resolve_at(&root.join("p").display().to_string(), &[]);
-            assert!(!std::fs::symlink_metadata(root.join("p"))
-                .expect("it stands")
-                .is_symlink());
-            assert_eq!(
-                std::fs::read_to_string(root.join("target")).expect("kept"),
-                "mine"
-            );
-            outcome
         }),
     ]
 }

@@ -41,6 +41,8 @@ const RECORD_LIMIT: usize = 1 << 20;
 pub struct Expected<'a> {
     /// The description, as the front read it.
     pub description: &'a Path,
+    /// Its text, as the front read it, which the checker must be able to read again.
+    pub text: Option<&'a str>,
     /// The plan the front wrote for it.
     pub plan: &'a Path,
     /// The digest of the elaborated program the description became, as the front computed it.
@@ -70,7 +72,8 @@ pub struct Checked {
 ///
 /// # Errors
 ///
-/// A `tool-failure` [`Refusal`] naming what disagreed, or both verdicts where the roles disagree.
+/// A `tool-failure` [`Refusal`] naming what disagreed, or both verdicts where the roles disagree; `usage` where what it would hand
+/// the checker cannot be handed: a description that is no regular file, reads differently now, or has no room in a path.
 pub fn check_plan(
     launcher: &dyn Launch,
     expected: &Expected<'_>,
@@ -90,6 +93,19 @@ pub fn check_plan(
         });
     }
     let description = absolute(expected.description, "the description")?;
+    // A regular file can still read differently: `/dev/stdin` reads empty the second time, and so would the checker.
+    if let Some(text) = expected.text {
+        if !std::fs::read(&description).is_ok_and(|again| again == text.as_bytes()) {
+            return Err(Refusal {
+                status: Status::Usage,
+                message: format!(
+                    "the checker reads the description again, and {} now reads differently from what the front read",
+                    expected.description.display()
+                ),
+                repair: "give the description as a file nothing is changing, or say `--unchecked` where the command has it".to_owned(),
+            });
+        }
+    }
     let plan = absolute(expected.plan, "the plan")?;
     let args: Vec<String> = vec![
         "--profile".to_owned(),
@@ -178,6 +194,13 @@ pub fn check_plan(
             status.slug()
         ))),
     }
+}
+
+/// Whether `file` reads as a checker's record.
+#[must_use]
+pub fn is_record(file: &Path) -> bool {
+    std::fs::symlink_metadata(file).is_ok_and(|meta| meta.is_file())
+        && std::fs::read(file).is_ok_and(|bytes| Record::read(&bytes, RECORD_LIMIT).is_ok())
 }
 
 /// The record's place in `dir`, the directory made and any earlier record there removed, so none is taken for this

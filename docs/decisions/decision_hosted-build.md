@@ -124,8 +124,8 @@ engine API, the wasm module and the [MCP](../book/src/ledger.md#mcp-specificatio
 needs of the engine API is only what the search already holds: the elaborated program and the kinds, beside the plan
 (`Resolution::elaborated`).
 
-**Where the package lands.** Every route `--out` can take is a row of the table in
-[Building a system](../book/src/building.md#the-rules), and every route of `archogen resolve`'s `--out` of
+**Where the package lands.** The routes `--out` can take are the rows of the table in
+[Building a system](../book/src/building.md#the-rules), and those of `archogen resolve`'s `--out` of
 [`cli.md`](../book/src/cli.md)'s: a test runs each row, and a row with no fixture, or a fixture with no row, fails. Those tables are the
 rule, and a route they do not name is promised nothing. Round 6 is why (`## Review`): a rule stated in several sentences drifted
 between them, round after round, and a table a test runs cannot. The designs the rows come from:
@@ -140,9 +140,13 @@ between them, round after round, and a table a test runs cannot. The designs the
   and the stage kept. The package takes the mode and the group of what it replaces last, read again just before the first rename; where
   nothing stood it takes what a new directory takes there, which alone needs a directory made at that mode, empty, for the instant before
   it is closed. An access control list a parent passes down is no mode, and applies to the stage.
-- **A plan judged before it lands.** `archogen resolve` writes `PLAN.part`, which the checker judges, and renames it only on acceptance,
-  so what stands at `PLAN` stands until there is a plan that may replace it, and a plan never replaces a file its description was read from.
-  Round 7 is why: replacing first and judging after lost the earlier plan on every refusal, and let a command destroy its own description.
+- **An output replaces only what its own kind wrote.** A build replaces exactly a build, a plan only a plan or an empty file, and a record
+  only a record or an empty file, the checker's `--result` among them. Asking "is this what it was read from" found a new loophole each
+  round, `/dev/fd/N` the last; asking "is this ours" has no such door. A plan is known by how it begins, as a build by what it lists: a
+  forger is not held against, as `crate::built` says of a build.
+- **A plan judged before it lands.** `archogen resolve` writes all it writes in `PLAN.part`, a private directory where the checker judges it,
+  and moves it out only on acceptance: the record first, as the step that can tell whether `PLAN.check` takes one, then the plan. So what
+  stands at either name stands until there is a plan that may replace it. Round 7 is why, and round 8 why the record went in too.
 - **One way to read a place**, `crates/archogen-cli/src/place.rs`, for both commands. Only a name found absent is absent, and whatever stops
   a place being read or made is `usage`, nothing yet being written. Room in a path is judged as the checker is handed the path, its
   directory canonical, and after the parents stand, since nothing else names it so.
@@ -193,6 +197,7 @@ capability unsupported. Then the S0 crate was deleted (`M4.2.4`), and the retire
 | 5 | 11 | 4 (R5-1, R5-2, R5-3, R5-5), beside 4 gaps and 3 of wording | `2026-11-05`, not acceptable — answered: a stream that remembers any failed write, every route one; what a stream closed before the run cannot show, stated; whatever stops the place opening is `usage`, by its cause; a carried name no bar to what came; the stage's mode from the call that makes it, and held again at landing; a directory that cannot be read refused |
 | 6 | 17 | 5 (R6-1 to R6-5), beside 5 gaps and 7 of wording | `2026-11-05`, not acceptable — answered by method as well as finding by finding: each route of `--out` a row a test runs, so no sentence states one; one way to read a place for both commands; a stage private from the first, whose files are created and never written over; a sibling's streams relayed apart, and a standard error nobody reads changing nothing |
 | 7 | 22 | 8 (R7-1 to R7-8), beside 9 routes no row named, 2 gaps and 3 of wording | `2026-11-05`, not acceptable — answered: `resolve` judges at `PLAN.part` and lands only on acceptance, and refuses to replace what its description was read from; a description the checker cannot read again refused; the stage held by what it is; the checker's own `.part` created, never written through; each named route a row |
+| 8 | 19 | 9 (R8-1 to R8-9), beside 2 routes no row named, 3 gaps and 5 of wording | `2026-11-05`, not acceptable — answered by one principle: an output replaces only what its own kind wrote, for a plan, a record and the checker's `--result`; everything a run writes kept in one private stage until it lands, the record moved first so that a plan cannot land to be refused after |
 
 The rounds, each finding and its answer, are in
 [`docs/reviews/decision_hosted-build-reviews.md`](../reviews/decision_hosted-build-reviews.md).

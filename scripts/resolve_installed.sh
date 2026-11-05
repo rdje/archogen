@@ -38,7 +38,7 @@ run_cases() {
   for entry in "${CASES[@]}"; do
     path="${entry%%|*}"; shape="${entry##*|}"
     plan="$out/$(basename "$path" .eadl).plan"
-    rm -rf "$plan" "$plan.check"
+    rm -rf "$plan" "$plan.check" "$plan.part"
     said="$("$install/archogen" resolve "$path" --out "$plan" 2>&1)"; rc=$?
     if [ "$rc" -ne 0 ]; then
       note "$path: \`archogen resolve\` exited $rc, not 0"; printf '%s\n' "$said" | sed -n '1,6p' | sed 's/^/    /' >&2

@@ -136,6 +136,7 @@ impl Case {
     fn run(&self, fake: &Fake) -> (Result<Record, archogen_cli::Refusal>, String) {
         let expected = Expected {
             description: &self.dir.join("system.eadl"),
+            text: None,
             plan: &self.dir.join("plan.eadl"),
             program: self.program,
             plan_sha256: self.plan,

@@ -190,10 +190,9 @@ fn owner_writes(mode: &Permissions) -> Permissions {
 /// the package to keep: that alone needs a directory made at it, empty, for the instant before it is closed.
 #[cfg(unix)]
 fn make_stage(path: &Path, fresh: bool) -> std::io::Result<Option<Permissions>> {
-    use std::os::unix::fs::{DirBuilderExt, PermissionsExt};
+    use std::os::unix::fs::PermissionsExt;
     if !fresh {
-        std::fs::DirBuilder::new().mode(0o700).create(path)?;
-        return std::fs::set_permissions(path, Permissions::from_mode(0o700)).map(|()| None);
+        return place::make_private(path).map(|()| None);
     }
     std::fs::create_dir(path)?;
     let mode = std::fs::symlink_metadata(path)?.permissions();
@@ -638,6 +637,12 @@ impl Build<'_> {
             .expect("a plan is written for a judged description");
         let expected = Expected {
             description: Path::new(self.path),
+            text: self
+                .response
+                .sources
+                .iter()
+                .find(|source| source.name == self.path)
+                .map(|source| source.text.as_str()),
             plan: &assignment,
             program,
             plan_sha256: Digest::of(self.plan.text.as_bytes()),
@@ -870,15 +875,36 @@ fn report(
             "  its mode closes it to its owner, and cargo reads it and may need to make `target` and `Cargo.lock` in it: open it if cargo stops on that"
         );
     }
-    let manifest = dir.join("Cargo.toml").display().to_string();
-    // As a shell reads it: a line nobody can follow as printed is no next step.
-    let plain = manifest
+    let manifest = followable(&dir.join("Cargo.toml").display().to_string());
+    let _ = writeln!(out, "  next: cargo run --manifest-path {manifest}");
+}
+
+/// `manifest` as a shell and cargo read it: a line nobody can follow as printed is no next step.
+fn followable(manifest: &str) -> String {
+    let unflagged = if manifest.starts_with('-') {
+        format!("./{manifest}")
+    } else {
+        manifest.to_owned()
+    };
+    let plain = unflagged
         .chars()
         .all(|c| c.is_ascii_alphanumeric() || "_-./,:=@%+".contains(c));
-    let manifest = if plain {
-        manifest
+    if plain {
+        unflagged
     } else {
-        format!("'{}'", manifest.replace('\'', "'\\''"))
-    };
-    let _ = writeln!(out, "  next: cargo run --manifest-path {manifest}");
+        format!("'{}'", unflagged.replace('\'', "'\\''"))
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::followable;
+
+    #[test]
+    fn a_manifest_is_named_as_a_shell_and_cargo_read_it() {
+        assert_eq!(followable("out/Cargo.toml"), "out/Cargo.toml");
+        assert_eq!(followable("my dir/Cargo.toml"), "'my dir/Cargo.toml'");
+        assert_eq!(followable("-x/Cargo.toml"), "./-x/Cargo.toml");
+        assert_eq!(followable("it's/Cargo.toml"), "'it'\\''s/Cargo.toml'");
+    }
 }

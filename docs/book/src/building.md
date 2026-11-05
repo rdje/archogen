@@ -16,7 +16,7 @@ when, and that is all it can show.
 > `archogen-plan-check` over the plan it wrote, `archogen_plan::lower_checked` on its acceptance, then
 > `archogen_emit::emit`, which accepts the plan only by lowering it again and comparing bytes. Behavior is copied and never
 > generated: the package holds `rt-core` and `sim-playground` byte for byte beside tables of exact integer ticks. Where it lands, and
-> every way that can go, is one table a test runs, and no byte of the package depends on the directory its description lies in or on
+> the ways that can go, are one table a test runs, and no byte of the package depends on the directory its description lies in or on
 > where it goes. It stays off the programmatic surface, by `ROADMAP.md` §10.4.
 > The design is `docs/decisions/decision_hosted-build.md`. The system's own behavior is held by `crates/archogen-cli/tests/functional_fixtures.rs`,
 > against observations frozen before any generator existed.
@@ -149,7 +149,7 @@ file is written. So `DIR` holds at every moment what stood there, nothing, or th
 found it. Your changes belong in the description, not in the output.
 
 ⛔ **A build deletes nothing it did not write**, but for two things: an empty directory at `--out`, which it takes, and its own stage,
-which on a refusal goes with anything put in it, unless the build knows something else wrote there, when the stage stays. Of an earlier
+which on a refusal goes with anything put in it, unless the table says it stays: for a report, or because something else wrote there. Of an earlier
 build it removes each file `provenance.json` lists, one by one and only if still the regular file it wrote, then the directories that
 held them where that leaves them empty. What building and looking at a package leave at its top, `target`, `Cargo.lock` and `.DS_Store`,
 is neither judged nor deleted: it moves to the new package, so a rebuild keeps cargo's work.
@@ -188,7 +188,7 @@ the rule: what it says is run, and a route it does not name is promised nothing 
 | `link-loop-on-the-way` | a loop of links among `--out`'s parents | `usage` | `name another place` | the links |
 | `closed-parent` | a parent this user cannot write | `usage` | `reach and write` | the parent, empty |
 | `reads-once` | a description that is no regular file, such as a pipe or `<(…)`, which the checker would read again | `usage` | `no regular file` | nothing made |
-| `no-checker` | no checker can be run | `tool-failure` | `runs no program` | nothing made |
+| `no-checker` | no install beside the command, so no checker can be run | `tool-failure` | `has no install manifest` | nothing made |
 | `absent` | nothing | `ok` | `generated` | the package, at what a new directory takes there |
 | `empty` | an empty directory | `ok` | `generated` | the package, at that directory's mode |
 | `earlier` | an earlier build, with what cargo left | `ok` | `generated` | the package, at that mode, what cargo left moved to it |

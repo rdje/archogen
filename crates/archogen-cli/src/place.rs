@@ -38,7 +38,7 @@ pub fn repair(error: &std::io::Error) -> &'static str {
         ErrorKind::AlreadyExists => {
             "a name on the way to it is a link to nothing, or something took it meanwhile: look at it, or name another place"
         }
-        _ => "name another place",
+        _ => "name another place, nearer the root if its path is long",
     }
 }
 
@@ -140,14 +140,9 @@ pub fn room(place: &Path, deepest: &str, out: &str) -> Result<(), Refused> {
         .filter(|p| !p.as_os_str().is_empty())
         .unwrap_or_else(|| Path::new("."));
     let unnamed = |error: std::io::Error| {
-        let why = if error.kind() == ErrorKind::PermissionDenied {
-            repair(&error)
-        } else {
-            TOO_LONG
-        };
         Refused::new(
             format!("cannot name `--out {out}` absolutely: {error}"),
-            why,
+            repair(&error),
         )
     };
     let name = place.file_name().unwrap_or_default();
@@ -166,23 +161,19 @@ pub fn room(place: &Path, deepest: &str, out: &str) -> Result<(), Refused> {
     }
 }
 
-/// Whether `a` and `b` are one file, links followed: a hard link and a second name for a directory among them.
+/// A directory made by a call that fails if anything stands there, private to its owner from that call on: nobody else reads or
+/// fills a stage, whatever what stands beside it lets others do.
 #[cfg(unix)]
-pub fn same_file(a: &Path, b: &Path) -> bool {
-    use std::os::unix::fs::MetadataExt;
-    match (std::fs::metadata(a), std::fs::metadata(b)) {
-        (Ok(a), Ok(b)) => a.dev() == b.dev() && a.ino() == b.ino(),
-        _ => false,
-    }
+pub fn make_private(path: &Path) -> std::io::Result<()> {
+    use std::os::unix::fs::{DirBuilderExt, PermissionsExt};
+    std::fs::DirBuilder::new().mode(0o700).create(path)?;
+    std::fs::set_permissions(path, std::fs::Permissions::from_mode(0o700))
 }
 
-/// Whether `a` and `b` are one file, as far as their canonical names can say it.
+/// A directory made by a call that fails if anything stands there; a platform with no owner's bits has nothing to close.
 #[cfg(not(unix))]
-pub fn same_file(a: &Path, b: &Path) -> bool {
-    match (std::fs::canonicalize(a), std::fs::canonicalize(b)) {
-        (Ok(a), Ok(b)) => a == b,
-        _ => false,
-    }
+pub fn make_private(path: &Path) -> std::io::Result<()> {
+    std::fs::create_dir(path)
 }
 
 /// What tells the directory a run made from one that came to stand at its name: never a link.

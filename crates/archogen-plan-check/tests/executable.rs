@@ -255,11 +255,12 @@ fn an_earlier_record_at_the_path_is_replaced() {
     let dir = scratch();
     let description = dir.join("system.eadl");
     std::fs::write(&description, PLAIN).unwrap();
-    std::fs::write(dir.join("result.json"), "an earlier record").unwrap();
-    let (code, record, _) = check(
-        &description,
-        &plan(&description, "console.write", "console.uart"),
-    );
+    let the_plan = plan(&description, "console.write", "console.uart");
+    let (code, _, _) = check(&description, &the_plan);
+    assert_eq!(code, 0);
+    let earlier = std::fs::metadata(dir.join("result.json")).unwrap();
+    assert!(earlier.len() > 0, "an earlier record stands");
+    let (code, record, _) = check(&description, &the_plan);
     assert_eq!((code, record.status()), (0, Status::Ok));
     assert!(!dir.join("result.json.part").exists());
 }
@@ -381,4 +382,52 @@ fn what_stands_beside_the_record_is_refused_and_a_link_there_is_never_written_th
         .expect("kept")
         .is_symlink());
     assert!(!result.exists());
+}
+
+#[test]
+fn a_result_replaces_only_a_record_and_never_what_it_was_read_from() {
+    let dir = scratch();
+    let description = dir.join("system.eadl");
+    std::fs::copy(
+        Path::new(env!("CARGO_MANIFEST_DIR")).join("../../examples/s0-heartbeat/system.eadl"),
+        &description,
+    )
+    .expect("a description");
+    let plan = dir.join("plan.eadl");
+    std::fs::write(&plan, "(format \"archogen-assignment/2\")\n").expect("a plan");
+    let (before, before_plan) = (
+        std::fs::read(&description).expect("read"),
+        std::fs::read(&plan).expect("read"),
+    );
+    let mine = dir.join("mine.txt");
+    std::fs::write(&mine, "mine").expect("written");
+    for at in [&description, &plan, &mine] {
+        let output = run(&[
+            "--result",
+            at.to_str().unwrap(),
+            "--",
+            description.to_str().unwrap(),
+            plan.to_str().unwrap(),
+        ]);
+        assert_eq!(output.status.code(), Some(2), "{output:?}");
+        assert!(
+            String::from_utf8_lossy(&output.stderr).contains("a result replaces only a record"),
+            "{output:?}"
+        );
+    }
+    assert_eq!(std::fs::read(&description).expect("kept"), before);
+    assert_eq!(std::fs::read(&plan).expect("kept"), before_plan);
+    assert_eq!(std::fs::read_to_string(&mine).expect("kept"), "mine");
+    // An empty file is nobody's work, and takes a record.
+    let empty = dir.join("empty.json");
+    std::fs::write(&empty, "").expect("written");
+    let output = run(&[
+        "--result",
+        empty.to_str().unwrap(),
+        "--",
+        description.to_str().unwrap(),
+        plan.to_str().unwrap(),
+    ]);
+    assert_ne!(output.status.code(), Some(2), "{output:?}");
+    assert!(std::fs::metadata(&empty).expect("it stands").len() > 0);
 }

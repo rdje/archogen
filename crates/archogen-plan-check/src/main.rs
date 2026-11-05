@@ -30,7 +30,7 @@ use std::path::{Path, PathBuf};
 use std::process::ExitCode;
 
 use archogen_digest::Digest;
-use archogen_outcome::record::{Finding, Producer, Severity};
+use archogen_outcome::record::{Finding, Producer, Record, Severity};
 use archogen_outcome::Status;
 use archogen_plan_check::judgement::{self, Inputs, Unjudged};
 use archogen_plan_check::mcp::{self, Checker};
@@ -204,6 +204,9 @@ fn run(
         Ok(profile) => profile,
         Err(why) => return refuse(err, Status::Usage, &why),
     };
+    if let Some(Err(why)) = result.as_deref().map(replaceable) {
+        return refuse(err, Status::Usage, &why);
+    }
     let producer = match me() {
         Ok(producer) => producer,
         Err(why) => return refuse(err, Status::ToolFailure, &why),
@@ -318,6 +321,29 @@ fn render(err: &mut dyn Write, findings: &[Finding]) {
     }
 }
 
+/// Whether what stands at `--result` is what a result may replace: nothing, an empty file, or a record. Anything else may be
+/// someone's, the description or the plan among them, so it is refused before anything is judged, and a link is not followed.
+fn replaceable(file: &Path) -> Result<(), String> {
+    let Ok(meta) = std::fs::symlink_metadata(file) else {
+        return Ok(());
+    };
+    let shown = file.display();
+    let no_record = || {
+        format!(
+            "{shown} stands at `--result` and is no record, and a result replaces only a record"
+        )
+    };
+    if !meta.is_file() {
+        return Err(no_record());
+    }
+    let bytes = std::fs::read(file).map_err(|error| format!("cannot read {shown}: {error}"))?;
+    if bytes.is_empty() || Record::read(&bytes, 1 << 20).is_ok() {
+        Ok(())
+    } else {
+        Err(no_record())
+    }
+}
+
 /// Write `text` at `path` whole: beside it, in a file this run makes, then renamed into place. What already stands beside it is
 /// not this run's, so it is refused and left alone, and a link there is never written through.
 fn write(path: &Path, text: &str) -> std::io::Result<()> {
@@ -327,7 +353,10 @@ fn write(path: &Path, text: &str) -> std::io::Result<()> {
     let mut file = std::fs::OpenOptions::new()
         .write(true)
         .create_new(true)
-        .open(&part)?;
+        .open(&part)
+        .map_err(|error| {
+            std::io::Error::new(error.kind(), format!("{}: {error}", part.display()))
+        })?;
     let written = file.write_all(text.as_bytes());
     drop(file);
     let placed = written.and_then(|()| std::fs::rename(&part, path));
