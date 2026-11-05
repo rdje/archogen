@@ -180,6 +180,26 @@ target-emulator: the §3.2 agreement holds: targets/riscv-virt-up.eadl agrees wi
 The description claims no instruction set, no interrupt route and no other device. Those would be facts
 nothing checks, and the interrupt timings the runtime analysis needs are the catalog's, with their evidence.
 
+### A system on a target: which device is which
+
+A description names devices of its own, and a target has others: `console.uart` on a playground, `target.console` on the emulator. Nothing says the two
+are one device, and nothing has to, because a description says what it asks for. The engine gives the system the target's platform in place of its own and
+searches again. The device then bound for "`console.write` needs observable output" is the device `console.uart` was
+(`docs/decisions/decision_device-correspondence.md`; `crates/eadl-resolve/src/target.rs`).
+
+So everything a target build says of a device is the target's. A description's rate, width and regions do not reach it, each requirement is judged again at
+the target's providers, and the joint rules read the target's memory map. One device may become two, two may become one, and an adapter a better device no
+longer needs is gone. What no device can serve is the refusal any system gets.
+
+The engine refuses three things before it searches, because no requirement can answer them:
+
+- a name both the description and the target declare;
+- a system or a task naming a block or a platform itself, where it could say what it asks of one;
+- a fact a system's platform declares absent that the target offers.
+
+⚠️ Two devices no requirement tells apart are not told apart: the policy's order chooses. And this says what is judged, not that two runs match, which is
+`M4.9`'s. No command names a target yet: that is `M4.1.7`, with the plan format that reads this rule.
+
 ### The first code on the target
 
 `M2.8` asks for an architecture spike: startup, a timer interrupt, the return from it, observable output, and

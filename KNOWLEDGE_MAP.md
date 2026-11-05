@@ -210,6 +210,7 @@ workspace member with none.
 - [`decision_ceilings-bound-reads.md`](docs/decisions/decision_ceilings-bound-reads.md)
 - [`decision_ci-rehearsal-beside-the-repository.md`](docs/decisions/decision_ci-rehearsal-beside-the-repository.md)
 - [`decision_decisions-folder-ceiling.md`](docs/decisions/decision_decisions-folder-ceiling.md)
+- [`decision_device-correspondence.md`](docs/decisions/decision_device-correspondence.md)
 - [`decision_device-models.md`](docs/decisions/decision_device-models.md)
 - [`decision_eadl-engine-boundary.md`](docs/decisions/decision_eadl-engine-boundary.md)
 - [`decision_eadl1-value-domain.md`](docs/decisions/decision_eadl1-value-domain.md)

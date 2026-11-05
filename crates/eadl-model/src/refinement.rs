@@ -192,6 +192,19 @@ impl Default for Facets {
 }
 
 impl Facets {
+    /// Every fact this declaration declares absent, with where it says so.
+    pub fn absences(&self) -> impl Iterator<Item = (&str, Span)> {
+        self.absent
+            .iter()
+            .map(|(fact, span)| (fact.as_str(), *span))
+    }
+
+    /// Whether it offers `fact`, in any way, as §3 rule 3 reads an offer.
+    #[must_use]
+    pub fn offers_fact(&self, fact: &str) -> bool {
+        self.offers.contains_key(fact)
+    }
+
     /// Reduce one declaration.
     ///
     /// Recognizes `(offers …)`, `(absent …)` and `(refines <name>)`. An offer is either a bare
