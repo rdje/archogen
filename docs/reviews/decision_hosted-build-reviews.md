@@ -242,3 +242,21 @@ Said, and left as it stands: a real full disk, a read-only filesystem, a mount p
 | R10-13 | wording | "A build replaces exactly a build" against row `empty`; "known by how it begins" in a test | Both corrected |
 
 Said, and left as it stands: a real full disk, a read-only filesystem, a mount point, another user's or a sticky directory, a group moving, and Linux stayed unmeasured.
+
+**Round 11** — `2026-11-05`: not acceptable, 9 findings, 4 defects, none needing another program; only R11-1 touches a user's bytes, and R11-2 is a regression from round 10's own answer. Its reader ran every row of both tables on an install of `7a4155a0` (56 of 56 and 46 of 46 held, what is left included), 240 descriptions with odd names at 7 commands each, 212 descriptions from the tree at 6 commands each, 5,954 mutants of a plan, and all writes failing under `ulimit -f`, every earlier output kept. What broke was what the words claimed, not what the routes did.
+
+| # | Kind | Finding | Answer |
+| --- | --- | --- | --- |
+| R11-1 | defect | a hand edit that keeps the canonical form is replaced at exit 0, and the row, `cli.md`, §5, the API's doc and the fixture's comment said the opposite. Round 10's edit deleted the chapter's honest sentence | Nothing can tell it: canonical text carries no digest of itself. So it is stated in each place, held by a new row `a-canonical-edit`, and the chapter says where a choice belongs: the description. The behaviour stands |
+| R11-2 | defect | R10-7's 64 MiB bound called itself the most a build writes, and a description past it made a build refuse its own output and `explain` give a false `stale-input` | The bound is gone. Format `/5` gives each listed file's length, so another length is changed and is not read, whatever it has grown to; the same length is digested as it is read, at no cost in memory |
+| R11-3 | defect | "far more than any plan holds" and "larger than any build's" were false: a plan of 17.6 MB and a provenance of 17.5 MB, each the engine's own | No bound is claimed of what the engine writes. Only what begins as a plan is read whole, up to what its reader can hold, 2^32 bytes, row `a-plan-past-what-its-reader-holds`; a provenance is read to 2^30, and the refusal says this engine's limit |
+| R11-4 | defect | `archogen-plan-check` panicked on an argument that is no text, exit 101 | Read as the front reads them: a usage error, exit 2 |
+| R11-5 | gap | the checker wrote a record it would not read back past 1 MiB | One bound for a record, 2^30, in the front, `explain` and the checker; what does not begin as a record is refused for its first bytes |
+| R11-6 | gap | most `--result` refusals gave no repair | Each says what to do, as `hint:` |
+| R11-7 | route | three routes with no row, and a hint naming the record's mode where the directory's stops it | Rows `check-unsearchable`, `check-closed-unchecked` and `record-unreadable-unchecked`; the hint names both |
+| R11-8 | gap | a umask closing the owner's reads was reported as "changed while the plan was judged", and the stage stayed | A failed read is said as what it is, naming the umask, and the stage goes. A test runs the executable under `umask 0477` |
+| R11-9 | wording | `engine-api.md` said the API's version is `1.3` | The figure is gone: the chapter points at the register |
+
+Beside these, the reader's unverified remark: `Landing::open` left an empty stage when its mode could not be set, where `build_cmd.rs` removes it. Mirrored; still not forced, since nothing here makes `chmod` fail for an owner.
+
+Said, and left as it stands: a real full disk, a read-only filesystem, a mount point, another user's or a sticky directory, a group moving, Linux, and a working directory whose name is no text stayed unmeasured. R10-8's failed restore was not forced: it needs a race.

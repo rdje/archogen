@@ -10,17 +10,27 @@ use std::collections::BTreeSet;
 use std::io::Read;
 use std::path::{Component, Path};
 
-use archogen_digest::Digest;
+use archogen_digest::{Digest, Sha256};
 use archogen_emit::{
     provenance_is_whole, ASSIGNMENT_FILE, PROVENANCE_FILE, PROVENANCE_FORMAT, RESULT_FILE,
 };
 use archogen_json::Value;
 
-/// The most of a provenance the command reads.
-const LIMIT: u64 = 1 << 24;
+/// The most of a provenance the command reads, so that what is not one cannot take all there is.
+const LIMIT: u64 = 1 << 30;
 
-/// The most a file a build wrote can hold, a description and its modules the largest of them.
-const FILE_AT_MOST: u64 = 1 << 26;
+/// `file`'s digest, read as it goes, so that a file as long as a build wrote it is held to what it holds at no cost in memory.
+fn digest_of(file: &Path) -> std::io::Result<Digest> {
+    let mut opened = std::fs::File::open(file)?;
+    let mut hasher = Sha256::default();
+    let mut chunk = vec![0; 1 << 16];
+    loop {
+        match opened.read(&mut chunk)? {
+            0 => return Ok(hasher.finish()),
+            count => hasher.update(&chunk[..count]),
+        }
+    }
+}
 
 /// What building a package leaves at its top, cargo's or the desktop's, and no build wrote: a build neither judges them nor
 /// deletes them, and carries them to the package that replaces it.
@@ -35,6 +45,25 @@ const ALWAYS: [&str; 5] = [
     RESULT_FILE,
 ];
 
+/// A file a build wrote, as its provenance lists it.
+#[derive(Debug)]
+pub struct Listed {
+    /// Where it stands, under the build.
+    pub name: String,
+    /// How long it is.
+    pub bytes: u64,
+    /// What it holds.
+    pub digest: Digest,
+}
+
+impl Listed {
+    /// Whether the file at `file` is this one: another length is another file, and is not read to find that out, whatever it has
+    /// grown to.
+    fn holds(&self, file: &Path, meta: &std::fs::Metadata) -> std::io::Result<bool> {
+        Ok(meta.len() == self.bytes && digest_of(file)? == self.digest)
+    }
+}
+
 /// A build's provenance, as far as a later command reads it.
 #[derive(Debug)]
 pub struct Built {
@@ -44,8 +73,8 @@ pub struct Built {
     pub description: String,
     /// The digest of the configuration checker that accepted its plan.
     pub checker: Digest,
-    /// Every file it wrote but the provenance itself, with its digest.
-    pub files: Vec<(String, Digest)>,
+    /// Every file it wrote but the provenance itself.
+    pub files: Vec<Listed>,
     /// Whether the provenance is what its own digest says.
     whole: bool,
 }
@@ -77,7 +106,7 @@ impl Built {
             .map_err(|error| format!("{shown}'s `{PROVENANCE_FILE}`: {error}"))?;
         if bytes.len() as u64 > LIMIT {
             return Err(format!(
-                "{shown}'s `{PROVENANCE_FILE}` is larger than any build's"
+                "{shown}'s `{PROVENANCE_FILE}` is larger than this engine reads one, 2^30 bytes"
             ));
         }
         let provenance = archogen_json::read(&bytes, bytes.len().max(1))
@@ -118,11 +147,22 @@ impl Built {
                     "{shown}/{PROVENANCE_FILE} lists the file `{path}`, which lies outside the build"
                 ));
             }
-            files.push((path.to_owned(), digest(path, sha256)?));
+            let bytes = match entry.get("bytes") {
+                Some(Value::Number(number)) => {
+                    number.as_i64().and_then(|bytes| u64::try_from(bytes).ok())
+                }
+                _ => None,
+            }
+            .ok_or_else(|| format!("{shown}/{PROVENANCE_FILE} lists `{path}` with no length"))?;
+            files.push(Listed {
+                name: path.to_owned(),
+                bytes,
+                digest: digest(path, sha256)?,
+            });
         }
         if let Some(missing) = ALWAYS
             .iter()
-            .find(|name| !files.iter().any(|(listed, _)| listed == *name))
+            .find(|name| !files.iter().any(|listed: &Listed| listed.name == **name))
         {
             return Err(format!(
                 "{shown}/{PROVENANCE_FILE} does not list `{missing}`, which every build writes"
@@ -144,20 +184,17 @@ impl Built {
                 "`{PROVENANCE_FILE}` has changed since the build wrote it"
             ));
         }
-        self.files.iter().find_map(|(name, digest)| {
+        self.files.iter().find_map(|listed| {
+            let name = &listed.name;
             let file = dir.join(name);
-            match std::fs::symlink_metadata(&file) {
-                // Larger than any file a build writes is changed, and is not read to find that out.
-                Ok(meta) if meta.is_file() && meta.len() > FILE_AT_MOST => {
-                    return Some(format!("`{name}` has changed since the build wrote it"))
-                }
-                Ok(meta) if meta.is_file() => {}
+            let meta = match std::fs::symlink_metadata(&file) {
+                Ok(meta) if meta.is_file() => meta,
                 Ok(_) => return Some(format!("`{name}` is no file the build wrote")),
                 Err(error) => return Some(format!("`{name}`: {error}")),
-            }
-            match std::fs::read(&file) {
-                Ok(bytes) if Digest::of(&bytes) == *digest => None,
-                Ok(_) => Some(format!("`{name}` has changed since the build wrote it")),
+            };
+            match listed.holds(&file, &meta) {
+                Ok(true) => None,
+                Ok(false) => Some(format!("`{name}` has changed since the build wrote it")),
                 Err(error) => Some(format!("`{name}`: {error}")),
             }
         })
@@ -166,7 +203,7 @@ impl Built {
     /// Every directory that holds a file this build wrote, deepest first.
     fn holding(&self) -> Vec<String> {
         let mut held = BTreeSet::new();
-        for (name, _) in &self.files {
+        for Listed { name, .. } in &self.files {
             let mut at = Path::new(name).parent();
             while let Some(up) = at.filter(|up| !up.as_os_str().is_empty()) {
                 held.insert(up.display().to_string());
@@ -181,7 +218,11 @@ impl Built {
     /// The first thing under `dir` no build wrote, empty directories and names that are no text among them: all there is
     /// beside what it lists, and what [`CARRIED`] names at its top.
     pub fn foreign(&self, dir: &Path) -> Option<String> {
-        let listed: BTreeSet<&str> = self.files.iter().map(|(name, _)| name.as_str()).collect();
+        let listed: BTreeSet<&str> = self
+            .files
+            .iter()
+            .map(|listed| listed.name.as_str())
+            .collect();
         let holding = self.holding();
         let mut pending = vec![dir.to_path_buf()];
         while let Some(next) = pending.pop() {
@@ -234,19 +275,19 @@ impl Built {
             }
             true
         };
-        let regular =
-            |file: &Path| std::fs::symlink_metadata(file).is_ok_and(|meta| meta.is_file());
-        for (name, digest) in &self.files {
-            let file = dir.join(name);
-            if reached(name)
-                && regular(&file)
-                && std::fs::read(&file).is_ok_and(|bytes| Digest::of(&bytes) == *digest)
-            {
+        let as_written = |listed: &Listed, file: &Path| {
+            std::fs::symlink_metadata(file).is_ok_and(|meta| {
+                meta.is_file() && listed.holds(file, &meta).is_ok_and(|same| same)
+            })
+        };
+        for listed in &self.files {
+            let file = dir.join(&listed.name);
+            if reached(&listed.name) && as_written(listed, &file) {
                 let _ = std::fs::remove_file(&file);
             }
         }
         let provenance = dir.join(PROVENANCE_FILE);
-        if regular(&provenance)
+        if std::fs::symlink_metadata(&provenance).is_ok_and(|meta| meta.is_file())
             && std::fs::read_to_string(&provenance).is_ok_and(|text| provenance_is_whole(&text))
         {
             let _ = std::fs::remove_file(&provenance);

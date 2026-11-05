@@ -39,7 +39,10 @@ pub const RECORD_PART: &str = "plan-check.json.part";
 pub const RECORD_EARLIER: &str = "plan-check.json.earlier";
 
 /// The most of a record the front reads.
-const RECORD_LIMIT: usize = 1 << 20;
+pub const RECORD_LIMIT: usize = 1 << 30;
+
+/// What begins a record, so that what is not one is refused without being read whole.
+const A_RECORD_BEGINS: &[u8] = b"{\"format\":\"archogen-result/";
 
 /// What the front computed itself, which the checker's record must name.
 #[derive(Debug, Clone, Copy)]
@@ -242,9 +245,13 @@ fn reads_again(sources: &SourceMap) -> Result<(), Refusal> {
 ///
 /// What stopped it reading the file.
 pub fn reads_as_record(file: &Path) -> std::io::Result<bool> {
-    let mut bytes = Vec::new();
-    std::fs::File::open(file)?
-        .take(u64::try_from(RECORD_LIMIT).unwrap_or(u64::MAX) + 1)
+    let mut opened = std::fs::File::open(file)?;
+    let mut bytes = vec![0; A_RECORD_BEGINS.len()];
+    if opened.read_exact(&mut bytes).is_err() || bytes != A_RECORD_BEGINS {
+        return Ok(false);
+    }
+    opened
+        .take(u64::try_from(RECORD_LIMIT).unwrap_or(u64::MAX))
         .read_to_end(&mut bytes)?;
     Ok(bytes.len() <= RECORD_LIMIT && Record::read(&bytes, RECORD_LIMIT).is_ok())
 }

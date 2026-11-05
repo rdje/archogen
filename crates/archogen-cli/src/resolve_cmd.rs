@@ -298,8 +298,11 @@ impl From<place::Refused> for Unwritten {
 /// What a plan is written as in its stage, whatever it will be named.
 const PLAN_IN_STAGE: &str = "plan";
 
-/// The most of what stands at `--out` it reads, to tell it is a plan: far more than any plan holds.
-const A_PLAN_AT_MOST: u64 = 1 << 24;
+/// What begins a plan, so that what is not one is refused without being read whole.
+const A_PLAN_BEGINS: &[u8] = b"(format \"archogen-assignment/";
+
+/// The most the engine's reader of a plan can hold, as of any source: past it, no reader of this engine could tell.
+const A_PLAN_AT_MOST: u64 = u32::MAX as u64;
 
 /// Where a plan goes, the place judged. What each route does is `docs/book/src/cli.md`'s table, which `tests/resolve.rs` runs: this
 /// says it nowhere else. Everything a run writes stays in `stage`, private to its owner, until the plan may land, so what stands at
@@ -384,6 +387,10 @@ impl Landing {
     /// name taken at once.
     fn open(&mut self, text: &str) -> Result<(), Unwritten> {
         place::make_private(&self.stage).map_err(|error| {
+            // Never the stage, if this call did not make it. One it made and could not close is empty, and goes only if it still is.
+            if error.kind() != ErrorKind::AlreadyExists {
+                let _ = std::fs::remove_dir(&self.stage);
+            }
             place::unmake(&self.made);
             usage(
                 format!(
@@ -465,11 +472,22 @@ impl Landing {
                 self.stage.display()
             )));
         }
-        if !std::fs::read(&plan).is_ok_and(|bytes| bytes == text.as_bytes()) {
-            return Err(came(format!(
-                "{} changed while the plan was judged",
-                plan.display()
-            )));
+        match std::fs::read(&plan) {
+            Ok(bytes) if bytes == text.as_bytes() => {}
+            Ok(_) => {
+                return Err(came(format!(
+                    "{} changed while the plan was judged",
+                    plan.display()
+                )))
+            }
+            // Its own plan, in its own stage: a umask that closes it to its owner is the likely cause, and nothing came.
+            Err(error) => {
+                self.abandon();
+                return Err(usage(
+                    format!("cannot read back the plan it wrote: {error}"),
+                    "check the umask: this user must be able to read what it writes",
+                ));
+            }
         }
         let out = self.file.display().to_string();
         let replacing = replaceable(&self.file, &out).inspect_err(|_| self.abandon())?;
@@ -561,7 +579,7 @@ impl Landing {
                         "cannot move the earlier record {}: {error}{stranded}",
                         record.display()
                     ),
-                    "check its mode, and any flag on it",
+                    "check its mode and its directory's, and any flag on it",
                 ));
             }
             moved_out = true;
@@ -656,21 +674,32 @@ fn replaceable(file: &Path, out: &str) -> Result<Option<std::fs::Metadata>, Unwr
             name_a_file,
         ));
     }
+    // Only what begins as a plan is read whole, so that a large file of something else is refused for the cost of its first line.
     let mut bytes = Vec::new();
-    let read = std::fs::File::open(file)
-        .and_then(|opened| opened.take(A_PLAN_AT_MOST + 1).read_to_end(&mut bytes));
+    let read = std::fs::File::open(file).and_then(|mut opened| {
+        (&mut opened)
+            .take(A_PLAN_BEGINS.len() as u64)
+            .read_to_end(&mut bytes)?;
+        if bytes == A_PLAN_BEGINS && meta.len() <= A_PLAN_AT_MOST {
+            opened.read_to_end(&mut bytes)?;
+        }
+        Ok(bytes.len())
+    });
+    if bytes == A_PLAN_BEGINS && meta.len() > A_PLAN_AT_MOST {
+        return Err(usage(
+            format!(
+                "`--out {out}` is larger than this engine reads a plan, 2^32 bytes, so nothing can tell it is one"
+            ),
+            "name another file, or move what stands there",
+        ));
+    }
     match read {
         Err(error) => Err(usage(
             format!("cannot read `--out {out}`, to tell it is a plan: {error}"),
             "open it, or name another file",
         )),
         Ok(0) => Ok(Some(meta)),
-        Ok(_)
-            if bytes.len() as u64 <= A_PLAN_AT_MOST
-                && std::str::from_utf8(&bytes).is_ok_and(archogen_api::is_a_plan) =>
-        {
-            Ok(Some(meta))
-        }
+        Ok(_) if std::str::from_utf8(&bytes).is_ok_and(archogen_api::is_a_plan) => Ok(Some(meta)),
         Ok(_) => Err(usage(
             format!(
                 "`--out {out}` is no plan as this engine writes one, and a plan replaces only a plan or an empty file"

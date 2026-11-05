@@ -572,7 +572,7 @@ fn provenance_says_what_each_table_entry_came_from() {
     let provenance = file(&emitted, "provenance.json");
     assert!(
         provenance.contains("\"description\": \"description.eadl\"")
-            && provenance.contains("\"format\": \"archogen-build-provenance/4\""),
+            && provenance.contains("\"format\": \"archogen-build-provenance/5\""),
         "{provenance}"
     );
     assert!(

@@ -138,13 +138,15 @@ api 1.9 · engine 0.1.0 · status unsupported-profile
 `crates/archogen-api/tests/book_example.rs` runs the example and compares its output with the block
 above, so this page cannot go on showing output the API no longer gives.
 
-`is_a_plan` (API `1.9`) says whether a text is an assignment record exactly as the search writes it, read by the generator's own reader of
-the format. It is what the command line asks before a plan replaces what stands at its name, and it judges nothing of the plan's worth, which
-is the checker's.
+`is_a_plan` (API `1.9`) says whether a text is an assignment record in the canonical form the search writes, read by the generator's own
+reader of the format. It is what the command line asks before a plan replaces what stands at its name, and it judges nothing of the plan's
+worth, which is the checker's. ⚠️ An edit that leaves the text canonical, one binding for another, is still a record: canonical text carries
+no digest of itself.
 
 ### The version and what it promises
 
-The API's version is `1.3`, apart from the language's (`eadl/1`) and the profile's, as §15 requires.
+The API has a version of its own, apart from the language's (`eadl/1`) and the profile's, as §15 requires, and
+[What is versioned](versions.md) says which it is.
 Every response names the API version and the engine version, and a judged one also names the language
 version and the profile it was judged under. `1.0` was fixed when the API was declared. `1.1` added the
 engine version, a new field, `1.2` added `check_with`, below, and `1.3` the status `stale-input`, the vocabulary

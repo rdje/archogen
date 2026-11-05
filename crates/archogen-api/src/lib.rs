@@ -119,9 +119,9 @@ pub fn kind_modules() -> Vec<(String, String)> {
         .collect()
 }
 
-/// Whether `text` is an assignment record exactly as the search writes it (API `1.9`): read by the generator's own reader of the
-/// format, which accepts only the canonical text, so a file with anything written in it is none, a comment in any place among them.
-/// What may replace an earlier plan asks this, an output replacing only what its own kind wrote.
+/// Whether `text` is an assignment record in the canonical form the search writes (API `1.9`): read by the generator's own reader of
+/// the format, so a comment in any place makes it none, and a line it would not write. ⚠️ An edit that leaves it canonical, one binding
+/// for another, is still one: canonical text carries no digest of itself. What may replace an earlier plan asks this.
 #[must_use]
 pub fn is_a_plan(text: &str) -> bool {
     eadl_resolve::plan::read(text).is_ok()

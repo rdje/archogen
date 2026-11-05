@@ -1468,7 +1468,7 @@ fn a_report_cut_at_any_byte_is_noticed_by_what_the_executable_reads() {
 }
 
 #[test]
-fn a_listed_file_grown_past_any_build_s_is_changed_and_is_not_read_to_find_that_out() {
+fn a_listed_file_of_another_length_is_changed_and_is_not_read_to_find_that_out() {
     let dir = scratch("grown").join("out");
     let description = example(HEARTBEAT);
     let (status, _, err) = build(&description, &dir);
@@ -1482,6 +1482,39 @@ fn a_listed_file_grown_past_any_build_s_is_changed_and_is_not_read_to_find_that_
     let (status, _, err) = build(&description, &dir);
     assert_eq!(status, Status::Usage, "{err}");
     assert!(err.contains("has changed"), "{err}");
+}
+
+/// Read as it goes, a file past several of the chunks it is read in is held to all it holds: a build replaces its own, and an edit
+/// that leaves the length alone is seen wherever it falls. Lengths at and past a chunk's edge, the digest the emitter took of the whole.
+#[test]
+fn a_listed_file_read_as_it_goes_is_held_to_all_it_holds() {
+    const CHUNK: usize = 1 << 16;
+    let text = fs::read_to_string(example(HEARTBEAT)).expect("the description");
+    for length in [2 * CHUNK, 3 * CHUNK + 7] {
+        let root = scratch(&format!("chunks-{length}"));
+        let description = root.join("big.eadl");
+        let room = length - text.len() - 2;
+        fs::write(&description, format!("{text};{}\n", "x".repeat(room))).expect("written");
+        assert_eq!(
+            fs::metadata(&description).expect("it").len(),
+            u64::try_from(length).expect("fits")
+        );
+        let description = description.display().to_string();
+        let dir = root.join("out");
+        let (status, _, err) = build(&description, &dir);
+        assert_eq!(status, Status::Ok, "{err}");
+        let (status, _, err) = build(&description, &dir);
+        assert_eq!(status, Status::Ok, "{err}");
+        let recorded = dir.join("description/big.eadl");
+        let mut held = fs::read(&recorded).expect("the copy");
+        let last = held.len() - 2;
+        assert_eq!(held[last], b'x');
+        held[last] = b'y';
+        fs::write(&recorded, held).expect("written");
+        let (status, _, err) = build(&description, &dir);
+        assert_eq!(status, Status::Usage, "{err}");
+        assert!(err.contains("has changed"), "{err}");
+    }
 }
 
 #[test]
@@ -2559,10 +2592,16 @@ fn every_table_entry_resolves_from_both_ends() {
         let listed: BTreeMap<String, String> = files
             .iter()
             .map(|file| {
-                (
-                    text_at(file, "path").to_owned(),
-                    text_at(file, "sha256").to_owned(),
-                )
+                let name = text_at(file, "path").to_owned();
+                let Some(Value::Number(bytes)) = file.get("bytes") else {
+                    panic!("no length for {name}");
+                };
+                assert_eq!(
+                    bytes.as_i64().and_then(|bytes| u64::try_from(bytes).ok()),
+                    fs::metadata(dir.join(&name)).ok().map(|meta| meta.len()),
+                    "{name}"
+                );
+                (name, text_at(file, "sha256").to_owned())
             })
             .collect();
         let mut written = snapshot(&dir);
@@ -2737,13 +2776,22 @@ fn a_module_tree_is_recorded_whole_built_run_and_explained_from_the_build() {
 /// it is the search and the record, the digests catching only an edit.
 fn rewrite_in_step(dir: &Path, name: &str, contents: &str) {
     let file = dir.join(name);
-    let before = Digest::of(&fs::read(&file).expect("the file"));
+    let held = fs::read(&file).expect("the file");
+    let before = format!(
+        "\"bytes\": {}, \"sha256\": \"{}\"",
+        held.len(),
+        Digest::of(&held)
+    );
     fs::write(&file, contents).expect("written");
     let provenance = dir.join("provenance.json");
     let text = fs::read_to_string(&provenance).expect("provenance");
     let moved = text.replace(
-        &before.to_string(),
-        &Digest::of(contents.as_bytes()).to_string(),
+        &before,
+        &format!(
+            "\"bytes\": {}, \"sha256\": \"{}\"",
+            contents.len(),
+            Digest::of(contents.as_bytes())
+        ),
     );
     assert_ne!(moved, text, "`{name}` is not listed");
     rewrite_provenance(dir, &moved);

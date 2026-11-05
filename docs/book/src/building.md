@@ -101,7 +101,7 @@ Thirteen files, and only one of them is generated in any interesting sense:
 | `sim-playground/Cargo.toml` | a generated manifest |
 | `sim-playground/src/lib.rs` | the engine's simulator, byte for byte |
 | `plan.txt` | the runtime plan's canonical text |
-| `provenance.json` | what the plan was lowered from, what each table entry came from, every other file with its digest, and its own |
+| `provenance.json` | what the plan was lowered from, what each table entry came from, every other file with its length and its digest, and its own digest |
 | `description/system.eadl` | the description it was made from, with every module it imports beside it |
 | `assignment.eadl` | the assignment the search wrote, which the checker judged |
 | `plan-check.json` | the checker's result record for it |

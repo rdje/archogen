@@ -142,9 +142,11 @@ until lock data exists (`M4.7`). `--system` names the system when a description 
 **An output replaces only what its own kind wrote.** Everything a run writes stays in a private directory, `PLAN.part`, where the
 checker judges it, and it lands only on acceptance, or under `--unchecked`: the record in `PLAN.check/`, then the plan at `PLAN`. So what
 stands at either name stands until there is a plan that may replace it, and a plan replaces only a plan or an empty file, a record only a
-record or an empty file. A plan is known by the engine's own reader of the format, which takes only the text the search writes. So a
-description, a module, a file of notes, a plan with anything written in it and a plan of another format are all no plan, however each is
-named. `crates/archogen-cli/src/place.rs` is how this command and
+record or an empty file. A plan is known by the engine's own reader of the format, which takes only text in the canonical form the search
+writes. So a description, a module, a file of notes, a plan with a comment in it and a plan of another format are all no plan, however each
+is named. ⚠️ An edit that leaves the text canonical, one binding changed for another or one added where the search would sort it, is still a plan, and the next run replaces it: canonical
+text carries no digest of itself, so nothing can tell. A plan is the search's output, and what you choose belongs in the description.
+`crates/archogen-cli/src/place.rs` is how this command and
 `archogen build` read a place, and [Building a system](building.md) has `build`'s table. Each row below is a fixture of
 `crates/archogen-cli/tests/resolve.rs`, which runs it; a row with no fixture, or a fixture with no row, fails. A route it does not name is
 promised nothing and worth reporting. ⚠️ As for a build, the standard library has no rename that refuses to replace, so each path is held
@@ -162,7 +164,9 @@ again just before it is used, and in that instant what stands there is what is u
 | `a-link` | a link at `PLAN` | `usage` | `is a link` | the link, and what it points at |
 | `a-pipe` | what is no file at `PLAN` | `usage` | `is no file` | it |
 | `no-plan` | a file at `PLAN` that is no plan | `usage` | `is no plan` | the file |
-| `a-plan-with-notes-in-it` | a plan with anything written in it, in any place, or of another format | `usage` | `is no plan` | the file, with its notes |
+| `a-plan-with-notes-in-it` | a plan no longer in canonical form, a comment in any place or a line the search would not write, or of another format | `usage` | `is no plan` | the file, with its notes |
+| `a-canonical-edit` | a plan edited so that it stays canonical, one binding for another or one added in its sorted place, which nothing can tell from the search's own | `ok` | `resolved system` | the plan, the edit replaced |
+| `a-plan-past-what-its-reader-holds` | a file beginning as a plan and larger than the engine's reader can hold, told without reading it | `usage` | `larger than this engine reads a plan` | the file |
 | `closed-to-reads` | a file at `PLAN` this user cannot read, so nothing can tell it is a plan | `usage` | `to tell it is a plan` | the file |
 | `its-own-description` | the description itself at `PLAN`, with `--unchecked` or without it | `usage` | `is no plan` | the description |
 | `its-own-description-by-a-descriptor` | the description at `PLAN`, itself given as `/dev/fd/3` | `usage` | `is no plan` | the description |
@@ -180,7 +184,10 @@ again just before it is used, and in that instant what stands there is what is u
 | `a-record-waiting` | a file at the name a record waits at on its way, which a run that stopped may have left | `usage` | `a record waits there` | it |
 | `check-closed` | a directory at `PLAN.check` that takes no record | `tool-failure` | `cannot put the checker's record` | what stood at `PLAN`; nothing this run wrote |
 | `check-unsearchable-unchecked` | a `PLAN.check` that cannot be searched, with `--unchecked`, so nothing can tell what record it holds | `usage` | `cannot tell whether an earlier record` | the plan and the record as they were |
-| `record-unreadable` | a record that cannot be read at that name | `usage` | `cannot read` | the plan and the record as they were |
+| `check-unsearchable` | a `PLAN.check` that cannot be searched | `usage` | `cannot use` | the plan and the record as they were |
+| `check-closed-unchecked` | a `PLAN.check` that takes no change, holding a record, with `--unchecked` | `tool-failure` | `cannot move the earlier record` | the plan and the record as they were |
+| `record-unreadable` | a record that cannot be read at that name, or an empty file at such a mode | `usage` | `cannot read` | the plan and the record as they were |
+| `record-unreadable-unchecked` | a record that cannot be read at that name, with `--unchecked` | `usage` | `cannot tell whether an earlier record` | the plan and the record as they were |
 | `a-record-keeps-its-mode` | an earlier record at a mode of its own | `ok` | `resolved system` | the plan; the new record at that mode |
 | `flagged-plan` | a flag on `PLAN`, found at the last step, where the platform has flags | `tool-failure` | `cannot write the plan` | the plan and the record as they were; nothing this run wrote |
 | `flagged-plan-unchecked` | a flag on `PLAN`, with `--unchecked` and a file at the name a record waits at | `tool-failure` | `cannot write the plan` | the plan, and that file |

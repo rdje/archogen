@@ -35,7 +35,7 @@ use crate::spec::Maturity;
 use crate::status::Status;
 
 /// The most of a build's record the command reads.
-const RECORD_LIMIT: usize = 1 << 24;
+use crate::consume::RECORD_LIMIT;
 
 /// A build, as `archogen explain` speaks for it.
 struct Asked {

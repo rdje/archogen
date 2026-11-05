@@ -397,6 +397,32 @@ fn plan_routes() -> Vec<(&'static str, Route)> {
             }
             outcome
         }),
+        ("a-canonical-edit", |root| {
+            // What cannot be told from the search's own plan. The chapter says so, and this holds what happens to it.
+            let plan = root.join("p");
+            let edited =
+                format!("{AN_EARLIER_PLAN}(bind console.write observable-output console.alt)\n");
+            assert!(archogen_api::is_a_plan(&edited), "{edited}");
+            std::fs::write(&plan, &edited).expect("written");
+            let outcome = resolve_at(&plan.display().to_string(), &[]);
+            assert_ne!(std::fs::read_to_string(&plan).expect("a plan"), edited);
+            outcome
+        }),
+        ("a-plan-past-what-its-reader-holds", |root| {
+            // Past what the engine's reader holds, and told without reading it: a sparse terabyte beginning as a plan.
+            let plan = root.join("p");
+            std::fs::write(&plan, "(format \"archogen-assignment/").expect("written");
+            let grown = std::fs::OpenOptions::new()
+                .write(true)
+                .open(&plan)
+                .expect("opened");
+            grown.set_len(1 << 40).expect("a sparse file");
+            drop(grown);
+            let outcome = resolve_at(&plan.display().to_string(), &[]);
+            assert_eq!(std::fs::metadata(&plan).expect("kept").len(), 1 << 40);
+            assert!(!root.join("p.part").exists() && !root.join("p.check").exists());
+            outcome
+        }),
         ("closed-to-reads", |root| {
             use std::os::unix::fs::PermissionsExt;
             if !modes_bind(root) {
@@ -683,6 +709,51 @@ fn plan_routes() -> Vec<(&'static str, Route)> {
             assert!(!root.join("p.part").exists());
             outcome
         }),
+        ("check-unsearchable", |root| {
+            use std::os::unix::fs::PermissionsExt;
+            if !modes_bind(root) {
+                return None;
+            }
+            let plan = root.join("p");
+            let record = a_checked_plan(&plan);
+            let before = std::fs::read(&plan).expect("read");
+            std::fs::set_permissions(root.join("p.check"), std::fs::Permissions::from_mode(0o000))
+                .expect("its mode");
+            let outcome = resolve_at(&plan.display().to_string(), &[]);
+            std::fs::set_permissions(root.join("p.check"), std::fs::Permissions::from_mode(0o755))
+                .expect("its mode");
+            assert_eq!(std::fs::read(&plan).expect("kept"), before);
+            assert_eq!(
+                std::fs::read(root.join("p.check/plan-check.json")).expect("kept"),
+                record
+            );
+            assert!(!root.join("p.part").exists());
+            outcome
+        }),
+        ("check-closed-unchecked", |root| {
+            use std::os::unix::fs::PermissionsExt;
+            if !modes_bind(root) {
+                return None;
+            }
+            // A plan with no acceptance may not stand beside a record, and this record cannot be moved aside.
+            let plan = root.join("p");
+            let record = a_checked_plan(&plan);
+            let before = std::fs::read(&plan).expect("read");
+            std::fs::set_permissions(root.join("p.check"), std::fs::Permissions::from_mode(0o555))
+                .expect("its mode");
+            let outcome = resolve_at(&plan.display().to_string(), &["--unchecked"]);
+            std::fs::set_permissions(root.join("p.check"), std::fs::Permissions::from_mode(0o755))
+                .expect("its mode");
+            assert_eq!(std::fs::read(&plan).expect("kept"), before);
+            assert_eq!(
+                std::fs::read(root.join("p.check/plan-check.json")).expect("kept"),
+                record
+            );
+            assert!(!root.join("p.part").exists());
+            let (_, said) = outcome.as_ref().expect("the route runs");
+            assert!(said.contains("its directory's"), "{said}");
+            outcome
+        }),
         ("check-unsearchable-unchecked", |root| {
             use std::os::unix::fs::PermissionsExt;
             if !modes_bind(root) {
@@ -728,6 +799,24 @@ fn plan_routes() -> Vec<(&'static str, Route)> {
                 .expect("its mode");
             assert_eq!(status, Status::Usage, "{said}");
             assert!(said.contains("cannot read"), "{said}");
+            outcome
+        }),
+        ("record-unreadable-unchecked", |root| {
+            use std::os::unix::fs::PermissionsExt;
+            if !modes_bind(root) {
+                return None;
+            }
+            let plan = root.join("p");
+            a_checked_plan(&plan);
+            let before = std::fs::read(&plan).expect("read");
+            let record = root.join("p.check/plan-check.json");
+            std::fs::set_permissions(&record, std::fs::Permissions::from_mode(0o000))
+                .expect("its mode");
+            let outcome = resolve_at(&plan.display().to_string(), &["--unchecked"]);
+            std::fs::set_permissions(&record, std::fs::Permissions::from_mode(0o600))
+                .expect("its mode");
+            assert_eq!(std::fs::read(&plan).expect("kept"), before);
+            assert!(!root.join("p.part").exists());
             outcome
         }),
         ("a-record-keeps-its-mode", |root| {
@@ -1442,4 +1531,70 @@ fn every_refusal_before_a_plan_writes_none_and_runs_nothing() {
     );
     assert_eq!(got, Status::Ok, "{err}");
     assert!(out_text.contains("resolved system `b`"), "{out_text}");
+}
+
+/// A plan past what any small description writes is still a plan, and the next run may replace it. Canonical lines, as the search sorts them.
+#[test]
+#[cfg(unix)]
+fn a_large_plan_is_a_plan_the_next_run_may_replace() {
+    let root = scratch();
+    let plan = root.join("p");
+    let mut text = AN_EARLIER_PLAN.to_owned();
+    let mut line = 0;
+    while text.len() <= 1 << 24 {
+        text.push_str(&format!(
+            "(bind t{line:08}.write observable-output console.alt)\n"
+        ));
+        line += 1;
+    }
+    assert!(archogen_api::is_a_plan(&text), "a plan");
+    std::fs::write(&plan, &text).expect("written");
+    let (status, said) = resolve_at(&plan.display().to_string(), &[]).expect("the route runs");
+    assert_eq!(status, Status::Ok, "{said}");
+    assert_ne!(std::fs::read_to_string(&plan).expect("a plan"), text);
+}
+
+/// A record past a mebibyte is one the checker can write, so the next run reads it as one and may replace it.
+#[test]
+#[cfg(unix)]
+fn a_large_record_is_a_record_the_next_run_may_replace() {
+    let root = scratch();
+    let plan = root.join("p");
+    a_checked_plan(&plan);
+    let record = root.join("p.check/plan-check.json");
+    let large = std::fs::read_to_string(&record)
+        .expect("the record")
+        .replace(PLAN_CHECKER, &"x".repeat(1 << 21));
+    assert!(large.len() > 1 << 21, "{}", large.len());
+    std::fs::write(&record, large).expect("written");
+    let (status, said) = resolve_at(&plan.display().to_string(), &[]).expect("the route runs");
+    assert_eq!(status, Status::Ok, "{said}");
+    assert!(std::fs::metadata(&record).expect("a record").len() < 1 << 20);
+}
+
+/// A plan it cannot read back is said as what it is, the umask, and no stage is left. Not "changed", since nothing came.
+#[test]
+#[cfg(unix)]
+fn a_plan_it_cannot_read_back_is_put_down_to_the_umask() {
+    let root = scratch();
+    let description = heartbeat();
+    let plan = root.join("p");
+    let output = std::process::Command::new("/bin/sh")
+        .args(["-c", "umask 0477; exec \"$0\" \"$@\""])
+        .arg(env!("CARGO_BIN_EXE_archogen"))
+        .arg("resolve")
+        .arg(&description)
+        .arg("--out")
+        .arg(&plan)
+        .arg("--unchecked")
+        .output()
+        .expect("the executable runs");
+    let said = String::from_utf8_lossy(&output.stderr).into_owned();
+    assert_eq!(output.status.code(), Some(Status::Usage.code()), "{said}");
+    assert!(
+        said.contains("read back") && said.contains("umask"),
+        "{said}"
+    );
+    assert!(!said.contains("changed while"), "{said}");
+    assert!(!plan.exists() && !root.join("p.part").exists(), "{said}");
 }

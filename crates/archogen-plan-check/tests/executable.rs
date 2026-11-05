@@ -377,6 +377,8 @@ fn what_stands_beside_the_record_is_refused_and_a_link_there_is_never_written_th
         plan.to_str().unwrap(),
     ]);
     assert_eq!(output.status.code(), Some(2), "{output:?}");
+    let said = String::from_utf8_lossy(&output.stderr);
+    assert!(said.contains("hint: look at it"), "{said}");
     assert_eq!(std::fs::read_to_string(&mine).expect("kept"), "mine");
     assert!(std::fs::symlink_metadata(dir.join("result.json.part"))
         .expect("kept")
@@ -475,5 +477,41 @@ fn a_result_keeps_the_mode_of_what_it_replaces_and_a_bad_place_is_refused_before
     assert_eq!(
         std::fs::read_to_string(dir.join("stale.json.part")).unwrap(),
         "mine"
+    );
+}
+
+/// A record past a mebibyte is one this executable may write, so it reads it as one and may replace it.
+#[test]
+fn a_large_record_is_a_record_it_may_replace() {
+    let dir = scratch();
+    let description = dir.join("system.eadl");
+    std::fs::write(&description, PLAIN).unwrap();
+    let the_plan = plan(&description, "console.write", "console.uart");
+    let (code, _, _) = check(&description, &the_plan);
+    assert_eq!(code, 0);
+    let result = dir.join("result.json");
+    let large = std::fs::read_to_string(&result)
+        .unwrap()
+        .replace("archogen-plan-check", &"x".repeat(1 << 21));
+    assert!(large.len() > 1 << 21, "{}", large.len());
+    std::fs::write(&result, large).unwrap();
+    let (code, record, said) = check(&description, &the_plan);
+    assert_eq!((code, record.status()), (0, Status::Ok), "{said}");
+    assert!(std::fs::metadata(&result).unwrap().len() < 1 << 20);
+}
+
+/// An argument that is no text is a usage error, not a panic: exit 101 is a code no status has.
+#[test]
+#[cfg(unix)]
+fn an_argument_that_is_no_text_is_a_usage_error() {
+    use std::os::unix::ffi::OsStrExt;
+    let output = Command::new(EXE)
+        .arg(std::ffi::OsStr::from_bytes(b"r\xff"))
+        .output()
+        .expect("the executable runs");
+    assert_eq!(output.status.code(), Some(2), "{output:?}");
+    assert!(
+        String::from_utf8_lossy(&output.stderr).contains("not UTF-8"),
+        "{output:?}"
     );
 }

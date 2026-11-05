@@ -21,7 +21,7 @@ use eadl_model::check::resolved_declarations;
 use eadl_model::kind::Registry;
 
 /// The format of `provenance.json`.
-pub const PROVENANCE_FORMAT: &str = "archogen-build-provenance/4";
+pub const PROVENANCE_FORMAT: &str = "archogen-build-provenance/5";
 
 /// The provenance's name in a package.
 pub const PROVENANCE_FILE: &str = "provenance.json";
@@ -752,7 +752,8 @@ fn provenance(
             if place + 1 == entries.len() { "" } else { "," }
         ));
     }
-    // Every other file of the package and its digest: what `archogen build` may replace, and `archogen explain` speak for.
+    // Every other file of the package, its length and its digest: what `archogen build` may replace, and `archogen explain` speak
+    // for. The length is what lets a later command say a file has changed without reading however much it has grown to.
     out.push_str("  ],\n  \"files\": [\n");
     for (place, file) in files.iter().enumerate() {
         let name = quote(&file.path);
@@ -760,9 +761,10 @@ fn provenance(
             "sha256:{}",
             Digest::of(file.contents.as_bytes()).hex()
         ));
+        let bytes = file.contents.len();
         let comma = if place + 1 == files.len() { "" } else { "," };
         out.push_str(&format!(
-            "    {{ \"path\": {name}, \"sha256\": {digest} }}{comma}\n"
+            "    {{ \"path\": {name}, \"bytes\": {bytes}, \"sha256\": {digest} }}{comma}\n"
         ));
     }
     out.push_str("  ]\n}\n");

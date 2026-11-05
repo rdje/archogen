@@ -1,0 +1,23 @@
+archogen-build-provenance/5
+acceptance: string
+checker: string
+description: string
+entries[].generated.file: string
+entries[].generated.line: number
+entries[].plan: string
+entries[].source.column: number
+entries[].source.file: string
+entries[].source.line: number
+entries[].source: null
+entries[].table: string
+experimental: bool
+files[].bytes: number
+files[].path: string
+files[].sha256: string
+format: string
+generator.sha256: string
+generator.version: string
+plan: string
+result: string
+self: string
+system: string

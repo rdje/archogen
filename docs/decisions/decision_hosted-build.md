@@ -34,7 +34,7 @@ No byte of the package depends on the directory its description lies in or on wh
 by its place relative to the description, whose own file name is part of what is recorded. A build records what it was made from
 so that a later command reads what it read: `archogen explain` of a build, by §10.2, holds its files to their digests, explains
 that description, and holds the search's plan equal to the one the build holds and to what its checker's record accepted, or says
-`stale-input`. `provenance.json` lists every other file with its digest, and each table entry with its generated line and its
+`stale-input`. `provenance.json` lists every other file with its length and its digest, and each table entry with its generated line and its
 line in the plan, and for a task its form in the description, and holds its own digest over its text. A digest catches an edit
 and a stale file, never a forger: whoever can write the directory can rewrite the list. A provenance that no longer reads, or names
 another format, is no build this engine reads, so it is `usage` and not `stale-input`.
@@ -143,8 +143,10 @@ between them, round after round, and a table a test runs cannot. The designs the
 - **An output replaces only what its own kind wrote.** A build replaces exactly a build or an empty directory, a plan only a plan or an empty file, and a record
   only a record or an empty file, the checker's `--result` among them, and what replaces a file keeps its mode. Asking "is this what it was
   read from" found a new loophole each round, `/dev/fd/N` the last; asking "is this ours" has no such door. A plan is known by the engine's
-  own reader of the format, which takes only the text the search writes, as a build is known by what it lists: so anything written in a plan
-  makes it none, in any place, as a file edited makes a build none. A forger who writes a whole canonical plan is not held against.
+  own reader of the format, which takes only text in the canonical form the search writes, as a build is known by what it lists: so a comment
+  in any place makes it none, as a file edited makes a build none. ⚠️ A plan is less held than a build, which lists a digest of every file: an edit
+  that leaves the text canonical, one binding for another, is still a plan and the next run replaces it, since canonical text carries no digest
+  of itself. A plan is the search's output, and what is chosen belongs in the description.
 - **A plan judged before it lands.** `archogen resolve` writes all it writes in `PLAN.part`, a private directory where the checker judges it,
   and moves it out only on acceptance, or under `--unchecked`: the record first, taking its name with the earlier one held aside, as the steps
   that find a mode or a flag in the way, then the plan. Each step undoes only what the ones before it moved. So what stands at either name
@@ -205,6 +207,7 @@ capability unsupported. Then the S0 crate was deleted (`M4.2.4`), and the retire
 | 8 | 19 | 9 (R8-1 to R8-9), beside 2 routes no row named, 3 gaps and 5 of wording | `2026-11-05`, not acceptable — answered by one principle: an output replaces only what its own kind wrote, for a plan, a record and the checker's `--result`; everything a run writes kept in one private stage until it lands, the record moved first so that a plan cannot land to be refused after |
 | 9 | 16 | 6 (R9-1 to R9-6), beside 5 gaps, 3 routes no row named and 2 of wording | `2026-11-05`, not acceptable — answered: a plan known by how it reads, not by how it begins; a landing whose each step undoes only what it moved, the record taking its name before the plan moves; a record the command cannot read refused, not taken as none; every source held to reading the same again |
 | 10 | 13 | 2 (R10-1, R10-2), beside 7 gaps, 2 routes no row named and 2 of wording | `2026-11-05`, not acceptable — answered: a plan known by the engine's own reader of the format, which takes only what the search writes; a stage held by what it is on the way out too; a question of a module's room, of a closed record and of a name with no room each answered as it is |
+| 11 | 9 | 4 (R11-1 to R11-4), beside 3 gaps, 1 route no row named and 1 of wording | `2026-11-05`, not acceptable — answered: what a canonical plan cannot show, stated and held by a row; no bound claimed that an engine's own output can pass, format `/5` giving each listed file's length so that another length is changed unread and the same length is digested as it is read; the checker's arguments read as the front's are |
 
 The rounds, each finding and its answer, are in
 [`docs/reviews/decision_hosted-build-reviews.md`](../reviews/decision_hosted-build-reviews.md).

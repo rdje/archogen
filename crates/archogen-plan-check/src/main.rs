@@ -63,7 +63,19 @@ plan written for another description — resolve again; 10 to 13 the description
 corrupted plan or a checker that could not finish.";
 
 fn main() -> ExitCode {
-    let args: Vec<String> = std::env::args().skip(1).collect();
+    // `std::env::args` panics on an argument that is no text, and exit 101 is a code no status has.
+    let args: Result<Vec<String>, _> = std::env::args_os()
+        .skip(1)
+        .map(std::ffi::OsString::into_string)
+        .collect();
+    let Ok(args) = args else {
+        let status = refuse(
+            &mut std::io::stderr().lock(),
+            Status::Usage,
+            "an argument is not UTF-8",
+        );
+        return ExitCode::from(u8::try_from(status.code()).unwrap_or(2));
+    };
     let status = run(
         &args,
         &mut std::io::stdin().lock(),
@@ -205,8 +217,10 @@ fn run(
         Ok(profile) => profile,
         Err(why) => return refuse(err, Status::Usage, &why),
     };
-    if let Some(Err(why)) = result.as_deref().map(replaceable) {
-        return refuse(err, Status::Usage, &why);
+    if let Some(Err((why, repair))) = result.as_deref().map(replaceable) {
+        let refused = refuse(err, Status::Usage, &why);
+        let _ = writeln!(err, "  hint: {repair}");
+        return refused;
     }
     let producer = match me() {
         Ok(producer) => producer,
@@ -327,14 +341,18 @@ fn render(err: &mut dyn Write, findings: &[Finding]) {
     }
 }
 
-/// The most of what stands at `--result` it reads, to tell it is a record.
-const RECORD_AT_MOST: u64 = 1 << 20;
+/// The most of what stands at `--result` it reads, to tell it is a record: any this engine writes.
+const RECORD_AT_MOST: u64 = 1 << 30;
+
+/// What begins a record, so that what is not one is refused without being read whole.
+const A_RECORD_BEGINS: &[u8] = b"{\"format\":\"archogen-result/";
 
 /// Whether `--result` can take a result: what stands there nothing, an empty file or a record this engine reads, and what goes beside
 /// it free. Anything else may be someone's, the description or the plan among them, so it is refused before anything is judged, and a
-/// link is not followed. Only a name found absent is absent.
-fn replaceable(file: &Path) -> Result<(), String> {
+/// link is not followed. Only a name found absent is absent. What stops it, and the repair.
+fn replaceable(file: &Path) -> Result<(), (String, &'static str)> {
     let shown = file.display();
+    let name_a_file = "name a file to hold the result";
     let written = file.as_os_str().as_encoded_bytes();
     if file.file_name().is_none()
         || written
@@ -342,16 +360,25 @@ fn replaceable(file: &Path) -> Result<(), String> {
             .is_some_and(|last| std::path::is_separator(char::from(*last)))
         || written.ends_with(b"/.")
     {
-        return Err(format!("`--result {shown}` names no file of its own"));
+        return Err((
+            format!("`--result {shown}` names no file of its own"),
+            name_a_file,
+        ));
     }
     let mut part = file.as_os_str().to_owned();
     part.push(".part");
     match std::fs::symlink_metadata(&part) {
         Err(error) if error.kind() == std::io::ErrorKind::NotFound => {}
-        Err(error) => return Err(format!("cannot use `--result {shown}`: {error}")),
+        Err(error) => {
+            return Err((
+                format!("cannot use `--result {shown}`: {error}"),
+                "name a file with room for `.part` beside it, in a directory this user can reach",
+            ))
+        }
         Ok(_) => {
-            return Err(format!(
-                "{shown}.part stands, where the result is written first: a run that stopped may have left it, so look at it, and move or remove it"
+            return Err((
+                format!("{shown}.part stands, where the result is written first: a run that stopped may have left it"),
+                "look at it, and move or remove it",
             ))
         }
     }
@@ -360,29 +387,57 @@ fn replaceable(file: &Path) -> Result<(), String> {
         .filter(|parent| !parent.as_os_str().is_empty())
     {
         if !std::fs::metadata(parent).is_ok_and(|meta| meta.is_dir()) {
-            return Err(format!(
-                "cannot use `--result {shown}`: {} is no directory this user can reach",
-                parent.display()
+            return Err((
+                format!(
+                    "cannot use `--result {shown}`: {} is no directory this user can reach",
+                    parent.display()
+                ),
+                "name a file in a directory that stands",
             ));
         }
     }
     let meta = match std::fs::symlink_metadata(file) {
         Err(error) if error.kind() == std::io::ErrorKind::NotFound => return Ok(()),
-        Err(error) => return Err(format!("cannot use `--result {shown}`: {error}")),
+        Err(error) => {
+            return Err((
+                format!("cannot use `--result {shown}`: {error}"),
+                name_a_file,
+            ))
+        }
         Ok(meta) => meta,
     };
     let no_record = || {
-        format!("{shown} stands at `--result` and is no record this engine reads, and a result replaces only a record")
+        (
+            format!("{shown} stands at `--result` and is no record this engine reads, and a result replaces only a record"),
+            "name another file, or move what stands there",
+        )
     };
     if !meta.is_file() {
         return Err(no_record());
     }
     let mut bytes = Vec::new();
-    std::fs::File::open(file)
-        .and_then(|opened| opened.take(RECORD_AT_MOST + 1).read_to_end(&mut bytes))
-        .map_err(|error| format!("cannot read {shown}: {error}"))?;
-    let within = bytes.len() as u64 <= RECORD_AT_MOST;
-    if bytes.is_empty() || (within && Record::read(&bytes, 1 << 20).is_ok()) {
+    let read = std::fs::File::open(file).and_then(|mut opened| {
+        (&mut opened)
+            .take(A_RECORD_BEGINS.len() as u64)
+            .read_to_end(&mut bytes)?;
+        if bytes == A_RECORD_BEGINS {
+            opened.take(RECORD_AT_MOST).read_to_end(&mut bytes)?;
+        }
+        Ok(())
+    });
+    if let Err(error) = read {
+        return Err((
+            format!("cannot read {shown}: {error}"),
+            "open it, or name another file",
+        ));
+    }
+    if bytes.is_empty()
+        || Record::read(
+            &bytes,
+            usize::try_from(RECORD_AT_MOST).unwrap_or(usize::MAX),
+        )
+        .is_ok()
+    {
         Ok(())
     } else {
         Err(no_record())
