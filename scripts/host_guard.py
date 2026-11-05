@@ -17,15 +17,17 @@ It reads macOS, the host this runs on, by macOS's own figures: Activity Monitor'
 each process's footprint and what it has written. On any other system it watches nothing and says so.
 
 What is ours goes by what each process shows of itself: its working directory or its executable under the root, or having been started by a process
-that shows so. What it stops goes by what that process holds or writes, not by what it is called: stopping what holds little frees nothing, so a `git`, an
-`rm`, an editor or a read is left alone at any line. A build is the exception, since it spawns more. Never another project's, never by a program's name across
-the host, never an agent or a terminal. It guards against accident, not against an agent set on going round it.
+that shows so. A job is the topmost such process with all it started, and a job is what a line judges and what it stops: a compiler stopped under a script would only
+be followed by the next. So a job that holds little and is no build, a `git`, an `rm`, an editor or a read, is left alone at a host's line, whatever it is called, and at a
+disk's unless it is writing. Never another project's, never by a program's name across the host, never an agent or a terminal. It guards against accident, not against an
+agent set on going round it.
 """
 
 from __future__ import annotations
 
 import ctypes
 import fcntl
+import itertools
 import json
 import os
 import re
@@ -34,7 +36,7 @@ import subprocess
 import sys
 import time
 from collections import deque
-from dataclasses import asdict, dataclass, fields
+from dataclasses import asdict, dataclass, field, fields
 from pathlib import Path
 
 GIB = 1 << 30
@@ -65,15 +67,16 @@ class Limits:
     stop_repo_free_gib: float = 100.0
     stop_boot_free_gib: float = 30.0
     stop_disk_growth_gib: float = 50.0  # lost on the volume within the window below while ours runs, whoever wrote it: nothing cheap can say who did
-    # Under this a process holds nothing worth stopping it for at a host's line, whatever it is called: stopping it would not help the host.
+    # Under this a job holds nothing worth stopping it for at a host's line, whatever it is called: stopping it would not help the host.
     worth_stopping_gib: float = 0.25
     # A watcher that has not read the host for this long is not watching, however alive it looks.
     watcher_stale_seconds: float = 60.0
 
 
+CODE = Path(__file__).resolve()
 # How far back growth is counted. A long-lived small process of ours, a `tail -f`, must not make "while ours runs" mean hours of other projects' growth.
 GROWTH_WINDOW_SECONDS = 900.0
-# What a process must have written since the last sample to count as writing, at a disk floor.
+# What a job must have written since the last sample to count as writing, at a disk floor. A volume losing this much since then has fallen.
 WRITING_BYTES = 1 << 20
 LOG_AT_MOST = 1 << 20  # What the log keeps, and the most any read of it can cost.
 TOLD_OF_LATELY_SECONDS = 600.0  # A session with no place in the log is told of what was stopped this recently: it may be new, or `cargo clean` may have taken its place.
@@ -241,6 +244,7 @@ class Process:
     exe: str
     bytes: int
     written: int = 0  # What it has written in its life.
+    waiting: bool = False  # A `make` that has started nothing but a `run` still waiting its turn.
 
     @property
     def name(self) -> str:
@@ -266,11 +270,27 @@ class Process:
 
     @property
     def programs_named(self) -> list[str]:
-        """The executables an interpreter's first arguments point at, a flag perhaps taking a value and hiding its script: by name, and with no extension, since
-        a data file is not a program."""
+        """The executable an interpreter runs when a flag taking a value hides it from `script`: a path with no extension, since a data file is not a program. The search ends
+        there, or at a file with an extension or a `-m` or `-c`, which is what it runs: what follows is that program's own arguments, a directory named after an agent among them."""
         if not self.script:
             return []
-        return [os.path.basename(word) for word in self.arguments.split()[:6] if "/" in word and "." not in os.path.basename(word)]
+        words = self.arguments.split()[:6]
+        for at, word in enumerate(words):
+            if word in ("-m", "-c"):
+                return []
+            base = os.path.basename(word)
+            if not word.startswith("-") and "." in base and not (at and words[at - 1].startswith("--") and "=" not in words[at - 1]):
+                return []
+            if "/" in word and not word.startswith("-") and "." not in base:
+                return [base]
+        return []
+
+    @property
+    def spawns(self) -> bool:
+        """Whether it is a build, which spawns more for as long as it lives, however little it holds. What only asks, or cleans, is none, nor a `make` waiting its turn."""
+        if self.name not in BUILDS or self.waiting:
+            return False
+        return self.name in MAKES or is_heavy([self.name, *self.arguments.split()])
 
     @property
     def label(self) -> str:
@@ -338,6 +358,9 @@ SHELL_FLAGS_WITH_VALUES = {"--init-file", "--rcfile", "-o", "+o", "-O", "+O", "-
 BUILDS = {"cargo", "rustc", "rustdoc", "clippy-driver", "make", "gmake"}
 # What shows a heavy job is under way. Not `make`, which may only be waiting its turn inside its own `run`.
 BUILDING = {"cargo", "rustc", "rustdoc", "clippy-driver"}
+MAKES = {"make", "gmake"}
+# The tools a guard reads the host with, which are nothing a job has started.
+READS_THE_HOST = {"ps", "sysctl", "vm_stat"}
 
 
 def is_agent(process: Process) -> bool:
@@ -394,10 +417,25 @@ def children_of(table: list[Process]) -> dict[int, list[int]]:
     return children
 
 
-def ours(table: list[Process], root: Path, me: int) -> list[Process]:
+def only_waiting(pid: int, by_pid: dict[int, Process], children: dict[int, list[int]], root: str) -> bool:
+    """Whether what `pid` has started is a `run` of this root still waiting its turn, and nothing more."""
+    saw_run, todo = False, list(children.get(pid, []))
+    while todo:
+        process = by_pid.get(todo.pop())
+        if process is None:
+            continue
+        if not (GUARD_PROCESS.search(process.command) or process.name in SHELLS or process.name in READS_THE_HOST):
+            return False
+        saw_run = saw_run or is_run_of(process, root)
+        todo.extend(children.get(process.pid, []))
+    return saw_run
+
+
+def ours(table: list[Process], root: Path, me: int, spare_its_line: bool = True) -> list[Process]:
     """This repository's processes that may be stopped, largest first: under its root by working directory or executable, and what those started,
     wherever it runs. A protected process is never one of them and vouches for nothing: the walk does not pass through it, so a terminal started here
-    gives no claim on a build it runs elsewhere. A guard's `run` of this root is the one exception, since it says itself that its job is ours."""
+    gives no claim on a build it runs elsewhere. A guard's `run` of this root is the one exception, since it says itself that its job is ours. Whoever asks is spared with
+    the line that started it, so that it does not count its own shell, unless it is the watcher, whose parents are jobs like any other: the `make` that happened to start it."""
     text = str(root)
     by_pid = {process.pid: process for process in table}
     children = children_of(table)
@@ -410,8 +448,45 @@ def ours(table: list[Process], root: Path, me: int) -> list[Process]:
             if child not in found and child not in spared:
                 found.add(child)
                 todo.append(child)
-    line = line_of(table, me)
-    return sorted((by_pid[pid] for pid in found if pid not in line), key=lambda process: process.bytes, reverse=True)
+    line = line_of(table, me) if spare_its_line else {me}
+    mine = [by_pid[pid] for pid in found if pid not in line]
+    for process in mine:
+        process.waiting = process.name in MAKES and only_waiting(process.pid, by_pid, children, text)
+    return sorted(mine, key=lambda process: process.bytes, reverse=True)
+
+
+@dataclass
+class Job:
+    """The topmost process of ours and all of ours it started: what a person would start again, and so what is judged and stopped. Stopping less leaves a script to start the next."""
+
+    top: Process
+    members: list[Process]
+
+    @property
+    def bytes(self) -> int:
+        return sum(process.bytes for process in self.members)
+
+    @property
+    def building(self) -> bool:
+        return any(process.spawns for process in self.members)
+
+    @property
+    def label(self) -> str:
+        largest = max(self.members, key=lambda process: process.bytes)
+        return self.top.label if largest is self.top else f"{self.top.label}, running {largest.label}"
+
+
+def jobs_of(mine: list[Process]) -> list[Job]:
+    """`mine` by the topmost of each's parents among them, largest first."""
+    by_pid = {process.pid: process for process in mine}
+    jobs: dict[int, Job] = {}
+    for process in mine:
+        top, seen = process, {process.pid}
+        while top.ppid in by_pid and top.ppid not in seen:
+            top = by_pid[top.ppid]
+            seen.add(top.pid)
+        jobs.setdefault(top.pid, Job(top, [])).members.append(process)
+    return sorted(jobs.values(), key=lambda job: job.bytes, reverse=True)
 
 
 def tree_of(pid: int, table: list[Process]) -> list[int]:
@@ -480,59 +555,89 @@ def size_of(path: Path) -> int:
         return 0
 
 
-def largest_worth_stopping(mine: list[Process], limits: Limits) -> Process | None:
-    """Ours, largest first, passing over a small `git`, which frees nothing and could leave a lock or a half-written index behind."""
-    for process in mine:
-        if process.name != "git" or process.bytes >= limits.worth_stopping_gib * GIB:
-            return process
-    return None
+@dataclass
+class Motion:
+    """What moved since the last sample: what each process wrote, which processes are new, and whether a volume fell. At a watcher's first sample nothing has: there is no last."""
+
+    written: dict[int, int] = field(default_factory=dict)
+    new: set[int] = field(default_factory=set)
+    fell: bool = False
 
 
-def judged(reading: Reading, mine: list[Process], limits: Limits, baseline: Reading | None, writing: list[Process] | None = None) -> tuple[list[Process], list[str], bool]:
-    """What to stop now, and why, and whether the pressure was someone else's and nothing of ours is worth stopping. A host's line stops what holds memory, whatever it
-    is called, and every build, which spawns more; a disk's line stops what is writing, and every build."""
-    worth = limits.worth_stopping_gib * GIB
-    total = sum(process.bytes for process in mine)
-    largest = largest_worth_stopping(mine, limits)
-    builds = [p for p in mine if p.name in BUILDS]
-    disk = disk_reasons(reading, limits)
+def disk_line(reading: Reading, jobs: list[Job], limits: Limits, baseline: Reading | None, motion: Motion) -> tuple[list[Job], list[str]]:
+    """Under a disk's floor, or losing too much in the window: what is writing, and every build. A script of writers each shorter than a sample shows no writer, only a volume
+    falling and a job that has started something new since the last sample."""
+    reasons = disk_reasons(reading, limits)
     if baseline and baseline.repo_free_gib - reading.repo_free_gib > limits.stop_disk_growth_gib:
-        disk.append(f"the repository's volume lost {baseline.repo_free_gib - reading.repo_free_gib:.1f} GiB in the last minutes, whoever wrote it, over {limits.stop_disk_growth_gib:.1f}")
-    if disk:
-        targets = list({p.pid: p for p in [*(writing or []), *builds]}.values())
-        if targets:
-            return targets, disk, False
-    danger = []
+        reasons.append(f"the repository's volume lost {baseline.repo_free_gib - reading.repo_free_gib:.1f} GiB in the last minutes, whoever wrote it, over {limits.stop_disk_growth_gib:.1f}")
+    if not reasons:
+        return [], []
+    targets = [job for job in jobs if job.building or sum(motion.written.get(p.pid, 0) for p in job.members) >= WRITING_BYTES]
+    if not targets and motion.fell:
+        targets = [job for job in jobs if job.top.pid not in motion.new and any(p.pid in motion.new for p in job.members)]
+    return targets, reasons
+
+
+def danger_line(reading: Reading, jobs: list[Job], limits: Limits) -> tuple[list[Job], list[str]]:
+    """At the director's danger line, or critical pressure: every job holding memory, and every build."""
+    reasons = []
     if reading.used_percent >= limits.panic_used_percent:
-        danger.append(f"RAM use is {reading.used_percent:.0f}%, at the {limits.panic_used_percent:.0f}% danger line")
+        reasons.append(f"RAM use is {reading.used_percent:.0f}%, at the {limits.panic_used_percent:.0f}% danger line")
     if reading.pressure_level >= limits.panic_pressure_level:
-        danger.append(f"macOS reports critical memory pressure, level {reading.pressure_level}")
-    if danger:
-        targets = list({p.pid: p for p in [*(p for p in mine if p.bytes >= worth), *builds]}.values())
-        # Many small ones can hold what one large one would: the largest then, one a sample, while it helps.
-        if not targets and total >= worth and largest:
-            targets = [largest]
-        if targets:
-            return targets, danger, False
-    if len(mine) > limits.processes:
-        return mine[: len(mine) - int(limits.processes)], [f"{len(mine)} processes of ours, over {limits.processes:.0f}"], False
-    if largest and largest.bytes > limits.one_process_gib * GIB:
-        return [largest], [f"one process of ours holds {largest.bytes / GIB:.2f} GiB, over {limits.one_process_gib:.2f}"], False
-    if largest and total > limits.all_processes_gib * GIB:
-        return [largest], [f"our processes hold {total / GIB:.2f} GiB, over {limits.all_processes_gib:.2f}"], False
-    host = list(danger)
-    if reading.used_percent >= limits.stop_used_percent and not danger:
-        host.append(f"RAM use is {reading.used_percent:.0f}%, at the {limits.stop_used_percent:.0f}% stop line")
-    if reading.pressure_level >= limits.stop_pressure_level and not danger:
-        host.append(f"macOS reports memory pressure at level {reading.pressure_level}, where 1 is normal")
+        reasons.append(f"macOS reports critical memory pressure, level {reading.pressure_level}")
+    if not reasons:
+        return [], []
+    return [job for job in jobs if job.bytes >= limits.worth_stopping_gib * GIB or job.building], reasons
+
+
+def ceiling_line(jobs: list[Job], limits: Limits) -> tuple[list[Job], list[str]]:
+    """What this repository's own processes may hold, whatever the host's state. Many small jobs together are held here, one at a time."""
+    targets: list[Job] = []
+    reasons: list[str] = []
+    count = sum(len(job.members) for job in jobs)
+    if count > limits.processes:
+        over = count - int(limits.processes)
+        for job in sorted(jobs, key=lambda job: len(job.members), reverse=True):
+            if over <= 0:
+                break
+            targets.append(job)
+            over -= len(job.members)
+        reasons.append(f"{count} processes of ours, over {limits.processes:.0f}")
+    for job in jobs:
+        largest = max(job.members, key=lambda process: process.bytes)
+        if largest.bytes > limits.one_process_gib * GIB:
+            targets.append(job)
+            reasons.append(f"one process of ours holds {largest.bytes / GIB:.2f} GiB, over {limits.one_process_gib:.2f}")
+            break
+    total = sum(job.bytes for job in jobs)
+    if jobs and total > limits.all_processes_gib * GIB:
+        targets.append(jobs[0])
+        reasons.append(f"our processes hold {total / GIB:.2f} GiB, over {limits.all_processes_gib:.2f}")
+    return targets, reasons
+
+
+def stop_line(reading: Reading, jobs: list[Job], limits: Limits, baseline: Reading | None) -> tuple[list[Job], list[str]]:
+    """Short of the danger line: our largest job, if it holds enough to help."""
+    reasons = []
+    if limits.stop_used_percent <= reading.used_percent < limits.panic_used_percent:
+        reasons.append(f"RAM use is {reading.used_percent:.0f}%, at the {limits.stop_used_percent:.0f}% stop line")
+    if limits.stop_pressure_level <= reading.pressure_level < limits.panic_pressure_level:
+        reasons.append(f"macOS reports memory pressure at level {reading.pressure_level}, where 1 is normal")
     if baseline and reading.swap_used_gib - baseline.swap_used_gib > limits.stop_swap_growth_gib:
-        host.append(f"swap grew {reading.swap_used_gib - baseline.swap_used_gib:.1f} GiB in the last minutes, over {limits.stop_swap_growth_gib:.1f}")
-    host.extend(disk)
-    if not host:
-        return [], [], False
-    if danger or disk or total < worth or largest is None:
-        return [], host, True
-    return [largest], host, False
+        reasons.append(f"swap grew {reading.swap_used_gib - baseline.swap_used_gib:.1f} GiB in the last minutes, over {limits.stop_swap_growth_gib:.1f}")
+    if not reasons:
+        return [], []
+    return ([jobs[0]] if jobs and jobs[0].bytes >= limits.worth_stopping_gib * GIB else []), reasons
+
+
+def judged(reading: Reading, mine: list[Process], limits: Limits, baseline: Reading | None = None, motion: Motion | None = None) -> tuple[list[Job], list[str], bool]:
+    """What to stop now, why, and whether a line was reached with nothing of ours to stop for it. Each line judges alone and they add up, so that none can silence another: a disk's
+    reason once switched the RAM line off."""
+    jobs = jobs_of(mine)
+    verdicts = (disk_line(reading, jobs, limits, baseline, motion or Motion()), danger_line(reading, jobs, limits), ceiling_line(jobs, limits), stop_line(reading, jobs, limits, baseline))
+    targets = {job.top.pid: job for found, _ in verdicts for job in found}
+    reasons = [reason for _, said in verdicts for reason in said]
+    return list(targets.values()), reasons, bool(reasons) and not targets
 
 
 def largest_on_host(table: list[Process], count: int = 5) -> list[dict]:
@@ -568,27 +673,44 @@ def baseline_of(history: deque, now: float, reading: Reading, ours_runs: bool) -
     return history[0][1]
 
 
-def sample(root: Path, limits: Limits, history: deque, said: list[float], written_before: dict[int, int]) -> tuple[Reading, list[Process]]:
+@dataclass
+class Memory:
+    """What a watcher keeps from one sample to the next. `written` is None until its first."""
+
+    history: deque = field(default_factory=deque)
+    said_at: float = 0.0
+    written: dict[int, int] | None = None
+    free: tuple[float, float] = (0.0, 0.0)
+
+    def moved(self, reading: Reading, mine: list[Process]) -> Motion:
+        free = (reading.repo_free_gib, reading.boot_free_gib)
+        motion = Motion()
+        if self.written is not None:
+            motion.written = {p.pid: p.written - self.written.get(p.pid, 0) for p in mine}
+            motion.new = {p.pid for p in mine} - self.written.keys()
+            motion.fell = any(before - now >= WRITING_BYTES / GIB for before, now in zip(self.free, free))
+        self.written, self.free = {p.pid: p.written for p in mine}, free
+        return motion
+
+
+def sample(root: Path, limits: Limits, memory: Memory) -> tuple[Reading, list[Process]]:
     reading = read_host(root)
     table = processes()
-    mine = ours(table, root, os.getpid())
-    baseline = baseline_of(history, time.monotonic(), reading, bool(mine))
-    writing = [p for p in mine if p.written - written_before.get(p.pid, 0) >= WRITING_BYTES]
-    written_before.clear()
-    written_before.update((p.pid, p.written) for p in mine)
-    targets, reasons, not_ours = judged(reading, mine, limits, baseline, writing)
+    mine = ours(table, root, os.getpid(), spare_its_line=False)
+    baseline = baseline_of(memory.history, time.monotonic(), reading, bool(mine))
+    targets, reasons, not_ours = judged(reading, mine, limits, baseline, memory.moved(reading, mine))
     if targets:
         # Written first, which cannot fail or wait long, so that a job's own `run` can say why it ended. Then the stop, and nothing below may keep it from happening.
-        stopped = [{"pid": t.pid, "name": t.label, "gib": round(t.bytes / GIB, 2), "command": t.command[:160]} for t in targets]
+        stopped = [{"pid": job.top.pid, "name": job.label, "gib": round(job.bytes / GIB, 2), "command": job.top.command[:160]} for job in targets]
         record(root, kind="stopped", reasons=reasons, stopped=stopped, reading=asdict(reading), largest=largest_on_host(table))
         pids: list[int] = []
-        for target in targets:
-            pids.extend(pid for pid in tree_of(target.pid, table) if pid not in pids)
+        for job in targets:
+            pids.extend(pid for pid in tree_of(job.top.pid, table) if pid not in pids)
         stop(pids)
         # The growth that caused this has been answered: what comes next is not stopped for it again.
-        history.clear()
-    elif not_ours and time.monotonic() - said[0] > 60:
-        said[0] = time.monotonic()
+        memory.history.clear()
+    elif not_ours and time.monotonic() - memory.said_at > 60:
+        memory.said_at = time.monotonic()
         record(root, kind="pressure-not-ours", reasons=reasons, reading=asdict(reading), largest=largest_on_host(table))
     note_peak(root, reading, sum(process.bytes for process in mine))
     return reading, mine
@@ -612,7 +734,15 @@ def write_note(root: Path, name: str, text: str) -> None:
         say(f"host-guard: cannot write {name}: {error}")
 
 
-def watch(root: Path, limits: Limits, once: bool, idle_seconds: float = 600.0) -> int:
+def code_stamp() -> tuple[int, int] | None:
+    try:
+        stats = CODE.stat()
+    except OSError:
+        return None
+    return stats.st_mtime_ns, stats.st_size
+
+
+def watch(root: Path, limits: Limits, once: bool, idle_seconds: float = 600.0, arguments: list[str] | None = None) -> int:
     lock = hold_lock(root)
     if lock is None:
         return 0  # One is watching.
@@ -622,15 +752,16 @@ def watch(root: Path, limits: Limits, once: bool, idle_seconds: float = 600.0) -
     except OSError:
         pass
     os.chdir("/")
-    history: deque = deque()
-    said, written_before, unread_said, last_seen, busy = [0.0], {}, 0.0, time.monotonic(), False
+    memory = Memory()
+    unread_said, last_seen, busy, code = 0.0, time.monotonic(), False, code_stamp()
     while True:
         wait = 0.5
         try:
-            reading, mine = sample(root, limits, history, said, written_before)
+            reading, mine = sample(root, limits, memory)
             busy = bool(mine)
             # It reads more often the closer the host is to a line, and as seldom as is safe when nothing of ours runs: this costs the shared host too.
-            wait = 0.5 if reading.used_percent >= limits.start_used_percent + 10 else 1.0 if busy or reading.used_percent >= limits.start_used_percent else 2.0
+            near = reading.used_percent >= limits.start_used_percent + 10 or disk_reasons(reading, limits)
+            wait = 0.5 if near else 1.0 if busy or reading.used_percent >= limits.start_used_percent else 2.0
             write_note(root, "sampled", str(time.time()))
         except Exception as error:  # Whatever it is, the watcher goes on trying, and `sampled` going stale says it is blind.
             if time.monotonic() - unread_said > 60:
@@ -640,6 +771,9 @@ def watch(root: Path, limits: Limits, once: bool, idle_seconds: float = 600.0) -
             return 0
         if not (state_path(root) / "watch.pid").exists():
             write_note(root, "watch.pid", str(os.getpid()))
+        # A guard changed under a watcher holds from now, not from when nothing of ours next runs. The lock closes with the old image and the new one takes it.
+        if arguments is not None and code_stamp() not in (None, code):
+            os.execv(sys.executable, [sys.executable, "-I", "-B", str(CODE), *arguments])
         try:
             fresh = time.time() - (state_path(root) / "heartbeat").stat().st_mtime < idle_seconds
         except OSError:
@@ -706,7 +840,7 @@ def unseen(root: Path, session: str = "") -> list[dict]:
     with open(log, "rb") as lines:
         lines.seek(start)
         text = lines.read()
-    since = time.strftime("%Y-%m-%dT%H:%M:%S", time.localtime(time.time() - TOLD_OF_LATELY_SECONDS))
+    since = time.time() - TOLD_OF_LATELY_SECONDS
     events = []
     for line in text.splitlines():
         try:
@@ -714,60 +848,448 @@ def unseen(root: Path, session: str = "") -> list[dict]:
         except ValueError:
             continue
         if isinstance(event, dict) and event.get("kind") == "stopped" and isinstance(event.get("stopped"), list):
-            if not lately_only or str(event.get("at", "")) >= since:
+            if not lately_only or when(event) >= since:
                 events.append(event)
     write_note(root, seen.name, str(start + len(text)))
     return events
+
+
+def when(event: dict) -> float:
+    """When it happened, or never: a line whose time is no time is not recent, and a hand-written one would otherwise refuse or tell every new session for good."""
+    try:
+        return time.mktime(time.strptime(str(event.get("at")), "%Y-%m-%dT%H:%M:%S"))
+    except (ValueError, OverflowError):
+        return 0.0
 
 
 def said_of(event: dict) -> str:
     stopped = [s for s in event.get("stopped", []) if isinstance(s, dict)]
     names = ", ".join(f"{s.get('name')} (pid {s.get('pid')}, {s.get('gib')} GiB)" for s in stopped[:4])
     more = len(stopped) - 4
-    holders = ", ".join(f"{h.get('name')} {h.get('gib')} GiB" for h in event.get("largest", [])[:3] if isinstance(h, dict))
+    largest, reasons = event.get("largest"), event.get("reasons")
+    holders = ", ".join(f"{h.get('name')} {h.get('gib')} GiB" for h in (largest if isinstance(largest, list) else [])[:3] if isinstance(h, dict))
     return (
-        f"{event.get('at')}: stopped {names}{f' and {more} more' if more > 0 else ''}: {'; '.join(map(str, event.get('reasons', [])))}"
+        f"{event.get('at')}: stopped {names}{f' and {more} more' if more > 0 else ''}: {'; '.join(map(str, reasons if isinstance(reasons, list) else []))}"
         + (f". Holding the most on the host: {holders}" if holders else "")
     )
 
 
+# ---- what a shell command would run
+
+ASSIGNMENT = re.compile(r"[A-Za-z_]\w*\+?=")
+REDIRECTION = re.compile(r"\d*(?:<<<|<<-|<<|<>|<&|>>|>&|>\||<|>)|&>>|&>")
+BEFORE_A_COMMAND = {"if", "then", "elif", "else", "while", "until", "do", "!", "{", "coproc"}
+NOT_A_COMMAND = {"for", "select", "case", "esac", "fi", "done", "}", "[[", "]]"}
+# What runs another command: the flags of its that take a value, and how many plain words stand before the command.
+WRAPPERS = {
+    "env": ({"-u", "-P", "-S", "-C", "--unset", "--chdir", "--split-string"}, 0),
+    "nohup": (set(), 0),
+    "nice": ({"-n", "--adjustment"}, 0),
+    "time": ({"-o", "--output"}, 0),
+    "timeout": ({"-k", "-s", "--kill-after", "--signal"}, 1),
+    "gtimeout": ({"-k", "-s", "--kill-after", "--signal"}, 1),
+    "caffeinate": ({"-t", "-w"}, 0),
+    "sudo": ({"-u", "-g", "-h", "-p", "-C", "-D", "-R", "-T", "-U"}, 0),
+    "command": (set(), 0),
+    "builtin": (set(), 0),
+    "exec": ({"-a"}, 0),
+    "xargs": ({"-I", "-J", "-L", "-n", "-P", "-R", "-S", "-s", "-E", "-d", "-a"}, 0),
+    "stdbuf": ({"-i", "-o", "-e"}, 0),
+}
+
+
+@dataclass
+class Command:
+    """One simple command a shell would run: its words as the command would get them, quotes gone and a substitution as written, and which pipeline it stands in. `fed` says that
+    its arguments come from its input, as `xargs` gives them."""
+
+    words: list[str]
+    pipeline: int
+    fed: bool = False
+
+    @property
+    def name(self) -> str:
+        return os.path.basename(self.words[0])
+
+
+def told_script(arguments: list[str]) -> str | None:
+    """What a shell given these arguments is told to run with `-c`, or nothing if it is given a script or no command."""
+    takes_a_value = False
+    for at, word in enumerate(arguments):
+        if takes_a_value:
+            takes_a_value = False
+        elif word in SHELL_FLAGS_WITH_VALUES:
+            takes_a_value = True
+        elif re.fullmatch(r"-\w*c\w*", word):
+            return arguments[at + 1] if at + 1 < len(arguments) else ""
+        elif not word.startswith(("-", "+")):
+            return None
+    return None
+
+
+def plain_word(words: list[str], takes_a_value: set[str] = frozenset()) -> str | None:
+    """The first word that is no flag or a flag's value."""
+    skip = False
+    for word in words:
+        if skip:
+            skip = False
+        elif word in takes_a_value:
+            skip = True
+        elif not word.startswith(("-", "+")):
+            return word
+    return None
+
+
+def unwrapped(words: list[str]) -> tuple[list[str], bool]:
+    """What `words` run once the assignments, keywords and wrappers before it are gone, and whether a wrapper feeds it arguments. `command -v` runs nothing."""
+    fed = False
+    while words:
+        name = os.path.basename(words[0])
+        if words[0] in BEFORE_A_COMMAND or ASSIGNMENT.match(words[0]):
+            words = words[1:]
+        elif words[0] == "function":
+            words = words[2:]
+        elif name == "rustup" and words[1:2] == ["run"]:
+            words = words[3:]
+        elif name in WRAPPERS:
+            takes_a_value, plain = WRAPPERS[name]
+            rest, at = words[1:], 0
+            while at < len(rest):
+                word = rest[at]
+                if word in takes_a_value:
+                    at += 2
+                elif word.startswith("-") and word != "-":
+                    if name == "command" and word in ("-v", "-V"):
+                        return [], False
+                    at += 1
+                elif name == "env" and ASSIGNMENT.match(word):
+                    at += 1
+                elif plain:
+                    plain -= 1
+                    at += 1
+                else:
+                    break
+            fed = fed or name == "xargs"
+            words = rest[at:]
+        else:
+            break
+    return words, fed
+
+
+class ShellReader:
+    """Enough of the shell's own grammar to say what it would run, instead of a pattern over its text: three rounds of review found that a pattern reads a word in a message as a
+    command, misses one in `$(…)`, and pairs a comment's apostrophe with a quote. `selftest_host_guard.py` holds this to the shell itself, running each form against stubs."""
+
+    def __init__(self, text: str, found: list[Command], pipelines: itertools.count) -> None:
+        self.text, self.at, self.found, self.pipelines = text, 0, found, pipelines
+
+    def commands(self, closing: bool = False) -> None:
+        """Up to the end of the text, or the `)` that closes this level when `closing`."""
+        text = self.text
+        words: list[str] = []
+        depth, cases, pipeline = 0, 0, next(self.pipelines)
+        here_docs: list[tuple[str, bool, bool]] = []
+
+        def finish() -> None:
+            nonlocal words, cases
+            if words:
+                cases = cases + 1 if words[0] == "case" else max(0, cases - 1) if words[0] == "esac" else cases
+                self.emit(words, pipeline)
+            words = []
+
+        while self.at < len(text):
+            c, two = text[self.at], text[self.at : self.at + 2]
+            redirection = REDIRECTION.match(text, self.at)
+            if c in " \t":
+                self.at += 1
+            elif two == "\\\n":
+                self.at += 2
+            elif c == "\n":
+                finish()
+                pipeline = next(self.pipelines)
+                self.at += 1
+                self.read_here_docs(here_docs)
+                here_docs = []
+            elif c == "#":
+                end = text.find("\n", self.at)
+                self.at = len(text) if end < 0 else end
+            elif c == ")":
+                self.at += 1
+                if words[:1] == ["case"]:
+                    cases += 1
+                    words = []
+                elif cases and depth == 0:  # A case's pattern, not a command.
+                    words = []
+                else:
+                    finish()
+                    if depth == 0 and closing:
+                        return
+                    depth = max(0, depth - 1)
+                    pipeline = next(self.pipelines)
+            elif c == "(":
+                finish()
+                depth += 1
+                self.at += 1
+                pipeline = next(self.pipelines)
+            elif two in ("<(", ">("):
+                self.at += 2
+                self.commands(closing=True)
+                words.append(f"{two}…)")
+            elif redirection:
+                self.at = redirection.end()
+                while text[self.at : self.at + 1] in (" ", "\t"):
+                    self.at += 1
+                target, quoted = self.word()
+                operator = redirection.group().lstrip("0123456789")
+                if operator in ("<<", "<<-"):
+                    here_docs.append((target, operator == "<<-", quoted))
+            elif two in ("&&", "||"):
+                finish()
+                self.at += 2
+                pipeline = next(self.pipelines)
+            elif c in ";&":
+                finish()
+                self.at += 1
+                pipeline = next(self.pipelines)
+            elif two == "|&":
+                finish()
+                self.at += 2
+            elif c == "|":
+                finish()
+                self.at += 1
+            else:
+                words.append(self.word()[0])
+        finish()
+
+    def word(self) -> tuple[str, bool]:
+        """One word, as the command would get it, and whether any of it was quoted."""
+        text = self.text
+        parts: list[str] = []
+        quoted = False
+        while self.at < len(text):
+            c = text[self.at]
+            if c in " \t\n;&|()<>":
+                break
+            if c == "\\":
+                following = text[self.at + 1 : self.at + 2]
+                parts.append("" if following == "\n" else following)
+                self.at += 2
+                quoted = True
+            elif c == "'":
+                end = text.find("'", self.at + 1)
+                end = len(text) if end < 0 else end
+                parts.append(text[self.at + 1 : end])
+                self.at = end + 1
+                quoted = True
+            elif c == '"':
+                self.at += 1
+                self.expansions(parts, '"')
+                quoted = True
+            elif c == "`":
+                self.backticks(parts)
+            elif c == "$":
+                self.dollar(parts)
+            else:
+                parts.append(c)
+                self.at += 1
+        return "".join(parts), quoted
+
+    def expansions(self, parts: list[str], closing: str | None) -> None:
+        """What stands between double quotes, or in a here-document: text, in which only a substitution still runs."""
+        text = self.text
+        while self.at < len(text):
+            c = text[self.at]
+            if c == closing:
+                self.at += 1
+                return
+            if c == "\\":
+                following = text[self.at + 1 : self.at + 2]
+                parts.append(following if following in ('"', "$", "`", "\\") else "" if following == "\n" else c + following)
+                self.at += 2
+            elif c == "`":
+                self.backticks(parts)
+            elif c == "$":
+                self.dollar(parts, in_quotes=True)
+            else:
+                parts.append(c)
+                self.at += 1
+
+    def dollar(self, parts: list[str], in_quotes: bool = False) -> None:
+        text = self.text
+        two, three = text[self.at : self.at + 2], text[self.at : self.at + 3]
+        if three == "$((":  # Arithmetic, which runs nothing but what a substitution in it would: read as text.
+            depth, at = 0, self.at + 1
+            while at < len(text):
+                depth += {"(": 1, ")": -1}.get(text[at], 0)
+                at += 1
+                if depth == 0:
+                    break
+            parts.append(text[self.at : at])
+            self.at = at
+        elif two == "$(":
+            self.at += 2
+            self.commands(closing=True)
+            parts.append("$(…)")
+        elif two == "${":
+            self.at += 2
+            parts.append("${")
+            while self.at < len(text) and text[self.at] != "}":
+                c = text[self.at]
+                if c == "$":
+                    self.dollar(parts, in_quotes=True)
+                elif c == "`":
+                    self.backticks(parts)
+                elif c == "\\":
+                    parts.append(text[self.at : self.at + 2])
+                    self.at += 2
+                elif c == '"':
+                    self.at += 1
+                    self.expansions(parts, '"')
+                else:
+                    parts.append(c)
+                    self.at += 1
+            parts.append("}")
+            self.at += 1
+        elif two == "$'" and not in_quotes:
+            at, said = self.at + 2, []
+            while at < len(text) and text[at] != "'":
+                if text[at] == "\\":
+                    said.append({"n": "\n", "t": "\t"}.get(text[at + 1 : at + 2], text[at + 1 : at + 2]))
+                    at += 2
+                else:
+                    said.append(text[at])
+                    at += 1
+            parts.append("".join(said))
+            self.at = at + 1
+        elif two == '$"' and not in_quotes:
+            self.at += 2
+            self.expansions(parts, '"')
+        else:
+            parts.append("$")
+            self.at += 1
+
+    def backticks(self, parts: list[str]) -> None:
+        text = self.text
+        at, inner = self.at + 1, []
+        while at < len(text) and text[at] != "`":
+            if text[at] == "\\" and text[at + 1 : at + 2] in ("`", "\\", "$"):
+                inner.append(text[at + 1])
+                at += 2
+            else:
+                inner.append(text[at])
+                at += 1
+        self.at = at + 1
+        ShellReader("".join(inner), self.found, self.pipelines).commands()
+        parts.append("`…`")
+
+    def read_here_docs(self, here_docs: list[tuple[str, bool, bool]]) -> None:
+        text = self.text
+        for delimiter, strip_tabs, quoted in here_docs:
+            lines: list[str] = []
+            while self.at < len(text):
+                end = text.find("\n", self.at)
+                end = len(text) if end < 0 else end
+                line = text[self.at : end]
+                self.at = end + 1
+                if (line.lstrip("\t") if strip_tabs else line) == delimiter:
+                    break
+                lines.append(line)
+            if not quoted:
+                ShellReader("\n".join(lines), self.found, self.pipelines).expansions([], None)
+
+    def emit(self, words: list[str], pipeline: int) -> None:
+        if words[0] in NOT_A_COMMAND:
+            return
+        words, fed = unwrapped(words)
+        if not words or words[0] in NOT_A_COMMAND:
+            return
+        name = os.path.basename(words[0])
+        script = told_script(words[1:]) if name in SHELLS else None
+        if script is not None:
+            ShellReader(script, self.found, self.pipelines).commands()
+        elif name == "eval":
+            ShellReader(" ".join(words[1:]), self.found, self.pipelines).commands()
+        else:
+            self.found.append(Command(words, pipeline, fed))
+
+
+def commands_of(text: str) -> list[Command]:
+    """What `text` would run, in the order it would reach them: a substitution before the command it stands in, and what a wrapper or `bash -c` runs in place of them. An
+    unterminated quote reads to the end, since the shell will refuse it anyway. Too deep to read raises, and the hook refuses what it cannot read."""
+    found: list[Command] = []
+    ShellReader(text, found, itertools.count()).commands()
+    return found
+
+
 # ---- what runs through it
 
-# What may use real memory or write much, where a command stands, so that the word in a message or a search is not taken for one. What only asks a question is not, nor
-# `make` of a recipe that goes through the guard and waits for room by itself. This is a courtesy to the host, not its guard: what reaches past it the watcher still holds.
-BEFORE = r"(?:^|[;&|({`'\"\n]|(?<![\w./-])(?:do|then|else|if|while|until|env|nohup|xargs|sudo|command|bash|sh|zsh)\s|!\s)\s*(?:\w+=\S*\s+)*(?:(?:timeout\s+\S+|nice(?:\s+-n\s*\S+)?|time|exec)\s+)*"
-HEAVY = re.compile(
-    BEFORE
-    + r"(?:[^\s=]*/)?(?:cargo(?!\s+(?:fmt|tree|metadata|locate-project|pkgid|search|help|--version|-V|--help)(?:\s|$))[\w-]*"
-    + r"|g?make(?!\s+(?:focused|integration|tiers|gate|check|clippy|test|book|help|hooks|fmt|-n)(?:\s|$))"
-    + r"|rustc(?!\s+(?:-V|--version|--help|--print)(?:\s|$))|mdbook(?!\s+(?:--version|--help)(?:\s|$))|qemu-system\S*|archogen|archogen-plan-check|build_book\.sh)(?=[\s;&|)'\"`]|$)"
-)
-# Stopping by a name, in the spellings an accident takes: `pkill`, `killall`, and `kill` fed by `pgrep` or by a search of `ps`. A pattern naming this repository's path says it means what is ours.
-KILL_BY_NAME = re.compile(BEFORE + r"(?:[^\s=]*/)?(?:pkill|killall)\s+([^;&|\n]*)")
-KILL_OF_A_SEARCH = re.compile(r"\bxargs\s+(?:-\S+\s+)*(?:[^\s=]*/)?kill\b|\bkill\b[^;&|\n]*(?:\$\(|`)\s*ps\b")
+CARGO_FLAGS_WITH_VALUES = {"--config", "-Z", "-C", "--color"}
+# What only asks, or frees room. Nothing here compiles or holds much.
+CARGO_ONLY_ASKS = {"fmt", "tree", "metadata", "locate-project", "pkgid", "search", "help", "clean", "version"}
+# `make` of a recipe that goes through the guard and waits for room by itself.
+MAKE_GUARDED = {"focused", "integration", "tiers", "gate", "check", "clippy", "test", "book", "help", "hooks", "fmt"}
+MAKE_FLAGS_WITH_VALUES = {"-I", "-l", "-o", "-W", "--include-dir", "--load-average", "--old-file", "--what-if"}
 
 
-def code_of(command: str) -> str:
-    """`command` without what it only says: a heredoc's body, a comment, and quoted text unless it is what a shell is told to run (`bash -c '…'`)."""
-    text = re.sub(r"<<-?\s*(['\"]?)(\w+)\1[^\n]*\n.*?\n\s*\2[ \t]*(?:\n|$)", " ", command, flags=re.S)
-    shell_told = r"((?:^|[\s;&|(])(?:[^\s=]*/)?(?:bash|sh|zsh)\s+(?:-\S+\s+)*-\w*c\s+)?"
-    text = re.sub(shell_told + r"('[^']*'|\"(?:[^\"\\]|\\.)*\")", lambda m: m.group(0) if m.group(1) else " ", text)
-    return re.sub(r"(?m)(^|\s)#.*$", r"\1", text)
+def make_is_guarded(arguments: list[str]) -> bool:
+    """Whether `make` with these runs only what goes through the guard here: another directory or makefile may run anything, and with no target it may too."""
+    targets, at = [], 0
+    while at < len(arguments):
+        word = arguments[at]
+        if word in ("-n", "--dry-run", "--just-print", "--recon"):
+            return True
+        if word in ("-C", "-f", "--directory", "--file", "--makefile") or word.startswith(("-C", "-f", "--directory=", "--file=", "--makefile=")):
+            return False
+        if word in MAKE_FLAGS_WITH_VALUES:
+            at += 1
+        elif word == "-j" and arguments[at + 1 : at + 2] and arguments[at + 1].isdigit():
+            at += 1
+        elif not word.startswith("-") and not ASSIGNMENT.match(word):
+            targets.append(word)
+        at += 1
+    return bool(targets) and all(target in MAKE_GUARDED for target in targets)
 
 
-def kills_by_name(command: str, root: Path) -> bool:
-    """Whether `command` stops processes by a name rather than a pid, with nothing in that very stage saying it means this repository's. `kill "$(cat job.pid)"` is by a pid, and passes."""
+def is_heavy(words: list[str]) -> bool:
+    """Whether a command may use real memory or write much. This is a courtesy to the host, not its guard: what reaches past it, a program in a variable, a `python3` that allocates,
+    the watcher still holds."""
+    if not words:
+        return False
+    name, arguments = os.path.basename(words[0]), words[1:]
+    if name == "cargo":
+        subcommand = plain_word(arguments, CARGO_FLAGS_WITH_VALUES)
+        return subcommand is not None and subcommand not in CARGO_ONLY_ASKS
+    if name in MAKES:
+        return not make_is_guarded(arguments)
+    if name in ("rustc", "rustdoc", "clippy-driver", "mdbook"):
+        return bool(arguments) and not any(word in ("-V", "-vV", "--version", "--help", "-h") or word.startswith("--print") for word in arguments)
+    if name in SHELLS:
+        script = plain_word(arguments, SHELL_FLAGS_WITH_VALUES)
+        return script is not None and os.path.basename(script) == "build_book.sh"
+    return name.startswith(("cargo-", "qemu-system")) or name in ("archogen", "archogen-plan-check", "build_book.sh")
+
+
+def kills_by_name(commands: list[Command], root: Path) -> bool:
+    """Whether these stop processes by a name rather than a pid, with nothing saying it means this repository's: `pkill` or `killall` naming no path here, or `kill` of what a search
+    of the process table found. A search names this root if anything in its pipeline does. `-P` goes by a parent's pid, and `kill` of numbers by theirs, whatever else ran before."""
     text = str(root)
-    unsaid = re.sub(r"<<-?\s*(['\"]?)(\w+)\1[^\n]*\n.*?\n\s*\2[ \t]*(?:\n|$)", " ", command, flags=re.S)
-    substituted = re.sub(r"'[^']*'", "' '", unsaid)  # A double quote still runs what is in `$(…)`.
-    if re.search(r"(?<![\w-])kill\b", substituted) and re.search(r"(?<![\w-])pgrep\b", substituted):
-        for search in re.findall(r"(?<![\w-])pgrep\b[^;&|)\n`]*", unsaid):
-            if text not in search:
+
+    def by_pid(command: Command, flag: str) -> bool:
+        return any(word.startswith(flag) for word in command.words[1:])
+
+    def searches_by_name(command: Command) -> bool:
+        return (command.name == "pgrep" and not by_pid(command, "-P")) or (command.name == "ps" and not by_pid(command, "-p"))
+
+    for at, command in enumerate(commands):
+        if command.name in ("pkill", "killall"):
+            if not (command.name == "pkill" and by_pid(command, "-P")) and not any(text in word for word in command.words[1:]):
                 return True
-    if KILL_OF_A_SEARCH.search(substituted):
-        return True
-    if KILL_BY_NAME.search(code_of(command)):
-        return any(text not in stage for stage in re.split(r"\|\||&&|[;|\n]", unsaid) if re.search(r"(?:^|[\s/])(?:pkill|killall)\s", stage))
+        elif command.name == "kill":
+            targets = [word for word in command.words[1:] if not word.startswith("-")]
+            if command.fed or not all(re.fullmatch(r"\d+|%\S*|\$[!$]", word) for word in targets):
+                for search in commands[:at]:
+                    if searches_by_name(search) and not any(text in word for other in commands if other.pipeline == search.pipeline for word in other.words):
+                        return True
     return False
 
 
@@ -779,7 +1301,7 @@ def heavy_running(root: Path) -> list[Process]:
     line = line_of(table, me)
     children = children_of(table)
     by_pid = {process.pid: process for process in table}
-    running = [p for p in ours(table, root, me) if p.name in BUILDING]
+    running = [p for p in ours(table, root, me) if p.name in BUILDING and p.spawns]
     for process in table:
         if process.pid not in line and is_run_of(process, text):
             # The watcher it may have started is its child too, and no job; nor are the tools it reads the host with.
@@ -912,19 +1434,44 @@ def run(root: Path, limits: Limits, command: list[str], wait_seconds: float = 0.
     return 128 - status if status < 0 else status
 
 
+def heavy_refused(root: Path, limits: Limits) -> str | None:
+    """Why a heavy command may not start now, if it may not."""
+    try:
+        reasons = start_reasons(read_host(root), limits)
+    except Exception as error:
+        return f"host-guard: refused, this is a heavy command, and the host cannot be read, so nothing says it is safe: {error}"
+    if reasons:
+        return f"host-guard: refused, this is a heavy command: {'; '.join(reasons)}. To wait for room, run it in the background as `python3 scripts/host_guard.py run --wait 1800 -- COMMAND`; `make` does so by itself."
+    # A watcher just started has had no time to read the host, so it gets a moment before it is called blind.
+    deadline = time.monotonic() + 3.0
+    while not healthy(root, limits) and time.monotonic() < deadline:
+        time.sleep(0.1)
+    if not healthy(root, limits):
+        return "host-guard: refused, this is a heavy command, and no watcher has read the host lately: look at `host_guard.py status`."
+    try:
+        running = heavy_running(root)
+    except Exception as error:
+        return f"host-guard: refused, this is a heavy command, and the process table cannot be read: {error}"
+    if running:
+        return f"host-guard: refused: one heavy job at a time, and {running[0].label} (pid {running[0].pid}) is running: {running[0].command[:120]}. Wait for it, or queue behind it as `python3 scripts/host_guard.py run --wait 1800 -- COMMAND`."
+    return None
+
+
 def hook(root: Path, limits: Limits) -> int:
-    """Exit 2 refuses the command, and what it prints goes to the agent. It refuses what it cannot read, a heavy command when the host has no room for it, and stopping by a name. A
-    light command it lets by, whatever the host's state: it cannot hurt, the watcher holds what turns out otherwise, and a host in trouble must stay readable and repairable."""
+    """Exit 2 refuses the command, and what it prints to stderr goes to the agent. It refuses three things: what it cannot read, stopping by a name, and a heavy command with no room. What the
+    watcher has stopped is told beside the command's result and refuses nothing, since the way out may be that very command. Anything else runs, whatever the host's state: a light
+    command cannot hurt, the watcher holds what turns out otherwise, and a host in trouble must stay readable and repairable."""
     try:
         given = json.load(sys.stdin)
         command = given["tool_input"]["command"]
         session = str(given.get("session_id", ""))
         if not isinstance(command, str) or not command.strip():
             raise ValueError("no command")
+        commands = commands_of(command)
     except Exception as error:
         say(f"host-guard: refused: this cannot be read as a command to judge: {error!r}")
         return 2
-    if kills_by_name(command, root):
+    if kills_by_name(commands, root):
         say("host-guard: refused: never by a program's name across the host, which can stop another project's work. Stop what is ours by its pid, or name this repository's path in the pattern.")
         return 2
     happened: list[dict] = []
@@ -934,36 +1481,16 @@ def hook(root: Path, limits: Limits) -> int:
         happened = unseen(root, session)
     except Exception as error:
         say(f"host-guard: cannot keep its own state: {error}")
-    if happened:
-        for event in happened:
-            say(f"host-guard: {said_of(event)}")
-        say("host-guard: this command was not run, so that you see that. Find out why before running it again.")
+    told = [f"host-guard: {said_of(event)}" for event in happened[-5:]]
+    refused = heavy_refused(root, limits) if any(is_heavy(each.words) for each in commands) else None
+    if refused:
+        for line in told:
+            say(line)
+        say(refused)
         return 2
-    if not HEAVY.search(code_of(command)):
-        return 0
-    try:
-        reasons = start_reasons(read_host(root), limits)
-    except Exception as error:
-        say(f"host-guard: refused, this is a heavy command, and the host cannot be read, so nothing says it is safe: {error}")
-        return 2
-    if reasons:
-        say(f"host-guard: refused, this is a heavy command: {'; '.join(reasons)}. To wait for room, run it in the background as `python3 scripts/host_guard.py run --wait 1800 -- COMMAND`; `make` does so by itself.")
-        return 2
-    # A watcher just started has had no time to read the host, so it gets a moment before it is called blind.
-    deadline = time.monotonic() + 3.0
-    while not healthy(root, limits) and time.monotonic() < deadline:
-        time.sleep(0.1)
-    if not healthy(root, limits):
-        say("host-guard: refused, this is a heavy command, and no watcher has read the host lately: look at `host_guard.py status`.")
-        return 2
-    try:
-        running = heavy_running(root)
-    except Exception as error:
-        say(f"host-guard: refused, this is a heavy command, and the process table cannot be read: {error}")
-        return 2
-    if running:
-        say(f"host-guard: refused: one heavy job at a time, and {running[0].label} (pid {running[0].pid}) is running: {running[0].command[:120]}. Wait for it, or queue behind it as `python3 scripts/host_guard.py run --wait 1800 -- COMMAND`.")
-        return 2
+    if told:
+        # Beside the tool's result, as the harness's reference has it for `additionalContext`. With no decision here, the command goes on through the normal permissions.
+        print(json.dumps({"hookSpecificOutput": {"hookEventName": "PreToolUse", "additionalContext": "\n".join(told)}}))
     return 0
 
 
@@ -1061,7 +1588,7 @@ def main(argv: list[str]) -> int:
             say("host-guard: interrupted")
             return 130
     if verb == "watch":
-        return watch(root, limits, once)
+        return watch(root, limits, once, arguments=list(argv))
     if verb == "ensure":
         ensure(root)
         return 0

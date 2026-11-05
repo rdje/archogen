@@ -1,7 +1,9 @@
 #!/usr/bin/env python3
 """selftest_host_guard.py: the guard stops what it should and nothing else. Each case runs in a scratch root of its own, so a watcher with a limit
 tightened to nothing has only that root's processes to stop, and the memory it uses to prove so stays under a few hundred MiB. On a host already
-over the start line it does not run: it would add to the load. Exit 0 all held · 1 one did not · 20 some could not run, which is not a pass."""
+over the start line only the cases that hold nothing run: the others would add to the load. Exit 0 all held · 1 one did not · 20 some could not run, which is not a pass.
+
+With case names as arguments, only those run."""
 
 from __future__ import annotations
 
@@ -18,6 +20,8 @@ from pathlib import Path
 
 HERE = Path(__file__).resolve().parent
 sys.path.insert(0, str(HERE))
+# Run as this file names itself, it must leave the tree as it found it: an untracked `scripts/__pycache__` is a code file no commit may stand beside.
+sys.dont_write_bytecode = True
 import host_guard as g  # noqa: E402
 
 GUARD = HERE / "host_guard.py"
@@ -66,6 +70,14 @@ with open(sys.argv[1], "wb") as out:
 open(sys.argv[2], "w").close()
 time.sleep(60)
 """
+WROTE_THEN_IDLE = """
+import sys, time
+with open(sys.argv[1], "wb") as out:
+    out.write(bytes(10 << 20))
+    out.flush()
+open(sys.argv[2], "w").close()
+time.sleep(60)
+"""
 IGNORE = """
 import signal, sys, time
 signal.signal(signal.SIGTERM, signal.SIG_IGN)
@@ -76,13 +88,15 @@ started: list[subprocess.Popen] = []
 failures: list[str] = []
 not_run: list[str] = []
 passed = 0
+# Whether the case at hand holds nothing and reads nothing of the host, so that a failure says the same whatever the host's state.
+pure = False
 
 
 def check(what: str, holds: bool, detail: object = "") -> None:
     global passed
     if holds:
         passed += 1
-    elif not host_clear():
+    elif not pure and not host_clear():
         # This host is shared, and another project's load can arrive mid-test: then this says nothing either way, and it is no pass.
         not_run.append(f"{what} (the host filled meanwhile)")
     else:
@@ -227,6 +241,27 @@ def hook_says(command: str, root: Path, limits: dict | None = None, env: dict | 
     if session is not None:
         given["session_id"] = session
     return guard("hook", stdin=json.dumps(given), root=root, limits=limits, env=env)
+
+
+def told(done: subprocess.CompletedProcess) -> str:
+    """What the hook has told beside a command that runs, in the shape the harness reads: nothing, or an `additionalContext` of a `PreToolUse`, with no decision of its own."""
+    if not done.stdout.strip():
+        return ""
+    output = json.loads(done.stdout)["hookSpecificOutput"]
+    assert output["hookEventName"] == "PreToolUse" and "permissionDecision" not in output, output
+    return output["additionalContext"]
+
+
+def stop_event(at: str, name: str) -> str:
+    return json.dumps({"kind": "stopped", "at": at, "reasons": ["why"], "stopped": [{"pid": 1, "name": name, "gib": 1.0, "command": "x"}]}) + "\n"
+
+
+def proc(pid: int, command: str, mib: int = 1, ppid: int = 0) -> g.Process:
+    return g.Process(pid, ppid, command, "", "", mib << 20)
+
+
+def tops(targets: list[g.Job]) -> set[int]:
+    return {job.top.pid for job in targets}
 
 
 PANIC = {"panic_used_percent": 0}
@@ -407,6 +442,9 @@ def case_agents() -> None:
     alive = [pid for pid in its_children if pid_up(pid)]
     check("a build it started here is stopped, and one it started elsewhere is not", len(its_children) == 2 and len(alive) == 1, (its_children, alive))
     check("a program behind an interpreter's flag is found", g.is_agent(g.Process(1, 1, "python3 -X utf8 /x/bin/kimi", "", "", 0)) and g.is_agent(g.Process(1, 1, "node --max-old-space-size 8192 /x/bin/codex", "", "", 0)))
+    check("behind a flag's file too", g.is_agent(g.Process(1, 1, "node --require ./preload.js /x/bin/claude", "", "", 0)))
+    for job in ("python3 rig.py --out target/review/codex", "python3 -m pytest target/codex", "python3 -c pass target/codex", "python3 /x/rig --out target/codex"):
+        check(f"a directory named after one, among a program's own arguments, makes no agent: {job}", not g.is_agent(g.Process(1, 1, job, "", "", 0)))
     check("a data file named after one is no agent", not g.is_agent(g.Process(1, 1, "python3 hold.py data/gemini.json", "", "", 0)) and not g.is_agent(g.Process(1, 1, "python3 hold.py x/CLAUDE.md", "", "", 0)))
     check("a job that merely takes such a file is a job", not g.protected(g.Process(1, 1, "python3 hold.py data/gemini.json", "", "", 0)) and up(data_file))
     # A job an agent's shell execed looks like the agent's own, and is a job: it counts, and is stopped past its limit.
@@ -441,37 +479,215 @@ def case_what_holds_little_is_left_alone() -> None:
     big = holding(40, scope)
     watch_once(scope, {"panic_used_percent": 0, "worth_stopping_gib": 0.02})
     check("what holds memory stops", settle(big))
-    # Many small ones can hold what one large one would.
+    # A job holds what its parts hold, and small jobs apart hold only their own.
     scope = fresh("little-many")
-    one, two = holding(25, scope), holding(15, scope)
-    watch_once(scope, {"panic_used_percent": 0, "worth_stopping_gib": 0.035})
-    check("with none large but enough together, the largest stops", settle(one))
-    check("and not the rest", up(two))
-    # A small `git` that is our largest is passed over, not stopped.
-    git, build = g.Process(1, 1, "git status", "", "", 40 << 20), g.Process(2, 1, "sed x", "", "", 20 << 20)
+    (scope / "hold.py").write_text(HOLD)
+    many = spawn(["bash", "-c", f"{sys.executable} -I -B hold.py 25 a & {sys.executable} -I -B hold.py 25 b & wait"], scope)
+    ready(scope / "a")
+    ready(scope / "b")
+    apart = holding(25, scope)
+    watch_once(scope, {"panic_used_percent": 0, "worth_stopping_gib": 0.04})
+    check("a job of small processes that together hold memory stops", settle(many))
+    check("and a small job apart does not", up(apart))
+    # What holds little stays at the stop line too, however it is called.
     reading = g.Reading(86.0, 1, 50, 1.0, 1000.0, 200.0)
-    targets, _, not_ours = g.judged(reading, [git, build], g.tightened({"worth_stopping_gib": 0.05}), None)
-    check("a small git that is our largest is passed over at the stop line, for the next", targets == [build] and not not_ours, targets)
-    targets, _, not_ours = g.judged(reading, [git], g.tightened({"worth_stopping_gib": 0.05}), None)
-    check("and with nothing else, nothing of ours is worth stopping", targets == [] and not_ours, targets)
-    # A line that finds nothing to stop leaves the ceilings to hold.
-    swarm = [g.Process(i, 1, "sleep 9", "", "", 1 << 20) for i in range(6)]
-    targets, reasons, _ = g.judged(g.Reading(90.0, 1, 50, 1.0, 1000.0, 200.0), swarm, g.tightened({"processes": 2}), None)
-    check("at the danger line too, too many processes stop", len(targets) == 4 and "processes" in reasons[0], reasons)
+    limits = g.tightened({"worth_stopping_gib": 0.05})
+    git, sed = proc(1, "git status", 40), proc(2, "sed x", 20)
+    targets, _, not_ours = g.judged(reading, [git, sed], limits)
+    check("at the stop line nothing of ours worth stopping is said, and nothing stopped", targets == [] and not_ours, targets)
+    large = proc(3, "git gc", 100)
+    targets, _, _ = g.judged(reading, [git, sed, large], limits)
+    check("what holds much stops, whatever it is called", tops(targets) == {3}, tops(targets))
+    # Small jobs apart are the ceilings' to hold.
+    swarm = [proc(i, "sleep 9") for i in range(1, 7)]
+    targets, reasons, _ = g.judged(g.Reading(90.0, 1, 50, 1.0, 1000.0, 200.0), swarm, g.tightened({"processes": 2}))
+    check("at the danger line too, too many processes stop", len(targets) == 4 and any("processes" in reason for reason in reasons), reasons)
+    swarm = [proc(i, "sleep 9", 100) for i in range(1, 5)]
+    targets, reasons, _ = g.judged(g.Reading(50.0, 1, 50, 1.0, 1000.0, 200.0), swarm, g.tightened({"all_processes_gib": 0.2}))
+    check("and over the total the largest job stops, one a sample", len(targets) == 1 and "our processes hold" in reasons[0], reasons)
+
+
+def case_each_line_judges_alone() -> None:
+    """Every state of the host against one set of jobs: what each line asks for stops, whatever the others say, and nothing else does. A disk's reason once switched the RAM line off."""
+    limits = g.tightened({})
+    mine = [proc(1, "vim notes", 150), proc(2, "python3 job.py", 2048), proc(3, "cargo build", 10), proc(4, "cat big"), proc(5, "bash -c x", 2), proc(6, "sleep 9", 200, ppid=5), proc(7, "sleep 9", 200, ppid=5)]
+    motion = g.Motion(written={4: 10 << 20})
+    bad, states = [], 0
+    for ram in (50.0, 84.9, 85.0, 87.9, 88.0, 92.0):
+        for pressure in (1, 2, 4):
+            for free in (1000.0, 90.0):
+                for lost in (0.0, 51.0):
+                    for swap in (0.0, 4.0):
+                        reading = g.Reading(ram, pressure, 50, 1.0 + swap, free, 200.0)
+                        baseline = g.Reading(50.0, 1, 50, 1.0, free + lost, 200.0)
+                        targets, reasons, not_ours = g.judged(reading, mine, limits, baseline, motion)
+                        want: set[int] = set()
+                        if ram >= 88.0 or pressure == 4:
+                            want |= {2, 3, 5}
+                        elif ram >= 85.0 or pressure == 2 or swap:
+                            want |= {2}
+                        if ram >= 88.0 and swap:
+                            want |= {2}
+                        if free < 100.0 or lost:
+                            want |= {3, 4}
+                        states += 1
+                        if tops(targets) != want or (bool(reasons) != bool(want)) or not_ours:
+                            bad.append((ram, pressure, free, lost, swap, sorted(tops(targets)), sorted(want)))
+    check(f"over {states} states of the host, each line stops what it asks for and nothing else", not bad and states == 6 * 3 * 2 * 2 * 2, bad[:4])
+    # With nothing of ours worth stopping, a line reached is said as someone else's.
+    small = [proc(1, "vim notes", 10), proc(2, "git status", 5)]
+    for reading in (g.Reading(86.0, 1, 50, 1.0, 1000.0, 200.0), g.Reading(92.0, 4, 50, 1.0, 1000.0, 200.0), g.Reading(50.0, 1, 50, 1.0, 90.0, 200.0)):
+        targets, reasons, not_ours = g.judged(reading, small, limits)
+        check(f"nothing of ours stops, and the line is said: {reading.used_percent}%, {reading.repo_free_gib} GiB", targets == [] and reasons and not_ours, reasons)
+    # A job's top is the highest of ours, through any depth.
+    chain = [proc(1, "bash -c x", ppid=99), proc(2, "make", ppid=1), proc(3, "cargo build", ppid=2), proc(4, "rustc x", ppid=3)]
+    jobs = g.jobs_of(chain)
+    check("a chain of ours is one job", len(jobs) == 1 and jobs[0].top.pid == 1 and len(jobs[0].members) == 4, jobs)
+    check("and a loop in what the table says ends", len(g.jobs_of([proc(1, "a", ppid=2), proc(2, "b", ppid=1)])) >= 1)
+    check("what only asks, or cleans, is no build", not proc(1, "cargo clean").spawns and not proc(2, "cargo --version").spawns and not proc(3, "rustc -vV").spawns)
+    check("what compiles is", proc(1, "cargo build").spawns and proc(2, "rustc --crate-name x").spawns and proc(3, "make x").spawns)
+    # As the kernel shows a real one: through rustup's proxy the first word may or may not be the executable's own path.
+    exe = "/u/.rustup/toolchains/x/bin/cargo"
+    for shown in ("cargo clean", f"{exe} clean", "/u/.cargo/bin/cargo clean", "cargo +nightly clean", "cargo clean -p x"):
+        check(f"`cargo clean` as shown: {shown}", not g.Process(1, 0, shown, "", exe, 0).spawns)
+    for shown in ("cargo build", f"{exe} test -p x", "/u/.cargo/bin/cargo clippy", "cargo +nightly miri test"):
+        check(f"a build as shown: {shown}", g.Process(1, 0, shown, "", exe, 0).spawns)
+
+
+def case_a_job_is_stopped_whole() -> None:
+    scope = fresh("whole")
+    if not host_clear():
+        not_run.append("a job is stopped whole")
+        return
+    steps = scope / "steps"
+    script = f"while :; do echo x >> {steps}; (exec -a cargo sleep 30); done"
+    job = subprocess.Popen([*PY, str(GUARD), "run", "--root", str(scope), "--", "bash", "-c", script], cwd=scope, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, start_new_session=True)
+    started.append(job)
+    time.sleep(0.8)
+    guard("stop", root=scope)
+    time.sleep(0.5)
+    watcher = looping_watcher(scope, PANIC)
+    check("the danger line ends the script around a build, not only the build", settle(job, 8))
+    check("so it starts no other", steps.exists() and len(steps.read_text().splitlines()) == 1, steps.read_text() if steps.exists() else "")
+    check("and it took one stop", len(stopped_events(scope)) == 1, stopped_events(scope))
+    check("a job ended by a signal says so", job.returncode not in (0, None), job.returncode)
+    watcher.terminate()
+    watcher.wait(timeout=5)
+    # All it started goes with it, a small `git` among them, and an agent or terminal under it does not.
+    scope = fresh("whole-tree")
+    parent = spawn(["bash", "-c", "(exec -a git sleep 60) & (exec -a cargo sleep 60) & (exec -a claude sleep 60) & wait"], scope)
+    time.sleep(0.3)
+    under = children(parent.pid)
+    check("there are three under a shell", len(under) == 3, under)
+    table = {p.pid: p.name for p in g.processes()}
+    watch_once(scope, PANIC)
+    check("the job stops", settle(parent))
+    time.sleep(0.2)
+    alive = [table.get(pid) for pid in under if pid_up(pid)]
+    check("with all it started, short of an agent", alive == ["claude"], alive)
+    clean = [pid for pid in under if pid_up(pid)]
+    for pid in clean:
+        os.kill(pid, signal.SIGKILL)
+
+
+def case_a_queued_make_is_no_build() -> None:
+    scope = fresh("queued")
+    limits = json.dumps({"start_used_percent": 0})
+    (scope / "Makefile").write_text(f"waits:\n\t{sys.executable} -I -B {GUARD} run --root {scope} --limits '{limits}' --wait 40 -- touch {scope}/ran\nruns:\n\t{sys.executable} -I -B {GUARD} run --root {scope} --wait 40 -- sleep 30\n")
+    try:
+        make = spawn(["make", "waits"], scope)
+        time.sleep(1.2)
+        # Its `run` started a watcher of the default lines, which holds the lock: with that left, the watcher below would read nothing and any answer would pass.
+        guard("stop", root=scope)
+        time.sleep(0.5)
+        mine = g.ours(g.processes(), scope, os.getpid())
+        check("a real `make` waiting its turn is seen, and seen to wait", [(p.name, p.waiting, p.spawns) for p in mine] == [("make", True, False)], [(p.name, p.waiting, p.spawns) for p in mine])
+        watch_once(scope, PANIC)
+        time.sleep(0.2)
+        check("and is no build, so it waits on at the danger line", up(make) and not (scope / "ran").exists())
+        os.killpg(make.pid, signal.SIGKILL)
+        make.wait()
+        time.sleep(0.2)
+        if not host_clear():
+            not_run.append("a `make` whose job has started is a build")
+            return
+        make = spawn(["make", "runs"], scope)
+        time.sleep(1.2)
+        guard("stop", root=scope)
+        time.sleep(0.5)
+        mine = g.ours(g.processes(), scope, os.getpid())
+        check("once its job has started, it is seen to be one", any(p.name == "make" and p.spawns and not p.waiting for p in mine), [(p.name, p.waiting, p.spawns) for p in mine])
+        # A watcher its own `run` started has that `make` for a parent, and must hold it all the same.
+        table = g.processes()
+        child = next(p.pid for p in table if p.ppid == make.pid)
+        check("a process does not count the line that started it", not any(p.pid == make.pid for p in g.ours(table, scope, child)))
+        check("but the watcher does: its parents are jobs like any other", any(p.pid == make.pid for p in g.ours(table, scope, child, spare_its_line=False)))
+        watch_once(scope, PANIC)
+        check("and stops at the danger line", settle(make))
+    finally:
+        guard("stop", root=scope)
 
 
 def case_at_a_disk_floor_what_writes_stops() -> None:
     scope = fresh("floor")
-    file = scope / "finished"
+    idle, file = scope / "wrote", scope / "finished"
+    past = spawn([*PY, "-c", WROTE_THEN_IDLE, str(scope / "past"), str(idle)], scope)
+    ready(idle)
+    limits = {"stop_repo_free_gib": 1e9}
+    watcher = looping_watcher(scope, limits)
+    time.sleep(1.0)
     writer = spawn([*PY, "-c", WRITE, str(scope / "data"), str(file)], scope)
     reader = named("rm", scope)
     build = named("cargo", scope)
-    time.sleep(0.6)
-    watch_once(scope, {"stop_repo_free_gib": 1e9})
-    check("at a disk floor what is writing stops, however little it holds", settle(writer))
+    cleaning = spawn(["bash", "-c", 'exec -a "cargo clean" sleep 60'], scope)
+    check("at a disk floor what is writing stops, however little it holds", settle(writer, 8))
     check("and every build", settle(build))
+    time.sleep(1.0)
     check("and what is not writing goes on, so disk can be freed", up(reader))
+    check("`cargo clean` among it, which is how disk is freed", up(cleaning))
+    check("a process that wrote before the watcher began is not counted at its first sample", up(past))
     (scope / "data").unlink(missing_ok=True)
+    # A script of writers each shorter than a sample, going on for many samples: it goes whole, whichever of them is seen, or by the volume falling under it.
+    loop = spawn(["bash", "-c", "for i in $(seq 1 400); do dd if=/dev/zero of=f$i bs=1048576 count=5 2>/dev/null; sleep 0.02; done; touch ended"], scope)
+    check("a script of short writers is stopped whole", settle(loop, 40), events(scope)[-1:])
+    check("before it ended", not (scope / "ended").exists())
+    watcher.terminate()
+    watcher.wait(timeout=5)
+    for written in scope.glob("f[0-9]*"):
+        written.unlink(missing_ok=True)
+    # None of it seen writing, only the volume falling and a job starting something new since the last sample.
+    floor = g.Reading(50.0, 1, 50, 1.0, 90.0, 200.0)
+    limits = g.tightened({})
+    shell, new_child, unrelated = proc(1, "bash -c loop", ppid=99), proc(2, "dd", ppid=1), proc(3, "tail -f log", ppid=99)
+    targets, _, not_ours = g.judged(floor, [shell, new_child, unrelated], limits, None, g.Motion(new={2}, fell=True))
+    check("a job that keeps starting what the volume falls under is stopped, and one that does not is left", tops(targets) == {1} and not not_ours, tops(targets))
+    targets, _, _ = g.judged(floor, [shell, new_child, unrelated], limits, None, g.Motion(new={2}, fell=False))
+    check("with the volume not falling, it is not", targets == [], tops(targets))
+    targets, _, _ = g.judged(floor, [proc(1, "bash -c rm", ppid=99)], limits, None, g.Motion(new={1}, fell=True))
+    check("a command that has just begun is not, so disk can still be freed", targets == [], tops(targets))
+
+
+def case_a_new_script_is_taken_up() -> None:
+    repo = fresh("takes-up")
+    (repo / ".git").mkdir()
+    (repo / "scripts").mkdir()
+    copy = repo / "scripts" / "host_guard.py"
+    shutil.copy(GUARD, copy)
+    marker = repo / "new-code"
+    watcher = spawn([*PY, str(copy), "watch", "--root", str(repo)], repo)
+    try:
+        time.sleep(1.0)
+        check("a watcher is up", up(watcher))
+        check("and has not yet what is not yet written", not marker.exists())
+        head = "from __future__ import annotations\n"
+        copy.write_text(copy.read_text().replace(head, head + f"open({str(marker)!r}, 'w').close()\n", 1))
+        deadline = time.monotonic() + 8
+        while not marker.exists() and time.monotonic() < deadline:
+            time.sleep(0.1)
+        check("a guard changed under a running watcher holds from then, with no restart asked for", marker.exists())
+        check("and it is the same watcher", up(watcher))
+    finally:
+        subprocess.run([*PY, str(copy), "stop", "--root", str(repo)], capture_output=True, timeout=30)
 
 
 def case_growth_is_of_the_last_minutes() -> None:
@@ -487,7 +703,7 @@ def case_growth_is_of_the_last_minutes() -> None:
     limits = g.tightened({})
     build = g.Process(2, 1, "cargo build", "", "", 1 << 30)
     targets, reasons, _ = g.judged(at(9.0), [build], limits, at(2.0))
-    check("growth past the line stops ours, and says so", targets == [build] and "swap grew" in reasons[0], reasons)
+    check("growth past the line stops ours, and says so", [job.top for job in targets] == [build] and "swap grew" in reasons[0], reasons)
     targets, _, _ = g.judged(at(9.0), [build], limits, None)
     check("with the count begun again, the same reading does not", targets == [])
 
@@ -697,25 +913,124 @@ def case_a_blind_watcher_is_said() -> None:
     watcher.wait(timeout=5)
 
 
+def heavy_text(command: str) -> bool:
+    return any(g.is_heavy(each.words) for each in g.commands_of(command))
+
+
 def case_what_counts_as_heavy() -> None:
     for heavy in (
         "cargo test -p x", "make -C other all", "cd a && cargo build", "FOO=1 cargo build", "timeout 9 cargo test", "for t in a; do cargo test; done", "bash -c 'cargo build'",
         "if cargo build; then :; fi", "env cargo build", "nohup cargo build", "{ cargo build; }", "`cargo build`", "gmake x", "cargo-nextest run", "bash scripts/build_book.sh",
-        "target/m/install/archogen build s --out d", "archogen-plan-check --help",
+        "target/m/install/archogen build s --out d", "archogen-plan-check --help", "# let's build\ncargo build\n# it's done", 'out="$(cargo build 2>&1)"', "caffeinate -i cargo test",
+        "/usr/bin/time -l cargo build", "rustup run stable cargo build", "zsh -c 'cargo build'", "bash -lc 'cargo build'", "sudo cargo build", "env -i cargo build", "cargo +nightly miri test",
+        "cargo --locked build", "cargo --config x build", "make", "make -f other.mk focused", "qemu-system-riscv32 -M virt", "mdbook build", "rustc x.rs", "xargs cargo build", "eval 'cargo build'",
     ):
-        check(f"heavy: {heavy}", bool(g.HEAVY.search(g.code_of(heavy))))
+        check(f"heavy: {heavy}", heavy_text(heavy))
     for light in (
         "ls", "cargo fmt -p x", "git commit -F m", "grep -n 'make ' Makefile", "git commit -m 'make cargo build'", "echo cargo build", "echo archogen-plan-check",
         "grep -rn archogen-plan-check docs/", "git commit -m 'x (make sure it holds)'", "git commit -F - <<'M'\nmake sure it holds\nM\n",
         "R=/Volumes/SSD/Documents/github/archogen; mkdir -p x", "X=/y/archogen ls", "cargo --version", "rustc -V", "cargo tree", "cargo metadata", "make help", "make hooks", "make -n focused",
         "make focused", "mdbook --version", "python3 -c \"print('make')\"", "rg -c 'cargo' Cargo.toml", "scripts/foo.sh make", "file target/m/install/archogen", "ls # first; make sure of it",
+        "cargo clean", "cargo clean -p x", "make focused>log 2>&1", "make focused;echo done", "make -j4 focused", "make -j 4 focused", "make focused integration", "command -v cargo",
+        "python3 scripts/host_guard.py run --wait 1800 -- bash -c 'cd x && cargo test'", "python3 scripts/host_guard.py run --wait 1800 -- env RUST_BACKTRACE=1 cargo test",
+        "python3 scripts/host_guard.py run --wait 1800 -- bash scripts/build_book.sh", "bash -c 'python3 scripts/host_guard.py run -- cargo test'", "case x in cargo) ls;; esac", "for x in cargo make; do ls; done",
     ):
-        check(f"not heavy: {light!r}", not g.HEAVY.search(g.code_of(light)))
+        check(f"not heavy: {light!r}", not heavy_text(light))
+
+
+# Each of these runs in the real shell, under a `PATH` of stubs and nothing else, so what is named here is never the real program. So none may name a dangerous program by its whole
+# path, ask for a login shell, which may set its own `PATH`, or clear the environment.
+THE_SHELL_RUNS_THESE = (
+    "cargo build", "cd x && cargo build", "FOO=1 cargo build", "timeout 9 cargo test", "for t in a; do cargo test; done", "bash -c 'cargo build'", 'sh -c "cargo build"', "if cargo build; then :; fi",
+    "env cargo build", "env FOO=1 cargo build", "env -u FOO cargo build", "nohup cargo build >/dev/null 2>&1", "nice -n 5 cargo build", "{ cargo build; }", "(cargo build)", "(cd x && cargo build)",
+    "`cargo build`", "$(cargo build)", 'out="$(cargo build 2>&1)"', "out=`cargo build`", 'echo "$(cargo build)"', "echo ${X:-$(cargo build)}", 'echo "${X:-$(cargo build)}"', "echo $((1 + 2)); cargo test",
+    "! cargo build", "time cargo build", "time -p cargo build", "command cargo build", "exec cargo build", "caffeinate -i cargo test", "/usr/bin/time -l cargo build", "rustup run stable cargo build",
+    "eval 'cargo build'", "cargo build & wait", "cargo build; make focused", "cargo build && make focused", "cargo build | cat", "cat <(cargo build)", "ca\\rgo build", "'cargo' \"build\"", "cargo bu''ild", "$'cargo' build",
+    "# let's build\ncargo build\n# it's done", "# don't\npkill -x rustc\n# don't", "cargo build # make sure", "cargo \\\n build", "cat <<EOF\n$(cargo build)\nEOF", "cat <<-EOF\n\t$(cargo build)\n\tEOF",
+    "cat <<'EOF'\n$(cargo build)\nEOF", "cat <<\\EOF\n$(cargo build)\nEOF", "cat <<'A' <<'B'\nmake\nA\ncargo\nB\nls", 'cat <<<"$(cargo build)"', "make focused>log 2>&1", "make focused;echo done", "make -j4 focused",
+    "echo x >log; ls", "2>err cargo build", "cargo build 2>&1 >/dev/null", "pkill -x rustc", "(pkill -x rustc)", "$(pkill -x rustc)", "bash -c 'pkill -x rustc'", "sh -c 'pgrep -x rustc | xargs kill'",
+    "kill 999999", "kill -9 999999", "kill $(pgrep -x rustc)", 'kill "$(pgrep -x rustc)"', "kill `pgrep -x rustc`", 'for p in $(pgrep -x rustc); do kill "$p"; done', "pids=$(pgrep -x rustc); kill $pids",
+    "pgrep -x rustc | while read p; do kill $p; done", "pgrep -x rustc | xargs kill", "ps -ax | awk '/rustc/{print $1}' | while read p; do kill $p; done", "for p in $(ps -ax | grep rustc | awk '{print $1}'); do kill $p; done",
+    "cat job.pid | xargs kill", 'grep -n "kill\\|pgrep" f', 'rg "xargs kill" scripts/', 'git commit -m "kill the pgrep rig"', "git commit -m 'make cargo build'", "git commit -m 'x (make sure it holds)'",
+    "git commit -F - <<'M'\nmake sure it holds\nM\n", "echo cargo build", "echo 'pkill -x rustc'", "echo '$(cargo build)'", "echo \\$\\(cargo build\\)", 'echo "use kill, not pgrep"', "python3 -c \"print('make')\"",
+    "python3 scripts/host_guard.py run --wait 1800 -- bash -c 'cd x && cargo test'", "X=/y/archogen ls", "file target/m/install/archogen", "find . -name pkill -print", "ls # first; make sure of it",
+    "case cargo in cargo) ls;; esac", "case cargo in\n  cargo) ls ;;\nesac", "for x in cargo make; do ls; done", "f() { ls; }; f",
+)
+# Those the shell may not reach: what it runs must still be what is read, and what is read may be more.
+THE_SHELL_MAY_NOT_REACH = ("ls || cargo build", "false && cargo build", "if false; then cargo build; else make focused; fi", "while false; do cargo build; done", "case x in y) cargo build;; esac", "case x in cargo) make focused;; esac", "f() { cargo build; }", "xargs cargo build </dev/null")
+# Every way of standing, around everything that may stand there.
+HOW_IT_STANDS = ("%s", "(%s)", "$(%s)", "`%s`", "bash -c '%s'", 'sh -c "%s"', "env %s", "nohup %s", "x=$(%s)", "{ %s; }", "if %s; then :; fi", "! %s", "time %s", 'echo "$(%s)"', "# it's\n%s\n# it's", "true; %s", "true && %s", "true | %s", "eval '%s'")
+WHAT_STANDS = ("cargo build", "make -j4 focused>log", "pgrep -x rustc | xargs kill", "git commit -m '(make) x'", 'ls "a b"', "kill 999999")
+STUBS = ("cargo", "make", "gmake", "rustc", "mdbook", "archogen", "pkill", "killall", "kill", "pgrep", "ps", "grep", "awk", "rg", "git", "python3", "sleep", "ls", "cat", "touch", "mkdir", "file", "find")
+
+
+def case_the_reader_sees_what_the_shell_runs() -> None:
+    """The oracle no code here wrote: the shell itself. Each form runs under stubs that write down how they were called, and the reader must name exactly those."""
+    scope = fresh("shell")
+    stubs, work, log = scope / "stubs", scope / "work", scope / "ran"
+    stubs.mkdir()
+    (work / "x").mkdir(parents=True)
+    for name in STUBS:
+        (stubs / name).write_text("#!/bin/sh\nsep=$(printf '\\037')\nline=\"${0##*/}\"\nfor word in \"$@\"; do line=\"$line$sep$word\"; done\nprintf '%s\\n' \"$line\" >> \"$RAN_LOG\"\nprintf '999999\\n'\n")
+    for name, real in (("bash", "/bin/bash"), ("sh", "/bin/sh"), ("env", "/usr/bin/env"), ("nohup", "/usr/bin/nohup"), ("nice", "/usr/bin/nice"), ("xargs", "/usr/bin/xargs"), ("caffeinate", "/usr/bin/caffeinate")):
+        (stubs / name).write_text(f'#!/bin/sh\nexec {real} "$@"\n')
+    (stubs / "timeout").write_text('#!/bin/sh\nshift\nexec "$@"\n')
+    (stubs / "rustup").write_text('#!/bin/sh\nshift 2\nexec "$@"\n')
+    for stub in stubs.iterdir():
+        stub.chmod(0o755)
+    (scope / "env").write_text("enable -n kill\n")
+    environment = {"PATH": str(stubs), "RAN_LOG": str(log), "BASH_ENV": str(scope / "env"), "HOME": str(scope)}
+
+    def ran(command: str) -> set[tuple[str, ...]]:
+        log.write_text("")
+        subprocess.run(["/bin/bash", "-c", command], cwd=work, env=environment, stdin=subprocess.DEVNULL, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, timeout=20)
+        return {tuple(line.split("\x1f")) for line in log.read_text().splitlines()}
+
+    def read(command: str) -> tuple[set[str], set[tuple[str, ...]], set[tuple[str, ...]]]:
+        """The names read, how each is called where no expansion can change it, and how each is called as read, an awk program's `$1` among what no expansion touches."""
+        found = [each for each in g.commands_of(command) if each.name in STUBS and not each.fed]
+        every = {(each.name, *each.words[1:]) for each in found}
+        whole = {call for call in every if not any(mark in word for word in call for mark in "$`…")}
+        return {each.name for each in g.commands_of(command) if each.name in STUBS}, whole, every
+
+    def what_it_shows(shown: set[tuple[str, ...]]) -> set[tuple[str, ...]]:
+        # What a substitution fed it is not in the command's text.
+        return {call for call in shown if not any("999999" in word or "/dev/fd/" in word for word in call)}
+
+    forms = list(THE_SHELL_RUNS_THESE)
+    for standing in HOW_IT_STANDS:
+        for standing_there in WHAT_STANDS:
+            if "'" in standing_there and "'" in standing:
+                continue
+            if '"' in standing_there and '"' in standing:
+                continue
+            # `kill` is a builtin of `sh`, which no stub can stand in for, so that one would be the real thing.
+            if standing.startswith("sh -c") and standing_there.startswith("kill"):
+                continue
+            forms.append(standing % standing_there)
+    disagree = []
+    for form in forms:
+        shown = ran(form)
+        names, whole, every = read(form)
+        if names != {call[0] for call in shown} or not whole <= shown or not what_it_shows(shown) <= every:
+            disagree.append((form, sorted(names), sorted(shown), sorted(every)))
+    check(f"over {len(forms)} forms the reader names exactly what the shell ran, and how", not disagree, disagree[:3])
+    disagree = []
+    for form in THE_SHELL_MAY_NOT_REACH:
+        shown = ran(form)
+        names = read(form)[0]
+        if not {call[0] for call in shown} <= names:
+            disagree.append((form, sorted(names), sorted(shown)))
+    check("and what the shell may not reach is read all the same", not disagree, disagree[:3])
+    check("each of those is read to hold what it may run", all("cargo" in read(form)[0] or "make" in read(form)[0] for form in THE_SHELL_MAY_NOT_REACH), THE_SHELL_MAY_NOT_REACH)
+    check("a quote left open is read to its end, with nothing raised", [each.words for each in g.commands_of("ls 'a b")] == [["ls", "a b"]])
+    check("a substitution left open too", [each.name for each in g.commands_of("echo $(cargo build")] == ["cargo", "echo"])
+    check("and much of what is not there costs little", len(g.commands_of("cat <<A\n" * 2000)) == 1)
 
 
 def case_the_hook_passes_nothing_it_cannot_read() -> None:
     scope = fresh("unreadable")
-    for given in ("not json", "", "{}", "[]", "null", "5", '{"tool_input": {"cmd": "cargo build"}}', '{"tool_input": {"command": 5}}', '{"tool_input": {"command": ""}}', "[" * 100000):
+    for given in ("not json", "", "{}", "[]", "null", "5", '{"tool_input": {"cmd": "cargo build"}}', '{"tool_input": {"command": 5}}', '{"tool_input": {"command": ""}}', "[" * 100000, json.dumps({"tool_input": {"command": "$(" * 5000}})):
         done = guard("hook", stdin=given, root=scope)
         check(f"input that is no command is refused: {given[:30]!r}", done.returncode == 2 and "cannot be read" in done.stderr, done.stderr)
 
@@ -727,12 +1042,16 @@ def case_killing_by_name() -> None:
             "pkill -x rustc", "pkill -9 -f .", "killall cargo", "cd x && pkill rustc", f"cd {scope} && pkill -x rustc", f"R={scope}; killall cargo", "kill $(pgrep -x rustc)",
             'kill "$(pgrep -x rustc)"', 'kill -9 "$(pgrep -f rustc)"', "kill `pgrep -x rustc`", 'for p in $(pgrep -x rustc); do kill "$p"; done', "pids=$(pgrep -x rustc); kill $pids",
             "pgrep -x rustc | while read p; do kill $p; done", "pgrep -x rustc | xargs kill", "/usr/bin/pkill rustc", "ps -ax | grep rustc | awk '{print $1}' | xargs kill", "kill $(ps -ax | grep rustc)",
+            "(pkill -x rustc)", "$(pkill -x rustc)", "bash -c 'pkill -x rustc'", "sh -c 'pgrep -x rustc | xargs kill'", "# don't\npkill -x rustc\n# don't", "env pkill rustc", "sudo killall cargo",
+            "ps -ax | awk '/rustc/{print $1}' | while read p; do kill $p; done", "for p in $(ps -ax | grep rustc | awk '{print $1}'); do kill $p; done",
         ):
             done = hook_says(command, scope)
             check(f"never by a name across the host: {command}", done.returncode == 2 and "never by a program's name" in done.stderr, done.stderr)
         for command in (
             f"pkill -f '{scope}/x'", f"kill $(pgrep -f {scope}/x)", "kill 123", "kill -9 123", 'kill "$(cat job.pid)"', "kill $(cat job.pid)", "kill $(jobs -p)", "git commit -m 'pkill -x rustc'",
             "rg pkill docs/", "git grep -n killall -- scripts", "find . -name pkill -print", "python3 -I -B -c pass pkill probe", "pgrep -x rustc", "ps -ax | grep rustc", "git commit -m 'kill the pgrep rig'",
+            "pkill -P 123", "pkill -P123", "kill $(pgrep -P 123)", "cat target/x/job.pid | xargs kill", f"pgrep -f {scope}/x | xargs kill", f"ps -ax | grep {scope}/x | awk '{{print $1}}' | xargs kill",
+            'grep -n "kill\\|pgrep" f', 'rg "xargs kill" scripts/', 'echo "use kill, not pgrep"', "kill 123; ps -ax | grep x", "ps -ax | grep x; kill 123", "kill $!; pgrep -x rustc", "ps -p 123; kill $(cat p)",
         ):
             done = hook_says(command, scope)
             check(f"not by a name across the host: {command}", done.returncode == 0, done.stderr)
@@ -761,26 +1080,43 @@ def case_hook() -> None:
         check("a light command beside it passes", hook_says("touch x", scope).returncode == 0)
         os.killpg(builder.pid, signal.SIGKILL)
         builder.wait()
-        check("a session new to this log is not told what came before it", hook_says("touch x", scope, session="b").returncode == 0)
-        check("nor is another", hook_says("touch x", scope, session="a").returncode == 0)
+        now = time.strftime("%Y-%m-%dT%H:%M:%S")
         with open(scope / "state" / "events.log", "a") as log:
-            log.write(json.dumps({"kind": "stopped", "at": time.strftime("%Y-%m-%dT%H:%M:%S"), "reasons": ["why"], "stopped": [{"pid": 1, "name": "x", "gib": 1.0, "command": "x"}]}) + "\n")
+            log.write(stop_event(time.strftime("%Y-%m-%dT%H:%M:%S", time.localtime(time.time() - 3600)), "long-ago"))
+            log.write(stop_event("hook-proof", "no-time"))
+        done = hook_says("touch x", scope, session="b")
+        check("a session new to this log is not told what was stopped long ago, nor a line whose time is no time", done.returncode == 0 and told(done) == "", done)
+        check("nor is another", told(hook_says("touch x", scope, session="a")) == "")
+        with open(scope / "state" / "events.log", "a") as log:
+            log.write(stop_event(now, "x"))
+        check("a light command beside nothing new prints nothing for the harness to read", hook_says("touch x", scope, session="c").returncode == 0)
         done = hook_says("touch x", scope)
-        check("what was stopped is told before the next command runs", done.returncode == 2 and "stopped x" in done.stderr, done.stderr)
-        check("once", hook_says("touch x", scope).returncode == 0)
+        check("what was stopped is told beside the command, which runs", done.returncode == 0 and "stopped x" in told(done), done)
+        check("once", told(hook_says("touch x", scope)) == "")
         for session in ("a", "b"):
             done = hook_says("touch x", scope, session=session)
-            check(f"each session is told for itself: {session}", done.returncode == 2 and "stopped x" in done.stderr, done.stderr)
-            check(f"and once: {session}", hook_says("touch x", scope, session=session).returncode == 0)
+            check(f"each session is told for itself: {session}", done.returncode == 0 and "stopped x" in told(done), done)
+            check(f"and once: {session}", told(hook_says("touch x", scope, session=session)) == "")
         # `cargo clean` takes a session's place: what was stopped lately is told all the same.
         (scope / "state" / "seen.a").unlink()
         done = hook_says("touch x", scope, session="a")
-        check("a session that lost its place is told what was stopped lately", done.returncode == 2 and "stopped x" in done.stderr, done.stderr)
+        check("a session that lost its place is told what was stopped lately", done.returncode == 0 and "stopped x" in told(done), done)
+        # However often it stops, the way out of it runs: a `kill` of the job among it.
+        with open(scope / "state" / "events.log", "a") as log:
+            log.write(stop_event(now, "y"))
+        done = hook_says("kill 999999", scope, session="a")
+        check("a stop just made refuses nothing, the way out of it among it", done.returncode == 0 and "stopped y" in told(done), done)
+        with open(scope / "state" / "events.log", "a") as log:
+            log.write(stop_event(now, "z"))
+        done = hook_says("cargo build", scope, {"start_used_percent": 0}, session="a")
+        check("a command refused for another reason still tells it", done.returncode == 2 and "stopped z" in done.stderr, done)
         done = hook_says("cargo build", scope, {"start_used_percent": 0})
         check("a heavy command refused is told how to wait", done.returncode == 2 and "run --wait" in done.stderr, done.stderr)
         check("`make` of a guarded recipe waits by itself, so the hook lets it", hook_says("make focused", scope, {"start_used_percent": 0}).returncode == 0)
         time.sleep(0.5)
         check("the hook started a watcher", "watcher: running" in guard("status", root=scope).stdout)
+        check("a heavy command the guard runs is not refused for being one", hook_says("python3 scripts/host_guard.py run --wait 1800 -- bash -c 'cd x && cargo test'", scope, {"start_used_percent": 0}).returncode == 0)
+        check("nor `cargo clean`, at a disk floor, where it is needed", hook_says("cargo clean", scope, {"stop_repo_free_gib": 1e9}).returncode == 0)
     finally:
         guard("stop", root=scope)
     time.sleep(0.4)
@@ -795,15 +1131,19 @@ def case_a_damaged_log() -> None:
         good = json.dumps({"kind": "stopped", "at": "now", "reasons": ["why"], "stopped": [{"pid": 1, "name": "told", "gib": 1.0, "command": "x"}]})
         (state / "events.log").write_bytes(b"not json\n\xff\xfe\n[1]\n" + good.encode() + b'\n{"kind": "stopped"}\n')
         done = hook_says("touch x", scope)
-        check("bad lines do not cost the good one", done.returncode == 2 and "stopped told" in done.stderr, done.stderr)
-        check("and are read past", hook_says("touch x", scope).returncode == 0)
+        check("bad lines do not cost the good one", done.returncode == 0 and "stopped told" in told(done), done)
+        check("and are read past", told(hook_says("touch x", scope)) == "")
         check("`status` reads past them too", guard("status", root=scope).returncode == 0)
         (state / "seen").write_text("-5")
         done = hook_says("touch x", scope)
-        check("a nonsense position starts again rather than crashing", done.returncode == 2 and "stopped told" in done.stderr, done.stderr)
+        check("a nonsense position starts again rather than crashing", done.returncode == 0 and "stopped told" in told(done), done)
         (state / "seen").write_text("5000000")
         done = hook_says("touch x", scope)
-        check("a position past a replaced log starts again, and the stop is told", done.returncode == 2 and "stopped told" in done.stderr, done.stderr)
+        check("a position past a replaced log starts again, and the stop is told", done.returncode == 0 and "stopped told" in told(done), done)
+        with open(state / "events.log", "a") as log:
+            log.write(json.dumps({"kind": "stopped", "at": "now", "reasons": 5, "largest": 5, "stopped": [{"pid": 1, "name": "odd", "gib": 1.0, "command": "x"}]}) + "\n")
+        done = hook_says("touch x", scope)
+        check("a line whose fields are not what they should be is told as far as it reads", done.returncode == 0 and "stopped odd" in told(done), done)
         with open(state / "events.log", "a") as log:
             for _ in range(6):
                 log.write(json.dumps({"kind": "pressure-not-ours", "at": "later", "reasons": ["x"]}) + "\n")
@@ -933,29 +1273,50 @@ def case_run() -> None:
         guard("stop", root=scope)
 
 
-def main() -> int:
-    # This test holds a few hundred MiB. On a host already full, that is the wrong thing to do.
-    if not host_clear():
-        print("host-guard self-test: not run: the host is over the start line, and this test would add to it")
-        print(guard("status").stdout)
-        return 20
+# What holds nothing and reads nothing of the host: these say the same on a host of any state.
+PURE = (case_each_line_judges_alone, case_growth_is_of_the_last_minutes, case_what_counts_as_heavy, case_the_reader_sees_what_the_shell_runs, case_where_a_root_is)
+THE_REST = (
+    case_only_tightened, case_check_refuses, case_a_figure_not_read_is_never_safe, case_one_process, case_all_processes, case_what_a_stopped_process_started,
+    case_another_project_is_never_ours, case_a_terminal_vouches_for_nothing, case_a_root_is_exactly_itself, case_agents, case_what_holds_little_is_left_alone, case_a_job_is_stopped_whole,
+    case_a_queued_make_is_no_build, case_at_a_disk_floor_what_writes_stops, case_names_and_zombies, case_a_command_line_that_is_no_text, case_pressure, case_not_ours, case_growing,
+    case_a_small_writer_is_counted, case_the_watcher_outlives_its_own_trouble, case_a_new_script_is_taken_up, case_a_stale_pid_names_nobody, case_the_watcher_stays_while_a_job_runs,
+    case_what_is_not_the_table_is_blindness, case_a_blind_watcher_is_said, case_the_hook_passes_nothing_it_cannot_read, case_killing_by_name, case_hook, case_a_damaged_log, case_run,
+)
+
+
+def run_case(case) -> None:
+    before = len(failures)
+    try:
+        case()
+    except Exception as error:
+        check(f"{case.__name__} ran to its end", False, repr(error))
+    finally:
+        clean_up()
+    print(f"  {case.__name__}: {'ok' if len(failures) == before else 'FAILED'}", flush=True)
+
+
+def main(names: list[str]) -> int:
+    global pure
+    unknown = set(names) - {case.__name__ for case in (*PURE, *THE_REST)}
+    if unknown:
+        print(f"host-guard self-test: no case is called {sorted(unknown)}")
+        return 2
     BASE.mkdir(parents=True, exist_ok=True)
-    for case in (
-        case_only_tightened, case_check_refuses, case_a_figure_not_read_is_never_safe, case_one_process, case_all_processes, case_what_a_stopped_process_started,
-        case_another_project_is_never_ours, case_a_terminal_vouches_for_nothing, case_a_root_is_exactly_itself, case_agents, case_what_holds_little_is_left_alone,
-        case_at_a_disk_floor_what_writes_stops, case_where_a_root_is, case_names_and_zombies, case_a_command_line_that_is_no_text, case_pressure, case_not_ours, case_growing,
-        case_a_small_writer_is_counted, case_the_watcher_outlives_its_own_trouble, case_a_stale_pid_names_nobody, case_the_watcher_stays_while_a_job_runs,
-        case_what_is_not_the_table_is_blindness, case_growth_is_of_the_last_minutes, case_a_blind_watcher_is_said, case_what_counts_as_heavy, case_the_hook_passes_nothing_it_cannot_read,
-        case_killing_by_name, case_hook, case_a_damaged_log, case_run,
-    ):
-        before = len(failures)
-        try:
-            case()
-        except Exception as error:
-            check(f"{case.__name__} ran to its end", False, repr(error))
-        finally:
-            clean_up()
-        print(f"  {case.__name__}: {'ok' if len(failures) == before else 'FAILED'}", flush=True)
+    chosen = lambda case: not names or case.__name__ in names
+    pure = True
+    for case in filter(chosen, PURE):
+        run_case(case)
+    pure = False
+    rest = list(filter(chosen, THE_REST))
+    # The rest holds a few hundred MiB. On a host already full, that is the wrong thing to do.
+    if rest and not host_clear():
+        print("host-guard self-test: the rest not run: the host is over the start line, and they would add to it")
+        print(guard("status").stdout)
+        not_run.extend(case.__name__ for case in rest)
+        rest = []
+    for case in rest:
+        run_case(case)
+    check("this test leaves the tree as it found it, with no bytecode beside its script", not (HERE / "__pycache__").exists())
     print(f"host-guard self-test: {passed} passed, {len(failures)} failed, {len(not_run)} not run")
     for what in not_run:
         print(f"  not run, the host being over the start line: {what}")
@@ -966,4 +1327,4 @@ def main() -> int:
 
 
 if __name__ == "__main__":
-    sys.exit(main())
+    sys.exit(main(sys.argv[1:]))

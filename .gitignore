@@ -24,6 +24,9 @@ git_message_brief.txt
 *.log
 .DS_Store
 
+# What a script run without `-B` leaves beside itself: an untracked file in a code path, which UNTRACKED-CODE refuses (PROGRAM.127.5).
+__pycache__/
+
 # Note: Cargo.lock is intentionally NOT ignored — binary/application projects should
 # commit it for reproducible builds. If this becomes a library-only workspace, add it.
 

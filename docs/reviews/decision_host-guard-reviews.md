@@ -113,3 +113,35 @@ Said, and left as it stands: its reader could not run a real `make`, a commit's 
 | G4-16 | wording | `kill $(cat job.pid)` was refused as by a name, and a pattern naming the root held for `pkill` alone | By a pid passes, in either quoting, and a search naming this root passes |
 
 Said, and left as it stands: its reader could not run a real `make`, a commit's compile, a real full volume, real pressure levels, the true idle and blind times, the census against the real watcher, a real Codex, Kimi or VS Code, two live harness sessions, or `onFailure` with a real crash.
+
+**Round 5** — `2026-11-05`: not acceptable, 21 findings, 13 defects, after 15, 12, 5 and 6: rising, so again by method. The reader found twenty, and its engineer a twenty-first, from the refusal of the session's first command. The measurements held: RAM by hand 54.12%, by the guard 54.1 to 54.2%; a 100 MiB buffer read 106.8 MiB, `footprint` 107 MB; 50 MiB written read 50.0. Nothing outside a scratch root was stopped, and no case of "not ours" failed.
+
+What broke was what round 4's rule stood on. Lines looked at a process where what a person starts is a job: a build stopped under a script was followed by the next, eleven stops in as many samples, and each stop refused the next command, the `kill` of that script among them. And the hook read a shell's text by a pattern, which after four rounds of answers still took words in a message for commands and missed what ran in a subshell.
+
+So a job is what is judged and stopped; each line judges alone and they add up; and the hook reads a command by the shell's own grammar, held to the real shell by forms run against stubs, while an enumeration of the host's states holds the lines. The next reader should look hardest at what stopping a whole job now takes with it, and at where the reader of a command and the shell can still part.
+
+| # | Kind | Finding | Answer |
+| --- | --- | --- | --- |
+| G5-1 | defect | the danger line never ended a script around a build, and `verify` runs every step whatever the last did | A line stops the job, its topmost process of ours with all it started. A watcher no longer spares the `make` that happened to start it |
+| G5-2 | defect | while stops continued, every command was refused, the `kill` of that very job among them, so "it refuses three things" was false | A stop is told beside the next command's result and refuses nothing. It refuses three things |
+| G5-3 | defect | a script of short writers crossed a disk's floor unstopped | The first writer seen takes the script with it, the watcher reads every half second under a floor, and with none seen a volume falling under a job that keeps starting something new is enough. All of them between two samples is a stated limit |
+| G5-4 | defect | any disk reason switched the RAM stop line off, and with a small writer only it stopped at the danger line | Each line judges alone and they add up, and a case judges every state of the host |
+| G5-5 | defect | `cargo clean` could not run at a floor, refused by the hook and stopped by the watcher | What only asks or cleans is neither heavy nor a build |
+| G5-6 | defect | a `make` queued in its `run` was stopped at the danger line | It is no build until its `run` has started something |
+| G5-7 | defect | "since the last sample" was false at a watcher's first, so what wrote long ago and sat idle was stopped | A first sample has no last, and counts nothing written |
+| G5-8 | defect | stopping by a name passed in a subshell, in `$(…)`, in `bash -c`, under a comment's apostrophe, and through `ps` into a loop | The command is read by the shell's grammar, and the shell itself holds that reading |
+| G5-9 | defect | it refused by a pid and a pattern naming the root, and took words in a search or a message for commands | The same: `pkill -P`, `xargs kill` of a file, a search naming this root, and text all pass |
+| G5-10 | defect | the refusal's own remedy was refused, `run … -- bash -c 'cargo test'`, and `make focused>log`, `make -j4 focused` | The same: what `run` is given is its argument, and `make`'s words are read as `make` reads them |
+| G5-11 | defect | "left alone, whatever it is" was false for a 150 MiB `vim` at the stop and danger lines, and a small `git` under a stopped build | A job under a quarter of a GiB stays at any host's line, and many small jobs apart are the ceilings'. A stopped job goes whole, which the record now says, with what that takes |
+| G5-12 | defect | the self-test, run as it names itself, left an untracked `scripts/__pycache__`, which `UNTRACKED-CODE` refuses | It writes no bytecode and checks so, and `.gitignore` holds any other script's |
+| G5-13 | defect | a hand-written line whose time was no time refused the first command of every new session for good, by comparing as text | A time that is no time is never recent. The line is gone from the log |
+| G5-14 | gap | a job taking a directory named after an agent was spared | The search for what an interpreter runs ends at what it runs, so the rest are that program's own arguments |
+| G5-15 | gap | ordinary heavy forms passed: a comment's apostrophe, `$(…)` in quotes, `caffeinate`, `time -l`, `rustup run` | The same reader, with what wraps a command written down |
+| G5-16 | gap | a watcher kept the code it started with, so a fix was not in force while anything of ours ran | It takes up its new self |
+| G5-17 | gap | `mmap` writes read as nothing | Stated: only the volume's figures say it |
+| G5-18 | gap | a case's name said a new session is told nothing, and it passed with no stop in the log | It now holds a stop long ago, one with no time, and one just made |
+| G5-19 | wording | "its own ceilings and turn, wherever it stands" was false for a worktree inside the checkout | Said as it is |
+| G5-20 | wording | "over 512 processes, the largest stops" | Said as it is: the jobs with the most, until it is under |
+| G5-21 | wording | "each check starts the watcher" was not true of `check` | Said as it is |
+
+Said, and left as it stands: its reader could not run a real `make focused`, a commit's compile, real pressure levels, a real full volume, the true idle and blind times, the census against the real watcher, a real Codex, Kimi or VS Code, or `onFailure` with a real crash. It stated that it ran `git log -3 --format='%h %ad' -- scripts/host_guard.py` once, dates for that script alone with no content and no sealed path, against a brief that said no history search; and that a first run of a rig of its own left a `bash` behind, which it stopped by its pid.
