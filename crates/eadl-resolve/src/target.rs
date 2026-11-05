@@ -52,8 +52,9 @@ impl Target {
     ///
     /// # Errors
     ///
-    /// Each thing that makes the file no target: a declaration of anything but hardware, no one platform that nothing else in the file
-    /// names, or a block or platform that platform does not compose, which would be a device the machine does not have.
+    /// Each thing that makes the file no target: a declaration of anything but hardware; one with no name, or a name two declarations
+    /// bear; no one platform that nothing else in the file names; or a block or platform that platform does not compose, which would be a
+    /// device the machine does not have.
     pub fn read(forms: &[Form], file: Span) -> Result<Self, Vec<Diagnostic>> {
         let mut errors = Vec::new();
         let forms: Vec<&Form> = forms
@@ -71,11 +72,29 @@ impl Target {
                 "move it to the description: a target says what the machine is, never what runs on it",
             ));
         }
-        let declared: BTreeMap<&str, &Form> = forms
-            .iter()
-            .filter(|form| is_hardware(form))
-            .filter_map(|form| declared_name(form).map(|name| (name, *form)))
-            .collect();
+        let mut declared: BTreeMap<&str, &Form> = BTreeMap::new();
+        for form in forms.iter().filter(|form| is_hardware(form)) {
+            let Some(name) = declared_name(form) else {
+                errors.push(Diagnostic::error(
+                    "schema-missing-name",
+                    "a target's file declares devices, and this one has no name",
+                    Label::new(form.span(), "here"),
+                    "name it, and compose it under the one platform with `uses`",
+                ));
+                continue;
+            };
+            if let Some(first) = declared.insert(name, form) {
+                errors.push(
+                    Diagnostic::error(
+                        "schema-duplicate-name",
+                        format!("`{name}` is declared twice by a target's file"),
+                        Label::new(form.span(), "and here"),
+                        "a name means one declaration, and one device judged as two would be neither: rename one or remove it",
+                    )
+                    .with_secondary(Label::new(first.span(), "declared here")),
+                );
+            }
+        }
         let named: BTreeSet<&str> = declared
             .values()
             .flat_map(|form| names_in(form))
@@ -147,64 +166,116 @@ pub struct OnTarget {
     pub declarations: Vec<Form>,
 }
 
-/// `system` with no `platform` clause.
-fn without_platform(system: &Form) -> Vec<Form> {
-    system
-        .items()
-        .iter()
-        .filter(|item| item.head() != Some("platform"))
-        .cloned()
-        .collect()
-}
-
-/// A `(platform (uses PLATFORM))` clause, written at `span`.
-fn platform_clause(platform: &str, span: Span) -> Form {
+/// `system`'s `platform` clause as the target has it: `platform` in place of the hardware its own `uses` names, and all else it holds kept, a
+/// `platform` clause being the system's own side (model §7 rule 4). Written at `span`.
+fn clause_on_target(
+    system: &Form,
+    declared: &BTreeMap<&str, &Form>,
+    platform: &str,
+    span: Span,
+) -> Form {
     let symbol = |name: &str| Form::Symbol {
         name: name.to_owned(),
         span,
     };
-    Form::List {
-        items: vec![
-            symbol("platform"),
-            Form::List {
-                items: vec![symbol("uses"), symbol(platform)],
-                span,
-            },
-        ],
-        span,
-    }
-}
-
-/// Every platform whose absences `hardware` owes: each it holds, and each up the chain each refines (model §3 rule 3).
-fn platforms_with_their_chains<'d>(
-    hardware: &BTreeSet<String>,
-    declared: &BTreeMap<&str, &'d Form>,
-) -> Vec<&'d Form> {
-    let mut seen: BTreeSet<&str> = BTreeSet::new();
-    let mut platforms = Vec::new();
-    for name in hardware {
-        let mut at = declared.get_key_value(name.as_str());
-        while let Some((name, form)) = at {
-            if form.head() != Some("defplatform") || !seen.insert(*name) {
-                break;
-            }
-            platforms.push(*form);
-            at = Facets::of(form)
-                .0
-                .refines
-                .and_then(|(up, _)| declared.get_key_value(up.as_str()));
+    let mut items = vec![
+        symbol("platform"),
+        Form::List {
+            items: vec![symbol("uses"), symbol(platform)],
+            span,
+        },
+    ];
+    let clauses = system
+        .items()
+        .iter()
+        .filter(|item| item.head() == Some("platform"));
+    for item in clauses.flat_map(|clause| clause.items().iter().skip(1)) {
+        if item.head() != Some("uses") {
+            items.push(item.clone());
+            continue;
+        }
+        let kept: Vec<Form> = item
+            .items()
+            .iter()
+            .skip(1)
+            .filter(|name| {
+                !name
+                    .as_symbol()
+                    .and_then(|name| declared.get(name))
+                    .is_some_and(|form| is_hardware(form))
+            })
+            .cloned()
+            .collect();
+        if !kept.is_empty() {
+            items.push(Form::List {
+                items: std::iter::once(symbol("uses")).chain(kept).collect(),
+                span: item.span(),
+            });
         }
     }
+    Form::List { items, span }
+}
+
+/// The hardware `system`'s `platform` clause itself names by `uses`.
+fn named_by_clause<'s>(system: &'s Form, declared: &BTreeMap<&str, &Form>) -> Vec<&'s str> {
+    system
+        .items()
+        .iter()
+        .filter(|item| item.head() == Some("platform"))
+        .flat_map(|clause| clause.items().iter().skip(1))
+        .filter(|item| item.head() == Some("uses"))
+        .flat_map(|uses| uses.items().iter().skip(1))
+        .filter_map(Form::as_symbol)
+        .filter(|name| declared.get(name).is_some_and(|form| is_hardware(form)))
+        .collect()
+}
+
+/// The platforms whose absences the whole machine owes: the one platform the clause names, which all the system's hardware is made of, and
+/// each up the chain it refines (model §3 rule 3). Another's absence covers what it is made of and no more (model §2 rule 1), so it says nothing of
+/// a device beside it, and neither does one platform's among two the clause names.
+fn platforms_speaking_for_the_machine<'d>(
+    named: &[&str],
+    declared: &BTreeMap<&str, &'d Form>,
+) -> Vec<&'d Form> {
+    let [only] = named else {
+        return Vec::new();
+    };
+    let mut seen: BTreeSet<&str> = BTreeSet::new();
+    let mut platforms = Vec::new();
+    let mut at = declared.get_key_value(*only);
+    while let Some((name, form)) = at {
+        if form.head() != Some("defplatform") || !seen.insert(*name) {
+            break;
+        }
+        platforms.push(*form);
+        at = Facets::of(form)
+            .0
+            .refines
+            .and_then(|(up, _)| declared.get_key_value(up.as_str()));
+    }
     platforms
+}
+
+/// What `form` names of a declaration: by `uses`, `needs` or `refines`.
+fn declarations_named_by(form: &Form) -> Vec<(String, Span)> {
+    let mut names: Vec<(String, Span)> = names_in(form)
+        .into_iter()
+        .map(|(name, span)| (name.to_owned(), span))
+        .collect();
+    if is_hardware(form) {
+        names.extend(Facets::of(form).0.refines);
+    }
+    names
 }
 
 /// `system`, one of `declarations`, on `target`.
 ///
 /// # Errors
 ///
-/// What keeps it from being read there, the search not having run: a name the target declares too; a block or platform the system or
-/// a task names itself, which no requirement can stand for; and an absence a platform of the system declares that the target offers
-/// (model §3 rule 3). A service or a policy naming hardware past the target's is `M1.49`'s, the search's own refusal.
+/// What keeps it from being read there, the search not having run: a name the target declares too; a file naming what only the other
+/// declares, since each says what it holds with no help from the other; a block or platform the system, a task, or a service or a policy it
+/// reaches names itself, which no requirement can stand for; and an absence the platform it runs on declares that the target offers (model
+/// §3 rule 3).
 pub fn on_target(
     system: &Form,
     declarations: &[Form],
@@ -233,31 +304,77 @@ pub fn on_target(
             );
         }
     }
-    let rest = Form::List {
-        items: without_platform(system),
-        span: system.span(),
-    };
-    let system_name = declared_name(system).unwrap_or("the system");
-    for (name, span) in names_in(&rest) {
-        if declared.get(name).is_some_and(|form| is_hardware(form)) {
-            errors.push(Diagnostic::error(
-                "infeasible-configuration",
-                format!(
-                    "`{system_name}` names `{name}` itself, so no requirement says which device of `{}` it is",
-                    target.platform
-                ),
-                Label::new(span, "names it here"),
-                "say what is asked of it instead, with `needs` and the facts: any device offering them then serves it",
-            ));
+    // Each file stands alone: put together, a name either lacks would be found in the other and read as a device of the machine.
+    for form in &target.declarations {
+        for (name, span) in declarations_named_by(form) {
+            if !theirs.contains_key(name.as_str()) && declared.contains_key(name.as_str()) {
+                errors.push(Diagnostic::error(
+                    "invalid-description",
+                    format!("the target's file names `{name}`, which only the description declares"),
+                    Label::new(span, "names it here"),
+                    "a target's file says what the machine is by itself: declare the device there, or remove the name",
+                ));
+            }
         }
     }
-    let own = System::read(system, declarations);
+    for form in declarations {
+        for (name, span) in declarations_named_by(form) {
+            if theirs.contains_key(name.as_str()) && !declared.contains_key(name.as_str()) {
+                errors.push(Diagnostic::error(
+                    "infeasible-configuration",
+                    format!("the description names `{name}`, a device of the target, so it can run nowhere else and cannot be read alone"),
+                    Label::new(span, "names it here"),
+                    "say what is asked of it instead, with `needs` and the facts: any device offering them then serves it",
+                ));
+            }
+        }
+    }
+    let named = named_by_clause(system, &declared);
+    let mut items: Vec<Form> = system
+        .items()
+        .iter()
+        .filter(|item| item.head() != Some("platform"))
+        .cloned()
+        .collect();
+    items.push(clause_on_target(
+        system,
+        &declared,
+        &target.platform,
+        target.span,
+    ));
+    let on_it = Form::List {
+        items,
+        span: system.span(),
+    };
+    // What the system runs on is the target's now, so a name of hardware still standing, its own or in what it reaches from there, says nothing of the machine.
+    let reached = System::read(&on_it, declarations).reached;
+    let reached = reached
+        .iter()
+        .filter_map(|name| declared.get_key_value(name.as_str()))
+        .filter(|(_, form)| !is_hardware(form) && form.head() != Some("defsystem"))
+        .map(|(name, form)| (*name, *form));
+    let system_name = declared_name(system).unwrap_or("the system");
+    for (who, form) in std::iter::once((system_name, &on_it)).chain(reached) {
+        for (name, span) in names_in(form) {
+            if declared.get(name).is_some_and(|form| is_hardware(form)) {
+                errors.push(Diagnostic::error(
+                    "infeasible-configuration",
+                    format!(
+                        "`{who}` names `{name}` itself, so no requirement says which device of `{}` it is",
+                        target.platform
+                    ),
+                    Label::new(span, "names it here"),
+                    "say what is asked of it instead, with `needs` and the facts: any device offering them then serves it",
+                ));
+            }
+        }
+    }
     let offered: Vec<Facets> = target
         .declarations
         .iter()
         .map(|form| Facets::of(form).0)
         .collect();
-    for platform in platforms_with_their_chains(&own.hardware, &declared) {
+    for platform in platforms_speaking_for_the_machine(&named, &declared) {
         let facets = Facets::of(platform).0;
         for (fact, span) in facets.absences() {
             if let Some(offerer) = offered.iter().find(|target| target.offers_fact(fact)) {
@@ -276,12 +393,6 @@ pub fn on_target(
     if !errors.is_empty() {
         return Err(errors);
     }
-    let mut items = without_platform(system);
-    items.push(platform_clause(&target.platform, target.span));
-    let on_it = Form::List {
-        items,
-        span: system.span(),
-    };
     let declarations = declarations
         .iter()
         .map(|form| {
@@ -306,11 +417,12 @@ pub type Requirement = (Who, String);
 #[derive(Debug, Clone, Default, PartialEq, Eq)]
 pub struct Correspondence {
     /// Each device of the description a requirement is bound to, each target device that requirement is bound to on the target, and
-    /// the requirements. One device may be several, and several one: the joint rules have judged what they share.
+    /// the requirements; a device bound only for what the target's plan does not bind has none. One device may be several, and several
+    /// one: the joint rules have judged what they share.
     pub devices: BTreeMap<String, BTreeMap<String, Vec<Requirement>>>,
     /// The system's hardware no requirement is bound to: what the target's plan has nothing to say of.
     pub unreached: BTreeSet<String>,
-    /// Requirements bound in the description's plan alone: a device's own, or an adapter's, that the target's hardware does not ask.
+    /// Requirements bound in the description's plan alone: its hardware's own, which the target's hardware does not ask.
     pub only_described: Vec<Requirement>,
     /// Requirements bound in the target's plan alone.
     pub only_on_target: Vec<Requirement>,
@@ -338,11 +450,9 @@ pub fn correspond(
     for (requirement, provider) in &own.bindings {
         let device = device_of(provider, own);
         found.unreached.remove(device);
+        let targets = found.devices.entry(device.to_owned()).or_default();
         match there.bindings.get(requirement) {
-            Some(theirs) => found
-                .devices
-                .entry(device.to_owned())
-                .or_default()
+            Some(theirs) => targets
                 .entry(device_of(theirs, there).to_owned())
                 .or_default()
                 .push(requirement.clone()),

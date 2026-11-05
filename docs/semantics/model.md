@@ -386,7 +386,7 @@ written from this section alone (`crates/archogen-plan-check/src/joint.rs`, `M3.
    answer it, as they do not answer memory reserved in every byte. A plan records a placement exactly where the system
    has placement memory: one recording none there places the image nowhere, and one naming what is not placement memory
    of the system's hardware, each a conflict of that assignment. A system with no placement memory is said nothing of —
-   the hosted playground provides memory — and a system's regions against a target's own map are `M4.4`'s.
+   the hosted playground provides memory; a target with none is `DC-H4`'s. On a target a system's regions do not reach the joint rules at all: its platform is replaced, so they read the target's own map (`docs/decisions/decision_device-correspondence.md`).
 11. **Ordering** (`M3.3.5.2`; `SR-H13`). A required ordering — `(ordering (before …) (after …))` — is `unsupported-profile`
    under `rt-static-up-v1`: `ordering` has no entry in `/1`, and a constraint on an undeclared fact is that (§7, record
    §1.1). Its entry and domain wait for the profile that admits `dma`, whose exclusion names ordering among its

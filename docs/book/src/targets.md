@@ -188,14 +188,17 @@ searches again. The device then bound for "`console.write` needs observable outp
 (`docs/decisions/decision_device-correspondence.md`; `crates/eadl-resolve/src/target.rs`).
 
 So everything a target build says of a device is the target's. A description's rate, width and regions do not reach it, each requirement is judged again at
-the target's providers, and the joint rules read the target's memory map. One device may become two, two may become one, and an adapter a better device no
+the target's providers, what a system's `platform` clause asks beside its hardware among them, and the joint rules read the target's memory map. One device may become two, two may become one, and an adapter a better device no
 longer needs is gone. What no device can serve is the refusal any system gets.
 
-The engine refuses three things before it searches, because no requirement can answer them:
+The engine refuses these before it searches, because no requirement can answer them:
 
 - a name both the description and the target declare;
-- a system or a task naming a block or a platform itself, where it could say what it asks of one;
-- a fact a system's platform declares absent that the target offers.
+- a file naming what only the other declares, since each must say what it holds by itself: read together, the target's name would find the description's device and bind it;
+- a system, a task, or a service or policy the system reaches, naming a block or a platform itself, where it could say what it asks of one;
+- a fact the one platform a system runs on declares absent that the target offers. Another platform's absence covers what that platform is made of, and says nothing of a device beside it.
+
+A target's file holds what its agreement with the machine checks, so what it does not state it does not offer. A system that declares a fact absent lands on a target that is silent about it, even where the machine has the device.
 
 ⚠️ Two devices no requirement tells apart are not told apart: the policy's order chooses. And this says what is judged, not that two runs match, which is
 `M4.9`'s. No command names a target yet: that is `M4.1.7`, with the plan format that reads this rule.

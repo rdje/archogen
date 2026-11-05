@@ -187,6 +187,29 @@ fn what_is_no_target_is_refused_by_what_it_is() {
         "(defplatform a (offers x)) (defblock stray (offers x))",
         "does not compose it",
     );
+    // One name is one declaration: a map of names would have kept the last of these and judged the machine by it.
+    let duplicate = |text: &str| {
+        let errors =
+            Target::read(&forms(text), file_start()).expect_err("one name, two declarations");
+        assert!(
+            codes(&errors).contains(&"schema-duplicate-name"),
+            "{errors:?}"
+        );
+    };
+    duplicate(
+        "(defblock c (offers x)) (defblock c (offers y)) (defplatform t (requires (uses c)))",
+    );
+    duplicate("(defplatform t (offers x)) (defplatform t (offers y))");
+    duplicate("(defblock t (offers x)) (defplatform t (offers y))");
+    let nameless = Target::read(
+        &forms("(defplatform t (offers x)) (defblock (offers y))"),
+        file_start(),
+    )
+    .expect_err("a device with no name");
+    assert!(
+        codes(&nameless).contains(&"schema-missing-name"),
+        "{nameless:?}"
+    );
     // A cycle leaves no platform nothing names, which says so and does not spin.
     refused(
         "(defplatform a (requires (uses b))) (defplatform b (requires (uses a)))",
@@ -323,23 +346,169 @@ fn one_device_may_be_two_and_two_one() {
         map(&found),
         BTreeMap::from([("all.in-one", vec!["target.console", "target.timer"])])
     );
-    // Two of the description's, one of the target's, which nothing here forbids and the channels would.
+    // Two of the description's, told apart by what is asked of them, and one of the target's offering both.
     let two = "
-(defblock one.uart (offers (observable-output true) (reachable-at-privilege machine)))
-(defblock two.uart (offers (observable-output true) (reachable-at-privilege machine)))
+(defblock own.out (offers (observable-output true) (reachable-at-privilege machine)))
+(defblock own.clock (offers (tick-rate 10 MHz) (reachable-at-privilege machine)))
 (defplatform soc.here
   (offers (core-count 1 tick) (reachable-at-privilege machine))
-  (requires (uses one.uart two.uart)))
+  (requires (uses own.out own.clock)))
 (defservice a.write (requires (needs observable-output)))
-(defservice b.write (requires (needs observable-output)))
+(defservice b.read (requires (needs tick-rate)))
 (defsystem s
-  (requires (uses a.write b.write))
+  (requires (uses a.write b.read))
   (platform (uses soc.here)))
 ";
-    let policy_free = both(two, &target_of(A_WHOLE_TARGET)).2;
-    assert!(map(&policy_free)
-        .values()
-        .all(|there| there == &vec!["target.console"]));
+    let one_machine = "
+(defblock t.both (offers (observable-output true) (tick-rate 10 MHz) (reachable-at-privilege machine)))
+(defplatform t
+  (offers (core-count 1 tick) (reachable-at-privilege machine))
+  (requires (uses t.both)))
+";
+    let (_, _, found) = both(two, &target_of(one_machine));
+    assert_eq!(
+        map(&found),
+        BTreeMap::from([("own.clock", vec!["t.both"]), ("own.out", vec!["t.both"])])
+    );
+}
+
+#[test]
+fn what_one_plan_alone_binds_is_said_as_that() {
+    // A device of the description with a requirement of its own, which the target's hardware does not ask, and another bound only for it.
+    let own_requirement = "
+(defblock timer.block (offers (tick-rate 10 MHz) (reachable-at-privilege machine)))
+(defblock gate.block (offers (reachable-at-privilege machine)) (requires (needs tick-rate)))
+(defblock console.uart (offers (observable-output true) (reachable-at-privilege machine)))
+(defplatform soc.here
+  (offers (core-count 1 tick) (reachable-at-privilege machine))
+  (requires (uses timer.block gate.block console.uart)))
+(defservice console.write (requires (needs observable-output)))
+(defsystem s (requires (uses console.write)) (platform (uses soc.here)))
+";
+    let (_, _, found) = both(own_requirement, &target_of(A_WHOLE_TARGET));
+    assert_eq!(found.only_described.len(), 1, "{found:?}");
+    assert_eq!(found.only_described[0].1, "tick-rate", "{found:?}");
+    assert!(found.only_on_target.is_empty(), "{found:?}");
+    // The device bound only for that is among the devices, with nothing beside it, and is not called unreached.
+    assert_eq!(
+        map(&found).get("timer.block"),
+        Some(&Vec::new()),
+        "{found:?}"
+    );
+    assert!(!found.unreached.contains("timer.block"), "{found:?}");
+    assert!(found.unreached.contains("gate.block"), "{found:?}");
+    // And a target's device with a requirement of its own.
+    let their_requirement = "
+(defblock t.timer (offers (tick-rate 10 MHz) (reachable-at-privilege machine)))
+(defblock t.gate (offers (observable-output true) (reachable-at-privilege machine)) (requires (needs tick-rate)))
+(defplatform t
+  (offers (core-count 1 tick) (reachable-at-privilege machine))
+  (requires (uses t.timer t.gate)))
+";
+    let (_, _, found) = both(A_SYSTEM, &target_of(their_requirement));
+    assert_eq!(found.only_on_target.len(), 1, "{found:?}");
+    assert_eq!(found.only_on_target[0].1, "tick-rate", "{found:?}");
+    assert!(found.only_described.is_empty(), "{found:?}");
+}
+
+#[test]
+fn what_a_platform_clause_holds_beside_its_hardware_stays_the_system_s() {
+    // Over the hardware of its own it is met, and on a target it is judged again, as it would be anywhere else in the system.
+    let with = |clause: &str| {
+        format!(
+            "
+(defblock fast.counter (offers (counter-width 256 bit) (reachable-at-privilege machine)))
+(defblock console.uart (offers (observable-output true) (reachable-at-privilege machine)))
+(defplatform soc.here
+  (offers (core-count 1 tick) (reachable-at-privilege machine))
+  (requires (uses fast.counter console.uart)))
+(defservice console.write (requires (needs observable-output)))
+(defservice time.read (requires (counter-width (at-least 128 bit))))
+(defsystem s
+  (requires (uses console.write))
+  (platform {clause}))
+"
+        )
+    };
+    let refused_there = |text: &str| {
+        let declarations = forms(text);
+        let system = system_of(&declarations);
+        assert!(
+            matches!(run(&declarations, system), Search::Resolved(_)),
+            "its own hardware meets it"
+        );
+        let moved = on_target(system, &declarations, &target_of(A_WHOLE_TARGET))
+            .expect("it can be read there");
+        let Search::Refused { diagnostics, .. } = run(&moved.declarations, &moved.system) else {
+            panic!("the clause's requirement was dropped: {text}");
+        };
+        assert!(
+            diagnostics.iter().any(|d| d.code == "missing-fact"),
+            "{diagnostics:?}"
+        );
+    };
+    refused_there(&with(
+        "(uses soc.here) (requires (counter-width (at-least 128 bit)))",
+    ));
+    refused_there(&with("(uses soc.here time.read)"));
+    // A name of hardware the clause holds anywhere but its own `uses` is a name no requirement stands for.
+    let nested = with("(uses soc.here) (requires (uses console.uart))");
+    let declarations = forms(&nested);
+    let errors = on_target(
+        system_of(&declarations),
+        &declarations,
+        &target_of(A_WHOLE_TARGET),
+    )
+    .expect_err("a device named");
+    assert_eq!(
+        codes(&errors),
+        vec!["infeasible-configuration"],
+        "{errors:?}"
+    );
+}
+
+#[test]
+fn each_file_stands_alone_though_they_are_read_together() {
+    let run_on = |description: &str, target: &str| {
+        let declarations = forms(description);
+        on_target(system_of(&declarations), &declarations, &target_of(target))
+    };
+    // A target naming what only the description declares would have bound the description's device.
+    let errors = run_on(
+        A_SYSTEM,
+        "(defplatform t (offers (core-count 1 tick)) (requires (uses console.uart)))",
+    )
+    .expect_err("a target's name found in the description");
+    assert_eq!(codes(&errors), vec!["invalid-description"], "{errors:?}");
+    assert!(errors[0].message.contains("`console.uart`"), "{errors:?}");
+    let errors = run_on(
+        A_SYSTEM,
+        "(defplatform t (refines soc.here) (offers (core-count 1 tick)))",
+    )
+    .expect_err("a target refining the description's platform");
+    assert_eq!(codes(&errors), vec!["invalid-description"], "{errors:?}");
+    // A description naming the target's device would read only beside that target.
+    for naming in [
+        A_SYSTEM.replace(
+            "(requires (uses console.write))",
+            "(requires (uses console.write target.console))",
+        ),
+        A_SYSTEM.replace(
+            "(defservice console.write (requires (needs observable-output)))",
+            "(defservice console.write (requires (needs observable-output) (uses target.console)))",
+        ),
+        A_SYSTEM.replace(
+            "(platform (uses soc.here))",
+            "(platform (uses target.machine))",
+        ),
+    ] {
+        let errors =
+            run_on(&naming, A_WHOLE_TARGET).expect_err("a description naming the target's device");
+        assert!(
+            codes(&errors).contains(&"infeasible-configuration"),
+            "{naming}: {errors:?}"
+        );
+    }
 }
 
 #[test]
@@ -376,24 +545,56 @@ fn a_system_or_a_task_naming_hardware_itself_is_refused_with_what_to_do() {
 }
 
 #[test]
-fn a_service_naming_hardware_past_the_target_s_is_the_search_s_own_refusal() {
+fn a_service_it_reaches_naming_hardware_is_refused_like_the_system_with_a_repair_that_works() {
     let text = A_SYSTEM.replace(
         "(defservice console.write (requires (needs observable-output)))",
         "(defservice console.write (requires (needs observable-output) (uses console.uart)))",
     );
     let declarations = forms(&text);
-    let moved = on_target(system_of(&declarations), &declarations, &real_target())
-        .expect("it can be read there");
-    let Search::Refused { diagnostics, .. } = run(&moved.declarations, &moved.system) else {
-        panic!("a plan past the hardware");
-    };
-    assert!(
-        diagnostics
-            .iter()
-            .any(|d| d.code == "infeasible-configuration"
-                && d.message.contains("not part of the hardware")),
-        "{diagnostics:?}"
+    let errors = on_target(system_of(&declarations), &declarations, &real_target())
+        .expect_err("a device named by what the system reaches");
+    assert_eq!(
+        codes(&errors),
+        vec!["infeasible-configuration"],
+        "{errors:?}"
     );
+    assert!(
+        errors[0]
+            .message
+            .contains("`console.write` names `console.uart`"),
+        "{errors:?}"
+    );
+    assert!(
+        errors[0].repair.contains("say what is asked of it"),
+        "{errors:?}"
+    );
+    // The repair it gives: the service asked only by what it asks, and it reads there.
+    assert!(on_target(
+        system_of(&forms(A_SYSTEM)),
+        &forms(A_SYSTEM),
+        &real_target()
+    )
+    .is_ok());
+    // Nor is one it reached only through the hardware the target replaces: it is gone with that hardware.
+    let through = "
+(defblock console.uart
+  (offers (observable-output true) (reachable-at-privilege machine))
+  (requires (uses helper.service)))
+(defservice helper.service (requires (uses console.uart)))
+(defplatform soc.here
+  (offers (core-count 1 tick) (reachable-at-privilege machine))
+  (requires (uses console.uart)))
+(defservice console.write (requires (needs observable-output)))
+(defsystem s
+  (requires (uses console.write))
+  (platform (uses soc.here)))
+";
+    let declarations = forms(through);
+    assert!(on_target(system_of(&declarations), &declarations, &real_target()).is_ok());
+    // A service the system does not reach says nothing of it.
+    let unreached = format!("{A_SYSTEM} (defservice unused.one (requires (uses console.uart)))");
+    let declarations = forms(&unreached);
+    assert!(on_target(system_of(&declarations), &declarations, &real_target()).is_ok());
 }
 
 #[test]
@@ -429,6 +630,37 @@ fn a_platform_s_absence_is_kept_and_a_block_s_speaks_for_the_block() {
         codes(&absent_on(&chained).expect_err("kept")),
         vec!["refinement-violated"]
     );
+    // What a composed platform says it says of what it is made of, and another device beside it may offer the fact: the same hardware passes as its own.
+    let composed = "
+(defblock console.uart (offers (observable-output true) (reachable-at-privilege machine)))
+(defplatform soc.sub
+  (absent tick-rate)
+  (offers (reachable-at-privilege machine))
+  (requires (uses console.uart)))
+(defblock timer.block (offers (tick-rate 10 MHz) (reachable-at-privilege machine)))
+(defplatform soc.top
+  (offers (core-count 1 tick) (reachable-at-privilege machine))
+  (requires (uses soc.sub timer.block)))
+(defservice console.write (requires (needs observable-output)))
+(defsystem s (requires (uses console.write)) (platform (uses soc.top)))
+";
+    assert!(matches!(
+        run(&forms(composed), system_of(&forms(composed))),
+        Search::Resolved(_)
+    ));
+    assert!(absent_on(composed).is_ok());
+    // Nor does one of two platforms the clause names speak for the machine.
+    let two_named = "
+(defblock console.uart (offers (observable-output true) (reachable-at-privilege machine)))
+(defplatform soc.a
+  (absent tick-rate)
+  (offers (core-count 1 tick) (reachable-at-privilege machine))
+  (requires (uses console.uart)))
+(defplatform soc.b (offers (tick-rate 10 MHz) (reachable-at-privilege machine)))
+(defservice console.write (requires (needs observable-output)))
+(defsystem s (requires (uses console.write)) (platform (uses soc.a soc.b)))
+";
+    assert!(absent_on(two_named).is_ok());
     // A block says it of itself alone: another device may offer the fact.
     let on_block = A_SYSTEM.replace(
         "(defblock console.uart\n  (offers",
