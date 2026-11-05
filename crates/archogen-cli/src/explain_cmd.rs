@@ -27,7 +27,7 @@ use archogen_digest::Digest;
 use archogen_emit::ASSIGNMENT_FILE;
 use archogen_outcome::record::{Judged, Record};
 
-use crate::built::Built;
+use crate::built::{Built, NotAsWritten, Unbuilt};
 use crate::check_cmd::{ask_with, report_not_judged};
 use crate::cli::Parsed;
 use crate::consume::{PLAN_CHECKER, RECORD};
@@ -53,19 +53,34 @@ struct Asked {
 enum Unasked {
     /// It is no build this engine reads: the repair is to give a description or a build.
     NoBuild(String),
+    /// It is a build of another format, which only a new build answers.
+    OtherFormat(String),
     /// It is one, and not as it was written.
     Altered(String),
+    /// It is one, and what it holds could not be read, so nothing is said of whether it changed.
+    Unread(String),
 }
 
 impl Asked {
     /// What `dir` records, each file held to its digest before anything reads it.
     fn read(dir: &str) -> Result<Self, Unasked> {
         let root = Path::new(dir);
-        let built = Built::read(root).map_err(Unasked::NoBuild)?;
-        if let Some(why) = built.edited(root).or_else(|| built.foreign(root)) {
-            return Err(Unasked::Altered(format!(
-                "the build {dir} is not as it was written: {why}"
-            )));
+        let built = Built::read(root).map_err(|unbuilt| match unbuilt {
+            Unbuilt::OtherFormat(said) => Unasked::OtherFormat(said),
+            Unbuilt::Other(said) => Unasked::NoBuild(said),
+        })?;
+        match built.edited(root).or_else(|| built.foreign(root)) {
+            Some(NotAsWritten::Changed(why)) => {
+                return Err(Unasked::Altered(format!(
+                    "the build {dir} is not as it was written: {why}"
+                )))
+            }
+            Some(NotAsWritten::Unread(why)) => {
+                return Err(Unasked::Unread(format!(
+                    "the build {dir} cannot be read, so nothing says whether it is as it was written: {why}"
+                )))
+            }
+            None => {}
         }
         let no_build = |message: String| Unasked::NoBuild(message);
         let assignment = std::fs::read_to_string(root.join(ASSIGNMENT_FILE))
@@ -127,8 +142,25 @@ pub fn run(parsed: &Parsed, out: &mut dyn Write, err: &mut dyn Write) -> Status 
             Ok(built) => Some(built),
             Err(Unasked::Altered(message)) => {
                 let _ = writeln!(err, "archogen: {}: {message}", Status::StaleInput.slug());
-                let _ = writeln!(err, "  hint: run `archogen build` again");
+                // A build is not put over one that has changed, which it did not write as it stands.
+                let _ = writeln!(
+                    err,
+                    "  hint: run `archogen build` again, into a new directory"
+                );
                 return Status::StaleInput;
+            }
+            Err(Unasked::Unread(message)) => {
+                let _ = writeln!(err, "archogen: {}: {message}", Status::Usage.slug());
+                let _ = writeln!(err, "  hint: open what it could not read");
+                return Status::Usage;
+            }
+            Err(Unasked::OtherFormat(message)) => {
+                let _ = writeln!(err, "archogen: {}: {message}", Status::Usage.slug());
+                let _ = writeln!(
+                    err,
+                    "  hint: run `archogen build` with this engine, into a new directory"
+                );
+                return Status::Usage;
             }
             Err(Unasked::NoBuild(message)) => {
                 let _ = writeln!(err, "archogen: {}: {message}", Status::Usage.slug());

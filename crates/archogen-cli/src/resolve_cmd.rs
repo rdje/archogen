@@ -688,7 +688,7 @@ fn replaceable(file: &Path, out: &str) -> Result<Option<std::fs::Metadata>, Unwr
     if bytes == A_PLAN_BEGINS && meta.len() > A_PLAN_AT_MOST {
         return Err(usage(
             format!(
-                "`--out {out}` is larger than this engine reads a plan, 2^32 bytes, so nothing can tell it is one"
+                "`--out {out}` is larger than this engine reads a plan, 2^32 bytes less one, so nothing can tell it is one"
             ),
             "name another file, or move what stands there",
         ));

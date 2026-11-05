@@ -79,6 +79,51 @@ pub struct Built {
     whole: bool,
 }
 
+/// Why a directory records nothing this engine reads.
+#[derive(Debug)]
+pub enum Unbuilt {
+    /// It is a build of a format this engine does not read: another engine's, which nothing here can judge, so only a new directory or
+    /// taking that build away helps.
+    OtherFormat(String),
+    /// Anything else, what stands there being no build, or one that does not read.
+    Other(String),
+}
+
+impl Unbuilt {
+    /// What it says.
+    #[must_use]
+    pub fn said(self) -> String {
+        match self {
+            Self::OtherFormat(said) | Self::Other(said) => said,
+        }
+    }
+}
+
+impl From<String> for Unbuilt {
+    fn from(said: String) -> Self {
+        Self::Other(said)
+    }
+}
+
+/// Why a build is not known to be as it was written.
+#[derive(Debug)]
+pub enum NotAsWritten {
+    /// It is not: a file changed or gone, or something there no build wrote.
+    Changed(String),
+    /// What it holds could not be read, so nothing is said of whether it changed: an unanswerable question is not answered as a change.
+    Unread(String),
+}
+
+impl NotAsWritten {
+    /// What it says.
+    #[must_use]
+    pub fn said(self) -> String {
+        match self {
+            Self::Changed(said) | Self::Unread(said) => said,
+        }
+    }
+}
+
 /// A name that stays inside the build: a provenance is text anyone may have edited.
 fn inside(name: &str) -> bool {
     !name.is_empty()
@@ -89,25 +134,30 @@ fn inside(name: &str) -> bool {
 
 impl Built {
     /// What `dir` records, or why it records nothing this engine reads.
-    pub fn read(dir: &Path) -> Result<Self, String> {
+    pub fn read(dir: &Path) -> Result<Self, Unbuilt> {
         let shown = dir.display();
         // A regular file, read within a bound: a link is no file a build wrote, and a pipe would never end.
         let file = dir.join(PROVENANCE_FILE);
         let meta = std::fs::symlink_metadata(&file)
             .map_err(|error| format!("{shown}'s `{PROVENANCE_FILE}`: {error}"))?;
         if !meta.is_file() {
-            return Err(format!(
-                "{shown}'s `{PROVENANCE_FILE}` is no file a build wrote"
-            ));
+            return Err(format!("{shown}'s `{PROVENANCE_FILE}` is no file a build wrote").into());
+        }
+        // Past the bound by its length, unread: a file of that size costs the shared host what it holds, sparse or not. The bound is held while reading too, for one that grows.
+        let past = || {
+            format!(
+                "{shown}'s `{PROVENANCE_FILE}` is larger than this engine reads one, 2^30 bytes"
+            )
+        };
+        if meta.len() > LIMIT {
+            return Err(past().into());
         }
         let mut bytes = Vec::new();
         std::fs::File::open(&file)
             .and_then(|opened| opened.take(LIMIT + 1).read_to_end(&mut bytes))
             .map_err(|error| format!("{shown}'s `{PROVENANCE_FILE}`: {error}"))?;
         if bytes.len() as u64 > LIMIT {
-            return Err(format!(
-                "{shown}'s `{PROVENANCE_FILE}` is larger than this engine reads one, 2^30 bytes"
-            ));
+            return Err(past().into());
         }
         let provenance = archogen_json::read(&bytes, bytes.len().max(1))
             .map_err(|refusal| format!("{shown}/{PROVENANCE_FILE} does not read: {refusal}"))?;
@@ -125,18 +175,19 @@ impl Built {
         };
         let format = text("format")?;
         if format != PROVENANCE_FORMAT {
-            return Err(format!(
+            return Err(Unbuilt::OtherFormat(format!(
                 "{shown} is a build of `{format}`, and this engine reads `{PROVENANCE_FORMAT}`"
-            ));
+            )));
         }
         let description = text("description")?;
         if !inside(&description) {
             return Err(format!(
                 "{shown}/{PROVENANCE_FILE} names the description `{description}`, which lies outside the build"
-            ));
+            )
+            .into());
         }
         let Some(Value::Array(listed)) = provenance.get("files") else {
-            return Err(format!("{shown}/{PROVENANCE_FILE} lists no `files`"));
+            return Err(format!("{shown}/{PROVENANCE_FILE} lists no `files`").into());
         };
         let mut files = Vec::with_capacity(listed.len());
         for entry in listed {
@@ -145,7 +196,8 @@ impl Built {
             if !inside(path) {
                 return Err(format!(
                     "{shown}/{PROVENANCE_FILE} lists the file `{path}`, which lies outside the build"
-                ));
+                )
+                .into());
             }
             let bytes = match entry.get("bytes") {
                 Some(Value::Number(number)) => {
@@ -166,7 +218,8 @@ impl Built {
         {
             return Err(format!(
                 "{shown}/{PROVENANCE_FILE} does not list `{missing}`, which every build writes"
-            ));
+            )
+            .into());
         }
         Ok(Self {
             system: text("system")?,
@@ -177,25 +230,34 @@ impl Built {
         })
     }
 
-    /// The first file this build wrote that is not as it wrote it.
-    pub fn edited(&self, dir: &Path) -> Option<String> {
+    /// The first file this build wrote that is not as it wrote it, or that could not be read to tell.
+    pub fn edited(&self, dir: &Path) -> Option<NotAsWritten> {
         if !self.whole {
-            return Some(format!(
+            return Some(NotAsWritten::Changed(format!(
                 "`{PROVENANCE_FILE}` has changed since the build wrote it"
-            ));
+            )));
         }
         self.files.iter().find_map(|listed| {
             let name = &listed.name;
             let file = dir.join(name);
             let meta = match std::fs::symlink_metadata(&file) {
                 Ok(meta) if meta.is_file() => meta,
-                Ok(_) => return Some(format!("`{name}` is no file the build wrote")),
-                Err(error) => return Some(format!("`{name}`: {error}")),
+                Ok(_) => {
+                    return Some(NotAsWritten::Changed(format!(
+                        "`{name}` is no file the build wrote"
+                    )))
+                }
+                Err(error) if error.kind() == std::io::ErrorKind::NotFound => {
+                    return Some(NotAsWritten::Changed(format!("`{name}`: {error}")))
+                }
+                Err(error) => return Some(NotAsWritten::Unread(format!("`{name}`: {error}"))),
             };
             match listed.holds(&file, &meta) {
                 Ok(true) => None,
-                Ok(false) => Some(format!("`{name}` has changed since the build wrote it")),
-                Err(error) => Some(format!("`{name}`: {error}")),
+                Ok(false) => Some(NotAsWritten::Changed(format!(
+                    "`{name}` has changed since the build wrote it"
+                ))),
+                Err(error) => Some(NotAsWritten::Unread(format!("`{name}`: {error}"))),
             }
         })
     }
@@ -217,7 +279,7 @@ impl Built {
 
     /// The first thing under `dir` no build wrote, empty directories and names that are no text among them: all there is
     /// beside what it lists, and what [`CARRIED`] names at its top.
-    pub fn foreign(&self, dir: &Path) -> Option<String> {
+    pub fn foreign(&self, dir: &Path) -> Option<NotAsWritten> {
         let listed: BTreeSet<&str> = self
             .files
             .iter()
@@ -228,13 +290,18 @@ impl Built {
         while let Some(next) = pending.pop() {
             let entries = match std::fs::read_dir(&next) {
                 Ok(entries) => entries,
-                Err(error) => return Some(format!("{}: {error}", next.display())),
+                Err(error) => {
+                    return Some(NotAsWritten::Unread(format!("{}: {error}", next.display())))
+                }
             };
             for entry in entries.flatten() {
                 let path = entry.path();
                 let relative = path.strip_prefix(dir).unwrap_or(&path);
                 let Some(name) = relative.to_str() else {
-                    return Some(format!("`{}` is no file a build wrote", relative.display()));
+                    return Some(NotAsWritten::Changed(format!(
+                        "`{}` is no file a build wrote",
+                        relative.display()
+                    )));
                 };
                 if name == PROVENANCE_FILE || CARRIED.contains(&name) {
                     continue;
@@ -246,7 +313,9 @@ impl Built {
                 } else if is_dir
                     || !(kind.is_ok_and(|kind| kind.is_file()) && listed.contains(name))
                 {
-                    return Some(format!("`{name}` is no file a build wrote"));
+                    return Some(NotAsWritten::Changed(format!(
+                        "`{name}` is no file a build wrote"
+                    )));
                 }
             }
         }

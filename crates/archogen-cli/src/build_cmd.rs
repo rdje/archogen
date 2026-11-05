@@ -25,7 +25,7 @@ use archogen_digest::Digest;
 use archogen_emit::{copies, emit, Emitted, Inputs, ASSIGNMENT_FILE, PROVENANCE_FILE};
 use archogen_plan::{lower_checked, Acceptance, Generator, Refusal};
 
-use crate::built::{Built, CARRIED};
+use crate::built::{Built, Unbuilt, CARRIED};
 use crate::check_cmd::{ask_with, report_not_judged};
 use crate::cli::Parsed;
 use crate::consume::{self, Checked, Expected};
@@ -364,12 +364,18 @@ impl Place {
                     None
                 } else {
                     Some(Self::earlier_build(&dir).map_err(|why| {
+                        let repair = if matches!(why, Unbuilt::OtherFormat(_)) {
+                            "name a new directory, or take that build away: this engine reads no other format, and moving a file out of it changes nothing"
+                        } else {
+                            "name a new directory, move what is yours out of it, or open what it could not read"
+                        };
                         usage(
                             format!(
                                 "`--out {out_dir}` cannot be replaced: a build deletes nothing it did not write, and this cannot \
-                                 be told to be only what one wrote: {why}"
+                                 be told to be only what one wrote: {}",
+                                why.said()
                             ),
-                            "name a new directory, move what is yours out of it, or open what it could not read",
+                            repair,
                         )
                     })?)
                 };
@@ -389,10 +395,10 @@ impl Place {
     }
 
     /// `dir` as the earlier build it is, or why it is not exactly a build's.
-    fn earlier_build(dir: &Path) -> Result<Built, String> {
+    fn earlier_build(dir: &Path) -> Result<Built, Unbuilt> {
         let built = Built::read(dir)?;
         match built.edited(dir).or_else(|| built.foreign(dir)) {
-            Some(why) => Err(why),
+            Some(why) => Err(why.said().into()),
             None => Ok(built),
         }
     }
@@ -741,7 +747,7 @@ fn refused(failed: &Failed, path: &str, err: &mut dyn Write) -> Status {
             );
             let _ = writeln!(
                 err,
-                "  hint: check that its disk has room, and that nothing else moved or closed the build's `.building` directory"
+                "  hint: check that its disk has room, that the umask lets this user write what it makes, and that nothing else moved or closed the build's `.building` directory"
             );
             Status::ToolFailure
         }

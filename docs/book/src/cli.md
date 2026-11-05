@@ -164,7 +164,7 @@ again just before it is used, and in that instant what stands there is what is u
 | `a-link` | a link at `PLAN` | `usage` | `is a link` | the link, and what it points at |
 | `a-pipe` | what is no file at `PLAN` | `usage` | `is no file` | it |
 | `no-plan` | a file at `PLAN` that is no plan | `usage` | `is no plan` | the file |
-| `a-plan-with-notes-in-it` | a plan no longer in canonical form, a comment in any place or a line the search would not write, or of another format | `usage` | `is no plan` | the file, with its notes |
+| `a-plan-with-notes-in-it` | a plan no longer in canonical form, a comment in any place or a line out of its form or sorted place, or of another format | `usage` | `is no plan` | the file, with its notes |
 | `a-canonical-edit` | a plan edited so that it stays canonical, one binding for another or one added in its sorted place, which nothing can tell from the search's own | `ok` | `resolved system` | the plan, the edit replaced |
 | `a-plan-past-what-its-reader-holds` | a file beginning as a plan and larger than the engine's reader can hold, told without reading it | `usage` | `larger than this engine reads a plan` | the file |
 | `closed-to-reads` | a file at `PLAN` this user cannot read, so nothing can tell it is a plan | `usage` | `to tell it is a plan` | the file |

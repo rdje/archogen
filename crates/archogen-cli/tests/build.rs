@@ -6,7 +6,7 @@
 
 mod common;
 
-use std::collections::BTreeMap;
+use std::collections::{BTreeMap, BTreeSet};
 use std::fs;
 use std::io::Write;
 use std::path::{Path, PathBuf};
@@ -1762,10 +1762,19 @@ type Route = fn(&Path) -> Option<Said>;
 fn out_routes() -> Vec<(&'static str, Route)> {
     vec![
         ("no-name", |_| {
-            said(invoke(
+            let names = || -> BTreeSet<_> {
+                fs::read_dir("..")
+                    .expect("a directory")
+                    .map(|entry| entry.expect("an entry").file_name())
+                    .collect()
+            };
+            let before = names();
+            let outcome = said(invoke(
                 &["build", &example(HEARTBEAT), "--out", ".."],
                 &Checker,
-            ))
+            ));
+            assert_eq!(names(), before, "something was made");
+            outcome
         }),
         ("back-through", |root| {
             let outcome = build_at(&root.join("missing/../x"));
@@ -1844,6 +1853,47 @@ fn out_routes() -> Vec<(&'static str, Route)> {
             assert_eq!(snapshot(&dir), before, "something of it moved");
             outcome
         }),
+        ("a-provenance-past-what-it-reads", |root| {
+            // Told by its length, unread: a test of a bound never loads what it bounds, on a shared host.
+            let dir = root.join("x");
+            an_earlier_build(&dir);
+            let plan = fs::read(dir.join("plan.txt")).expect("read");
+            let provenance = dir.join("provenance.json");
+            let at = 1_u64 << 40;
+            fs::OpenOptions::new()
+                .write(true)
+                .open(&provenance)
+                .and_then(|opened| opened.set_len(at))
+                .expect("sparse");
+            let outcome = build_at(&dir);
+            assert_eq!(fs::metadata(&provenance).expect("kept").len(), at);
+            assert_eq!(fs::read(dir.join("plan.txt")).expect("kept"), plan);
+            let (status, _, err) = explain(&dir.display().to_string());
+            assert_eq!(status, Status::Usage, "{err}");
+            assert!(err.contains("larger than this engine reads one"), "{err}");
+            outcome
+        }),
+        ("flagged", |root| {
+            // A flag stops the last step alone, and every step before it goes back. `chflags` is not on every platform.
+            let dir = root.join("x");
+            an_earlier_build(&dir);
+            let before = snapshot(&dir);
+            let flag = |value: &str| {
+                Command::new("chflags")
+                    .arg(value)
+                    .arg(&dir)
+                    .status()
+                    .is_ok_and(|status| status.success())
+            };
+            if !flag("uchg") {
+                return None;
+            }
+            let outcome = build_at(&dir);
+            assert!(flag("nouchg"), "the flag cleared");
+            assert_eq!(snapshot(&dir), before, "something of it moved");
+            assert!(!root.join("x.building").exists());
+            outcome
+        }),
         ("other-format", |root| {
             let dir = root.join("x");
             fs::create_dir(&dir).expect("a directory");
@@ -1910,7 +1960,13 @@ fn out_routes() -> Vec<(&'static str, Route)> {
         ("link-loop-on-the-way", |root| {
             std::os::unix::fs::symlink(root.join("b"), root.join("a")).expect("a link");
             std::os::unix::fs::symlink(root.join("a"), root.join("b")).expect("a link");
-            build_at(&root.join("a/x"))
+            let outcome = build_at(&root.join("a/x"));
+            for link in ["a", "b"] {
+                assert!(fs::symlink_metadata(root.join(link))
+                    .expect("kept")
+                    .is_symlink());
+            }
+            outcome
         }),
         ("closed-parent", |root| {
             if !modes_bind(root) {
@@ -2806,6 +2862,73 @@ fn rewrite_provenance(dir: &Path, text: &str) {
     let own = Digest::of(blanked.as_bytes()).hex();
     let written = format!("{}{own}{}", &text[..start], &text[start + 64..]);
     fs::write(dir.join("provenance.json"), written).expect("written");
+}
+
+#[test]
+fn what_cannot_be_read_is_not_called_a_change() {
+    use std::os::unix::fs::PermissionsExt;
+    let root = scratch("explain-unread");
+    if !modes_bind(&root) {
+        return;
+    }
+    let dir = root.join("out");
+    let (status, _, err) = build(&example(HEARTBEAT), &dir);
+    assert_eq!(status, Status::Ok, "{err}");
+    let shown = dir.display().to_string();
+    assert_eq!(explain(&shown).0, Status::Ok);
+    let closed = |path: &Path, mode: u32, opened: u32| {
+        let _reopened = Reopened(vec![path.to_path_buf()]);
+        let set = |mode: u32| {
+            fs::set_permissions(path, fs::Permissions::from_mode(mode)).expect("its mode");
+        };
+        set(mode);
+        let (status, out, err) = explain(&shown);
+        set(opened);
+        assert_eq!(status, Status::Usage, "{}: {out}{err}", path.display());
+        assert!(out.is_empty(), "{out}");
+        assert!(err.contains("cannot be read, so nothing says"), "{err}");
+        assert!(err.contains("hint: open what it could not read"), "{err}");
+    };
+    closed(&dir.join("plan.txt"), 0o000, 0o644);
+    closed(&dir.join("rt-core"), 0o000, 0o755);
+    closed(&dir, 0o300, 0o755);
+    // Opened, with nothing rebuilt, it is as it was: which is what the first answer would have denied.
+    assert_eq!(explain(&shown).0, Status::Ok);
+    // A build truly changed is told so, and told what works: `build` will not write over it.
+    fs::write(dir.join("plan.txt"), "mine").expect("written");
+    let err = stale(&shown);
+    assert!(err.contains("into a new directory"), "{err}");
+    let (status, _, _) = build(&example(HEARTBEAT), &dir);
+    assert_eq!(status, Status::Usage, "`build` refuses what has changed");
+    let (status, _, err) = build(&example(HEARTBEAT), &root.join("new"));
+    assert_eq!(status, Status::Ok, "the repair the hint gives: {err}");
+}
+
+#[test]
+fn a_build_of_another_format_is_told_what_works() {
+    let root = scratch("other-format");
+    let dir = root.join("x");
+    fs::create_dir(&dir).expect("a directory");
+    fs::write(
+        dir.join("provenance.json"),
+        r#"{"format":"archogen-build-provenance/0"}"#,
+    )
+    .expect("written");
+    let (status, _, err) = build(&example(HEARTBEAT), &dir);
+    assert_eq!(status, Status::Usage, "{err}");
+    assert!(err.contains("take that build away"), "{err}");
+    assert!(!err.contains("move what is yours"), "{err}");
+    let (status, _, err) = explain(&dir.display().to_string());
+    assert_eq!(status, Status::Usage, "{err}");
+    assert!(err.contains("this engine reads"), "{err}");
+    assert!(
+        err.contains("with this engine, into a new directory"),
+        "{err}"
+    );
+    // The repair: what stands there taken away, the same name builds.
+    fs::remove_dir_all(&dir).expect("taken away");
+    let (status, _, err) = build(&example(HEARTBEAT), &dir);
+    assert_eq!(status, Status::Ok, "{err}");
 }
 
 /// What `explain` of `target` says of a build it must not speak for: the error stream.

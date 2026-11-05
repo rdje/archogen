@@ -177,6 +177,8 @@ the rule: what it says is run, and a route it does not name is promised nothing 
 | `edited` | an earlier build with a file edited | `usage` | `has changed since the build wrote it` | all of it |
 | `closed-within` | an earlier build with a directory this user cannot read | `usage` | `open what it could not read` | all of it |
 | `listed-gone` | an earlier build with a listed file removed | `usage` | `cannot be replaced` | the rest of it |
+| `a-provenance-past-what-it-reads` | a provenance larger than this engine reads one, told by its length without reading it | `usage` | `larger than this engine reads one` | all of it |
+| `flagged` | a flag on `--out`, found at the last step, where the platform has flags | `tool-failure` | `any flag on either` | all of it; nothing this run wrote |
 | `other-format` | a provenance of a format this engine does not read | `usage` | `this engine reads` | all of it |
 | `stage-stands` | anything at `DIR.building` | `usage` | `a build that stopped may have left it` | it |
 | `aside-stands` | anything at `DIR.replaced` | `usage` | `kept there what could not go` | it |
@@ -257,7 +259,8 @@ build/heartbeat: the search's plan for system `heartbeat` is the one this build 
 It holds the build to what `archogen build` holds an earlier one to first: every listed file and the provenance itself unchanged, and
 nothing else there but what building and looking at a package leave. A build that fails that, whose description no longer gives its
 plan, or whose record does not accept that plan from the checker it names is `stale-input`, and the command prints
-no account of a plan it did not write: the search can only speak for its own. ⚠️ A digest catches an edit and a stale file, never a
+no account of a plan it did not write: the search can only speak for its own. Its repair is a build into a new directory, since `archogen build` will not write over
+one that has changed. What cannot be read is no change: a file or directory of a build closed to this user is `usage`, whose repair is to open it, and with nothing rebuilt it then reads as it did. ⚠️ A digest catches an edit and a stale file, never a
 forger: whoever can write the directory can rewrite the list too. A provenance that no longer reads, or names another format, is
 `usage`, being no build this engine reads, and so is a request that misses, a requirement nobody writes, as of any description.
 

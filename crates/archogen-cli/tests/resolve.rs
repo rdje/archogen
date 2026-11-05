@@ -374,7 +374,8 @@ fn plan_routes() -> Vec<(&'static str, Route)> {
             outcome
         }),
         ("a-plan-with-notes-in-it", |root| {
-            // Every shape notes can take: what is written in a plan is someone's, wherever it is.
+            // Every shape of a note that leaves a plan no longer in canonical form: what is written there is someone's, wherever it is. One that keeps
+            // the form cannot be told from the search's own, `a-canonical-edit`'s row.
             let plan = root.join("p");
             let mut outcome = None;
             for notes in [
@@ -785,12 +786,14 @@ fn plan_routes() -> Vec<(&'static str, Route)> {
             a_checked_plan(&plan);
             let before = std::fs::read(&plan).expect("read");
             let record = root.join("p.check/plan-check.json");
+            let held = std::fs::read(&record).expect("read");
             std::fs::set_permissions(&record, std::fs::Permissions::from_mode(0o000))
                 .expect("its mode");
             let outcome = resolve_at(&plan.display().to_string(), &[]);
             std::fs::set_permissions(&record, std::fs::Permissions::from_mode(0o600))
                 .expect("its mode");
             assert_eq!(std::fs::read(&plan).expect("kept"), before);
+            assert_eq!(std::fs::read(&record).expect("kept"), held);
             std::fs::write(&record, "").expect("emptied");
             std::fs::set_permissions(&record, std::fs::Permissions::from_mode(0o000))
                 .expect("its mode");
@@ -810,12 +813,14 @@ fn plan_routes() -> Vec<(&'static str, Route)> {
             a_checked_plan(&plan);
             let before = std::fs::read(&plan).expect("read");
             let record = root.join("p.check/plan-check.json");
+            let held = std::fs::read(&record).expect("read");
             std::fs::set_permissions(&record, std::fs::Permissions::from_mode(0o000))
                 .expect("its mode");
             let outcome = resolve_at(&plan.display().to_string(), &["--unchecked"]);
             std::fs::set_permissions(&record, std::fs::Permissions::from_mode(0o600))
                 .expect("its mode");
             assert_eq!(std::fs::read(&plan).expect("kept"), before);
+            assert_eq!(std::fs::read(&record).expect("kept"), held);
             assert!(!root.join("p.part").exists());
             outcome
         }),
@@ -1068,7 +1073,11 @@ fn plan_routes() -> Vec<(&'static str, Route)> {
         }),
         ("link-on-the-way", |root| {
             std::os::unix::fs::symlink("nowhere", root.join("dangling")).expect("a link");
-            resolve_at(&root.join("dangling/x").display().to_string(), &[])
+            let outcome = resolve_at(&root.join("dangling/x").display().to_string(), &[]);
+            assert!(std::fs::symlink_metadata(root.join("dangling"))
+                .expect("kept")
+                .is_symlink());
+            outcome
         }),
         ("link-to-a-directory-on-the-way", |root| {
             std::fs::create_dir(root.join("real")).expect("a directory");
@@ -1080,7 +1089,13 @@ fn plan_routes() -> Vec<(&'static str, Route)> {
         ("link-loop-on-the-way", |root| {
             std::os::unix::fs::symlink(root.join("b"), root.join("a")).expect("a link");
             std::os::unix::fs::symlink(root.join("a"), root.join("b")).expect("a link");
-            resolve_at(&root.join("a/p").display().to_string(), &[])
+            let outcome = resolve_at(&root.join("a/p").display().to_string(), &[]);
+            for link in ["a", "b"] {
+                assert!(std::fs::symlink_metadata(root.join(link))
+                    .expect("kept")
+                    .is_symlink());
+            }
+            outcome
         }),
         ("absent", |root| {
             let outcome = resolve_at(&root.join("a/b/p").display().to_string(), &[]);

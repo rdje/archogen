@@ -120,8 +120,8 @@ pub fn kind_modules() -> Vec<(String, String)> {
 }
 
 /// Whether `text` is an assignment record in the canonical form the search writes (API `1.9`): read by the generator's own reader of
-/// the format, so a comment in any place makes it none, and a line it would not write. ⚠️ An edit that leaves it canonical, one binding
-/// for another, is still one: canonical text carries no digest of itself. What may replace an earlier plan asks this.
+/// the format, so a comment in any place makes it none, and a line out of its form or sorted place. ⚠️ An edit that leaves it canonical, one binding
+/// for another or one added in its place, is still one: canonical text carries no digest of itself. What may replace an earlier plan asks this.
 #[must_use]
 pub fn is_a_plan(text: &str) -> bool {
     eadl_resolve::plan::read(text).is_ok()

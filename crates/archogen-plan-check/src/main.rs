@@ -341,7 +341,7 @@ fn render(err: &mut dyn Write, findings: &[Finding]) {
     }
 }
 
-/// The most of what stands at `--result` it reads, to tell it is a record: any this engine writes.
+/// The most of what stands at `--result` it reads, to tell it is a record. No bound is claimed of what the engine writes: a record past it is refused, truly, with what to do.
 const RECORD_AT_MOST: u64 = 1 << 30;
 
 /// What begins a record, so that what is not one is refused without being read whole.
