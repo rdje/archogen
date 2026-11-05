@@ -41,9 +41,8 @@ fn main() -> ExitCode {
     // Flush explicitly: a locked stdout is flushed on drop, and a drop-time failure would be
     // discarded, turning a truncated report into a silent success.
     if stdout.flush().is_err() || stderr.flush().is_err() {
-        return ExitCode::from(
-            u8::try_from(archogen_cli::Status::ToolFailure.code()).unwrap_or(70),
-        );
+        let failure = archogen_cli::unwritten(&mut stderr);
+        return ExitCode::from(u8::try_from(failure.code()).unwrap_or(70));
     }
 
     ExitCode::from(u8::try_from(status.code()).unwrap_or(70))

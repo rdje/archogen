@@ -347,7 +347,7 @@ fn a_source_that_does_not_arrive_is_said_not_to() {
 
 #[test]
 fn a_period_of_no_whole_millisecond_is_exact() {
-    // S0's `whole-millisecond-periods` is over: the tick is what the plan's durations need.
+    // S0's `whole-millisecond-periods` is over: the tick is what the durations the run repeats need.
     let emitted = build_of(&periodic(&[("fast", "250 us"), ("slow", "1 ms")]))
         .emitted()
         .expect("emitted");

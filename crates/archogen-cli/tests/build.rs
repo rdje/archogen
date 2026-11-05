@@ -839,9 +839,71 @@ fn a_listed_file_changed_while_a_build_runs_stays_and_is_said() {
         );
         assert_eq!(status, Status::ToolFailure, "{err}");
         assert!(err.contains("appeared while the build ran"), "{err}");
+        assert!(err.contains("look at it, and move or remove it"), "{err}");
+        assert!(!err.contains("whose parent can be written"), "{err}");
         assert!(beside(&dir, ".replaced").is_dir());
         assert!(dir.join("Cargo.toml").is_file(), "the earlier build stays");
+        assert!(!beside(&dir, ".building").exists());
+        // At the place itself, where nothing stood: refused, what came left alone, nothing placed.
+        let dir = root.join("came");
+        let (status, _, err) = invoke(
+            &["build", &description, "--out", &dir.display().to_string()],
+            &Changing {
+                change: |dir| fs::create_dir_all(dir).expect("a directory"),
+                dir: dir.clone(),
+            },
+        );
+        assert_eq!(status, Status::ToolFailure, "{err}");
+        assert!(err.contains("appeared while the build ran"), "{err}");
+        assert!(err.contains("look at it, and move or remove it"), "{err}");
+        assert!(!err.contains("whose parent can be written"), "{err}");
+        assert_eq!(fs::read_dir(&dir).expect("a directory").count(), 0);
+        assert!(!beside(&dir, ".building").exists());
+        // What stood there gone while it ran: the repair says that, and not something about the parent.
+        let dir = root.join("went");
+        let (status, _, err) = build(&description, &dir);
+        assert_eq!(status, Status::Ok, "{err}");
+        let (status, _, err) = invoke(
+            &["build", &description, "--out", &dir.display().to_string()],
+            &Changing {
+                change: |dir| fs::remove_dir_all(dir).expect("removed"),
+                dir: dir.clone(),
+            },
+        );
+        assert_eq!(status, Status::ToolFailure, "{err}");
+        assert!(
+            err.contains("moved or removed what the build was moving"),
+            "{err}"
+        );
+        assert!(!err.contains("whose parent can be written"), "{err}");
+        assert!(!beside(&dir, ".building").exists());
     }
+}
+
+#[test]
+fn what_is_put_in_the_stage_while_a_build_runs_lands_with_it() {
+    let dir = scratch("in-the-stage").join("out");
+    let description = example(HEARTBEAT);
+    let (status, _, err) = invoke(
+        &["build", &description, "--out", &dir.display().to_string()],
+        &Changing {
+            change: |dir| {
+                let mut stage = dir.as_os_str().to_owned();
+                stage.push(".building");
+                fs::write(PathBuf::from(stage).join("mine.txt"), "mine").expect("written");
+            },
+            dir: dir.clone(),
+        },
+    );
+    assert_eq!(status, Status::Ok, "{err}");
+    assert_eq!(
+        fs::read_to_string(dir.join("mine.txt")).expect("landed"),
+        "mine"
+    );
+    // So the package is no longer exactly a build's, and the next build says what is in it.
+    let (status, _, err) = build(&description, &dir);
+    assert_eq!(status, Status::Usage, "{err}");
+    assert!(err.contains("`mine.txt` is no file a build wrote"), "{err}");
 }
 
 #[test]
@@ -986,6 +1048,179 @@ fn a_stage_some_other_run_left_is_refused_and_left_alone() {
     let (status, _, err) = build(&held.display().to_string(), &dir);
     assert_eq!(status, Status::Usage, "{err}");
     assert!(held.is_file(), "the description was deleted");
+}
+
+/// A directory's mode gives way when the test ends, however it ends, so that the next run's `scratch` can clear it.
+#[cfg(unix)]
+struct Reopened(Vec<PathBuf>);
+
+#[cfg(unix)]
+impl Drop for Reopened {
+    fn drop(&mut self) {
+        use std::os::unix::fs::PermissionsExt;
+        for dir in &self.0 {
+            let _ = fs::set_permissions(dir, fs::Permissions::from_mode(0o755));
+        }
+    }
+}
+
+/// `dir`'s mode, its permission bits alone.
+#[cfg(unix)]
+fn mode_of(dir: &Path) -> u32 {
+    use std::os::unix::fs::PermissionsExt;
+    fs::symlink_metadata(dir)
+        .expect("it stands")
+        .permissions()
+        .mode()
+        & 0o777
+}
+
+/// `dir` given `mode`.
+#[cfg(unix)]
+fn set_mode(dir: &Path, mode: u32) {
+    use std::os::unix::fs::PermissionsExt;
+    fs::set_permissions(dir, fs::Permissions::from_mode(mode)).expect("its mode");
+}
+
+#[test]
+#[cfg(unix)]
+fn a_directory_closed_to_its_owner_s_writes_takes_a_package_and_keeps_its_mode() {
+    let description = example(HEARTBEAT);
+    for mode in [0o555, 0o500] {
+        let root = scratch(&format!("closed-{mode:o}"));
+        let (status, _, err) = build(&description, &root.join("clean"));
+        assert_eq!(status, Status::Ok, "{err}");
+        let clean = snapshot(&root.join("clean"));
+        let dir = root.join("out");
+        let _reopened = Reopened(vec![dir.clone()]);
+        // Empty, and it holds nothing that would stop it.
+        fs::create_dir(&dir).expect("a directory");
+        set_mode(&dir, mode);
+        let (status, _, err) = build(&description, &dir);
+        assert_eq!(status, Status::Ok, "{err}");
+        assert_eq!(mode_of(&dir), mode, "{err}");
+        assert_eq!(clean, snapshot(&dir), "the package is not whole");
+        assert!(!beside(&dir, ".replaced").exists(), "{err}");
+        assert!(!beside(&dir, ".building").exists(), "{err}");
+        // An earlier build at that mode, with what cargo left in it: carried, the mode given after that.
+        set_mode(&dir, 0o755);
+        fs::create_dir(dir.join("target")).expect("a directory");
+        fs::write(dir.join("target/kept.txt"), "cargo's").expect("written");
+        set_mode(&dir, mode);
+        let (status, _, err) = build(&description, &dir);
+        assert_eq!(status, Status::Ok, "{err}");
+        assert_eq!(mode_of(&dir), mode, "{err}");
+        assert_eq!(clean, snapshot(&dir), "the package is not whole");
+        assert_eq!(
+            fs::read_to_string(dir.join("target/kept.txt")).expect("carried"),
+            "cargo's"
+        );
+        assert!(!beside(&dir, ".replaced").exists(), "{err}");
+    }
+}
+
+#[test]
+#[cfg(unix)]
+fn what_stays_of_an_earlier_build_keeps_the_mode_it_had() {
+    let root = scratch("closed-stays");
+    let dir = root.join("out");
+    let aside = beside(&dir, ".replaced");
+    let _reopened = Reopened(vec![
+        dir.clone(),
+        aside.clone(),
+        aside.join("rt-core/src"),
+        dir.join("rt-core/src"),
+    ]);
+    let description = example(HEARTBEAT);
+    let (status, _, err) = build(&description, &dir);
+    assert_eq!(status, Status::Ok, "{err}");
+    set_mode(&dir.join("rt-core/src"), 0o555);
+    set_mode(&dir, 0o555);
+    let (status, _, err) = build(&description, &dir);
+    assert_eq!(status, Status::Ok, "{err}");
+    assert_eq!(mode_of(&dir), 0o555, "{err}");
+    // Running as root, nothing stands in the way, and nothing stays.
+    if aside.exists() {
+        assert_eq!(mode_of(&aside), 0o555, "{err}");
+        assert!(err.contains("rt-core/src/"), "{err}");
+        // What did go, went: the top of it was opened for that.
+        assert!(!aside.join("Cargo.toml").exists(), "{err}");
+    }
+}
+
+#[test]
+#[cfg(unix)]
+fn a_stage_closes_from_the_first_what_the_mode_it_will_take_closes_its_owner_able_to_write() {
+    for (mode, stage) in [(0o555, 0o755), (0o550, 0o750), (0o500, 0o700)] {
+        let dir = scratch(&format!("stage-{mode:o}")).join("out");
+        let _reopened = Reopened(vec![dir.clone()]);
+        fs::create_dir(&dir).expect("a directory");
+        set_mode(&dir, mode);
+        let (status, _, err) = invoke(
+            &[
+                "build",
+                &example(HEARTBEAT),
+                "--out",
+                &dir.display().to_string(),
+            ],
+            &Answering {
+                status: Status::ToolFailure,
+                code: Status::ToolFailure.code(),
+            },
+        );
+        assert_eq!(status, Status::ToolFailure, "{err}");
+        assert_eq!(mode_of(&beside(&dir, ".building")), stage, "{err}");
+        assert_eq!(
+            mode_of(&dir),
+            mode,
+            "a refused build touched what stood there"
+        );
+    }
+}
+
+#[test]
+fn a_name_with_no_room_for_its_stage_is_a_usage_error_and_leaves_nothing() {
+    let root = scratch("no-room");
+    let description = example(HEARTBEAT);
+    let long = "x".repeat(250);
+    // Beside a parent that stands, the check reads it at once.
+    let (status, _, err) = build(&description, &root.join(&long));
+    assert_eq!(status, Status::Usage, "{err}");
+    assert!(err.contains("room in its name"), "{err}");
+    // Under parents that do not stand yet, a path reads as absent up to its first missing name, so only making it can tell.
+    let (status, _, err) = build(&description, &root.join("a/b").join(&long));
+    assert_eq!(status, Status::Usage, "{err}");
+    assert!(err.contains("room in its name"), "{err}");
+    assert_eq!(
+        fs::read_dir(&root).expect("a directory").count(),
+        0,
+        "the parents it made stayed"
+    );
+}
+
+#[test]
+fn a_report_that_cannot_be_written_is_said_and_is_the_exit_code() {
+    // `--version` fails as it writes, and `check` when the executable flushes: each route says so.
+    let description = example(HEARTBEAT);
+    let check: [&str; 2] = ["check", &description];
+    for args in [&["--version"][..], &check[..]] {
+        let (reader, writer) = std::io::pipe().expect("a pipe");
+        drop(reader);
+        let output = Command::new(env!("CARGO_BIN_EXE_archogen"))
+            .args(args)
+            .stdout(writer)
+            .output()
+            .expect("the executable runs");
+        assert_eq!(
+            output.status.code(),
+            Some(Status::ToolFailure.code()),
+            "{output:?}"
+        );
+        assert!(
+            String::from_utf8_lossy(&output.stderr).contains("could not be written whole"),
+            "{output:?}"
+        );
+    }
 }
 
 #[test]

@@ -68,3 +68,20 @@ each `plan.txt`, against what each run printed, and found none wrong. Eleven of 
 | R3-8 | wording | leftovers from before H2-8 in the chapter and record: "the plan's durations", "a duration past 64 bits", "each naming the task" | Reworded to what the run repeats and to what each refusal names |
 | R3-9 | gap | older than this review: a description that is a link read its modules from two places, the front's beside the link and the checker's beside its target, so a build said "report it", falsely | `consume.rs` keeps the description's own name under its canonical directory, so both read through the link; a test |
 
+
+**Round 4** — `2026-11-05`, reported `2026-11-04`: not acceptable, 5 findings, each defect a refusal that leaves `--out` as it was. Its
+reader worked over round 3's answers alone, on an install of `d14c6fba`'s code. Each was first measured on an install of `68f62a87`'s
+code, each behaving as the reader said; an install of the answers' own snapshot measured each after.
+
+| # | Kind | Finding | Answer |
+| --- | --- | --- | --- |
+| R4-1 | defect | a regression from R3-3's answer: `mkdir ro; chmod 555 ro; archogen build S --out ro` was `tool-failure`, exit 70, with a false hint, since the stage took `DIR`'s mode before anything was written | The stage closes from the first what that mode closes, its owner able to write; the package takes the exact mode last, on every way out once it stands; what went aside is opened to its owner the same way, and what stays takes back its mode. Tests at `555` and `500`, empty and over an earlier build with what cargo left carried, a stage at each, and what stays |
+| R4-2 | defect | a `--out` name too long for its stage read as absent, any error taken for absence, so it was refused late as `tool-failure`, and a failed `open` left the parents it made | Only `NotFound` is absence, the rest `usage` at once. A path reads as absent up to its first missing name, so under parents that do not stand yet only making the stage can tell: that error is `usage` too. A failed `open` removes the parents, never the stage, which it did not make. A test for each route |
+| R4-3 | wording | "a file whose bytes match" was false of the instant the record disclaims: what stands at that path at that moment goes, whatever its bytes | Said so in the record, `build_cmd.rs` and `built.rs` |
+| R4-4 | wording | what appeared at `DIR` or `DIR.replaced` while a build ran was refused, where the record and the chapter said it stayed with the package in place; those refusals printed a false hint; what is put in the stage lands with it; the message for a `DIR.replaced` a finished build left named only other causes | Each said as it is. Each refusal has its own repair, by a type of them, one that finds what stood at `DIR` gone among them; a test for each and for what lands. The message says what may have left each name, and no more than may |
+| R4-5 | wording | "whole or absent" and "deletes nothing" unqualified in the chapter's "In one minute" and `build_cmd.rs`; "the one thing it removes" against the stage's contents; "the plan's durations" in `docs/book/src/s0.md` and a comment of `crates/archogen-emit/tests/emit.rs` | `DIR` holds at every moment what stood there, nothing, or the whole package; what a build deletes that it did not write is named wherever that is stated; the rest reworded |
+
+Seen beside it, and answered with these: `archogen resolve --out` at a directory left its `.part`: what it wrote beside the plan goes if
+the plan cannot land, and what already stands at that name is refused and left alone, a test holding both. A closed standard output
+exited `70` with nothing said, by two routes, the library's `emit` and the executable's flush: each says so now, `archogen_cli::unwritten`, a
+test holding both, and the record and `cli.md` state it. Its code stays the older design's, for every command.

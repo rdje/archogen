@@ -209,8 +209,8 @@ impl Built {
     /// through real directories, then each directory that held them and is empty now. Nothing else goes: what stays is for
     /// its owner to look at.
     ///
-    /// ⚠️ Each path is held at the moment it is used, which is as far as `std` goes: another program swapping a directory for
-    /// a link between that moment and the removal could still redirect one file, and only one whose bytes match.
+    /// ⚠️ Each path is held just before it is used, which is as far as `std` goes: in the instant between, whatever another
+    /// program puts at that path goes, whatever its bytes, and a directory it swaps for a link redirects the removal.
     pub fn remove(&self, dir: &Path) {
         // A directory on the way that is no longer a real one is not this build's.
         let reached = |name: &str| {

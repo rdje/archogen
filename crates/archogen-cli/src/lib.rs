@@ -66,14 +66,14 @@ where
     S: Into<String>,
 {
     match cli::parse(args) {
-        Ok(Invocation::Help(None)) => emit(out, &cli::help_overview()),
+        Ok(Invocation::Help(None)) => emit(out, err, &cli::help_overview()),
         Ok(Invocation::Help(Some(name))) => match spec::command(name).and_then(|spec| spec.sibling)
         {
             // A sibling's help is its own: the front holds none of its options to describe.
             Some(program) => sibling(program, &["--help".to_owned()], launcher, out, err),
-            None => emit(out, &cli::help_command(name)),
+            None => emit(out, err, &cli::help_command(name)),
         },
-        Ok(Invocation::Version) => emit(out, &format!("archogen {VERSION}\n")),
+        Ok(Invocation::Version) => emit(out, err, &format!("archogen {VERSION}\n")),
         Ok(Invocation::Run(parsed)) => dispatch(&parsed, input, launcher, out, err),
         Err(refusal) => report(err, &refusal),
     }
@@ -108,11 +108,23 @@ fn sibling(
     report(err, &refusal)
 }
 
-fn emit(out: &mut dyn Write, text: &str) -> Status {
+fn emit(out: &mut dyn Write, err: &mut dyn Write, text: &str) -> Status {
     if write!(out, "{text}").is_err() {
-        return Status::ToolFailure;
+        return unwritten(err);
     }
     Status::Ok
+}
+
+/// Say that standard output could not take the report, the exit code that follows from it: it is said, since a code alone
+/// would not tell a reader that whatever the command did stands.
+pub fn unwritten(err: &mut dyn Write) -> Status {
+    let failure = Status::ToolFailure;
+    let _ = writeln!(
+        err,
+        "archogen: {}: the report could not be written whole, so the exit code is this one; what the command did stands, a package it placed among it",
+        failure.slug()
+    );
+    failure
 }
 
 /// Print a refusal in the shape every archogen diagnostic uses: what happened, then what to
@@ -439,5 +451,6 @@ mod tests {
         let status = run(["--help"].map(String::from), &mut out, &mut err);
         assert_eq!(status, Status::ToolFailure);
         assert_eq!(status.code(), 70);
+        assert!(String::from_utf8_lossy(&err).contains("could not be written whole"));
     }
 }

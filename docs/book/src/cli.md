@@ -204,13 +204,14 @@ any description:
 | Code | Status | Meaning |
 | --- | --- | --- |
 | `0` | `ok` | the command completed and its result was affirmative |
-| `2` | `usage` | the command line was malformed |
+| `2` | `usage` | the command line was malformed, or names what the command cannot use |
 | `3` | `stale-input` | the inputs do not belong together — a plan resolved from another description, a build made from another plan — so nothing was judged; resolve, or build, again |
 | `20` | `unimplemented` | the command is part of the §10.2 target but is not built yet |
 
 `tool-failure` sits with the diagnostic results because §5.5 defines it there, but it shares
 its code with nothing: a toolchain that failed has not produced a valid system, and must
-never be readable as one. `unimplemented` is temporary — it disappears command by command as
+never be readable as one. A report standard output could not take is one too, for every command, whatever
+the verdict was and with what the command did left standing, and it says so on standard error. `unimplemented` is temporary — it disappears command by command as
 the owning leaves land. `stale-input` is permanent: a checker answers it when what it was handed was not made
 together, and it says nothing about the system either.
 

@@ -193,6 +193,30 @@ fn a_resolved_plan_is_checked_and_the_checker_s_verdict_is_the_status() {
 }
 
 #[test]
+fn a_plan_that_cannot_land_leaves_nothing_beside_it_and_takes_nothing_it_did_not_write() {
+    let dir = scratch();
+    // A directory at `--out`: the rename fails, and what was written beside it goes.
+    let at = dir.join("a-directory");
+    std::fs::create_dir_all(at.join("mine")).expect("a directory");
+    let part = dir.join("a-directory.part");
+    let checker = Checker::answering(Answer::Record(Status::Ok));
+    let (status, _, err) = resolve(&[&heartbeat(), "--out", at.to_str().unwrap()], &checker);
+    assert_eq!(status, Status::ToolFailure, "{err}");
+    assert!(err.contains("cannot write the plan"), "{err}");
+    assert!(!part.exists(), "{err}");
+    assert!(at.join("mine").is_dir());
+    // What stands at the name beside it is not this run's: refused, named and left alone.
+    let plan = dir.join("plan.json");
+    let part = dir.join("plan.json.part");
+    std::fs::write(&part, "mine").expect("written");
+    let (status, _, err) = resolve(&[&heartbeat(), "--out", plan.to_str().unwrap()], &checker);
+    assert_eq!(status, Status::ToolFailure, "{err}");
+    assert!(err.contains("plan.json.part"), "{err}");
+    assert_eq!(std::fs::read_to_string(&part).expect("kept"), "mine");
+    assert!(!plan.exists());
+}
+
+#[test]
 fn a_plan_the_checker_refuses_is_a_tool_failure_naming_both() {
     let dir = scratch();
     let plan = dir.join("plan.json");

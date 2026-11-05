@@ -11,13 +11,14 @@
 //!    is the command line's alone (`ROADMAP.md` §10.4).
 //! 4. Lower on its acceptance ([`archogen_plan::lower_checked`]) and emit ([`archogen_emit::emit`]), which lowers again and
 //!    compares bytes.
-//! 5. Write the package in `DIR.building` and rename it into place, so `DIR` is at every moment a whole package or
-//!    absent ([`Place`]).
+//! 5. Write the package in `DIR.building` and rename it into place, so `DIR` holds at every moment what stood there,
+//!    nothing, or the whole package ([`Place`]).
 //!
 //! ⛔ **Never a programmatic operation.** §10.4 rules that generation writes a crate tree and stays a human or CI action,
 //! so nothing else reaches this file: the command table excludes it, and only the command line holds a launcher.
 
-use std::io::Write;
+use std::fs::Permissions;
+use std::io::{ErrorKind, Write};
 use std::path::{Component, Path, PathBuf};
 
 use archogen_api::{Elaborated, Limits, Plan, Resolve, Response};
@@ -33,6 +34,9 @@ use crate::launch::Launch;
 use crate::resolve_cmd::print_owed;
 use crate::spec::Maturity;
 use crate::status::Status;
+
+/// The repair for a name with no room for what a build needs beside it, or that lies where this user cannot reach.
+const ROOM: &str = "name a directory with room in its name for `.building` and `.replaced`, in a place this user can reach";
 
 /// Run `archogen build`.
 pub fn run(
@@ -122,29 +126,32 @@ pub fn run(
         }
     };
     match place.land() {
-        Ok(None) => {}
-        Ok(Some(remains)) => {
-            let _ = writeln!(
-                err,
-                "archogen: the package is in place, and {} keeps what could not go or what no build wrote: {remains}; \
-                 look at it, and remove it",
-                place.replaced.display()
-            );
+        Ok(landed) => {
+            if let Some(remains) = landed.kept {
+                let _ = writeln!(
+                    err,
+                    "archogen: the package is in place, and {} keeps what could not go or what no build wrote: {remains}; \
+                     look at it, and remove it",
+                    place.replaced.display()
+                );
+            }
+            if let Some(why) = landed.unmoded {
+                let _ = writeln!(
+                    err,
+                    "archogen: the package is in place, and could not take the mode of what it replaced: {why}"
+                );
+            }
         }
-        Err(why) => {
+        Err(unplaced) => {
             place.abandon();
+            let (why, repair) = unplaced.said(&place);
             let _ = writeln!(
                 err,
                 "archogen: {}: cannot put the generated package in place at {}: {why}",
                 Status::ToolFailure.slug(),
                 place.dir.display()
             );
-            if !why.contains("could not be put back") {
-                let _ = writeln!(
-                    err,
-                    "  hint: give `--out` a directory whose parent can be written"
-                );
-            }
+            let _ = writeln!(err, "  hint: {repair}");
             return Status::ToolFailure;
         }
     }
@@ -152,17 +159,93 @@ pub fn run(
     Status::Ok
 }
 
-/// Where a package goes: `dir`, by way of a stage beside it, so that it lands whole.
+/// `mode` with its owner able to write: what it closes to others stays closed, while a build writes in a directory that will
+/// end with `mode` itself.
+#[cfg(unix)]
+fn owner_writes(mode: &Permissions) -> Permissions {
+    use std::os::unix::fs::PermissionsExt;
+    Permissions::from_mode(mode.mode() | 0o700)
+}
+
+/// `mode` with its owner able to write, as far as a platform with no owner's bits can say it.
+#[cfg(not(unix))]
+#[allow(clippy::permissions_set_readonly_false)]
+fn owner_writes(mode: &Permissions) -> Permissions {
+    let mut writable = mode.clone();
+    writable.set_readonly(false);
+    writable
+}
+
+/// What a package's landing leaves to say, the package standing either way.
+struct Landed {
+    /// What stays at `DIR.replaced`, named.
+    kept: Option<String>,
+    /// Why the package could not take the mode of what it replaced.
+    unmoded: Option<std::io::Error>,
+}
+
+/// Why a package was not placed.
+enum Unplaced {
+    /// Something came, while the build ran, to a place it had seen free.
+    Appeared(PathBuf),
+    /// A rename failed, and what stood at `DIR` stands there again, if anything did.
+    Renaming(std::io::Error),
+    /// The second rename failed, and what stood at `DIR` could not be put back from `DIR.replaced`.
+    Stranded {
+        error: std::io::Error,
+        again: std::io::Error,
+    },
+}
+
+impl Unplaced {
+    /// What went wrong, and the repair for it.
+    fn said(&self, place: &Place) -> (String, String) {
+        match self {
+            Self::Appeared(at) => (
+                format!("{} appeared while the build ran", at.display()),
+                "look at it, and move or remove it; or name another directory".to_owned(),
+            ),
+            Self::Renaming(error) if error.kind() == ErrorKind::NotFound => (
+                error.to_string(),
+                format!(
+                    "something moved or removed what the build was moving while it ran: look at {}, and build again",
+                    place.dir.display()
+                ),
+            ),
+            Self::Renaming(error) => (
+                error.to_string(),
+                "give `--out` a directory whose parent can be written, and no mount point".to_owned(),
+            ),
+            Self::Stranded { error, again } => (
+                format!(
+                    "{error}; and what stood there could not be put back ({again}), and is at {}",
+                    place.replaced.display()
+                ),
+                format!(
+                    "{} is what stood at {}: look at it, and move it back or remove it",
+                    place.replaced.display(),
+                    place.dir.display()
+                ),
+            ),
+        }
+    }
+}
+
+/// Where a package goes: `dir`, by way of a stage beside it, so that it lands whole: `dir` holds at every moment what stood
+/// there, nothing, or the whole package.
 ///
-/// ⛔ **A build deletes nothing it did not write.** With `remove_dir_all` it removes only a stage this very run made. Of an
-/// earlier build it removes each file [`Built`] lists, file by file and only if still as written, and the directories that
-/// held them where that leaves them empty. So whatever appears meanwhile, or is edited, stays, and the command says so. What
-/// [`crate::built::CARRIED`] names is moved to the new package. Anything else is refused and left alone, a stage some other run
-/// left among it: a run that stopped, or the report of a disagreement, which is not this run's to delete.
+/// ⛔ **A build deletes nothing it did not write, but for what it names here.** With `remove_dir_all` it removes only a stage
+/// this very run made, with whatever was put in it meanwhile; and it takes an empty directory named by `--out`. Of an earlier
+/// build it removes each file [`Built`] lists, file by file and only if still as written, and the directories that held them
+/// where that leaves them empty. So whatever appears meanwhile in what it replaces, or is edited, stays, and the command says
+/// so. What [`crate::built::CARRIED`] names is moved to the new package. Anything else is refused and left alone, a stage some
+/// other run left among it: a run that stopped, or the report of a disagreement, which is not this run's to delete. What is put
+/// in the stage while it runs lands with the package, the stage being the package.
 ///
 /// ⚠️ **What this does not hold against.** `std` has no rename that refuses to replace, and no directory-relative open, so each
 /// path is held again just before it is used and not at the moment itself. Another program, working in the same directory in that
-/// instant, could have an empty directory it made replaced, or redirect the removal of a file whose bytes match.
+/// instant, could have an empty directory it made replaced, or have what it puts at a listed path removed, whatever its bytes,
+/// through a link if it swaps a directory for one.
 struct Place {
     dir: PathBuf,
     stage: PathBuf,
@@ -208,16 +291,37 @@ impl Place {
             PathBuf::from(name)
         };
         let (stage, replaced) = (beside(".building"), beside(".replaced"));
-        for other in [&stage, &replaced] {
-            if std::fs::symlink_metadata(other).is_ok() {
-                return Err(usage(
-                    format!(
-                        "{} exists, left by a build that stopped or holding the report of a disagreement, and a build \
-                         deletes nothing it did not write",
-                        other.display()
-                    ),
-                    "look at it, and move or remove it; or name another directory",
-                ));
+        let beside_it = [
+            (
+                &stage,
+                "a build that stopped may have left it, or it may hold the report of a disagreement",
+            ),
+            (
+                &replaced,
+                "a build may have stopped between its renames, or kept there what could not go or what came while it ran",
+            ),
+        ];
+        for (other, maybe) in beside_it {
+            match std::fs::symlink_metadata(other) {
+                Err(error) if error.kind() == ErrorKind::NotFound => {}
+                Err(error) => {
+                    return Err(usage(
+                        format!(
+                            "cannot use {}, which `--out {out_dir}` needs beside it: {error}",
+                            other.display()
+                        ),
+                        ROOM,
+                    ))
+                }
+                Ok(_) => {
+                    return Err(usage(
+                        format!(
+                            "{} exists, and a build deletes nothing it did not write: {maybe}",
+                            other.display()
+                        ),
+                        "look at it, and move or remove it; or name another directory",
+                    ))
+                }
             }
         }
         let occupied = match std::fs::symlink_metadata(&dir) {
@@ -287,69 +391,98 @@ impl Place {
         }
     }
 
-    /// The stage made, by this run alone: a stage that appears meanwhile is another run's. It takes the mode of what it will
-    /// replace from the first, since it holds what a private directory would keep private.
+    /// The stage made, by this run alone: a stage that appears meanwhile is another run's. From the first it closes what the
+    /// mode of what it will replace closes, since it holds what a private directory would keep private, its owner able to
+    /// write: that mode comes last ([`Self::land`]), and a directory closed to its owner's writes still takes a package.
+    ///
+    /// A name too long for its stage can first be seen here when the parents it lies under do not exist yet, since a path
+    /// is read only as far as its first missing name.
     fn open(&self) -> Result<(), Failed> {
-        let opened = self
+        let failed = |error: std::io::Error| {
+            let message = format!(
+                "cannot make the directory {}: {error}",
+                self.stage.display()
+            );
+            if error.kind() == ErrorKind::InvalidFilename {
+                Failed::Usage(message, ROOM.to_owned())
+            } else {
+                Failed::Tool(message)
+            }
+        };
+        let made = self
             .stage
             .parent()
             .filter(|parent| !parent.as_os_str().is_empty())
             .map_or(Ok(()), std::fs::create_dir_all)
-            .and_then(|()| std::fs::create_dir(&self.stage))
-            .and_then(|()| match &self.occupied {
-                Some((mode, _)) => std::fs::set_permissions(&self.stage, mode.clone()),
-                None => Ok(()),
-            });
-        opened.map_err(|error| {
-            Failed::Tool(format!(
-                "cannot make the directory {}: {error}",
-                self.stage.display()
-            ))
-        })
+            .and_then(|()| std::fs::create_dir(&self.stage));
+        if let Err(error) = made {
+            // Never the stage: this call did not make it, so it is not this run's.
+            self.unmake();
+            return Err(failed(error));
+        }
+        if let Some((mode, _)) = &self.occupied {
+            if let Err(error) = std::fs::set_permissions(&self.stage, owner_writes(mode)) {
+                self.abandon();
+                return Err(failed(error));
+            }
+        }
+        Ok(())
     }
 
-    /// The stage gone, with whatever this run made to reach it that stayed empty.
-    fn abandon(&self) {
-        let _ = std::fs::remove_dir_all(&self.stage);
+    /// The directories this run made to reach the stage gone, where they stayed empty.
+    fn unmake(&self) {
         for made in &self.made {
             let _ = std::fs::remove_dir(made);
         }
     }
 
-    /// The package in place, by two renames, so `dir` is at every moment a whole package or absent, and an earlier build is
-    /// restored if the second fails, or named if it cannot be. Then what it replaced goes as [`Place`] says, and what is
-    /// left there, if anything, is the answer: the new package stands either way.
-    fn land(&self) -> Result<Option<String>, String> {
+    /// The stage gone, with whatever this run made to reach it that stayed empty.
+    fn abandon(&self) {
+        let _ = std::fs::remove_dir_all(&self.stage);
+        self.unmake();
+    }
+
+    /// The package in place, by two renames, so `dir` holds at every moment what stood there, nothing, or the whole package,
+    /// and what stood there is restored if the second fails, or named if it cannot be. From there on the package stands: what
+    /// it replaced goes as [`Place`] says, and it takes that mode last, on every way out, once nothing more is carried to it.
+    fn land(&self) -> Result<Landed, Unplaced> {
         // Held again, the checker having run since: a rename would silently replace an empty directory that came meanwhile.
-        let appeared = |at: &Path| format!("{} appeared while the build ran", at.display());
-        let Some((_, earlier)) = &self.occupied else {
+        let Some((mode, earlier)) = &self.occupied else {
             if std::fs::symlink_metadata(&self.dir).is_ok() {
-                return Err(appeared(&self.dir));
+                return Err(Unplaced::Appeared(self.dir.clone()));
             }
-            return std::fs::rename(&self.stage, &self.dir)
-                .map(|()| None)
-                .map_err(|error| error.to_string());
+            std::fs::rename(&self.stage, &self.dir).map_err(Unplaced::Renaming)?;
+            return Ok(Landed {
+                kept: None,
+                unmoded: None,
+            });
         };
         if std::fs::symlink_metadata(&self.replaced).is_ok() {
-            return Err(appeared(&self.replaced));
+            return Err(Unplaced::Appeared(self.replaced.clone()));
         }
-        std::fs::rename(&self.dir, &self.replaced).map_err(|error| error.to_string())?;
+        std::fs::rename(&self.dir, &self.replaced).map_err(Unplaced::Renaming)?;
         if let Err(error) = std::fs::rename(&self.stage, &self.dir) {
             return Err(match std::fs::rename(&self.replaced, &self.dir) {
-                Ok(()) => error.to_string(),
-                Err(again) => format!(
-                    "{error}; and what stood there could not be put back ({again}), and is at {}",
-                    self.replaced.display()
-                ),
+                Ok(()) => Unplaced::Renaming(error),
+                Err(again) => Unplaced::Stranded { error, again },
             });
         }
-        // What went aside may have been swapped for a link since it was judged: then nothing behind it is this build's.
+        let kept = self.clear_aside(mode, earlier.as_ref());
+        let unmoded = std::fs::set_permissions(&self.dir, mode.clone()).err();
+        Ok(Landed { kept, unmoded })
+    }
+
+    /// What went aside carried and removed as [`Place`] says, and what is left there, named, if anything. It is opened to its
+    /// owner for that, and what stays takes back its mode.
+    fn clear_aside(&self, mode: &Permissions, earlier: Option<&Built>) -> Option<String> {
+        // It may have been swapped for a link since it was judged: then nothing behind it is this build's, nor is its mode.
         if !std::fs::symlink_metadata(&self.replaced).is_ok_and(|meta| meta.is_dir()) {
-            return Ok(Some(format!(
+            return Some(format!(
                 "{} is no longer a directory",
                 self.replaced.display()
-            )));
+            ));
         }
+        let _ = std::fs::set_permissions(&self.replaced, owner_writes(mode));
         for name in CARRIED {
             let from = self.replaced.join(name);
             if std::fs::symlink_metadata(&from).is_ok() {
@@ -360,8 +493,15 @@ impl Place {
             earlier.remove(&self.replaced);
         }
         if std::fs::remove_dir(&self.replaced).is_ok() {
-            return Ok(None);
+            return None;
         }
+        let remains = self.remaining();
+        let _ = std::fs::set_permissions(&self.replaced, mode.clone());
+        Some(remains)
+    }
+
+    /// What `DIR.replaced` still holds, by name, the first few of it.
+    fn remaining(&self) -> String {
         let named = |at: &Path| {
             at.strip_prefix(&self.replaced)
                 .unwrap_or(at)
@@ -392,11 +532,11 @@ impl Place {
             .cloned()
             .collect::<Vec<_>>()
             .join(", ");
-        Ok(Some(if remains.len() > 5 {
+        if remains.len() > 5 {
             format!("{shown} and {} more", remains.len() - 5)
         } else {
             shown
-        }))
+        }
     }
 }
 

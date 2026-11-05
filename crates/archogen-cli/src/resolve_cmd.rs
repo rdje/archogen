@@ -214,7 +214,8 @@ pub(crate) fn print_owed(plan: &Plan, out: &mut dyn Write) {
     }
 }
 
-/// Write `text` at `path` whole: its directory made, the text written beside it and renamed into place.
+/// Write `text` at `path` whole: its directory made, the text written beside it and renamed into place. What it wrote beside
+/// it goes if that fails, and what already stands at that name is not this run's, so it is refused and left alone.
 fn write_whole(path: &Path, text: &str) -> std::io::Result<()> {
     if let Some(parent) = path.parent().filter(|p| !p.as_os_str().is_empty()) {
         std::fs::create_dir_all(parent)?;
@@ -222,6 +223,18 @@ fn write_whole(path: &Path, text: &str) -> std::io::Result<()> {
     let mut part = path.as_os_str().to_owned();
     part.push(".part");
     let part = PathBuf::from(part);
-    std::fs::write(&part, text)?;
-    std::fs::rename(&part, path)
+    let mut file = std::fs::OpenOptions::new()
+        .write(true)
+        .create_new(true)
+        .open(&part)
+        .map_err(|error| {
+            std::io::Error::new(error.kind(), format!("{}: {error}", part.display()))
+        })?;
+    let written = file.write_all(text.as_bytes());
+    drop(file);
+    let placed = written.and_then(|()| std::fs::rename(&part, path));
+    if placed.is_err() {
+        let _ = std::fs::remove_file(&part);
+    }
+    placed
 }
