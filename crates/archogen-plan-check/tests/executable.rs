@@ -351,3 +351,34 @@ fn help_and_version_answer_and_exit_zero() {
         "archogen-plan-check: reads archogen-assignment/2, writes archogen-result/1\n"
     );
 }
+
+#[test]
+#[cfg(unix)]
+fn what_stands_beside_the_record_is_refused_and_a_link_there_is_never_written_through() {
+    let dir = scratch();
+    let description = dir.join("system.eadl");
+    std::fs::copy(
+        Path::new(env!("CARGO_MANIFEST_DIR")).join("../../examples/s0-heartbeat/system.eadl"),
+        &description,
+    )
+    .expect("a description");
+    let plan = dir.join("plan.eadl");
+    std::fs::write(&plan, "(format \"archogen-assignment/2\")\n").expect("a plan");
+    let mine = dir.join("mine");
+    std::fs::write(&mine, "mine").expect("written");
+    let result = dir.join("result.json");
+    std::os::unix::fs::symlink(&mine, dir.join("result.json.part")).expect("a link");
+    let output = run(&[
+        "--result",
+        result.to_str().unwrap(),
+        "--",
+        description.to_str().unwrap(),
+        plan.to_str().unwrap(),
+    ]);
+    assert_eq!(output.status.code(), Some(70), "{output:?}");
+    assert_eq!(std::fs::read_to_string(&mine).expect("kept"), "mine");
+    assert!(std::fs::symlink_metadata(dir.join("result.json.part"))
+        .expect("kept")
+        .is_symlink());
+    assert!(!result.exists());
+}

@@ -117,10 +117,10 @@ is code the engine compiles and tests, and `crates/archogen-emit/tests/emit.rs` 
 | --- | --- | --- |
 | 1 | the profile, then `--locked` | the invocation cannot be honored |
 | 2 | the engine API's `resolve`: the check, then the search | the description, or what it asks of its hardware: the same verdict `archogen check` or `archogen resolve` gives |
-| 3 | `--out`, and what stands beside it | the place: `usage`, before anything is written, whatever stops it, and the table below says which |
-| 4 | the installed `archogen-plan-check` | two programs disagree about one input, so `tool-failure` |
+| 3 | `--out`, and what stands beside it | the place: `usage`, before anything is written, and the table below says which |
+| 4 | the installed `archogen-plan-check` | it could not judge, or two programs disagree about one input: `tool-failure`; or the description cannot be handed to it as a file, by a name it can read: `usage` |
 | 5 | the lowering and the emitter | what this format cannot yet express |
-| 6 | writing the package | the output directory: `tool-failure`, or `usage` where a name a module brought leaves no room in a path |
+| 6 | writing and landing the package | the output directory: `tool-failure`, or `usage` where a name a module brought leaves no room in a path |
 
 There is one frontend, so `build` can never accept what `check` refuses.
 
@@ -154,14 +154,16 @@ build it removes each file `provenance.json` lists, one by one and only if still
 held them where that leaves them empty. What building and looking at a package leave at its top, `target`, `Cargo.lock` and `.DS_Store`,
 is neither judged nor deleted: it moves to the new package, so a rebuild keeps cargo's work.
 
-**The stage is private to its owner**, mode `700`, from when it is made until the package lands, whatever `DIR` lets others do. Then the
-package takes the mode and the group of what it replaces, read again just before it moves, so closing a directory while a build runs
-holds; where nothing stood it takes what a new directory takes there. ⚠️ Those two are all it keeps. The standard library reads no access
-control list, owner or flag, so where one of those is what makes a directory private, a build there loses it.
+**The stage is private to its owner**, mode `700`, until the package lands, whatever `DIR` lets others do. Where something stands at
+`DIR` it is `700` from the call that makes it; where nothing stands it is made first at what a new directory takes there, empty, for the
+instant before it is closed, since that is the mode the package will keep. Then the package takes the mode and the group of what it
+replaces, read again just before it moves, so closing a directory while a build runs holds. ⚠️ Those two are all it keeps. The standard
+library reads no access control list, owner or flag, so where one of those is what makes a directory private, a build there loses it; and
+a list a parent passes down to what is made in it applies to the stage, whatever its mode.
 
-**Every route `--out` can take.** Each row is a fixture of `crates/archogen-cli/tests/build.rs`, which sets the route up, runs it, holds
+**The routes `--out` can take.** Each row is a fixture of `crates/archogen-cli/tests/build.rs`, which sets the route up, runs it, holds
 what is left and compares the status and the words with the row. A row with no fixture, or a fixture with no row, fails. So this table is
-the rule, and nothing else states a route.
+the rule: what it says is run, and a route it does not name is promised nothing and worth reporting.
 
 <!-- machine-read: out-routes -->
 | Route | What stands there, or what happens | Status | It says | What is left |
@@ -174,32 +176,46 @@ the rule, and nothing else states a route.
 | `not-a-build` | a directory holding what no build wrote | `usage` | `a build deletes nothing it did not write` | all of it |
 | `edited` | an earlier build with a file edited | `usage` | `has changed since the build wrote it` | all of it |
 | `closed-within` | an earlier build with a directory this user cannot read | `usage` | `open what it could not read` | all of it |
+| `listed-gone` | an earlier build with a listed file removed | `usage` | `cannot be replaced` | the rest of it |
+| `other-format` | a provenance of a format this engine does not read | `usage` | `this engine reads` | all of it |
 | `stage-stands` | anything at `DIR.building` | `usage` | `a build that stopped may have left it` | it |
 | `aside-stands` | anything at `DIR.replaced` | `usage` | `kept there what could not go` | it |
 | `no-room-name` | a name with no room for `.building` beside it | `usage` | `too long` | nothing made |
 | `no-room-path` | a path with no room for what a build writes beneath it, as the checker is handed it | `usage` | `leaves no room in a path` | nothing made |
 | `file-on-the-way` | a file among `--out`'s parents | `usage` | `is no directory` | the file |
 | `link-on-the-way` | a link to nothing among `--out`'s parents | `usage` | `a link to nothing` | the link |
+| `link-to-a-directory-on-the-way` | a link to a directory among `--out`'s parents | `ok` | `generated` | the package, beneath what the link points at |
+| `link-loop-on-the-way` | a loop of links among `--out`'s parents | `usage` | `name another place` | the links |
 | `closed-parent` | a parent this user cannot write | `usage` | `reach and write` | the parent, empty |
+| `reads-once` | a description that is no regular file, such as a pipe or `<(…)`, which the checker would read again | `usage` | `no regular file` | nothing made |
+| `no-checker` | no checker can be run | `tool-failure` | `runs no program` | nothing made |
 | `absent` | nothing | `ok` | `generated` | the package, at what a new directory takes there |
 | `empty` | an empty directory | `ok` | `generated` | the package, at that directory's mode |
 | `earlier` | an earlier build, with what cargo left | `ok` | `generated` | the package, at that mode, what cargo left moved to it |
+| `stays-aside` | an earlier build with what cannot be removed, a closed directory | `ok` | `keeps what could not go` | the package; that at `DIR.replaced`, which the next build refuses over until it is removed |
 | `closed-to-writes` | a directory closed to its owner's writes, a `555` or a `500` | `ok` | `open it if cargo stops` | the package, closed as it was |
 | `came-at-out` | while it runs, something comes to `--out`, where nothing stood | `tool-failure` | `appeared while the build ran` | what came; no package |
 | `came-aside` | while it runs, something comes to `DIR.replaced`, an earlier build standing at `--out` | `tool-failure` | `appeared while the build ran` | what came, and the earlier build |
 | `aside-not-needed` | while it runs, something comes to `DIR.replaced`, nothing standing at `--out`, so the name is not needed | `ok` | `generated` | the package and what came, which the next build names |
 | `gone` | while it runs, what stood at `--out` goes | `tool-failure` | `moved or removed what the build was moving` | nothing |
 | `came-in-earlier` | while it runs, something comes into the earlier build | `ok` | `keeps what could not go` | the package; what came at `DIR.replaced` |
+| `came-in-empty` | while it runs, something comes into an empty directory at `--out` | `ok` | `keeps what could not go` | the package; what came at `DIR.replaced` |
+| `swapped-meanwhile` | while it runs, what stood at `--out` is swapped for a file | `ok` | `is no longer a directory` | the package; the file at `DIR.replaced` |
 | `came-in-stage` | while it runs, a new name comes in the stage | `ok` | `generated` | the package and what came, which the next build names, or carries on under a name a build carries |
 | `filled-in-stage` | while it runs, something fills a name the package writes | `tool-failure` | `came in the stage` | the stage, with what came; no package |
 | `linked-in-stage` | while it runs, a link stands where the package writes a directory | `tool-failure` | `came in the stage` | the stage; what the link points at, untouched |
+| `stage-swapped` | while it runs, the stage is swapped for a link | `tool-failure` | `came in the stage` | the link and what it points at; no package |
+| `stage-gone` | while it runs, the stage is removed | `tool-failure` | `wrote no record` | nothing |
+| `parent-closed-meanwhile` | while it runs, `--out`'s parent is closed | `tool-failure` | `a build renames` | no package; the stage, which it says could not be removed |
 | `carried-in-stage` | while it runs, the stage comes to hold a name a build carries, an earlier build holding it too | `ok` | `keeps what could not go` | the package with what came; the earlier one at `DIR.replaced` |
 | `closed-meanwhile` | while it runs, the directory at `--out` is closed further | `ok` | `generated` | the package, at the mode it was closed to |
-| `disagreed` | the checker refuses the search's plan, or its record does not hold together | `tool-failure` | `refuses the plan the search wrote` | the stage, with the assignment and the record for the report |
+| `record-unsound` | the checker's record does not hold together with what it did | `tool-failure` | `does not hold together` | the stage, with the assignment and the record for the report |
+| `disagreed` | the checker refuses the search's plan | `tool-failure` | `refuses the plan the search wrote` | the stage, with the assignment and the record for the report |
 
 No sync call is made, so none of this claims anything across a power loss. ⚠️ Nor does it hold against another program working in the same
 directory at the same instant: the standard library has no rename that refuses to replace and no directory-relative open, so each path is
-held again just before it is used, and in that instant what stands there is what is used.
+held again just before it is used, and in that instant what stands there is what is used. The checker's record is the one name a
+program's rename fills on purpose, so what comes there while the checker runs is replaced by it.
 
 **The two standard streams.** If a write to standard output fails, at any byte, the command says so on standard error and exits `70`,
 as every command does: a pipe nobody reads, a full disk. What it did stands, so a package it placed is in place. ⚠️ A failure is what it can

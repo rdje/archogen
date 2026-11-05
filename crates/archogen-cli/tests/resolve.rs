@@ -51,6 +51,8 @@ enum Answer {
     Record(Status),
     /// The launcher could not start it.
     Unlaunched,
+    /// It ran and wrote no record, as when the place given it cannot take one.
+    NoRecord,
 }
 
 /// A launcher standing in for `archogen-plan-check`: it reads the plan the front names, writes a record about it where
@@ -87,6 +89,13 @@ impl Launch for Checker {
                 })
             }
             Answer::Record(status) => status,
+            Answer::NoRecord => {
+                return Ok(Launched {
+                    ended: Ended::Code(Status::ToolFailure.code()),
+                    sha256: verified(),
+                    front: Digest::of(b"the front that ran it"),
+                })
+            }
         };
         // `--profile P --result R -- DESCRIPTION PLAN`, as the front hands them over.
         let (profile, result, plan) = (&args[1], &args[3], &args[6]);
@@ -241,20 +250,44 @@ fn a_plan_that_cannot_land_leaves_nothing_beside_it_and_takes_nothing_it_did_not
     assert_ne!(std::fs::read_to_string(&named).expect("written"), "mine");
 }
 
-/// `archogen resolve` of the heartbeat at `plan`, with a checker that accepts, `extra` arguments added: its status, and all it said.
-fn resolve_at(plan: &str, extra: &[&str]) -> (Status, String) {
-    let checker = Checker::answering(Answer::Record(Status::Ok));
-    let mut args = vec![heartbeat()];
+/// `archogen resolve` of `description` at `plan`, with a checker answering `answer`, `extra` arguments added: its status, and all
+/// it said.
+fn resolve_of(
+    description: &str,
+    plan: &str,
+    extra: &[&str],
+    answer: Answer,
+) -> Option<(Status, String)> {
+    let checker = Checker::answering(answer);
+    let mut args = vec![description.to_owned()];
     args.extend(["--out".to_owned(), plan.to_owned()]);
     args.extend(extra.iter().map(ToString::to_string));
     let args: Vec<&str> = args.iter().map(String::as_str).collect();
     let (status, out, err) = resolve(&args, &checker);
-    (status, format!("{out}{err}"))
+    Some((status, format!("{out}{err}")))
 }
 
-/// One route of `docs/book/src/cli.md`'s table: what it sets up under the directory it is given, runs and leaves.
+/// `archogen resolve` of the heartbeat at `plan`, with a checker that accepts.
+fn resolve_at(plan: &str, extra: &[&str]) -> Option<(Status, String)> {
+    resolve_of(&heartbeat(), plan, extra, Answer::Record(Status::Ok))
+}
+
+/// Whether a closed mode binds whoever runs this: not for root, for whom a closed directory still takes a file.
 #[cfg(unix)]
-type Route = fn(&Path) -> (Status, String);
+fn modes_bind(root: &Path) -> bool {
+    use std::os::unix::fs::PermissionsExt;
+    let closed = root.join("does-a-mode-bind");
+    std::fs::create_dir_all(&closed).expect("a directory");
+    std::fs::set_permissions(&closed, std::fs::Permissions::from_mode(0o555)).expect("its mode");
+    let binds = std::fs::write(closed.join("a-file"), "").is_err();
+    std::fs::set_permissions(&closed, std::fs::Permissions::from_mode(0o755)).expect("its mode");
+    binds
+}
+
+/// One route of `docs/book/src/cli.md`'s table: what it sets up under the directory it is given, runs and leaves. `None` where a
+/// closed mode binds nobody, so the route cannot be taken.
+#[cfg(unix)]
+type Route = fn(&Path) -> Option<(Status, String)>;
 
 /// Each route of that table, by the name its row gives it.
 #[cfg(unix)]
@@ -262,6 +295,11 @@ fn plan_routes() -> Vec<(&'static str, Route)> {
     vec![
         ("no-name", |_| resolve_at(".", &[])),
         ("empty-name", |_| resolve_at("", &[])),
+        ("a-trailing-dot", |root| {
+            let outcome = resolve_at(&format!("{}/.", root.join("q").display()), &[]);
+            assert!(!root.join("q").exists());
+            outcome
+        }),
         ("a-trailing-separator", |root| {
             let outcome = resolve_at(&format!("{}/", root.join("q").display()), &[]);
             assert!(!root.join("q").exists());
@@ -277,6 +315,86 @@ fn plan_routes() -> Vec<(&'static str, Route)> {
             std::fs::create_dir(root.join("d")).expect("a directory");
             let outcome = resolve_at(&root.join("d").display().to_string(), &[]);
             assert!(!root.join("d.part").exists());
+            outcome
+        }),
+        ("a-pipe", |root| {
+            let pipe = root.join("p");
+            let made = std::process::Command::new("mkfifo")
+                .arg(&pipe)
+                .status()
+                .expect("mkfifo runs");
+            assert!(made.success());
+            let outcome = resolve_at(&pipe.display().to_string(), &[]);
+            assert!(!std::fs::metadata(&pipe).expect("kept").is_file());
+            outcome
+        }),
+        ("its-own-description", |root| {
+            let copy = root.join("s.eadl");
+            std::fs::copy(heartbeat(), &copy).expect("copied");
+            let before = std::fs::read(&copy).expect("read");
+            let name = copy.display().to_string();
+            for extra in [&[][..], &["--unchecked"][..]] {
+                let (status, _) = resolve_of(&name, &name, extra, Answer::Record(Status::Ok))?;
+                assert_eq!(status, Status::Usage);
+                assert_eq!(std::fs::read(&copy).expect("kept"), before);
+            }
+            resolve_of(&name, &name, &[], Answer::Record(Status::Ok))
+        }),
+        ("its-own-description-by-a-link", |root| {
+            let copy = root.join("s.eadl");
+            std::fs::copy(heartbeat(), &copy).expect("copied");
+            let before = std::fs::read(&copy).expect("read");
+            let link = root.join("l.eadl");
+            std::os::unix::fs::symlink(&copy, &link).expect("a link");
+            let outcome = resolve_of(
+                &link.display().to_string(),
+                &copy.display().to_string(),
+                &[],
+                Answer::Record(Status::Ok),
+            );
+            assert_eq!(std::fs::read(&copy).expect("kept"), before);
+            outcome
+        }),
+        ("a-module-it-imports", |root| {
+            let corpus = crate::root().join("crates/archogen-plan/tests/corpus/modules");
+            let main = root.join("app.main.eadl");
+            for entry in std::fs::read_dir(&corpus).expect("the corpus") {
+                let entry = entry.expect("an entry");
+                std::fs::copy(entry.path(), root.join(entry.file_name())).expect("copied");
+            }
+            let module = root.join("hw.dev.eadl");
+            let before = std::fs::read(&module).expect("read");
+            let outcome = resolve_of(
+                &main.display().to_string(),
+                &module.display().to_string(),
+                &[],
+                Answer::Record(Status::Ok),
+            );
+            assert_eq!(std::fs::read(&module).expect("kept"), before);
+            outcome
+        }),
+        ("reads-once", |root| {
+            let pipe = root.join("once.eadl");
+            let made = std::process::Command::new("mkfifo")
+                .arg(&pipe)
+                .status()
+                .expect("mkfifo runs");
+            assert!(made.success());
+            let (writer, text) = (pipe.clone(), std::fs::read(heartbeat()).expect("read"));
+            let feeding = std::thread::spawn(move || std::fs::write(writer, text));
+            std::fs::write(root.join("p"), "old").expect("written");
+            let outcome = resolve_of(
+                &pipe.display().to_string(),
+                &root.join("p").display().to_string(),
+                &[],
+                Answer::Record(Status::Ok),
+            );
+            feeding.join().expect("the writer").expect("written");
+            assert_eq!(
+                std::fs::read_to_string(root.join("p")).expect("kept"),
+                "old"
+            );
+            assert!(!root.join("p.part").exists());
             outcome
         }),
         ("part-stands", |root| {
@@ -301,6 +419,28 @@ fn plan_routes() -> Vec<(&'static str, Route)> {
                 std::fs::read_to_string(root.join("p.check")).expect("kept"),
                 "mine"
             );
+            outcome
+        }),
+        ("check-a-link", |root| {
+            std::fs::write(root.join("p"), "old").expect("written");
+            std::os::unix::fs::symlink("elsewhere", root.join("p.check")).expect("a link");
+            let outcome = resolve_at(&root.join("p").display().to_string(), &[]);
+            assert_eq!(
+                std::fs::read_to_string(root.join("p")).expect("kept"),
+                "old"
+            );
+            outcome
+        }),
+        ("check-reused", |root| {
+            std::fs::create_dir(root.join("p.check")).expect("a directory");
+            std::fs::write(root.join("p.check/plan-check.json"), "old").expect("written");
+            std::fs::write(root.join("p.check/mine.txt"), "mine").expect("written");
+            let outcome = resolve_at(&root.join("p").display().to_string(), &[]);
+            assert_ne!(
+                std::fs::read_to_string(root.join("p.check/plan-check.json")).expect("written"),
+                "old"
+            );
+            assert!(root.join("p.check/mine.txt").is_file());
             outcome
         }),
         ("check-stands-unchecked", |root| {
@@ -332,6 +472,21 @@ fn plan_routes() -> Vec<(&'static str, Route)> {
             assert_eq!(std::fs::read_dir(root).expect("a directory").count(), 0);
             outcome
         }),
+        ("closed-parent", |root| {
+            use std::os::unix::fs::PermissionsExt;
+            if !modes_bind(root) {
+                return None;
+            }
+            let closed = root.join("closed");
+            std::fs::create_dir(&closed).expect("a directory");
+            std::fs::set_permissions(&closed, std::fs::Permissions::from_mode(0o555))
+                .expect("its mode");
+            let outcome = resolve_at(&closed.join("a/p").display().to_string(), &[]);
+            assert_eq!(std::fs::read_dir(&closed).expect("a directory").count(), 0);
+            std::fs::set_permissions(&closed, std::fs::Permissions::from_mode(0o755))
+                .expect("its mode");
+            outcome
+        }),
         ("file-on-the-way", |root| {
             std::fs::write(root.join("f"), "mine").expect("written");
             let outcome = resolve_at(&root.join("f/x").display().to_string(), &[]);
@@ -354,20 +509,105 @@ fn plan_routes() -> Vec<(&'static str, Route)> {
         }),
         ("over-a-file", |root| {
             use std::os::unix::fs::PermissionsExt;
-            std::fs::write(root.join("p"), "mine").expect("written");
-            std::fs::set_permissions(root.join("p"), std::fs::Permissions::from_mode(0o600))
-                .expect("its mode");
-            let outcome = resolve_at(&root.join("p").display().to_string(), &[]);
-            assert_ne!(
-                std::fs::read_to_string(root.join("p")).expect("written"),
-                "mine"
-            );
-            let mode = std::fs::metadata(root.join("p"))
-                .expect("it stands")
-                .permissions()
-                .mode();
-            assert_eq!(mode & 0o777, 0o600);
+            let mut outcome = None;
+            // Any mode, one that closes it to its owner's reads among them: the checker reads the plan where it is first written.
+            for mode in [0o640, 0o600, 0o400, 0o000] {
+                let plan = root.join(format!("p{mode:o}"));
+                std::fs::write(&plan, "mine").expect("written");
+                std::fs::set_permissions(&plan, std::fs::Permissions::from_mode(mode))
+                    .expect("its mode");
+                outcome = resolve_at(&plan.display().to_string(), &[]);
+                let kept = std::fs::metadata(&plan)
+                    .expect("it stands")
+                    .permissions()
+                    .mode();
+                assert_eq!(kept & 0o777, mode);
+                std::fs::set_permissions(&plan, std::fs::Permissions::from_mode(0o600))
+                    .expect("its mode");
+                assert_ne!(std::fs::read_to_string(&plan).expect("written"), "mine");
+            }
             outcome
+        }),
+        ("unchecked-over-a-checked", |root| {
+            let plan = root.join("p").display().to_string();
+            let (status, _) = resolve_at(&plan, &[])?;
+            assert_eq!(status, Status::Ok);
+            assert!(root.join("p.check/plan-check.json").is_file());
+            let outcome = resolve_at(&plan, &["--unchecked"]);
+            assert!(!root.join("p.check/plan-check.json").exists());
+            outcome
+        }),
+        ("refused", |root| {
+            std::fs::write(root.join("p"), "old").expect("written");
+            let outcome = resolve_of(
+                &heartbeat(),
+                &root.join("p").display().to_string(),
+                &[],
+                Answer::Record(Status::ToolFailure),
+            );
+            assert_eq!(
+                std::fs::read_to_string(root.join("p")).expect("kept"),
+                "old"
+            );
+            assert!(root.join("p.part").is_file());
+            assert!(root.join("p.check/plan-check.json").is_file());
+            outcome
+        }),
+        ("no-record", |root| {
+            std::fs::write(root.join("p"), "old").expect("written");
+            let outcome = resolve_of(
+                &heartbeat(),
+                &root.join("p").display().to_string(),
+                &[],
+                Answer::NoRecord,
+            );
+            assert_eq!(
+                std::fs::read_to_string(root.join("p")).expect("kept"),
+                "old"
+            );
+            assert!(!root.join("p.part").exists());
+            outcome
+        }),
+        ("no-checker", |root| {
+            std::fs::write(root.join("p"), "old").expect("written");
+            let outcome = resolve_of(
+                &heartbeat(),
+                &root.join("p").display().to_string(),
+                &[],
+                Answer::Unlaunched,
+            );
+            assert_eq!(
+                std::fs::read_to_string(root.join("p")).expect("kept"),
+                "old"
+            );
+            assert!(!root.join("p.part").exists() && !root.join("p.check").exists());
+            outcome
+        }),
+        ("a-flag-as-its-value", |root| {
+            // The parser takes the next word as `--out`'s value, whatever it spells.
+            let output = std::process::Command::new(env!("CARGO_BIN_EXE_archogen"))
+                .args([
+                    "resolve",
+                    &heartbeat(),
+                    "--out",
+                    "--unchecked",
+                    "--unchecked",
+                ])
+                .current_dir(root)
+                .output()
+                .expect("the executable runs");
+            assert!(root.join("--unchecked").is_file());
+            let said = format!(
+                "{}{}",
+                String::from_utf8_lossy(&output.stdout),
+                String::from_utf8_lossy(&output.stderr)
+            );
+            let status = if output.status.success() {
+                Status::Ok
+            } else {
+                Status::ToolFailure
+            };
+            Some((status, said))
         }),
         ("over-a-link", |root| {
             std::fs::write(root.join("target"), "mine").expect("written");
@@ -392,11 +632,20 @@ fn every_route_of_out_does_what_the_chapter_s_table_says() {
         std::fs::read_to_string(root().join("docs/book/src/cli.md")).expect("the chapter");
     let rows = common::table_rows(&chapter, "plan-routes");
     let routes = plan_routes();
-    let named: Vec<&str> = routes.iter().map(|(name, _)| *name).collect();
-    let listed: Vec<&str> = rows.iter().map(|row| row[0].as_str()).collect();
+    let mut named: Vec<&str> = routes.iter().map(|(name, _)| *name).collect();
+    let mut listed: Vec<&str> = rows.iter().map(|row| row[0].as_str()).collect();
+    named.sort_unstable();
+    listed.sort_unstable();
     assert_eq!(listed, named, "the table's routes and the fixtures differ");
-    for (row, (name, route)) in rows.iter().zip(&routes) {
-        let (status, said) = route(&scratch());
+    for row in &rows {
+        let name = row[0].as_str();
+        let (_, route) = routes
+            .iter()
+            .find(|(fixture, _)| *fixture == name)
+            .expect("each row has its fixture");
+        let Some((status, said)) = route(&scratch()) else {
+            continue;
+        };
         assert_eq!(status.slug(), row[2], "`{name}`: {said}");
         assert!(
             said.contains(&row[3]),

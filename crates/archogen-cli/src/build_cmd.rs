@@ -112,6 +112,7 @@ pub fn run(
         plan,
         elaborated,
         stage: &place.stage,
+        made_stage: place.made_stage,
     };
     let emitted = match built.generate(launcher, err) {
         Ok(emitted) => emitted,
@@ -140,7 +141,10 @@ pub fn run(
             }
         }
         Err(unplaced) => {
-            place.abandon();
+            // A stage that is no longer this run's is left as it stands: what is at that name now is not this run's to remove.
+            if !matches!(unplaced, Unplaced::StageGone) {
+                place.abandon();
+            }
             let (why, repair) = unplaced.said(&place);
             let _ = writeln!(
                 err,
@@ -149,6 +153,14 @@ pub fn run(
                 place.dir.display()
             );
             let _ = writeln!(err, "  hint: {repair}");
+            // It could not be removed, and the next build refuses while it stands, so it is said.
+            if !matches!(unplaced, Unplaced::StageGone) && place.stage.exists() {
+                let _ = writeln!(
+                    err,
+                    "  {} could not be removed, and the next build refuses while it stands: remove it",
+                    place.stage.display()
+                );
+            }
             return Status::ToolFailure;
         }
     }
@@ -195,23 +207,6 @@ fn make_stage(path: &Path, _fresh: bool) -> std::io::Result<Option<Permissions>>
     std::fs::create_dir(path).map(|()| None)
 }
 
-/// `dir` given what it takes of `from`, what it replaced: its group first, since a change of group can clear a mode's bits, then
-/// its mode. An access control list, an owner and a flag are not among it: `std` can read none of the three.
-#[cfg(unix)]
-fn take_over(dir: &Path, from: &Metadata) -> std::io::Result<()> {
-    use std::os::unix::fs::MetadataExt;
-    if std::fs::symlink_metadata(dir)?.gid() != from.gid() {
-        std::os::unix::fs::chown(dir, None, Some(from.gid()))?;
-    }
-    std::fs::set_permissions(dir, from.permissions())
-}
-
-/// `dir` given the mode of `from`, what it replaced.
-#[cfg(not(unix))]
-fn take_over(dir: &Path, from: &Metadata) -> std::io::Result<()> {
-    std::fs::set_permissions(dir, from.permissions())
-}
-
 /// Whether `mode` closes a directory to its owner in any of the three ways cargo needs it open.
 #[cfg(unix)]
 fn closed_to_owner(mode: &Permissions) -> bool {
@@ -237,6 +232,8 @@ struct Landed {
 enum Unplaced {
     /// Something came, while the build ran, to a place it had seen free.
     Appeared(PathBuf),
+    /// What stands at the stage's name is no longer the directory this run made.
+    StageGone,
     /// A rename failed, and what stood at `DIR` stands there again, if anything did.
     Renaming(std::io::Error),
     /// The second rename failed, and what stood at `DIR` could not be put back from `DIR.replaced`.
@@ -253,6 +250,13 @@ impl Unplaced {
             Self::Appeared(at) => (
                 format!("{} appeared while the build ran", at.display()),
                 "look at it, and move or remove it; or name another directory".to_owned(),
+            ),
+            Self::StageGone => (
+                format!(
+                    "{} is no longer the directory this run made",
+                    place.stage.display()
+                ),
+                "look at it, and at what else writes there: it stays, and the next build refuses while it stands".to_owned(),
             ),
             Self::Renaming(error) if error.kind() == ErrorKind::NotFound => (
                 error.to_string(),
@@ -294,6 +298,8 @@ struct Place {
     made: Vec<PathBuf>,
     /// Where nothing stands at `dir`: the mode a new directory takes there, which the package keeps.
     fresh: Option<Permissions>,
+    /// The directory this run made as the stage, told apart from one that comes to stand at its name.
+    made_stage: Option<(u64, u64)>,
 }
 
 impl Place {
@@ -382,6 +388,7 @@ impl Place {
             occupied,
             made,
             fresh: None,
+            made_stage: None,
         })
     }
 
@@ -420,6 +427,7 @@ impl Place {
                 ));
             }
         }
+        self.made_stage = place::identity(&self.stage);
         // What a build writes beneath the stage needs room in a path too: the checker is handed its record's path whole.
         let deepest = copies()
             .iter()
@@ -447,6 +455,10 @@ impl Place {
     /// there on the package stands: what it replaced is dealt with, and it takes what it keeps of that last, on every way out,
     /// once nothing more is carried to it.
     fn land(&self) -> Result<Landed, Unplaced> {
+        // Held once more, the checker having run since: a stage swapped for a link would land the link, or what it points at.
+        if place::identity(&self.stage) != self.made_stage {
+            return Err(Unplaced::StageGone);
+        }
         // Held again, the checker having run since: a rename would silently replace an empty directory that came meanwhile.
         let Some((judged, earlier)) = &self.occupied else {
             if std::fs::symlink_metadata(&self.dir).is_ok() {
@@ -478,7 +490,7 @@ impl Place {
             });
         }
         let kept = self.clear_aside(&held.permissions(), earlier.as_ref());
-        let unmoded = take_over(&self.dir, &held).err();
+        let unmoded = place::take_over(&self.dir, &held).err();
         Ok(Landed { kept, unmoded })
     }
 
@@ -558,12 +570,17 @@ struct Build<'a> {
     plan: &'a Plan,
     elaborated: &'a Elaborated,
     stage: &'a Path,
+    /// What the stage is, which it must still be when the package is written in it.
+    made_stage: Option<(u64, u64)>,
 }
 
 impl Build<'_> {
     /// The package written in the stage: the assignment, the checker's record, and what its acceptance lowers to.
     fn generate(&self, launcher: &dyn Launch, err: &mut dyn Write) -> Result<Emitted, Failed> {
         let checked = self.checked(launcher, err)?;
+        if place::identity(self.stage) != self.made_stage {
+            return Err(Failed::Came(self.stage.to_path_buf()));
+        }
         let generator = Generator {
             version: self.response.engine.to_owned(),
             sha256: checked.front,
@@ -603,6 +620,10 @@ impl Build<'_> {
     fn checked(&self, launcher: &dyn Launch, err: &mut dyn Write) -> Result<Checked, Failed> {
         let assignment = self.stage.join(ASSIGNMENT_FILE);
         write_file(self.stage, ASSIGNMENT_FILE, &self.plan.text)?;
+        // The record's name is the checker's to fill, and the front removes an earlier one: here nothing earlier can be this run's.
+        if std::fs::symlink_metadata(self.stage.join(consume::RECORD)).is_ok() {
+            return Err(Failed::Came(self.stage.join(consume::RECORD)));
+        }
         let program = Digest::parse(&format!("sha256:{}", self.plan.program)).ok_or_else(|| {
             Failed::Tool(format!(
                 "the engine named the program by `{}`, which is no digest",
@@ -849,9 +870,15 @@ fn report(
             "  its mode closes it to its owner, and cargo reads it and may need to make `target` and `Cargo.lock` in it: open it if cargo stops on that"
         );
     }
-    let _ = writeln!(
-        out,
-        "  next: cargo run --manifest-path {}/Cargo.toml",
-        dir.display()
-    );
+    let manifest = dir.join("Cargo.toml").display().to_string();
+    // As a shell reads it: a line nobody can follow as printed is no next step.
+    let plain = manifest
+        .chars()
+        .all(|c| c.is_ascii_alphanumeric() || "_-./,:=@%+".contains(c));
+    let manifest = if plain {
+        manifest
+    } else {
+        format!("'{}'", manifest.replace('\'', "'\\''"))
+    };
+    let _ = writeln!(out, "  next: cargo run --manifest-path {manifest}");
 }

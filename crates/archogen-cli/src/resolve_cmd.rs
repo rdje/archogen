@@ -21,7 +21,7 @@
 use std::io::{ErrorKind, Write};
 use std::path::{Path, PathBuf};
 
-use archogen_api::{Limits, Plan, Resolve};
+use archogen_api::{Limits, Plan, Resolve, SourceMap};
 use archogen_digest::Digest;
 
 use crate::check_cmd::{ask_with, report_not_judged};
@@ -97,36 +97,50 @@ pub fn run(
         .as_ref()
         .map(|judged| judged.profile)
         .expect("a plan is written for a judged description");
-    let plan_path = match write_whole(out_name, &plan.text, !parsed.flag("unchecked")) {
-        Ok(plan_path) => plan_path,
-        Err(unwritten) => {
-            let _ = writeln!(
-                err,
-                "archogen: {}: {}",
-                unwritten.status.slug(),
-                unwritten.message
-            );
-            let _ = writeln!(err, "  hint: {}", unwritten.repair);
-            return unwritten.status;
+    let unchecked = parsed.flag("unchecked");
+    let refused = |unwritten: Unwritten, err: &mut dyn Write| {
+        let _ = writeln!(
+            err,
+            "archogen: {}: {}",
+            unwritten.status.slug(),
+            unwritten.message
+        );
+        let _ = writeln!(err, "  hint: {}", unwritten.repair);
+        unwritten.status
+    };
+    let landing = match Landing::judge(out_name, &response.sources, !unchecked) {
+        Ok(landing) => landing,
+        Err(unwritten) => return refused(unwritten, err),
+    };
+    if let Err(unwritten) = landing.write(&plan.text) {
+        return refused(unwritten, err);
+    }
+    // What it says once the plan stands: so a command that refuses never said it wrote one.
+    let said = |out: &mut dyn Write| {
+        let _ = writeln!(
+            out,
+            "{path}: resolved system `{}` against profile `{profile}` into {} ({} binding(s))",
+            plan.system,
+            landing.file.display(),
+            plan.bindings
+        );
+        print_owed(plan, out);
+        // What it searches over today, as the command table states it, so `--help` and this line cannot differ.
+        if let Maturity::Experimental {
+            scope,
+            completed_by,
+        } = parsed.spec().maturity
+        {
+            let _ = writeln!(out, "  experimental: {scope}; completed by {completed_by}");
         }
     };
-    let _ = writeln!(
-        out,
-        "{path}: resolved system `{}` against profile `{profile}` into {} ({} binding(s))",
-        plan.system,
-        plan_path.display(),
-        plan.bindings
-    );
-    print_owed(plan, out);
-    // What it searches over today, as the command table states it, so `--help` and this line cannot differ.
-    if let Maturity::Experimental {
-        scope,
-        completed_by,
-    } = parsed.spec().maturity
-    {
-        let _ = writeln!(out, "  experimental: {scope}; completed by {completed_by}");
-    }
-    if parsed.flag("unchecked") {
+    if unchecked {
+        if let Err(unwritten) = landing.land() {
+            return refused(unwritten, err);
+        }
+        // A record of an earlier plan beside this one would read as this one's.
+        let _ = std::fs::remove_file(landing.check.join(consume::RECORD));
+        said(out);
         let _ = writeln!(
             err,
             "archogen: unchecked: `--unchecked` — the plan was not checked by `{}`; nothing independent judged it",
@@ -135,6 +149,7 @@ pub fn run(
         return Status::Ok;
     }
     let Some(program) = Digest::parse(&format!("sha256:{}", plan.program)) else {
+        landing.abandon();
         let _ = writeln!(
             err,
             "archogen: {}: the engine named the program by `{}`, which is no digest",
@@ -143,21 +158,27 @@ pub fn run(
         );
         return Status::ToolFailure;
     };
-    let dir = place::beside(&plan_path, CHECK_SUFFIX);
     let expected = Expected {
         description: Path::new(path),
-        plan: &plan_path,
+        plan: &landing.part,
         program,
         plan_sha256: Digest::of(plan.text.as_bytes()),
         profile,
     };
-    match consume::check_plan(launcher, &expected, &dir, err).map(|checked| checked.record) {
+    let record_file = landing.check.join(consume::RECORD);
+    match consume::check_plan(launcher, &expected, &landing.check, err)
+        .map(|checked| checked.record)
+    {
         Ok(record) if record.status() == Status::Ok => {
+            if let Err(unwritten) = landing.land() {
+                return refused(unwritten, err);
+            }
+            said(out);
             let _ = writeln!(
                 out,
                 "  checked by `{}`: accepted ({})",
                 consume::PLAN_CHECKER,
-                dir.join(consume::RECORD).display()
+                record_file.display()
             );
             Status::Ok
         }
@@ -169,16 +190,22 @@ pub fn run(
                 record.status().slug(),
                 consume::PLAN_CHECKER,
                 record.findings().len(),
-                dir.join(consume::RECORD).display()
+                record_file.display()
             );
             let _ = writeln!(
                 err,
                 "  hint: report it, with the checker's findings above: one of the two programs misreads this \
-                 description"
+                 description. The plan stays at {}, for that report, and whatever stood at its name is as it was",
+                landing.part.display()
             );
             record.status()
         }
         Err(refusal) => {
+            // A record that does not hold together is what a report needs; with none, nothing was judged and nothing stays.
+            let kept = record_file.exists();
+            if !kept {
+                landing.abandon();
+            }
             let _ = writeln!(
                 err,
                 "archogen: {}: {}",
@@ -186,6 +213,13 @@ pub fn run(
                 refusal.message
             );
             let _ = writeln!(err, "  hint: {}", refusal.repair);
+            if kept {
+                let _ = writeln!(
+                    err,
+                    "  the plan stays at {}, for that report, and whatever stood at its name is as it was",
+                    landing.part.display()
+                );
+            }
             refusal.status
         }
     }
@@ -235,135 +269,200 @@ impl From<place::Refused> for Unwritten {
     }
 }
 
-/// The new file a plan is written in first, taking the mode of the file it will replace, if one stands there.
+/// The new file a plan is written in first: private where it will take a file's mode, so the checker can read it whatever that
+/// mode is, and that mode given only when it lands.
 #[cfg(unix)]
-fn create_part(
-    part: &Path,
-    replacing: Option<&std::fs::Metadata>,
-) -> std::io::Result<std::fs::File> {
-    use std::os::unix::fs::{OpenOptionsExt, PermissionsExt};
+fn create_part(part: &Path, replacing: bool) -> std::io::Result<std::fs::File> {
+    use std::os::unix::fs::OpenOptionsExt;
     let mut options = std::fs::OpenOptions::new();
     options.write(true).create_new(true);
-    if let Some(meta) = replacing {
-        options.mode(meta.permissions().mode() & 0o7777);
+    if replacing {
+        options.mode(0o600);
     }
-    let file = options.open(part)?;
-    if let Some(meta) = replacing {
-        file.set_permissions(meta.permissions())?;
-    }
-    Ok(file)
+    options.open(part)
 }
 
 /// The new file a plan is written in first; a platform with no owner's bits has no mode to keep.
 #[cfg(not(unix))]
-fn create_part(
-    part: &Path,
-    _replacing: Option<&std::fs::Metadata>,
-) -> std::io::Result<std::fs::File> {
+fn create_part(part: &Path, _replacing: bool) -> std::io::Result<std::fs::File> {
     std::fs::OpenOptions::new()
         .write(true)
         .create_new(true)
         .open(part)
 }
 
-/// `text` written whole at what `out` names, and where that is. What each route does is `docs/book/src/cli.md`'s table, which
-/// `tests/resolve.rs` runs: this says it nowhere else. The place is judged whole before anything moves, the checker's record's
-/// place among it where it will run, so a plan never lands to be refused after.
-fn write_whole(out: &str, text: &str, checked: bool) -> Result<PathBuf, Unwritten> {
-    let name_a_file = "name the file to hold the plan";
-    let refused = |message: String, repair: &str| Unwritten {
-        status: Status::Usage,
-        message,
-        repair: repair.to_owned(),
-    };
-    if out
-        .as_bytes()
-        .last()
-        .is_some_and(|last| std::path::is_separator(char::from(*last)))
-    {
-        return Err(refused(
-            format!("`--out {out}` names no file of its own"),
-            name_a_file,
-        ));
-    }
-    let path = place::read(out, "file", name_a_file)?;
-    let standing = std::fs::symlink_metadata(&path).ok();
-    if standing.as_ref().is_some_and(std::fs::Metadata::is_dir) {
-        return Err(refused(
-            format!("`--out {out}` is a directory, and a plan is a file"),
-            name_a_file,
-        ));
-    }
-    let part = place::beside(&path, ".part");
-    place::free(
-        &part,
-        out,
-        "and a plan is written there first: a run that stopped may have left it",
-    )?;
-    let check = place::beside(&path, CHECK_SUFFIX);
-    if checked {
-        match std::fs::symlink_metadata(&check) {
-            Err(error) if error.kind() == ErrorKind::NotFound => {}
-            Err(error) => {
+/// Where a plan goes, the place judged. What each route does is `docs/book/src/cli.md`'s table, which `tests/resolve.rs` runs: this
+/// says it nowhere else. A plan is judged at `part` and lands at `file` only on acceptance, so what stands at `file` stands until
+/// there is a plan that may replace it.
+struct Landing {
+    file: PathBuf,
+    part: PathBuf,
+    check: PathBuf,
+    /// A regular file standing at `file`, which the plan takes the mode and the group of.
+    replacing: Option<std::fs::Metadata>,
+    /// The directories this run made to reach `file`, innermost first.
+    made: Vec<PathBuf>,
+    /// Whether nothing stood at `check`, so that an empty directory there is this run's.
+    check_was_free: bool,
+}
+
+impl Landing {
+    /// `out` as a place, its parents made, or why it is none.
+    fn judge(out: &str, sources: &SourceMap, checked: bool) -> Result<Self, Unwritten> {
+        let name_a_file = "name the file to hold the plan";
+        let refused = |message: String, repair: &str| Unwritten {
+            status: Status::Usage,
+            message,
+            repair: repair.to_owned(),
+        };
+        let names_a_directory = out.ends_with("/.")
+            || out
+                .as_bytes()
+                .last()
+                .is_some_and(|last| std::path::is_separator(char::from(*last)));
+        if names_a_directory {
+            return Err(refused(
+                format!("`--out {out}` names no file of its own"),
+                name_a_file,
+            ));
+        }
+        let path = place::read(out, "file", name_a_file)?;
+        let standing = std::fs::symlink_metadata(&path).ok();
+        if let Some(meta) = &standing {
+            if meta.is_dir() {
                 return Err(refused(
-                    format!(
-                        "cannot use {}, which `--out {out}` needs beside it: {error}",
-                        check.display()
-                    ),
-                    place::repair(&error),
-                ))
+                    format!("`--out {out}` is a directory, and a plan is a file"),
+                    name_a_file,
+                ));
             }
-            Ok(meta) if meta.is_dir() => {}
-            Ok(_) => {
+            if !(meta.is_file() || meta.is_symlink()) {
                 return Err(refused(
+                    format!("`--out {out}` is neither a file nor a link, and a plan replaces only those"),
+                    name_a_file,
+                ));
+            }
+        }
+        if let Some(source) = sources
+            .iter()
+            .find(|source| place::same_file(Path::new(&source.name), &path))
+        {
+            return Err(refused(
+                format!(
+                    "`--out {out}` is `{}`, which this description was read from, and the plan would replace it",
+                    source.name
+                ),
+                name_a_file,
+            ));
+        }
+        let part = place::beside(&path, ".part");
+        place::free(
+            &part,
+            out,
+            "and a plan is written there first: a run that stopped may have left it, or a refused one for a report",
+        )?;
+        let check = place::beside(&path, CHECK_SUFFIX);
+        let mut check_was_free = true;
+        if checked {
+            match std::fs::symlink_metadata(&check) {
+                Err(error) if error.kind() == ErrorKind::NotFound => {}
+                Err(error) => {
+                    return Err(refused(
+                        format!(
+                            "cannot use {}, which `--out {out}` needs beside it: {error}",
+                            check.display()
+                        ),
+                        place::repair(&error),
+                    ))
+                }
+                Ok(meta) if meta.is_dir() => check_was_free = false,
+                Ok(_) => return Err(refused(
                     format!(
                         "{} stands where the checker's record goes, and is no directory",
                         check.display()
                     ),
                     "look at it, and move or remove it; or name another file, or say `--unchecked`",
-                ))
+                )),
             }
         }
-    }
-    let made = place::missing_parents(&path);
-    let unmake = |unwritten: Unwritten| {
-        place::unmake(&made);
-        unwritten
-    };
-    place::make_parents(&path).map_err(|refused| unmake(refused.into()))?;
-    if checked {
-        place::room(&check, consume::RECORD_PART, out).map_err(|refused| unmake(refused.into()))?;
-    }
-    let replacing = standing.as_ref().filter(|meta| meta.is_file());
-    let mut file = create_part(&part, replacing).map_err(|error| {
-        unmake(if error.kind() == ErrorKind::AlreadyExists {
-            refused(
-                format!(
-                    "{} came while the plan was being written: a run alongside this one may have made it",
-                    part.display()
-                ),
-                "look at it, and move or remove it; or name another place",
-            )
-        } else {
-            refused(
-                format!("cannot write {}: {error}", part.display()),
-                place::repair(&error),
-            )
+        let made = place::missing_parents(&path);
+        let unmake = |unwritten: Unwritten| {
+            place::unmake(&made);
+            unwritten
+        };
+        place::make_parents(&path).map_err(|refused| unmake(refused.into()))?;
+        if checked {
+            place::room(&check, consume::RECORD_PART, out)
+                .map_err(|refused| unmake(refused.into()))?;
+        }
+        Ok(Self {
+            replacing: standing.filter(std::fs::Metadata::is_file),
+            file: path,
+            part,
+            check,
+            made,
+            check_was_free,
         })
-    })?;
-    let written = file.write_all(text.as_bytes());
-    drop(file);
-    let shown = path.display().to_string();
-    written
-        .and_then(|()| std::fs::rename(&part, &path))
-        .map_err(|error| {
-            let _ = std::fs::remove_file(&part);
-            unmake(Unwritten {
-                status: Status::ToolFailure,
-                message: format!("cannot write the plan {shown}: {error}"),
-                repair: "check that its disk has room, and that what stands at that name can be replaced"
-                    .to_owned(),
-            })
+    }
+
+    /// `text` written at `part`, new.
+    fn write(&self, text: &str) -> Result<(), Unwritten> {
+        let mut file = create_part(&self.part, self.replacing.is_some()).map_err(|error| {
+            place::unmake(&self.made);
+            Unwritten {
+                status: Status::Usage,
+                message: if error.kind() == ErrorKind::AlreadyExists {
+                    format!(
+                        "{} came while the plan was being written: a run alongside this one may have made it",
+                        self.part.display()
+                    )
+                } else {
+                    format!("cannot write {}: {error}", self.part.display())
+                },
+                repair: if error.kind() == ErrorKind::AlreadyExists {
+                    "look at it, and move or remove it; or name another place".to_owned()
+                } else {
+                    place::repair(&error).to_owned()
+                },
+            }
         })?;
-    Ok(path)
+        let written = file.write_all(text.as_bytes());
+        drop(file);
+        written.map_err(|error| {
+            self.abandon();
+            Unwritten {
+                status: Status::ToolFailure,
+                message: format!("cannot write {}: {error}", self.part.display()),
+                repair: "check that its disk has room".to_owned(),
+            }
+        })
+    }
+
+    /// The plan in place, taking the mode and the group of the file it replaces. It stands or nothing changed.
+    fn land(&self) -> Result<(), Unwritten> {
+        let shown = self.file.display().to_string();
+        let kept = self
+            .replacing
+            .as_ref()
+            .map_or(Ok(()), |from| place::take_over(&self.part, from));
+        kept.and_then(|()| std::fs::rename(&self.part, &self.file))
+            .map_err(|error| {
+                self.abandon();
+                Unwritten {
+                    status: Status::ToolFailure,
+                    message: format!("cannot write the plan {shown}: {error}"),
+                    repair:
+                        "check that what stands at that name can be replaced, and any flag on it"
+                            .to_owned(),
+                }
+            })
+    }
+
+    /// What this run wrote gone, with the directories it made where they stayed empty.
+    fn abandon(&self) {
+        let _ = std::fs::remove_file(&self.part);
+        if self.check_was_free {
+            let _ = std::fs::remove_dir(&self.check);
+        }
+        place::unmake(&self.made);
+    }
 }

@@ -78,6 +78,17 @@ pub fn check_plan(
     err: &mut dyn Write,
 ) -> Result<Checked, Refusal> {
     let record_file = place_record(dir)?;
+    // The checker reads it again, so what reads only once would read empty to it, or never end.
+    if !std::fs::metadata(expected.description).is_ok_and(|meta| meta.is_file()) {
+        return Err(Refusal {
+            status: Status::Usage,
+            message: format!(
+                "the checker reads the description again, and {} is no regular file, which could read differently or never end",
+                expected.description.display()
+            ),
+            repair: "give the description as a file, or say `--unchecked` where the command has it".to_owned(),
+        });
+    }
     let description = absolute(expected.description, "the description")?;
     let plan = absolute(expected.plan, "the plan")?;
     let args: Vec<String> = vec![
@@ -209,17 +220,21 @@ fn absolute(file: &Path, what: &str) -> Result<PathBuf, Refusal> {
             "cannot name {what}, {}, absolutely: {error}",
             file.display()
         );
-        if matches!(
-            error.kind(),
-            std::io::ErrorKind::NotFound | std::io::ErrorKind::PermissionDenied
-        ) {
-            failure(message, "check that it exists and can be read".to_owned())
-        } else {
-            Refusal {
+        match error.kind() {
+            std::io::ErrorKind::NotFound => {
+                failure(message, "check that it still exists".to_owned())
+            }
+            std::io::ErrorKind::PermissionDenied => Refusal {
+                status: Status::Usage,
+                message,
+                repair: "this user must be able to reach it, and every directory above it"
+                    .to_owned(),
+            },
+            _ => Refusal {
                 status: Status::Usage,
                 message,
                 repair: nearer.to_owned(),
-            }
+            },
         }
     };
     std::fs::metadata(file).map_err(unnamed)?;
@@ -272,9 +287,14 @@ fn read_record(file: &Path, code: i32) -> Result<(Record, String), Refusal> {
             })?;
             Ok((record, text))
         }
-        Err(error) if error.kind() == std::io::ErrorKind::NotFound => Err(fault(format!(
-            "`{PLAN_CHECKER}` exited with {code} and wrote no record, so nothing was judged"
-        ))),
+        Err(error) if error.kind() == std::io::ErrorKind::NotFound => Err(failure(
+            format!("`{PLAN_CHECKER}` exited with {code} and wrote no record, so nothing was judged"),
+            format!(
+                "look at {}, where the record goes: if it can be written and nothing moved it, report it, with what the checker \
+                 wrote above",
+                file.parent().unwrap_or(file).display()
+            ),
+        )),
         Err(error) => Err(fault(format!(
             "cannot read `{PLAN_CHECKER}`'s record {}: {error}",
             file.display()

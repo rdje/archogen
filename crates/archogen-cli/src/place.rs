@@ -2,6 +2,7 @@
 //! route does is a row of a table a test runs: `docs/book/src/building.md`'s for `build`, `docs/book/src/cli.md`'s for `resolve`.
 //! So this file says how to read a place, and no sentence here says what happens to one.
 
+use std::fs::Metadata;
 use std::io::ErrorKind;
 use std::path::{Component, Path, PathBuf};
 
@@ -139,9 +140,14 @@ pub fn room(place: &Path, deepest: &str, out: &str) -> Result<(), Refused> {
         .filter(|p| !p.as_os_str().is_empty())
         .unwrap_or_else(|| Path::new("."));
     let unnamed = |error: std::io::Error| {
+        let why = if error.kind() == ErrorKind::PermissionDenied {
+            repair(&error)
+        } else {
+            TOO_LONG
+        };
         Refused::new(
             format!("cannot name `--out {out}` absolutely: {error}"),
-            TOO_LONG,
+            why,
         )
     };
     let name = place.file_name().unwrap_or_default();
@@ -158,4 +164,60 @@ pub fn room(place: &Path, deepest: &str, out: &str) -> Result<(), Refused> {
         )),
         _ => Ok(()),
     }
+}
+
+/// Whether `a` and `b` are one file, links followed: a hard link and a second name for a directory among them.
+#[cfg(unix)]
+pub fn same_file(a: &Path, b: &Path) -> bool {
+    use std::os::unix::fs::MetadataExt;
+    match (std::fs::metadata(a), std::fs::metadata(b)) {
+        (Ok(a), Ok(b)) => a.dev() == b.dev() && a.ino() == b.ino(),
+        _ => false,
+    }
+}
+
+/// Whether `a` and `b` are one file, as far as their canonical names can say it.
+#[cfg(not(unix))]
+pub fn same_file(a: &Path, b: &Path) -> bool {
+    match (std::fs::canonicalize(a), std::fs::canonicalize(b)) {
+        (Ok(a), Ok(b)) => a == b,
+        _ => false,
+    }
+}
+
+/// What tells the directory a run made from one that came to stand at its name: never a link.
+#[cfg(unix)]
+pub fn identity(path: &Path) -> Option<(u64, u64)> {
+    use std::os::unix::fs::MetadataExt;
+    let meta = std::fs::symlink_metadata(path).ok()?;
+    meta.is_dir().then(|| (meta.dev(), meta.ino()))
+}
+
+/// What tells the directory a run made from one that came to stand at its name: never a link.
+#[cfg(not(unix))]
+pub fn identity(path: &Path) -> Option<(u64, u64)> {
+    std::fs::symlink_metadata(path)
+        .ok()?
+        .is_dir()
+        .then_some((0, 0))
+}
+
+/// `path` given what it takes of `from`, what it replaces: its group first, since a change of group can clear a mode's bits, then
+/// its mode, whichever way the first went. An access control list, an owner and a flag are not among it: `std` can read none.
+#[cfg(unix)]
+pub fn take_over(path: &Path, from: &Metadata) -> std::io::Result<()> {
+    use std::os::unix::fs::MetadataExt;
+    let group = if std::fs::symlink_metadata(path)?.gid() == from.gid() {
+        Ok(())
+    } else {
+        std::os::unix::fs::chown(path, None, Some(from.gid()))
+    };
+    let mode = std::fs::set_permissions(path, from.permissions());
+    group.and(mode)
+}
+
+/// `path` given the mode of `from`, what it replaces.
+#[cfg(not(unix))]
+pub fn take_over(path: &Path, from: &Metadata) -> std::io::Result<()> {
+    std::fs::set_permissions(path, from.permissions())
 }

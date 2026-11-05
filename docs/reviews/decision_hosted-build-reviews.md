@@ -142,3 +142,32 @@ unchanged.
 | R6-17 | wording | `chmod u+rx` cannot open a directory an access control list closes | The repair says "if its mode is what closes it" |
 
 Said, and left as it stands: a mount point, a full disk, a read-only filesystem and another user's directory stayed unmeasured, as `hdiutil` was refused and no second account exists. A write returning `Ok(0)` is unverified, no real stream being known to do it.
+
+**Round 7** — `2026-11-05`: not acceptable, 22 findings. The rows held as written, each one this reader ran behaving so: the method's failure was the question no test can answer, the routes no row named. Four lose a user's bytes with no other program acting, R7-1 the worst: `resolve --out` naming its own description destroyed it, at exit 0 under `--unchecked`. R6-1, R6-2, R6-4 for the front's writes, R6-5, R6-6, R6-14, R6-15 and R6-17 held. Its reader built a release of `b48408e9` in a checkout of its own, the trust inventory refusing `cargo xtask install` there because the main repository's `.cargo/config.toml` lies above a nested tree, so its binaries did not pass that inventory, and it says so. R7-1, R7-2, R7-3, R7-8 and R7-21 were measured again on that install before they were answered, and each behaved as the reader said.
+
+| # | Kind | Finding | Answer |
+| --- | --- | --- | --- |
+| R7-1 | defect | older: `resolve --out` naming its own description, or a module it imports, destroyed that file, through a link too, at exit 0 under `--unchecked` | A plan is refused where `PLAN` is a file the description was read from, by device and inode. Rows `its-own-description`, `its-own-description-by-a-link` and `a-module-it-imports` |
+| R7-2 | defect | older: a `PLAN.check` directory that cannot take the record lost the earlier plan, then refused with a false "disagree" | `resolve`'s order changed: the checker judges `PLAN.part`, and it lands only on acceptance. Row `no-record`. The "wrote no record" repair now says to look where the record goes first |
+| R7-3 | defect | a regression of R6-16's answer: a mode closed to the owner's reads landed the plan where the checker could not read it | Written at `0600`, the file's mode and group given only as it lands. Row `over-a-file`, at four modes, `000` among them |
+| R7-4 | defect | "never lands to be refused after" was false wherever the checker could not judge | The same order. Rows `no-checker`, `reads-once` and `refused` hold what stood at `PLAN` untouched |
+| R7-5 | defect | older: the checker's own `fs::write` went through a link at its `.part`, writing outside the stage | It creates that file new, and refuses what stands there: a test of the real executable. The record's own name stays a rename's to fill, the one name that does, and the chapter says what comes there is replaced. Needs another program |
+| R7-6 | defect | older: the stage swapped for a link while the checker ran landed a link at `--out`, and removed the earlier build | The stage is held by what it is, device and inode, before anything is written in it after the checker and again before it lands. Row `stage-swapped`. Needs another program |
+| R7-7 | defect | row `disagreed` claimed words the record-unsound half never says, and its fixture ran only the first half | Split: `record-unsound` and `disagreed`, each with its own fixture |
+| R7-8 | defect | a description that reads only once reached a bogus report, or hung for ever on a pipe | Refused before the checker runs, as `usage`: it reads the description again. Row `reads-once` in both tables. `--unchecked` runs no checker and is unaffected |
+| R7-9 | wording | two repairs wrong under a closed ancestor: `TOO_LONG`, and "check that it exists" of a file just read | Each by the error's kind |
+| R7-10 | wording | "mode `700`, from when it is made" was false where nothing stood, by an instant measured at 981 of 1,422,114 polls; an inheriting list is no mode | The chapter and the record say both. The instant is empty, and no wider than what the package keeps |
+| R7-11 | route | landing refused, a parent closed meanwhile left a stage unsaid, blocking the next build | Row `parent-closed-meanwhile`, and it says the stage could not be removed |
+| R7-12 | route | `ok` with something left aside that then blocks the next build | Row `stays-aside` |
+| R7-13 | route | an earlier build with a listed file gone, or another format | Rows `listed-gone` and `other-format` |
+| R7-14 | route | a link to a directory, and a loop, on the way | Rows `link-to-a-directory-on-the-way` and `link-loop-on-the-way` |
+| R7-15 | route | `--out` swapped for a file, and an empty one filled, meanwhile | Rows `swapped-meanwhile` and `came-in-empty` |
+| R7-16 | route | the stage gone got a bogus report; parallel `resolve`s likewise | Row `stage-gone`, with the repair of R7-2 |
+| R7-17 | route | failures with no row | Row `no-checker`. A failing write and a module's long name stay untabled: nothing portable forces them, and the rig has measured both |
+| R7-18 | route | the plan table's omissions: a parent closed, a pipe at `PLAN` replaced, a reused `.check`, a link there, a stale "ok" record left by `--unchecked`, `q/.` | Rows for each. A pipe is refused, not replaced, and `--unchecked` removes the record it would otherwise stand beside |
+| R7-19 | route | `--out --unchecked` takes a flag as its value | Row `a-flag-as-its-value`, by design, as the parser says |
+| R7-20 | gap | fixtures weaker than their rows: `over-a-file` at one mode, `edited` and `closed-within` asserting one thing of "all of it", launchers with no `.part` | Four modes; a snapshot held whole; the `.part` route a test of the real checker |
+| R7-21 | gap | older: a `next:` line unquoted, which a shell cannot follow in a directory with a space | Quoted where it needs to be, a test holding it |
+| R7-22 | wording | sentences against rows: step 3's "whatever stops it" against a flag on `--out`, step 4's "so `tool-failure`", "every route", and §5's "what the build's own user fills is refused" against `came-in-stage` | Each said as it is. "The routes" replaces "every route", and the chapter says a route no row names is promised nothing |
+
+Said, and left as it stands: a mount point, a real full disk, a read-only filesystem, another user's directory and names that are no text stayed unmeasured. A plan's group cannot be seen to move on this volume, owners being disabled. Its reader, its first rig still pointed at round 6's directory, created `target/m4237/run/a1` there against its brief, deleted exactly that and said so; nothing tracked moved.

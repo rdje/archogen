@@ -1468,6 +1468,20 @@ fn a_report_cut_at_any_byte_is_noticed_by_what_the_executable_reads() {
 }
 
 #[test]
+fn the_next_line_is_one_a_shell_can_follow() {
+    let dir = scratch("next-line").join("my dir");
+    let (status, out, err) = build(&example(HEARTBEAT), &dir);
+    assert_eq!(status, Status::Ok, "{err}");
+    assert!(
+        out.contains(&format!(
+            "next: cargo run --manifest-path '{}/Cargo.toml'",
+            dir.display()
+        )),
+        "{out}"
+    );
+}
+
+#[test]
 fn a_cut_report_of_any_command_leaves_its_own_exit_code_to_the_library() {
     // What the library returns is the command's: `Watched` is how the executable learns the stream failed. So a verdict stays a
     // verdict for whoever holds a stream of their own.
@@ -1625,6 +1639,45 @@ fn build_at(dir: &Path) -> Option<Said> {
     said(build(&example(HEARTBEAT), dir))
 }
 
+/// The checker, with `change` done to the place once it has run.
+#[cfg(unix)]
+struct After {
+    change: fn(&Path),
+    dir: PathBuf,
+}
+
+#[cfg(unix)]
+impl Launch for After {
+    fn launch(
+        &self,
+        program: &str,
+        args: &[String],
+        out: &mut dyn Write,
+        err: &mut dyn Write,
+    ) -> Result<Launched, Unlaunched> {
+        let launched = Checker.launch(program, args, out, err);
+        (self.change)(&self.dir);
+        launched
+    }
+}
+
+/// `build` of the heartbeat at `dir`, with `change` done once the checker has run.
+#[cfg(unix)]
+fn build_after(dir: &Path, change: fn(&Path)) -> Option<Said> {
+    said(invoke(
+        &[
+            "build",
+            &example(HEARTBEAT),
+            "--out",
+            &dir.display().to_string(),
+        ],
+        &After {
+            change,
+            dir: dir.to_path_buf(),
+        },
+    ))
+}
+
 /// `build` of the heartbeat at `dir`, with `change` done while the checker runs.
 #[cfg(unix)]
 fn build_meddled(dir: &Path, change: fn(&Path)) -> Option<Said> {
@@ -1712,11 +1765,9 @@ fn out_routes() -> Vec<(&'static str, Route)> {
             let dir = root.join("x");
             an_earlier_build(&dir);
             fs::write(dir.join("plan.txt"), "mine").expect("written");
+            let before = snapshot(&dir);
             let outcome = build_at(&dir);
-            assert_eq!(
-                fs::read_to_string(dir.join("plan.txt")).expect("kept"),
-                "mine"
-            );
+            assert_eq!(snapshot(&dir), before, "something of it moved");
             outcome
         }),
         ("closed-within", |root| {
@@ -1726,9 +1777,34 @@ fn out_routes() -> Vec<(&'static str, Route)> {
             let dir = root.join("x");
             an_earlier_build(&dir);
             let _reopened = Reopened(vec![dir.join("rt-core")]);
+            let before = snapshot(&dir);
             set_mode(&dir.join("rt-core"), 0o600);
             let outcome = build_at(&dir);
             assert_eq!(mode_of(&dir.join("rt-core")), 0o600);
+            set_mode(&dir.join("rt-core"), 0o755);
+            assert_eq!(snapshot(&dir), before, "something of it moved");
+            outcome
+        }),
+        ("listed-gone", |root| {
+            let dir = root.join("x");
+            an_earlier_build(&dir);
+            fs::remove_file(dir.join("plan.txt")).expect("removed");
+            let before = snapshot(&dir);
+            let outcome = build_at(&dir);
+            assert_eq!(snapshot(&dir), before, "something of it moved");
+            outcome
+        }),
+        ("other-format", |root| {
+            let dir = root.join("x");
+            fs::create_dir(&dir).expect("a directory");
+            fs::write(
+                dir.join("provenance.json"),
+                r#"{"format":"archogen-build-provenance/0"}"#,
+            )
+            .expect("written");
+            let before = snapshot(&dir);
+            let outcome = build_at(&dir);
+            assert_eq!(snapshot(&dir), before, "something of it moved");
             outcome
         }),
         ("stage-stands", |root| {
@@ -1774,6 +1850,18 @@ fn out_routes() -> Vec<(&'static str, Route)> {
             assert!(fs::symlink_metadata(&link).expect("kept").is_symlink());
             outcome
         }),
+        ("link-to-a-directory-on-the-way", |root| {
+            fs::create_dir(root.join("real")).expect("a directory");
+            std::os::unix::fs::symlink(root.join("real"), root.join("link")).expect("a link");
+            let outcome = build_at(&root.join("link/x"));
+            assert!(root.join("real/x/Cargo.toml").is_file());
+            outcome
+        }),
+        ("link-loop-on-the-way", |root| {
+            std::os::unix::fs::symlink(root.join("b"), root.join("a")).expect("a link");
+            std::os::unix::fs::symlink(root.join("a"), root.join("b")).expect("a link");
+            build_at(&root.join("a/x"))
+        }),
         ("closed-parent", |root| {
             if !modes_bind(root) {
                 return None;
@@ -1784,6 +1872,35 @@ fn out_routes() -> Vec<(&'static str, Route)> {
             set_mode(&closed, 0o555);
             let outcome = build_at(&closed.join("a/x"));
             assert_eq!(fs::read_dir(&closed).expect("a directory").count(), 0);
+            outcome
+        }),
+        ("reads-once", |root| {
+            let pipe = root.join("once.eadl");
+            let made = Command::new("mkfifo")
+                .arg(&pipe)
+                .status()
+                .expect("mkfifo runs");
+            assert!(made.success());
+            let (writer, text) = (pipe.clone(), fs::read(example(HEARTBEAT)).expect("read"));
+            let feeding = std::thread::spawn(move || fs::write(writer, text));
+            let dir = root.join("x");
+            let outcome = said(build(&pipe.display().to_string(), &dir));
+            feeding.join().expect("the writer").expect("written");
+            assert!(!dir.exists() && !beside(&dir, ".building").exists());
+            outcome
+        }),
+        ("no-checker", |root| {
+            let dir = root.join("x");
+            let outcome = said(invoke(
+                &[
+                    "build",
+                    &example(HEARTBEAT),
+                    "--out",
+                    &dir.display().to_string(),
+                ],
+                &NoLaunch,
+            ));
+            assert!(!dir.exists() && !beside(&dir, ".building").exists());
             outcome
         }),
         ("absent", |root| {
@@ -1813,6 +1930,22 @@ fn out_routes() -> Vec<(&'static str, Route)> {
             assert_eq!(mode_of(&dir), 0o750);
             assert!(dir.join("target/kept.txt").is_file());
             assert!(!beside(&dir, ".replaced").exists());
+            outcome
+        }),
+        ("stays-aside", |root| {
+            if !modes_bind(root) {
+                return None;
+            }
+            let dir = root.join("x");
+            let aside = beside(&dir, ".replaced");
+            let _reopened = Reopened(vec![dir.join("rt-core/src"), aside.join("rt-core/src")]);
+            an_earlier_build(&dir);
+            set_mode(&dir.join("rt-core/src"), 0o555);
+            let outcome = build_at(&dir);
+            assert!(dir.join("Cargo.toml").is_file());
+            assert!(aside.join("rt-core/src").is_dir());
+            let (status, _, err) = build(&example(HEARTBEAT), &dir);
+            assert_eq!(status, Status::Usage, "{err}");
             outcome
         }),
         ("closed-to-writes", |root| {
@@ -1871,6 +2004,30 @@ fn out_routes() -> Vec<(&'static str, Route)> {
             assert!(dir.join("Cargo.toml").is_file());
             outcome
         }),
+        ("came-in-empty", |root| {
+            let dir = root.join("x");
+            fs::create_dir(&dir).expect("a directory");
+            let outcome = build_meddled(&dir, |dir| {
+                fs::write(dir.join("thesis.txt"), "mine").expect("written");
+            });
+            assert!(beside(&dir, ".replaced").join("thesis.txt").is_file());
+            assert!(dir.join("Cargo.toml").is_file());
+            outcome
+        }),
+        ("swapped-meanwhile", |root| {
+            let dir = root.join("x");
+            an_earlier_build(&dir);
+            let outcome = build_meddled(&dir, |dir| {
+                fs::remove_dir_all(dir).expect("removed");
+                fs::write(dir, "mine").expect("written");
+            });
+            assert!(dir.join("Cargo.toml").is_file());
+            assert_eq!(
+                fs::read_to_string(beside(&dir, ".replaced")).expect("kept"),
+                "mine"
+            );
+            outcome
+        }),
         ("came-in-stage", |root| {
             let dir = root.join("x");
             let outcome = build_meddled(&dir, |dir| {
@@ -1880,6 +2037,44 @@ fn out_routes() -> Vec<(&'static str, Route)> {
             let (status, _, err) = build(&example(HEARTBEAT), &dir);
             assert_eq!(status, Status::Usage, "{err}");
             assert!(err.contains("`mine.txt`"), "{err}");
+            outcome
+        }),
+        ("stage-swapped", |root| {
+            let dir = root.join("x");
+            let outcome = build_after(&dir, |dir| {
+                let stage = beside(dir, ".building");
+                let moved = dir.parent().expect("a parent").join("moved");
+                fs::rename(&stage, &moved).expect("moved");
+                std::os::unix::fs::symlink(&moved, &stage).expect("a link");
+            });
+            assert!(!dir.exists(), "a link landed at --out");
+            assert!(fs::symlink_metadata(beside(&dir, ".building"))
+                .expect("kept")
+                .is_symlink());
+            assert!(root.join("moved").is_dir());
+            outcome
+        }),
+        ("stage-gone", |root| {
+            let dir = root.join("x");
+            let outcome = build_after(&dir, |dir| {
+                fs::remove_dir_all(beside(dir, ".building")).expect("removed");
+            });
+            assert!(!dir.exists());
+            outcome
+        }),
+        ("parent-closed-meanwhile", |root| {
+            if !modes_bind(root) {
+                return None;
+            }
+            let parent = root.join("p");
+            let _reopened = Reopened(vec![parent.clone()]);
+            fs::create_dir(&parent).expect("a directory");
+            let dir = parent.join("x");
+            let outcome = build_meddled(&dir, |dir| {
+                set_mode(dir.parent().expect("a parent"), 0o555);
+            });
+            assert!(!dir.exists());
+            assert!(beside(&dir, ".building").is_dir());
             outcome
         }),
         ("filled-in-stage", |root| {
@@ -1939,6 +2134,24 @@ fn out_routes() -> Vec<(&'static str, Route)> {
             assert_eq!(mode_of(&dir), 0o700);
             outcome
         }),
+        ("record-unsound", |root| {
+            let dir = root.join("x");
+            let outcome = said(invoke(
+                &[
+                    "build",
+                    &example(HEARTBEAT),
+                    "--out",
+                    &dir.display().to_string(),
+                ],
+                &Answering {
+                    status: Status::Ok,
+                    code: Status::ToolFailure.code(),
+                },
+            ));
+            assert!(beside(&dir, ".building").join(RECORD).is_file());
+            assert!(!dir.exists());
+            outcome
+        }),
         ("disagreed", |root| {
             let dir = root.join("x");
             let outcome = said(invoke(
@@ -1967,11 +2180,18 @@ fn every_route_of_out_does_what_the_chapter_s_table_says() {
         fs::read_to_string(repo_root().join("docs/book/src/building.md")).expect("the chapter");
     let rows = common::table_rows(&chapter, "out-routes");
     let routes = out_routes();
-    let named: Vec<&str> = routes.iter().map(|(name, _)| *name).collect();
-    let listed: Vec<&str> = rows.iter().map(|row| row[0].as_str()).collect();
-    // Both ways: a row no fixture runs states nothing, and a fixture no row names says nothing to the reader.
+    // Both ways, by name: a row no fixture runs states nothing, and a fixture no row names says nothing to the reader.
+    let mut named: Vec<&str> = routes.iter().map(|(name, _)| *name).collect();
+    let mut listed: Vec<&str> = rows.iter().map(|row| row[0].as_str()).collect();
+    named.sort_unstable();
+    listed.sort_unstable();
     assert_eq!(listed, named, "the table's routes and the fixtures differ");
-    for (row, (name, route)) in rows.iter().zip(&routes) {
+    for row in &rows {
+        let name = row[0].as_str();
+        let (_, route) = routes
+            .iter()
+            .find(|(fixture, _)| *fixture == name)
+            .expect("each row has its fixture");
         let root = scratch(&format!("route-{name}"));
         let Some((status, said)) = route(&root) else {
             continue;
