@@ -65,6 +65,7 @@ Each line judges alone and they add up, so that none can silence another: a disk
 
 ## How to apply
 
+- **What to do about the reading, the director's word of `2026-11-06`:** "Regarding RAM, Just observe the trend, it shouldn't cross 90% and still increasing. don't stress out. If it's cross 90% and keep increasing, then you might say, well, I think we might have a situation here. other than that, just chill." So the trend is watched quietly, a percentage or another project's load is no news, and a reader's brief says the same. RAM over 90% and still rising is what is said. Waiting for room or being stopped by the guard is routine: the lines above stand as they are, doing that work, and moving one is the director's to rule on.
 - Heavy work is `python3 scripts/host_guard.py run --wait SECONDS -- CMD`, or `make`. One at a time: a reader never overlaps `make focused`.
 - `python3 scripts/host_guard.py status` says what it reads, who holds the most on the host, the peak, and what it has stopped.
 - A reader's brief says to test a size limit with a sparse file refused unread, never by loading gigabytes.

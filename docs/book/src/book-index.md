@@ -642,7 +642,8 @@ a change that leaves it stale, so it is never edited by hand.
 ## R
 
 - **R24-11** — [definition](glossary.md), [What this project relies on from outside](ledger.md)
-- **RAM** — [definition](glossary.md), [Where generated systems run](targets.md)
+- **RAM** — [definition](glossary.md), [Where generated systems run](targets.md), [Verifying the
+  toolchain](verification.md)
 - Read or taken: consumed facts and channels — [Matching an offer to a
   requirement](matching.md#read-or-taken-consumed-facts-and-channels)
 - **README** — [definition](glossary.md), [Checks that must not share a mistake: the trust gate](trust.md), [Verifying

@@ -902,6 +902,11 @@ mdBook that is the director's window into the project.
   Verification: `python3 -I -B "$ARCHOGEN_CHIPDOC_ROOT/scripts/find_docs.py" --text FE310 --retrieve` → a path, `pages: 20`, a `sha256:` and a `cite:` line; `--peer archogen --count` → `27`; `git -C "$ARCHOGEN_CHIPDOC_ROOT" log -1 --format=%h` → `226cfb0`; `grep -n 'REQ-007' "$ARCHOGEN_CHIPDOC_ROOT/catalog/REQUESTS.md"` → `**fulfilled** 2026-09-30`; `stat -f .` from each checkout → the same file system id, `100001c0000001a`; `awk` over that ledger for the rows naming archogen → `REQ-006` and `REQ-007` alone; `bash scripts/check_source_ledger.sh` and `bash scripts/check_doctrines.sh` on the staged tree.
   Commit: `ARCHOGEN-PROGRAM-1162 (leaf PROGRAM.128)`
 
+- ID: `PROGRAM.129`
+  Status: `done` — `2026-11-06`: by the director's word: "Regarding RAM, Just observe the trend, it shouldn't cross 90% and still increasing. don't stress out. If it's cross 90% and keep increasing, then you might say, well, I think we might have a situation here. other than that, just chill." The record's `How to apply` and the book's section say so, and a reader's brief from now on. The guard's lines stand as they are. A documents-only leaf.
+  Verification: `bash scripts/check_host_guard.sh` → `host-guard: OK`, exit 0, its lines untouched; `git diff --cached --stat -- scripts` → empty.
+  Commit: `ARCHOGEN-PROGRAM-1169 (leaf PROGRAM.129)`
+
 ## Roadmap coverage map
 
 Every roadmap unit has exactly one owning tree. This table is the answer to "where does
@@ -1064,6 +1069,7 @@ leaf's outcome is its row in the Commit Log below, and a sealed leaf's full reco
 | `PROGRAM.127.6` | `ARCHOGEN-PROGRAM-1164 (leaf PROGRAM.127.6)` | **paused at the director's word**, at a clean tree, before round 6 began: the resume pointer and the leaf say to wait |
 | `PROGRAM.127.6` | `ARCHOGEN-PROGRAM-1165 (leaf PROGRAM.127.6)` | **the host guard's review, round 6 answered**: a volume has fallen only by more than a shared volume costs anyway; what a job takes with it said; the shell reader given a case's branches, arithmetic, arrays and `[[ ]]`, held to each `bash` here; each agent told for itself |
 | `PROGRAM.127.7` | `ARCHOGEN-PROGRAM-1168 (leaf PROGRAM.127.7)` | **the host guard's review, round 7 answered**: `make` that only asks is no build; the reader's rare misses read, each held to both `bash`es; a `kill` by a pid passes by any spelling; the root named exactly; what is told says what it leaves out |
+| `PROGRAM.129` | `ARCHOGEN-PROGRAM-1169 (leaf PROGRAM.129)` | **the director's word on RAM**: observe the trend, and say something only when it is over 90% and still rising; the guard's lines stand as they are |
 | `PROGRAM.128` | `ARCHOGEN-PROGRAM-1162 (leaf PROGRAM.128)` | **a chip's document starts at `chipdoc`'s `AGENTS.md`**, the director's word: the record, its index row, the ledger and `TOOLBOX.md`; `REQ-007` fulfilled, the corpus on this volume, and a document never copied into this public repository, each corrected |
 
 ## Changelog
@@ -1131,3 +1137,5 @@ leaf's outcome is its row in the Commit Log below, and a sealed leaf's full reco
 - `2026-11-05`: `PROGRAM.127.6` done: the guard's round 6, thirteen findings answered, two of them defects; `PROGRAM.127.7` filed for round 7.
 
 - `2026-11-05`: `PROGRAM.127.7` done: the guard's round 7, thirteen findings answered, one a defect; `PROGRAM.127.8` filed for round 8.
+
+- `2026-11-06`: `PROGRAM.129` done: the director's word on RAM, in the record and the book.
