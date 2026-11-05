@@ -221,8 +221,11 @@ def shim(scope: Path, name: str, script: str) -> dict:
     return env
 
 
-def hook_says(command: str, root: Path, limits: dict | None = None, env: dict | None = None) -> subprocess.CompletedProcess:
-    return guard("hook", stdin=json.dumps({"tool_input": {"command": command}}), root=root, limits=limits, env=env)
+def hook_says(command: str, root: Path, limits: dict | None = None, env: dict | None = None, session: str | None = None) -> subprocess.CompletedProcess:
+    given = {"tool_input": {"command": command}}
+    if session is not None:
+        given["session_id"] = session
+    return guard("hook", stdin=json.dumps(given), root=root, limits=limits, env=env)
 
 
 PANIC = {"panic_used_percent": 0}
@@ -323,7 +326,12 @@ def case_another_project_is_never_ours() -> None:
 def case_a_terminal_vouches_for_nothing() -> None:
     scope, elsewhere = fresh("terminals"), fresh("terminals-elsewhere")
     shells = []
-    for args in (["bash", "--noprofile", "--norc", "-i"], ["/bin/zsh", "-f", "-il"], ["/bin/zsh", "-f", "-l"], ["/bin/sh", "-i"]):
+    rc_file = elsewhere / "rc"
+    rc_file.write_text("")
+    for args in (
+        ["bash", "--noprofile", "--norc", "-i"], ["/bin/zsh", "-f", "-il"], ["/bin/zsh", "-f", "-l"], ["/bin/sh", "-i"], ["bash", "--init-file", str(rc_file)],
+        ["bash", "--rcfile", str(rc_file), "-i"], ["/bin/zsh", "-o", "no_rcs", "-i"],
+    ):
         shells.append(spawn(args, scope, stdin=subprocess.PIPE))
     zsh = shells[1]
     zsh.stdin.write(f"(cd {elsewhere} && exec bash -c 'sleep 60; true') &\n".encode())
@@ -340,6 +348,10 @@ def case_a_terminal_vouches_for_nothing() -> None:
     check("nor the build elsewhere under it", all(pid_up(pid) for pid in its_build))
     for shell in shells:
         shell.stdin.close()
+    check("macOS's `screen`, which is `SCREEN`, is a terminal", g.protected(g.Process(1, 1, "/usr/bin/SCREEN -dmS x", "", "/usr/bin/SCREEN", 0)))
+    check("an editor is what a person works in", g.protected(g.Process(1, 1, "vim notes.txt", "", "/usr/bin/vim", 0)))
+    check("a REPL on a terminal is too", g.protected(g.Process(1, 1, "python3", "", "/usr/bin/python3", 0, "ttys001")))
+    check("an interpreter with a script is a job", not g.protected(g.Process(1, 1, "python3 rig.py", "", "/usr/bin/python3", 0, "ttys001")))
     p = g.Process(1, 1, "bash -lc 'x'", "", "", 0)
     check("a shell told a command is a job", not g.is_terminal_shell(p))
     p = g.Process(1, 1, "bash /x/script.sh", "", "", 0)
@@ -400,6 +412,20 @@ def case_an_agent_is_never_stopped() -> None:
     alive = [pid for pid in its_children if pid_up(pid)]
     # Its three: a shell elsewhere, left; its own helper, left; a shell here, stopped.
     check("what the agent started here is stopped, and what it started elsewhere and for itself is not", len(its_children) == 3 and len(alive) == 2, (its_children, alive))
+    # An agent's shell that execs its command looks like its helper. A job that grows is a job, however it was started.
+    scope = fresh("agents-exec")
+    (scope / "hold.py").write_text(HOLD)
+    file = scope / "held"
+    agent = named("codex", scope, f"{sys.executable} -I -B {scope}/hold.py 60 {file} & wait; sleep 60")
+    ready(file)
+    held = children(agent.pid)
+    table = g.processes()
+    mine = g.ours(table, scope, os.getpid())
+    check("a job an agent's shell execed is seen as ours", any(p.pid in held for p in mine), [p.label for p in mine])
+    watch_once(scope, {"one_process_gib": 0.03})
+    time.sleep(0.2)
+    check("and is stopped past its limit", bool(held) and not any(pid_up(pid) for pid in held), held)
+    check("and the agent is not", up(agent))
     # What its own helper starts is its own too.
     scope = fresh("agents-helper")
     (scope / "helper.py").write_text("import subprocess, time\nsubprocess.Popen(['sleep', '60'])\ntime.sleep(60)\n")
@@ -458,6 +484,18 @@ def case_what_is_under_a_stopped_process() -> None:
     check("through a job's limit too: the holder stops", settle(holder))
     time.sleep(0.2)
     check("and the agent under it does not", pid_up(child))
+
+
+def case_where_a_root_is() -> None:
+    base = fresh("where")
+    main, linked = base / "main", base / "linked"
+    (main / ".git").mkdir(parents=True)
+    linked.mkdir()
+    (linked / ".git").write_text("gitdir: elsewhere")
+    check("the main checkout holds a worktree under it", g.root_among([main / "target" / "wt", main]) == main)
+    check("a linked worktree elsewhere is its own root", g.root_among([linked / "scripts", linked, base]) == linked)
+    check("and keeps its state under `target/`", g.state_path(linked) == linked / "target" / "host-guard" / "state")
+    check("nothing is no root", g.root_among([base]) is None)
 
 
 def case_names_and_zombies() -> None:
@@ -600,6 +638,26 @@ def case_what_is_not_the_table_is_blindness() -> None:
     check("a watcher gone blind does not leave while it last saw a job", up(watcher))
 
 
+def case_growth_is_of_the_last_minutes() -> None:
+    from collections import deque
+
+    def at(swap: float) -> g.Reading:
+        return g.Reading(50.0, 1, 50, swap, 1000.0, 200.0)
+
+    history: deque = deque()
+    check("with nothing of ours running there is no count", g.baseline_of(history, 0.0, at(1.0), False) is None)
+    check("it starts when ours does", g.baseline_of(history, 10.0, at(2.0), True).swap_used_gib == 2.0)
+    g.baseline_of(history, 20.0, at(9.0), True)
+    check("and holds through the window", g.baseline_of(history, 500.0, at(9.0), True).swap_used_gib == 2.0)
+    check("and no further: a long-lived small process does not make it hours", g.baseline_of(history, 20.0 + g.GROWTH_WINDOW_SECONDS, at(9.0), True).swap_used_gib == 9.0)
+    limits = g.tightened({})
+    build = g.Process(2, 1, "cargo build", "", "", 1 << 30)
+    targets, reasons, _ = g.judged(at(9.0), [build], limits, at(2.0))
+    check("growth past the line stops ours, and says so", targets == [build] and "swap grew" in reasons[0], reasons)
+    targets, _, _ = g.judged(at(9.0), [build], limits, None)
+    check("with the count begun again, the same reading does not", targets == [])
+
+
 def case_a_stale_pid_names_nobody() -> None:
     scope = fresh("stale")
     innocent = spawn(["sleep", "30"], fresh("stale-elsewhere"))
@@ -646,6 +704,9 @@ def case_reads_and_what_rides_on_them() -> None:
     for read in (
         "ps -ax", "ps -ax | sort -k3 | head", "vm_stat | head", "top -l 1 | head", "du -sh target", "lsof -p 1", "rm -rf target/x", "sysctl -n hw.memsize 2>/dev/null",
         "git status", "kill -9 123", "mkdir -p target/tmp; export TMPDIR=\"$PWD/target/tmp\"; python3 -I -B scripts/host_guard.py status",
+        "ps -ax -o pid,rss,command | sort -k2 -nr | head", "ps -o rss= -p 1", "top -l 1 -o mem -n 5", "top -l1", "grep -o foo x", "ls -S target", "pwd", "which cargo", "sed -n 1,20p f", "find target -name x",
+        "git show HEAD", "git rev-parse HEAD", "git ls-files", "git branch --show-current", "git --no-pager log -3", "git -C x status", "git grep -n x -- y", "git worktree list", "test -f x", "[ -f x ]",
+        "# a comment\nps -ax", "bash scripts/handoff_census.sh", "rg pkill docs/",
     ):
         check(f"a read: {read}", g.is_read(read))
     for not_one in (
@@ -653,11 +714,12 @@ def case_reads_and_what_rides_on_them() -> None:
         "git status && make focused", "kill 1 | cargo build", "python3 /other/not_host_guard.py", "python3 scripts/host_guard.py run -- true", "ps -ax > out", "ps -ax &", "top", "",
         "pkill -f x", "pkill -x rustc", "kill -9 x", "python3 scripts/host_guard.py stop", "python3 -c'x' scripts/host_guard.py status", "python3 -mmod x/host_guard.py status",
         "ps () ( touch m ); ps", "cat () ( cargo build ); cat", "S/bin/ps -ax", "export PATH=S/bin:$PATH; ps -ax", "export GIT_EXTERNAL_DIFF=x; git diff a b", "sort -o m a",
-        "git diff --no-index --output=m a b", "sort --compress-program=x big", "sort -S 20G big",
+        "git diff --no-index --output=m a b", "sort --compress-program=x big", "sort -S 20G big", "sed -i s/a/b/ f", "sed -n -i s/a/b/ f", "find . -delete", "find . -exec rm {} ;",
+        "git worktree add x", "git branch -D x", "git commit -m x",
     ):
         check(f"not a read: {not_one!r}", not g.is_read(not_one))
     for heavy in (
-        "cargo test -p x", "make focused", "cd a && cargo build", "FOO=1 cargo build", "timeout 9 cargo test", "for t in a; do cargo test; done", "bash -c 'cargo build'",
+        "cargo test -p x", "make -C other all", "cd a && cargo build", "FOO=1 cargo build", "timeout 9 cargo test", "for t in a; do cargo test; done", "bash -c 'cargo build'",
         "if cargo build; then :; fi", "env cargo build", "nohup cargo build", "{ cargo build; }", "`cargo build`", "gmake x", "cargo-nextest run", "bash scripts/build_book.sh",
         "target/m/install/archogen build s --out d", "archogen-plan-check --help",
     ):
@@ -665,7 +727,8 @@ def case_reads_and_what_rides_on_them() -> None:
     for light in (
         "ls", "cargo fmt -p x", "git commit -F m", "grep -n 'make ' Makefile", "git commit -m 'make cargo build'", "echo cargo build", "echo archogen-plan-check",
         "grep -rn archogen-plan-check docs/", "git commit -m 'x (make sure it holds)'", "git commit -F - <<'M'\nmake sure it holds\nM\n",
-        "R=/Volumes/SSD/Documents/github/archogen; mkdir -p x", "X=/y/archogen ls",
+        "R=/Volumes/SSD/Documents/github/archogen; mkdir -p x", "X=/y/archogen ls", "cargo --version", "rustc -V", "cargo tree", "cargo metadata", "make help", "make hooks", "make -n focused",
+        "make focused", "mdbook --version", "python3 -c \"print('make')\"", "rg -c 'cargo' Cargo.toml", "scripts/foo.sh make", "file target/m/install/archogen", "ls # first; make sure of it",
     ):
         check(f"not heavy: {light!r}", not g.HEAVY.search(g.code_of(light)))
 
@@ -692,11 +755,22 @@ def case_hook() -> None:
         check("a light command beside it passes", hook_says("touch x", scope).returncode == 0)
         builder.kill()
         builder.wait()
+        check("a session new to this log is not told what came before it", hook_says("touch x", scope, session="b").returncode == 0)
+        check("nor is another", hook_says("touch x", scope, session="a").returncode == 0)
         with open(scope / "state" / "events.log", "a") as log:
             log.write(json.dumps({"kind": "stopped", "at": "now", "reasons": ["why"], "stopped": [{"pid": 1, "name": "x", "gib": 1.0, "command": "x"}]}) + "\n")
         done = hook_says("touch x", scope)
         check("what was stopped is told before anything but a read runs", done.returncode == 2 and "stopped x" in done.stderr, done.stderr)
         check("once", hook_says("touch x", scope).returncode == 0)
+        for session in ("a", "b"):
+            done = hook_says("touch x", scope, session=session)
+            check(f"each session is told for itself: {session}", done.returncode == 2 and "stopped x" in done.stderr, done.stderr)
+            check(f"and once: {session}", hook_says("touch x", scope, session=session).returncode == 0)
+        done = hook_says("cargo clean", scope, {"stop_repo_free_gib": 1e9})
+        check("at a disk floor it says how disk can be freed", done.returncode == 2 and "`rm`" in done.stderr, done.stderr)
+        done = hook_says("cargo build", scope, {"start_used_percent": 0})
+        check("a heavy command refused is told how to wait", done.returncode == 2 and "run --wait" in done.stderr, done.stderr)
+        check("`make` of a guarded recipe waits by itself, so the hook lets it", hook_says("make focused", scope, {"start_used_percent": 0}).returncode == 0)
         time.sleep(0.5)
         check("the hook started a watcher", "watcher: running" in guard("status", root=scope).stdout)
     finally:
@@ -715,11 +789,15 @@ def case_the_hook_passes_nothing_it_cannot_read() -> None:
 def case_killing_by_name() -> None:
     scope = fresh("by-name")
     try:
-        for command in ("pkill -x rustc", "pkill -9 -f .", "killall cargo", "cd x && pkill rustc"):
+        for command in (
+            "pkill -x rustc", "pkill -9 -f .", "killall cargo", "cd x && pkill rustc", f"cd {scope} && pkill -x rustc", f"R={scope}; killall cargo", "kill $(pgrep -x rustc)",
+            "pgrep -x rustc | xargs kill", "/usr/bin/pkill rustc",
+        ):
             done = hook_says(command, scope)
             check(f"never by a name across the host: {command}", done.returncode == 2 and "never by a program's name" in done.stderr, done.stderr)
         check("a pattern that names this root may", hook_says(f"pkill -f '{scope}/x'", scope).returncode == 0)
-        check("the word in a message is not the act", hook_says("git commit -m 'pkill -x rustc'", scope).returncode == 0)
+        for command in ("git commit -m 'pkill -x rustc'", "rg pkill docs/", "git grep -n killall -- scripts", "find . -name pkill -print", "python3 -I -B -c pass pkill probe"):
+            check(f"the word is not the act: {command}", hook_says(command, scope).returncode == 0)
     finally:
         guard("stop", root=scope)
 
@@ -793,19 +871,27 @@ def case_run() -> None:
         done = hook_says("cargo build", scope)
         check("a heavy command is refused beside it, whatever its job is called", done.returncode == 2 and "one heavy job" in done.stderr, done.stderr)
         first.wait(timeout=15)
-        # Killed outright, the `run` leaves its job holding the turn.
-        first = subprocess.Popen([*PY, str(GUARD), "run", "--root", str(scope), "--", "sleep", "5"], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, start_new_session=True)
-        started.append(first)
-        time.sleep(0.7)
-        its_job = jobs_of(first.pid)
-        first.kill()
-        first.wait()
-        time.sleep(0.2)
-        done = guard("run", "--", "touch", str(marker), root=scope)
-        check("a job whose `run` was killed keeps its turn", bool(its_job) and done.returncode == 75 and "holds its turn" in done.stderr and not marker.exists(), done)
-        for pid in its_job:
-            os.kill(pid, signal.SIGKILL)
-        time.sleep(0.2)
+        # What a job leaves behind holds no turn: it is no job of a `run`, and nothing could find it.
+        left = scope / "left-pid"
+        done = guard("run", "--", "bash", "-c", f"nohup sleep 20 >/dev/null 2>&1 & echo $! > {left}", root=scope)
+        check("a job that left something running has ended", done.returncode == 0, done)
+        done = guard("run", "--", "bash", "-c", "exit 6", root=scope)
+        check("and what it left holds no turn", done.returncode == 6, done)
+        os.kill(int(left.read_text()), signal.SIGKILL)
+        done = guard("run", "--", "/nonexistent/program", root=scope)
+        check("a program that cannot start is said, as a shell says it", done.returncode == 127 and "cannot be run" in done.stderr and "Traceback" not in done.stderr, done)
+        done = guard("run", "--", "bash", "-c", "kill -9 $$", root=scope)
+        check("a job ended by a signal is 128 and the signal", done.returncode == 137, done)
+        # A job's own stop is said by its own `run`. The watcher its earlier `run`s started has the default lines, and holds the lock: it goes first.
+        guard("stop", root=scope)
+        time.sleep(0.5)
+        watcher = looping_watcher(scope, {"one_process_gib": 0.03})
+        time.sleep(0.5)
+        (scope / "hold.py").write_text(HOLD)
+        done = guard("run", "--", sys.executable, "-I", "-B", str(scope / "hold.py"), "60", str(scope / "held"), root=scope)
+        check("a `run` says why its own job was stopped", "stopped" in done.stderr and "one process" in done.stderr, done)
+        watcher.terminate()
+        watcher.wait(timeout=5)
         # A `run` that goes blind ends its job, with no process table to read.
         flag = scope / "flag"
         env = shim(scope, "ps", f'[ -f "{flag}" ] && exit 1; exec /bin/ps "$@"')
@@ -834,8 +920,8 @@ def case_run() -> None:
         time.sleep(1.0)
         said = subprocess.run([*PY, str(copy), "status"], capture_output=True, text=True, timeout=30).stdout
         check("a `run` from another directory has its job counted as ours", "ours: 0 " not in said and "ours:" in said, said)
-        subprocess.run([*PY, str(copy), "stop"], capture_output=True, timeout=30)
         away.wait(timeout=15)
+        subprocess.run([*PY, str(copy), "stop"], capture_output=True, timeout=30)
         nested = [*PY, str(GUARD), "run", "--root", str(scope), "--", "bash", "-c", "exit 4"]
         done = guard("run", "--", *nested, root=scope)
         check("a job nested in its own `run` is not its own rival", done.returncode == 4, done)
@@ -857,8 +943,8 @@ def main() -> int:
     BASE.mkdir(parents=True, exist_ok=True)
     for case in (
         case_only_tightened, case_check_refuses, case_a_figure_not_read_is_never_safe, case_one_process, case_all_processes, case_what_a_stopped_process_started,
-        case_another_project_is_never_ours, case_a_terminal_vouches_for_nothing, case_a_root_is_exactly_itself, case_an_agent_is_never_stopped, case_what_is_under_a_stopped_process, case_names_and_zombies, case_a_command_line_that_is_no_text,
-        case_pressure, case_not_ours, case_growing, case_a_small_writer_is_counted, case_the_watcher_outlives_its_own_trouble, case_what_is_not_the_table_is_blindness, case_a_stale_pid_names_nobody,
+        case_another_project_is_never_ours, case_a_terminal_vouches_for_nothing, case_a_root_is_exactly_itself, case_an_agent_is_never_stopped, case_what_is_under_a_stopped_process, case_where_a_root_is, case_names_and_zombies, case_a_command_line_that_is_no_text,
+        case_pressure, case_not_ours, case_growing, case_a_small_writer_is_counted, case_the_watcher_outlives_its_own_trouble, case_what_is_not_the_table_is_blindness, case_growth_is_of_the_last_minutes, case_a_stale_pid_names_nobody,
         case_the_watcher_stays_while_a_job_runs, case_a_blind_watcher_is_said, case_reads_and_what_rides_on_them, case_the_hook_passes_nothing_it_cannot_read, case_killing_by_name, case_hook, case_a_damaged_log, case_run,
     ):
         before = len(failures)

@@ -835,7 +835,19 @@ mdBook that is the director's window into the project.
   Commit: `ARCHOGEN-PROGRAM-1159 (leaf PROGRAM.127.2)`
 
 - ID: `PROGRAM.127.3`
-  Status: `pending` — round 3, a fresh reader over round 2's answers. It closes on a round that finds no defect, and a form written to go round the guard is a stated limit, not a defect.
+  Status: `done` — `2026-11-05`: round 3, a fresh reader on ordinary work: 20 findings, 5 defects. A job an agent's shell execs escaped every limit, and `pkill` passed behind the ordinary `cd ROOT &&`. A helper is now passed over only while small. The findings and each answer are in `docs/reviews/decision_host-guard-reviews.md`.
+
+  **Acceptance checklist (`DOCTRINE_ENFORCEMENT.md`):**
+  - [x] **REPRODUCE / ISSUE** — the reader's rigs on `ff41eab2`, `target/m4259/work/e_a.py`: a fake agent's `/bin/bash -c 'x'` execing a 60 MiB holder, 30 MiB limit in scratch root `S` → `ours` empty, the holder alive; `H("cd S && pkill -x rustc")` → `exit 0`, against `H("pkill -x rustc")` → `exit 2`; `H("ps -o rss= -p 1")` at a stop line → `exit 2`.
+  - [x] **ROOT CAUSE (WHY + WHERE)** — `git grep -n 'return at.name not in SHELLS' ff41eab2 -- scripts/host_guard.py` → a helper known only by not being a shell, which a shell that has execed its command is not; `git grep -n 'str(root) not in command' ff41eab2 -- scripts/host_guard.py` → the path looked for in the whole command, not the stage; `git grep -n 'WRITES_OR_SPENDS = ' ff41eab2 -- scripts/host_guard.py` → one list for every tool.
+  - [x] **FIX** — `scripts/host_guard.py`, `scripts/selftest_host_guard.py`, `scripts/check_host_guard.sh`; the record's account of what is spared, passed over and refused, and its limits, its `## Review`; `docs/reviews/decision_host-guard-reviews.md` and its index.
+  - [x] **ADDRESSED (verified)** — `python3 scripts/selftest_host_guard.py` → `host-guard self-test: 318 passed, 0 failed, 0 not run`, exit 0, each finding a case: a job an agent's shell execed seen as ours and stopped past its limit, the agent left; seven real shells left, flags with values among them; `SCREEN`, an editor and a REPL left; `cd ROOT && pkill -x rustc`, `kill $(pgrep -x rustc)` and `pgrep -x rustc | xargs kill` refused, a search for the word let through; `ps -o`, `top -o`, `git show`, `sed -n`, `find` and the census read as reads; `cargo --version` and `make help` not heavy; growth over a window and from afresh; what a job leaves behind holding no turn; a `run` saying why its own job stopped; two sessions told each for itself; a linked worktree its own root
+  - [x] **NO REGRESSION** — `bash scripts/check_host_guard.sh` → `host-guard: OK`, exit 0, and `bash scripts/check_doctrines.sh` on the staged tree naming only the focused stamp; `make focused` → `tier focused: passed — 3 passed, 0 failed`, on the staged tree, through the guard.
+  - [x] **LOCKSTEP** — the record, the review history and its index, these leaves and the Commit Log.
+  Commit: `ARCHOGEN-PROGRAM-1160 (leaf PROGRAM.127.3)`
+
+- ID: `PROGRAM.127.4`
+  Status: `pending` — round 4, a fresh reader over round 3's answers, on ordinary work. It closes on a round that finds no defect, and a form written to go round the guard is a stated limit, not a defect.
 
 ## Roadmap coverage map
 
@@ -993,6 +1005,7 @@ leaf's outcome is its row in the Commit Log below, and a sealed leaf's full reco
 | `PROGRAM.127` | `ARCHOGEN-PROGRAM-1157 (leaf PROGRAM.127)` | **the host guard**: the machine is shared and holds 24 GB, so a watcher stops this repository's processes before the director's RAM lines, never another project's; `make` and every agent's shell command go through it |
 | `PROGRAM.127.1` | `ARCHOGEN-PROGRAM-1158 (leaf PROGRAM.127.1)` | **the host guard's review, round 1 answered**: a process is ours only by what it shows of itself, so another project's build is left alone; the watcher survives its own trouble and says when it is blind; nothing rides in on a read |
 | `PROGRAM.127.2` | `ARCHOGEN-PROGRAM-1159 (leaf PROGRAM.127.2)` | **the host guard's review, round 2 answered**: a terminal known by being told no command; a root exactly itself; one job at a time by what the process table shows; nothing by a name across the host; said to be a guard against accident, no sandbox |
+| `PROGRAM.127.3` | `ARCHOGEN-PROGRAM-1160 (leaf PROGRAM.127.3)` | **the host guard's review, round 3 answered**: a helper passed over only while small, so a job an agent's shell execs is held; `pkill` judged by its own stage; a read is a read, each tool's writing options its own; growth over a window; everyday commands no longer refused |
 
 ## Changelog
 
@@ -1047,3 +1060,5 @@ leaf's outcome is its row in the Commit Log below, and a sealed leaf's full reco
 - `2026-11-05`: `PROGRAM.127.1` done: the guard's round 1, twenty-five findings answered; `PROGRAM.127.2` filed for round 2.
 
 - `2026-11-05`: `PROGRAM.127.2` done: the guard's round 2, twenty-three findings answered; `PROGRAM.127.3` filed for round 3.
+
+- `2026-11-05`: `PROGRAM.127.3` done: the guard's round 3, twenty findings answered; `PROGRAM.127.4` filed for round 4.

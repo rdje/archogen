@@ -63,3 +63,30 @@ Said, and left as it stands: a detached process that shows nothing here, a jump 
 | G2-23 | wording | "lost during this work" counted anyone's writes | Said as it is |
 
 Said, and left as it stands: its reader could not run the census against the real watcher, real pressure levels, the true idle and blind times, a commit's compile, a real terminal in an IDE or a real tool server, or `onFailure` with a real crash.
+
+**Round 3** — `2026-11-05`: not acceptable, 20 findings, 5 defects. Asked about ordinary work rather than forms written to go round it. The measurements held again: RAM by hand 50.61% and by the guard 50.61%; a 60 MiB buffer read 66 MiB; the watcher used 1.7% of a core at 21 MB; a job's output reached its caller and its exit status was kept; `rm -rf target` during a job left the same watcher, the state back and the job finishing. Claude Code's own shell stayed the parent, so the worst finding does not reach this harness. Two of round 2's answers had brought new trouble, the lock passed down to what a job left behind and a list of writing options applied to every tool.
+
+| # | Kind | Finding | Answer |
+| --- | --- | --- | --- |
+| G3-1 | defect | when an agent's shell execs its command, the job counted as the agent's helper: not counted, not stopped, not seen by the check for a build | That is told from a helper by nothing, so a helper is passed over only while small: past a quarter of a GiB it is a job |
+| G3-2 | defect | a terminal given a flag with a value, as VS Code's is, counted as a job | The value is skipped: only `-c` or a script makes a shell a job |
+| G3-3 | defect | `pkill` passed whenever the repository's path appeared anywhere, as `cd ROOT && …` does, and `kill $(pgrep …)` was the same act unseen | Judged by its own stage, and `kill` of a search refused with it |
+| G3-4 | defect | `-o` and `-S` were refused for every tool, so `ps -o` and `top -o` were no reads at a stop line | Each tool's writing options its own |
+| G3-5 | defect | macOS's `screen` is `SCREEN`, and was stopped | Infrastructure by name in any case |
+| G3-6 | gap | a long-lived small process kept the count of growth for hours, stopping job after job for what others did | Growth is counted over a window, and from afresh after a stop |
+| G3-7 | gap | the lock passed to a job was held by what it left behind, with a false refusal and no way to find the holder | Not passed. A job whose `run` is killed gives up its turn unless it is a build: stated |
+| G3-8 | gap | `run` never said its own job's stop, reading the log before it was written | Written first, then the stop |
+| G3-9 | gap | in a linked worktree beside the repository the guard exited, and with `onFailure: block` every command was refused | A linked worktree is its own root |
+| G3-10 | gap | on another harness `ensure` once is not enough | Said as it is: `run`, `make`, or `ensure` before each job |
+| G3-11 | gap | a search for the word `pkill` was refused | Only where a command stands |
+| G3-12 | gap | `cargo --version`, `make help` and a word in another tool's quoted argument counted as heavy | What only asks is not, and only a shell's `-c` is read as code |
+| G3-13 | gap | `pwd`, `sed -n`, `find`, `git show`, a comment and the handoff census were no reads | They are |
+| G3-14 | gap | a refusal did not say what to do, and `run --wait` was silent | Each says what to do, it says what it waits for, and `make` of a guarded recipe passes the hook and waits by itself |
+| G3-15 | gap | two sessions shared one place in the log, so one was refused for the other's stop | Each session its own, by the harness's id |
+| G3-16 | gap | a person's editor or REPL here was stopped at the danger line, unsaved work with it | They are what a person works in, and are spared |
+| G3-17 | gap | the self-test left a watcher behind, which the census would count | It stops it after the job that keeps it alive |
+| G3-18 | gap | a command that cannot start, a failing `ps` at start and ^C were tracebacks, and a signal's status not a shell's | Each said, as a shell says it. No controlling terminal: stated |
+| G3-19 | wording | "`HOST-GUARD` refuses a commit that changes what a `make` recipe runs" overclaimed | Said of the recipes it writes out, and `GUARD` defined once, and the hook's fields known |
+| G3-20 | wording | "the first check starts the watcher", and "during this work" left in a log line | Both said as they are |
+
+Said, and left as it stands: its reader could not run a real `make`, a commit's compile, a real VS Code terminal, a real Codex or Kimi command, real pressure levels, the true idle and blind times, the census against the real watcher, or `onFailure` with a real crash.

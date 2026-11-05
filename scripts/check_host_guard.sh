@@ -56,8 +56,8 @@ if {"start_used_percent", "stop_used_percent", "panic_used_percent"} <= limits.k
 # Everything `make` compiles or tests goes through it. These recipes are written out rather than read for what they might mean: a loose reading of a shell line
 # was passed by `cargo fmt && cargo test`. Changing one means changing it here too, in a commit that says why.
 makefile = (root / "Makefile").read_text(encoding="utf-8")
-if not re.search(r"^GUARD\s*:=\s*python3 -I -B scripts/host_guard\.py run --wait \d+ --\s*$", makefile, re.M):
-    breaches.append("the Makefile's `GUARD` is not `python3 -I -B scripts/host_guard.py run --wait SECONDS --`")
+if len(re.findall(r"^GUARD\s*[:+?]?=", makefile, re.M)) != 1 or not re.search(r"^GUARD\s*:=\s*python3 -I -B scripts/host_guard\.py run --wait \d+ --\s*$", makefile, re.M):
+    breaches.append("the Makefile's `GUARD` is not `python3 -I -B scripts/host_guard.py run --wait SECONDS --`, defined once")
 RECIPES = {
     "focused": ["$(GUARD) cargo xtask verify --tier focused"],
     "integration": ["$(GUARD) cargo xtask verify --tier integration"],
@@ -118,6 +118,8 @@ elif held[0].get("async"):
     breaches.append("the hook runs in the background, where it refuses nothing")
 elif not held[0].get("timeout"):
     breaches.append("the hook states no timeout, so one that hangs would hang every command")
+elif set(held[0]) - {"type", "command", "timeout", "onFailure", "statusMessage"}:
+    breaches.append(f"the hook says more than this check knows, which may narrow what it sees: {sorted(set(held[0]) - {'type', 'command', 'timeout', 'onFailure', 'statusMessage'})}")
 
 # What an agent of any harness reads first says so.
 if "scripts/host_guard.py" not in (root / "CLAUDE.md").read_text(encoding="utf-8"):
@@ -127,5 +129,5 @@ for breach in breaches:
     print(f"HOST-GUARD: {breach}")
 if breaches:
     sys.exit(1)
-print("host-guard: OK (every line at or inside its mark; every `make` build, every agent's shell command and CLAUDE.md through it; that it stops what it should is the self-test's)")
+print("host-guard: OK (every line at or inside its mark; the recipes it holds and every agent's shell command through it; that it stops what it should is the self-test's)")
 PY
