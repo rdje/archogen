@@ -67,12 +67,15 @@ that source does. Nothing rounds. What would not fit `u64` ticks, and a hyperper
 it hands each event to an observer, and the generated `main` prints them.
 
 **The order of one instant** is its whole allowed-ordering policy, so that one input has one trace:
-1. an interrupt becomes pending at its arrival, whether or not anything can take it;
-2. while the hardware is unmasked, every pending interrupt is taken, one at a time and none nested: the routes in the plan's
+1. a job with nothing left that takes time finishes, so its completion is recorded before a release at that instant, as `ROADMAP.md`
+   §13.4 requires ("At a coincident completion/release instant, record completion before processing the new release"). It stops at an
+   unmask that lets a pending interrupt in, which is taken before the job's next instruction, its completion among them;
+2. an interrupt becomes pending at its arrival, whether or not anything can take it;
+3. while the hardware is unmasked, every pending interrupt is taken, one at a time and none nested: the routes in the plan's
    rank order, then the release timer, as `RTP-H9` writes it. Taking one runs entry, its releases and exit, and each
    release is decided by `rt-core`;
-3. the scheduling decision follows, and its switch;
-4. the running job's body advances, until the next arrival or its own next step.
+4. the scheduling decision follows, and its switch;
+5. the running job's body advances, until the next arrival or its own next step.
 
 A mask step masks the hardware before raising the depth, an unmask lowers the depth before unmasking it, so no service ever
 runs with the depth raised (`releases-never-latched`). Initialisation runs first, in the plan's steps, interrupts masked,
@@ -85,7 +88,7 @@ longer bodies all the same, so preemption, masking and overrun are exercised now
 **A run names its scenario.** The horizon is one hyperperiod of what the run repeats (§2). Each
 source whose separation is stated arrives at exactly that separation from time zero, the densest the plan allows. One whose
 separation is zero, `unknown` or `absent`, or that the plan does not enable, does not arrive, and the trace's header says so: a run
-never claims what it did not exercise. **The trace** is `archogen-playground-trace/1`, one line an event, its time exact.
+never claims what it did not exercise. **The trace** is `archogen-playground-trace/2`, one line an event, its time exact.
 
 **A run is bounded.** A hyperperiod that fits `u64` can still be a run nobody could read: `1 ms` against `2305843009213693951 ms`
 never ends. So a plan whose one hyperperiod holds more than `2^20` timer releases and source arrivals is refused
@@ -168,7 +171,7 @@ capability unsupported. Then the S0 crate was deleted (`M4.2.4`), and the retire
 
 - `M4.3.1` builds the simulator; `M4.2.2` the emitter; `M4.2.3.1` the command, S0's fixtures through it and the book;
   `M4.2.3.2` `archogen explain` on a build; `M4.2.3.3` the review; `M4.2.4` S0's retirement.
-- A change that moves a generated file for the same inputs moves `archogen-playground-trace/1` or its emitter's identity, as
+- A change that moves a generated file for the same inputs moves `archogen-playground-trace` or its emitter's identity, as
   `docs/book/src/versions.md` registers them.
 
 ## Review

@@ -449,8 +449,9 @@ a change that leaves it stale, so it is never edited by hand.
   from: the catalog](catalog.md), [The runtime plan: what the generated system is told](runtime-plan.md), [The runtime:
   decisions, not actions](runtime.md), [Building a system](building.md), [The S0 early generation path](s0.md), [Where
   generated systems run](targets.md), [Verifying the toolchain](verification.md), [What this project relies on from
-  outside](ledger.md), [Annex A: The runtime's rules in detail](annex-runtime.md), [Annex B: The checks that keep the
-  repository honest](annex-repository.md), [Annex C: Trust proof records](annex-trust-proofs.md)
+  outside](ledger.md), [What is versioned, and what changing it costs](versions.md), [Annex A: The runtime's rules in
+  detail](annex-runtime.md), [Annex B: The checks that keep the repository honest](annex-repository.md), [Annex C: Trust
+  proof records](annex-trust-proofs.md)
 - Joint rules — [Matching an offer to a requirement](matching.md#joint-rules)
 - **JSON** — [definition](glossary.md), [Checking a plan](plan-check.md), [Checks that must not share a mistake: the
   trust gate](trust.md), [Generated-sources test adequacy](trust-adequacy.md), [The engine API](engine-api.md),

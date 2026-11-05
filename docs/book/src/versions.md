@@ -204,7 +204,7 @@ their versioned readers and permanent refusal controls enforce their local contr
 | Field | Value |
 | --- | --- |
 | Surface | the trace a system prints on the hosted playground: one line an event, its time exact, in the one order `docs/decisions/decision_hosted-build.md` §3 fixes for an instant |
-| Version | `archogen-playground-trace/1` |
+| Version | `archogen-playground-trace/2` — `/2` moved the order of one instant, a job with nothing left that takes time finishing before what arrives then (`M4.3.2`) |
 | Declared at | `const:crates/sim-playground/src/lib.rs:TRACE_FORMAT` |
 | Changes when | an event's words change, an event is added or removed, or the order of one instant moves |
 | Pinned by | the exact traces of `crates/sim-playground/tests/harness.rs` |

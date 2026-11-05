@@ -162,6 +162,65 @@ fn a_masked_run_holds_the_interrupt_pending_to_its_unmask_and_the_release_is_lat
     );
 }
 
+/// The lines of `lines` at `instant`, the instant's own text left off.
+fn at<'l>(lines: &'l [String], instant: &str) -> Vec<&'l str> {
+    lines
+        .iter()
+        .filter_map(|line| line.strip_prefix(instant))
+        .collect()
+}
+
+#[test]
+fn a_job_finishing_at_a_release_s_instant_completes_before_that_release() {
+    // `ROADMAP.md` §13.4: "At a coincident completion/release instant, record completion before processing the new release".
+    for body in [
+        &[Step::Run(10)][..],
+        &[Step::Run(10), Step::Mask, Step::Unmask][..],
+        &[Step::Mask, Step::Run(10)][..],
+    ] {
+        let tasks = [timer("a", 1, 10, body)];
+        let (ended, lines) = trace::<1>(&system(&tasks, &[], 20));
+        assert_eq!(ended, Ended::Horizon, "{lines:#?}");
+        let completes = lines.iter().position(|l| l == "1/10 s complete a");
+        let releases = lines.iter().position(|l| l == "1/10 s release a");
+        assert!(
+            completes.is_some() && completes < releases,
+            "{body:?}: {lines:#?}"
+        );
+        assert!(
+            !lines
+                .iter()
+                .any(|l| l.contains("job-skipped") || l.contains("faulted")),
+            "{body:?}: a job that filled its period read as an overrun: {lines:#?}"
+        );
+    }
+}
+
+#[test]
+fn a_job_with_time_left_at_a_release_s_instant_still_overruns() {
+    let body = [Step::Run(11)];
+    let tasks = [timer("a", 1, 10, &body)];
+    let (_, lines) = trace::<1>(&system(&tasks, &[], 20));
+    assert!(lines.contains(&"1/10 s faulted a".to_owned()), "{lines:#?}");
+    assert!(
+        !lines.contains(&"1/10 s complete a".to_owned()),
+        "{lines:#?}"
+    );
+}
+
+#[test]
+fn an_unmask_that_lets_an_interrupt_in_takes_it_before_the_job_s_next_step() {
+    // The release arrives under the mask, so it is taken at the unmask, before the job's next instruction: here its completion,
+    // at that same instant. So the task still owes that job, and the release finds it so.
+    let body = [Step::Mask, Step::Run(15), Step::Unmask];
+    let tasks = [timer("a", 1, 10, &body)];
+    let (_, lines) = trace::<1>(&system(&tasks, &[], 20));
+    let at_unmask = at(&lines, "3/20 s ");
+    assert_eq!(at_unmask.first().copied(), Some("unmask a"), "{lines:#?}");
+    assert_eq!(at_unmask.get(1).copied(), Some("entry timer"), "{lines:#?}");
+    assert!(!at_unmask.contains(&"complete a"), "{lines:#?}");
+}
+
 #[test]
 fn a_masked_job_completing_closes_its_section_and_the_interrupt_is_taken() {
     let body = [Step::Mask, Step::Run(2)];

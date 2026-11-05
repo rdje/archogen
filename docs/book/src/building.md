@@ -41,7 +41,7 @@ source the plan inferred. Run what it wrote:
 
 ```console
 $ cargo run --quiet --manifest-path build/heartbeat/Cargo.toml
-; archogen-playground-trace/1
+; archogen-playground-trace/2
 ; system heartbeat
 ; plan sha256:390fb545f810c644ba38a4341dc4a158f2d586d3c728dea3879867e0fd529fa2
 ; scenario one hyperperiod, 3 ticks of 1/100 s; each source at its stated separation, from time zero

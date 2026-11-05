@@ -155,7 +155,7 @@ fn a_generated_system_builds_offline_and_runs_without_an_edit() {
     let before = snapshot(&dir);
     let trace = run_package(&dir);
     assert!(
-        trace.starts_with("; archogen-playground-trace/1\n; system heartbeat\n; plan sha256:"),
+        trace.starts_with("; archogen-playground-trace/2\n; system heartbeat\n; plan sha256:"),
         "{trace}"
     );
     assert!(trace.contains("0 s release beat\n"), "{trace}");

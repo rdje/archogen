@@ -24,7 +24,7 @@ commit. The prototype and that doctrine are both gone.
 | `horizon-is-one-hyperperiod` | the generated system was observed for exactly one hyperperiod | **moved**: a named rule of the hosted build's scenario, not an assumption (`decision_hosted-build.md` §3); a run of a part of a hyperperiod is a scenario `M4.3` may add |
 | `whole-millisecond-periods` | every period an exact whole number of milliseconds | **discharged**: exact integer ticks (§2), a test running `250 us` |
 | `periodic-releases-only` | a task with a minimum separation refused, no event source modeled | **discharged**: the simulator's sources, a test counting a source's arrivals; device models stay `M4.5`'s |
-| `fixed-observation-format` | the `system` / `release` / `summary` format fixed in the engine | **discharged**: `archogen-playground-trace/1`, registered; the rest of §6.3's event set stays `M4.3`'s |
+| `fixed-observation-format` | the `system` / `release` / `summary` format fixed in the engine | **discharged**: `archogen-playground-trace`, registered; the rest of §6.3's event set stays `M4.3`'s |
 | `stdout-is-observable-output` | `observable-output` realized by standard output, with no device model | **moved** to `M4.3`: no job writes anything yet, and the trace is the simulator's own |
 | `single-fixed-realization` | one realization selected unconditionally | **discharged** by `M3.1`: the search |
 | `plan-is-not-independently-checked` | the plan nothing re-validated | **discharged** by `M3.5`: the configuration checker, which `archogen build` runs |

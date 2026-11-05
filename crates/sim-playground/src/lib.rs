@@ -5,10 +5,11 @@
 //! the shared runtime logic. It is not a newly synthesized full CPU emulator." So nothing here decides what runs: `rt-core`
 //! does. This decides *when each thing happens*, by one fixed order, so that one input has one trace.
 //!
-//! **The order of one instant.** An interrupt becomes pending at its arrival. While the hardware is unmasked, every pending
-//! interrupt is taken, one at a time and none nested: the routes in rank order, then the release timer. Taking one runs
-//! entry, its releases and exit. The scheduling decision follows, and its switch; then the running job's body advances until
-//! the next arrival or its own next step.
+//! **The order of one instant.** A job with nothing left that takes time finishes first, so its completion is recorded before
+//! a release at that instant (`ROADMAP.md` §13.4). Then an interrupt becomes pending at its arrival. While the hardware is
+//! unmasked, every pending interrupt is taken, one at a time and none nested: the routes in rank order, then the release timer.
+//! Taking one runs entry, its releases and exit. The scheduling decision follows, and its switch; then the running job's body
+//! advances until the next arrival or its own next step.
 //!
 //! It does no I/O: each event goes to an [`Observer`]. Its sources are copied byte for byte into every generated system.
 
@@ -17,7 +18,7 @@
 use rt_core::{Decision, OverrunPolicy, Scheduler, TaskState, Transition};
 
 /// The trace's format, as [`Stamped`]'s `Display` writes it.
-pub const TRACE_FORMAT: &str = "archogen-playground-trace/1";
+pub const TRACE_FORMAT: &str = "archogen-playground-trace/2";
 
 /// One step of a job's body.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -303,6 +304,9 @@ impl<'s, 'o, const N: usize> Run<'s, 'o, N> {
             self.emit(Event::TimerProgrammed { at });
         }
         loop {
+            if self.finish_what_is_due() {
+                return Ended::Halted;
+            }
             self.arrive();
             if !self.masked && self.take_interrupts() {
                 return Ended::Halted;
@@ -316,6 +320,37 @@ impl<'s, 'o, const N: usize> Run<'s, 'o, N> {
                 Advance::Horizon => return Ended::Horizon,
             }
         }
+    }
+
+    /// The running job finished, if it has nothing left that takes time, so that its completion comes before what arrives at
+    /// this instant (`ROADMAP.md` §13.4). It stops at an unmask that lets a pending interrupt in, which is taken before the job's
+    /// next instruction, its completion among them. True where the runtime halted.
+    fn finish_what_is_due(&mut self) -> bool {
+        loop {
+            let interrupted =
+                !self.masked && (self.timer_pending || self.pending.iter().any(|pending| *pending));
+            if interrupted || !self.has_no_time_left() {
+                return false;
+            }
+            if matches!(self.advance(), Advance::Halted) {
+                return true;
+            }
+        }
+    }
+
+    /// Whether a job is running with nothing left that takes time.
+    fn has_no_time_left(&self) -> bool {
+        (0..N)
+            .find(|task| self.scheduler.state(*task) == TaskState::Running)
+            .is_some_and(|task| {
+                let job = self.jobs[task];
+                job.left == 0
+                    && self.system.tasks[task]
+                        .body
+                        .iter()
+                        .skip(job.step)
+                        .all(|step| !matches!(step, Step::Run(ticks) if *ticks > 0))
+            })
     }
 
     /// Whatever arrives at this instant becomes pending, whether or not anything can take it.
