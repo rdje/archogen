@@ -664,9 +664,21 @@ def case_at_a_disk_floor_what_writes_stops() -> None:
     check("a process that wrote before the watcher began is not counted at its first sample", up(past))
     (scope / "data").unlink(missing_ok=True)
     # A script of writers each shorter than a sample, going on for many samples: it goes whole, whichever of them is seen, or by the volume falling under it.
-    loop = spawn(["bash", "-c", "for i in $(seq 1 400); do dd if=/dev/zero of=f$i bs=1048576 count=5 2>/dev/null; sleep 0.02; done; touch ended"], scope)
-    check("a script of short writers is stopped whole", settle(loop, 40), events(scope)[-1:])
-    check("before it ended", not (scope / "ended").exists())
+    loop = spawn(["bash", "-c", "for i in $(seq 1 400); do dd if=/dev/zero of=f$i bs=1048576 count=8 2>/dev/null; sleep 0.02; done; touch ended"], scope)
+    began = time.monotonic()
+    settled = settle(loop, 40)
+    took = time.monotonic() - began
+    # A script slower than a fall is one the record says goes unstopped by this line, and a loaded disk can hold it there: then this says nothing, and says that.
+    written = sum(file.stat().st_size for file in scope.glob("f[0-9]*"))
+    ended = (scope / "ended").exists()
+    if (ended or not settled) and written / took < g.FELL_BYTES / g.FELL_WINDOW_SECONDS:
+        not_run.append(f"a script of short writers is stopped whole: the host held it to {written >> 20} MiB in {took:.0f} s, under the rate a fall needs")
+        if not settled:
+            os.killpg(loop.pid, signal.SIGKILL)
+            loop.wait()
+    else:
+        check("a script of short writers is stopped whole", settled, events(scope)[-1:])
+        check("before it ended", not ended, f"{written >> 20} MiB in {took:.0f} s")
     watcher.terminate()
     watcher.wait(timeout=5)
     for written in scope.glob("f[0-9]*"):
@@ -979,6 +991,8 @@ def case_what_counts_as_heavy() -> None:
         "/usr/bin/time -l cargo build", "rustup run stable cargo build", "zsh -c 'cargo build'", "bash -lc 'cargo build'", "sudo cargo build", "env -i cargo build", "cargo +nightly miri test",
         "cargo --locked build", "cargo --config x build", "make", "make -f other.mk focused", "qemu-system-riscv32 -M virt", "mdbook build", "rustc x.rs", "xargs cargo build", "eval 'cargo build'",
         "cargo test -- --help", "cargo run -- --version", "make --jobs 4 other", "bash -euo pipefail scripts/build_book.sh", "bash -c -- 'cargo build'", "bash -euo pipefail -c 'cargo build'", "bash <<'E'\ncargo build\nE",
+        "bash -s -- x <<'E'\ncargo build\nE", "bash -s x <<< 'cargo build'", "bash /dev/stdin <<'E'\ncargo build\nE", "source /dev/stdin <<'E'\ncargo build\nE", 'x="$(cat <<EOF\nbody\nEOF)" && cargo build',
+        "a[0]=x cargo build", "echo ${x:-'}'} ; cargo build", "env -S 'cargo build'", "coproc name { cargo build; }", "{fd}>log cargo build", "[[ a == a ]]>log; cargo build", "if [[ '#c' =~ ^([[:space:]]*)#(.*)$ ]]; then cargo build; fi",
         "bash <<< 'cargo build'", "trap 'cargo build' EXIT", "echo $(( $(cargo build) + 1 ))", 'x="$(if true; then case y in y) cargo build;; esac; fi)"', "x=( $(cargo build) )", "[[ -n $(cargo metadata --format-version 1 >x; cargo build) ]]",
     ):
         check(f"heavy: {heavy}", heavy_text(heavy))
@@ -993,6 +1007,7 @@ def case_what_counts_as_heavy() -> None:
         "rustc --explain E0308", "cargo build --help", "cargo update -p serde", "cargo add serde", "cargo remove serde", "cargo info serde", "cargo clippy --version", "cargo generate-lockfile", "cargo fetch", "mdbook help",
         "qemu-system-riscv32 --version", "archogen --help", "archogen help build", "archogen-plan-check --help", "make --jobs 4 focused", "names=(rustc cargo); echo ${names[0]}", "(( make > 1 ))", "((make>1)) && ls",
         "[[ $x == cargo ]]", "[[ $x =~ ^(cargo|make)$ ]] && ls", "case $x in cargo|make) ls;; esac", "cargo() { ls; }", "function make { ls; }",
+        "make --version", "make --help", "gmake -v", "make -h", "for x in a; do make() { ls; }; done", "if true; then cargo() { :; }; fi", "bash -n -c 'cargo build'", "sh -n <<'E'\ncargo build\nE", "zsh -n <<'E'\ncargo build\nE", "command -pv cargo",
     ):
         check(f"not heavy: {light!r}", not heavy_text(light))
 
@@ -1021,13 +1036,19 @@ THE_SHELL_RUNS_THESE = (
     "bash <<< 'cargo build'", "sh <<'EOF'\ncargo build\nEOF", "tools=(pkill killall); echo ${tools[0]}", "names=(rustc cargo); echo ${names[0]}", "x=( $(cargo build) )", "x+=(a b); ls", "(( make > 1 ))", "((make>1)); ls",
     "[[ a < b && c > d || e == f ]]; ls", "[[ -z $(cargo build) ]]; ls", "if [[ -n $(ls) ]]; then cargo build; fi", "for t in a b; do case $t in a) ls;; b) cargo build;; esac; done",
     "pkill() { :; }; ls", "function make { :; }; ls", "function cargo() { :; }; ls",
+    # What round 7's reader found parting them.
+    "if [[ '#c' =~ ^([[:space:]]*)#(.*)$ ]]; then cargo build; fi", "[[ a == a ]]>log; cargo build", "bash -s -- x <<'E'\ncargo build\nE", "bash -s x <<< 'cargo build'", "bash /dev/stdin <<'E'\ncargo build\nE",
+    'x="$(cat <<EOF\nbody\nEOF)" && cargo build', "a[0]=x cargo build", "echo ${x:-'}'} ; cargo build", "env -S 'cargo build'", "for x in a; do g() { :; }; done; ls", "if true; then h() { :; }; fi; ls", "bash -n -c 'cargo build'; ls", "command -pv cargo; ls",
 )
 # Those the shell may not reach: what it runs must still be what is read, and what is read may be more.
 THE_SHELL_MAY_NOT_REACH = ("ls || cargo build", "false && cargo build", "if false; then cargo build; else make focused; fi", "while false; do cargo build; done", "case x in y) cargo build;; esac", "case x in cargo) make focused;; esac", "f() { cargo build; }", "xargs cargo build </dev/null",
     'arch="$(case "$(ls)" in arm64) touch a;; *) file b;; esac)"; cargo build', 'case "$t" in a) ls;; pkill|killall) make focused;; esac', "case y in\nz) make x ;;\nesac\nls", "case y in z) cargo build; esac", "case y in z) cat <<E ;; esac\nmake\nE\nmake focused",
     "[[ $x =~ ^(pkill|killall)$ ]] && cargo build")
 # A bare `)` of a case inside a substitution: bash 3.2 takes it for the substitution's end, as its own bug, so it runs less than bash 4 and later do, which the reader reads. Reading more is the safe side.
-ONLY_LATER_BASH_RUNS_THESE = ('x="$(case y in y) cargo build;; esac)"; make focused', 'x="$(case y in y) cargo build;; esac )"; make focused', 'x="$(if true; then case y in y) cargo build;; esac; fi)"', 'x=$(case y in y) cargo build; esac); ls')
+ONLY_LATER_BASH_RUNS_THESE = (
+    'x="$(case y in y) cargo build;; esac)"; make focused', 'x="$(case y in y) cargo build;; esac )"; make focused', 'x="$(if true; then case y in y) cargo build;; esac; fi)"', 'x=$(case y in y) cargo build; esac); ls',
+    "coproc name { cargo build; }", "{fd}>log cargo build",
+)
 # Every way of standing, around everything that may stand there.
 HOW_IT_STANDS = ("%s", "(%s)", "$(%s)", "`%s`", "bash -c '%s'", 'sh -c "%s"', "env %s", "nohup %s", "x=$(%s)", "{ %s; }", "if %s; then :; fi", "! %s", "time %s", 'echo "$(%s)"', "# it's\n%s\n# it's", "true; %s", "true && %s", "true | %s", "eval '%s'")
 WHAT_STANDS = ("cargo build", "make -j4 focused>log", "pgrep -x rustc | xargs kill", "git commit -m '(make) x'", 'ls "a b"', "kill 999999")
@@ -1133,6 +1154,10 @@ def the_reader_against(bash: str) -> None:
         ("-o pipefail script", (None, "script")), ("script -c x", (None, "script")), ("-- script", (None, "script")), ("-s", (None, None)), ("-eo pipefail", (None, None)), ("--norc", (None, None)), ("--rcfile f", (None, None)), ("", (None, None)),
     ):
         check(f"a shell given `{arguments}` is told {told_it}", g.shell_told(arguments.split()) == told_it, g.shell_told(arguments.split()))
+    check("`-s` keeps a shell on its input, its words being only its arguments", g.shell_told(["-s", "--", "x"]) == (None, None) and g.shell_told(["-s", "x"]) == (None, None))
+    check("`-n` runs nothing it reads", g.shell_only_parses(["-n"]) and g.shell_only_parses(["-en"]) and not g.shell_only_parses(["-e", "x"]) and not g.shell_only_parses(["--norc"]))
+    for quiet, asks in (("make --version", False), ("make --help", False), ("gmake -v", False), ("make -n focused", False), ("make help", False), ("make focused", True), ("cargo build --help", False), ("cargo build", True)):
+        check(f"a build only if it builds: {quiet}", g.Process(1, 0, quiet, "", "", 0).spawns == asks)
     check("a shell told nothing is a terminal, whatever its options", g.is_terminal_shell(proc(1, "bash -eo pipefail")) and g.is_terminal_shell(proc(1, "bash --rcfile f")))
     check("and one told a command, wherever `-c` stands, is none", not g.is_terminal_shell(proc(1, "bash -euo pipefail -c x")) and not g.is_terminal_shell(proc(1, "bash -c -- x")))
 
@@ -1155,6 +1180,8 @@ def case_killing_by_name() -> None:
             "ps -ax | awk '/rustc/{print $1}' | while read p; do kill $p; done", "for p in $(ps -ax | grep rustc | awk '{print $1}'); do kill $p; done",
             'arch="$(case "$(uname -m)" in arm64) echo a;; *) echo b;; esac)"; pkill -x rustc', 'x="$(case y in y) echo a;; esac )"\npkill -x rustc', "(( y = 1 << 3 ))\npkill -x rustc", "((x<<=1)); killall cargo", "echo $[1<<2]; pkill rustc",
             "bash -euo pipefail -c 'pkill -x rustc'", "bash -eo pipefail -c 'pkill -x rustc'", "bash -c -- 'pkill -x rustc'", "trap 'pkill -x rustc' EXIT", "bash <<'EOF'\npkill -x rustc\nEOF", "bash <<< 'pkill -x rustc'", "case y in y) pkill -x rustc;; esac",
+            "[[ $line =~ ^([[:space:]]*)#(.*)$ ]] && pkill -x rustc", "bash -s -- x <<'E'\npkill -x rustc\nE", "bash -s x <<< 'killall cargo'", 'x="$(cat <<EOF\nbody\nEOF)"\npkill -x rustc', f"pkill -f {scope}-other/x", f"ps -ax | grep {scope}-other/x | xargs kill",
+            'kill "$(pgrep -x rustc)"', 'ps -ax | grep x; kill "$PID"',
         ):
             done = hook_says(command, scope)
             check(f"never by a name across the host: {command}", done.returncode == 2 and "never by a program's name" in done.stderr, done.stderr)
@@ -1165,6 +1192,8 @@ def case_killing_by_name() -> None:
             'grep -n "kill\\|pgrep" f', 'rg "xargs kill" scripts/', 'echo "use kill, not pgrep"', "kill 123; ps -ax | grep x", "ps -ax | grep x; kill 123", "kill $!; pgrep -x rustc", "ps -p 123; kill $(cat p)",
             "tools=(pkill killall); echo ${tools[0]}", 'case "$t" in a) echo a;; pkill|killall) echo b;; esac', "for t in a b; do case $t in a) echo a;; pkill) echo b;; esac; done", "[[ $cmd =~ ^(pkill|killall)$ ]] && echo careful",
             "(( pkill > 1 ))", "pkill() { :; }; echo", "cat <<'EOF'\npkill -x rustc\nEOF",
+            f"ps -ax |\n grep {scope}/x |\n awk '{{print $1}}' |\n xargs kill", 'ps -fp "$PID" && kill "$PID"', "pkill -F job.pid", "pgrep -F job.pid | xargs kill", 'ps -ax | head; kill "$(cat job.pid)"', "if true; then pkill() { :; }; fi",
+            "bash -n -c 'pkill -x rustc'", "sh -n <<'E'\npkill -x rustc\nE",
         ):
             done = hook_says(command, scope)
             check(f"not by a name across the host: {command}", done.returncode == 0, done.stderr)
@@ -1232,6 +1261,12 @@ def case_hook() -> None:
         check("a command refused for another reason still tells it", done.returncode == 2 and "stopped z" in done.stderr, done)
         done = hook_says("cargo build", scope, {"start_used_percent": 0})
         check("a heavy command refused is told how to wait", done.returncode == 2 and "run --wait" in done.stderr, done.stderr)
+        # Told the last few, and how many came before them, never fewer in silence.
+        with open(scope / "state" / "events.log", "a") as log:
+            for n in range(9):
+                log.write(stop_event(now, f"many{n}"))
+        said = told(hook_says("touch x", scope, session="a"))
+        check("many stops are told as the last few and how many more", "and 4 stopped before these" in said and "stopped many8" in said and "stopped many3" not in said, said)
         check("`make` of a guarded recipe waits by itself, so the hook lets it", hook_says("make focused", scope, {"start_used_percent": 0}).returncode == 0)
         time.sleep(0.5)
         check("the hook started a watcher", "watcher: running" in guard("status", root=scope).stdout)

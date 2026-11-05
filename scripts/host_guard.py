@@ -78,8 +78,8 @@ CODE = Path(__file__).resolve()
 GROWTH_WINDOW_SECONDS = 900.0
 # What a job must have written since the last sample to count as writing, at a disk floor.
 WRITING_BYTES = 1 << 20
-# What a volume must lose within this long to have fallen, at a floor with no writer seen. Other projects cost this shared volume up to 49 MiB in a half second, measured `2026-11-05`,
-# so a smaller fall says nothing of ours, and a script of `rm` was stopped for one: a floor's way out.
+# What a volume must lose within this long to have fallen, at a floor with no writer seen. Other projects cost this shared volume up to 67 MiB in a half second and 355 MiB in ten seconds, measured
+# `2026-11-05`, so a smaller fall says nothing of ours, and a script of `rm` was stopped for one: a floor's way out. `check_host_guard.sh` holds these and the windows beside `Limits`.
 FELL_BYTES = 1 << 30
 FELL_WINDOW_SECONDS = 10.0
 LOG_AT_MOST = 1 << 20  # What the log keeps, and the most any read of it can cost.
@@ -294,7 +294,8 @@ class Process:
         """Whether it is a build, which spawns more for as long as it lives, however little it holds. What only asks, or cleans, is none, nor a `make` waiting its turn."""
         if self.name not in BUILDS or self.waiting:
             return False
-        return self.name in MAKES or is_heavy([self.name, *self.arguments.split()])
+        arguments = self.arguments.split()
+        return not make_only_asks(arguments) if self.name in MAKES else is_heavy([self.name, *arguments])
 
     @property
     def label(self) -> str:
@@ -370,7 +371,7 @@ READS_THE_HOST = {"ps", "sysctl", "vm_stat"}
 def shell_told(arguments: list[str]) -> tuple[str | None, str | None]:
     """The command a shell given these is told to run, with `-c`, and the script it is given; neither if it runs its input. As the shell reads them: options first, so that `-c` holds
     wherever it stands and the first word that is no option is what it was told, and `-o` takes a value even at the end of a cluster, `-euo pipefail`."""
-    told_a_command, at = False, 0
+    told_a_command, on_its_input, at = False, False, 0
     while at < len(arguments):
         word = arguments[at]
         if word in ("--", "-"):
@@ -380,10 +381,23 @@ def shell_told(arguments: list[str]) -> tuple[str | None, str | None]:
             break
         long = word.startswith("--")
         told_a_command = told_a_command or (not long and word[0] == "-" and "c" in word)
+        on_its_input = on_its_input or (not long and word[0] == "-" and "s" in word)
         at += 2 if word in SHELL_FLAGS_WITH_VALUES or (not long and word[-1] in "oO") else 1
     if at >= len(arguments):
         return ("", None) if told_a_command else (None, None)
-    return (arguments[at], None) if told_a_command else (None, arguments[at])
+    if told_a_command:
+        return arguments[at], None
+    return (None, None) if on_its_input else (None, arguments[at])
+
+
+def shell_only_parses(arguments: list[str]) -> bool:
+    """Whether a shell given these is told `-n`: it reads what it is given and runs none of it."""
+    for word in arguments:
+        if word == "--" or not word.startswith("-"):
+            return False
+        if not word.startswith("--") and "n" in word[1:]:
+            return True
+    return False
 
 
 def is_agent(process: Process) -> bool:
@@ -900,10 +914,12 @@ def said_of(event: dict) -> str:
 
 # ---- what a shell command would run
 
-ASSIGNMENT = re.compile(r"[A-Za-z_]\w*\+?=")
+ASSIGNMENT = re.compile(r"[A-Za-z_]\w*(?:\[[^\]]*\])?\+?=")
 REDIRECTION = re.compile(r"\d*(?:<<<|<<-|<<|<>|<&|>>|>&|>\||<|>)|&>>|&>")
 ARRAY_ASSIGNMENT = re.compile(r"[A-Za-z_]\w*\+?=")
 A_FUNCTION = re.compile(r"\(\s*\)")
+A_DESCRIPTOR_VARIABLE = re.compile(r"\{[A-Za-z_]\w*\}")
+A_SUBSTITUTION_ALONE = re.compile(r"(?:\$\(…\)|`…`|\s)+")
 BEFORE_A_COMMAND = {"if", "then", "elif", "else", "while", "until", "do", "!", "{", "coproc"}
 NOT_A_COMMAND = {"for", "select", "case", "esac", "fi", "done", "}", "[[", "]]"}
 # What runs another command: the flags of its that take a value, and how many plain words stand before the command.
@@ -927,11 +943,12 @@ WRAPPERS = {
 @dataclass
 class Command:
     """One simple command a shell would run: its words as the command would get them, quotes gone and a substitution as written, and which pipeline it stands in. `fed` says that
-    its arguments come from its input, as `xargs` gives them."""
+    its arguments come from its input, as `xargs` gives them. `own_from` says where among all that is read the substitutions in its own words begin, which it stands just after."""
 
     words: list[str]
     pipeline: int
     fed: bool = False
+    own_from: int = 0
 
     @property
     def name(self) -> str:
@@ -941,7 +958,15 @@ class Command:
 def runs_its_input(words: list[str]) -> bool:
     """Whether these run a shell told neither a command nor a script, so that what it is fed is what it runs."""
     words = unwrapped(words)[0]
-    return bool(words) and os.path.basename(words[0]) in SHELLS and shell_told(words[1:]) == (None, None)
+    if not words:
+        return False
+    name, arguments = os.path.basename(words[0]), words[1:]
+    if name in (".", "source"):
+        return arguments[:1] == ["/dev/stdin"]
+    if name not in SHELLS or shell_only_parses(arguments):
+        return False
+    command, script = shell_told(arguments)
+    return command is None and script in (None, "/dev/stdin")
 
 
 def plain_word(words: list[str], takes_a_value: set[str] = frozenset()) -> str | None:
@@ -962,7 +987,9 @@ def unwrapped(words: list[str]) -> tuple[list[str], bool]:
     fed = False
     while words:
         name = os.path.basename(words[0])
-        if words[0] in BEFORE_A_COMMAND or ASSIGNMENT.match(words[0]):
+        if words[0] == "coproc":
+            words = words[2:] if words[2:3] == ["{"] else words[1:]
+        elif words[0] in BEFORE_A_COMMAND or ASSIGNMENT.match(words[0]):
             words = words[1:]
         elif words[0] == "function":
             words = words[2:]
@@ -973,10 +1000,12 @@ def unwrapped(words: list[str]) -> tuple[list[str], bool]:
             rest, at = words[1:], 0
             while at < len(rest):
                 word = rest[at]
-                if word in takes_a_value:
+                if name == "env" and word in ("-S", "--split-string") and at + 1 < len(rest):
+                    rest = rest[:at] + rest[at + 1].split() + rest[at + 2 :]  # What it is given is what it runs.
+                elif word in takes_a_value:
                     at += 2
                 elif word.startswith("-") and word != "-":
-                    if name == "command" and word in ("-v", "-V"):
+                    if name == "command" and re.fullmatch(r"-\w*[vV]\w*", word):
                         return [], False
                     at += 1
                 elif name == "env" and ASSIGNMENT.match(word):
@@ -1000,18 +1029,21 @@ class ShellReader:
     def __init__(self, text: str, found: list[Command], pipelines: itertools.count) -> None:
         self.text, self.at, self.found, self.pipelines = text, 0, found, pipelines
         self.here_docs: list[tuple[str, bool, bool, list[str]]] = []  # Each body starts at the next newline, at whatever level the reading then stands.
+        self.substitutions = 0  # How many `$(…)` the reading stands in.
 
     def commands(self, closing: str | None = None) -> bool:
         """Up to the end of the text, or to the `)` that closes this level, or to the end of a case's branch: an `esac` then says so by returning true."""
         text = self.text
         words: list[str] = []
         depth, pipeline = 0, next(self.pipelines)
+        continued, started = False, len(self.found)  # After a `|`, a newline does not end the pipeline. What it found from `started` on stands in this command's words.
 
         def finish() -> None:
-            nonlocal words
+            nonlocal words, started
             if words:
-                self.emit(words, pipeline)
+                self.emit(words, pipeline, started)
             words = []
+            started = len(self.found)
 
         while self.at < len(text):
             c, two = text[self.at], text[self.at : self.at + 2]
@@ -1023,7 +1055,8 @@ class ShellReader:
                 self.at += 2
             elif c == "\n":
                 finish()
-                pipeline = next(self.pipelines)
+                if not continued:
+                    pipeline = next(self.pipelines)
                 self.at += 1
                 self.read_here_docs()
             elif c == "#":
@@ -1038,9 +1071,9 @@ class ShellReader:
                 pipeline = next(self.pipelines)
             elif c == "(" and words and ARRAY_ASSIGNMENT.fullmatch(words[-1]) and text[self.at - 1] == "=":
                 self.array()
-            elif c == "(" and len(words) == 1 and A_FUNCTION.match(text, self.at):
+            elif c == "(" and words and A_FUNCTION.match(text, self.at) and all(word in BEFORE_A_COMMAND or word == "time" for word in words[:-1]):
                 self.at = A_FUNCTION.match(text, self.at).end()  # Its name is no command, and its body is read as any other.
-                words = []
+                words = words[:-1]
             elif two == "((" and (at_start or words[-1:] == ["for"]) and (end := self.arithmetic_end(self.at + 2)) is not None:
                 self.read_expansions(text[self.at + 2 : end - 2])
                 self.at = end
@@ -1051,7 +1084,9 @@ class ShellReader:
                 pipeline = next(self.pipelines)
             elif two in ("<(", ">("):
                 self.at += 2
+                self.substitutions += 1
                 self.commands(closing=")")
+                self.substitutions -= 1
                 words.append(f"{two}…)")
             elif redirection:
                 self.at = redirection.end()
@@ -1080,12 +1115,17 @@ class ShellReader:
             elif two == "|&":
                 finish()
                 self.at += 2
+                continued = True
             elif c == "|":
                 finish()
                 self.at += 1
+                continued = True
             else:
+                continued = False
                 word = self.word()[0]
-                if at_start and word == "case":
+                if A_DESCRIPTOR_VARIABLE.fullmatch(word) and REDIRECTION.match(text, self.at):
+                    pass  # `{fd}>log`: where a redirection puts a descriptor, and no word of the command.
+                elif at_start and word == "case":
                     self.case()
                 elif at_start and word == "[[":
                     self.condition()
@@ -1111,8 +1151,8 @@ class ShellReader:
             elif newlines and c == "\n":
                 self.at += 1
                 self.read_here_docs()
-            elif newlines and c == "#":
-                end = text.find("\n", self.at)
+            elif newlines and c == "#" and (self.at == 0 or text[self.at - 1] in " \t\n"):
+                end = text.find("\n", self.at)  # Only where a word could begin: `)#(` in a regular expression is none.
                 self.at = len(text) if end < 0 else end
             else:
                 return
@@ -1155,7 +1195,7 @@ class ShellReader:
         text = self.text
         while self.at < len(text):
             self.blanks(newlines=True)
-            if text[self.at : self.at + 2] == "]]" and text[self.at + 2 : self.at + 3] in ("", " ", "\t", "\n", ";", "&", "|", ")", "#"):
+            if text[self.at : self.at + 2] == "]]" and text[self.at + 2 : self.at + 3] in ("", " ", "\t", "\n", ";", "&", "|", ")", "#", "<", ">"):
                 self.at += 2
                 return
             before = self.at
@@ -1263,7 +1303,9 @@ class ShellReader:
             self.at = end
         elif two == "$(":
             self.at += 2
+            self.substitutions += 1
             self.commands(closing=")")
+            self.substitutions -= 1
             parts.append("$(…)")
         elif two == "$[":
             depth, at = 0, self.at + 1
@@ -1290,6 +1332,11 @@ class ShellReader:
                 elif c == '"':
                     self.at += 1
                     self.expansions(parts, '"')
+                elif c == "'" and not in_quotes:
+                    end = text.find("'", self.at + 1)
+                    end = len(text) if end < 0 else end
+                    parts.append(text[self.at + 1 : end])
+                    self.at = end + 1
                 else:
                     parts.append(c)
                     self.at += 1
@@ -1337,8 +1384,13 @@ class ShellReader:
                 end = text.find("\n", self.at)
                 end = len(text) if end < 0 else end
                 line = text[self.at : end]
+                plain = line.lstrip("\t") if strip_tabs else line
+                # Inside a substitution a delimiter may close on its `)`, which is then the substitution's.
+                if self.substitutions and plain.startswith(delimiter + ")"):
+                    self.at += len(line) - len(plain) + len(delimiter)
+                    break
                 self.at = end + 1
-                if (line.lstrip("\t") if strip_tabs else line) == delimiter:
+                if plain == delimiter:
                     break
                 lines.append(line)
             if runs_its_input(fed):
@@ -1346,13 +1398,15 @@ class ShellReader:
             elif not quoted:
                 self.read_expansions("\n".join(lines))
 
-    def emit(self, words: list[str], pipeline: int) -> None:
+    def emit(self, words: list[str], pipeline: int, started: int) -> None:
         if words[0] in NOT_A_COMMAND:
             return
         words, fed = unwrapped(words)
         if not words or words[0] in NOT_A_COMMAND:
             return
         name = os.path.basename(words[0])
+        if name in SHELLS and shell_only_parses(words[1:]):
+            return
         script = shell_told(words[1:])[0] if name in SHELLS else None
         if script is not None:
             ShellReader(script, self.found, self.pipelines).commands()
@@ -1361,7 +1415,7 @@ class ShellReader:
         elif name == "trap":
             ShellReader(plain_word(words[1:]) or "", self.found, self.pipelines).commands()
         else:
-            self.found.append(Command(words, pipeline, fed))
+            self.found.append(Command(words, pipeline, fed, started))
 
 
 def commands_of(text: str) -> list[Command]:
@@ -1382,6 +1436,13 @@ ASKING_FLAGS = {"-V", "-vV", "--version", "--help", "-h"}
 # `make` of a recipe that goes through the guard and waits for room by itself.
 MAKE_GUARDED = {"focused", "integration", "tiers", "gate", "check", "clippy", "test", "book", "help", "hooks", "fmt"}
 MAKE_FLAGS_WITH_VALUES = {"-I", "-l", "-o", "-W", "--include-dir", "--load-average", "--old-file", "--what-if"}
+# Asked of `make`, these run no recipe.
+MAKE_ASKS = {"-n", "--dry-run", "--just-print", "--recon", "--version", "-v", "--help", "-h"}
+
+
+def make_only_asks(arguments: list[str]) -> bool:
+    """Whether `make` given these runs no recipe, or only the one that says what there is."""
+    return arguments[:1] == ["help"] or any(word in MAKE_ASKS for word in arguments)
 
 
 def make_is_guarded(arguments: list[str]) -> bool:
@@ -1389,7 +1450,7 @@ def make_is_guarded(arguments: list[str]) -> bool:
     targets, at = [], 0
     while at < len(arguments):
         word = arguments[at]
-        if word in ("-n", "--dry-run", "--just-print", "--recon"):
+        if word in MAKE_ASKS:
             return True
         if word in ("-C", "-f", "--directory", "--file", "--makefile") or word.startswith(("-C", "-f", "--directory=", "--file=", "--makefile=")):
             return False
@@ -1439,21 +1500,30 @@ def kills_by_name(commands: list[Command], root: Path) -> bool:
     of the process table found. A search names this root if anything in its pipeline does. `-P` goes by a parent's pid, and `kill` of numbers by theirs, whatever else ran before."""
     text = str(root)
 
-    def by_pid(command: Command, flag: str) -> bool:
-        return any(word.startswith(flag) for word in command.words[1:])
+    def names_this_root(word: str) -> bool:
+        # Exactly it: `archogen-other` begins the same, and a name's own characters do not end a path.
+        return re.search(re.escape(text) + r"(?![\w.-])", word) is not None
+
+    def by_pid(command: Command, *flags: str) -> bool:
+        return any(word.startswith(flags) for word in command.words[1:])
 
     def searches_by_name(command: Command) -> bool:
-        return (command.name == "pgrep" and not by_pid(command, "-P")) or (command.name == "ps" and not by_pid(command, "-p"))
+        if command.name == "pgrep":
+            return not by_pid(command, "-P", "-F")
+        # `-p` in any cluster, as `ps -fp 123` writes it.
+        return command.name == "ps" and not any(re.fullmatch(r"-\w*p\w*|--pid.*", word) for word in command.words[1:])
 
     for at, command in enumerate(commands):
         if command.name in ("pkill", "killall"):
-            if not (command.name == "pkill" and by_pid(command, "-P")) and not any(text in word for word in command.words[1:]):
+            if not (command.name == "pkill" and by_pid(command, "-P", "-F")) and not any(names_this_root(word) for word in command.words[1:]):
                 return True
         elif command.name == "kill":
             targets = [word for word in command.words[1:] if not word.startswith("-")]
             if command.fed or not all(re.fullmatch(r"\d+|%\S*|\$[!$]", word) for word in targets):
-                for search in commands[:at]:
-                    if searches_by_name(search) and not any(text in word for other in commands if other.pipeline == search.pipeline for word in other.words):
+                # What a substitution alone feeds it is what that substitution ran. A variable may hold what anything before it found.
+                alone = not command.fed and all(A_SUBSTITUTION_ALONE.fullmatch(word) or re.fullmatch(r"\d+|%\S*|\$[!$]", word) for word in targets)
+                for search in commands[command.own_from if alone else 0 : at]:
+                    if searches_by_name(search) and not any(names_this_root(word) for other in commands if other.pipeline == search.pipeline for word in other.words):
                         return True
     return False
 
@@ -1651,6 +1721,8 @@ def hook(root: Path, limits: Limits) -> int:
     except Exception as error:
         say(f"host-guard: cannot keep its own state: {error}")
     told = [f"host-guard: {said_of(event)}" for event in happened[-5:]]
+    if len(happened) > 5:
+        told.insert(0, f"host-guard: and {len(happened) - 5} stopped before these, in `{state_path(root) / 'events.log'}`")
     refused = heavy_refused(root, limits) if any(is_heavy(each.words) for each in commands) else None
     if refused:
         for line in told:

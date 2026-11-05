@@ -883,7 +883,19 @@ mdBook that is the director's window into the project.
   Commit: `ARCHOGEN-PROGRAM-1165 (leaf PROGRAM.127.6)`
 
 - ID: `PROGRAM.127.7`
-  Status: `pending` — round 7, a fresh reader over round 6's answer, looking hardest at the reader's new branches for a case, arithmetic, an array and a condition, and at whether what is stated of a job going whole is the whole of it. It closes on a round that finds no defect, and a form written to go round the guard is a stated limit, not a defect.
+  Status: `done` — `2026-11-05`: round 7, a fresh reader over round 6's answer: 13 findings, 1 defect and that small, after 15, 12, 5, 6, 13 and 2. Its fuzz of 800 composed forms on both `bash`es missed nothing, and it found nothing else missing from what is stated of a job going whole. `make` that only asked was read as heavy; the reader's rare misses are read now, each held to both `bash`es; a `kill` by a pid passes across lines and by any spelling of it; the root is named exactly; what is told says what it leaves out; the constants beside `Limits` have marks. The findings and each answer are in `docs/reviews/decision_host-guard-reviews.md`. And a commit whose hook held 0.41 GiB at pressure level 2 was stopped, nothing lost, this session: the record now says a commit goes through `run` on a full host.
+
+  **Acceptance checklist (`DOCTRINE_ENFORCEMENT.md`):**
+  - [x] **REPRODUCE / ISSUE** — the reader's rigs on `a64d9c7b`, `target/p1277/work/`: `printf '{"tool_input":{"command":"make --version"}}' | python3 -I -B scripts/host_guard.py hook --root <scratch> --limits '{"start_used_percent":0}'` → `refused, this is a heavy command`, rc=2; `diff.py forms3.py` → `[[ a == a ]]>log; cargo build`, both `bash`es ran `cargo`, read nothing; `hf1.py` → `[[ $line =~ ^([[:space:]]*)#(.*)$ ]] && pkill -x rustc`, rc=0; `ps -fp "$PID" && kill "$PID"`, rc=2.
+  - [x] **ROOT CAUSE (WHY + WHERE)** — `git grep -n 'return not make_is_guarded\|elif newlines and c == "#"\|text in word' a64d9c7b -- scripts/host_guard.py` → `make` returning before `only_asks` was reached; a `#` taken for a comment wherever it stands, so a regular expression lost the rest; and the root named by a substring, at `kills_by_name`. `git grep -n 'pipeline = next(self.pipelines)' a64d9c7b -- scripts/host_guard.py` → a newline ending a pipeline after its `|`.
+  - [x] **FIX** — `scripts/host_guard.py`: `make_only_asks`, `shell_only_parses`, `-s` in `shell_told`, `/dev/stdin`, a `#` only where a word could begin, a delimiter closing on a substitution's `)`, `A_DESCRIPTOR_VARIABLE`, `coproc`, `env -S`, `Command.own_from`, `names_this_root`, how many came before what is told. `scripts/selftest_host_guard.py`; `scripts/check_host_guard.sh`, marks for the constants beside `Limits`; the record, the review history and its index.
+  - [x] **ADDRESSED (verified)** — `python3 -I -B scripts/selftest_host_guard.py` → `host-guard self-test: 563 passed, 0 failed, 0 not run`, exit 0, no `scripts/__pycache__`: among them the real shell against the reader over 252 forms on `/bin/bash` 3.2 and 258 on bash 5.3, each of this round's forms by name.
+  - [x] **NO REGRESSION** — `bash scripts/check_host_guard.sh` → `host-guard: OK`, exit 0; `make focused` → `tier focused: passed — 3 passed, 0 failed`, on the staged tree, through the guard.
+  - [x] **LOCKSTEP** — the record, the review history and its index, these leaves and the Commit Log; `MEMORY.md`'s next action.
+  Commit: `ARCHOGEN-PROGRAM-1168 (leaf PROGRAM.127.7)`
+
+- ID: `PROGRAM.127.8`
+  Status: `pending` — round 8, a fresh reader over round 7's answer. It closes on a round that finds no defect, and a form written to go round the guard is a stated limit, not a defect.
 
 - ID: `PROGRAM.128`
   Status: `done` — `2026-11-05`: by the director's word, "If you ever need new CPU, DSP, MCU, BOARD, ISA or in general digital chip PDF just look here", naming `chipdoc`'s `AGENTS.md`. The record, its index row, the book's ledger and a `TOOLBOX.md` row now start any chip document's need there. Reading it corrected three things of ours: the record and the ledger still said `REQ-007` was `requested`, fulfilled `2026-09-30`; the ledger said the corpus was off this volume; and the record said what is adopted is copied here, where most of the corpus may not be republished and this repository is public, so a fact and its citation are copied and never a document. A documents-only leaf.
@@ -1051,6 +1063,7 @@ leaf's outcome is its row in the Commit Log below, and a sealed leaf's full reco
 | `PROGRAM.127.5` | `ARCHOGEN-PROGRAM-1163 (leaf PROGRAM.127.5)` | **the host guard's review, round 5 answered by method**: a job is what is judged and stopped; each line judges alone and they add up; the hook reads a command by the shell's grammar, held to the real shell, and tells a stop without refusing anything |
 | `PROGRAM.127.6` | `ARCHOGEN-PROGRAM-1164 (leaf PROGRAM.127.6)` | **paused at the director's word**, at a clean tree, before round 6 began: the resume pointer and the leaf say to wait |
 | `PROGRAM.127.6` | `ARCHOGEN-PROGRAM-1165 (leaf PROGRAM.127.6)` | **the host guard's review, round 6 answered**: a volume has fallen only by more than a shared volume costs anyway; what a job takes with it said; the shell reader given a case's branches, arithmetic, arrays and `[[ ]]`, held to each `bash` here; each agent told for itself |
+| `PROGRAM.127.7` | `ARCHOGEN-PROGRAM-1168 (leaf PROGRAM.127.7)` | **the host guard's review, round 7 answered**: `make` that only asks is no build; the reader's rare misses read, each held to both `bash`es; a `kill` by a pid passes by any spelling; the root named exactly; what is told says what it leaves out |
 | `PROGRAM.128` | `ARCHOGEN-PROGRAM-1162 (leaf PROGRAM.128)` | **a chip's document starts at `chipdoc`'s `AGENTS.md`**, the director's word: the record, its index row, the ledger and `TOOLBOX.md`; `REQ-007` fulfilled, the corpus on this volume, and a document never copied into this public repository, each corrected |
 
 ## Changelog
@@ -1116,3 +1129,5 @@ leaf's outcome is its row in the Commit Log below, and a sealed leaf's full reco
 - `2026-11-05`: `PROGRAM.127.5` done: the guard's round 5, twenty-one findings answered by a job as the unit and the shell's grammar; `PROGRAM.127.6` filed for round 6.
 
 - `2026-11-05`: `PROGRAM.127.6` done: the guard's round 6, thirteen findings answered, two of them defects; `PROGRAM.127.7` filed for round 7.
+
+- `2026-11-05`: `PROGRAM.127.7` done: the guard's round 7, thirteen findings answered, one a defect; `PROGRAM.127.8` filed for round 8.

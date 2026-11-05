@@ -53,6 +53,22 @@ if {"start_used_percent", "stop_used_percent", "panic_used_percent"} <= limits.k
     if not limits["start_used_percent"] < limits["stop_used_percent"] < limits["panic_used_percent"]:
         breaches.append("the lines must rise: start, then stop, then everything of ours stopped")
 
+# And what stands beside `Limits`, which no flag reaches and the table leans on: how much a fall is and over how long, what counts as writing, how far back growth is counted.
+constants = {}
+for node in ast.parse(guard.read_text(encoding="utf-8")).body:
+    if isinstance(node, ast.Assign) and len(node.targets) == 1 and isinstance(node.targets[0], ast.Name) and node.targets[0].id in ("FELL_BYTES", "FELL_WINDOW_SECONDS", "GROWTH_WINDOW_SECONDS", "WRITING_BYTES"):
+        constants[node.targets[0].id] = eval(compile(ast.Expression(node.value), "guard", "eval"), {"__builtins__": {}})
+for name, line in {"FELL_BYTES": 1 << 30, "WRITING_BYTES": 1 << 20}.items():
+    if name not in constants:
+        breaches.append(f"scripts/host_guard.py states no `{name}`")
+    elif constants[name] > line:
+        breaches.append(f"`{name}` is {constants[name]}, looser than {line}")
+for name, line in {"FELL_WINDOW_SECONDS": 10, "GROWTH_WINDOW_SECONDS": 900}.items():
+    if name not in constants:
+        breaches.append(f"scripts/host_guard.py states no `{name}`")
+    elif constants[name] < line:
+        breaches.append(f"`{name}` is {constants[name]}, looser than {line}")
+
 # Everything `make` compiles or tests goes through it. These recipes are written out rather than read for what they might mean: a loose reading of a shell line
 # was passed by `cargo fmt && cargo test`. Changing one means changing it here too, in a commit that says why.
 makefile = (root / "Makefile").read_text(encoding="utf-8")
