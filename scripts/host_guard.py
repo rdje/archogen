@@ -49,13 +49,13 @@ class Limits:
 
     # RAM the whole host uses, in percent. The director's danger zone starts at 88.
     start_used_percent: float = 70.0  # no heavy job starts above this
-    stop_used_percent: float = 85.0  # our largest process stops
-    panic_used_percent: float = 88.0  # all of ours that holds memory stops, and every build
+    stop_used_percent: float = 85.0  # our largest job stops
+    panic_used_percent: float = 88.0  # every job of ours that holds memory stops, and every build
     # macOS's own judgement, `kern.memorystatus_vm_pressure_level`: 1 normal, 2 warning, 4 critical. With the compressor taking the load, RAM
     # use can sit still while swap climbs, so this says what a percentage cannot.
     start_pressure_level: float = 2  # no heavy job starts at this
-    stop_pressure_level: float = 2  # our largest process stops
-    panic_pressure_level: float = 4  # all of ours that holds memory stops, and every build
+    stop_pressure_level: float = 2  # our largest job stops
+    panic_pressure_level: float = 4  # every job of ours that holds memory stops, and every build
     # Swap, which on this machine reached 62 GiB before anyone noticed, RSS showing under one.
     start_swap_gib: float = 16.0
     stop_swap_growth_gib: float = 3.0  # within the window below, while ours runs
@@ -76,8 +76,12 @@ class Limits:
 CODE = Path(__file__).resolve()
 # How far back growth is counted. A long-lived small process of ours, a `tail -f`, must not make "while ours runs" mean hours of other projects' growth.
 GROWTH_WINDOW_SECONDS = 900.0
-# What a job must have written since the last sample to count as writing, at a disk floor. A volume losing this much since then has fallen.
+# What a job must have written since the last sample to count as writing, at a disk floor.
 WRITING_BYTES = 1 << 20
+# What a volume must lose within this long to have fallen, at a floor with no writer seen. Other projects cost this shared volume up to 49 MiB in a half second, measured `2026-11-05`,
+# so a smaller fall says nothing of ours, and a script of `rm` was stopped for one: a floor's way out.
+FELL_BYTES = 1 << 30
+FELL_WINDOW_SECONDS = 10.0
 LOG_AT_MOST = 1 << 20  # What the log keeps, and the most any read of it can cost.
 TOLD_OF_LATELY_SECONDS = 600.0  # A session with no place in the log is told of what was stopped this recently: it may be new, or `cargo clean` may have taken its place.
 
@@ -363,6 +367,25 @@ MAKES = {"make", "gmake"}
 READS_THE_HOST = {"ps", "sysctl", "vm_stat"}
 
 
+def shell_told(arguments: list[str]) -> tuple[str | None, str | None]:
+    """The command a shell given these is told to run, with `-c`, and the script it is given; neither if it runs its input. As the shell reads them: options first, so that `-c` holds
+    wherever it stands and the first word that is no option is what it was told, and `-o` takes a value even at the end of a cluster, `-euo pipefail`."""
+    told_a_command, at = False, 0
+    while at < len(arguments):
+        word = arguments[at]
+        if word in ("--", "-"):
+            at += 1
+            break
+        if not word.startswith(("-", "+")):
+            break
+        long = word.startswith("--")
+        told_a_command = told_a_command or (not long and word[0] == "-" and "c" in word)
+        at += 2 if word in SHELL_FLAGS_WITH_VALUES or (not long and word[-1] in "oO") else 1
+    if at >= len(arguments):
+        return ("", None) if told_a_command else (None, None)
+    return (arguments[at], None) if told_a_command else (None, arguments[at])
+
+
 def is_agent(process: Process) -> bool:
     return any(AGENT.search(word) for word in (process.name, os.path.basename(process.exe), process.script, *process.programs_named))
 
@@ -374,15 +397,7 @@ def is_terminal_shell(process: Process) -> bool:
         return name[1:] in SHELLS
     if name not in SHELLS:
         return False
-    takes_a_value = False
-    for word in process.arguments.split():
-        if takes_a_value:
-            takes_a_value = False
-        elif word in SHELL_FLAGS_WITH_VALUES:
-            takes_a_value = True
-        elif not word.startswith(("-", "+")) or re.fullmatch(r"-\w*c\w*", word):
-            return False
-    return True
+    return shell_told(process.arguments.split()) == (None, None)
 
 
 def protected(process: Process) -> bool:
@@ -557,23 +572,27 @@ def size_of(path: Path) -> int:
 
 @dataclass
 class Motion:
-    """What moved since the last sample: what each process wrote, which processes are new, and whether a volume fell. At a watcher's first sample nothing has: there is no last."""
+    """What moved since the last sample: what each process wrote and which processes are new; and whether a volume fell, over `FELL_WINDOW_SECONDS`. At a watcher's first sample nothing has:
+    there is no last."""
 
     written: dict[int, int] = field(default_factory=dict)
     new: set[int] = field(default_factory=set)
-    fell: bool = False
+    repo_fell: bool = False
+    boot_fell: bool = False
 
 
 def disk_line(reading: Reading, jobs: list[Job], limits: Limits, baseline: Reading | None, motion: Motion) -> tuple[list[Job], list[str]]:
     """Under a disk's floor, or losing too much in the window: what is writing, and every build. A script of writers each shorter than a sample shows no writer, only a volume
-    falling and a job that has started something new since the last sample."""
+    falling, the very one that is short, and a job that has started something new since the last sample."""
     reasons = disk_reasons(reading, limits)
-    if baseline and baseline.repo_free_gib - reading.repo_free_gib > limits.stop_disk_growth_gib:
+    lost = bool(baseline) and baseline.repo_free_gib - reading.repo_free_gib > limits.stop_disk_growth_gib
+    if lost:
         reasons.append(f"the repository's volume lost {baseline.repo_free_gib - reading.repo_free_gib:.1f} GiB in the last minutes, whoever wrote it, over {limits.stop_disk_growth_gib:.1f}")
     if not reasons:
         return [], []
     targets = [job for job in jobs if job.building or sum(motion.written.get(p.pid, 0) for p in job.members) >= WRITING_BYTES]
-    if not targets and motion.fell:
+    falling = motion.repo_fell and (lost or reading.repo_free_gib < limits.stop_repo_free_gib) or motion.boot_fell and reading.boot_free_gib < limits.stop_boot_free_gib
+    if not targets and falling:
         targets = [job for job in jobs if job.top.pid not in motion.new and any(p.pid in motion.new for p in job.members)]
     return targets, reasons
 
@@ -680,16 +699,21 @@ class Memory:
     history: deque = field(default_factory=deque)
     said_at: float = 0.0
     written: dict[int, int] | None = None
-    free: tuple[float, float] = (0.0, 0.0)
+    free: deque = field(default_factory=deque)
 
-    def moved(self, reading: Reading, mine: list[Process]) -> Motion:
-        free = (reading.repo_free_gib, reading.boot_free_gib)
+    def moved(self, reading: Reading, mine: list[Process], now: float | None = None) -> Motion:
+        now = time.monotonic() if now is None else now
         motion = Motion()
         if self.written is not None:
             motion.written = {p.pid: p.written - self.written.get(p.pid, 0) for p in mine}
             motion.new = {p.pid for p in mine} - self.written.keys()
-            motion.fell = any(before - now >= WRITING_BYTES / GIB for before, now in zip(self.free, free))
-        self.written, self.free = {p.pid: p.written for p in mine}, free
+        self.free.append((now, reading.repo_free_gib, reading.boot_free_gib))
+        while now - self.free[0][0] > FELL_WINDOW_SECONDS:
+            self.free.popleft()
+        _, repo, boot = self.free[0]
+        motion.repo_fell = repo - reading.repo_free_gib >= FELL_BYTES / GIB
+        motion.boot_fell = boot - reading.boot_free_gib >= FELL_BYTES / GIB
+        self.written = {p.pid: p.written for p in mine}
         return motion
 
 
@@ -878,6 +902,8 @@ def said_of(event: dict) -> str:
 
 ASSIGNMENT = re.compile(r"[A-Za-z_]\w*\+?=")
 REDIRECTION = re.compile(r"\d*(?:<<<|<<-|<<|<>|<&|>>|>&|>\||<|>)|&>>|&>")
+ARRAY_ASSIGNMENT = re.compile(r"[A-Za-z_]\w*\+?=")
+A_FUNCTION = re.compile(r"\(\s*\)")
 BEFORE_A_COMMAND = {"if", "then", "elif", "else", "while", "until", "do", "!", "{", "coproc"}
 NOT_A_COMMAND = {"for", "select", "case", "esac", "fi", "done", "}", "[[", "]]"}
 # What runs another command: the flags of its that take a value, and how many plain words stand before the command.
@@ -912,19 +938,10 @@ class Command:
         return os.path.basename(self.words[0])
 
 
-def told_script(arguments: list[str]) -> str | None:
-    """What a shell given these arguments is told to run with `-c`, or nothing if it is given a script or no command."""
-    takes_a_value = False
-    for at, word in enumerate(arguments):
-        if takes_a_value:
-            takes_a_value = False
-        elif word in SHELL_FLAGS_WITH_VALUES:
-            takes_a_value = True
-        elif re.fullmatch(r"-\w*c\w*", word):
-            return arguments[at + 1] if at + 1 < len(arguments) else ""
-        elif not word.startswith(("-", "+")):
-            return None
-    return None
+def runs_its_input(words: list[str]) -> bool:
+    """Whether these run a shell told neither a command nor a script, so that what it is fed is what it runs."""
+    words = unwrapped(words)[0]
+    return bool(words) and os.path.basename(words[0]) in SHELLS and shell_told(words[1:]) == (None, None)
 
 
 def plain_word(words: list[str], takes_a_value: set[str] = frozenset()) -> str | None:
@@ -982,24 +999,24 @@ class ShellReader:
 
     def __init__(self, text: str, found: list[Command], pipelines: itertools.count) -> None:
         self.text, self.at, self.found, self.pipelines = text, 0, found, pipelines
+        self.here_docs: list[tuple[str, bool, bool, list[str]]] = []  # Each body starts at the next newline, at whatever level the reading then stands.
 
-    def commands(self, closing: bool = False) -> None:
-        """Up to the end of the text, or the `)` that closes this level when `closing`."""
+    def commands(self, closing: str | None = None) -> bool:
+        """Up to the end of the text, or to the `)` that closes this level, or to the end of a case's branch: an `esac` then says so by returning true."""
         text = self.text
         words: list[str] = []
-        depth, cases, pipeline = 0, 0, next(self.pipelines)
-        here_docs: list[tuple[str, bool, bool]] = []
+        depth, pipeline = 0, next(self.pipelines)
 
         def finish() -> None:
-            nonlocal words, cases
+            nonlocal words
             if words:
-                cases = cases + 1 if words[0] == "case" else max(0, cases - 1) if words[0] == "esac" else cases
                 self.emit(words, pipeline)
             words = []
 
         while self.at < len(text):
             c, two = text[self.at], text[self.at : self.at + 2]
             redirection = REDIRECTION.match(text, self.at)
+            at_start = all(word in BEFORE_A_COMMAND or word == "time" for word in words)
             if c in " \t":
                 self.at += 1
             elif two == "\\\n":
@@ -1008,24 +1025,25 @@ class ShellReader:
                 finish()
                 pipeline = next(self.pipelines)
                 self.at += 1
-                self.read_here_docs(here_docs)
-                here_docs = []
+                self.read_here_docs()
             elif c == "#":
                 end = text.find("\n", self.at)
                 self.at = len(text) if end < 0 else end
             elif c == ")":
                 self.at += 1
-                if words[:1] == ["case"]:
-                    cases += 1
-                    words = []
-                elif cases and depth == 0:  # A case's pattern, not a command.
-                    words = []
-                else:
-                    finish()
-                    if depth == 0 and closing:
-                        return
-                    depth = max(0, depth - 1)
-                    pipeline = next(self.pipelines)
+                finish()
+                if depth == 0 and closing == ")":
+                    return False
+                depth = max(0, depth - 1)
+                pipeline = next(self.pipelines)
+            elif c == "(" and words and ARRAY_ASSIGNMENT.fullmatch(words[-1]) and text[self.at - 1] == "=":
+                self.array()
+            elif c == "(" and len(words) == 1 and A_FUNCTION.match(text, self.at):
+                self.at = A_FUNCTION.match(text, self.at).end()  # Its name is no command, and its body is read as any other.
+                words = []
+            elif two == "((" and (at_start or words[-1:] == ["for"]) and (end := self.arithmetic_end(self.at + 2)) is not None:
+                self.read_expansions(text[self.at + 2 : end - 2])
+                self.at = end
             elif c == "(":
                 finish()
                 depth += 1
@@ -1033,7 +1051,7 @@ class ShellReader:
                 pipeline = next(self.pipelines)
             elif two in ("<(", ">("):
                 self.at += 2
-                self.commands(closing=True)
+                self.commands(closing=")")
                 words.append(f"{two}…)")
             elif redirection:
                 self.at = redirection.end()
@@ -1042,7 +1060,15 @@ class ShellReader:
                 target, quoted = self.word()
                 operator = redirection.group().lstrip("0123456789")
                 if operator in ("<<", "<<-"):
-                    here_docs.append((target, operator == "<<-", quoted))
+                    self.here_docs.append((target, operator == "<<-", quoted, words))
+                elif operator == "<<<" and runs_its_input(words):
+                    ShellReader(target, self.found, self.pipelines).commands()
+            elif closing == "case" and depth == 0 and two in (";;", ";&"):
+                finish()
+                self.at += 2
+                if text[self.at : self.at + 1] == "&":
+                    self.at += 1
+                return False
             elif two in ("&&", "||"):
                 finish()
                 self.at += 2
@@ -1058,8 +1084,121 @@ class ShellReader:
                 finish()
                 self.at += 1
             else:
-                words.append(self.word()[0])
+                word = self.word()[0]
+                if at_start and word == "case":
+                    self.case()
+                elif at_start and word == "[[":
+                    self.condition()
+                elif at_start and word == "function":
+                    self.blanks()
+                    self.word()
+                    self.at = self.past_empty_parentheses()
+                elif at_start and word == "esac" and closing == "case":
+                    finish()
+                    return True
+                else:
+                    words.append(word)
         finish()
+        return closing == "case"
+
+    def blanks(self, newlines: bool = False) -> None:
+        """Past blanks, and with `newlines` past them and comments too."""
+        text = self.text
+        while self.at < len(text):
+            c = text[self.at]
+            if c in " \t" or text[self.at : self.at + 2] == "\\\n":
+                self.at += 1 if c != "\\" else 2
+            elif newlines and c == "\n":
+                self.at += 1
+                self.read_here_docs()
+            elif newlines and c == "#":
+                end = text.find("\n", self.at)
+                self.at = len(text) if end < 0 else end
+            else:
+                return
+
+    def past_empty_parentheses(self) -> int:
+        found = A_FUNCTION.match(self.text, self.at)
+        return found.end() if found else self.at
+
+    def case(self) -> None:
+        """A `case`, from its subject on: each pattern is text whatever it says, and each branch commands, to the `esac` that closes it."""
+        text = self.text
+        self.blanks(newlines=True)
+        self.word()
+        self.blanks(newlines=True)
+        self.word()
+        while self.at < len(text):
+            self.blanks(newlines=True)
+            first = True
+            if text[self.at : self.at + 1] == "(":
+                self.at += 1
+                first = False  # `(esac)` is a pattern, and only a bare `esac` ends it.
+            while self.at < len(text):
+                self.blanks()
+                c = text[self.at : self.at + 1]
+                if c == ")":
+                    self.at += 1
+                    break
+                before = self.at
+                word = self.word()[0]
+                if first and word == "esac":
+                    return
+                first = False
+                if self.at == before:
+                    self.at += 1  # An alternative's `|`, or anything the shell would refuse.
+            if self.commands(closing="case"):
+                return
+
+    def condition(self) -> None:
+        """A `[[ … ]]`: text but for what a substitution in it runs, whatever a pattern or a regular expression in it says, `(`, `|`, `<` and `&&` among it."""
+        text = self.text
+        while self.at < len(text):
+            self.blanks(newlines=True)
+            if text[self.at : self.at + 2] == "]]" and text[self.at + 2 : self.at + 3] in ("", " ", "\t", "\n", ";", "&", "|", ")", "#"):
+                self.at += 2
+                return
+            before = self.at
+            self.word()
+            if self.at == before:
+                self.at += 1
+
+    def array(self) -> None:
+        """`name=(…)`'s elements: text but for what a substitution in them runs."""
+        text = self.text
+        self.at += 1
+        while self.at < len(text):
+            self.blanks(newlines=True)
+            if text[self.at : self.at + 1] == ")":
+                self.at += 1
+                return
+            before = self.at
+            self.word()
+            if self.at == before:
+                self.at += 1
+
+    def arithmetic_end(self, at: int) -> int | None:
+        """Past the `))` of what stands at `at`, just inside a `((`: or nothing, when the inner parenthesis does not close right before the outer, and they are subshells, as the shell decides it."""
+        text, depth = self.text, 1
+        while at < len(text):
+            c = text[at]
+            if c == "\\":
+                at += 1
+            elif c in "'\"":
+                end = text.find(c, at + 1)
+                at = len(text) if end < 0 else end
+            elif c == "(":
+                depth += 1
+            elif c == ")":
+                depth -= 1
+                if depth == 0:
+                    return at + 2 if text[at + 1 : at + 2] == ")" else None
+            at += 1
+        return None
+
+    def read_expansions(self, inside: str) -> None:
+        """Arithmetic runs nothing but what a substitution in it would."""
+        ShellReader(inside, self.found, self.pipelines).expansions([], None)
 
     def word(self) -> tuple[str, bool]:
         """One word, as the command would get it, and whether any of it was quoted."""
@@ -1117,19 +1256,25 @@ class ShellReader:
     def dollar(self, parts: list[str], in_quotes: bool = False) -> None:
         text = self.text
         two, three = text[self.at : self.at + 2], text[self.at : self.at + 3]
-        if three == "$((":  # Arithmetic, which runs nothing but what a substitution in it would: read as text.
+        end = self.arithmetic_end(self.at + 3) if three == "$((" else None
+        if end is not None:
+            self.read_expansions(text[self.at + 3 : end - 2])
+            parts.append(text[self.at : end])
+            self.at = end
+        elif two == "$(":
+            self.at += 2
+            self.commands(closing=")")
+            parts.append("$(…)")
+        elif two == "$[":
             depth, at = 0, self.at + 1
             while at < len(text):
-                depth += {"(": 1, ")": -1}.get(text[at], 0)
+                depth += {"[": 1, "]": -1}.get(text[at], 0)
                 at += 1
                 if depth == 0:
                     break
+            self.read_expansions(text[self.at + 2 : at - 1])
             parts.append(text[self.at : at])
             self.at = at
-        elif two == "$(":
-            self.at += 2
-            self.commands(closing=True)
-            parts.append("$(…)")
         elif two == "${":
             self.at += 2
             parts.append("${")
@@ -1182,9 +1327,11 @@ class ShellReader:
         ShellReader("".join(inner), self.found, self.pipelines).commands()
         parts.append("`…`")
 
-    def read_here_docs(self, here_docs: list[tuple[str, bool, bool]]) -> None:
+    def read_here_docs(self) -> None:
+        """Each body waiting: text, in which a substitution still runs unless its delimiter was quoted; and what a shell it feeds runs, read as what is run."""
         text = self.text
-        for delimiter, strip_tabs, quoted in here_docs:
+        here_docs, self.here_docs = self.here_docs, []
+        for delimiter, strip_tabs, quoted, fed in here_docs:
             lines: list[str] = []
             while self.at < len(text):
                 end = text.find("\n", self.at)
@@ -1194,8 +1341,10 @@ class ShellReader:
                 if (line.lstrip("\t") if strip_tabs else line) == delimiter:
                     break
                 lines.append(line)
-            if not quoted:
-                ShellReader("\n".join(lines), self.found, self.pipelines).expansions([], None)
+            if runs_its_input(fed):
+                ShellReader("\n".join(lines), self.found, self.pipelines).commands()
+            elif not quoted:
+                self.read_expansions("\n".join(lines))
 
     def emit(self, words: list[str], pipeline: int) -> None:
         if words[0] in NOT_A_COMMAND:
@@ -1204,11 +1353,13 @@ class ShellReader:
         if not words or words[0] in NOT_A_COMMAND:
             return
         name = os.path.basename(words[0])
-        script = told_script(words[1:]) if name in SHELLS else None
+        script = shell_told(words[1:])[0] if name in SHELLS else None
         if script is not None:
             ShellReader(script, self.found, self.pipelines).commands()
         elif name == "eval":
             ShellReader(" ".join(words[1:]), self.found, self.pipelines).commands()
+        elif name == "trap":
+            ShellReader(plain_word(words[1:]) or "", self.found, self.pipelines).commands()
         else:
             self.found.append(Command(words, pipeline, fed))
 
@@ -1224,8 +1375,10 @@ def commands_of(text: str) -> list[Command]:
 # ---- what runs through it
 
 CARGO_FLAGS_WITH_VALUES = {"--config", "-Z", "-C", "--color"}
-# What only asks, or frees room. Nothing here compiles or holds much.
-CARGO_ONLY_ASKS = {"fmt", "tree", "metadata", "locate-project", "pkgid", "search", "help", "clean", "version"}
+# What only asks, edits a manifest or a lock file, fetches, or frees room. Nothing here compiles or holds much.
+CARGO_ONLY_ASKS = {"fmt", "tree", "metadata", "locate-project", "pkgid", "search", "help", "clean", "version", "update", "generate-lockfile", "add", "remove", "info", "init", "new", "fetch"}
+# Asked of a tool, these say something and run nothing, up to a `--`, past which words are what it runs.
+ASKING_FLAGS = {"-V", "-vV", "--version", "--help", "-h"}
 # `make` of a recipe that goes through the guard and waits for room by itself.
 MAKE_GUARDED = {"focused", "integration", "tiers", "gate", "check", "clippy", "test", "book", "help", "hooks", "fmt"}
 MAKE_FLAGS_WITH_VALUES = {"-I", "-l", "-o", "-W", "--include-dir", "--load-average", "--old-file", "--what-if"}
@@ -1242,12 +1395,24 @@ def make_is_guarded(arguments: list[str]) -> bool:
             return False
         if word in MAKE_FLAGS_WITH_VALUES:
             at += 1
-        elif word == "-j" and arguments[at + 1 : at + 2] and arguments[at + 1].isdigit():
+        elif word in ("-j", "--jobs") and arguments[at + 1 : at + 2] and arguments[at + 1].isdigit():
             at += 1
         elif not word.startswith("-") and not ASSIGNMENT.match(word):
             targets.append(word)
         at += 1
     return bool(targets) and all(target in MAKE_GUARDED for target in targets)
+
+
+def only_asks(arguments: list[str]) -> bool:
+    """Whether a tool given these only says something: `help` first, or an asking flag before any `--`."""
+    if arguments[:1] == ["help"]:
+        return True
+    for word in arguments:
+        if word == "--":
+            return False
+        if word in ASKING_FLAGS or word.startswith(("--print", "--explain")):
+            return True
+    return False
 
 
 def is_heavy(words: list[str]) -> bool:
@@ -1258,15 +1423,15 @@ def is_heavy(words: list[str]) -> bool:
     name, arguments = os.path.basename(words[0]), words[1:]
     if name == "cargo":
         subcommand = plain_word(arguments, CARGO_FLAGS_WITH_VALUES)
-        return subcommand is not None and subcommand not in CARGO_ONLY_ASKS
+        return subcommand is not None and subcommand not in CARGO_ONLY_ASKS and not only_asks(arguments)
     if name in MAKES:
         return not make_is_guarded(arguments)
     if name in ("rustc", "rustdoc", "clippy-driver", "mdbook"):
-        return bool(arguments) and not any(word in ("-V", "-vV", "--version", "--help", "-h") or word.startswith("--print") for word in arguments)
+        return bool(arguments) and not only_asks(arguments)
     if name in SHELLS:
-        script = plain_word(arguments, SHELL_FLAGS_WITH_VALUES)
+        script = shell_told(arguments)[1]
         return script is not None and os.path.basename(script) == "build_book.sh"
-    return name.startswith(("cargo-", "qemu-system")) or name in ("archogen", "archogen-plan-check", "build_book.sh")
+    return (name.startswith(("cargo-", "qemu-system")) or name in ("archogen", "archogen-plan-check", "build_book.sh")) and not only_asks(arguments)
 
 
 def kills_by_name(commands: list[Command], root: Path) -> bool:
@@ -1311,6 +1476,11 @@ def heavy_running(root: Path) -> list[Process]:
     return running
 
 
+def one_at_a_time(root: Path) -> list[str]:
+    """Why a heavy job may not start beside what runs now."""
+    return [f"one heavy job at a time, and {process.label} (pid {process.pid}) is running" for process in heavy_running(root)[:1]]
+
+
 def run(root: Path, limits: Limits, command: list[str], wait_seconds: float = 0.0) -> int:
     if not command:
         say("host-guard: `run` takes a command, after `--`")
@@ -1338,11 +1508,9 @@ def run(root: Path, limits: Limits, command: list[str], wait_seconds: float = 0.
             reasons = start_reasons(read_host(root), limits)
             if nested:
                 return reasons
-            running = heavy_running(root)
+            reasons.extend(one_at_a_time(root))
         except Exception as error:
             return [f"the host cannot be read, so nothing says this is safe: {error}"]
-        if running:
-            reasons.append(f"one heavy job at a time, and {running[0].label} (pid {running[0].pid}) is running")
         try:
             fcntl.flock(job_lock, fcntl.LOCK_EX | fcntl.LOCK_NB)
         except OSError:
@@ -1464,7 +1632,8 @@ def hook(root: Path, limits: Limits) -> int:
     try:
         given = json.load(sys.stdin)
         command = given["tool_input"]["command"]
-        session = str(given.get("session_id", ""))
+        # A subagent shares its session's id, and has an `agent_id` of its own: each is told for itself, or a stop goes to whichever runs a command first.
+        session = str(given.get("session_id", "")) + str(given.get("agent_id", ""))
         if not isinstance(command, str) or not command.strip():
             raise ValueError("no command")
         commands = commands_of(command)
@@ -1538,6 +1707,10 @@ def status(root: Path, limits: Limits) -> int:
     for event in [e for e in events if e.get("kind") != "stopped"][-2:]:
         print(f"{event.get('at')}: {event.get('kind')}: {event.get('reasons', event.get('error'))}")
     reasons = start_reasons(reading, limits)
+    try:
+        reasons.extend(one_at_a_time(root))
+    except Exception as error:
+        reasons.append(f"the process table cannot be read: {error}")
     print("a heavy job may start" if not reasons else f"a heavy job may not start: {'; '.join(reasons)}")
     return 0
 
@@ -1575,7 +1748,7 @@ def main(argv: list[str]) -> int:
         return 2
     if verb == "check":
         try:
-            reasons = start_reasons(read_host(root), limits)
+            reasons = start_reasons(read_host(root), limits) + one_at_a_time(root)
         except Exception as error:
             print(f"not clear: the host cannot be read, so nothing says this is safe: {error}")
             return UNCLEAR

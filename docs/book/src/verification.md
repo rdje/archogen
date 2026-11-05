@@ -573,7 +573,7 @@ $ cargo xtask mutate --timeouts-fail --only lcm-to-max  # require a finishing te
 Everything here runs on a machine shared with many other projects, so a build that uses too much memory is everyone's problem. A watcher reads the
 host every second and stops this repository's own jobs before the director's lines, and nothing heavy starts when the machine is already full: it
 waits for room (`scripts/host_guard.py`, `docs/decisions/decision_host-guard.md`). A job is what a person would start again, a script with all it started,
-so a stopped build is not simply followed by the next. A job that holds little and builds nothing stays, whatever it is called, and so does what frees room, such as `cargo clean`.
+so a stopped build is not simply followed by the next. A job that holds little and builds nothing stays, whatever it is called, and so does what frees room, such as `cargo clean` or a script of `rm` on a volume under its floor. A job goes whole, so an editor that started a build goes with it at the danger line, unsaved words included.
 
 `make` runs everything that compiles or tests through it, and an agent's shell commands are checked before they run. `python3 scripts/host_guard.py status`
 says what it reads, who holds the most memory, and what it has stopped. It stops only this repository's processes, so it cannot make the host safe from

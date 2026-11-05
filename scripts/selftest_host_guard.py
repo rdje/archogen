@@ -9,6 +9,7 @@ from __future__ import annotations
 
 import json
 import os
+import select
 import shutil
 import signal
 import stat
@@ -116,8 +117,12 @@ def guard(*args: str, stdin: str | None = None, root: Path | None = None, limits
 
 def host_clear() -> bool:
     """Whether the host itself would let a heavy job start. No limit can be loosened to test what happens when it would, so while another project
-    holds the memory the cases that need it cannot run: said, and never counted as passing."""
-    return guard("check").returncode == 0
+    holds the memory the cases that need it cannot run: said, and never counted as passing. The host's room alone, and not `check`, which also counts a build of ours: a stub of this
+    test's, under this root, would read as one, and three cases never run."""
+    try:
+        return not g.start_reasons(g.read_host(ROOT), g.tightened({}))
+    except Exception:
+        return False
 
 
 def fresh(name: str) -> Path:
@@ -236,10 +241,12 @@ def shim(scope: Path, name: str, script: str) -> dict:
     return env
 
 
-def hook_says(command: str, root: Path, limits: dict | None = None, env: dict | None = None, session: str | None = None) -> subprocess.CompletedProcess:
+def hook_says(command: str, root: Path, limits: dict | None = None, env: dict | None = None, session: str | None = None, agent: str | None = None) -> subprocess.CompletedProcess:
     given = {"tool_input": {"command": command}}
     if session is not None:
         given["session_id"] = session
+    if agent is not None:
+        given["agent_id"] = agent
     return guard("hook", stdin=json.dumps(given), root=root, limits=limits, env=env)
 
 
@@ -286,6 +293,15 @@ def case_check_refuses() -> None:
     check("the boot volume under its floor is not clear", done.returncode == 75 and "boot volume" in done.stdout, done.stdout)
     done = guard("check", limits={"start_pressure_level": 0})
     check("macOS's pressure level stops a heavy job starting", done.returncode == 75 and "memory pressure" in done.stdout, done.stdout)
+    # `check` and `status` say what `run` and the hook will do: one heavy job at a time.
+    scope = fresh("check-beside")
+    builder = named("cargo", scope)
+    done = guard("check", root=scope)
+    check("beside a heavy job of ours, it is not clear", done.returncode == 75 and "one heavy job at a time" in done.stdout, done.stdout)
+    last = guard("status", root=scope).stdout.splitlines()[-1]
+    check("and `status` does not say one may start", last.startswith("a heavy job may not start") and "one heavy job at a time" in last, last)
+    os.killpg(builder.pid, signal.SIGKILL)
+    builder.wait()
 
 
 def case_a_figure_not_read_is_never_safe() -> None:
@@ -659,12 +675,50 @@ def case_at_a_disk_floor_what_writes_stops() -> None:
     floor = g.Reading(50.0, 1, 50, 1.0, 90.0, 200.0)
     limits = g.tightened({})
     shell, new_child, unrelated = proc(1, "bash -c loop", ppid=99), proc(2, "dd", ppid=1), proc(3, "tail -f log", ppid=99)
-    targets, _, not_ours = g.judged(floor, [shell, new_child, unrelated], limits, None, g.Motion(new={2}, fell=True))
+    targets, _, not_ours = g.judged(floor, [shell, new_child, unrelated], limits, None, g.Motion(new={2}, repo_fell=True))
     check("a job that keeps starting what the volume falls under is stopped, and one that does not is left", tops(targets) == {1} and not not_ours, tops(targets))
-    targets, _, _ = g.judged(floor, [shell, new_child, unrelated], limits, None, g.Motion(new={2}, fell=False))
+    targets, _, _ = g.judged(floor, [shell, new_child, unrelated], limits, None, g.Motion(new={2}))
     check("with the volume not falling, it is not", targets == [], tops(targets))
-    targets, _, _ = g.judged(floor, [proc(1, "bash -c rm", ppid=99)], limits, None, g.Motion(new={1}, fell=True))
+    targets, _, _ = g.judged(floor, [shell, new_child, unrelated], limits, None, g.Motion(new={2}, boot_fell=True))
+    check("nor with the other volume falling, which is not the one short", targets == [], tops(targets))
+    targets, _, _ = g.judged(g.Reading(50.0, 1, 50, 1.0, 1000.0, 20.0), [shell, new_child, unrelated], limits, None, g.Motion(new={2}, boot_fell=True))
+    check("the boot volume short and falling is the same", tops(targets) == {1}, tops(targets))
+    targets, _, _ = g.judged(floor, [proc(1, "bash -c rm", ppid=99)], limits, None, g.Motion(new={1}, repo_fell=True))
     check("a command that has just begun is not, so disk can still be freed", targets == [], tops(targets))
+    # What a shared volume costs anyway is no fall: a script of `rm` stopped for it would be a floor's way out taken away.
+    def free(repo: float, boot: float = 200.0) -> g.Reading:
+        return g.Reading(50.0, 1, 50, 1.0, repo, boot)
+    memory = g.Memory()
+    check("a first sample has no fall", not memory.moved(free(90.0), [], 0.0).repo_fell)
+    little = 49 / 1024
+    check("what others cost a shared volume in a sample is no fall", not memory.moved(free(90.0 - little), [], 0.5).repo_fell)
+    check("nor is many such samples short of the line", not memory.moved(free(90.0 - 0.9), [], 5.0).repo_fell)
+    check("a gibibyte within the window is", memory.moved(free(90.0 - 1.0), [], 9.0).repo_fell)
+    check("nor does it lean on the other volume", not memory.moved(free(90.0 - 1.0), [], 9.5).boot_fell)
+    memory = g.Memory()
+    memory.moved(free(90.0), [], 0.0)
+    check("and only within it: a slow fall is no fall", not memory.moved(free(89.0), [], g.FELL_WINDOW_SECONDS + 1.0).repo_fell)
+    memory = g.Memory()
+    memory.moved(free(90.0), [], 0.0)
+    check("what is freed counts against a fall", not memory.moved(free(95.0), [], 1.0).repo_fell)
+    # The way out of a floor, for real: a script of `rm` and of `du`, whatever else the volume is doing, short of a fall.
+    scope = fresh("floor-way-out")
+    for i in range(24):
+        (scope / f"d{i}").mkdir()
+        (scope / f"d{i}" / "f").write_bytes(b"x" * 4096)
+    watcher = looping_watcher(scope, {"stop_repo_free_gib": 1e9})
+    time.sleep(1.0)
+    before = g.read_host(ROOT)
+    cleaning = spawn(["bash", "-c", "for i in $(seq 0 23); do rm -rf d$i; du -s . >/dev/null; sleep 0.25; done; touch ended"], scope)
+    ended = settle(cleaning, 30)
+    after = g.read_host(ROOT)
+    fell = before.repo_free_gib - after.repo_free_gib >= g.FELL_BYTES / g.GIB or before.boot_free_gib - after.boot_free_gib >= g.FELL_BYTES / g.GIB
+    if fell:
+        not_run.append("a script of `rm` at a floor: another project wrote a gibibyte meanwhile")
+    else:
+        check("at a floor, a script of `rm` and `du` runs to its end, so disk can be freed", ended and (scope / "ended").exists(), stopped_events(scope)[-1:])
+    watcher.terminate()
+    watcher.wait(timeout=5)
 
 
 def case_a_new_script_is_taken_up() -> None:
@@ -921,9 +975,11 @@ def case_what_counts_as_heavy() -> None:
     for heavy in (
         "cargo test -p x", "make -C other all", "cd a && cargo build", "FOO=1 cargo build", "timeout 9 cargo test", "for t in a; do cargo test; done", "bash -c 'cargo build'",
         "if cargo build; then :; fi", "env cargo build", "nohup cargo build", "{ cargo build; }", "`cargo build`", "gmake x", "cargo-nextest run", "bash scripts/build_book.sh",
-        "target/m/install/archogen build s --out d", "archogen-plan-check --help", "# let's build\ncargo build\n# it's done", 'out="$(cargo build 2>&1)"', "caffeinate -i cargo test",
+        "target/m/install/archogen build s --out d", "archogen-plan-check --result r s p", "# let's build\ncargo build\n# it's done", 'out="$(cargo build 2>&1)"', "caffeinate -i cargo test",
         "/usr/bin/time -l cargo build", "rustup run stable cargo build", "zsh -c 'cargo build'", "bash -lc 'cargo build'", "sudo cargo build", "env -i cargo build", "cargo +nightly miri test",
         "cargo --locked build", "cargo --config x build", "make", "make -f other.mk focused", "qemu-system-riscv32 -M virt", "mdbook build", "rustc x.rs", "xargs cargo build", "eval 'cargo build'",
+        "cargo test -- --help", "cargo run -- --version", "make --jobs 4 other", "bash -euo pipefail scripts/build_book.sh", "bash -c -- 'cargo build'", "bash -euo pipefail -c 'cargo build'", "bash <<'E'\ncargo build\nE",
+        "bash <<< 'cargo build'", "trap 'cargo build' EXIT", "echo $(( $(cargo build) + 1 ))", 'x="$(if true; then case y in y) cargo build;; esac; fi)"', "x=( $(cargo build) )", "[[ -n $(cargo metadata --format-version 1 >x; cargo build) ]]",
     ):
         check(f"heavy: {heavy}", heavy_text(heavy))
     for light in (
@@ -934,6 +990,9 @@ def case_what_counts_as_heavy() -> None:
         "cargo clean", "cargo clean -p x", "make focused>log 2>&1", "make focused;echo done", "make -j4 focused", "make -j 4 focused", "make focused integration", "command -v cargo",
         "python3 scripts/host_guard.py run --wait 1800 -- bash -c 'cd x && cargo test'", "python3 scripts/host_guard.py run --wait 1800 -- env RUST_BACKTRACE=1 cargo test",
         "python3 scripts/host_guard.py run --wait 1800 -- bash scripts/build_book.sh", "bash -c 'python3 scripts/host_guard.py run -- cargo test'", "case x in cargo) ls;; esac", "for x in cargo make; do ls; done",
+        "rustc --explain E0308", "cargo build --help", "cargo update -p serde", "cargo add serde", "cargo remove serde", "cargo info serde", "cargo clippy --version", "cargo generate-lockfile", "cargo fetch", "mdbook help",
+        "qemu-system-riscv32 --version", "archogen --help", "archogen help build", "archogen-plan-check --help", "make --jobs 4 focused", "names=(rustc cargo); echo ${names[0]}", "(( make > 1 ))", "((make>1)) && ls",
+        "[[ $x == cargo ]]", "[[ $x =~ ^(cargo|make)$ ]] && ls", "case $x in cargo|make) ls;; esac", "cargo() { ls; }", "function make { ls; }",
     ):
         check(f"not heavy: {light!r}", not heavy_text(light))
 
@@ -955,16 +1014,41 @@ THE_SHELL_RUNS_THESE = (
     "git commit -F - <<'M'\nmake sure it holds\nM\n", "echo cargo build", "echo 'pkill -x rustc'", "echo '$(cargo build)'", "echo \\$\\(cargo build\\)", 'echo "use kill, not pgrep"', "python3 -c \"print('make')\"",
     "python3 scripts/host_guard.py run --wait 1800 -- bash -c 'cd x && cargo test'", "X=/y/archogen ls", "file target/m/install/archogen", "find . -name pkill -print", "ls # first; make sure of it",
     "case cargo in cargo) ls;; esac", "case cargo in\n  cargo) ls ;;\nesac", "for x in cargo make; do ls; done", "f() { ls; }; f",
+    # What round 6's reader found parting them: a case inside a substitution, arithmetic, a shell's options, what runs later, and what is only text.
+    "case y in (y) cargo build;; esac; ls", "case y in\n# it's a comment\ny) cargo build ;;\nesac\nls", "(( y = 1 << 3 ))\npkill -x rustc", "((x<<=1)); cargo build", "echo $[1<<2]; cargo build", "echo $((1<<2)); cargo build",
+    "echo $(( $(cargo build) + 1 ))", 'echo "$(( $(cargo build) + 1 ))"', "for ((i=0; i<1; i++)); do cargo build; done", "((cargo build); ls)", "bash -euo pipefail -c 'pkill -x rustc'", "bash -eo pipefail -c 'cargo build'", "bash -c -- 'cargo build'",
+    "bash -c -e 'cargo build'", "bash -o pipefail -c 'cargo build'", "trap 'pkill -x rustc' EXIT", "trap 'cargo build' EXIT; ls", "bash <<'EOF'\npkill -x rustc\nEOF", "bash <<EOF\ncargo build\nEOF", "bash -s <<'EOF'\nmake focused\nEOF",
+    "bash <<< 'cargo build'", "sh <<'EOF'\ncargo build\nEOF", "tools=(pkill killall); echo ${tools[0]}", "names=(rustc cargo); echo ${names[0]}", "x=( $(cargo build) )", "x+=(a b); ls", "(( make > 1 ))", "((make>1)); ls",
+    "[[ a < b && c > d || e == f ]]; ls", "[[ -z $(cargo build) ]]; ls", "if [[ -n $(ls) ]]; then cargo build; fi", "for t in a b; do case $t in a) ls;; b) cargo build;; esac; done",
+    "pkill() { :; }; ls", "function make { :; }; ls", "function cargo() { :; }; ls",
 )
 # Those the shell may not reach: what it runs must still be what is read, and what is read may be more.
-THE_SHELL_MAY_NOT_REACH = ("ls || cargo build", "false && cargo build", "if false; then cargo build; else make focused; fi", "while false; do cargo build; done", "case x in y) cargo build;; esac", "case x in cargo) make focused;; esac", "f() { cargo build; }", "xargs cargo build </dev/null")
+THE_SHELL_MAY_NOT_REACH = ("ls || cargo build", "false && cargo build", "if false; then cargo build; else make focused; fi", "while false; do cargo build; done", "case x in y) cargo build;; esac", "case x in cargo) make focused;; esac", "f() { cargo build; }", "xargs cargo build </dev/null",
+    'arch="$(case "$(ls)" in arm64) touch a;; *) file b;; esac)"; cargo build', 'case "$t" in a) ls;; pkill|killall) make focused;; esac', "case y in\nz) make x ;;\nesac\nls", "case y in z) cargo build; esac", "case y in z) cat <<E ;; esac\nmake\nE\nmake focused",
+    "[[ $x =~ ^(pkill|killall)$ ]] && cargo build")
+# A bare `)` of a case inside a substitution: bash 3.2 takes it for the substitution's end, as its own bug, so it runs less than bash 4 and later do, which the reader reads. Reading more is the safe side.
+ONLY_LATER_BASH_RUNS_THESE = ('x="$(case y in y) cargo build;; esac)"; make focused', 'x="$(case y in y) cargo build;; esac )"; make focused', 'x="$(if true; then case y in y) cargo build;; esac; fi)"', 'x=$(case y in y) cargo build; esac); ls')
 # Every way of standing, around everything that may stand there.
 HOW_IT_STANDS = ("%s", "(%s)", "$(%s)", "`%s`", "bash -c '%s'", 'sh -c "%s"', "env %s", "nohup %s", "x=$(%s)", "{ %s; }", "if %s; then :; fi", "! %s", "time %s", 'echo "$(%s)"', "# it's\n%s\n# it's", "true; %s", "true && %s", "true | %s", "eval '%s'")
 WHAT_STANDS = ("cargo build", "make -j4 focused>log", "pgrep -x rustc | xargs kill", "git commit -m '(make) x'", 'ls "a b"', "kill 999999")
 STUBS = ("cargo", "make", "gmake", "rustc", "mdbook", "archogen", "pkill", "killall", "kill", "pgrep", "ps", "grep", "awk", "rg", "git", "python3", "sleep", "ls", "cat", "touch", "mkdir", "file", "find")
 
 
+def every_bash() -> list[str]:
+    """Each `bash` there is here: the system's, an old one, and the first on the path, which is what a harness may run a command with."""
+    found = ["/bin/bash"]
+    onward = shutil.which("bash")
+    if onward and os.path.realpath(onward) != os.path.realpath(found[0]):
+        found.append(onward)
+    return found
+
+
 def case_the_reader_sees_what_the_shell_runs() -> None:
+    for bash in every_bash():
+        the_reader_against(bash)
+
+
+def the_reader_against(bash: str) -> None:
     """The oracle no code here wrote: the shell itself. Each form runs under stubs that write down how they were called, and the reader must name exactly those."""
     scope = fresh("shell")
     stubs, work, log = scope / "stubs", scope / "work", scope / "ran"
@@ -972,7 +1056,7 @@ def case_the_reader_sees_what_the_shell_runs() -> None:
     (work / "x").mkdir(parents=True)
     for name in STUBS:
         (stubs / name).write_text("#!/bin/sh\nsep=$(printf '\\037')\nline=\"${0##*/}\"\nfor word in \"$@\"; do line=\"$line$sep$word\"; done\nprintf '%s\\n' \"$line\" >> \"$RAN_LOG\"\nprintf '999999\\n'\n")
-    for name, real in (("bash", "/bin/bash"), ("sh", "/bin/sh"), ("env", "/usr/bin/env"), ("nohup", "/usr/bin/nohup"), ("nice", "/usr/bin/nice"), ("xargs", "/usr/bin/xargs"), ("caffeinate", "/usr/bin/caffeinate")):
+    for name, real in (("bash", bash), ("sh", "/bin/sh"), ("env", "/usr/bin/env"), ("nohup", "/usr/bin/nohup"), ("nice", "/usr/bin/nice"), ("xargs", "/usr/bin/xargs"), ("caffeinate", "/usr/bin/caffeinate")):
         (stubs / name).write_text(f'#!/bin/sh\nexec {real} "$@"\n')
     (stubs / "timeout").write_text('#!/bin/sh\nshift\nexec "$@"\n')
     (stubs / "rustup").write_text('#!/bin/sh\nshift 2\nexec "$@"\n')
@@ -983,7 +1067,19 @@ def case_the_reader_sees_what_the_shell_runs() -> None:
 
     def ran(command: str) -> set[tuple[str, ...]]:
         log.write_text("")
-        subprocess.run(["/bin/bash", "-c", command], cwd=work, env=environment, stdin=subprocess.DEVNULL, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, timeout=20)
+        # A shell does not wait for a process substitution, so under load its log was read before `cat <(cargo build)` had written: 6 of 150 on one bash, measured. Everything the shell
+        # starts holds this descriptor, whatever it redirects, so that it closing says the last of them has ended.
+        reader, writer = os.pipe()
+        try:
+            shell = subprocess.Popen([bash, "-c", command], cwd=work, env=environment, stdin=subprocess.DEVNULL, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, pass_fds=(writer,))
+            os.close(writer)
+            writer = -1
+            select.select([reader], [], [], 20)
+            shell.wait(timeout=20)
+        finally:
+            os.close(reader)
+            if writer >= 0:
+                os.close(writer)
         return {tuple(line.split("\x1f")) for line in log.read_text().splitlines()}
 
     def read(command: str) -> tuple[set[str], set[tuple[str, ...]], set[tuple[str, ...]]]:
@@ -997,7 +1093,9 @@ def case_the_reader_sees_what_the_shell_runs() -> None:
         # What a substitution fed it is not in the command's text.
         return {call for call in shown if not any("999999" in word or "/dev/fd/" in word for word in call)}
 
-    forms = list(THE_SHELL_RUNS_THESE)
+    version = int(subprocess.run([bash, "-c", "echo ${BASH_VERSINFO[0]}"], capture_output=True, text=True, timeout=20).stdout.strip())
+    may_not_reach = THE_SHELL_MAY_NOT_REACH if version >= 4 else THE_SHELL_MAY_NOT_REACH + ONLY_LATER_BASH_RUNS_THESE
+    forms = list(THE_SHELL_RUNS_THESE) + (list(ONLY_LATER_BASH_RUNS_THESE) if version >= 4 else [])
     for standing in HOW_IT_STANDS:
         for standing_there in WHAT_STANDS:
             if "'" in standing_there and "'" in standing:
@@ -1014,18 +1112,29 @@ def case_the_reader_sees_what_the_shell_runs() -> None:
         names, whole, every = read(form)
         if names != {call[0] for call in shown} or not whole <= shown or not what_it_shows(shown) <= every:
             disagree.append((form, sorted(names), sorted(shown), sorted(every)))
-    check(f"over {len(forms)} forms the reader names exactly what the shell ran, and how", not disagree, disagree[:3])
+    check(f"over {len(forms)} forms the reader names exactly what {bash} ran, and how", not disagree, disagree[:8])
     disagree = []
-    for form in THE_SHELL_MAY_NOT_REACH:
+    for form in may_not_reach:
         shown = ran(form)
         names = read(form)[0]
         if not {call[0] for call in shown} <= names:
             disagree.append((form, sorted(names), sorted(shown)))
-    check("and what the shell may not reach is read all the same", not disagree, disagree[:3])
-    check("each of those is read to hold what it may run", all("cargo" in read(form)[0] or "make" in read(form)[0] for form in THE_SHELL_MAY_NOT_REACH), THE_SHELL_MAY_NOT_REACH)
+    check(f"and what {bash} may not reach is read all the same", not disagree, disagree[:3])
+    check("each of those is read to hold what it may run", all("cargo" in read(form)[0] or "make" in read(form)[0] for form in may_not_reach), may_not_reach)
     check("a quote left open is read to its end, with nothing raised", [each.words for each in g.commands_of("ls 'a b")] == [["ls", "a b"]])
     check("a substitution left open too", [each.name for each in g.commands_of("echo $(cargo build")] == ["cargo", "echo"])
     check("and much of what is not there costs little", len(g.commands_of("cat <<A\n" * 2000)) == 1)
+    check("a case left open reads to its end", [each.name for each in g.commands_of("case x in a) cargo build")] == ["cargo"])
+    check("a condition left open too", [each.name for each in g.commands_of("[[ $(cargo build)")] == ["cargo"])
+    check("an array left open too", [each.name for each in g.commands_of("x=($(cargo build)")] == ["cargo"])
+    check("and arithmetic, read as a subshell as the shell would", [each.name for each in g.commands_of("((cargo build")] == ["cargo"])
+    for arguments, told_it in (
+        ("-euo pipefail -c x", ("x", None)), ("-eo pipefail -c x", ("x", None)), ("-c -e x", ("x", None)), ("-c -- x", ("x", None)), ("-lc x", ("x", None)), ("--rcfile f -c x", ("x", None)), ("-e script", (None, "script")),
+        ("-o pipefail script", (None, "script")), ("script -c x", (None, "script")), ("-- script", (None, "script")), ("-s", (None, None)), ("-eo pipefail", (None, None)), ("--norc", (None, None)), ("--rcfile f", (None, None)), ("", (None, None)),
+    ):
+        check(f"a shell given `{arguments}` is told {told_it}", g.shell_told(arguments.split()) == told_it, g.shell_told(arguments.split()))
+    check("a shell told nothing is a terminal, whatever its options", g.is_terminal_shell(proc(1, "bash -eo pipefail")) and g.is_terminal_shell(proc(1, "bash --rcfile f")))
+    check("and one told a command, wherever `-c` stands, is none", not g.is_terminal_shell(proc(1, "bash -euo pipefail -c x")) and not g.is_terminal_shell(proc(1, "bash -c -- x")))
 
 
 def case_the_hook_passes_nothing_it_cannot_read() -> None:
@@ -1044,6 +1153,8 @@ def case_killing_by_name() -> None:
             "pgrep -x rustc | while read p; do kill $p; done", "pgrep -x rustc | xargs kill", "/usr/bin/pkill rustc", "ps -ax | grep rustc | awk '{print $1}' | xargs kill", "kill $(ps -ax | grep rustc)",
             "(pkill -x rustc)", "$(pkill -x rustc)", "bash -c 'pkill -x rustc'", "sh -c 'pgrep -x rustc | xargs kill'", "# don't\npkill -x rustc\n# don't", "env pkill rustc", "sudo killall cargo",
             "ps -ax | awk '/rustc/{print $1}' | while read p; do kill $p; done", "for p in $(ps -ax | grep rustc | awk '{print $1}'); do kill $p; done",
+            'arch="$(case "$(uname -m)" in arm64) echo a;; *) echo b;; esac)"; pkill -x rustc', 'x="$(case y in y) echo a;; esac )"\npkill -x rustc', "(( y = 1 << 3 ))\npkill -x rustc", "((x<<=1)); killall cargo", "echo $[1<<2]; pkill rustc",
+            "bash -euo pipefail -c 'pkill -x rustc'", "bash -eo pipefail -c 'pkill -x rustc'", "bash -c -- 'pkill -x rustc'", "trap 'pkill -x rustc' EXIT", "bash <<'EOF'\npkill -x rustc\nEOF", "bash <<< 'pkill -x rustc'", "case y in y) pkill -x rustc;; esac",
         ):
             done = hook_says(command, scope)
             check(f"never by a name across the host: {command}", done.returncode == 2 and "never by a program's name" in done.stderr, done.stderr)
@@ -1052,6 +1163,8 @@ def case_killing_by_name() -> None:
             "rg pkill docs/", "git grep -n killall -- scripts", "find . -name pkill -print", "python3 -I -B -c pass pkill probe", "pgrep -x rustc", "ps -ax | grep rustc", "git commit -m 'kill the pgrep rig'",
             "pkill -P 123", "pkill -P123", "kill $(pgrep -P 123)", "cat target/x/job.pid | xargs kill", f"pgrep -f {scope}/x | xargs kill", f"ps -ax | grep {scope}/x | awk '{{print $1}}' | xargs kill",
             'grep -n "kill\\|pgrep" f', 'rg "xargs kill" scripts/', 'echo "use kill, not pgrep"', "kill 123; ps -ax | grep x", "ps -ax | grep x; kill 123", "kill $!; pgrep -x rustc", "ps -p 123; kill $(cat p)",
+            "tools=(pkill killall); echo ${tools[0]}", 'case "$t" in a) echo a;; pkill|killall) echo b;; esac', "for t in a b; do case $t in a) echo a;; pkill) echo b;; esac; done", "[[ $cmd =~ ^(pkill|killall)$ ]] && echo careful",
+            "(( pkill > 1 ))", "pkill() { :; }; echo", "cat <<'EOF'\npkill -x rustc\nEOF",
         ):
             done = hook_says(command, scope)
             check(f"not by a name across the host: {command}", done.returncode == 0, done.stderr)
@@ -1097,6 +1210,13 @@ def case_hook() -> None:
             done = hook_says("touch x", scope, session=session)
             check(f"each session is told for itself: {session}", done.returncode == 0 and "stopped x" in told(done), done)
             check(f"and once: {session}", told(hook_says("touch x", scope, session=session)) == "")
+        # A subagent shares its session's id: a stop is told to it and to the agent that started it, each once, whichever comes first.
+        hook_says("touch x", scope, session="a", agent="sub")  # Its place in the log begins here, so that the stop below is what it is told.
+        with open(scope / "state" / "events.log", "a") as log:
+            log.write(stop_event(now, "for-both"))
+        check("a stop is told to a subagent", "stopped for-both" in told(hook_says("touch x", scope, session="a", agent="sub")))
+        check("and to the agent that started it, its session's id being the same", "stopped for-both" in told(hook_says("touch x", scope, session="a")))
+        check("each once", told(hook_says("touch x", scope, session="a", agent="sub")) == "" and told(hook_says("touch x", scope, session="a")) == "")
         # `cargo clean` takes a session's place: what was stopped lately is told all the same.
         (scope / "state" / "seen.a").unlink()
         done = hook_says("touch x", scope, session="a")
