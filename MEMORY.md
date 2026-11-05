@@ -16,7 +16,6 @@
 - **Active tree:** `M4` → frontier `M4.1`, the accepted runtime plan, the model's amendments done (`M4.1.2`): `/1` for
   the hosted playground; `PROGRAM` → `PROGRAM.34`, the director's.
 - **The host is shared:** every heavy job goes through `scripts/host_guard.py`, one at a time (`docs/decisions/decision_host-guard.md`). A reader's brief says so.
-- **Paused `2026-11-05` at the director's word, at a clean tree: wait for the director before going on.**
 - **Next action:** `PROGRAM.127.5`, the guard's review, round 5; then `M4.2.3.3.12`, round 12 of the hosted build's review, a fresh reader over round 11's answers and the routes' tables; then
   `M4.4.1.1`, the device correspondence's review (`M4.4.1` done), and `M4.3.5`; `M4.3.4` waits on `M2.21`. The runtime plan's design is accepted (`M4.1.1` done).
   `M3.2.7` and `M3.5.9`, full verification, wait for the

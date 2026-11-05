@@ -103,13 +103,13 @@ the day a chapter or a decision relies on it, as Miri did.
 
 | Field | Value |
 | --- | --- |
-| Source | `chipdoc`, a read-only corpus of chip, ISA, interface and protocol documents |
-| Version | ⚠️ **the checkout's revision was not recorded** when it was read. What was used is recorded: the RISC-V ISA at `risc-v/isa/pinned/v20260120`; PLIC 1.0.0, ACLINT 1.0-rc4, TL16C550C and Devicetree v0.4 |
-| Pinned at | not pinned — kept off this volume and supplied at run time as `ARCHOGEN_CHIPDOC_ROOT`; never a build dependency |
-| Retrieved | `2026-09-27` |
-| Hash | not captured — no figure has been adopted from it yet. The first one adopted must cite its family's `SHA256SUMS` digest |
-| Scope | ISA, RISC-V, devicetree and peripheral specifications, and board documents, by operator-relayed request (`REQ-006` fulfilled, `REQ-007` requested) |
-| Known limitations | a document is a source, not a fact (§9). Its board PDFs are readable here through the shell's `pdftotext` (`docs/decisions/reference_external-document-source-chipdoc.md`) |
+| Source | `chipdoc`, a read-only corpus of processor, microcontroller, board, ISA, interface and protocol documents, entered by its `AGENTS.md`, where a need for any digital chip's document starts |
+| Version | `226cfb0`, its revision of `2026-10-31`, as read on `2026-11-05`. ⚠️ **The revision was not recorded** when it was first read, on `2026-09-27`. What was used then is recorded: the RISC-V ISA at `risc-v/isa/pinned/v20260120`; PLIC 1.0.0, ACLINT 1.0-rc4, TL16C550C and Devicetree v0.4 |
+| Pinned at | not pinned — kept outside this repository and supplied at run time as `ARCHOGEN_CHIPDOC_ROOT`; never a build dependency |
+| Retrieved | `2026-11-05` |
+| Hash | not captured — no figure has been adopted from it yet. The first one adopted must cite the digest its `--retrieve` prints |
+| Scope | processor, microcontroller, board, ISA, RISC-V, devicetree, interface, protocol and peripheral documents; what it lacks, by operator-relayed request (`REQ-006` and `REQ-007` fulfilled) |
+| Known limitations | a document is a source, not a fact (§9). Most of the corpus may be read and quoted but not republished, so a document is never copied into this public repository. Its board PDFs are readable here through the shell's `pdftotext` (`docs/decisions/reference_external-document-source-chipdoc.md`) |
 | Revalidation trigger | the next time it is queried, which must record the revision; any figure adopted from it |
 | Named as | `chipdoc` |
 

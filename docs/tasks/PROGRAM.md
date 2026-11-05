@@ -859,7 +859,12 @@ mdBook that is the director's window into the project.
   Commit: `ARCHOGEN-PROGRAM-1161 (leaf PROGRAM.127.4)`
 
 - ID: `PROGRAM.127.5`
-  Status: `pending` — round 5, a fresh reader over round 4's rewrite, looking hardest at what removing the lists let through. It closes on a round that finds no defect, and a form written to go round the guard is a stated limit, not a defect. Paused `2026-11-05` at the director's word, until the director says to go on.
+  Status: `in_progress` — round 5, a fresh reader over round 4's rewrite, looking hardest at what removing the lists let through. It closes on a round that finds no defect, and a form written to go round the guard is a stated limit, not a defect. The director said to go on `2026-11-05`; the reader is at work.
+
+- ID: `PROGRAM.128`
+  Status: `done` — `2026-11-05`: by the director's word, "If you ever need new CPU, DSP, MCU, BOARD, ISA or in general digital chip PDF just look here", naming `chipdoc`'s `AGENTS.md`. The record, its index row, the book's ledger and a `TOOLBOX.md` row now start any chip document's need there. Reading it corrected three things of ours: the record and the ledger still said `REQ-007` was `requested`, fulfilled `2026-09-30`; the ledger said the corpus was off this volume; and the record said what is adopted is copied here, where most of the corpus may not be republished and this repository is public, so a fact and its citation are copied and never a document. A documents-only leaf.
+  Verification: `python3 -I -B "$ARCHOGEN_CHIPDOC_ROOT/scripts/find_docs.py" --text FE310 --retrieve` → a path, `pages: 20`, a `sha256:` and a `cite:` line; `--peer archogen --count` → `27`; `git -C "$ARCHOGEN_CHIPDOC_ROOT" log -1 --format=%h` → `226cfb0`; `grep -n 'REQ-007' "$ARCHOGEN_CHIPDOC_ROOT/catalog/REQUESTS.md"` → `**fulfilled** 2026-09-30`; `stat -f .` from each checkout → the same file system id, `100001c0000001a`; `awk` over that ledger for the rows naming archogen → `REQ-006` and `REQ-007` alone; `bash scripts/check_source_ledger.sh` and `bash scripts/check_doctrines.sh` on the staged tree.
+  Commit: `ARCHOGEN-PROGRAM-1162 (leaf PROGRAM.128)`
 
 ## Roadmap coverage map
 
@@ -1019,6 +1024,7 @@ leaf's outcome is its row in the Commit Log below, and a sealed leaf's full reco
 | `PROGRAM.127.2` | `ARCHOGEN-PROGRAM-1159 (leaf PROGRAM.127.2)` | **the host guard's review, round 2 answered**: a terminal known by being told no command; a root exactly itself; one job at a time by what the process table shows; nothing by a name across the host; said to be a guard against accident, no sandbox |
 | `PROGRAM.127.3` | `ARCHOGEN-PROGRAM-1160 (leaf PROGRAM.127.3)` | **the host guard's review, round 3 answered**: a helper passed over only while small, so a job an agent's shell execs is held; `pkill` judged by its own stage; a read is a read, each tool's writing options its own; growth over a window; everyday commands no longer refused |
 | `PROGRAM.127.4` | `ARCHOGEN-PROGRAM-1161 (leaf PROGRAM.127.4)` | **the host guard's review, round 4 answered by method**: the lists of names are gone; a host's line goes by what a process holds and a disk's by what it writes; the hook refuses only what it cannot read, stopping by a name, and a heavy command with no room |
+| `PROGRAM.128` | `ARCHOGEN-PROGRAM-1162 (leaf PROGRAM.128)` | **a chip's document starts at `chipdoc`'s `AGENTS.md`**, the director's word: the record, its index row, the ledger and `TOOLBOX.md`; `REQ-007` fulfilled, the corpus on this volume, and a document never copied into this public repository, each corrected |
 
 ## Changelog
 
@@ -1077,3 +1083,5 @@ leaf's outcome is its row in the Commit Log below, and a sealed leaf's full reco
 - `2026-11-05`: `PROGRAM.127.3` done: the guard's round 3, twenty findings answered; `PROGRAM.127.4` filed for round 4.
 
 - `2026-11-05`: `PROGRAM.127.4` done: the guard's round 4, sixteen findings answered by removing its lists; `PROGRAM.127.5` filed for round 5.
+
+- `2026-11-05`: `PROGRAM.128` done: a chip's document starts at `chipdoc`'s `AGENTS.md`, by the director's word; the pause lifted the same day, `PROGRAM.127.5` at work.
