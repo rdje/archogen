@@ -23,34 +23,53 @@ if not guard.is_file():
 if not (root / "scripts" / "selftest_host_guard.py").is_file():
     breaches.append("scripts/selftest_host_guard.py is gone, so nothing shows the guard stops what it should and nothing else")
 
-# Its lines, as written, inside the director's.
+# Its lines, as written: none looser than this. The first three are the director's, or inside them; the rest were measured or chosen, and moving
+# one means moving it here too, in a commit that says why.
 limits = {}
 for node in ast.walk(ast.parse(guard.read_text(encoding="utf-8"))):
     if isinstance(node, ast.ClassDef) and node.name == "Limits":
         for item in node.body:
             if isinstance(item, ast.AnnAssign) and isinstance(item.target, ast.Name) and isinstance(item.value, ast.Constant):
                 limits[item.target.id] = item.value.value
-for name in ("start_used_percent", "stop_used_percent", "panic_used_percent", "stop_pressure_level", "one_process_gib", "all_processes_gib"):
+AT_MOST = {
+    "start_used_percent": 70, "stop_used_percent": 85, "panic_used_percent": 88, "start_pressure_level": 2, "stop_pressure_level": 2, "panic_pressure_level": 4,
+    "start_swap_gib": 16, "stop_swap_growth_gib": 3, "all_processes_gib": 6, "one_process_gib": 3, "processes": 512, "stop_disk_growth_gib": 50,
+    "worth_stopping_gib": 0.25, "watcher_stale_seconds": 60,
+}
+AT_LEAST = {"stop_repo_free_gib": 100, "stop_boot_free_gib": 30}
+for name, line in AT_MOST.items():
     if name not in limits:
         breaches.append(f"scripts/host_guard.py states no `{name}`")
+    elif limits[name] > line:
+        breaches.append(f"`{name}` is {limits[name]}, looser than {line}")
+for name, line in AT_LEAST.items():
+    if name not in limits:
+        breaches.append(f"scripts/host_guard.py states no `{name}`")
+    elif limits[name] < line:
+        breaches.append(f"`{name}` is {limits[name]}, looser than {line}")
+for name in limits.keys() - AT_MOST.keys() - AT_LEAST.keys():
+    breaches.append(f"`{name}` is a limit this check does not hold: add it")
 if {"start_used_percent", "stop_used_percent", "panic_used_percent"} <= limits.keys():
-    if limits["panic_used_percent"] > 88:
-        breaches.append(f"`panic_used_percent` is {limits['panic_used_percent']}: the director's danger zone starts at 88")
     if not limits["start_used_percent"] < limits["stop_used_percent"] < limits["panic_used_percent"]:
         breaches.append("the lines must rise: start, then stop, then everything of ours stopped")
 
-# Everything `make` compiles or tests goes through it. `cargo fmt` neither.
+# Everything `make` compiles or tests goes through it, by what each recipe line runs, however it is written. `cargo fmt` neither.
+makefile = (root / "Makefile").read_text(encoding="utf-8")
+if not re.search(r"^GUARD\s*:?=.*scripts/host_guard\.py\s+run\b", makefile, re.M):
+    breaches.append("the Makefile's `GUARD` does not run scripts/host_guard.py")
+HEAVY = re.compile(r"(?<![\w./-])(?:\S*/)?(?:cargo|rustc|mdbook|build_book\.sh|check_doctrines\.sh)(?![\w.-])|\$\(CARGO\)")
 recipe = None
-for line in (root / "Makefile").read_text(encoding="utf-8").splitlines():
+for line in makefile.splitlines():
     if not line.startswith("\t"):
         found = re.match(r"([a-zA-Z_-]+):", line)
         recipe = found.group(1) if found else recipe
         continue
-    command = line.strip()
-    if re.match(r"cargo\b", command) and not re.match(r"cargo fmt\b", command):
+    command = line.strip().lstrip("@-")
+    # A line that only prints runs nothing, whatever it says.
+    if re.fullmatch(r'echo\s+"[^"]*"', command):
+        continue
+    if HEAVY.search(command) and not command.startswith("$(GUARD)") and not re.match(r"cargo fmt\b", command):
         breaches.append(f"Makefile `{recipe}` runs `{command}` outside the guard: write it `$(GUARD) {command}`")
-if "host_guard.py run" not in (root / "Makefile").read_text(encoding="utf-8"):
-    breaches.append("the Makefile's `GUARD` does not run scripts/host_guard.py")
 
 # Every shell command an agent runs here is checked first, a subagent's too.
 settings = root / ".claude" / "settings.json"
@@ -70,6 +89,8 @@ if not held:
     breaches.append(".claude/settings.json runs no `host_guard.py hook` before a shell command")
 elif held[0].get("onFailure") != "block":
     breaches.append("the hook must block when it cannot run: a guard that fails open is no guard")
+elif not held[0].get("timeout"):
+    breaches.append("the hook states no timeout, so one that hangs would hang every command")
 
 # What an agent of any harness reads first says so.
 if "scripts/host_guard.py" not in (root / "CLAUDE.md").read_text(encoding="utf-8"):
@@ -79,5 +100,5 @@ for breach in breaches:
     print(f"HOST-GUARD: {breach}")
 if breaches:
     sys.exit(1)
-print("host-guard: OK (the lines inside the director's; every `make` build, every agent's shell command and CLAUDE.md through it)")
+print("host-guard: OK (every line at or inside its mark; every `make` build, every agent's shell command and CLAUDE.md through it; that it stops what it should is the self-test's)")
 PY

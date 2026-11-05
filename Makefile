@@ -34,7 +34,7 @@ tiers:
 	$(GUARD) cargo xtask verify --list
 
 gate:
-	scripts/check_doctrines.sh
+	$(GUARD) scripts/check_doctrines.sh
 
 check:
 	cargo fmt --all -- --check
@@ -51,7 +51,7 @@ test:
 	$(GUARD) cargo test --all
 
 book:
-	scripts/build_book.sh
+	$(GUARD) scripts/build_book.sh
 
 hooks:
 	git config core.hooksPath .githooks

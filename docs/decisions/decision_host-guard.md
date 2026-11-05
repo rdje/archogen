@@ -27,13 +27,13 @@
 
 A whole `make focused` measured 0.77 GiB of ours on `2026-11-05`, on a third of the cores at lower priority, so the ceilings leave room to work.
 
-**What is ours.** A process whose working directory or command line is under the repository, what those started, and what an agent working here started. Never an agent or terminal itself, an application, the guard, or a small `git`, which frees nothing and could leave a lock. Never by a program's name across the host: stopping the incident that way killed another project's build.
+**What is ours.** A process that shows it itself: its working directory or its executable is under the repository, or a process that shows so started it, wherever it then runs. A process merely mentioning the path is not ours: another project's build is not made ours by an argument. An agent or a terminal here vouches for nothing it starts, so a build it runs elsewhere stays that project's. Never stopped, nor counted: an agent, found by searching its name, its executable and the script it runs; a terminal or login shell; an application; the guard; what an agent runs for itself rather than through a shell, such as a server for its tools. A small `git`, or a small tool for looking at the host, is spared when stopped would free nothing. Never by a program's name across the host: stopping the incident that way killed another project's build.
 
 **How nothing goes around it.**
-- `make` runs everything that compiles or tests through `scripts/host_guard.py run`, for any agent or person.
-- `.claude/settings.json` checks every shell command first, a subagent's too (`hook`): every command is refused at the stop line, a heavy one at the start line or while a build of ours runs, and what the guard stopped is told before the next command runs. The host can always be read.
-- The first check starts the watcher, which then sees everything of ours however it was started.
-- `HOST-GUARD` (`scripts/check_host_guard.sh`) refuses a commit that removes any of these or moves the lines past the director's. `scripts/selftest_host_guard.py` shows that it stops what it should and nothing else.
+- `make` runs everything that compiles or tests through `scripts/host_guard.py run`, for any agent or person. `run` is one job at a time: it waits its turn behind a build or another `run` of ours, and ends its job if no watcher can read the host.
+- `.claude/settings.json` checks every shell command first, a subagent's too (`hook`). Nothing but a read runs at a stop line, by RAM, pressure or disk; a command recognised as heavy is refused at the start line, while a build of ours runs, or when no watcher has read the host lately; and what the guard stopped is told before the next command that is not a read. A read, every stage of it, is always let through, so a host in trouble can be looked at, its disk freed and a broken guard repaired. When the hook cannot judge a command it refuses it.
+- The first check starts the watcher, which then sees everything of ours however it was started. It survives its own trouble, `cargo clean` removing its state among it, and a watcher that cannot read the host is said to be blind rather than taken for one that can.
+- `HOST-GUARD` (`scripts/check_host_guard.sh`) refuses a commit that takes `make` or the hook off it, lets the hook fail open, or moves a line past its mark. It holds the wiring and the lines. That the guard stops what it should and nothing else is `scripts/selftest_host_guard.py`'s, which does not run on a host over the start line, since it would add to the load.
 
 ## Why
 
@@ -53,4 +53,17 @@ A whole `make focused` measured 0.77 GiB of ours on `2026-11-05`, on a third of 
 - `python3 scripts/host_guard.py status` says what it reads, who holds the most on the host, the peak, and what it has stopped.
 - A reader's brief says to test a size limit with a sparse file refused unread, never by loading gigabytes.
 - An agent on another harness runs `python3 scripts/host_guard.py ensure` first: only this harness has the hook.
-- ⚠️ **What it cannot do.** It cannot make the host safe from other projects. On `2026-11-05` the reading passed 90% with ours at 1 GiB and another project's two compilers at 10 GiB each; the guard stopped ours and said who held it, and that was all it could do. A sudden jump can also pass a line between two samples, and a process that detached itself and names nothing here is not seen. It reads macOS only: elsewhere a job runs unwatched, and says so.
+- ⚠️ **What it cannot do.**
+  - It cannot make the host safe from other projects. On `2026-11-05` the reading passed 90% with ours at 1 GiB and another project's two compilers at 10 GiB each; the guard stopped ours and said who held it, and that was all it could do.
+  - A sudden jump can pass a line between two samples.
+  - What escapes it: a process that detached itself and shows nothing here, and a command that first leaves the repository's directory, whose shell then shows nothing either. A session rooted in another project that comes here has that project's settings, so no hook; the watcher, if running, still holds what runs here.
+  - The hook's pattern for a heavy command is a courtesy to the host: what gets past it, a program in a variable or a build behind a script, the watcher still holds. Nor does it catch every harmless word: it errs both ways, in small numbers.
+  - An agent is found by a search of names, so a script that happens to be called `codex.py` is spared; a new agent with no such name is not. Wrongly sparing costs less than wrongly stopping, and what is spared is not counted towards our ceilings.
+  - It sees this user's processes alone, so "who holds the most" means of this user's.
+  - It reads macOS only: elsewhere a job runs unwatched, and says so.
+
+## Review
+
+| Round | Findings | Defects | Verdict |
+| --- | --- | --- | --- |
+| 1 | 25 | 15 (G1-1 to G1-15), beside 8 gaps and 2 of wording | `2026-11-05`, not acceptable — answered: a process is ours only by what it shows of itself, so another project's build is left alone; what is under a stopped process is spared as it is at the top; the watcher survives its own trouble, stays while a job runs, and says when it is blind; a read cannot carry anything in and is always let through; a figure not read is never safe |
