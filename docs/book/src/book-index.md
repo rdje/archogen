@@ -856,6 +856,8 @@ a change that leaves it stale, so it is never edited by hand.
 - The vocabulary — [Matching an offer to a requirement](matching.md#the-vocabulary)
 - The vocabulary is a typed table — [Matching an offer to a requirement](matching.md#the-vocabulary-is-a-typed-table)
 - The witness — [What the scheduling checker establishes](analysis.md#the-witness)
+- This machine is shared: the host guard — [Verifying the
+  toolchain](verification.md#this-machine-is-shared-the-host-guard)
 - Three kinds of success — [The use cases](usecases.md#three-kinds-of-success)
 - Three obligations, and a violation names which —
   [Refinement](refinement.md#three-obligations-and-a-violation-names-which)

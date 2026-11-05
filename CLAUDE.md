@@ -1,4 +1,4 @@
-# Agent bootstrap (read this first — whatever AI / harness you are: Claude Code, Codex, Gemini, Cursor, Aider, a custom runner, …)
+# Agent bootstrap (read first, whatever AI or harness you are)
 
 This repository is built on a **portable discipline spine**: durable memory, task-tree
 tracking, a strict commit workflow, mechanical doctrine enforcement, and a claim-verification
@@ -49,6 +49,8 @@ human is working. Follow it exactly.
   a job that outlives its session rewrites tracked files under the next one, with its log
   gone. The wrapper checks that the native census's required OS reads actually succeeded; exit 2 means unknown,
   never safe to clear. Kill stragglers AND their children — a parent's death does not propagate.
+- **The host is shared, 24 GB: never endanger it.** RAM above 88% is danger, above 90% it may crash. Heavy work runs singly through
+  `scripts/host_guard.py run` (`make` does); other harnesses `ensure` first (`docs/decisions/decision_host-guard.md`).
 - **A commit message ends with its own last line** — no agent/tool attribution trailers
   (`COMMIT.md`); the `commit-msg` hook refuses them.
 - **Every other git repository is read-only — in both directions.** *Outbound:* never create a
@@ -78,6 +80,4 @@ human is working. Follow it exactly.
 
 ## First time in a fresh clone
 
-Run `scripts/bootstrap.sh` once. It sets the project name, installs the git hooks, and
-seeds the first task-tree from `ROADMAP.md`. Then drop your real roadmap into `ROADMAP.md`
-and grow the project from there.
+Run `scripts/bootstrap.sh` once: project name, git hooks, first task-tree.

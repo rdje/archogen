@@ -568,6 +568,16 @@ $ cargo xtask mutate --only lcm-to-max      # one entry
 $ cargo xtask mutate --timeouts-fail --only lcm-to-max  # require a finishing test outcome
 ```
 
+### This machine is shared: the host guard
+
+Everything here runs on a machine shared with many other projects, so a build that uses too much memory is everyone's problem. A watcher reads the
+host every second and stops this repository's own processes before the director's lines, and nothing heavy starts when the machine is already full: it
+waits for room (`scripts/host_guard.py`, `docs/decisions/decision_host-guard.md`).
+
+`make` runs everything that compiles or tests through it, and an agent's shell commands are checked before they run. `python3 scripts/host_guard.py status`
+says what it reads, who holds the most memory, and what it has stopped. It stops only this repository's processes, so it cannot make the host safe from
+another project's; it can only take its own share out of the way and say who holds the rest. `HOST-GUARD` keeps all of this wired in.
+
 ### What CI does with an `incomplete` tier
 
 It passes the job, and says so on every run. The policy is recorded in

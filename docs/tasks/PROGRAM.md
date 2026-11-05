@@ -798,6 +798,21 @@ mdBook that is the director's window into the project.
   Verification: the census, the removal report.
   Commit: `ARCHOGEN-PROGRAM-1143 (leaf PROGRAM.126)`
 
+- ID: `PROGRAM.127`
+  Status: `done` — `2026-11-05`: by the director's instruction, "that's critical". The machine is shared and holds 24 GB, RAM use above 88% is the danger zone and above 90% it may crash, and nothing here watched it. A watcher now stops this repository's processes before those lines and never another project's; everything `make` builds and every agent's shell command goes through it. Its review is `PROGRAM.127.1`.
+
+  **Acceptance checklist (`DOCTRINE_ENFORCEMENT.md`):**
+  - [x] **REPRODUCE / ISSUE** — `2026-11-05`, the director: "You are eating all the RAM, the host is going to crash!!"; `sysctl -n vm.swapusage` → `total = 63488.00M  used = 62501.50M`, with a reader and `make focused` running at once; and `git grep -nIiE 'memory_pressure|swapusage|CARGO_BUILD_JOBS' cb7ee681 -- scripts Makefile TOOLBOX.md` → no match, exit 1: nothing read the host.
+  - [x] **ROOT CAUSE (WHY + WHERE)** — no mechanism existed: `git grep -n 'verify --tier focused' cb7ee681 -- Makefile` → `cb7ee681:Makefile:24:	cargo xtask verify --tier focused`, unbounded and unwatched, and a background job's notification says when it ended, never what it did to the host. Which process held the memory was never established: another project's `rustc --crate-name pgen` was running then and later measured 8.4 GiB, and my own kill took it down too, so that incident cannot be divided up.
+  - [x] **FIX** — `scripts/host_guard.py`, `scripts/selftest_host_guard.py`, `scripts/check_host_guard.sh` and its `HOST-GUARD` row; `Makefile`'s `GUARD`; `.claude/settings.json`'s hook; `scripts/handoff_census.sh`; `docs/decisions/decision_host-guard.md` and its index row; `CLAUDE.md`, compacted to hold it; `DOCTRINE_ENFORCEMENT.md`; `docs/book/src/verification.md`.
+  - [x] **ADDRESSED (verified)** — `python3 scripts/selftest_host_guard.py` → `host-guard self-test: 71 passed, 0 failed, 0 not run`, exit 0: a process over its limit stopped and one under it not; a process of the same size outside the root, one in a directory that merely begins with its name and an agent working in it all untouched, what the agent started stopped; what a stopped process started stopped too, in another session and directory; a process still growing stopped within a sample or two; a command line that is no text no blindness; macOS's pressure level at start, stop and critical; a loosened limit refused; every command refused at the stop line, the host still readable, nothing riding in on a read; a heavy command refused at the start line and while a build runs, and the word in a message not taken for one; on the real host, `2026-11-05`: the watcher stopped this repository's job at `RAM use is 88%, at the 88% danger line`, with `0.06 GiB` the largest of ours, and another project's compiler ran on untouched; a heavy job waited for room and a whole `make focused` then passed under it, ours peaking at `0.77` GiB; the reading agreed with the director's, `85.6%` here and `85%` there.
+  - [x] **NO REGRESSION** — `bash scripts/check_host_guard.sh` → `host-guard: OK`, exit 0, and `bash scripts/check_doctrines.sh` on the staged tree naming only the focused stamp; `make focused` → `tier focused: passed — 3 passed, 0 failed`, on the staged tree, now through the guard.
+  - [x] **LOCKSTEP** — the record, its index row, `CLAUDE.md`, the doctrine table, the book, the map, these leaves and the Commit Log.
+  Commit: `ARCHOGEN-PROGRAM-1157 (leaf PROGRAM.127)`
+
+- ID: `PROGRAM.127.1`
+  Status: `pending` — a fresh reader tries to break the guard, itself under the guard and using tiny limits in scratch roots: does it ever stop what is not ours, miss what is, or fail open? It closes on a round that finds no defect.
+
 ## Roadmap coverage map
 
 Every roadmap unit has exactly one owning tree. This table is the answer to "where does
@@ -951,6 +966,7 @@ leaf's outcome is its row in the Commit Log below, and a sealed leaf's full reco
 | `PROGRAM.124` | `ARCHOGEN-PROGRAM-1122 (leaf PROGRAM.124)` | **a log row's note no bar to its seal**: `LOGS`, its arm, the record; 219 log rows and 31 leaves sealed across `M4`, `M2`, `M3` and `PROGRAM`, `docs/tasks/` 785285 → 614992 bytes |
 | `PROGRAM.125` | `ARCHOGEN-PROGRAM-1135 (leaf PROGRAM.125)` | **every crate a row in the map**: eleven rows, and `BOOK-COVERAGE`'s second leg with four arms |
 | `PROGRAM.126` | `ARCHOGEN-PROGRAM-1143 (leaf PROGRAM.126)` | **twenty-second daily artifact cleanup**: the main debug incremental cache, 30872 files / 3821526631 bytes, removed after `handoff: OK` |
+| `PROGRAM.127` | `ARCHOGEN-PROGRAM-1157 (leaf PROGRAM.127)` | **the host guard**: the machine is shared and holds 24 GB, so a watcher stops this repository's processes before the director's RAM lines, never another project's; `make` and every agent's shell command go through it |
 
 ## Changelog
 
@@ -999,3 +1015,5 @@ leaf's outcome is its row in the Commit Log below, and a sealed leaf's full reco
 - `2026-10-18`: `PROGRAM.87` restores complete headed logs without changing prior record text; native history/rendering and original input restoration verified.
 
 - `2026-11-04`: `PROGRAM.125` filed by `M4.2.2` and done: every workspace member a row in the knowledge map, and a gate that asks for one.
+
+- `2026-11-05`: `PROGRAM.127` done: the host guard, by the director's instruction; its review `PROGRAM.127.1` filed.

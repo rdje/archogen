@@ -219,6 +219,7 @@ workspace member with none.
 - [`decision_executable-design-reviews.md`](docs/decisions/decision_executable-design-reviews.md)
 - [`decision_findings-for-director-review.md`](docs/decisions/decision_findings-for-director-review.md)
 - [`decision_history-ledgers.md`](docs/decisions/decision_history-ledgers.md)
+- [`decision_host-guard.md`](docs/decisions/decision_host-guard.md)
 - [`decision_hosted-build.md`](docs/decisions/decision_hosted-build.md)
 - [`decision_incomplete-blocking-policy.md`](docs/decisions/decision_incomplete-blocking-policy.md)
 - [`decision_main-protection.md`](docs/decisions/decision_main-protection.md)
