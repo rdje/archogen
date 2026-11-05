@@ -16,7 +16,7 @@
 - **Active tree:** `M4` → frontier `M4.1`, the accepted runtime plan, the model's amendments done (`M4.1.2`): `/1` for
   the hosted playground; `PROGRAM` → `PROGRAM.34`, the director's.
 - **Next action:** `M4.2.3.3.9`, round 9 of the hosted build's review, a fresh reader over round 8's answers and the routes' tables; then
-  `M4.3.5`, the devices, with `M4.5`; `M4.3.4` waits on `M2.21`. The runtime plan's design is accepted (`M4.1.1` done).
+  `M4.4.1`, the device correspondence, before `M4.1.7`, and `M4.3.5` after it; `M4.3.4` waits on `M2.21`. The runtime plan's design is accepted (`M4.1.1` done).
   `M4.4.1`, the device correspondence, before `M4.1.7`. `M3.2.7` and `M3.5.9`, full verification, wait for the
   features (doctrine 22).
   After the first batch, runner leaves `M3.5.3.2`, `M3.5.5.7.4`, `M3.5.1.4.5`, `M3.5.1.6.6`; `M3.4.7` waits on `M3.7`.

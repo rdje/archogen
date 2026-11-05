@@ -1519,7 +1519,7 @@ os.execvp("rustc", ["rustc"] + arguments)
             'xtask/Cargo.toml': '7ec83341e8ba3104c8483930250683a0750af941be130b31bf950192e46568ab',  # re-pinned by M3.5.1.3: the dependency on archogen-install alone; no reader's wiring changed
             'crates/archogen-catalog/Cargo.toml': '1e8266bd7987f766565e66ddca4d6fbc277bfc853771dfec61fa8050fea0629d',
             'Cargo.toml': '523ef1fdc14883302cf62d951526ae83d78cb38153caf4f9c4f9927f2c986510',
-            'Cargo.lock': '078cde417a8b9642829cc48da92d922ecf79434a174209941dd87a201ae6cc10',  # re-pinned by M4.2.4: the archogen-s0 package deleted; no reader's wiring moves
+            'Cargo.lock': 'b2d0e23e163ced9da08e0bc036047fe8fddf5c4f0d27b75cc456892aa69a0944',  # re-pinned by M4.5.1: the sim-devices package added; no reader's wiring
             'rust-toolchain.toml': '4706b7b407427c38a3b63860b2e131cacc9eb57569a6755a39e81756cca676cd',
             '.cargo/config.toml': '48296b18a2b27cc7268cf489fc37bdcf24e04d79b914c2237c248e4db1f6fa79',
         }

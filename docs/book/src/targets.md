@@ -68,6 +68,13 @@ fixes, so a hosted run and a target's can be compared: `1/50 s fault overrun lat
 that release becoming the task's next job, with no separate `release` line. A task that leaves the schedule says `fault` once, and its
 later releases say nothing. A halt says its kind, its case and whom it was attributed to, and nothing follows it.
 
+**A timer and an interrupt controller, as contracts you can run** (`crates/sim-devices`, `M4.5`). The roadmap asks a timer's contract to say
+what happens when its counter wraps, when a deadline is too far ahead to tell apart, and when a deadline has already passed by the time it is
+programmed. These models make each of those something you can execute: a deadline past the counter's horizon is refused rather than quietly
+becoming a nearer one, a deadline already passed is raised at once and says how late, and an interrupt that arrives while masked waits and is
+delivered at the unmask. Their tests walk every case at small counter sizes. They do not run in a generated system yet: the playground's own
+release timer is an exact clock with no counter to wrap, so they wait for a plan that names a target's devices.
+
 ## The precise rules
 
 ### The emulator is pinned

@@ -178,6 +178,10 @@ name = "rt-reference"
 version = "0.1.0"
 
 [[package]]
+name = "sim-devices"
+version = "0.1.0"
+
+[[package]]
 name = "sim-playground"
 version = "0.1.0"
 dependencies = [

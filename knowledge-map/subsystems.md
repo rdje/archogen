@@ -71,6 +71,8 @@ workspace member with none.
 - `crates/sim-playground/` — the hosted playground's deterministic event harness (§6.3) over
   `rt-core`, with no I/O: a system as data, a job's body as steps, an observer for each event, one
   order for one instant, the trace `archogen-playground-trace/3`. Copied into each generated system.
+- `crates/sim-devices/` — the hosted simulator's device models (§6.2): a timer and an interrupt controller as exact state machines
+  over a contract read as data, with no I/O and no clock, F13, F14 and F15 enumerated at small moduli. Not yet wired into a run.
 - `crates/archogen-emit/` — the emitter (§4.2, §10.1 step 6): a checked plan into the files of a
   package, with no I/O. ⛔ A plan is accepted only by lowering it again and comparing bytes. What it
   specializes is data; behavior is `rt-core` and `sim-playground` copied under `copies/`, each held
