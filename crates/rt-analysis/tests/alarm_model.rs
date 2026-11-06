@@ -240,14 +240,25 @@ fn random_set(
     for a in 0..n_alarms {
         let c_s = r.pick(&[2, 3, 5, 8, 12]).max(1 + 2 * lag_max);
         let t_s = r.pick(&[8, 12, 17, 25, 40, 60, 100]);
-        // The record's `write`, on either kind of device: the floor fits one write, so what one write reaches is at least that.
-        let write = t_s + lag_max + 2 * (p.res - 1);
+        // The record's `write`, whose two cells write one sum: the floor fits one write, so what one write reaches is at least that.
+        let write = charge(
+            "write",
+            Device::Compare,
+            Inputs {
+                t_s: i64::try_from(t_s).expect("small"),
+                lag: i64::try_from(lag_max).expect("small"),
+                rho: i64::try_from(p.res - 1).expect("small"),
+                j_s: 0,
+                c_s: 0,
+                p: 0,
+                reach: 0,
+                w: 0,
+            },
+        );
         alarms.push(AlarmSpec {
             c_s,
             t_s,
-            reach: r
-                .pick(&[7, 15, 30, 10_000])
-                .max(i64::try_from(write).expect("small")),
+            reach: r.pick(&[7, 15, 30, 10_000]).max(write),
             rank: i64::try_from(a).expect("small") + 1,
             floored: true,
             read_at: 1,
@@ -471,7 +482,7 @@ fn the_record_s_sums_read_as_they_are_written() {
     assert_eq!(charge("update", Device::Delay, i), 64 + 1 + 6 + 5 + 2);
     assert_eq!(charge("room", Device::Compare, i), 100 + 3 + 24 + 9);
     assert_eq!(charge("room", Device::Delay, i), 100 + 3 + 28 + 9);
-    assert_eq!(charge("write", Device::Compare, i), 10 + 6);
+    assert_eq!(charge("write", Device::Compare, i), 10 + 1 + 6);
     assert_eq!(charge("write", Device::Delay, i), 10 + 1 + 6);
 }
 
@@ -791,7 +802,7 @@ fn with_no_floor_a_chain_passes_the_analysis_and_misses() {
     assert_eq!(run.worst[1], 2_374, "inside its bound");
 }
 
-/// A floor read off the value last written is the first thing one would write, and no code knows more than that without the protocol. At a lag it does not hold, and the bound falls with it.
+/// A floor read off the value last written is the first thing one would write, and no code knows more than that without the protocol. At a lag it does not hold, and the bound falls with it. The second set stands within the protocol's own conditions, a masked run holding both lags and a reach at `write`, and there the protocol holds what this breaks.
 #[test]
 fn a_floor_off_the_value_written_breaks_at_a_lag_and_the_protocol_holds() {
     let tasks = vec![
@@ -826,6 +837,32 @@ fn a_floor_off_the_value_written_breaks_at_a_lag_and_the_protocol_holds() {
     );
     assert_eq!(run.least_separation(0), 4);
     assert_eq!(run.worst, [104, 83]);
+
+    let tasks = vec![
+        task("t0", 2, 150, 26, vec![(0, -17)], 2, None),
+        task(
+            "t1",
+            1,
+            200,
+            10,
+            vec![(0, 412), (0, 202), (0, 148), (0, -6)],
+            1,
+            None,
+        ),
+    ];
+    let alarms = [alarm(9, 40, 44, true)];
+    let p = plain(3, 4, 1, 9, 0, false);
+    let (bound, _) = bounds(&tasks, &alarms, p).expect("the analysis holds it at the floor");
+    let run = once(
+        &tasks,
+        &alarms,
+        p,
+        Know::ValueWritten,
+        Device::Compare,
+        late(),
+        12_000,
+    );
+    assert_eq!(run.least_separation(0), 36);
     let run = once(
         &tasks,
         &alarms,
@@ -835,8 +872,89 @@ fn a_floor_off_the_value_written_breaks_at_a_lag_and_the_protocol_holds() {
         late(),
         12_000,
     );
-    assert_eq!(run.least_separation(0), 17);
-    assert_eq!(run.worst, [47, 49]);
+    assert_eq!(run.least_separation(0), 40);
+    assert_eq!(run.programmed_past_reach, 0);
+    assert!(run.worst[0] <= bound[0] && run.worst[1] <= bound[1]);
+}
+
+/// A chain's segment is an arrival and delivers nothing, so it re-arms and releases nothing: a job hears of the deadline it asked for, and not of the way there.
+#[test]
+fn a_chain_s_segment_re_arms_and_releases_nothing() {
+    let tasks = vec![
+        task("programs", 1, 400, 2, vec![(0, 200)], 1, None),
+        task("released", 2, 20, 1, Vec::new(), 0, Some(0)),
+    ];
+    let alarms = [AlarmSpec {
+        c_s: 3,
+        t_s: 20,
+        reach: 30,
+        rank: 1,
+        floored: true,
+        read_at: 1,
+        wake: None,
+        calls: None,
+    }];
+    let p = plain(1, 1, 1, 1, 0, true);
+    assert!(bounds(&tasks, &alarms, p).is_some());
+    let run = once(
+        &tasks,
+        &alarms,
+        p,
+        Know::WhatItReadAndWrote,
+        Device::Compare,
+        LagModel {
+            max: 0,
+            pattern: vec![0],
+            past: 0,
+        },
+        380,
+    );
+    assert_eq!(run.arrivals[0], [35, 66, 97, 128, 159, 190, 210]);
+    assert_eq!(run.released[0].len(), 1, "{:?}", run.released[0]);
+    assert!(run.released[0][0] >= 200, "{:?}", run.released[0]);
+}
+
+/// Where the time base is the counter itself, an arrival a whole wrap gone reads as recent, and its floor stands within its own window of a read, on a compare as on a delay. So `write` holds that window, and the narrower sum of round 7 does not.
+#[test]
+fn an_arrival_a_wrap_gone_stands_a_write_no_farther_than_its_cell() {
+    for (modulus, t_s, lag, res) in [
+        (256_i64, 10_i64, 5_i64, 1_i64),
+        (256, 10, 5, 4),
+        (1024, 64, 8, 16),
+        (4096, 100, 40, 32),
+    ] {
+        let rho = res - 1;
+        let i = Inputs {
+            t_s,
+            lag,
+            rho,
+            j_s: 0,
+            c_s: 0,
+            p: 0,
+            reach: 0,
+            w: 0,
+        };
+        let window = t_s + lag + rho;
+        let mut most = 0;
+        for last in 0..modulus {
+            for read in (0..modulus).step_by(usize::try_from(res).expect("small")) {
+                let ahead = (last + t_s - read).rem_euclid(modulus);
+                if ahead <= window {
+                    let value = (read + ahead + res - 1).div_euclid(res) * res;
+                    most = most.max(value - read);
+                }
+            }
+        }
+        let said = format!("modulus {modulus}, T_s {t_s}, lag {lag}, resolution {res}");
+        for device in [Device::Compare, Device::Delay] {
+            assert!(most <= charge("write", device, i), "{most}: {said}");
+        }
+        assert!(
+            most + rho >= charge("write", Device::Compare, i),
+            "wide: {most}: {said}"
+        );
+        assert!(most > t_s + 2 * rho, "no lag in it: {most}: {said}");
+    }
 }
 
 /// One deadline per job, 100 apart on average and 50 at the closest: a rate of one per job is no separation.

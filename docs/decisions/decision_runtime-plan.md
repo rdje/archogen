@@ -411,7 +411,7 @@ timer route and a source, and a block may be named `timer`:
    obligation: no member's initialisation calls another member's code. Since `M4.1.14` and `M4.1.15` a component can
    hold hardware and instances too, a block bound to the timer whose alarm it programs: the answer holds for them,
    re-derived. A member's initialisation sets its own state; programming an alarm is a call of the timer's code, work
-   for run time (`/2` amends this for a wake's first arm, `decision_release-alarm.md` §2), and initialisation, run masked, waits on no interrupt (§2.6); so the obligation binds hardware as it
+   for run time (`/2` amends this for a wake's first arm and for a compare that cannot be disarmed, `decision_release-alarm.md` §2), and initialisation, run masked, waits on no interrupt (§2.6); so the obligation binds hardware as it
    binds services. For generated code it is the emitter's (`RTP-H2`), which generates no such call; for a record it is
    stated by its initialisation entry (`RTP-H6`); `M4.10` checks the image (`RTP-H6`). Where a record states such a
    call, the lowering refuses (§1).

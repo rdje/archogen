@@ -84,6 +84,8 @@ pub struct Measured {
     /// A deadline still pending at the horizon, and how long.
     pub oldest_pending: Vec<i64>,
     pub programmed_past_reach: u32,
+    /// Per alarm, when its service released a task: only where the arrival delivered a deadline or a wake's point.
+    pub released: Vec<Vec<i64>>,
 }
 
 impl Measured {
@@ -126,6 +128,8 @@ struct Alarm {
     shadow: Option<i64>,
     last_read: Option<i64>,
     being_delivered: Vec<(i64, i64)>,
+    /// This service's read found a deadline or a wake's point due. A chain's segment finds neither, and only re-arms.
+    delivers: bool,
     writes: usize,
 }
 
@@ -437,6 +441,7 @@ impl Run<'_> {
                 shadow: None,
                 last_read: None,
                 being_delivered: Vec::new(),
+                delivers: false,
                 writes: 0,
             })
             .collect();
@@ -450,6 +455,7 @@ impl Run<'_> {
         order.sort_by_key(|a| self.alarms[*a].rank);
         let mut measured = Measured {
             arrivals: vec![Vec::new(); n_alarms],
+            released: vec![Vec::new(); n_alarms],
             latest_delivery: vec![0; n_alarms],
             worst_delivery_case: vec![(0, 0, 0); n_alarms],
             longest_read_to_read: vec![0; n_alarms],
@@ -562,9 +568,11 @@ impl Run<'_> {
                         let (delivered, kept): (Vec<_>, Vec<_>) =
                             al.pending.iter().copied().partition(|(d, _)| *d <= seen);
                         al.pending = kept;
+                        al.delivers |= !delivered.is_empty();
                         al.being_delivered.extend(delivered);
                         if let (Some(every), Some(next)) = (al.spec.wake, al.wake_next) {
                             if next <= seen {
+                                al.delivers = true;
                                 al.wake_next = Some((now / every + 1) * every);
                             }
                         }
@@ -585,8 +593,12 @@ impl Run<'_> {
                                 measured.worst_delivery_case[a] = (deadline, written, now);
                             }
                         }
+                        let delivers = std::mem::take(&mut al.delivers);
+                        if delivers {
+                            measured.released[a].push(now);
+                        }
                         for task in &mut tasks {
-                            if task.spec.released_by == Some(a) {
+                            if delivers && task.spec.released_by == Some(a) {
                                 let first = task.segs[0].len;
                                 task.jobs.push_back(Job {
                                     nominal: arrival,
