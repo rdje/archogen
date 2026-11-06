@@ -768,6 +768,16 @@ def hold_lock(root: Path) -> int | None:
     return fd
 
 
+def file_is_whole() -> bool:
+    """Whether this file as it stands compiles and ends as it ends: what a save can be seen to have broken with nothing run. An edit half done may pass, and its failing is what the record states."""
+    try:
+        source = CODE.read_bytes()
+        compile(source, str(CODE), "exec")
+    except (OSError, SyntaxError, ValueError):
+        return False
+    return source.endswith(b"\n    sys.exit(main(sys.argv[1:]))\n")
+
+
 def write_note(root: Path, name: str, text: str) -> None:
     try:
         (state_dir(root) / name).write_text(text)
@@ -783,7 +793,24 @@ def code_stamp() -> tuple[int, int] | None:
     return stats.st_mtime_ns, stats.st_size
 
 
-def watch(root: Path, limits: Limits, once: bool, idle_seconds: float = 600.0) -> int:
+STARTED_FROM = "ARCHOGEN_HOST_GUARD_STARTED_FROM"
+
+
+def started_from() -> tuple[int, int] | None:
+    """The file as it stood before this image read it, where what started it says: a save while it comes up is one it has not taken up, and is then seen. Taking it for another costs one more taking up."""
+    told = os.environ.pop(STARTED_FROM, "")
+    try:
+        when, size = told.split(":")
+        return int(when), int(size)
+    except ValueError:
+        return code_stamp()
+
+
+def stamp_for_the_next(stamp: tuple[int, int] | None) -> str:
+    return f"{stamp[0]}:{stamp[1]}" if stamp else ""
+
+
+def watch(root: Path, limits: Limits, once: bool, idle_seconds: float = 600.0, again: list[str] | None = None) -> int:
     lock = hold_lock(root)
     if lock is None:
         return 0  # One is watching.
@@ -795,7 +822,7 @@ def watch(root: Path, limits: Limits, once: bool, idle_seconds: float = 600.0) -
     held_inode = os.stat(root).st_ino
     os.chdir("/")
     memory = Memory()
-    unread_said, last_seen, busy, read_at, running = 0.0, time.monotonic(), False, time.monotonic(), code_stamp()
+    unread_said, last_seen, busy, read_at, running = 0.0, time.monotonic(), False, time.monotonic(), started_from()
     while True:
         wait = 2.0
         try:
@@ -812,9 +839,16 @@ def watch(root: Path, limits: Limits, once: bool, idle_seconds: float = 600.0) -
             if time.monotonic() - unread_said > 60:
                 unread_said = time.monotonic()
                 record(root, kind="unread", error=str(error))
-        # A guard changed under a watcher holds from the next command or `run`, each of which starts one from the file as it stands: this one leaves, whatever it is doing, a line that raises among it.
-        if code_stamp() not in (None, running):
-            return 0
+        # A guard changed under a watcher holds from then, whatever this round did, a line that raises among it. The lock closes with the old image and the new one takes it, so nothing goes unwatched between.
+        # One that can be seen to be broken is not taken up, and said once.
+        stamp = code_stamp()
+        if stamp not in (None, running):
+            running = stamp
+            if again is not None:
+                if file_is_whole():
+                    os.environ[STARTED_FROM] = stamp_for_the_next(stamp)
+                    os.execv(sys.executable, [sys.executable, "-I", "-B", str(CODE), *again])
+                record(root, kind="unread", error=f"{CODE.name} as saved does not compile or is cut short: this watcher goes on as it was")
         # A root that is gone, a removed worktree, is watched by nobody: nothing of it can run, and its state must not bring it back. One remade at that name is another, which holds its own lock.
         try:
             if os.stat(root).st_ino != held_inode:
@@ -861,9 +895,12 @@ def ensure(root: Path) -> None:
     if watcher_pid(root):
         return
     state_dir(root)
+    # It outlives what started it, so a narrow `PATH` of that one's must not leave it blind to everyone. What is first on the path stays first.
+    env = dict(os.environ, PATH=os.pathsep.join([os.environ.get("PATH", ""), "/usr/bin", "/bin", "/usr/sbin", "/sbin"]))
+    env[STARTED_FROM] = stamp_for_the_next(code_stamp())
     subprocess.Popen(
         [sys.executable, "-I", "-B", str(Path(__file__).resolve()), "watch", "--root", str(root)],
-        stdin=subprocess.DEVNULL, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, start_new_session=True, cwd="/",
+        stdin=subprocess.DEVNULL, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, start_new_session=True, cwd="/", env=env,
     )
 
 
@@ -1533,16 +1570,17 @@ def is_heavy(words: list[str]) -> bool:
 def kill_targets(arguments: list[str]) -> list[str]:
     """What `kill` given these signals, as it reads them: a signal is `-s NAME`, `-n NUMBER`, or `-NAME` or `-NUMBER` before any target, and `--` ends them. So `-$(…)` and `-$GROUP`, a process group, are targets."""
     targets: list[str] = []
-    at = 0
+    at, signalled = 0, False
     while at < len(arguments):
         word = arguments[at]
         if word == "--":
             return targets + arguments[at + 1 :]
         if word in ("-s", "-n", "--signal"):
-            at += 2
+            at, signalled = at + 2, True
             continue
-        if targets or not re.fullmatch(r"-[A-Za-z0-9+]+", word):
+        if targets or signalled or not re.fullmatch(r"-[A-Za-z0-9+]+", word):
             targets.append(word)
+        signalled = True
         at += 1
     return targets
 
@@ -1588,8 +1626,8 @@ def kills_by_name(commands: list[Command], root: Path) -> bool:
     def searches_by_name(command: Command) -> bool:
         if command.name == "pgrep":
             return goes_by_pid(command) is None
-        # `-p` or a group's `-g` in any cluster of `ps`'s plain flags, as `ps -fp 123` writes it. Past a flag taking a value it is that value: `-opid`, `-upeter`.
-        return command.name == "ps" and not any(re.fullmatch(r"-[AaCcdEefhjLlMmrSTvwXx]*[pg]\w*|--pid.*", word) for word in command.words[1:])
+        # `-p` or a group's `-g` in any cluster of `ps`'s plain flags, as `ps -fp 123` writes it, or a pid written plainly, `ps up 123`. Past a flag taking a value it is that value: `-opid`, `-upeter`.
+        return command.name == "ps" and not any(re.fullmatch(r"-[AaCcdEefhjLlMmrSTvwXx]*[pg]\w*|--pid.*|\d+", word) for word in command.words[1:])
 
     for at, command in enumerate(commands):
         if command.name in ("pkill", "killall"):
@@ -1608,6 +1646,9 @@ def kills_by_name(commands: list[Command], root: Path) -> bool:
             if command.words[1:2] in (["-0"], ["-s"]) and (command.words[1] == "-0" or command.words[2:3] == ["0"]):
                 continue
             targets = kill_targets(command.words[1:])
+            # -1 is every process this user may signal, on all of the host.
+            if "-1" in targets:
+                return True
             if command.fed or not all(A_PLAIN_TARGET.fullmatch(word) for word in targets):
                 # What a substitution alone feeds it is what that substitution ran. A variable may hold what anything before it found.
                 alone = not command.fed and all(A_SUBSTITUTION_ALONE.fullmatch(word) or A_PLAIN_TARGET.fullmatch(word) for word in targets)
@@ -1687,6 +1728,7 @@ def run(root: Path, limits: Limits, command: list[str], wait_seconds: float = 0.
         time.sleep(min(5.0, max(0.1, wait_seconds - (time.monotonic() - begun))))
         try:
             (state_dir(root) / "heartbeat").touch()
+            ensure(root)
         except OSError:
             pass
         reasons = why_not()
@@ -1706,6 +1748,10 @@ def run(root: Path, limits: Limits, command: list[str], wait_seconds: float = 0.
     except OSError as error:
         say(f"host-guard: `{command[0]}` cannot be run: {error}")
         return 127 if isinstance(error, FileNotFoundError) else 126
+    try:
+        ensure(root)
+    except OSError:
+        pass
 
     def to_job(number: int, *_: object) -> None:
         try:
@@ -1941,8 +1987,12 @@ def main(argv: list[str]) -> int:
             say("host-guard: interrupted")
             return 130
     if verb == "watch":
+        # It goes to `/`, so what it takes itself up with names its root as resolved.
+        rest = list(argv[1:])
+        if "--root" in rest:
+            del rest[rest.index("--root") : rest.index("--root") + 2]
         try:
-            return watch(root, limits, once)
+            return watch(root, limits, once, again=["watch", "--root", str(root), *rest])
         except Exception as error:
             record(root, kind="unread", error=f"the watcher ended: {error!r}")
             raise

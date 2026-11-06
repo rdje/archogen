@@ -288,3 +288,23 @@ Said, and left as it stands: its reader could not run a real `make focused`, a c
 | G12-12 | wording | "one broken any other way exits with its error" was too wide: `sys.exit(0)` at its top passes | Said in the record |
 
 Said, and left as it stands: its reader could not run a real `make focused`, a commit's compile, `xtask`, a real full volume, chosen pressure levels, the true idle and blind times, the census against the real watcher, real Codex, Kimi or VS Code, `onFailure` with a real crash, or the interpreter-gone path. It stated that its self-test went through the real root's `run`, that one rootless `status` was read, and that a loop bug in a rig was ended by its own pids.
+
+**Round 13** — `2026-11-06`: not acceptable, 11 findings, 5 defects, after 15, 12, 5, 6, 13, 2, 1, 1, 1, 3, 2 and 3. What it re-derived held: RAM by hand 49.90% against 49.92%, a 64 MiB buffer 71.0 against `footprint`'s 71, 50 MiB read 50.0, a slow writer seen at 7.3 s, `run`'s statuses, the pace, and the self-test whole, `645 passed, 0 failed, 0 not run`. `only_waiting` held, none of 25 `make`s stopped at a 1% danger line, and `A_PLAIN_TARGET`, `-g` and `ps`'s flags over 120 forms but for G13-9 and G13-10; 81 ordinary commands went as before; `wait_for_room` and the excuse held with the host's states stubbed. Round 12's own answer opened the main defect, a moment with nothing watching. What is kept of that answer is that no proof stands in the way; what goes is the leaving.
+
+| # | Kind | Finding | Answer |
+| --- | --- | --- | --- |
+| G13-1 | defect | "this repository's commit checks and the watcher are what stand then", of a guard emptied or cut short, was false: the watcher left at the save and nothing could start another, `pkill -x rustc` and `cargo build` then passing | A watcher does not take up a file that can be seen to be cut short or not to compile: it goes on as it was and says so, and the sentence holds |
+| G13-2 | defect | "holds from the next command" failed where that command's hook came before the old watcher's next look: `ensure` saw it alive, it left, and a bare job ran unwatched for its whole life, 6 of 6 | It takes itself up from the file, so the lock passes with nothing unwatched between. `case_a_guard_changed_holds_from_then` |
+| G13-3 | defect | "saved broken, what comes next fails or refuses" was false of a break only the watcher's path meets, a half-done rename: hook, `run` and `check` passed | Said as it is: it ends the watcher, a heavy command is refused after a minute, a job ended a minute later, and a light command runs |
+| G13-4 | defect | "ended once no watcher has read the host for a minute" is two: 60 s to stale, then 60 s more | Said as it is, some two minutes |
+| G13-5 | defect | "`check` and `status` say what `run` and the hook would" was false beside a blind watcher | They say what `run` would, and `status` says blind |
+| G13-6 | gap | a `run` waiting its turn started no watcher, and its job's first came 5 s in | It starts one as it waits, and at once with its job |
+| G13-7 | gap | the runner's `head -12` counted "waiting for room" lines, and one dying by a traceback printed no reason | Those lines are left out, and what says nothing gets its last lines |
+| G13-8 | gap | a watcher kept its starter's `PATH`, so one narrow `run` left it blind to everyone | `ensure` adds the system's to it, what is first staying first |
+| G13-9 | gap | `kill -9 -1` and `kill -- -1`, every process of this user's, passed | Refused |
+| G13-10 | gap | false refusal of `ps 123` and `ps up 123` before a `kill "$x"` | A pid written plainly is no search |
+| G13-11 | wording | self-test leftovers | Gone |
+
+Found in answering, and answered: an image coming up took its stamp after reading its file, so a save in that moment went unseen until the next, and the self-test caught it; what starts a watcher now tells it the stamp from before. `kill -9 -1` read both as signals and passed: one signal comes before a target, and what follows is one.
+
+Said, and left as it stands: its reader could not run what the brief lists, saw hook rc 1 but not what `onFailure` does with it, and ran `run_self_tests.sh`'s seams and not its `--self-test`, which writes outside its work directory. Rootless `status` was read four times.

@@ -128,7 +128,9 @@ while IFS= read -r gate; do
   else
     failed=$((failed + 1))
     printf '  ✗ %-52s %3ss  its RED arms did not all pass:\n' "$gate" "$((SECONDS - started))" >&2
-    printf '%s\n' "$out" | grep -E '^SELF-TEST|self-test|FAILED' | head -12 | sed 's/^/      /' >&2
+    # What it says it waits for says nothing of why it failed, and one that died by a traceback says only that.
+    printf '%s\n' "$out" | grep -E '^SELF-TEST|self-test|FAILED' | grep -v 'waiting for room' | head -12 | sed 's/^/      /' >&2
+    grep -qE '^SELF-TEST|self-test|FAILED' <<< "$out" || printf '%s\n' "$out" | tail -3 | sed 's/^/      /' >&2
   fi
 done <<< "$gates"
 if [ "$failed" -ne 0 ]; then

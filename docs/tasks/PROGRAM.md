@@ -955,7 +955,19 @@ mdBook that is the director's window into the project.
   Commit: `ARCHOGEN-PROGRAM-1185 (leaf PROGRAM.127.12)`
 
 - ID: `PROGRAM.127.13`
-  Status: `pending` — round 13, a fresh reader over round 12's answer, looking hardest at the moment between a watcher leaving and the next starting, at what is left now the proof has gone, and at the self-test's room. It closes on a round that finds no defect, and a form written to go round the guard is a stated limit, not a defect.
+  Status: `done` — `2026-11-06`: round 13, a fresh reader over round 12's answer: 11 findings, 5 defects. Round 12's leaving opened a moment with nothing watching. It is closed: a watcher takes itself up from the file as it stands, unless a save can be seen to have broken it, with no proof. The sentences on a broken guard, two minutes and blindness now say what happens. The findings and each answer are in `docs/reviews/decision_host-guard-reviews.md`.
+
+  **Acceptance checklist (`DOCTRINE_ENFORCEMENT.md`):**
+  - [x] **REPRODUCE / ISSUE** — the reader's rigs on `ee72c8e0`, `target/p12713/work/`: `e8_clean.py` → `save, then the next command at once: hook rc 0`, then `T+30: job alive True | watcher: not running`; `e1_saves.py` → guard emptied: `watcher left after 0.93 s`, `hook on 'pkill -x rustc': rc 0`; `e2_broken.py` → `run` ended at T+122; `e4_blind.py` → `status`: `BLIND`, `check`: `clear`, hook on `cargo build` rc 2.
+  - [x] **ROOT CAUSE (WHY + WHERE)** — `git grep -n 'if code_stamp() not in (None, running)' ee72c8e0 -- scripts/host_guard.py` → a watcher that leaves, with nothing to bring the next but a command that may already have looked.
+  - [x] **FIX** — `scripts/host_guard.py`: `file_is_whole`, a watcher taking itself up, `ensure`'s `PATH`, `run` starting one as it waits and with its job, `kill -1`, a plain pid to `ps`. `scripts/run_self_tests.sh`. `scripts/selftest_host_guard.py`: `case_a_guard_changed_holds_from_then`, the forms. The record, the review history and its index.
+  - [x] **ADDRESSED (verified)** — `python3 -I -B scripts/selftest_host_guard.py` → `host-guard self-test: 657 passed, 0 failed, 0 not run`, exit 0, no `scripts/__pycache__`.
+  - [x] **NO REGRESSION** — `bash scripts/check_host_guard.sh` → `host-guard: OK`, exit 0; `bash scripts/run_self_tests.sh --self-test`, exit 0; `make focused` → `tier focused: passed — 3 passed, 0 failed`, on the staged tree, through the guard.
+  - [x] **LOCKSTEP** — the record, the review history and its index, these leaves and the Commit Log; `MEMORY.md`'s next action.
+  Commit: `ARCHOGEN-PROGRAM-1189 (leaf PROGRAM.127.13)`
+
+- ID: `PROGRAM.127.14`
+  Status: `pending` — round 14, a fresh reader over round 13's answer, looking hardest at a watcher taking itself up and at each answer's own new code. It closes on a round that finds no defect, and a form written to go round the guard is a stated limit, not a defect.
 
 - ID: `PROGRAM.128`
   Status: `done` — `2026-11-05`: by the director's word, "If you ever need new CPU, DSP, MCU, BOARD, ISA or in general digital chip PDF just look here", naming `chipdoc`'s `AGENTS.md`. The record, its index row, the book's ledger and a `TOOLBOX.md` row now start any chip document's need there. Reading it corrected three things of ours: the record and the ledger still said `REQ-007` was `requested`, fulfilled `2026-09-30`; the ledger said the corpus was off this volume; and the record said what is adopted is copied here, where most of the corpus may not be republished and this repository is public, so a fact and its citation are copied and never a document. A documents-only leaf.
@@ -1141,6 +1153,7 @@ leaf's outcome is its row in the Commit Log below, and a sealed leaf's full reco
 | `PROGRAM.127.6` | `ARCHOGEN-PROGRAM-1164 (leaf PROGRAM.127.6)` | **paused at the director's word**, at a clean tree, before round 6 began: the resume pointer and the leaf say to wait |
 | `PROGRAM.127.6` | `ARCHOGEN-PROGRAM-1165 (leaf PROGRAM.127.6)` | **the host guard's review, round 6 answered**: a volume has fallen only by more than a shared volume costs anyway; what a job takes with it said; the shell reader given a case's branches, arithmetic, arrays and `[[ ]]`, held to each `bash` here; each agent told for itself |
 | `PROGRAM.127.7` | `ARCHOGEN-PROGRAM-1168 (leaf PROGRAM.127.7)` | **the host guard's review, round 7 answered**: `make` that only asks is no build; the reader's rare misses read, each held to both `bash`es; a `kill` by a pid passes by any spelling; the root named exactly; what is told says what it leaves out |
+| `PROGRAM.127.13` | `ARCHOGEN-PROGRAM-1189 (leaf PROGRAM.127.13)` | **the host guard's review, round 13 answered**: a watcher takes itself up from the file as it stands, unless a save can be seen to have broken it, with no proof and no moment unwatched |
 | `PROGRAM.127.12` | `ARCHOGEN-PROGRAM-1185 (leaf PROGRAM.127.12)` | **the host guard's review, round 12 answered by removing what kept failing**: a watcher no longer takes up its own change, and leaves; the next command or `run` starts one from the file |
 | `PROGRAM.127.11` | `ARCHOGEN-PROGRAM-1182 (leaf PROGRAM.127.11)` | **the host guard's review, round 11 answered**: `make` runs no proof, and looks at the guard's last line; a proof goes in as a watcher does; no line of a round ends a watcher; what a `pkill` goes by read as `kill`'s target |
 | `PROGRAM.127.10` | `ARCHOGEN-PROGRAM-1178 (leaf PROGRAM.127.10)` | **the host guard's review, round 10 answered**: the compiled file walked and the watcher's own loop run, in a proof that stands beside a watcher still reading; a root named as resolved; `make` asks before any recipe; a self-test waits for room |
@@ -1226,3 +1239,4 @@ leaf's outcome is its row in the Commit Log below, and a sealed leaf's full reco
 - `2026-11-06`: `PROGRAM.127.10` done: the guard's round 10, twelve findings answered, three defects; `PROGRAM.127.11` filed for round 11.
 - `2026-11-06`: `PROGRAM.127.11` done: the guard's round 11, eight findings answered, two defects; `PROGRAM.127.12` filed for round 12.
 - `2026-11-06`: `PROGRAM.127.12` done: the guard's round 12, twelve findings answered, three defects, by removing what kept failing; `PROGRAM.127.13` filed for round 13.
+- `2026-11-06`: `PROGRAM.127.13` done: the guard's round 13, eleven findings answered, five defects; `PROGRAM.127.14` filed for round 14.
