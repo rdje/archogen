@@ -380,7 +380,11 @@ pub(crate) fn concluded(request: &Request<'_>, ready: Ready<'_>, found: Search) 
         Search::Refused {
             verdict,
             diagnostics,
-        } => unresolved(ready.response.sources, verdict_status(verdict), diagnostics),
+        } => unresolved(
+            ready.response.sources,
+            verdict_status(verdict),
+            eadl_front::Diagnostics::held(diagnostics),
+        ),
         Search::Inconclusive { diagnostic, .. } => unresolved(
             ready.response.sources,
             Status::AnalysisInconclusive,

@@ -29,7 +29,7 @@
 
 use std::collections::{BTreeMap, BTreeSet};
 
-use eadl_front::{read, Diagnostic, Form, Label, SourceMap, Span};
+use eadl_front::{read, Diagnostic, Form, Label, SourceMap, Span, MOST_ERRORS};
 
 /// What a description says about one fact.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -446,13 +446,17 @@ impl FactMap {
         // leaf `M3.4.8`,
         // `docs/decisions/decision_absence-per-provider.md`). Every declaration is compared, so a
         // contradiction written after another provider's statement is never hidden by it.
-        for (fact, absences) in &self.absent {
+        // Each one is `invalid-description`, so what is held back moves no verdict, and a fact offered and declared absent n times each is n² of them.
+        'contradictions: for (fact, absences) in &self.absent {
             let Some(offers) = self.offered.get(fact) else {
                 continue;
             };
             for absent in absences {
                 let parts = self.composed_by(&absent.declared_by);
                 for offered in offers {
+                    if diagnostics.len() > MOST_ERRORS {
+                        break 'contradictions;
+                    }
                     let (message, offered_label) = if offered.declared_by == absent.declared_by {
                         (
                             format!(

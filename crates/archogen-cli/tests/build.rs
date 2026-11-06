@@ -224,6 +224,107 @@ fn two_periods(first: &str, second: &str) -> String {
     )
 }
 
+/// A cap moves no verdict: a duplicate past any count is refused, and a later error of a higher precedence decides, however many stand before it (round 20's shapes).
+#[test]
+fn what_a_thousand_errors_hold_back_moves_no_verdict() {
+    let root = scratch("cap-no-verdict");
+    let pre = "(eadl-version eadl/1)
+(defservice s (requires (needs o)))
+(defblock b (offers (o true) (reachable-at-privilege machine)))
+(defplatform p (offers (core-count 1 tick) (reachable-at-privilege machine)) (requires (uses b)))
+";
+    let post = "  (requires (uses s))\n  (platform (uses p)))\n";
+    let many = |line: &dyn Fn(usize) -> String| (1..1004).map(line).collect::<String>();
+    let no_model = |i: usize, priority: usize| {
+        format!("  (task a{i} (deadline 10 ms) (deadline-from release) (priority {priority}) (uses s) (on-overrun fault))\n")
+    };
+    let cases: Vec<(&str, String, Status)> = vec![
+        (
+            "a duplicate past two thousand",
+            format!(
+                "{pre}(defsystem m\n{}  (task dupe (period 10 ms) (deadline 10 ms) (deadline-from release) (priority 90001) (uses s) (on-overrun fault))\n  (task dupe (period 10 ms) (deadline 10 ms) (deadline-from release) (priority 90002) (uses s) (on-overrun fault))\n{post}",
+                (1..2003).map(|i| format!("  (task t{i} (period 10 ms) (deadline 10 ms) (deadline-from release) (priority {i}) (uses s) (on-overrun fault))\n")).collect::<String>()
+            ),
+            Status::InvalidDescription,
+        ),
+        (
+            "no release model, all sharing a priority",
+            format!("{pre}(defsystem m\n{}{post}", many(&|i| no_model(i, 1))),
+            Status::UnsupportedProfile,
+        ),
+        (
+            "no release model, then two",
+            format!(
+                "{pre}(defsystem m\n{}  (task z (period 10 ms) (min-separation 10 ms) (deadline 10 ms) (deadline-from release) (priority 5000) (uses s) (on-overrun fault))\n{post}",
+                many(&|i| no_model(i, i))
+            ),
+            Status::InvalidDescription,
+        ),
+        (
+            "an unsupported overrun, then a priority below one",
+            format!(
+                "{pre}(defsystem m\n{}  (task z (period 10 ms) (deadline 10 ms) (deadline-from release) (priority 0) (uses s) (on-overrun fault))\n{post}",
+                many(&|i| format!("  (task a{i} (period 10 ms) (deadline 10 ms) (deadline-from release) (priority {i}) (uses s) (on-overrun nope))\n"))
+            ),
+            Status::InvalidDescription,
+        ),
+    ];
+    let file = root.join("s.eadl");
+    for (case, text, wanted) in cases {
+        fs::write(&file, text).expect("written");
+        let (status, _, err) = build(&file.display().to_string(), &root.join("out"));
+        assert_eq!(status, wanted, "{case}: {}", &err[..300.min(err.len())]);
+        assert!(!root.join("out").exists(), "{case}");
+    }
+}
+
+/// What multiplied, each bounded where it is gathered: a fact offered and declared absent n times each, one offer refined n ways; and what a description can print to a terminal.
+#[test]
+fn what_multiplies_is_bounded_and_nothing_paints_over_what_is_said() {
+    let root = scratch("multiplied");
+    let file = root.join("s.eadl");
+    let shapes = [
+        format!(
+            "(defblock b (offers {}) (absent {}))\n",
+            "f ".repeat(1000),
+            "f ".repeat(1000)
+        ),
+        format!(
+            "(defblock a (offers {}))\n{}",
+            (0..1000)
+                .map(|i| format!("(o{i} true)"))
+                .collect::<Vec<_>>()
+                .join(" "),
+            (0..200)
+                .map(|i| format!("(defblock r{i} (refines a))\n"))
+                .collect::<String>()
+        ),
+    ];
+    for shape in shapes {
+        fs::write(&file, shape).expect("written");
+        let (status, _, err) = build(&file.display().to_string(), &root.join("out"));
+        assert_ne!(status, Status::Ok);
+        assert!(
+            err.matches("error[").count() <= 1001,
+            "{}",
+            err.matches("error[").count()
+        );
+    }
+    // A comment may hold these bytes, and a module may come from elsewhere.
+    fs::write(
+        &file,
+        "(bogus) ; \u{1b}[2J\u{1b}[Hall clear: accepted\r\u{202e}\n",
+    )
+    .expect("written");
+    let (status, _, err) = build(&file.display().to_string(), &root.join("out"));
+    assert_ne!(status, Status::Ok);
+    assert!(
+        !err.contains('\u{1b}') && !err.contains('\r') && !err.contains('\u{202e}'),
+        "{err:?}"
+    );
+    assert!(err.contains("\\u{1b}"), "{err}");
+}
+
 #[test]
 fn a_duration_past_the_ticks_is_told_a_repair_that_works() {
     let root = scratch("past-ticks");

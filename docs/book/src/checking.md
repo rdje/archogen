@@ -19,7 +19,7 @@ built from it will meet its deadlines, which needs the steps that come after.
 
 > **In one minute, for engineers.** `archogen check` runs read, resolve, boundary, schema, profile, workload and
 > presence passes in an order where a failure makes the next meaningless. The headline verdict is chosen by a fixed
-> precedence meaning *what to fix first*, every diagnostic is still printed, and the verdict maps totally onto the
+> precedence meaning *what to fix first*, every diagnostic up to a thousand errors is still printed, and the verdict maps totally onto the
 > process exit code. Capabilities outside the profile are refused by name. The language definition is compiled into
 > the binary, and a semantic corpus pins the verdicts.
 
@@ -52,7 +52,7 @@ built from it will behave — the evidence categories start after this point.
 | presence | offered / absent / undescribed | `missing-fact`, `infeasible-configuration`, `invalid-description` |
 | refinement | the three obligations, the target they are owed to, and the quantities they are written in | `infeasible-configuration`; a target the description does not declare is `missing-fact`; a quantity it cannot read is `invalid-description` |
 
-Every pass runs. Every diagnostic is collected. A description with three problems costs one edit
+Every pass runs. Every diagnostic is collected, up to a thousand errors, and what is held back past that still counts for the verdict. A description with three problems costs one edit
 cycle, not three.
 
 The rules these passes enforce are written down in two normative documents, and each diagnostic code

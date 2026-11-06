@@ -153,6 +153,36 @@ impl Severity {
     }
 }
 
+/// The most characters one sentence of a diagnostic says. A message quotes names whole, a name may be any length, and a thousand errors each quoting one were an answer thousands of times its request (leaf `M4.2.3.3.20`).
+pub const MOST_SAID: usize = 1024;
+
+/// A character as a diagnostic prints it: one that would move, clear or reorder what a terminal shows is written as its escape, as canonical text writes it, so a description cannot paint over what is said of it.
+fn shown(c: char) -> Option<String> {
+    (c != '\t'
+        && c != '\n'
+        && (c.is_control() || matches!(c, '\u{202a}'..='\u{202e}' | '\u{2066}'..='\u{2069}')))
+    .then(|| format!("\\u{{{:x}}}", u32::from(c)))
+}
+
+/// `text` as a diagnostic says it: within [`MOST_SAID`], cut with `…`, and with nothing a terminal would act on.
+fn fit(text: String) -> String {
+    if text.len() <= MOST_SAID && !text.chars().any(|c| shown(c).is_some()) {
+        return text;
+    }
+    let mut out = String::new();
+    for (at, c) in text.chars().enumerate() {
+        if at == MOST_SAID {
+            out.push('…');
+            break;
+        }
+        match shown(c) {
+            Some(escape) => out.push_str(&escape),
+            None => out.push(c),
+        }
+    }
+    out
+}
+
 /// A span with something to say about it.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Label {
@@ -168,7 +198,7 @@ impl Label {
     pub fn new(span: Span, message: impl Into<String>) -> Self {
         Self {
             span,
-            message: message.into(),
+            message: fit(message.into()),
         }
     }
 }
@@ -207,10 +237,10 @@ impl Diagnostic {
         Self {
             severity: Severity::Error,
             code,
-            message: message.into(),
+            message: fit(message.into()),
             primary,
             secondary: Vec::new(),
-            repair: repair.into(),
+            repair: fit(repair.into()),
             related_ids: Vec::new(),
             profile: None,
         }
@@ -302,7 +332,7 @@ impl Diagnostic {
 
         format!(
             "  --> {}:{}:{}\n{pad} |\n{} | {}\n{pad} | {}{}{}{}\n",
-            source.name,
+            fit_name(&source.name),
             position.line,
             position.column,
             position.line,
@@ -326,34 +356,60 @@ pub const EXCERPT: usize = 160;
 /// How many characters of context an excerpt keeps before its span.
 const BEFORE: usize = 40;
 
+/// A source's name as a diagnostic prints it: its end, where one is longer than a sentence, which is what tells two paths apart; and nothing a terminal would act on.
+fn fit_name(name: &str) -> String {
+    let length = name.chars().count();
+    if length <= MOST_SAID {
+        return fit(name.to_owned());
+    }
+    let tail: String = name.chars().skip(length - MOST_SAID + 1).collect();
+    format!("…{}", fit(tail))
+}
+
 /// The text to quote for a line, the span's column in that text (0-based), and how many characters the caret may
 /// cover from there before the quoted text ends: the line itself when it is at most [`EXCERPT`] characters, and
 /// otherwise a window of that many around `column`, marked `…` at each cut end.
 fn excerpt(line: &str, column: usize) -> (String, usize, usize) {
     let length = line.chars().count();
-    if length <= EXCERPT {
-        return (
-            line.to_owned(),
-            column,
-            length.saturating_sub(column).max(1),
-        );
-    }
-    let mut start = column.saturating_sub(BEFORE);
-    let end = (start + EXCERPT).min(length);
-    if end - start < EXCERPT {
-        start = end.saturating_sub(EXCERPT);
-    }
+    let (start, end) = if length <= EXCERPT {
+        (0, length)
+    } else {
+        let mut start = column.saturating_sub(BEFORE);
+        let end = (start + EXCERPT).min(length);
+        if end - start < EXCERPT {
+            start = end.saturating_sub(EXCERPT);
+        }
+        (start, end)
+    };
     let mut text = String::new();
-    let mut shifted = column - start;
+    // In what is printed: an escape is wider than what it stands for, and the marker keeps to what it marks.
+    let (mut shifted, mut room) = (0_usize, 0_usize);
     if start > 0 {
         text.push('…');
         shifted += 1;
     }
-    text.extend(line.chars().skip(start).take(end - start));
+    for (at, c) in line.chars().enumerate().skip(start).take(end - start) {
+        let wrote = match shown(c) {
+            Some(escape) => {
+                text.push_str(&escape);
+                escape.chars().count()
+            }
+            None => {
+                text.push(c);
+                1
+            }
+        };
+        if at < column {
+            shifted += wrote;
+        } else {
+            room += wrote;
+        }
+    }
+    shifted += column.saturating_sub(end);
     if end < length {
         text.push('…');
     }
-    (text, shifted, end.saturating_sub(column).max(1))
+    (text, shifted, room.max(1))
 }
 
 /// How many errors one set holds. A file of junk gets one error per byte, at some 2 KiB each once said: a file of 64 MiB

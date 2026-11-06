@@ -25,7 +25,7 @@
 //!
 //! # It does not stop at the first pass
 //!
-//! Every pass runs, and every diagnostic is collected. The **verdict** is the highest-precedence
+//! Every pass runs, and every diagnostic is collected, up to what [`MOST_ERRORS`] holds. The **verdict** is the highest-precedence
 //! one, where precedence means *what to fix first* rather than severity of consequence: a
 //! malformed description makes every later answer meaningless, and an unsupported request is
 //! reported before a missing fact because describing that fact would be wasted work on a system
@@ -341,7 +341,7 @@ fn passes(
     // ── boundary (F27) ───────────────────────────────────────────────────────────────────────
     let mut boundary_errors = Vec::new();
     for form in &forms {
-        // Each pass stops gathering where nothing more would be said: a file of junk that reads as forms costs a host what each error costs.
+        // A pass stops gathering where nothing more would be said and nothing it holds back could move the verdict, every error of it carrying one: a file of junk that reads as forms costs a host what each error costs. A pass whose errors carry different verdicts gathers them all, the highest deciding.
         if boundary_errors.len() > MOST_ERRORS {
             break;
         }
@@ -588,6 +588,10 @@ fn refinements(forms: &[Form]) -> Refinements {
             ));
             continue;
         };
+        // Every one of these is `infeasible-configuration`, so what is held back moves no verdict, and one offer refined a thousand ways multiplies.
+        if violated.len() > MOST_ERRORS {
+            break;
+        }
         violated.extend(refinement::check(abstract_, concrete).diagnostics());
         // Model §3 rule 3 through the chain the abstract refines and what the concrete composes (leaf `M3.4.8`).
         let named = |name: &str| facets.iter().find(|f| f.name == name);

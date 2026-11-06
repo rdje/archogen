@@ -52,7 +52,7 @@ A `Response` holds:
 | `version` | the API version that answered |
 | `engine` | the engine version that answered: with `version`, the build the response came from |
 | `status` | the outcome, always present |
-| `diagnostics` | every finding, each with its code, the spans it points at, and a repair direction |
+| `diagnostics` | what was found, up to `too-many-errors`, each with its code, the spans it points at, and a repair direction |
 | `sources` | the texts those spans point into, so any consumer can render them |
 | `notes`, `hint` | what the API says about a request it did not judge, and the repair |
 | `judged` | present exactly when the description was judged: the verdict, the language version and profile it was judged under, the declarations it read, a module tree's instances, and the closure |
@@ -191,8 +191,9 @@ The answer is bounded with the request. A diagnostic quotes the line it points i
 characters is quoted as a window of that many around the span, cut with `…` (`crates/eadl-front/src/diagnostic.rs`,
 leaf `API.6.6`). Before that window, one line of a million unclosed forms drew 257 diagnostics that each quoted it
 whole: an answer of 1.5 GB for a request of 1 MB. A check says a thousand errors and no more, whatever else there is to say
-(`too-many-errors`), and each pass stops gathering there, so a request's answer is at most that many windows, however long the
-request. `crates/archogen-api/tests/check.rs` holds that over the shapes that drew the most.
+(`too-many-errors`), and each sentence of one has a limit of its own, so a request's answer is bounded, however long the request and however short.
+The most severe of what was found decides the status whether or not it was said: a pass stops gathering early only where every error of it carries one verdict.
+`crates/archogen-api/tests/check.rs` holds that over the shapes that drew the most.
 
 ### How the command line is held to it
 
@@ -338,7 +339,7 @@ module themselves.
 - **The commands not built yet.** They are no operation. The command table
   (`crates/archogen-cli/src/spec.rs`) names the leaf that owns each one, and the MCP server reports that
   leaf rather than failing.
-- **Wall-clock time.** The budget bounds the work, and the work is linear in it. A host that needs a
+- **Wall-clock time.** The budget bounds the text. Most of the work is linear in it, and not all of it: a chain of refinements takes time cubic in its length. A host that needs a
   deadline as well enforces it around the instance. The API reads no clock, and on `wasm32-unknown-unknown`
   the standard library has none to read.
 

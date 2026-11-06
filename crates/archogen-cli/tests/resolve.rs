@@ -1159,6 +1159,33 @@ fn plan_routes() -> Vec<(&'static str, Route)> {
             assert!(!plan.exists() && !root.join("p.part").exists());
             outcome
         }),
+        ("many-unmet", |root| {
+            // The search says no more than a check does.
+            let file = root.join("u.eadl");
+            let mut text = String::from(
+                "(eadl-version eadl/1)\n(defblock blk (offers (reachable-at-privilege machine)\n",
+            );
+            for i in 0..1500 {
+                text.push_str(&format!("  (horizon{i} 1 s)\n"));
+            }
+            text.push_str("))\n(defplatform soc (offers (core-count 1 tick) (reachable-at-privilege machine)) (requires (uses blk)))\n(defservice svc (requires\n");
+            for i in 0..1500 {
+                text.push_str(&format!(
+                    "  (needs horizon{i}) (horizon{i} (at-least 10 s))\n"
+                ));
+            }
+            text.push_str("))\n(defsystem m (task t (period 100 ms) (deadline 100 ms) (deadline-from release) (priority 1) (uses svc)) (requires (uses svc)) (platform (uses soc)))\n");
+            std::fs::write(&file, text).expect("written");
+            let plan = root.join("p");
+            let outcome = resolve_of(
+                &file.display().to_string(),
+                &plan.display().to_string(),
+                &[],
+                Answer::Record(Status::Ok),
+            );
+            assert!(!plan.exists() && !root.join("p.part").exists());
+            outcome
+        }),
         ("came-on-a-refusal", |root| {
             // What came stays, with the stage, and it is said; what this run wrote goes.
             let plan = root.join("p");

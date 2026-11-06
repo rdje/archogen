@@ -227,7 +227,7 @@ the rule: what it says is run, and a route it does not name is promised nothing 
 No sync call is made, so none of this claims anything across a power loss. ⚠️ Nor does it hold against another program working in the same
 directory at the same instant: the standard library has no rename that refuses to replace and no directory-relative open, so each path is
 held again just before it is used, and in that instant what stands there is what is used. The checker's record is held so too: what
-comes at its name while the checker runs stays, and the checker refuses.
+comes at its name after the checker first looks at it stays, and the checker refuses; a record that comes before that reads as an earlier one, and is replaced.
 
 **The two standard streams.** If a write to standard output fails, at any byte, the command says so on standard error and exits `70`,
 as every command does: a pipe nobody reads, a full disk. What it did stands, so a package it placed is in place. ⚠️ A failure is what it can

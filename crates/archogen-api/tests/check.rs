@@ -325,17 +325,32 @@ fn an_answer_is_as_bounded_as_its_request() {
         rendered.len(),
         text.len()
     );
-    // What a check says is bounded whatever the request, in each shape that drew the most: junk on one line, on many, that reads as forms, and a system of tasks.
+    // What a check says is bounded whatever the request, in each shape that drew the most: junk on one line, on many, that reads as forms, and a system of tasks; a long name quoted by each error; a long source name; a fact stated both ways n times.
+    let long_name = "n".repeat(65_536);
+    let many_sharing = format!(
+        "(defsystem s (task {long_name} (period 10 ms) (deadline 10 ms) (deadline-from release) (priority 1) (on-overrun fault))\n{})",
+        (0..1100)
+            .map(|i| format!("(task t{i} (period 10 ms) (deadline 10 ms) (deadline-from release) (priority 1) (on-overrun fault))\n"))
+            .collect::<String>()
+    );
+    let both_ways = format!(
+        "(defblock b (offers {}) (absent {}))",
+        "f ".repeat(1000),
+        "f ".repeat(1000)
+    );
     let mut most = 0;
-    for shape in [
-        "x ".repeat(60_000),
-        "x\n".repeat(60_000),
-        "\0".repeat(120_000),
-        "1.2.3 ".repeat(20_000),
-        "(defsystem s (task t))\n".repeat(5_000),
+    for (name, shape) in [
+        ("junk.eadl", "x ".repeat(60_000)),
+        ("junk.eadl", "x\n".repeat(60_000)),
+        ("junk.eadl", "\0".repeat(120_000)),
+        ("junk.eadl", "1.2.3 ".repeat(20_000)),
+        ("junk.eadl", "(defsystem s (task t))\n".repeat(5_000)),
+        ("junk.eadl", many_sharing),
+        ("junk.eadl", both_ways),
+        (long_name.as_str(), ")".repeat(1100)),
     ] {
         let response = archogen_api::check(&Request {
-            name: "junk.eadl",
+            name,
             text: &shape,
             profile: None,
             modules: &archogen_api::NoModules,
@@ -343,5 +358,5 @@ fn an_answer_is_as_bounded_as_its_request() {
         assert_eq!(response.diagnostics.len(), 1001, "{}", &shape[..8]);
         most = most.max(response.render_diagnostics().len());
     }
-    assert!(most < 1024 * 1024, "{most} bytes rendered");
+    assert!(most < 8 * 1024 * 1024, "{most} bytes rendered");
 }

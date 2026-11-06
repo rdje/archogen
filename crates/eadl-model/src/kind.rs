@@ -775,7 +775,6 @@ pub fn duplicate_task_names(forms: &[&Form]) -> Vec<Diagnostic> {
             .items()
             .iter()
             .filter(|item| item.head() == Some("task"))
-            .take(MOST_ERRORS.saturating_mul(2))
             .filter_map(|task| task.items().get(1))
         {
             let Some(name) = name_form.as_symbol() else {

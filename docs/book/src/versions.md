@@ -148,7 +148,7 @@ their versioned readers and permanent refusal controls enforce their local contr
 
 | Field | Value |
 | --- | --- |
-| Surface | the record a checker writes for the front that ran it and the build that consumes it: who wrote it and its sha256, what it judged, the profile, the status and every finding (`M3.5.1`) |
+| Surface | the record a checker writes for the front that ran it and the build that consumes it: who wrote it and its sha256, what it judged, the profile, the status and every finding, up to `too-many-errors` (`M3.5.1`) |
 | Version | `archogen-result/1` |
 | Declared at | `const:crates/archogen-outcome/src/record.rs:FORMAT` |
 | Changes when | a member is added, removed, renamed, re-typed or reinterpreted. A reader that meets another identifier refuses the record rather than guess |
