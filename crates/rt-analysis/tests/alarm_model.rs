@@ -240,8 +240,8 @@ fn random_set(
     for a in 0..n_alarms {
         let c_s = r.pick(&[2, 3, 5, 8, 12]).max(1 + 2 * lag_max);
         let t_s = r.pick(&[8, 12, 17, 25, 40, 60, 100]);
-        // The record's `write`: the floor fits one write, so a segment is at least that.
-        let write = t_s + lag_max + 3 * (p.res - 1);
+        // The record's `write`, on either kind of device: the floor fits one write, so what one write reaches is at least that.
+        let write = t_s + lag_max + 2 * (p.res - 1);
         alarms.push(AlarmSpec {
             c_s,
             t_s,
@@ -471,8 +471,8 @@ fn the_record_s_sums_read_as_they_are_written() {
     assert_eq!(charge("update", Device::Delay, i), 64 + 1 + 6 + 5 + 2);
     assert_eq!(charge("room", Device::Compare, i), 100 + 3 + 24 + 9);
     assert_eq!(charge("room", Device::Delay, i), 100 + 3 + 28 + 9);
-    assert_eq!(charge("write", Device::Compare, i), 10 + 1 + 6);
-    assert_eq!(charge("write", Device::Delay, i), 10 + 1 + 9);
+    assert_eq!(charge("write", Device::Compare, i), 10 + 6);
+    assert_eq!(charge("write", Device::Delay, i), 10 + 1 + 6);
 }
 
 /// Random sets the analysis holds, each run under each pattern of lags: no arrivals under the floor, none lost, no response past its bound, no deadline delivered past `delivery`. How many sets and
@@ -639,6 +639,26 @@ fn with_what_code_can_know_the_floor_holds_at_each_lag_on_a_level_compare() {
                 Know::WhatItReadAndWrote,
                 Device::Compare,
                 lag
+            ),
+            (20, 80)
+        );
+    }
+}
+
+/// Tasks an alarm releases, under the protocol: their releases follow its arrivals, and the floor is what separates them.
+#[test]
+fn tasks_an_alarm_releases_hold_under_the_protocol() {
+    for device in [Device::Compare, Device::Delay] {
+        assert_eq!(
+            sweep(
+                0x5357_9BDF_0246_8ACF,
+                20,
+                true,
+                true,
+                true,
+                Know::WhatItReadAndWrote,
+                device,
+                2
             ),
             (20, 80)
         );

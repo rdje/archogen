@@ -329,7 +329,7 @@ impl Run<'_> {
         }
         let next = al.pending.iter().map(|p| p.0).chain(al.wake_next).min();
         let value = next.map(|n| {
-            let mut at = n.min(seen + al.spec.reach).max(seen);
+            let mut at = n.min(seen + al.spec.reach - rho).max(seen);
             if let Some(last) = al.code_last {
                 at = at.max(last + t_s);
             }
@@ -339,7 +339,7 @@ impl Run<'_> {
             }
         });
         if let Some(v) = value {
-            if v - seen > al.spec.reach + rho {
+            if v - seen > al.spec.reach {
                 measured.programmed_past_reach += 1;
             }
             match self.device {
@@ -640,7 +640,9 @@ impl Run<'_> {
                             } else {
                                 j.left -= 1;
                                 let seg = segs[j.seg];
-                                if seg.arm && j.left == lag_max {
+                                // The read falls with room for the lag to the landing and the lag to the read after it, both still masked.
+                                if seg.arm && j.left == (2 * lag_max).min(seg.len.saturating_sub(1))
+                                {
                                     let (a, offset) =
                                         task.spec.arms[task.write_turn % task.spec.arms.len()];
                                     task.write_turn += 1;

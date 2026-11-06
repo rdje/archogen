@@ -347,7 +347,7 @@ written from this section alone (`crates/archogen-plan-check/src/joint.rs`, `M3.
    system's requesters rely on for an interrupt, one for each provider and kind: a *source*, bound through
    `interrupt-source` at `true`, with what it states of its own `min-arrival-separation`; and a *timer*, bound through a
    consumed fact at `true`. The description's half of a route is rule 7; the controller between source and core, its
-   line and context, and the latency are the catalog's, and the plan enables the release timer and every route's
+   line and context, and the latency are the catalog's, and the plan enables the release timer, where a system has one (`(timer none)` has none), and every route's
    interrupt, timer routes included, and on a target the platform's non-maskable interrupts and traps, and no other
    (`docs/decisions/decision_runtime-plan.md` §2.5; `M4.1.2.2`), as the analysis requires
    (`docs/specs/analysis/decision_runtime-analysis-variant.md`, *enabled sources*). A route is an obligation, never a

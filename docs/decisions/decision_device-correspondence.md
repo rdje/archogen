@@ -64,7 +64,7 @@ description need not have a plan of its own to be put on a target, nor pass pres
 - **Requirements are the contract.** `ROADMAP.md` §5.3 asks that refinement "preserve the obligations actually relied upon", and that "adding an
   unused device is not automatically an invalid refinement". A system relies on what its closure requires, which is exactly what is judged again. What the replaced hardware itself required goes with it, since it said what that machine asks of itself; what the profile asks of any machine is `DC-H4`.
 - **It adds no judgement of its own.** Channels, ownership, connectivity, routes, placement, privilege and functions already read one system's hardware
-  (model §8), so each holds on a target with no new rule. `§5.4`'s "device connectivity, interrupt routes, privilege, and memory placement" are the
+  (model §8), so each holds on a target with no new rule of this record's: `/2` adds the release requester and what an alarm asks of the device bound, which the search and the joint rules then read as any (`decision_release-alarm.md`, `RA-H1`). `§5.4`'s "device connectivity, interrupt routes, privilege, and memory placement" are the
   joint rules' there as here.
 - **It answers `M3.3.5`'s R8.** The remark that `periodic-three`'s `device.timer` at `0x1000_0000` is `riscv-virt-up`'s UART held only if a description's
   regions reach a target. They do not: the platform that wrote them is replaced, and it is the target's own map the joint rules judge.

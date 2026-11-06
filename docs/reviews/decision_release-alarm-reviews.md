@@ -111,3 +111,23 @@ Said, and left as it stands: no realization exists, so a real read-back's lag an
 | RA6-11 | wording | which alarm each sum binds; a stale comment | Said |
 
 Said, and left as it stands: no realization exists, so a real read-back's lag and a level compare's window stay unmeasured. RA6-1 made no response pass its bound, 2,400 timelines, so a miss is unverified and the false input was the finding. Acknowledge at exit was not run. Its reader's `rig6` is a copy of the model with readings as options, under `target/m4281/work/`.
+
+**Round 7** — `2026-11-06`, leaf `M4.1.6.7`: not acceptable, 13 findings, 7 defects, after 9, 9, 7, 5, 7 and 6, on `3270bed1`. The floor, the source term and each sum's derivation held, by hand on both kinds and over sweeps of 2,880, 2,424, 2,408, 2,880, 2,880 and 1,920 timelines, resolutions to 32 and lags to 16, and dropping `delivery`'s first term was right. What fell was the model's job path, things with no owner, and sentences that contradict each other. `(timer none)` was run on a recurrence with no timer term, 1,280 timelines, closest 0.077, none over.
+
+| # | Kind | Finding | Answer |
+| --- | --- | --- | --- |
+| RA7-1 | defect | the normative function read back past its masked run on a job's write, so "still masked" was false of it, and held to it, the compare's `write` and the floor's window: write 140 against 138, arrivals 14 apart at the record's own modular reads. The tree's sweep missed it, by lags up to 4 and a slack of `ρ` | The read falls with room for both lags, inside the mask, as the reader's `READ_EARLY` did. The slack is gone: no write passes what one write reaches |
+| RA7-2 | defect | `room` and "never lost" rested on a promise nobody carried: a deadline at or after its writer's release, within `R`. `R`'s owner cannot hold what a job passes: 150 late against 94 | `RA-H7`, on the application's inputs: stated where the time base is the counter itself, and `room` inconclusive without it |
+| RA7-3 | defect | `write`'s limit had no input row, owner or fact, and the function's cap was absent from the words | `H`, a row owned by the target's statement, `RA-H1` carrying it; and the words say a farther deadline is written in segments |
+| RA7-4 | defect | wiring was asked of what binds `relative-delay` and of an instance's `beneath`, and not of a direct `absolute-deadline` binding, so a core-wired device could bind and be refused later, a controller-wired one never tried | It is asked of that too, a fact of one function with it |
+| RA7-5 | defect | `RA-H4` refused sets "each released only by alarms the set programs", narrower than its reason: a service's write passed, and an alarm nothing programs | As wide as its reason |
+| RA7-6 | defect | model §8 rule 8 said the plan enables the release timer, and §1 that `(timer none)`'s is never enabled | Rule 8 says where a system has one |
+| RA7-7 | defect | the device record's "no new rule" against `RA-H1`, nothing telling that record to move | It says what `/2` adds, by this record |
+| RA7-8 | gap | the release requester asked no kind, so a core-wired delay could bind and condition 6 refuse what a level compare would serve | It asks a level compare |
+| RA7-9 | gap | a compare that cannot be disarmed stood "within a window" from initialisation, which can match during it | Past what initialisation's length can reach |
+| RA7-10 | gap | no fact names the device a record's code programs, so `RA-H5` had nothing to compare | The record states it |
+| RA7-11 | gap | "a second alarm's repair is another device" where rule 14 binds the two to one | Said |
+| RA7-12 | gap, unverified | a landing is one instant in the model, and a write of several stores could match between them | A compare of several stores is disarmed first, `RA-H6` |
+| RA7-13 | wording | `write` wide by `λ` on a compare and by `ρ` on a delay; "at most that value" on a delay; "the one that raised it" after another's write; `W`'s owner; "share one alarm"; tasks an alarm releases under the protocol unrun | Each says what is so, the cells measured tight, and a sweep runs the last |
+
+Said, and left as it stands: no realization exists, so a real read-back's lag, a level window, a zero-count delay and first-arm timing are unmeasured. Job instructions between a match and its trap and a claim displaced by a later arrival are argued, not run, and RA7-4 to RA7-11 are by reading, with no code to run them.

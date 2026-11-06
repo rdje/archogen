@@ -27,7 +27,7 @@ The first format, `archogen-runtime-plan/1`, is for a system run on the **hosted
 devices the simulator provides (`M4.3`). Everything in it is determined by the description, the checked assignment and
 the joint rules as `.2` amends them, and three complete worked texts pin it (§3). Running on a target needs three designs
 that are not this record's: which of a target's devices a system's device is (`M4.4.1`), how timer releases and an
-adapter share one alarm (`decision_release-alarm.md`, `M4.1.6`), and the sizes only catalog records state. They come with a second format, `/2`
+adapter's alarm are each bound (`decision_release-alarm.md`, `M4.1.6`), and the sizes only catalog records state. They come with a second format, `/2`
 (§4, `.7`).
 
 A `/1` plan describes a system; it does not make its scheduling analysis conclusive. The analysis reads the platform's
