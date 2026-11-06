@@ -14,7 +14,7 @@ ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)" || exit 2
 if [ "${1:-}" = "--self-test" ]; then
     if [ "$(uname -s)" != "Darwin" ]; then
         echo "host-guard self-test: not run: it reads macOS alone"
-        exit 0
+        exit 21
     fi
     exec python3 -I -B "$ROOT/scripts/selftest_host_guard.py"
 fi
@@ -42,7 +42,7 @@ for node in ast.walk(ast.parse(guard.read_text(encoding="utf-8"))):
 AT_MOST = {
     "start_used_percent": 70, "stop_used_percent": 85, "panic_used_percent": 88, "start_pressure_level": 2, "stop_pressure_level": 2, "panic_pressure_level": 4,
     "start_swap_gib": 16, "stop_swap_growth_gib": 3, "all_processes_gib": 6, "one_process_gib": 3, "processes": 512, "stop_disk_growth_gib": 50,
-    "worth_stopping_gib": 0.25, "watcher_stale_seconds": 60,
+    "worth_stopping_gib": 0.25, "watcher_stale_seconds": 60, "proof_seconds": 60, "proof_again_seconds": 60,
 }
 AT_LEAST = {"stop_repo_free_gib": 100, "stop_boot_free_gib": 30}
 for name, line in AT_MOST.items():
@@ -82,6 +82,8 @@ for name, line in {"FELL_WINDOW_SECONDS": 10, "GROWTH_WINDOW_SECONDS": 900}.item
 makefile = (root / "Makefile").read_text(encoding="utf-8")
 if len(re.findall(r"^GUARD\s*[:+?]?=", makefile, re.M)) != 1 or not re.search(r"^GUARD\s*:=\s*python3 -I -B scripts/host_guard\.py run --wait \d+ --\s*$", makefile, re.M):
     breaches.append("the Makefile's `GUARD` is not `python3 -I -B scripts/host_guard.py run --wait SECONDS --`, defined once")
+if "$(shell python3 -I -B scripts/host_guard.py prove 2>/dev/null),host-guard: this file runs)" not in makefile:
+    breaches.append("the Makefile does not ask the guard whether it runs: emptied, it exits 0 and a recipe through it reads as passed")
 RECIPES = {
     "focused": ["$(GUARD) cargo xtask verify --tier focused"],
     "integration": ["$(GUARD) cargo xtask verify --tier integration"],

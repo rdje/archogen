@@ -575,7 +575,7 @@ host every second and stops this repository's own jobs before the director's lin
 waits for room (`scripts/host_guard.py`, `docs/decisions/decision_host-guard.md`). A job is what a person would start again, a script with all it started,
 so a stopped build is not simply followed by the next. A job that holds little and builds nothing stays, whatever it is called, and so does what frees room, such as `cargo clean` or a script of `rm` on a volume under its floor. A job goes whole, so an editor that started a build goes with it at the danger line, unsaved words included.
 
-`make` runs everything that compiles or tests through it, and an agent's shell commands are checked before they run. `python3 scripts/host_guard.py status`
+`make` runs everything that compiles or tests through it, and first asks the guard whether it runs at all, since a file emptied by accident would exit 0 having run nothing and a recipe would read as passed. An agent's shell commands are checked before they run. `python3 scripts/host_guard.py status`
 says what it reads, who holds the most memory, and what it has stopped. It stops only this repository's processes, so it cannot make the host safe from
 another project's; it can only take its own share out of the way and say who holds the rest. What it stops is told to the agent beside its next command's result, and
 what it refuses before a command runs is three things: what it cannot read, stopping by a program's name, and a heavy command with no room. `HOST-GUARD` keeps all of this wired in. Nobody has to watch it: the director's word of `2026-11-06` is to observe the trend, and to say something only when RAM is over 90% and still rising.

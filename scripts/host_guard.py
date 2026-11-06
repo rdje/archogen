@@ -11,7 +11,7 @@ crash. So the limits below hold well inside them, on what the whole host uses, a
     host_guard.py watch            the watcher itself; one per repository
     host_guard.py hook             the harness's check before a shell command: exit 2 refuses it
     host_guard.py status           what it reads now, and what it has stopped
-    host_guard.py prove            this file reads the host and judges, acting on nothing: what a watcher asks of a changed guard before taking it up
+    host_guard.py prove            this file runs, acting on nothing: what a watcher asks of a changed guard before taking it up, and `make` before a recipe
     host_guard.py stop             the watcher stopped, for a handoff
 
 It reads macOS, the host this runs on, by macOS's own figures: Activity Monitor's sum for RAM, the kernel's memory pressure level, swap, and
@@ -72,6 +72,9 @@ class Limits:
     worth_stopping_gib: float = 0.25
     # A watcher that has not read the host for this long is not watching, however alive it looks.
     watcher_stale_seconds: float = 60.0
+    # How long a changed guard may take to show it runs, and how soon a guard that did not show it is asked again: what failed may have been the moment's, and the file is not saved again to say so.
+    proof_seconds: float = 60.0
+    proof_again_seconds: float = 60.0
 
 
 CODE = Path(__file__).resolve()
@@ -743,7 +746,7 @@ def sample(root: Path, limits: Limits, memory: Memory) -> tuple[Reading, list[Pr
     targets, reasons, not_ours = judged(reading, mine, limits, baseline, memory.moved(reading, mine))
     if targets:
         # Written first, which cannot fail or wait long, so that a job's own `run` can say why it ended. Then the stop, and nothing below may keep it from happening.
-        stopped = [{"pid": job.top.pid, "name": job.label, "gib": round(job.bytes / GIB, 2), "command": job.top.command[:160]} for job in targets]
+        stopped = [{"pid": job.top.pid, "parent": job.top.ppid, "name": job.label, "gib": round(job.bytes / GIB, 2), "command": job.top.command[:160]} for job in targets]
         record(root, kind="stopped", reasons=reasons, stopped=stopped, reading=asdict(reading), largest=largest_on_host(table))
         pids: list[int] = []
         for job in targets:
@@ -772,27 +775,111 @@ def hold_lock(root: Path) -> int | None:
 PROVEN = "host-guard: this file runs"
 
 
-def code_runs(root: Path) -> bool:
-    """Whether this file as it now stands runs: a guard saved broken, a half-done edit that compiles among it, must not end the one watching. So it is asked to read the host and to judge,
-    in a process of its own, and to say so: an emptied file says nothing, and exits 0."""
-    try:
-        done = subprocess.run([sys.executable, "-I", "-B", str(CODE), "prove", "--root", str(root)], capture_output=True, text=True, errors="replace", timeout=60, check=False, stdin=subprocess.DEVNULL)
-    except (OSError, subprocess.SubprocessError):
-        return False
-    return done.returncode == 0 and done.stdout.strip() == PROVEN
+def names_not_found(source: bytes) -> set[str]:
+    """Each name a function in `source` reads as a global and nothing there defines. Such a line raises only when it is reached, which may be the line that stops a job with the host in danger,
+    so the compiled file is walked rather than its paths tried or its names listed. Beside these stand the builtins and what the interpreter gives a module."""
+    import builtins
+    import dis
+    import types
+
+    module = compile(source, str(CODE), "exec")
+    defined = set(vars(builtins)) | {"__name__", "__file__", "__doc__", "__spec__", "__package__", "__loader__", "__builtins__"}
+    read: set[str] = set()
+    codes = [module]
+    while codes:
+        code = codes.pop()
+        codes.extend(each for each in code.co_consts if isinstance(each, types.CodeType))
+        for step in dis.get_instructions(code):
+            if step.opname == "STORE_GLOBAL" or (code is module and step.opname == "STORE_NAME"):
+                defined.add(step.argval)
+            elif step.opname == "LOAD_GLOBAL":
+                read.add(step.argval)
+    return read - defined
 
 
 def prove(root: Path, limits: Limits) -> int:
-    """What `code_runs` asks: one reading and one judgement, acting on nothing."""
-    reading = read_host(root)
-    table = processes()
-    mine = ours(table, root, os.getpid())
-    judged(reading, mine, limits, None, Memory().moved(reading, mine))
-    commands = commands_of("true | cat")
-    kills_by_name(commands, root)
-    any(is_heavy(each.words) for each in commands)
+    """What a watcher asks of a changed guard, and `make` of one before trusting a recipe to it, by running this file in a process of its own: an emptied file says nothing, and exits 0. Every name
+    it reads is defined, and it goes round the watcher's own loop, what it would stop by and the hook's reading, over a root of its own where nothing is anybody's. A line that goes wrong
+    in another way, only when a job is stopped, it cannot see: that is the self-test's and the commit's."""
+    missing = names_not_found(CODE.read_bytes())
+    if missing:
+        print(f"host-guard: read and defined nowhere: {', '.join(sorted(missing))}")
+        return 1
+    if sys.platform == "darwin":
+        import shutil
+
+        reading = read_host(root)
+        mine = ours(processes(), root, os.getpid())
+        judged(reading, mine, limits, None, Memory().moved(reading, mine))
+        scope = state_dir(root) / f"proof-{os.getpid()}"
+        scope.mkdir()
+        try:
+            sample(scope, limits, Memory())
+            watch(scope, limits, True)
+            tree_of(os.getpid(), processes())
+            stop([])
+            record(scope, kind="proof")
+        finally:
+            shutil.rmtree(scope, ignore_errors=True)
+        commands = commands_of("true | cat")
+        kills_by_name(commands, root)
+        any(is_heavy(each.words) for each in commands)
     print(PROVEN)
     return 0
+
+
+@dataclass
+class Saved:
+    """What a watcher knows of this file: the stamp it is running, and the proof standing beside it of what is saved now. The proof takes a moment, and a loaded host's moment is long, so the watcher
+    goes on reading while it runs."""
+
+    running: tuple[int, int] | None
+    proof: subprocess.Popen | None = None
+    proving: tuple[int, int] | None = None
+    began: float = 0.0
+    again_at: float = 0.0
+    said_of: tuple[int, int] | None = None
+
+
+def end_proof(saved: Saved) -> str:
+    """What the proof said, it being over one way or the other."""
+    proof, saved.proof = saved.proof, None
+    try:
+        if proof.poll() is None:
+            proof.kill()
+        return proof.communicate(timeout=10)[0].strip()
+    except (OSError, ValueError, subprocess.SubprocessError):
+        return ""
+
+
+def follow_the_file(root: Path, limits: Limits, saved: Saved, arguments: list[str]) -> None:
+    """A guard changed under a watcher holds from now, not from when nothing of ours next runs. But one saved broken, a half-done edit among it, must not end the one watching: the new self is
+    asked first, and only of the file as it was when asked. Saved again meanwhile, that proof says nothing, and the new file is asked. The lock closes with the old image and the new one takes it."""
+    now, stamp = time.monotonic(), code_stamp()
+    if saved.proof is None:
+        if stamp in (None, saved.running) or (stamp == saved.proving and now < saved.again_at):
+            return
+        saved.proving, saved.began = stamp, now
+        try:
+            saved.proof = subprocess.Popen([sys.executable, "-I", "-B", str(CODE), "prove", "--root", str(root)], stdin=subprocess.DEVNULL, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True, errors="replace")
+        except OSError as error:
+            saved.again_at = now + limits.proof_again_seconds
+            record(root, kind="unread", error=f"{CODE.name} as saved cannot be asked whether it runs: {error}: this watcher goes on as it was")
+        return
+    if stamp != saved.proving:
+        end_proof(saved)
+        return
+    ended = saved.proof.poll()
+    if ended is None and now - saved.began < limits.proof_seconds:
+        return
+    said = end_proof(saved)
+    if ended == 0 and said == PROVEN and code_stamp() == stamp:
+        os.execv(sys.executable, [sys.executable, "-I", "-B", str(CODE), *arguments])
+    saved.again_at = now + limits.proof_again_seconds
+    if saved.said_of != stamp:
+        saved.said_of = stamp
+        why = said.splitlines()[-1] if said else "it said nothing" if ended == 0 else f"exit {ended}" if ended is not None else f"no answer in {limits.proof_seconds:.0f} s"
+        record(root, kind="unread", error=f"{CODE.name} as saved does not run ({why[:300]}): this watcher goes on as it was, and asks again")
 
 
 def write_note(root: Path, name: str, text: str) -> None:
@@ -822,45 +909,47 @@ def watch(root: Path, limits: Limits, once: bool, idle_seconds: float = 600.0, a
     held_inode = os.stat(root).st_ino
     os.chdir("/")
     memory = Memory()
-    unread_said, last_seen, busy, code = 0.0, time.monotonic(), False, code_stamp()
-    while True:
-        wait = 0.5
-        try:
-            reading, mine = sample(root, limits, memory)
-            busy = bool(mine)
-            # It reads more often the closer the host is to a line, and as seldom as is safe when nothing of ours runs: this costs the shared host too.
-            near = reading.used_percent >= limits.start_used_percent + 10 or disk_reasons(reading, limits)
-            wait = 0.5 if near else 1.0 if busy or reading.used_percent >= limits.start_used_percent else 2.0
-            write_note(root, "sampled", str(time.time()))
-        except Exception as error:  # Whatever it is, the watcher goes on trying, and `sampled` going stale says it is blind.
-            if time.monotonic() - unread_said > 60:
-                unread_said = time.monotonic()
-                record(root, kind="unread", error=str(error))
-        if once:
-            return 0
-        if not (state_path(root) / "watch.pid").exists():
-            write_note(root, "watch.pid", str(os.getpid()))
-        # A guard changed under a watcher holds from now, not from when nothing of ours next runs. The lock closes with the old image and the new one takes it.
-        if arguments is not None and code_stamp() not in (None, code):
-            if code_runs(root):
-                os.execv(sys.executable, [sys.executable, "-I", "-B", str(CODE), *arguments])
-            code = code_stamp()
-            record(root, kind="unread", error=f"{CODE.name} as saved does not run: this watcher goes on as it was")
-        # A root that is gone, a removed worktree, is watched by nobody: nothing of it can run, and its state must not bring it back. One remade at that name is another, which holds its own lock.
-        try:
-            if os.stat(root).st_ino != held_inode:
+    unread_said, last_seen, busy, saved = 0.0, time.monotonic(), False, Saved(code_stamp())
+    # Ended by `stop`, it leaves no proof behind it.
+    signal.signal(signal.SIGTERM, lambda *_: sys.exit(0))
+    try:
+        while True:
+            wait = 0.5
+            try:
+                reading, mine = sample(root, limits, memory)
+                busy = bool(mine)
+                # It reads more often the closer the host is to a line, and as seldom as is safe when nothing of ours runs: this costs the shared host too.
+                near = reading.used_percent >= limits.start_used_percent + 10 or disk_reasons(reading, limits)
+                wait = 0.5 if near else 1.0 if busy or reading.used_percent >= limits.start_used_percent else 2.0
+                write_note(root, "sampled", str(time.time()))
+            except Exception as error:  # Whatever it is, the watcher goes on trying, and `sampled` going stale says it is blind.
+                if time.monotonic() - unread_said > 60:
+                    unread_said = time.monotonic()
+                    record(root, kind="unread", error=str(error))
+            if not (state_path(root) / "watch.pid").exists():
+                write_note(root, "watch.pid", str(os.getpid()))
+            if arguments is not None:
+                follow_the_file(root, limits, saved, arguments)
+            # A root that is gone, a removed worktree, is watched by nobody: nothing of it can run, and its state must not bring it back. One remade at that name is another, which holds its own lock.
+            try:
+                if os.stat(root).st_ino != held_inode:
+                    return 0
+            except OSError:
                 return 0
-        except OSError:
-            return 0
-        try:
-            fresh = time.time() - (state_path(root) / "heartbeat").stat().st_mtime < idle_seconds
-        except OSError:
-            fresh = False
-        if busy or fresh:
-            last_seen = time.monotonic()
-        elif time.monotonic() - last_seen > idle_seconds:
-            return 0
-        time.sleep(wait)
+            try:
+                fresh = time.time() - (state_path(root) / "heartbeat").stat().st_mtime < idle_seconds
+            except OSError:
+                fresh = False
+            if busy or fresh:
+                last_seen = time.monotonic()
+            elif time.monotonic() - last_seen > idle_seconds:
+                return 0
+            if once:
+                return 0
+            time.sleep(wait)
+    finally:
+        if saved.proof is not None:
+            end_proof(saved)
 
 
 def watcher_pid(root: Path) -> int | None:
@@ -963,6 +1052,15 @@ A_SUBSTITUTION_ALONE = re.compile(r"-?(?:\$\(…\)|`…`|\s)+")
 A_PLAIN_TARGET = re.compile(r"-?\d+|%\S*|\$[!$]")
 BEFORE_A_COMMAND = {"if", "then", "elif", "else", "while", "until", "do", "!", "{", "coproc"}
 NOT_A_COMMAND = {"for", "select", "case", "esac", "fi", "done", "}", "[[", "]]"}
+
+
+def a_loop_header(words: list[str]) -> bool:
+    """Whether `words`, the keywords before them gone, are a `for` or `select` whose body may begin at the next word. After `in` they are its list, which only a `;` or a line ends, and may hold `do`."""
+    at = 0
+    while at < len(words) and (words[at] in BEFORE_A_COMMAND or words[at] in ("time", "-p")):
+        at += 1
+    return words[at : at + 1] in (["for"], ["select"]) and words[at + 2 : at + 3] != ["in"]
+
 # What runs another command: the flags of its that take a value, and how many plain words stand before the command.
 WRAPPERS = {
     "env": ({"-u", "-P", "-S", "-C", "--unset", "--chdir", "--split-string"}, 0),
@@ -1168,7 +1266,7 @@ class ShellReader:
                 continued = False
                 word = self.word()[0]
                 # A `for` or `select` needs no `;` before its body: what follows its header is commands.
-                if word in ("do", "{") and words[:1] in (["for"], ["select"]):
+                if word in ("do", "{") and a_loop_header(words):
                     words = []
                 elif A_DESCRIPTOR_VARIABLE.fullmatch(word) and REDIRECTION.match(text, self.at):
                     pass  # `{fd}>log`: where a redirection puts a descriptor, and no word of the command.
@@ -1592,15 +1690,16 @@ def kills_by_name(commands: list[Command], root: Path) -> bool:
         return command.name in ("grep", "egrep", "fgrep", "rg", "pgrep", "pkill") and any(re.fullmatch(r"-[a-zA-Z]*v[a-zA-Z]*|--invert-match|--inverse", word) for word in command.words[1:])
 
     def by_pid(command: Command) -> bool:
-        """By a pid file, or by a parent's pid, which 1 is not: every orphan on the host has it for a parent."""
+        """By a pid file, or by a parent's pid, in any cluster, `-lP 123`. 1 is no such pid: every orphan on the host has it for a parent. Inverted, it is all that is not those."""
+        if inverted(command):
+            return False
         words = command.words[1:]
-        if any(word.startswith("-F") for word in words):
-            return True
         for at, word in enumerate(words):
-            parent = word[2:] if word.startswith("-P") else ""
-            parent = parent or (words[at + 1] if word == "-P" and at + 1 < len(words) else "")
-            if word.startswith("-P") and parent.strip("'\"") != "1":
-                return True
+            flag = re.fullmatch(r"-[acfilLnoqSvx]*([PF])(.*)", word, re.S)
+            if flag:
+                value = flag.group(2) or (words[at + 1] if at + 1 < len(words) else "")
+                if flag.group(1) == "F" or "1" not in value.strip("'\"").split(","):
+                    return True
         return False
 
     def searches_by_name(command: Command) -> bool:
@@ -1898,6 +1997,8 @@ def main(argv: list[str]) -> int:
             command = args[args.index("--") + 1:] if "--" in args else args
             say("host-guard: this reads macOS only: running unwatched")
             return subprocess.run(command).returncode
+        if verb == "prove":
+            return prove(repository_root(), Limits())
         say("host-guard: this reads macOS only")
         return 0 if verb == "hook" else 2
     root, overrides, once, wait_seconds, named = repository_root(), {}, False, 0.0, False
@@ -1946,7 +2047,15 @@ def main(argv: list[str]) -> int:
             say("host-guard: interrupted")
             return 130
     if verb == "watch":
-        return watch(root, limits, once, arguments=list(argv))
+        # It goes to `/`, so its root is named as resolved: spelt `sub` or `.`, what it took up again would watch another root, which may be everything on the host.
+        again = list(argv[1:])
+        if "--root" in again:
+            del again[again.index("--root") : again.index("--root") + 2]
+        try:
+            return watch(root, limits, once, arguments=["watch", "--root", str(root), *again])
+        except Exception as error:
+            record(root, kind="unread", error=f"the watcher ended: {error!r}")
+            raise
     if verb == "ensure":
         ensure(root)
         return 0

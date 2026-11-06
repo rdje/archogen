@@ -21,6 +21,10 @@ help:
 # Everything that compiles or tests goes through the host guard, because this machine is shared: it waits for room, runs at lower
 # priority on a third of the cores, and is stopped before it endangers the host (docs/decisions/decision_host-guard.md).
 GUARD := python3 -I -B scripts/host_guard.py run --wait 1800 --
+# A guard emptied or cut short exits 0 having run nothing, and a recipe through it would read as passed.
+ifneq ($(shell python3 -I -B scripts/host_guard.py prove 2>/dev/null),host-guard: this file runs)
+$(error scripts/host_guard.py does not run, so nothing here would be guarded or run: python3 -I -B scripts/host_guard.py prove says why)
+endif
 
 # ROADMAP.md §14.3, through the runner in xtask/. `incomplete` (exit 20) is NOT a pass: a
 # required tool that is unavailable is reported as unavailable.

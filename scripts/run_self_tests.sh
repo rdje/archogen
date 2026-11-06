@@ -19,9 +19,10 @@
 # repository that commits sets its own identity — so this guards the next arm, not a known one.
 #
 # CONTRACT: exit 0 = every self-test passed; 1 = at least one failed, each named; 2 = nothing to run; 20 = none failed and at least one could not all be run, which is no pass.
+# A gate that reads one host alone exits 21 on any other, and is counted apart, never as passed. Only those `SELF_TESTS_ONE_HOST` names may: any other could exempt itself by its exit code.
 # `--self-test` runs this runner's own arms against stub gates in `target/doctrine_scratch/`.
-# Seams, for those arms only: `SELF_TESTS_GLOB` (where gates are looked for) and `SELF_TESTS_HARNESS` (the
-# outside harness).
+# Seams, for those arms only: `SELF_TESTS_GLOB` (where gates are looked for), `SELF_TESTS_HARNESS` (the
+# outside harness) and `SELF_TESTS_ONE_HOST`.
 set -uo pipefail
 SELF="$0"
 case "$SELF" in /*) ;; *) SELF="$PWD/$SELF" ;; esac
@@ -29,6 +30,7 @@ ROOT="$(git rev-parse --show-toplevel)"; cd "$ROOT"
 
 GLOB="${SELF_TESTS_GLOB:-scripts/*.sh knowledge-map/scripts/*.sh}"
 HARNESS="${SELF_TESTS_HARNESS-scripts/selftest_spine.sh}"
+ONE_HOST="${SELF_TESTS_ONE_HOST-scripts/check_host_guard.sh}"
 
 # Run a command as a bare runner would: no global or system git configuration, no identity it did not set.
 bare() {
@@ -84,6 +86,15 @@ self_test() {
   arm "an arm leaning on this machine's git identity fails, as it would on a runner" 1 "✗ $work/check_ident.sh"
   printf '#!/usr/bin/env bash\n[ "${1:-}" = "--self-test" ] || exit 0\nd="%s/ident"; rm -rf "$d"; git init -q "$d" 2>/dev/null && git -C "$d" -c user.name=arm -c user.email=arm@example.invalid commit -q --allow-empty -m x\n' "$work" > "$work/check_ident.sh"
   arm "an arm that sets its own identity passes" 0 "check_ident.sh"
+  stub "$work/check_ident.sh" 20
+  arm "one that could not all be run is incomplete, no pass" 20 "incomplete"
+  stub "$work/check_alpha.sh" 1; stub "$work/check_ident.sh" 20
+  arm "and a failure outranks it" 1 "✗ $work/check_alpha.sh"
+  rm -f "$work"/check_*.sh; stub "$work/check_alpha.sh" 0; stub "$work/check_beta.sh" 21
+  arm "a gate no row names cannot exempt itself as of another host" 1 "✗ $work/check_beta.sh"
+  SELF_TESTS_ONE_HOST="$work/check_beta.sh" arm "one that reads another host is counted apart, never as passed" 0 "1 self-test(s) passed, and 1 reads another host"
+  rm -f "$work/check_alpha.sh"
+  SELF_TESTS_ONE_HOST="$work/check_beta.sh" arm "and with nothing else run, nothing was" 2 "nothing here ran"
   rm -rf "$work"
   echo "run-self-tests self-test: $ok pass / $((arms - ok)) fail ($arms arms)"
   [ "$ok" -eq "$arms" ]
@@ -98,7 +109,7 @@ if [ -z "$gates" ]; then
   echo "SELF-TESTS: no gate carries a --self-test under '$GLOB' — nothing ran, which is not a pass" >&2
   exit 2
 fi
-passed=0; failed=0; incomplete=0
+passed=0; failed=0; incomplete=0; elsewhere=0
 while IFS= read -r gate; do
   started=$SECONDS
   out="$(bare bash "$gate" --self-test 2>&1)"
@@ -110,6 +121,9 @@ while IFS= read -r gate; do
     # Could not all be run, which is neither: `ROADMAP.md` §14.3's incomplete, said and carried up.
     incomplete=$((incomplete + 1))
     printf '  ? %-52s %3ss  %s\n' "$gate" "$((SECONDS - started))" "$(printf '%s\n' "$out" | grep -E 'self-test:' | tail -1)"
+  elif [ "$status" -eq 21 ] && [ "$gate" = "$ONE_HOST" ]; then
+    elsewhere=$((elsewhere + 1))
+    printf '  - %-52s %3ss  %s\n' "$gate" "$((SECONDS - started))" "$(printf '%s\n' "$out" | tail -1)"
   else
     failed=$((failed + 1))
     printf '  ✗ %-52s %3ss  its RED arms did not all pass:\n' "$gate" "$((SECONDS - started))" >&2
@@ -123,6 +137,14 @@ fi
 if [ "$incomplete" -ne 0 ]; then
   echo "self-tests: incomplete — $passed passed, and $incomplete could not all be run, which is no pass"
   exit 20
+fi
+if [ "$passed" -eq 0 ]; then
+  echo "SELF-TESTS: $elsewhere read another host, and nothing here ran, which is not a pass" >&2
+  exit 2
+fi
+if [ "$elsewhere" -ne 0 ]; then
+  echo "self-tests: OK — $passed self-test(s) passed, and $elsewhere reads another host"
+  exit 0
 fi
 echo "self-tests: OK — $passed self-test(s) passed"
 exit 0
