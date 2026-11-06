@@ -125,7 +125,7 @@ an old plan through: check 4 judges the new requirement and refuses.
 ### Running the checker
 
 The checks run as a program of their own, `archogen-plan-check`, which an install places beside `archogen`, and
-which `archogen plan-check` runs, handing over its arguments as they are:
+which `archogen plan-check` runs, handing over its arguments as they are and giving it no input, so a description or a plan named `/dev/stdin` reads as nothing there and is refused:
 
 ```text
 archogen plan-check examples/periodic-three/system.eadl build/plan.json

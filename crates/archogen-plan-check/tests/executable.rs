@@ -266,6 +266,35 @@ fn an_earlier_record_at_the_path_is_replaced() {
 }
 
 #[test]
+fn a_stream_that_reads_as_nothing_is_no_description_and_no_plan() {
+    let dir = scratch();
+    let description = dir.join("system.eadl");
+    std::fs::write(&description, PLAIN).expect("written");
+    let plan_file = dir.join("plan");
+    std::fs::write(
+        &plan_file,
+        plan(&description, "console.write", "console.uart"),
+    )
+    .expect("written");
+    for args in [
+        ["/dev/stdin", plan_file.to_str().expect("a path")],
+        [description.to_str().expect("a path"), "/dev/stdin"],
+    ] {
+        let output = run(&args);
+        assert_eq!(
+            output.status.code(),
+            Some(2),
+            "{args:?}: {}",
+            String::from_utf8_lossy(&output.stderr)
+        );
+        assert!(
+            String::from_utf8_lossy(&output.stderr).contains("read as nothing"),
+            "{args:?}"
+        );
+    }
+}
+
+#[test]
 fn a_usage_error_writes_no_record() {
     let dir = scratch();
     let description = dir.join("system.eadl");

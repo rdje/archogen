@@ -216,10 +216,22 @@ pub fn say_it_stays(stage: &Path, err: &mut dyn Write) {
         Ok(_) => {
             let _ = writeln!(
                 err,
-                "  {} could not be removed, or holds what this run did not write, and the next run refuses while it stands: look at it, and remove it",
+                "  {} could not be removed, or holds what this run did not write, what its checker left among it, and the next run refuses while it stands: look at it, and remove it",
                 stage.display()
             );
         }
+    }
+}
+
+/// What to say of `stage` where a refusal has tried to remove it: that it stands, if it does.
+pub fn if_it_stays(stage: &Path) -> String {
+    if std::fs::symlink_metadata(stage).is_err_and(|error| error.kind() == ErrorKind::NotFound) {
+        String::new()
+    } else {
+        format!(
+            "; and {} could not be removed, and the next run refuses while it stands: look at it, and remove it",
+            stage.display()
+        )
     }
 }
 

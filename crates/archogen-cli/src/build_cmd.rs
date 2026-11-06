@@ -440,8 +440,9 @@ impl Place {
             .map(|(path, _)| *path)
             .max_by_key(|path| path.len())
             .unwrap_or_default();
-        place::room(&self.stage, deepest, out_dir).map_err(|refused| {
+        place::room(&self.stage, deepest, out_dir).map_err(|mut refused| {
             self.abandon();
+            refused.message.push_str(&place::if_it_stays(&self.stage));
             refused.into()
         })
     }
@@ -761,7 +762,7 @@ fn refused(failed: &Failed, path: &str, err: &mut dyn Write) -> Status {
             );
             let _ = writeln!(
                 err,
-                "  hint: check that its disk has room, that the umask lets this user write what it makes, and that nothing else moved or closed the build's `.building` directory"
+                "  hint: check that its disk has room, that no limit holds what this user may write, that the umask lets it write what it makes, and that nothing else moved or closed the build's `.building` directory"
             );
             Status::ToolFailure
         }

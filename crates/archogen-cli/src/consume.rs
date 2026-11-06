@@ -128,17 +128,17 @@ pub fn check_plan(
         description.to_string_lossy().into_owned(),
         plan.to_string_lossy().into_owned(),
     ];
-    ran.set(true);
     let launched = launcher
         .launch(PLAN_CHECKER, &args, &mut std::io::sink(), err)
         .map_err(|unlaunched| failure(unlaunched.message, unlaunched.repair))?;
+    ran.set(true);
     let code = match launched.ended {
         Ended::Code(code) => code,
         // Nothing disagrees: it did not finish.
         Ended::Abnormally(how) => {
             return Err(failure(
                 format!("`{PLAN_CHECKER}` ended without an exit code: {how}"),
-                "nothing was judged, so run this again: if nothing else stopped it and it ends the same way, report it, with what it wrote above".to_owned(),
+                "nothing was judged. Run this again, once what is said below to stand is gone: if nothing else stopped it and it ends the same way, report it, with what it wrote above".to_owned(),
             ))
         }
     };
@@ -288,26 +288,15 @@ fn put_it_back(error: &std::io::Error) -> &'static str {
     }
 }
 
-/// The checker's record out of `dir`, if it is a regular file and a record, and what it was writing, if that reads as the start of one: the one file in a stage this run did not write itself, and
-/// its own program did. So it is asked only of a run whose checker was handed the stage: before that, nothing at that name is this run's, whatever it reads as.
+/// The checker's record out of `dir`, if it is a regular file and a record: the one file in a stage this run did not write itself, and its own program did. So it is asked only of a run whose checker ran:
+/// before that, nothing at that name is this run's, whatever it reads as. What a stopped checker was writing, beside it, is not asked of: no reading of it tells it from what came there, so it stays, and the
+/// stage with it is said.
 pub fn remove_record(dir: &Path) {
     let record = dir.join(RECORD);
     if std::fs::symlink_metadata(&record).is_ok_and(|meta| meta.is_file())
         && reads_as_record(&record).unwrap_or(false)
     {
         let _ = std::fs::remove_file(&record);
-    }
-    let part = dir.join(RECORD_PART);
-    if place::open_regular(&part)
-        .and_then(|opened| {
-            let mut begins = Vec::new();
-            let length = u64::try_from(A_RECORD_BEGINS.len()).unwrap_or(u64::MAX);
-            opened.take(length).read_to_end(&mut begins)?;
-            Ok(A_RECORD_BEGINS.starts_with(&begins))
-        })
-        .unwrap_or(false)
-    {
-        let _ = std::fs::remove_file(&part);
     }
 }
 

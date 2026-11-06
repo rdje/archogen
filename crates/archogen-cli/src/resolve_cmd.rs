@@ -429,7 +429,7 @@ impl Landing {
                     ),
                     place::NotWritten::Failed(_, _, error) => (
                         format!("cannot write the plan: {error}"),
-                        "check that its disk has room, and that the umask lets this user write what it makes",
+                        "check that its disk has room, that no limit holds what this user may write, and that the umask lets it write what it makes",
                     ),
                 };
                 Unwritten {
@@ -558,18 +558,18 @@ impl Landing {
         let (mut moved_in, mut moved_out, mut placed) = (false, false, false);
         let undo = |moved_in: bool, moved_out: bool, placed: bool| {
             let mut stranded = String::new();
-            let placed_at = if placed {
-                Some(&record)
-            } else if moved_in {
-                Some(&new)
-            } else {
-                None
-            };
-            if let Some(at) = placed_at {
-                if let Err(error) = std::fs::remove_file(at) {
+            if placed {
+                if let Err(error) = std::fs::remove_file(&record) {
                     stranded = format!(
-                        "; and the checker's record could not be taken back ({error}), and is at {}, where the next run refuses while it stands: look at it, and remove it",
-                        at.display()
+                        "; and the checker's record could not be taken back ({error}), and is at {}: it speaks of no plan that stands, so look at it, and remove it",
+                        record.display()
+                    );
+                }
+            } else if moved_in {
+                if let Err(error) = std::fs::remove_file(&new) {
+                    stranded = format!(
+                        "; and the checker's record could not be taken back ({error}), and is at {}, where a checked run refuses while it stands: look at it, and remove it",
+                        new.display()
                     );
                 }
             }
@@ -642,7 +642,7 @@ impl Landing {
                         "cannot give the checker's record its name at {}: {error}{stranded}",
                         record.display()
                     ),
-                    "check what stands at that name, and any flag on it",
+                    "check what stands at that name, and any flag or access list on it or on its directory",
                 ));
             }
             placed = true;
@@ -664,7 +664,7 @@ impl Landing {
         if moved_out {
             if let Err(error) = std::fs::remove_file(&old) {
                 said.push(format!(
-                    "the plan is in place, and the earlier record could not be removed ({error}): it is at {}, and the next run refuses while it stands: look at it, and remove it",
+                    "the plan is in place, and the earlier record could not be removed ({error}): it is at {}, and a checked run refuses while it stands: look at it, and remove it",
                     old.display()
                 ));
             }

@@ -345,3 +345,20 @@ It injected those faults with a small interposer, `target/m4271/tools/fault.c`, 
 | R16-9 | gap | the resolve fixture for `parent-shut-meanwhile` was weaker than its row, no plan standing at `PLAN` | It stands one, and holds it |
 
 Said, and left as it stands: its reader could not run a real full disk or read-only mount, `hdiutil` being refused here, filesystems other than APFS, Linux, another user, a sticky directory, a mount point, or names that are no text. On coarse file times an edit of the same length within the tick, closed, reads as a run's own: stated in the record. Its read-only test aimed `mkdir` at `/usr/r16*` and `/r16*`, which the system refused.
+
+**Round 17** — `2026-11-06`: not acceptable, 10 findings, 4 defects, after 3, 5 and 2, R17-1 a regression of round 16's own answer and the only one touching bytes or needing another program. Its reader ran about 21,000 commands on an install of `55b9884f`: all 51 and 66 rows with no difference in status or words; 18 signals over 1,314 cases, each ending in a good run by following the next run's words; 24 masks; 248 cases of flags and access lists; 1,123 of injected faults; a marked file planted at each name at every call, 7,084 runs, 2,484 of 2,708 plants kept, 180 of the 224 lost being R17-1 and 44 the landing's stated window.
+
+| # | Kind | Finding | Answer |
+| --- | --- | --- | --- |
+| R17-1 | defect, regression | `remove_record` took whatever stood at `plan-check.json.part` for what the checker was writing, if it read as the start of a record: an empty file, a `{`, a whole record. 120 of 120 with a racer, unsaid. And `checker_ran` was set before the launch, even if the launcher refused | R16-2's answer is taken back: a run removes what it wrote, and no reading tells that part from what came. It stays, and `say_it_stays` now says a stage may hold what its checker left, which was R16-2's own complaint. `checker_ran` is set once the checker has run |
+| R17-2 | defect, older | `archogen plan-check` starts the checker with no input, so a description named `/dev/stdin` read empty and got `stale-input`, whose repair cannot work | A stream that reads as nothing is refused as `usage`, by the checker, of a description and a plan. It failed closed: no false `ok` was reached. The chapter says so |
+| R17-3 | defect, older | the checker's own `write` dropped the failure of `remove_file(&part)`, R16-1's class in the checker: the whole record stayed at `R.part`, unsaid, blocking the next run | It says so, with where it is |
+| R17-4 | defect, older | `Place::open`'s no-room way out never said a stage that could not be removed | It says so, in the refusal |
+| R17-5 | route, older | a module that is a pipe nobody writes hangs every command, `check` among them | Stated in `cli.md`: it waits as any reader of a pipe does. Nothing is left |
+| R17-6 | route, older | `build --out --locked` had no row, where `resolve` has `a-flag-as-its-value` | The row, and a fixture in a process of its own |
+| R17-7 | gap, older | the refusal from `past_ticks` had no repair | It has |
+| R17-8 | wording, older | hints pointing at the wrong thing: a flag on `PLAN.check` told to look at what stands at the name; a file limit told only of disk room and the umask | Each names what can be so |
+| R17-9 | wording, older | "nothing was judged, so run this again" beside "the next run refuses" | Run this again, once what is said to stand is gone |
+| R17-10 | wording | "the next run refuses while it stands" was false of a record stranded at its own name, and of `.earlier` under `--unchecked` | Each says what it does: a checked run refuses, or nothing does |
+
+Said, and left as it stands: its reader could not run a real full disk or read-only mount, other filesystems, Linux, another user, a sticky directory of someone else's, mount points, or names that are no text. By reading only: a file beginning as a record past 2^30 is read up to 1 GiB before it is refused. It stated that `git show a6b6f6ec:` went to three files under `crates/`, that a rig left two processes of its own, which it ended by pid, and that `ulimit -n 3` aborts before any of archogen's code runs.

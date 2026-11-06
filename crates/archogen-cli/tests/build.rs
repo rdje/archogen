@@ -1791,6 +1791,18 @@ fn build_meddled(dir: &Path, change: fn(&Path)) -> Option<Said> {
     ))
 }
 
+/// One command in a process of its own, in the directory it is told: what a relative `--out` needs, which this process's directory is no place for.
+#[test]
+fn a_command_in_a_directory_of_its_own() {
+    let Ok(args) = std::env::var("ARCHOGEN_ROUTE_ARGS") else {
+        return;
+    };
+    let args: Vec<&str> = args.split('\n').collect();
+    let (status, out, err) = invoke(&args, &Checker);
+    println!("status: {}", status.slug());
+    println!("{out}{err}");
+}
+
 /// An earlier build at `dir`.
 #[cfg(unix)]
 fn an_earlier_build(dir: &Path) {
@@ -2355,6 +2367,28 @@ fn out_routes() -> Vec<(&'static str, Route)> {
             let said = outcome.as_ref().map_or("", |(_, said)| said.as_str());
             assert!(said.contains("could not be removed"), "{said}");
             outcome
+        }),
+        ("a-flag-as-its-value", |root| {
+            // The parser takes the next word as `--out`'s value, whatever it spells.
+            let args = ["build", &example(HEARTBEAT), "--out", "--locked"].join("\n");
+            let output = Command::new(std::env::current_exe().expect("this test"))
+                .args([
+                    "--exact",
+                    "a_command_in_a_directory_of_its_own",
+                    "--nocapture",
+                ])
+                .env("ARCHOGEN_ROUTE_ARGS", args)
+                .current_dir(root)
+                .output()
+                .expect("it runs");
+            let said = String::from_utf8_lossy(&output.stdout).into_owned();
+            assert!(root.join("--locked").is_dir(), "{said}");
+            let status = if said.contains("status: ok") {
+                Status::Ok
+            } else {
+                Status::ToolFailure
+            };
+            Some((status, said))
         }),
         ("parent-shut-meanwhile", |root| {
             if !modes_bind(root) {

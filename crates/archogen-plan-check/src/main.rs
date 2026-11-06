@@ -261,6 +261,23 @@ fn run(
             )
         }
     };
+    // A stream that read as nothing was given nothing: `archogen plan-check` starts this with no input, so `/dev/stdin` is empty there, which says nothing of what the plan was written from.
+    for (what, given, empty) in [
+        ("description", &description, text.is_empty()),
+        ("plan", &plan, plan_bytes.is_empty()),
+    ] {
+        if empty && !std::fs::metadata(given).is_ok_and(|meta| meta.is_file()) {
+            return refuse_with(
+                err,
+                Status::Usage,
+                &format!(
+                    "the {what} {} is no regular file and read as nothing, so there is nothing to judge",
+                    given.display()
+                ),
+                "give it as a file: `archogen plan-check` gives this program no input",
+            );
+        }
+    }
     let modules = DirectoryModules::new(description.parent().unwrap_or_else(|| Path::new("")));
     let (description_name, plan_name) = (
         description.display().to_string(),
@@ -485,8 +502,16 @@ fn write(path: &Path, text: &str) -> std::io::Result<()> {
             None => Ok(()),
         })
         .and_then(|()| std::fs::rename(&part, path));
-    if placed.is_err() {
-        let _ = std::fs::remove_file(&part);
+    if let Err(error) = &placed {
+        if let Err(stuck) = std::fs::remove_file(&part) {
+            return Err(std::io::Error::new(
+                error.kind(),
+                format!(
+                    "{error}; and {} could not be removed ({stuck}), and the next run refuses while it stands: look at it, and remove it",
+                    part.display()
+                ),
+            ));
+        }
     }
     placed
 }

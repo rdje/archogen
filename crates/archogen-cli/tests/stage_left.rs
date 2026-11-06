@@ -210,8 +210,8 @@ impl Launch for StoppedWriting {
 }
 
 #[test]
-fn what_the_checker_was_writing_goes_with_the_rest() {
-    for (verb, out) in [("build", "x"), ("resolve", "p")] {
+fn what_the_checker_was_writing_stays_and_is_said_since_nothing_tells_it_from_what_came() {
+    for (verb, out, stage) in [("build", "x", "x.building"), ("resolve", "p", "p.part")] {
         let root = scratch(&format!("stopped-writing-{verb}"));
         let (status, written, err) = invoke(
             &[
@@ -223,13 +223,18 @@ fn what_the_checker_was_writing_goes_with_the_rest() {
             &StoppedWriting,
         );
         assert_eq!(status, Status::ToolFailure, "{verb}: {written}{err}");
-        let left: Vec<_> = fs::read_dir(&root)
-            .expect("the root")
-            .flatten()
-            .map(|entry| entry.path())
-            .collect();
-        assert!(left.is_empty(), "{verb}: left {left:?}: {err}");
-        assert!(!err.contains("did not write"), "{verb}: {err}");
+        assert_eq!(
+            fs::read(root.join(stage).join(archogen_cli::consume::RECORD_PART)).expect("kept"),
+            b"{\"format\":\"archogen-res"
+        );
+        assert!(
+            err.contains("what its checker left among it"),
+            "{verb}: {err}"
+        );
+        assert!(
+            err.contains("the next run refuses while it stands"),
+            "{verb}: {err}"
+        );
         reopened_and_gone(&root);
     }
 }

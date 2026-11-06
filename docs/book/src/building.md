@@ -149,7 +149,7 @@ file is written. So `DIR` holds at every moment what stood there, nothing, or th
 found it. Your changes belong in the description, not in the output.
 
 ⛔ **A build deletes nothing it did not write**, but for two things: an empty directory at `--out`, which it takes, and its own stage,
-of which on a refusal what this run wrote goes, a file it could not finish and each directory it made among it. It knows each from the moment it stands, by the file it is and not by what it reads as, so another file of the same length at that name is not its own, closed or not. What came in it stays with it, and is said, as is a stage that cannot be removed or looked at, unless the table says it stays for a report. A signal ends a build where it stands, a shell's `ulimit -f` among them, and it cleans nothing: the next run refuses, saying a run that stopped may have left its stage. Of an earlier
+of which on a refusal what this run wrote goes, a file it could not finish and each directory it made among it. What a stopped checker was writing stays, and is said, since nothing tells it from what came. It knows each from the moment it stands, by the file it is and not by what it reads as, so another file of the same length at that name is not its own, closed or not. What came in it stays with it, and is said, as is a stage that cannot be removed or looked at, unless the table says it stays for a report. A signal ends a build where it stands, a shell's `ulimit -f` among them, and it cleans nothing: the next run refuses, saying a run that stopped may have left its stage. Of an earlier
 build it removes each file `provenance.json` lists, one by one and only if still the regular file it wrote, then the directories that
 held them where that leaves them empty. What building and looking at a package leave at its top, `target`, `Cargo.lock` and `.DS_Store`,
 is neither judged nor deleted: it moves to the new package, so a rebuild keeps cargo's work.
@@ -213,6 +213,7 @@ the rule: what it says is run, and a route it does not name is promised nothing 
 | `stage-swapped` | while it runs, the stage is swapped for a link | `tool-failure` | `came in the stage` | the link and what it points at; no package |
 | `stage-replaced` | while it runs, another directory comes to stand at the stage's name | `tool-failure` | `wrote no record` | that directory, with what it holds; no package |
 | `stage-gone` | while it runs, the stage is removed | `tool-failure` | `wrote no record` | nothing |
+| `a-flag-as-its-value` | `--out --locked`, the parser taking the next word as `--out`'s value | `ok` | `generated` | a package named `--locked` |
 | `parent-closed-meanwhile` | while it runs, `--out`'s parent is closed to writing | `tool-failure` | `a build renames` | no package; the stage, which it says could not be removed |
 | `parent-shut-meanwhile` | while it runs, `--out`'s parent is closed to this user altogether, so the stage cannot be looked at | `tool-failure` | `closed while the checker ran` | no package; the stage, which it says it cannot look at and may stand |
 | `carried-in-stage` | while it runs, the stage comes to hold a name a build carries, an earlier build holding it too | `ok` | `keeps what could not go` | the package with what came; the earlier one at `DIR.replaced` |
