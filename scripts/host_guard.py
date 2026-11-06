@@ -1645,17 +1645,18 @@ def kills_by_name(commands: list[Command], root: Path) -> bool:
         words = command.words[1:]
         # What selects more than a pid does, and beside a pid prints all it selects: `ps -ef -p 1`, `ps -Ap 1`, `ps ax 1`, `ps -U 501 1`.
         plain = "AaCcdEefhjLlMmrSTvwXx"
-        if any(re.fullmatch(rf"-[{plain}]*[Aaex]\w*|-[{plain}]*[UuGt].*", word) for word in words):
+        if any(re.fullmatch(rf"-[{plain}]*[Aae]\S*|-[{plain}]*[UuGt].*", word) for word in words):
             return True
-        if words and re.fullmatch(r"[A-Za-z]*[Aaex][A-Za-z]*", words[0]):
+        if words and re.fullmatch(r"[A-Za-z]*[Aae][A-Za-z]*", words[0]):
             return True
+        a_pid = r"(?:\d+|\$[\w$!@*]+|\$\{[^}]*\}|\$\(.*\)|`.*`)"
         for at, word in enumerate(words):
-            # `-p` or a group's `-g` in any cluster of `ps`'s plain flags, as `ps -fp 123` writes it. Past a flag taking a value it is that value: `-opid`.
-            if re.fullmatch(rf"-[{plain}]*[pg]\w*|--pid.*", word):
+            # `-p` or a group's `-g` in any cluster of `ps`'s plain flags, as `ps -fp 123` and `ps -p$$` write it. Past a flag taking a value it is that value: `-opid`.
+            if re.fullmatch(rf"-[{plain}]*[pg]\S*|--pid.*", word):
                 return False
-            # Or a pid written plainly, however a shell spells one: `ps 123`, `ps up 123`, `ps -f "$PID"`, `ps $$`, `ps "$(cat job.pid)"`, `ps "${PIDS[@]}"`, unless it is what the flag before it takes: `-O 1`.
+            # Or a pid written plainly, however a shell spells one, or several: `ps 123`, `ps up 123`, `ps -f "$PID"`, `ps $$`, `ps "$(cat job.pid)"`, `` ps `cat job.pid` ``, `ps "$a,$b"`, unless it is what the flag before it takes: `-O 1`.
             before = words[at - 1] if at else ""
-            if re.fullmatch(r"\d+|\$[\w$!@*]+|\$\{[^}]*\}|\$\(.*\)", word.strip("'\""), re.S) and (not before.startswith("-") or re.fullmatch(rf"-[{plain}]*", before)):
+            if re.fullmatch(rf"{a_pid}(?:,{a_pid})*", word.strip("'\""), re.S) and not re.fullmatch(rf"-[{plain}]*[oOkMNW]", before):
                 return False
         return True
 

@@ -14,7 +14,7 @@ No bootstrap read includes this directory.
 
 | Review history | Design record | Rounds | Status |
 | --- | --- | --- | --- |
-| [`decision_host-guard-reviews.md`](decision_host-guard-reviews.md) | [`decision_host-guard.md`](../decisions/decision_host-guard.md) | 15 | open |
+| [`decision_host-guard-reviews.md`](decision_host-guard-reviews.md) | [`decision_host-guard.md`](../decisions/decision_host-guard.md) | 16 | open |
 | [`decision_release-alarm-reviews.md`](decision_release-alarm-reviews.md) | [`decision_release-alarm.md`](../decisions/decision_release-alarm.md) | 5 | open |
 | [`decision_device-correspondence-reviews.md`](decision_device-correspondence-reviews.md) | [`decision_device-correspondence.md`](../decisions/decision_device-correspondence.md) | 7 | open |
 | [`decision_hosted-build-reviews.md`](decision_hosted-build-reviews.md) | [`decision_hosted-build.md`](../decisions/decision_hosted-build.md) | 19 | open |

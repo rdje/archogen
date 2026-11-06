@@ -956,11 +956,62 @@ def case_a_commit_holds_what_is_staged() -> None:
     copy.write_text(changed)
     done = holds()
     check("and one staged is refused, the tree repaired", done.returncode == 1 and "reads `hold_lock`, bound nowhere" in done.stdout, done.stdout + done.stderr)
+    # What it holds of the rest as staged: a hook taken off and put back in the tree, and the tree half saved beside an unrelated change.
+    copy.write_text(good)
+    settings = repo / ".claude" / "settings.json"
+    kept = settings.read_text()
+    git("add", "-A")
+    (repo / "target" / "host-guard-self-test.passed").write_text(stamp_of(repo / "scripts"))
+    check("the fixture holds", holds().returncode == 0, holds().stdout)
+    settings.write_text('{"hooks": {}}')
+    git("add", "-A")
+    settings.write_text(kept)
+    done = holds()
+    check("a hook taken off and staged is refused, the tree as it was", done.returncode == 1, done.stdout + done.stderr)
+    git("add", "-A")
+    settings.write_text('{"hooks": {}}')
+    done = holds()
+    check("and in the tree alone refuses nothing", done.returncode == 0, done.stdout + done.stderr)
+    settings.write_text(kept)
+    # What the index no longer holds is gone, whatever stands in the tree.
+    git("rm", "-q", "--cached", "scripts/selftest_host_guard.py")
+    done = holds()
+    check("a self-test gone from the index is said", done.returncode == 1 and "selftest_host_guard.py is gone" in done.stdout, done.stdout + done.stderr)
+    git("add", "-A")
+    git("rm", "-q", "--cached", "scripts/host_guard.py")
+    done = holds()
+    check("and the guard gone from it", done.returncode == 1 and "host_guard.py is gone" in done.stdout, done.stdout + done.stderr)
+    git("add", "-A")
+    # Bytes the interpreter refuses, though text decoded leniently compiles.
+    copy.write_bytes(good.encode() + b"# \xff\n")
+    git("add", "-A")
+    done = holds()
+    check("bytes that are no text do not compile", done.returncode == 1 and "does not compile" in done.stdout, done.stdout + done.stderr)
     # What parses and does not compile.
     copy.write_text(good.replace("from __future__ import annotations\n", "from __future__ import annotations\nreturn\n", 1))
     git("add", "-A")
     done = holds()
     check("one that parses and does not compile is refused", done.returncode == 1 and "does not compile" in done.stdout, done.stdout + done.stderr)
+
+
+def case_a_stamp_is_of_a_whole_run_of_these_bytes() -> None:
+    repo = fresh("stamped")
+    scripts = repo / "scripts"
+    scripts.mkdir()
+    for name in ("host_guard.py", "selftest_host_guard.py", "check_host_guard.sh"):
+        (scripts / name).write_text(name)
+    before = stamp_of(scripts)
+    stamp = repo / "target" / "host-guard-self-test.passed"
+    check("a case by name leaves none", "by name" in leave_the_stamp(["case_x"], before, repo, scripts) and not stamp.exists())
+    elsewhere = repo / "copy"
+    elsewhere.mkdir()
+    for name in ("host_guard.py", "selftest_host_guard.py", "check_host_guard.sh"):
+        (elsewhere / name).write_text(name)
+    check("a copy leaves none in the repository it lies in", "a copy" in leave_the_stamp([], before, repo, elsewhere) and not stamp.exists())
+    (scripts / "host_guard.py").write_text("saved during the run")
+    check("a save during the run leaves none", "changed" in leave_the_stamp([], before, repo, scripts) and not stamp.exists())
+    (scripts / "host_guard.py").write_text("host_guard.py")
+    check("a whole run of these bytes leaves it", leave_the_stamp([], before, repo, scripts) == "" and stamp.read_text() == before)
 
 
 def case_a_clean_leaves_a_watcher_named() -> None:
@@ -1522,7 +1573,7 @@ def case_killing_by_name() -> None:
         for command in (
             f"pkill -f '{scope}/x'", f"kill $(pgrep -f {scope}/x)", "kill 123", "kill -9 123", 'kill "$(cat job.pid)"', "kill $(cat job.pid)", "kill $(jobs -p)", "git commit -m 'pkill -x rustc'",
             "rg pkill docs/", "git grep -n killall -- scripts", "find . -name pkill -print", "python3 -I -B -c pass pkill probe", "pgrep -x rustc", "ps -ax | grep rustc", "git commit -m 'kill the pgrep rig'",
-            "pkill -P 123", "pkill -P123", "pkill -fP 123 sleep", 'pkill -P "$PID"', "pkill -g 123", "ps -o pid= -g 123 | xargs kill", "ps -ax | head -3; kill -- -$$", 'ps 123; kill "$x"', 'ps up 123; kill "$x"', 'ps "$PID" && kill "$PID"', 'ps $PID; kill $PID', 'ps -f "$PID"; kill "$PID"', 'ps -w 123; kill "$x"', 'ps $$; kill "$x"', 'ps "$(cat job.pid)"; kill "$x"', 'ps "$@"; kill "$@"', 'ps "${PIDS[@]}"; kill "${PIDS[@]}"', 'pgrep -lP "$PID"; kill "$PID"', "for w in do pkill; do echo $w; done", "kill $(pgrep -P 123)", "cat target/x/job.pid | xargs kill", f"pgrep -f {scope}/x | xargs kill", f"ps -ax | grep {scope}/x | awk '{{print $1}}' | xargs kill",
+            "pkill -P 123", "pkill -P123", "pkill -fP 123 sleep", 'pkill -P "$PID"', "pkill -g 123", "ps -o pid= -g 123 | xargs kill", "ps -ax | head -3; kill -- -$$", 'ps 123; kill "$x"', 'ps up 123; kill "$x"', 'ps "$PID" && kill "$PID"', 'ps $PID; kill $PID', 'ps -f "$PID"; kill "$PID"', 'ps -w 123; kill "$x"', 'ps $$; kill "$x"', 'ps "$(cat job.pid)"; kill "$x"', 'ps "$@"; kill "$@"', 'ps "${PIDS[@]}"; kill "${PIDS[@]}"', 'kill "$(ps -o ppid= -p$$)"', 'ps -p$PID -o ppid= | xargs kill', 'ps `cat job.pid`; kill "$x"', 'ps "$a,$b"; kill "$a"', 'ps -opid= "$PID"; kill "$x"', 'ps -xp 123; kill "$x"', 'pgrep -lP "$PID"; kill "$PID"', "for w in do pkill; do echo $w; done", "kill $(pgrep -P 123)", "cat target/x/job.pid | xargs kill", f"pgrep -f {scope}/x | xargs kill", f"ps -ax | grep {scope}/x | awk '{{print $1}}' | xargs kill",
             'grep -n "kill\\|pgrep" f', 'rg "xargs kill" scripts/', 'echo "use kill, not pgrep"', "kill 123; ps -ax | grep x", "ps -ax | grep x; kill 123", "kill $!; pgrep -x rustc", "ps -p 123; kill $(cat p)",
             "tools=(pkill killall); echo ${tools[0]}", 'case "$t" in a) echo a;; pkill|killall) echo b;; esac', "for t in a b; do case $t in a) echo a;; pkill) echo b;; esac; done", "[[ $cmd =~ ^(pkill|killall)$ ]] && echo careful",
             "(( pkill > 1 ))", "pkill() { :; }; echo", "cat <<'EOF'\npkill -x rustc\nEOF",
@@ -1772,7 +1823,7 @@ THE_REST = (
     case_only_tightened, case_check_refuses, case_a_figure_not_read_is_never_safe, case_one_process, case_all_processes, case_what_a_stopped_process_started,
     case_another_project_is_never_ours, case_a_terminal_vouches_for_nothing, case_a_root_is_exactly_itself, case_agents, case_what_holds_little_is_left_alone, case_a_job_is_stopped_whole,
     case_a_queued_make_is_no_build, case_at_a_disk_floor_what_writes_stops, case_names_and_zombies, case_a_command_line_that_is_no_text, case_pressure, case_not_ours, case_growing,
-    case_a_small_writer_is_counted, case_the_watcher_outlives_its_own_trouble, case_a_commit_finds_a_name_bound_nowhere, case_a_commit_holds_what_is_staged, case_a_clean_leaves_a_watcher_named, case_a_guard_changed_holds_from_then, case_a_root_remade_is_another, case_a_root_that_is_gone_stays_gone, case_a_stale_pid_names_nobody, case_the_watcher_stays_while_a_job_runs,
+    case_a_small_writer_is_counted, case_the_watcher_outlives_its_own_trouble, case_a_commit_finds_a_name_bound_nowhere, case_a_commit_holds_what_is_staged, case_a_stamp_is_of_a_whole_run_of_these_bytes, case_a_clean_leaves_a_watcher_named, case_a_guard_changed_holds_from_then, case_a_root_remade_is_another, case_a_root_that_is_gone_stays_gone, case_a_stale_pid_names_nobody, case_the_watcher_stays_while_a_job_runs,
     case_what_is_not_the_table_is_blindness, case_a_blind_watcher_is_said, case_the_hook_passes_nothing_it_cannot_read, case_killing_by_name, case_hook, case_a_damaged_log, case_run,
 )
 
@@ -1824,8 +1875,28 @@ def run_case(case) -> None:
     print(f"  {case.__name__}: {'ok' if len(failures) == before else 'FAILED'}", flush=True)
 
 
+def leave_the_stamp(names: list[str], before: str, root: Path, scripts: Path) -> str:
+    """That these very bytes passed whole, which a commit changing them is asked for (`scripts/check_host_guard.sh`), or why not. A case by name is no run of the whole, a copy is no run of the repository it lies in, and what changed during the run did not pass."""
+    if names:
+        return "a case by name is no run of the whole"
+    if not scripts.samefile(root / "scripts"):
+        return "a copy is no run of the repository it lies in"
+    try:
+        if stamp_of(scripts) != before:
+            return "what ran changed while it ran"
+        (root / "target").mkdir(exist_ok=True)
+        (root / "target" / "host-guard-self-test.passed").write_text(before)
+    except OSError as error:
+        return f"its stamp could not be written: {error}"
+    return ""
+
+
 def main(names: list[str]) -> int:
     global pure, passed
+    try:
+        began_on = stamp_of(GUARD.parent)
+    except OSError:
+        began_on = ""
     unknown = set(names) - {case.__name__ for case in (*PURE, *THE_REST)}
     if unknown:
         print(f"host-guard self-test: no case is called {sorted(unknown)}")
@@ -1874,12 +1945,9 @@ def main(names: list[str]) -> int:
     # `incomplete`, as a verification tier says it: not a pass.
     if not_run:
         return 20
-    # That these very bytes passed, which a commit changing them is asked for (`scripts/check_host_guard.sh`).
-    try:
-        (ROOT / "target").mkdir(exist_ok=True)
-        (ROOT / "target" / "host-guard-self-test.passed").write_text(stamp_of(ROOT / "scripts"))
-    except OSError as error:
-        print(f"host-guard self-test: passed, and its stamp could not be written: {error}")
+    why_not = leave_the_stamp(names, began_on, ROOT, GUARD.parent)
+    if why_not:
+        print(f"host-guard self-test: no stamp left for a commit: {why_not}")
     return 0
 
 

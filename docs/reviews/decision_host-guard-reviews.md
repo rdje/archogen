@@ -345,3 +345,23 @@ Said, and left as it stands: its reader could not run real `make focused`, a com
 | G15-11 | wording | `kill -1` "whatever its signal", beside `kill -0 -1`, which sends none; the Review table had row 14 before row 13 | Said, and in order |
 
 Said, and left as it stands: its reader could not run real `make focused`, a commit's compile, a real full volume, chosen pressure levels, true idle or blind times, the census against the real watcher, real Codex, Kimi or VS Code, `onFailure` with a real crash, the interpreter-gone path, or `run_self_tests.sh --self-test`. A safety check refused one rig command, which it reissued without the removal. It read `watch.code` once, and left nothing running.
+
+**Round 16** — `2026-11-06`: not acceptable, 11 findings, 4 defects, after 15, 12, 5, 6, 13, 2, 1, 1, 1, 3, 2, 3, 5, 2 and 4. Its fixtures are under `target/p12716/work/`, each a disposable repository whose pre-commit runs the check, and it committed only there; it re-derived the measurements, all of which held. All four lay in what round 15 made a commit hold, as round 15's lay in round 14's: the method stands, a thing run in place of a thing said, and what it had not run yet is what fell. The stamp is a dozen lines, and it stays: without it a commit holds nothing of what the file does.
+
+| # | Kind | Finding | Answer |
+| --- | --- | --- | --- |
+| G16-1 | defect, fails open | one case by name left the stamp: `job.bytess` staged, `selftest case_what_counts_as_heavy`, 153 passed in 0.12 s, and the commit passed | A case by name leaves none, and says so |
+| G16-2 | defect | the stamp hashed the files when the run ended, so a save during it was stamped: a self-test appended to at 14:27:46, committed unrun | It hashes what the run began on, and leaves none if that changed |
+| G16-3 | defect | a copy with no `.git` stamped the real repository's bytes, never run: `ROOT` is the nearest parent with `.git` | A copy leaves none in the repository it lies in |
+| G16-4 | defect | "refuses a commit that takes the hook off" was false: only the guard was read as staged, so `{"hooks":{}}` staged with the tree restored passed, and `focused` off the guard likewise; and a half-saved `Makefile` refused an unrelated commit | All it reads is read as staged |
+| G16-5 | gap | `git rm --cached` of the guard passed, the tree standing in; `git rm` of the self-test was a traceback | What the index no longer holds is gone, and said |
+| G16-6 | gap | it compiled text decoded leniently, so `# \xff` compiled where Python refuses | It compiles the bytes |
+| G16-7 | gap | false refusals: `-p$$`, `-p$PID`, `` ps `cat job.pid` ``, `ps "$a,$b"`, `-opid= "$PID"`, `-xp 123`, which prints 2 lines | Each is a pid, and `x` beside a pid selects no more |
+| G16-8 | gap | a merge or a cherry-pick runs no pre-commit, and CI has nothing staged, so "at a commit" did not say they hold nothing | Said, with how this repository lands |
+| G16-9 | gap | by the volume's other spelling the check skipped the stamp, `Path.resolve` keeping it | The same place is asked of the filesystem |
+| G16-10 | gap | "last lines always" held of a failure alone: `echo boom; exit 20` said nothing | It says what it said last, and an arm holds it |
+| G16-11 | wording | "a table searched" and "`kill -1`": what is refused is `kill` of them, and `kill -1` alone names no target | It says so |
+
+Found in answering: the stamp's first run refused to stamp itself, `what ran changed while it ran`, since a later line of `main` reused the name the starting hash was held in. It failed closed, as it should, and the name is its own now. And round 15's watcher took each of these saves up as they came, `status` saying so, which is the first this host has run of what rounds 12 to 15 said.
+
+Said, and left as it stands: its reader could not run the brief's list, `main` in a copy with no `.git`, which would have written the real stamp and so is by import, or `run_self_tests.sh --self-test`. `ps -w ax 1` passes, and `ps` itself rejects it. An inherited `GIT_DIR` makes a copy read that repository's index, on no commit's path. It read `status` several times at the real root, and left nothing running.

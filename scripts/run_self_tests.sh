@@ -97,6 +97,8 @@ self_test() {
   arm "one that says FAILED and then died says why it died" 1 "ValueError: the real reason"
   printf '#!/usr/bin/env bash\n[ "${1:-}" = "--self-test" ] || exit 0\nkill -KILL $$\n' > "$work/check_waited.sh"
   arm "one a signal ended says how it ended" 1 "exit 137"
+  printf '#!/usr/bin/env bash\n[ "${1:-}" = "--self-test" ] || exit 0\necho "boom"\nexit 20\n' > "$work/check_waited.sh"
+  arm "one incomplete that names nothing says what it said last" 20 "boom"
   rm -f "$work"/check_*.sh; stub "$work/check_alpha.sh" 0; stub "$work/check_beta.sh" 21
   arm "a gate no row names cannot exempt itself as of another host" 1 "✗ $work/check_beta.sh"
   SELF_TESTS_ONE_HOST="$work/check_beta.sh" arm "one that reads another host is counted apart, never as passed" 0 "1 self-test(s) passed, and 1 reads another host"
@@ -129,6 +131,8 @@ while IFS= read -r gate; do
     incomplete=$((incomplete + 1))
     printf '  ? %-52s %3ss  %s\n' "$gate" "$((SECONDS - started))" "$(printf '%s\n' "$out" | grep -E 'self-test:' | tail -1)"
     printf '%s\n' "$out" | grep -E 'not run:' | head -8 | sed 's/^/      /'
+    # And what one that names nothing said last, as a failure does.
+    grep -qE 'not run:' <<< "$out" || printf '%s\n' "$out" | tail -3 | sed 's/^/      /'
   elif [ "$status" -eq 21 ] && [ "$gate" = "$ONE_HOST" ]; then
     elsewhere=$((elsewhere + 1))
     printf '  - %-52s %3ss  %s\n' "$gate" "$((SECONDS - started))" "$(printf '%s\n' "$out" | tail -1)"

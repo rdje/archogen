@@ -19,39 +19,48 @@ if [ "${1:-}" = "--self-test" ]; then
     exec python3 -I -B "$ROOT/scripts/selftest_host_guard.py"
 fi
 python3 -I -B - "$ROOT" <<'PY'
-import ast, builtins, hashlib, json, re, subprocess, symtable, sys
+import ast, builtins, hashlib, json, os, re, subprocess, symtable, sys
 from pathlib import Path
 
 root = Path(sys.argv[1])
 breaches = []
 guard = root / "scripts" / "host_guard.py"
-if not guard.is_file():
-    print("HOST-GUARD: scripts/host_guard.py is gone")
-    sys.exit(1)
-if not (root / "scripts" / "selftest_host_guard.py").is_file():
-    breaches.append("scripts/selftest_host_guard.py is gone, so nothing shows the guard stops what it should and nothing else")
 
-# At a commit what is staged is what lands, and what stands in the tree beside it may be another session's half-saved file. A copy in no repository of its own has the file alone.
+# At a commit what is staged is what lands, and what stands in the tree beside it may be another session's half-saved file. So everything this reads is read as staged, and what the index no longer holds is gone. A copy in no repository of its own has the tree alone.
 def asks_git(*words):
     return subprocess.run(["git", "-C", str(root), *words], capture_output=True)
 top = asks_git("rev-parse", "--show-toplevel")
-in_its_repository = top.returncode == 0 and Path(top.stdout.decode(errors="replace").strip()).resolve() == root.resolve()
+try:
+    in_its_repository = top.returncode == 0 and os.path.samefile(top.stdout.decode(errors="replace").strip(), root)
+except OSError:
+    in_its_repository = False
 def as_staged(name):
     if in_its_repository:
-        shown = asks_git("show", f":scripts/{name}")
-        if shown.returncode == 0:
-            return shown.stdout
-    return (root / "scripts" / name).read_bytes()
-source = as_staged("host_guard.py").decode("utf-8", errors="replace")
+        shown = asks_git("show", f":{name}")
+        return shown.stdout if shown.returncode == 0 else None
+    try:
+        return (root / name).read_bytes()
+    except OSError:
+        return None
+def text_of(name):
+    return (as_staged(name) or b"").decode("utf-8", errors="replace")
+code = as_staged("scripts/host_guard.py")
+if code is None:
+    print("HOST-GUARD: scripts/host_guard.py is gone")
+    sys.exit(1)
+if as_staged("scripts/selftest_host_guard.py") is None:
+    breaches.append("scripts/selftest_host_guard.py is gone, so nothing shows the guard stops what it should and nothing else")
+# Its bytes, as the interpreter takes them: text decoded leniently would compile where the file itself does not.
 try:
-    compile(source, str(guard), "exec")
+    compile(code, str(guard), "exec")
 except (SyntaxError, ValueError) as error:
     print(f"HOST-GUARD: scripts/host_guard.py does not compile: {error}")
     sys.exit(1)
+source = code.decode("utf-8", errors="replace")
 # A commit changing the guard carries a self-test passed on those very bytes: nothing else reads an attribute or a keyword half renamed, or what the file does when it runs.
 STAMPED = ("host_guard.py", "selftest_host_guard.py", "check_host_guard.sh")
 if in_its_repository and asks_git("diff", "--cached", "--quiet", "--", *[f"scripts/{name}" for name in STAMPED]).returncode != 0:
-    wanted = "".join(f"{hashlib.sha256(as_staged(name)).hexdigest()}  {name}\n" for name in STAMPED)
+    wanted = "".join(f"{hashlib.sha256(as_staged(f'scripts/{name}') or b'').hexdigest()}  {name}\n" for name in STAMPED)
     try:
         passed = (root / "target" / "host-guard-self-test.passed").read_text(encoding="utf-8")
     except (OSError, ValueError):
@@ -107,7 +116,7 @@ for name, line in {"FELL_WINDOW_SECONDS": 10, "GROWTH_WINDOW_SECONDS": 900}.item
 
 # Everything `make` compiles or tests goes through it. These recipes are written out rather than read for what they might mean: a loose reading of a shell line
 # was passed by `cargo fmt && cargo test`. Changing one means changing it here too, in a commit that says why.
-makefile = (root / "Makefile").read_text(encoding="utf-8")
+makefile = text_of("Makefile")
 if len(re.findall(r"^GUARD\s*[:+?]?=", makefile, re.M)) != 1 or not re.search(r"^GUARD\s*:=\s*python3 -I -B scripts/host_guard\.py run --wait \d+ --\s*$", makefile, re.M):
     breaches.append("the Makefile's `GUARD` is not `python3 -I -B scripts/host_guard.py run --wait SECONDS --`, defined once")
 # Whole, each line at its line's start and in this order: a comment, a warning or the other test would keep the words and lose the question.
@@ -167,10 +176,9 @@ for name, recipe in found.items():
 
 # Every shell command an agent runs here is checked first, a subagent's too, by exactly this, and nothing turns it off or lets it go by.
 EXPECTED = 'python3 -I -B "$CLAUDE_PROJECT_DIR/scripts/host_guard.py" hook'
-settings = root / ".claude" / "settings.json"
 try:
-    loaded = json.loads(settings.read_text(encoding="utf-8"))
-except (OSError, ValueError) as error:
+    loaded = json.loads(text_of(".claude/settings.json"))
+except ValueError as error:
     loaded = {}
     breaches.append(f".claude/settings.json does not read: {error}")
 if loaded.get("disableAllHooks"):
@@ -194,7 +202,7 @@ elif set(held[0]) - {"type", "command", "timeout", "onFailure", "statusMessage"}
     breaches.append(f"the hook says more than this check knows, which may narrow what it sees: {sorted(set(held[0]) - {'type', 'command', 'timeout', 'onFailure', 'statusMessage'})}")
 
 # What an agent of any harness reads first says so.
-if "scripts/host_guard.py" not in (root / "CLAUDE.md").read_text(encoding="utf-8"):
+if "scripts/host_guard.py" not in text_of("CLAUDE.md"):
     breaches.append("CLAUDE.md does not name scripts/host_guard.py, so an agent on another harness would not know of it")
 
 for breach in breaches:
