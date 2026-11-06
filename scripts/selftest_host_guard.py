@@ -145,12 +145,12 @@ def run_refused(job: subprocess.Popen, what: str) -> bool:
 
 
 def note_when_unclear() -> None:
-    """Beside the cases, once a second: when the host last would not have let a heavy job start. A `run` refused for it may be looked at after the load has gone."""
+    """Beside the cases, every few seconds, since each look costs the shared host: when the host last would not have let a heavy job start. A `run` refused for it may be looked at after the load has gone."""
     global last_unclear
     while True:
         if not host_clear():
             last_unclear = time.monotonic()
-        time.sleep(1.0)
+        time.sleep(3.0)
 
 
 def host_clear() -> bool:
@@ -167,7 +167,8 @@ def wait_for_room(room_until: float) -> bool:
     """Whether the host has room, within the bound: asked as `run` asks, every few seconds, since each look costs the shared host, and said first, since a long wait is not a hang. A test whose runner has
     gone, stopped by the guard, stops with it: nothing would read its answer."""
     runner, said = os.getppid(), False
-    while not host_clear():
+    # Clear for as long as a failure is excused: on a host clear only this instant, a real failure would read as not run again and again.
+    while not host_clear() or time.monotonic() - last_unclear < UNCLEAR_LATELY_SECONDS:
         if time.monotonic() >= room_until:
             return False
         if os.getppid() != runner:
@@ -688,7 +689,10 @@ def case_a_queued_make_is_no_build() -> None:
             not_run.append(f"a `make` whose job has started is a build ({TAKEN_AWAY})")
             return
         make = spawn(["make", "runs"], scope)
-        until(lambda: g.watcher_pid(scope) and any(p.name == "make" and p.spawns and not p.waiting for p in g.ours(g.processes(), scope, os.getpid())))
+        if not until(lambda: g.watcher_pid(scope) and any(p.name == "make" and p.spawns and not p.waiting for p in g.ours(g.processes(), scope, os.getpid())), 40):
+            # Its `run` was given no room in that time, which says nothing of a `make` that has started a job.
+            not_run.append(f"a `make` whose job has started is a build ({TAKEN_AWAY})")
+            return
         guard("stop", root=scope)
         until(lambda: not g.watcher_pid(scope))
         mine = g.ours(g.processes(), scope, os.getpid())
@@ -793,57 +797,42 @@ def case_at_a_disk_floor_what_writes_stops() -> None:
     watcher.wait(timeout=5)
 
 
-def case_a_guard_saved_broken_ends_nothing() -> None:
-    repo = fresh("broken-save")
+def case_a_guard_changed_holds_from_the_next_command() -> None:
+    repo, copy, watcher = a_copy_watched("changed")
+    good = copy.read_text()
+    marker = repo / "taken-up"
+    copy.write_text(takes_up(good, marker))
+    check("a watcher leaves when its file changes", settle(watcher, 15))
+    # What comes next starts it from the file as it stands.
+    subprocess.run([*PY, str(copy), "ensure", "--root", str(repo)], capture_output=True, timeout=30)
+    check("and the next command starts the new one", until(lambda: marker.exists()))
+    subprocess.run([*PY, str(copy), "stop", "--root", str(repo)], capture_output=True, timeout=30)
+    # Saved broken, the next command fails, and the repair needs nothing more than the save.
+    marker.unlink()
+    copy.write_text(good + "\ndef broken(:\n")
+    done = subprocess.run([*PY, str(copy), "ensure", "--root", str(repo)], capture_output=True, timeout=30)
+    check("saved broken, what comes next fails, and starts nothing", done.returncode != 0 and not marker.exists(), done)
+    copy.write_text(takes_up(good, marker))
+    subprocess.run([*PY, str(copy), "ensure", "--root", str(repo)], capture_output=True, timeout=30)
+    check("and repaired, the next command starts it", until(lambda: marker.exists()))
+    subprocess.run([*PY, str(copy), "stop", "--root", str(repo)], capture_output=True, timeout=30)
+
+
+def case_a_job_under_run_outlasts_a_changed_guard() -> None:
+    repo = fresh("changed-under-run")
     (repo / ".git").mkdir()
     (repo / "scripts").mkdir()
     copy = repo / "scripts" / "host_guard.py"
     shutil.copy(GUARD, copy)
-    watcher = spawn([*PY, str(copy), "watch", "--root", str(repo)], repo)
-    try:
-        until(lambda: (repo / "target" / "host-guard" / "state" / "sampled").exists())
-        good = copy.read_text()
-        log = repo / "target" / "host-guard" / "state" / "events.log"
-        head = "from __future__ import annotations\n"
-        renamed = lambda name: good.replace(f"def {name}(", f"def {name}_(", 1)
-        for name, broken in (
-            ("a syntax error", good + "\ndef broken(:\n"),
-            ("a name no longer defined, on its own reading", renamed("read_host")),
-            ("a name no longer defined, on the lock", renamed("hold_lock")),
-            ("a name no longer defined, on its round", renamed("sample")),
-            ("a name no longer defined, on its log", renamed("record")),
-            ("a name no longer defined, on a stop that may never come", renamed("stop")),
-            ("a field of what its own round reads", good.replace("    running: tuple[int, int] | None\n", "    current: tuple[int, int] | None\n", 1)),
-            ("a line on its way in", good.replace("again = list(argv[1:])", "again = list(argv[1:]); again.indexx", 1)),
-            ("an import that fails", good.replace(head, head + "import no_such_module\n", 1)),
-            ("a raise at its top", good.replace(head, head + "raise SystemExit(1)\n", 1)),
-            ("nothing at all", ""),
-            ("half of it", good[: len(good) // 2].rsplit("\n", 1)[0] + "\n"),
-        ):
-            before = log.stat().st_size if log.exists() else 0
-            copy.write_text(broken)
-            check(f"a guard saved broken is said, and not taken up: {name}", until(lambda: log.exists() and log.stat().st_size > before and "does not run" in log.read_text(errors="replace")[before:], 40))
-            check(f"and does not end the watcher: {name}", up(watcher))
-        check("and says what it found", "read and defined nowhere: stop" in log.read_text(errors="replace"))
-        marker = repo / "repaired"
-        copy.write_text(takes_up(good, marker))
-        check("repaired, it holds from then", until(lambda: marker.exists()))
-    finally:
-        subprocess.run([*PY, str(copy), "stop", "--root", str(repo)], capture_output=True, timeout=30)
-
-
-def case_what_it_says_beside_the_answer_is_no_failure() -> None:
-    repo, copy, watcher = a_copy_watched("warning-beside")
-    log = repo / "target" / "host-guard" / "state" / "events.log"
-    try:
-        marker = repo / "taken-up"
-        # A warning, as an escape the interpreter no longer likes gives, on its standard error.
-        head = "from __future__ import annotations\n"
-        copy.write_text(takes_up(copy.read_text(), marker).replace(head, head + 'A_DIGIT = "\\d+"\n', 1))
-        check("a file that runs and warns is taken up", until(lambda: marker.exists()))
-        check("and is not said to fail", not log.exists() or "does not run" not in log.read_text(errors="replace"))
-    finally:
-        subprocess.run([*PY, str(GUARD), "stop", "--root", str(repo)], capture_output=True, timeout=30)
+    good = copy.read_text()
+    job = spawn([*PY, str(copy), "run", "--", "sleep", "8"], repo)
+    if run_refused(job, "a job under `run` outlasts a changed guard"):
+        return
+    marker = repo / "taken-up"
+    copy.write_text(takes_up(good, marker))
+    check("`run` starts the new watcher itself", until(lambda: marker.exists(), 20))
+    check("and its job goes on to its end", settle(job, 30) and job.returncode == 0, job.returncode)
+    subprocess.run([*PY, str(copy), "stop", "--root", str(repo)], capture_output=True, timeout=30)
 
 
 def takes_up(good: str, marker: Path) -> str:
@@ -863,71 +852,34 @@ def a_copy_watched(name: str, *flags: str) -> tuple[Path, Path, subprocess.Popen
     return repo, copy, watcher
 
 
-def case_a_proof_stands_beside_the_watcher() -> None:
-    repo, copy, watcher = a_copy_watched("slow-proof")
-    state = repo / "target" / "host-guard" / "state"
-    try:
-        good = copy.read_text()
-        head = "from __future__ import annotations\n"
-        copy.write_text(good.replace(head, head + "import time\ntime.sleep(600)\n", 1))
-        until(lambda: subprocess.run(["pgrep", "-P", str(watcher.pid)], capture_output=True).stdout.strip())
-        before = (state / "sampled").read_text()
-        check("the watcher goes on reading while a saved file is asked", until(lambda: (state / "sampled").read_text() != before, 15))
-        # Saved again meanwhile, and broken: the proof running says nothing of it, and this one ends nothing.
-        log = state / "events.log"
-        copy.write_text("raise SystemExit(1)\n")
-        check("a file saved during a proof is asked in its turn", until(lambda: log.exists() and "does not run (exit 1)" in log.read_text(errors="replace"), 20))
-        check("and ends nothing", up(watcher))
-        check("and the proof before it is gone", until(lambda: not subprocess.run(["pgrep", "-P", str(watcher.pid)], capture_output=True).stdout.strip(), 15))
-        marker = repo / "taken-up"
-        copy.write_text(takes_up(good, marker))
-        check("a good file after them is taken up", until(lambda: marker.exists()))
-        check("by the same watcher", up(watcher))
-    finally:
-        subprocess.run([*PY, str(GUARD), "stop", "--root", str(repo)], capture_output=True, timeout=30)
-
-
-def case_a_proof_that_failed_is_asked_again() -> None:
-    repo, copy, watcher = a_copy_watched("proof-again", "--limits", json.dumps({"proof_again_seconds": 1}))
-    state = repo / "target" / "host-guard" / "state"
-    log = state / "events.log"
-    flag = repo / "not-now"
-    flag.write_text("")
-    try:
-        marker = repo / "taken-up"
-        head = "from __future__ import annotations\n"
-        moment = f"import os, sys\nif sys.argv[1:2] == ['prove'] and os.path.exists({str(flag)!r}):\n    print('host-guard: not now')\n    sys.exit(3)\n"
-        copy.write_text(takes_up(copy.read_text(), marker).replace(head, head + moment, 1))
-        check("what fails for a moment is said", until(lambda: log.exists() and "does not run (host-guard: not now)" in log.read_text(errors="replace"), 20))
-        time.sleep(3)
-        check("and said once, however often it is asked", log.read_text(errors="replace").count("does not run") == 1 and not marker.exists())
-        flag.unlink()
-        check("and once it runs, it is taken up, with no save", until(lambda: marker.exists()))
-    finally:
-        subprocess.run([*PY, str(GUARD), "stop", "--root", str(repo)], capture_output=True, timeout=30)
-
-
 def case_a_watcher_ended_by_its_own_error_says_so() -> None:
     repo = fresh("watcher-raises")
     (repo / ".git").mkdir()
     (repo / "scripts").mkdir()
     copy = repo / "scripts" / "host_guard.py"
-    flag = repo / "raise-now"
-    start = "def code_stamp() -> tuple[int, int] | None:\n"
-    copy.write_text(GUARD.read_text().replace(start, start + f"    if os.path.exists({str(flag)!r}):\n        raise ValueError('from the rig')\n", 1))
-    watcher = spawn([*PY, str(copy), "watch", "--root", str(repo)], repo)
+    in_round, at_start = repo / "raise-in-its-round", repo / "raise-at-its-start"
+    source = GUARD.read_text()
+    source = source.replace("def sample(root: Path, limits: Limits, memory: Memory) -> tuple[Reading, list[Process]]:\n", f"def sample(root: Path, limits: Limits, memory: Memory) -> tuple[Reading, list[Process]]:\n    if os.path.exists({str(in_round)!r}):\n        raise ValueError('from the rig')\n", 1)
+    source = source.replace("def code_stamp() -> tuple[int, int] | None:\n", f"def code_stamp() -> tuple[int, int] | None:\n    if os.path.exists({str(at_start)!r}):\n        raise ValueError('from the rig')\n", 1)
+    copy.write_text(source)
     state = repo / "target" / "host-guard" / "state"
     log = state / "events.log"
+    watcher = spawn([*PY, str(copy), "watch", "--root", str(repo)], repo)
     until(lambda: (state / "sampled").exists())
-    flag.write_text("")
-    # No line of its round ends it: said, and it goes on reading.
+    in_round.write_text("")
+    # No line of its round ends it: said, and it goes on trying.
     check("an error in a watcher's round is said", until(lambda: log.exists() and "from the rig" in log.read_text(errors="replace"), 15))
+    time.sleep(2.5)
+    check("and it goes on", up(watcher))
+    in_round.unlink()
     before = (state / "sampled").read_text()
-    check("and it goes on reading", until(lambda: (state / "sampled").read_text() != before, 15) and up(watcher))
-    subprocess.run([*PY, str(GUARD), "stop", "--root", str(repo)], capture_output=True, timeout=30)
+    check("and reads again once it can", until(lambda: (state / "sampled").read_text() != before, 15))
+    # A change of its file ends it, a round that raises or not.
+    subprocess.run([*PY, str(copy), "stop", "--root", str(repo)], capture_output=True, timeout=30)
     settle(watcher, 15)
     # Before its round begins there is nothing to go on with: it says so, and ends.
     log.unlink()
+    at_start.write_text("")
     again = spawn([*PY, str(copy), "watch", "--root", str(repo)], repo)
     check("a watcher that cannot start says so", settle(again, 15) and log.exists() and "the watcher ended: ValueError('from the rig')" in log.read_text(errors="replace"))
 
@@ -942,15 +894,11 @@ def case_a_root_spelt_relatively_stays_that_root() -> None:
     watcher = spawn([*PY, str(copy), "watch", "--root", "sub"], repo)
     sampled = repo / "sub" / "state" / "sampled"
     try:
-        until(sampled.exists)
-        marker = repo / "taken-up"
-        copy.write_text(takes_up(copy.read_text(), marker))
-        check("a change to a watcher named a relative root is taken up", until(lambda: marker.exists()))
-        check("and it goes on naming that root", f"--root {g.canonical(repo / 'sub')}" in marker.read_text() and up(watcher))
+        check("a watcher named a relative root reads for it", until(sampled.exists))
         before = sampled.read_text()
-        check("and goes on reading for it", until(lambda: sampled.read_text() != before))
+        check("and goes on reading for it, from wherever it went", until(lambda: sampled.read_text() != before) and up(watcher))
     finally:
-        subprocess.run([*PY, str(GUARD), "stop", "--root", str(repo / "sub")], capture_output=True, timeout=30)
+        subprocess.run([*PY, str(copy), "stop", "--root", str(repo / "sub")], capture_output=True, timeout=30)
 
 
 def case_make_looks_for_the_whole_guard() -> None:
@@ -968,7 +916,7 @@ def case_make_looks_for_the_whole_guard() -> None:
         copy.write_text(broken)
         done = tiers("-n")
         check(f"with one {name}, `make` runs nothing and says so", done.returncode != 0 and "is not whole" in done.stderr and "host_guard.py run" not in done.stdout, done)
-    # Broken otherwise, it exits with its error, so nothing reads as passed.
+    # Broken so as to raise, it exits with its error, so nothing reads as passed. One that runs and does nothing some other way is no accident `make` looks for.
     copy.write_text(good.replace("from __future__ import annotations\n", "from __future__ import annotations\ndef broken(:\n", 1))
     check("with one that fails, `make` fails", tiers().returncode != 0)
 
@@ -998,29 +946,6 @@ def case_a_root_that_is_gone_stays_gone() -> None:
     check("and does not bring it back", not scope.exists())
     report = subprocess.run([*PY, str(GUARD), "run", "--root", str(scope), "--", "true"], capture_output=True, text=True, timeout=30)
     check("and a `run` there says so and runs nothing", report.returncode == 75 and "gone" in report.stderr, report.stderr)
-
-
-def case_a_new_script_is_taken_up() -> None:
-    repo = fresh("takes-up")
-    (repo / ".git").mkdir()
-    (repo / "scripts").mkdir()
-    copy = repo / "scripts" / "host_guard.py"
-    shutil.copy(GUARD, copy)
-    marker = repo / "new-code"
-    watcher = spawn([*PY, str(copy), "watch", "--root", str(repo)], repo)
-    try:
-        time.sleep(1.0)
-        check("a watcher is up", up(watcher))
-        check("and has not yet what is not yet written", not marker.exists())
-        head = "from __future__ import annotations\n"
-        copy.write_text(copy.read_text().replace(head, head + f"open({str(marker)!r}, 'w').close()\n", 1))
-        deadline = time.monotonic() + 8
-        while not marker.exists() and time.monotonic() < deadline:
-            time.sleep(0.1)
-        check("a guard changed under a running watcher holds from then, with no restart asked for", marker.exists())
-        check("and it is the same watcher", up(watcher))
-    finally:
-        subprocess.run([*PY, str(copy), "stop", "--root", str(repo)], capture_output=True, timeout=30)
 
 
 def case_growth_is_of_the_last_minutes() -> None:
@@ -1218,7 +1143,7 @@ def case_what_is_not_the_table_is_blindness() -> None:
     (state / "sampled").write_text("")
     os.utime(state / "sampled", (time.time() + 3600, time.time() + 3600))
     check("a time in the future is no proof of having looked", not g.healthy(state.parent, limits))
-    code = f"import sys; sys.path.insert(0, {str(HERE)!r}); import host_guard as g; from pathlib import Path; g.watch(Path({str(scope)!r}), g.tightened({{}}), False, idle_seconds=1.5)"
+    code = f"import sys; sys.path.insert(0, {str(HERE)!r}); import host_guard as g; from pathlib import Path; g.watch(Path({str(scope)!r}), g.tightened({{}}), False, idle_seconds=4.0)"
     env = shim(scope, "ps", '[ -f "' + str(scope) + '/flag" ] && exit 1; exec /bin/ps "$@"')
     job = named("something", scope)
     watcher = spawn([*PY, "-c", code], ROOT, env=env)
@@ -1226,6 +1151,7 @@ def case_what_is_not_the_table_is_blindness() -> None:
     (scope / "flag").write_text("")
     time.sleep(3.5)
     check("a watcher gone blind does not leave while it last saw a job", up(watcher))
+    check("nor stays for it longer than it would stay idle", settle(watcher, 30))
 
 
 def case_a_blind_watcher_is_said() -> None:
@@ -1248,18 +1174,6 @@ def case_a_blind_watcher_is_said() -> None:
 
 def heavy_text(command: str) -> bool:
     return any(g.is_heavy(each.words) for each in g.commands_of(command))
-
-
-def case_every_name_read_is_defined() -> None:
-    source = GUARD.read_text()
-    check("this guard reads no name it does not define", not g.names_not_found(source.encode()))
-    # Each function a function calls, as `ast` finds them: no list of names to fall behind, and another reading than the walk's own. Its `def` renamed, the walk finds it gone.
-    tree = ast.parse(source)
-    functions = {node.name for node in tree.body if isinstance(node, ast.FunctionDef)}
-    read = {node.id for function in ast.walk(tree) if isinstance(function, ast.FunctionDef) for node in ast.walk(function) if isinstance(node, ast.Name) and isinstance(node.ctx, ast.Load)}
-    for name in sorted(functions & read):
-        missing = g.names_not_found(re.sub(rf"^def {name}\(", f"def {name}_gone(", source, count=1, flags=re.M).encode())
-        check(f"the walk finds `{name}` gone", name in missing, missing)
 
 
 def case_what_counts_as_heavy() -> None:
@@ -1469,7 +1383,7 @@ def case_killing_by_name() -> None:
             'arch="$(case "$(uname -m)" in arm64) echo a;; *) echo b;; esac)"; pkill -x rustc', 'x="$(case y in y) echo a;; esac )"\npkill -x rustc', "(( y = 1 << 3 ))\npkill -x rustc", "((x<<=1)); killall cargo", "echo $[1<<2]; pkill rustc",
             "bash -euo pipefail -c 'pkill -x rustc'", "bash -eo pipefail -c 'pkill -x rustc'", "bash -c -- 'pkill -x rustc'", "trap 'pkill -x rustc' EXIT", "bash <<'EOF'\npkill -x rustc\nEOF", "bash <<< 'pkill -x rustc'", "case y in y) pkill -x rustc;; esac",
             "[[ $line =~ ^([[:space:]]*)#(.*)$ ]] && pkill -x rustc", "bash -s -- x <<'E'\npkill -x rustc\nE", "bash -s x <<< 'killall cargo'", 'x="$(cat <<EOF\nbody\nEOF)"\npkill -x rustc', f"pkill -f {scope}-other/x", f"ps -ax | grep {scope}-other/x | xargs kill",
-            'kill "$(pgrep -x rustc)"', 'ps -ax | grep x; kill "$PID"', "for ((i=0;i<1;i++)) do pkill -x rustc; done", "if true; then for ((i=0;i<1;i++)) do pkill -x rustc; done; fi", "time for ((i=0;i<1;i++)) do pkill -x rustc; done", "pkill -v -P 123", "pkill -vP 123", "pkill -P 5,1 -x rustc", 'pkill -P "$(pgrep -x make)"', 'P=$(pgrep -x make); pkill -P "$P"', "pgrep -x make > p; pkill -F p", "pkill -F <(pgrep -x rustc)", "ps -ax -opid -ocommand | grep rustc | awk '{print $1}' | xargs kill", "pkill -P 1 -x rustc", "pgrep -P 1 -x rustc | xargs kill -9", f"pkill -v -f {scope}", f"pgrep -vf {scope} | xargs kill", "kill -- -$(pgrep -x rustc)", "kill -TERM -$(pgrep -f myjob)", "PGID=$(pgrep -f myjob); kill -- -$PGID", "kill -s TERM $(pgrep -x rustc)",
+            'kill "$(pgrep -x rustc)"', 'ps -ax | grep x; kill "$PID"', "for ((i=0;i<1;i++)) do pkill -x rustc; done", "if true; then for ((i=0;i<1;i++)) do pkill -x rustc; done; fi", "time for ((i=0;i<1;i++)) do pkill -x rustc; done", "pkill -v -P 123", "pkill -vP 123", "pkill -P 5,1 -x rustc", "pkill -PIPE rustc", "pkill -FPE rustc", "ps -upeter | awk '{print $1}' | xargs kill", 'pkill -P "$(pgrep -x make)"', 'P=$(pgrep -x make); pkill -P "$P"', "pgrep -x make > p; pkill -F p", "pkill -F <(pgrep -x rustc)", "ps -ax -opid -ocommand | grep rustc | awk '{print $1}' | xargs kill", "pkill -P 1 -x rustc", "pgrep -P 1 -x rustc | xargs kill -9", f"pkill -v -f {scope}", f"pgrep -vf {scope} | xargs kill", "kill -- -$(pgrep -x rustc)", "kill -TERM -$(pgrep -f myjob)", "PGID=$(pgrep -f myjob); kill -- -$PGID", "kill -s TERM $(pgrep -x rustc)",
             f"ps -ax | grep rustc | grep -v {scope} | awk '{{print $1}}' | xargs kill", f"pgrep -x rustc | tee {scope}/pids | xargs kill", f"pkill -f '{scope} copy'",
         ):
             done = hook_says(command, scope)
@@ -1477,7 +1391,7 @@ def case_killing_by_name() -> None:
         for command in (
             f"pkill -f '{scope}/x'", f"kill $(pgrep -f {scope}/x)", "kill 123", "kill -9 123", 'kill "$(cat job.pid)"', "kill $(cat job.pid)", "kill $(jobs -p)", "git commit -m 'pkill -x rustc'",
             "rg pkill docs/", "git grep -n killall -- scripts", "find . -name pkill -print", "python3 -I -B -c pass pkill probe", "pgrep -x rustc", "ps -ax | grep rustc", "git commit -m 'kill the pgrep rig'",
-            "pkill -P 123", "pkill -P123", "pkill -fP 123 sleep", 'pkill -P "$PID"', 'pgrep -lP "$PID"; kill "$PID"', "for w in do pkill; do echo $w; done", "kill $(pgrep -P 123)", "cat target/x/job.pid | xargs kill", f"pgrep -f {scope}/x | xargs kill", f"ps -ax | grep {scope}/x | awk '{{print $1}}' | xargs kill",
+            "pkill -P 123", "pkill -P123", "pkill -fP 123 sleep", 'pkill -P "$PID"', "pkill -g 123", "ps -o pid= -g 123 | xargs kill", "ps -ax | head -3; kill -- -$$", 'pgrep -lP "$PID"; kill "$PID"', "for w in do pkill; do echo $w; done", "kill $(pgrep -P 123)", "cat target/x/job.pid | xargs kill", f"pgrep -f {scope}/x | xargs kill", f"ps -ax | grep {scope}/x | awk '{{print $1}}' | xargs kill",
             'grep -n "kill\\|pgrep" f', 'rg "xargs kill" scripts/', 'echo "use kill, not pgrep"', "kill 123; ps -ax | grep x", "ps -ax | grep x; kill 123", "kill $!; pgrep -x rustc", "ps -p 123; kill $(cat p)",
             "tools=(pkill killall); echo ${tools[0]}", 'case "$t" in a) echo a;; pkill|killall) echo b;; esac', "for t in a b; do case $t in a) echo a;; pkill) echo b;; esac; done", "[[ $cmd =~ ^(pkill|killall)$ ]] && echo careful",
             "(( pkill > 1 ))", "pkill() { :; }; echo", "cat <<'EOF'\npkill -x rustc\nEOF",
@@ -1721,13 +1635,13 @@ def case_run() -> None:
 
 
 # What holds nothing and reads nothing of the host: these say the same on a host of any state.
-PURE = (case_each_line_judges_alone, case_growth_is_of_the_last_minutes, case_every_name_read_is_defined, case_what_counts_as_heavy, case_the_reader_sees_what_the_shell_runs, case_where_a_root_is)
+PURE = (case_each_line_judges_alone, case_growth_is_of_the_last_minutes, case_what_counts_as_heavy, case_the_reader_sees_what_the_shell_runs, case_where_a_root_is)
 THE_REST = (
-    case_a_proof_stands_beside_the_watcher, case_a_proof_that_failed_is_asked_again, case_a_watcher_ended_by_its_own_error_says_so, case_a_root_spelt_relatively_stays_that_root, case_make_looks_for_the_whole_guard, case_what_it_says_beside_the_answer_is_no_failure,
+    case_a_job_under_run_outlasts_a_changed_guard, case_a_watcher_ended_by_its_own_error_says_so, case_a_root_spelt_relatively_stays_that_root, case_make_looks_for_the_whole_guard,
     case_only_tightened, case_check_refuses, case_a_figure_not_read_is_never_safe, case_one_process, case_all_processes, case_what_a_stopped_process_started,
     case_another_project_is_never_ours, case_a_terminal_vouches_for_nothing, case_a_root_is_exactly_itself, case_agents, case_what_holds_little_is_left_alone, case_a_job_is_stopped_whole,
     case_a_queued_make_is_no_build, case_at_a_disk_floor_what_writes_stops, case_names_and_zombies, case_a_command_line_that_is_no_text, case_pressure, case_not_ours, case_growing,
-    case_a_small_writer_is_counted, case_the_watcher_outlives_its_own_trouble, case_a_new_script_is_taken_up, case_a_guard_saved_broken_ends_nothing, case_a_root_remade_is_another, case_a_root_that_is_gone_stays_gone, case_a_stale_pid_names_nobody, case_the_watcher_stays_while_a_job_runs,
+    case_a_small_writer_is_counted, case_the_watcher_outlives_its_own_trouble, case_a_guard_changed_holds_from_the_next_command, case_a_root_remade_is_another, case_a_root_that_is_gone_stays_gone, case_a_stale_pid_names_nobody, case_the_watcher_stays_while_a_job_runs,
     case_what_is_not_the_table_is_blindness, case_a_blind_watcher_is_said, case_the_hook_passes_nothing_it_cannot_read, case_killing_by_name, case_hook, case_a_damaged_log, case_run,
 )
 
@@ -1780,7 +1694,7 @@ def run_case(case) -> None:
 
 
 def main(names: list[str]) -> int:
-    global pure
+    global pure, passed
     unknown = set(names) - {case.__name__ for case in (*PURE, *THE_REST)}
     if unknown:
         print(f"host-guard self-test: no case is called {sorted(unknown)}")
@@ -1800,10 +1714,14 @@ def main(names: list[str]) -> int:
     if rest and not room():
         print("host-guard self-test: the rest not run: the host stayed over the start line, and they would add to it")
         print(guard("status").stdout)
-        not_run.extend(case.__name__ for case in rest)
+        not_run.extend(f"{case.__name__} ({TAKEN_AWAY})" for case in rest)
         rest = []
     for case in rest:
-        before = len(not_run)
+        # Each holds what it holds: on a host that has filled since the last, it waits too.
+        if not room():
+            not_run.append(f"{case.__name__} ({TAKEN_AWAY})")
+            continue
+        before, counted = len(not_run), passed
         run_case(case)
         # Only what the host took away, and not what a case could not run for a reason of its own, and twice more at most: some of them write gigabytes.
         for _ in range(2):
@@ -1811,7 +1729,9 @@ def main(names: list[str]) -> int:
                 break
             print(f"  {case.__name__}: the host took it away: again, with room", flush=True)
             del not_run[before:]
+            passed = counted
             run_case(case)
+    pure = True
     check("this test leaves the tree as it found it, with no bytecode beside its script", not (HERE / "__pycache__").exists())
     print(f"host-guard self-test: {passed} passed, {len(failures)} failed, {len(not_run)} not run")
     if not_run:

@@ -121,13 +121,14 @@ while IFS= read -r gate; do
     # Could not all be run, which is neither: `ROADMAP.md` §14.3's incomplete, said and carried up.
     incomplete=$((incomplete + 1))
     printf '  ? %-52s %3ss  %s\n' "$gate" "$((SECONDS - started))" "$(printf '%s\n' "$out" | grep -E 'self-test:' | tail -1)"
+    printf '%s\n' "$out" | grep -E 'not run:' | head -8 | sed 's/^/      /'
   elif [ "$status" -eq 21 ] && [ "$gate" = "$ONE_HOST" ]; then
     elsewhere=$((elsewhere + 1))
     printf '  - %-52s %3ss  %s\n' "$gate" "$((SECONDS - started))" "$(printf '%s\n' "$out" | tail -1)"
   else
     failed=$((failed + 1))
     printf '  ✗ %-52s %3ss  its RED arms did not all pass:\n' "$gate" "$((SECONDS - started))" >&2
-    printf '%s\n' "$out" | grep -E '^SELF-TEST|self-test' | head -8 | sed 's/^/      /' >&2
+    printf '%s\n' "$out" | grep -E '^SELF-TEST|self-test|FAILED' | head -12 | sed 's/^/      /' >&2
   fi
 done <<< "$gates"
 if [ "$failed" -ne 0 ]; then

@@ -42,7 +42,7 @@ for node in ast.walk(ast.parse(guard.read_text(encoding="utf-8"))):
 AT_MOST = {
     "start_used_percent": 70, "stop_used_percent": 85, "panic_used_percent": 88, "start_pressure_level": 2, "stop_pressure_level": 2, "panic_pressure_level": 4,
     "start_swap_gib": 16, "stop_swap_growth_gib": 3, "all_processes_gib": 6, "one_process_gib": 3, "processes": 512, "stop_disk_growth_gib": 50,
-    "worth_stopping_gib": 0.25, "watcher_stale_seconds": 60, "proof_seconds": 60, "proof_again_seconds": 60,
+    "worth_stopping_gib": 0.25, "watcher_stale_seconds": 60,
 }
 AT_LEAST = {"stop_repo_free_gib": 100, "stop_boot_free_gib": 30}
 for name, line in AT_MOST.items():
@@ -86,7 +86,8 @@ if len(re.findall(r"^GUARD\s*[:+?]?=", makefile, re.M)) != 1 or not re.search(r"
 WHOLE = "\nifneq ($(strip $(shell tail -n 1 scripts/host_guard.py)),sys.exit(main(sys.argv[1:])))\n$(error scripts/host_guard.py is not whole, so nothing here would be guarded or run: restore it)\nendif\n"
 if WHOLE not in makefile:
     breaches.append("the Makefile does not look at whether the guard is whole: emptied, it exits 0 and a recipe through it reads as passed")
-if guard.read_text(encoding="utf-8").rstrip("\n").splitlines()[-1].strip() != "sys.exit(main(sys.argv[1:]))":
+# As `tail -n 1` reads it: a blank line after it would refuse every `make`.
+if not guard.read_text(encoding="utf-8").endswith("\n    sys.exit(main(sys.argv[1:]))\n"):
     breaches.append("scripts/host_guard.py does not end with the line the Makefile looks for")
 RECIPES = {
     "focused": ["$(GUARD) cargo xtask verify --tier focused"],
