@@ -115,3 +115,19 @@ Said, and left as it stands: its reader could not run `/2`, the configuration ch
 | DC7-10 | wording, older | model §7 rule 3's "A service's offers are read and refused alike": `offer::read_service` has only test callers, so two values on a service resolve; §2 rule 2's "refused by the search" is false of a fact outside the vocabulary | Filed under `M3.4.17`, which holds what is older here |
 
 Said, and left as it stands: its reader could not run `/2`, the configuration checker on a target or a command naming a target, so `DC-H3`'s order is emulated, and it built no older commit. It read the opening of `M3.4.7` and, by an over-wide range, that file's sections after `M3.4.16`, past its search paths; no sealed case and no history.
+
+**Round 8** — `2026-11-06`, leaf `M4.4.1.8`: not acceptable, 9 findings, 1 defect, after 5, 3, 6, 2, 5, 4 and 2, low in reach, binding no wrong device and in no corpus file. Its reader's rig swept 16 targets, 14 well-formed with no breach, and 29,000 generated shape-and-target pairs against its own reading of the rule, with no disagreement.
+
+| # | Kind | Finding | Answer |
+| --- | --- | --- | --- |
+| DC8-1 | defect, low | a replaced name answered a need a named other system wrote at its own level, since the third refusal skipped every system, which is right only of its clause's own `uses`: a plan for a machine without the device | Another system is read as this one is, at its own level with its clause's hardware replaced, so what else it names of hardware is refused |
+| DC8-2 | gap | the sweep held less than the record: no partition, no check that what is replaced is gone, no real target; its floor for trees counted before `on_target` | It holds them, with floors of its own for trees read and resolved and for two plans compared |
+| DC8-3 | gap | `DC-H3`'s "`invalid-description` wherever it is said": a search stopping at its first stage hides a later one, and keeping what a stopped search says keeps a map's `missing-fact` | Each reading is asked alone, and what a plan's absence says, that `missing-fact` among it, is left out |
+| DC8-4 | gap | a reached service's absence answers, though "what answers is the machine", the code moving to `infeasible-configuration` | Said, with its way out |
+| DC8-5 | gap | `(uses (l.dev))` passes a target's reading, and every system on it is refused with no word of why | Refused where it is written |
+| DC8-6 | gap, older half | "no machine stands on a loop" is refused on a target alone: on the description `check` is `Ok` and the search binds | Filed under `M3.4.17`, which holds what is older here |
+| DC8-7 | wording | "all it names": the code counts hardware alone, rightly | It says so |
+| DC8-8 | wording | "do not reach a target build" beside `DC-H3`, which keeps a description's own map contradiction | Each says so |
+| DC8-9 | wording | round 7's row above round 6's; the refusals' heading; `only_described`'s words | In order, and each says what is so |
+
+Said, and left as it stands: its reader could not run `/2`, the configuration checker on a target or a command naming a target, so `DC-H3`'s order is judged by reading and library calls, and it built no older commit. Reading `M3.4.16` also printed the first row of `docs/tasks/M3.md`'s frontier.

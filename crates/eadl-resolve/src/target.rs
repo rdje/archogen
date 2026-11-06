@@ -56,7 +56,7 @@ impl Target {
     ///
     /// Each thing that makes the file no target: a declaration of anything but hardware; one with no name, or a name two declarations
     /// bear; no one platform that nothing else in the file composes; or a block or platform that platform does not compose, which would be a
-    /// device the machine does not have; or hardware that refines what leads back to it, on which no machine stands.
+    /// device the machine does not have; hardware that refines what leads back to it, on which no machine stands; or a `uses` holding a list.
     pub fn read(forms: &[Form], file: Span) -> Result<Self, Vec<Diagnostic>> {
         let mut errors = Vec::new();
         let forms: Vec<&Form> = forms
@@ -138,6 +138,17 @@ impl Target {
             }
         }
         errors.extend(loops_refused(&composed, &declared));
+        // What a system reads as hardware is a plain name, and what this composes is read as more: one set, or every system on it is refused with no word of why.
+        for form in declared.values() {
+            for span in uses_a_list(form) {
+                errors.push(Diagnostic::error(
+                    "invalid-description",
+                    "a target composes its devices by plain names, and this `uses` holds a list".to_owned(),
+                    Label::new(span, "here"),
+                    "write the name alone: a system on this machine reads a plain name as its hardware, and nothing else",
+                ));
+            }
+        }
         for (name, form) in &declared {
             if !composed.contains(*name) {
                 errors.push(Diagnostic::error(
@@ -209,6 +220,36 @@ impl OnTarget {
     pub fn presence(&self) -> Vec<Diagnostic> {
         self.report().diagnostics
     }
+}
+
+/// Where `form`, composing, holds a list among what it `uses`.
+fn uses_a_list(form: &Form) -> Vec<Span> {
+    fn walk(form: &Form, out: &mut Vec<Span>) {
+        match form.head() {
+            Some("offers" | "absent" | "refines") => {}
+            Some("uses") => out.extend(
+                form.items()
+                    .iter()
+                    .skip(1)
+                    .filter(|item| matches!(item, Form::List { .. }))
+                    .map(Form::span),
+            ),
+            _ => {
+                for item in form.items().iter().skip(1) {
+                    if matches!(item, Form::List { .. }) {
+                        walk(item, out);
+                    }
+                }
+            }
+        }
+    }
+    let mut out = Vec::new();
+    for item in form.items().iter().skip(2) {
+        if matches!(item, Form::List { .. }) {
+            walk(item, &mut out);
+        }
+    }
+    out
 }
 
 /// A system with its tasks taken out.
@@ -576,11 +617,31 @@ pub fn on_target(
         .collect();
     let read_there = System::read(&on_it, &kept);
     let reached = read_there.reached.clone();
+    // Another system named speaks at its own level, its clause's hardware being replaced as this one's is: what else it names of hardware, a replaced name answers no more than any.
+    let others: Vec<(&str, Form)> = reached
+        .iter()
+        .filter_map(|name| declared.get_key_value(name.as_str()))
+        .filter(|(_, form)| form.head() == Some("defsystem"))
+        .map(|(name, form)| {
+            let mut level = own_level(form);
+            if let Form::List { items, .. } = &mut level {
+                items.retain(|item| item.head() != Some("platform"));
+                items.push(clause_on_target(
+                    form,
+                    &declared,
+                    &target.platform,
+                    target.span,
+                ));
+            }
+            (*name, level)
+        })
+        .collect();
     let reached = reached
         .iter()
         .filter_map(|name| declared.get_key_value(name.as_str()))
         .filter(|(_, form)| !is_hardware(form) && form.head() != Some("defsystem"))
-        .map(|(name, form)| (*name, *form));
+        .map(|(name, form)| (*name, *form))
+        .chain(others.iter().map(|(name, form)| (*name, form)));
     let system_name = declared_name(system).unwrap_or("the system");
     for (who, form) in std::iter::once((system_name, &on_it)).chain(reached) {
         for (name, span) in names_in(form) {
@@ -670,7 +731,7 @@ pub struct Correspondence {
     pub devices: BTreeMap<String, BTreeMap<String, Vec<Requirement>>>,
     /// The system's hardware no requirement is bound to: what the target's plan has nothing to say of.
     pub unreached: BTreeSet<String>,
-    /// Requirements bound in the description's plan alone: its hardware's own, which the target's hardware does not ask.
+    /// Requirements bound in the description's plan alone: what its hardware asks, or a service reached only through it, which the target's hardware does not.
     pub only_described: Vec<Requirement>,
     /// Requirements bound in the target's plan alone.
     pub only_on_target: Vec<Requirement>,

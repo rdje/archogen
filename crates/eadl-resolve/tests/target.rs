@@ -1120,8 +1120,10 @@ fn every_system_under_the_roots_reads_on_a_target_as_the_rule_says() {
         eadl_files_under(&root().join(dir), &mut files);
     }
     files.sort();
-    let (mut systems, mut resolved, mut in_trees) = (0_u32, 0_u32, 0_u32);
-    for machine in [A_RICH_TARGET, A_WHOLE_TARGET] {
+    let (mut systems, mut resolved, mut in_trees, mut trees_resolved, mut compared) =
+        (0_u32, 0_u32, 0_u32, 0_u32, 0_u32);
+    let real = std::fs::read_to_string(root().join("targets/riscv-virt-up.eadl")).expect("read");
+    for machine in [A_RICH_TARGET, A_WHOLE_TARGET, real.as_str()] {
         let target = target_of(machine);
         let theirs: Vec<String> = target
             .declarations
@@ -1143,13 +1145,20 @@ fn every_system_under_the_roots_reads_on_a_target_as_the_rule_says() {
                 std::fs::read_to_string(file).is_ok_and(|text| text.contains("(defmodule"));
             for (system, declarations) in systems_of(file) {
                 systems += 1;
-                if a_tree {
-                    in_trees += 1;
-                }
                 let Ok(there) = on_target(&system, &declarations, &target) else {
                     continue;
                 };
+                if a_tree {
+                    in_trees += 1;
+                }
                 let said = file.display();
+                // What the target replaces and a system not named are gone from what is read there.
+                let theirs_or_kept = |form: &Form| {
+                    let name = form.items().get(1).and_then(Form::as_symbol);
+                    !matches!(form.head(), Some("defblock" | "defplatform"))
+                        || name.is_some_and(|name| theirs.iter().any(|one| one == name))
+                };
+                assert!(there.declarations.iter().all(theirs_or_kept), "{said}");
                 // The hardware a system has there is the target's, and nothing else.
                 let hardware = System::read(&there.system, &there.declarations).hardware;
                 assert_eq!(
@@ -1164,6 +1173,31 @@ fn every_system_under_the_roots_reads_on_a_target_as_the_rule_says() {
                     continue;
                 };
                 resolved += 1;
+                if a_tree {
+                    trees_resolved += 1;
+                }
+                // Each binding on the two plans is partitioned, where the description has a plan of its own (model §8 rule 3's reading).
+                if let Search::Resolved(own) = run(&declarations, &system) {
+                    compared += 1;
+                    let its_hardware = System::read(&system, &declarations).hardware;
+                    let map = correspond(&own, &its_hardware, &plan);
+                    let shared: usize = map
+                        .devices
+                        .values()
+                        .flat_map(|to| to.values())
+                        .map(Vec::len)
+                        .sum();
+                    assert_eq!(
+                        shared + map.only_described.len(),
+                        own.bindings.len(),
+                        "{said}"
+                    );
+                    assert_eq!(
+                        shared + map.only_on_target.len(),
+                        plan.bindings.len(),
+                        "{said}"
+                    );
+                }
                 for instance in &plan.instances {
                     assert!(
                         theirs.contains(&instance.over),
@@ -1226,7 +1260,15 @@ fn every_system_under_the_roots_reads_on_a_target_as_the_rule_says() {
     }
     assert!(systems >= 480, "only {systems} systems");
     assert!(resolved >= 100, "only {resolved} resolved");
-    assert!(in_trees >= 20, "only {in_trees} from a module tree");
+    assert!(
+        in_trees >= 12,
+        "only {in_trees} from a module tree read on a target"
+    );
+    assert!(
+        trees_resolved >= 4,
+        "only {trees_resolved} from a module tree resolved"
+    );
+    assert!(compared >= 100, "only {compared} with two plans to compare");
 }
 
 /// No machine stands on a loop, a target's among them, and a name it takes from the description says how to go on.
@@ -1246,6 +1288,19 @@ fn a_target_s_own_loop_and_a_name_it_takes_are_refused() {
             .iter()
             .any(|d| d.message.contains("leads back to it")),
         "{looped:?}"
+    );
+    let Err(listed) = Target::read(
+        &forms(
+            "(defblock l.dev (offers (observable-output true) (reachable-at-privilege machine)))
+             (defplatform l.top (offers (core-count 1 tick) (reachable-at-privilege machine)) (requires (uses (l.dev))))",
+        ),
+        file_start(),
+    ) else {
+        panic!("a `uses` holding a list is refused");
+    };
+    assert!(
+        listed.iter().any(|d| d.message.contains("holds a list")),
+        "{listed:?}"
     );
     let declarations = forms(
         "(defblock sha-accel (offers (x true)))
@@ -1308,6 +1363,32 @@ fn another_system_named_is_no_missing_fact_and_presence_keeps_its_metadata() {
             there.presence().is_empty(),
             "{task_asks}: {:?}",
             there.presence()
+        );
+    }
+    // A replaced name answers another system no more than it answers this one, at its level or in its clause.
+    for names in [
+        "(requires (needs o.dev)) (platform (uses o.soc))",
+        "(platform (uses o.soc) (needs o.dev))",
+        "(requires (uses o.dev)) (platform (uses o.soc))",
+    ] {
+        let text = format!(
+            "(defblock o.dev (offers (x true)))
+             (defplatform o.soc (offers (core-count 1 tick) (reachable-at-privilege machine)) (requires (uses o.dev)))
+             (defsystem other {names})
+             (defsystem s (requires (uses other)) (platform (uses o.soc)))"
+        );
+        let declarations = forms(&text);
+        let system = declarations
+            .iter()
+            .find(|form| form.items().get(1).and_then(Form::as_symbol) == Some("s"))
+            .expect("the system");
+        let Err(said) = on_target(system, &declarations, &target_of(A_WHOLE_TARGET)) else {
+            panic!("{names}: a replaced name answered it");
+        };
+        assert!(
+            said.iter().any(|d| d.code == "infeasible-configuration"
+                && d.message.contains("`other` names `o.dev`")),
+            "{names}: {said:?}"
         );
     }
     // What the other system asks is asked, and what only that system's replaced hardware reaches is not.
