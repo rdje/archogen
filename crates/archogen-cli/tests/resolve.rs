@@ -973,6 +973,30 @@ fn plan_routes() -> Vec<(&'static str, Route)> {
             );
             outcome
         }),
+        ("append-only-check", |root| {
+            // `PLAN.check` takes a new name and lets none go: what cannot be taken back is said, with where it is.
+            let plan = root.join("p");
+            let check = root.join("p.check");
+            std::fs::create_dir(&check).expect("a directory");
+            let flagged = std::process::Command::new("chflags")
+                .arg("uappnd")
+                .arg(&check)
+                .status();
+            if !flagged.is_ok_and(|status| status.success()) {
+                return None;
+            }
+            let outcome = resolve_at(&plan.display().to_string(), &[]);
+            let _ = std::process::Command::new("chflags")
+                .arg("nouappnd")
+                .arg(&check)
+                .status();
+            assert!(!plan.exists());
+            assert!(check.join("plan-check.json.part").is_file());
+            let said = outcome.as_ref().map_or("", |(_, said)| said.as_str());
+            assert!(said.contains("could not be taken back"), "{said}");
+            assert!(said.contains("plan-check.json.part"), "{said}");
+            outcome
+        }),
         ("flagged-record", |root| {
             // The record's own name found closed before the plan moves: a plan does not land to be refused after.
             let plan = root.join("p");
@@ -1073,6 +1097,7 @@ fn plan_routes() -> Vec<(&'static str, Route)> {
             let parent = root.join("in");
             std::fs::create_dir(&parent).expect("a directory");
             let plan = parent.join("p");
+            an_earlier_plan(&plan);
             let outcome = resolve_of(
                 &heartbeat(),
                 &plan.display().to_string(),
@@ -1081,7 +1106,10 @@ fn plan_routes() -> Vec<(&'static str, Route)> {
             );
             std::fs::set_permissions(&parent, std::fs::Permissions::from_mode(0o755))
                 .expect("its mode");
-            assert!(!plan.exists());
+            assert_eq!(
+                std::fs::read_to_string(&plan).expect("kept"),
+                AN_EARLIER_PLAN
+            );
             assert!(parent.join("p.part").is_dir());
             let said = outcome.as_ref().map_or("", |(_, said)| said.as_str());
             assert!(said.contains("cannot be looked at"), "{said}");

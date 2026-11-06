@@ -419,13 +419,14 @@ impl Place {
             Err(error) => {
                 // Never the stage, if this call did not make it: then it is not this run's. One it made and could not close is
                 // empty, and goes only if it still is.
+                let mut stays = String::new();
                 if error.kind() != ErrorKind::AlreadyExists {
-                    let _ = std::fs::remove_dir(&self.stage);
+                    stays = place::remove_empty_stage(&self.stage);
                 }
                 self.unmake();
                 return Err(Failed::Usage(
                     format!(
-                        "cannot make the directory {}: {error}",
+                        "cannot make the directory {}: {error}{stays}",
                         self.stage.display()
                     ),
                     place::repair(&error).to_owned(),

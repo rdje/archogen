@@ -271,7 +271,7 @@ fn reads_again(sources: &SourceMap) -> Result<(), Refusal> {
                         "the checker reads {} again, and it cannot be read now: {error}",
                         source.name
                     ),
-                    as_a_file,
+                    put_it_back(&error),
                 ))
             }
         }
@@ -288,14 +288,26 @@ fn put_it_back(error: &std::io::Error) -> &'static str {
     }
 }
 
-/// The checker's record out of `dir`, if it is a regular file and a record: the one file in a stage this run did not write itself, and its own program did. So it is asked only of a run whose
-/// checker was handed the stage: before that, nothing at that name is this run's, whatever it reads as.
+/// The checker's record out of `dir`, if it is a regular file and a record, and what it was writing, if that reads as the start of one: the one file in a stage this run did not write itself, and
+/// its own program did. So it is asked only of a run whose checker was handed the stage: before that, nothing at that name is this run's, whatever it reads as.
 pub fn remove_record(dir: &Path) {
     let record = dir.join(RECORD);
     if std::fs::symlink_metadata(&record).is_ok_and(|meta| meta.is_file())
         && reads_as_record(&record).unwrap_or(false)
     {
         let _ = std::fs::remove_file(&record);
+    }
+    let part = dir.join(RECORD_PART);
+    if place::open_regular(&part)
+        .and_then(|opened| {
+            let mut begins = Vec::new();
+            let length = u64::try_from(A_RECORD_BEGINS.len()).unwrap_or(u64::MAX);
+            opened.take(length).read_to_end(&mut begins)?;
+            Ok(A_RECORD_BEGINS.starts_with(&begins))
+        })
+        .unwrap_or(false)
+    {
+        let _ = std::fs::remove_file(&part);
     }
 }
 
@@ -308,8 +320,11 @@ pub fn remove_record(dir: &Path) {
 pub fn reads_as_record(file: &Path) -> std::io::Result<bool> {
     let mut opened = std::fs::File::open(file)?;
     let mut bytes = vec![0; A_RECORD_BEGINS.len()];
-    if opened.read_exact(&mut bytes).is_err() || bytes != A_RECORD_BEGINS {
-        return Ok(false);
+    match opened.read_exact(&mut bytes) {
+        Ok(()) if bytes == A_RECORD_BEGINS => {}
+        Ok(()) => return Ok(false),
+        Err(error) if error.kind() == std::io::ErrorKind::UnexpectedEof => return Ok(false),
+        Err(error) => return Err(error),
     }
     opened
         .take(u64::try_from(RECORD_LIMIT).unwrap_or(u64::MAX))

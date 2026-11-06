@@ -223,6 +223,17 @@ pub fn say_it_stays(stage: &Path, err: &mut dyn Write) {
     }
 }
 
+/// A stage this run made and could not close, gone if it is empty; and what to say if it could not go.
+pub fn remove_empty_stage(stage: &Path) -> String {
+    match std::fs::remove_dir(stage) {
+        Ok(()) => String::new(),
+        Err(error) if error.kind() == ErrorKind::NotFound => String::new(),
+        Err(error) => format!(
+            "; and it could not be removed ({error}), and the next run refuses while it stands: look at it, and remove it"
+        ),
+    }
+}
+
 /// Why a place cannot be used: what, and its repair. Always `usage`, nothing having been written.
 pub struct Refused {
     /// What stops it.
@@ -251,7 +262,7 @@ pub fn repair(error: &std::io::Error) -> &'static str {
         ErrorKind::NotADirectory => {
             "a name on the way to it is no directory: name a path whose parents are directories"
         }
-        ErrorKind::PermissionDenied => "name a place this user can reach and write, with a umask that lets it write what it makes",
+        ErrorKind::PermissionDenied => "name a place this user can reach and write, with a umask that lets it write what it makes and no flag on it",
         ErrorKind::AlreadyExists => {
             "a name on the way to it is a link to nothing, or something took it meanwhile: look at it, or name another place"
         }

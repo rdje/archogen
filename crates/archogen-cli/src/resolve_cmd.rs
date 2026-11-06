@@ -399,13 +399,14 @@ impl Landing {
     fn open(&mut self) -> Result<(), Unwritten> {
         place::make_private(&self.stage).map_err(|error| {
             // Never the stage, if this call did not make it. One it made and could not close is empty, and goes only if it still is.
+            let mut stays = String::new();
             if error.kind() != ErrorKind::AlreadyExists {
-                let _ = std::fs::remove_dir(&self.stage);
+                stays = place::remove_empty_stage(&self.stage);
             }
             place::unmake(&self.made);
             usage(
                 format!(
-                    "cannot make the directory {}: {error}",
+                    "cannot make the directory {}: {error}{stays}",
                     self.stage.display()
                 ),
                 place::repair(&error),
@@ -556,18 +557,28 @@ impl Landing {
         // What the steps so far have moved, and the way back from each.
         let (mut moved_in, mut moved_out, mut placed) = (false, false, false);
         let undo = |moved_in: bool, moved_out: bool, placed: bool| {
-            if placed {
-                let _ = std::fs::remove_file(&record);
-            } else if moved_in {
-                let _ = std::fs::remove_file(&new);
-            }
             let mut stranded = String::new();
+            let placed_at = if placed {
+                Some(&record)
+            } else if moved_in {
+                Some(&new)
+            } else {
+                None
+            };
+            if let Some(at) = placed_at {
+                if let Err(error) = std::fs::remove_file(at) {
+                    stranded = format!(
+                        "; and the checker's record could not be taken back ({error}), and is at {}, where the next run refuses while it stands: look at it, and remove it",
+                        at.display()
+                    );
+                }
+            }
             if moved_out {
                 if let Err(error) = std::fs::rename(&old, &record) {
-                    stranded = format!(
+                    stranded.push_str(&format!(
                         "; and the earlier record could not be put back ({error}), and is at {}",
                         old.display()
-                    );
+                    ));
                 }
             }
             if check_was_free {
@@ -651,11 +662,16 @@ impl Landing {
             ));
         }
         if moved_out {
-            let _ = std::fs::remove_file(&old);
+            if let Err(error) = std::fs::remove_file(&old) {
+                said.push(format!(
+                    "the plan is in place, and the earlier record could not be removed ({error}): it is at {}, and the next run refuses while it stands: look at it, and remove it",
+                    old.display()
+                ));
+            }
         }
         if std::fs::remove_dir(&self.stage).is_err() {
             said.push(format!(
-                "the plan is in place, and {} stays, holding what came in it, and the next run refuses while it stands: look at it, and remove it",
+                "the plan is in place, and {} could not be removed, or holds what came in it, and the next run refuses while it stands: look at it, and remove it",
                 self.stage.display()
             ));
         }

@@ -1,6 +1,7 @@
 //! What a refused run leaves in its stage, held by sweeping what a host can do rather than by naming shapes (`docs/decisions/decision_hosted-build.md` §5; the hosted build's round 15). The
 //! rule is one: a run removes what it wrote, and a stage that stands is said. So nothing of a run's stands after a refusal no other program had a hand in, and what another program
-//! put there stands after one it did, whatever it reads as.
+//! put there stands after one it did, whatever it reads as. A limit on a file ends a process by a signal unless it is ignored, and a process a signal ends cleans nothing: so the sweep ignores it, to hold
+//! what a failed write does, and `a_run_a_signal_ends_leaves_its_stage_and_the_next_run_says_so` holds what a signal does.
 #![cfg(unix)]
 
 mod common;
@@ -152,7 +153,7 @@ fn no_limit_on_a_file_leaves_anything_of_a_refused_run() {
 #[test]
 fn a_name_past_what_a_path_holds_leaves_nothing_of_a_refused_run() {
     let root = scratch("long-name");
-    // A module's own name is what fits or does not, where the package's names fit: `description/<name>`.
+    // A module's own name is what does not fit, where the package's names do: `description/<name>`.
     let long = "n".repeat(200);
     let description = root.join(format!("{long}.eadl"));
     fs::copy(self::description(), &description).expect("a copy");
@@ -160,7 +161,7 @@ fn a_name_past_what_a_path_holds_leaves_nothing_of_a_refused_run() {
     // Deep enough that the package's own names fit and `description/<name>` does not.
     let mut out = elsewhere.clone();
     let limit = common::path_limit(&elsewhere);
-    while out.as_os_str().len() + 300 < limit {
+    while out.as_os_str().len() + 120 < limit {
         out.push("d".repeat(40));
     }
     fs::create_dir_all(&out).expect("the way");
@@ -172,16 +173,65 @@ fn a_name_past_what_a_path_holds_leaves_nothing_of_a_refused_run() {
         deepest.display().to_string(),
     ];
     let (status, said) = under("true", &args);
-    if status != Status::Ok.slug() {
-        let left: Vec<_> = fs::read_dir(&out)
-            .expect("the place")
+    assert_eq!(status, Status::Usage.slug(), "{said}");
+    let left: Vec<_> = fs::read_dir(&out)
+        .expect("the place")
+        .flatten()
+        .map(|entry| entry.path())
+        .collect();
+    assert!(left.is_empty(), "{status}: left {left:?}: {said}");
+    reopened_and_gone(&root);
+    reopened_and_gone(&elsewhere);
+}
+
+/// The checker, stopped writing its record, as a limit on a file or a signal stops the real one: a part of it stands.
+struct StoppedWriting;
+
+impl Launch for StoppedWriting {
+    fn launch(
+        &self,
+        _program: &str,
+        args: &[String],
+        _out: &mut dyn std::io::Write,
+        _err: &mut dyn std::io::Write,
+    ) -> Result<Launched, Unlaunched> {
+        let stage = Path::new(&args[3]).parent().expect("a stage");
+        fs::write(
+            stage.join(archogen_cli::consume::RECORD_PART),
+            b"{\"format\":\"archogen-res",
+        )
+        .expect("written");
+        Ok(Launched {
+            ended: Ended::Abnormally("signal: 25 (SIGXFSZ)".to_owned()),
+            sha256: checker_digest(),
+            front: front_digest(),
+        })
+    }
+}
+
+#[test]
+fn what_the_checker_was_writing_goes_with_the_rest() {
+    for (verb, out) in [("build", "x"), ("resolve", "p")] {
+        let root = scratch(&format!("stopped-writing-{verb}"));
+        let (status, written, err) = invoke(
+            &[
+                verb,
+                &description(),
+                "--out",
+                &root.join(out).display().to_string(),
+            ],
+            &StoppedWriting,
+        );
+        assert_eq!(status, Status::ToolFailure, "{verb}: {written}{err}");
+        let left: Vec<_> = fs::read_dir(&root)
+            .expect("the root")
             .flatten()
             .map(|entry| entry.path())
             .collect();
-        assert!(left.is_empty(), "{status}: left {left:?}: {said}");
+        assert!(left.is_empty(), "{verb}: left {left:?}: {err}");
+        assert!(!err.contains("did not write"), "{verb}: {err}");
+        reopened_and_gone(&root);
     }
-    reopened_and_gone(&root);
-    reopened_and_gone(&elsewhere);
 }
 
 /// What comes to stand at a name the run wrote, while the checker runs.
@@ -380,5 +430,38 @@ fn a_path_past_what_a_path_holds_is_said_as_that_and_not_as_no_description() {
     );
     assert_eq!(status, Status::Usage, "{err}");
     assert!(err.contains("too long for this host"), "{err}");
+    reopened_and_gone(&root);
+}
+
+#[test]
+fn a_run_a_signal_ends_leaves_its_stage_and_the_next_run_says_so() {
+    let root = scratch("signal");
+    let plan = root.join("p").display().to_string();
+    let args = [
+        "resolve".to_owned(),
+        description(),
+        "--out".to_owned(),
+        plan.clone(),
+    ];
+    // As a shell's `ulimit -f` has it, the signal left as it is.
+    let done = Command::new("sh")
+        .arg("-c")
+        .arg("ulimit -f 0; exec \"$0\" --exact child --nocapture --test-threads=1")
+        .arg(std::env::current_exe().expect("this test"))
+        .env(ARGS, args.join("\n"))
+        .output()
+        .expect("it runs");
+    assert!(!done.status.success(), "a signal ended it");
+    // A signal reaches a process of several threads, as this test is, when it reaches it, so the failed write may yet have been cleaned up after. The front has one thread, and cleans nothing. What is
+    // held is what either leaves: a stage the next run names, and a repair that works.
+    if root.join("p.part").is_dir() {
+        let (status, _, err) = invoke(&["resolve", &description(), "--out", &plan], &Checker);
+        assert_eq!(status, Status::Usage, "{err}");
+        assert!(err.contains("a run that stopped may have left it"), "{err}");
+        assert!(err.contains("remove it"), "{err}");
+    }
+    reopened_and_gone(&root.join("p.part"));
+    let (status, _, err) = invoke(&["resolve", &description(), "--out", &plan], &Checker);
+    assert_eq!(status, Status::Ok, "its repair works: {err}");
     reopened_and_gone(&root);
 }

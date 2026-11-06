@@ -107,7 +107,7 @@ impl Launch for Installed {
             .map_err(|error| {
                 refused(
                     format!("cannot start `{program}` in {}: {error}", dir.display()),
-                    "check that the install's programs are executable, or install the toolchain again",
+                    "check that the install's programs are executable, and that this user has room for another process and its files; or install the toolchain again",
                 )
             })?;
         drop(opened);

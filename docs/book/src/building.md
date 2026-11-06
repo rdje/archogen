@@ -149,7 +149,7 @@ file is written. So `DIR` holds at every moment what stood there, nothing, or th
 found it. Your changes belong in the description, not in the output.
 
 ⛔ **A build deletes nothing it did not write**, but for two things: an empty directory at `--out`, which it takes, and its own stage,
-of which on a refusal what this run wrote goes, a file it could not finish and each directory it made among it. It knows each from the moment it stands, by the file it is and not by what it reads as, so another file of the same length at that name is not its own, closed or not. What came in it stays with it, and is said, as is a stage that cannot be removed or looked at, unless the table says it stays for a report. Of an earlier
+of which on a refusal what this run wrote goes, a file it could not finish and each directory it made among it. It knows each from the moment it stands, by the file it is and not by what it reads as, so another file of the same length at that name is not its own, closed or not. What came in it stays with it, and is said, as is a stage that cannot be removed or looked at, unless the table says it stays for a report. A signal ends a build where it stands, a shell's `ulimit -f` among them, and it cleans nothing: the next run refuses, saying a run that stopped may have left its stage. Of an earlier
 build it removes each file `provenance.json` lists, one by one and only if still the regular file it wrote, then the directories that
 held them where that leaves them empty. What building and looking at a package leave at its top, `target`, `Cargo.lock` and `.DS_Store`,
 is neither judged nor deleted: it moves to the new package, so a rebuild keeps cargo's work.
