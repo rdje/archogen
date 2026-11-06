@@ -824,9 +824,14 @@ def watch(root: Path, limits: Limits, once: bool, idle_seconds: float = 600.0, a
     memory = Memory()
     unread_said, last_seen, busy, read_at, running = 0.0, time.monotonic(), False, time.monotonic(), started_from()
     # What it runs, for `status`: a watcher running an older file looks like any other.
-    write_note(root, "watch.code", stamp_for_the_next(running))
+    image = stamp_for_the_next(running)
+    write_note(root, "watch.code", image)
     while True:
         wait = 2.0
+        # What names it outlasts what clears them, `cargo clean` among it, whatever its round goes on to do.
+        if not (state_path(root) / "watch.pid").exists():
+            write_note(root, "watch.pid", str(os.getpid()))
+            write_note(root, "watch.code", image)
         try:
             reading, mine = sample(root, limits, memory)
             busy, read_at = bool(mine), time.monotonic()
@@ -834,8 +839,6 @@ def watch(root: Path, limits: Limits, once: bool, idle_seconds: float = 600.0, a
             near = reading.used_percent >= limits.start_used_percent + 10 or disk_reasons(reading, limits)
             wait = 0.5 if near else 1.0 if busy or reading.used_percent >= limits.start_used_percent else 2.0
             write_note(root, "sampled", str(time.time()))
-            if not (state_path(root) / "watch.pid").exists():
-                write_note(root, "watch.pid", str(os.getpid()))
         except Exception as error:  # Whatever it is, the watcher goes on trying, and `sampled` going stale says it is blind. What it last saw may still run, so it stays for that, but no longer than it would stay idle.
             busy = busy and time.monotonic() - read_at <= idle_seconds
             if time.monotonic() - unread_said > 60:
@@ -875,7 +878,7 @@ def runs_the_file(root: Path) -> bool:
     """Whether the watcher started from the file as it stands. One from before this note was written reads as not."""
     try:
         return (state_path(root) / "watch.code").read_text() == stamp_for_the_next(code_stamp())
-    except OSError:
+    except (OSError, ValueError):
         return False
 
 
@@ -1640,13 +1643,19 @@ def kills_by_name(commands: list[Command], root: Path) -> bool:
         if command.name != "ps":
             return False
         words = command.words[1:]
+        # What selects more than a pid does, and beside a pid prints all it selects: `ps -ef -p 1`, `ps -Ap 1`, `ps ax 1`, `ps -U 501 1`.
+        plain = "AaCcdEefhjLlMmrSTvwXx"
+        if any(re.fullmatch(rf"-[{plain}]*[Aaex]\w*|-[{plain}]*[UuGt].*", word) for word in words):
+            return True
+        if words and re.fullmatch(r"[A-Za-z]*[Aaex][A-Za-z]*", words[0]):
+            return True
         for at, word in enumerate(words):
-            # `-p` or a group's `-g` in any cluster of `ps`'s plain flags, as `ps -fp 123` writes it. Past a flag taking a value it is that value: `-opid`, `-upeter`.
-            if re.fullmatch(r"-[AaCcdEefhjLlMmrSTvwXx]*[pg]\w*|--pid.*", word):
+            # `-p` or a group's `-g` in any cluster of `ps`'s plain flags, as `ps -fp 123` writes it. Past a flag taking a value it is that value: `-opid`.
+            if re.fullmatch(rf"-[{plain}]*[pg]\w*|--pid.*", word):
                 return False
-            # Or a pid written plainly, `ps 123`, `ps up 123`, `ps -f "$PID"`, unless it is what the flag before it takes: `-U 501`, `-t 1`.
+            # Or a pid written plainly, however a shell spells one: `ps 123`, `ps up 123`, `ps -f "$PID"`, `ps $$`, `ps "$(cat job.pid)"`, `ps "${PIDS[@]}"`, unless it is what the flag before it takes: `-O 1`.
             before = words[at - 1] if at else ""
-            if re.fullmatch(r"\d+|\$\w+|\$\{\w+\}", word.strip("'\"")) and (not before.startswith("-") or re.fullmatch(r"-[AaCcdEefhjLlMmrSTvwXx]*", before)):
+            if re.fullmatch(r"\d+|\$[\w$!@*]+|\$\{[^}]*\}|\$\(.*\)", word.strip("'\""), re.S) and (not before.startswith("-") or re.fullmatch(rf"-[{plain}]*", before)):
                 return False
         return True
 

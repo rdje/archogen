@@ -93,6 +93,10 @@ self_test() {
   rm -f "$work"/check_*.sh
   printf '#!/usr/bin/env bash\n[ "${1:-}" = "--self-test" ] || exit 0\necho "host-guard self-test: waiting for room, up to 9 s more"\necho "ValueError: the reason"\nexit 1\n' > "$work/check_waited.sh"
   arm "one that waited and then died says why it died" 1 "ValueError: the reason"
+  printf '#!/usr/bin/env bash\n[ "${1:-}" = "--self-test" ] || exit 0\necho "case_a: FAILED"\necho "ValueError: the real reason"\nexit 1\n' > "$work/check_waited.sh"
+  arm "one that says FAILED and then died says why it died" 1 "ValueError: the real reason"
+  printf '#!/usr/bin/env bash\n[ "${1:-}" = "--self-test" ] || exit 0\nkill -KILL $$\n' > "$work/check_waited.sh"
+  arm "one a signal ended says how it ended" 1 "exit 137"
   rm -f "$work"/check_*.sh; stub "$work/check_alpha.sh" 0; stub "$work/check_beta.sh" 21
   arm "a gate no row names cannot exempt itself as of another host" 1 "✗ $work/check_beta.sh"
   SELF_TESTS_ONE_HOST="$work/check_beta.sh" arm "one that reads another host is counted apart, never as passed" 0 "1 self-test(s) passed, and 1 reads another host"
@@ -130,15 +134,13 @@ while IFS= read -r gate; do
     printf '  - %-52s %3ss  %s\n' "$gate" "$((SECONDS - started))" "$(printf '%s\n' "$out" | tail -1)"
   else
     failed=$((failed + 1))
-    printf '  ✗ %-52s %3ss  its RED arms did not all pass:\n' "$gate" "$((SECONDS - started))" >&2
+    printf '  ✗ %-52s %3ss  its RED arms did not all pass, exit %s:\n' "$gate" "$((SECONDS - started))" "$status" >&2
     # What it says it waits for says nothing of why it failed, and one that died by a traceback says only that.
     said="$(printf '%s\n' "$out" | grep -vE '^host-guard( self-test)?: waiting for room')"
     reason="$(grep -E '^SELF-TEST|self-test|FAILED' <<< "$said")"
-    if [ -n "$reason" ]; then
-      printf '%s\n' "$reason" | head -12 | sed 's/^/      /' >&2
-    else
-      printf '%s\n' "$said" | tail -3 | sed 's/^/      /' >&2
-    fi
+    [ -n "$reason" ] && printf '%s\n' "$reason" | head -12 | sed 's/^/      /' >&2
+    # And how it ended, which a `FAILED` above it does not say: the last lines, as they stand.
+    printf '%s\n' "$said" | tail -3 | sed 's/^/      /' >&2
   fi
 done <<< "$gates"
 if [ "$failed" -ne 0 ]; then

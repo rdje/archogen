@@ -19,7 +19,7 @@ if [ "${1:-}" = "--self-test" ]; then
     exec python3 -I -B "$ROOT/scripts/selftest_host_guard.py"
 fi
 python3 -I -B - "$ROOT" <<'PY'
-import ast, builtins, json, re, symtable, sys
+import ast, builtins, hashlib, json, re, subprocess, symtable, sys
 from pathlib import Path
 
 root = Path(sys.argv[1])
@@ -31,10 +31,38 @@ if not guard.is_file():
 if not (root / "scripts" / "selftest_host_guard.py").is_file():
     breaches.append("scripts/selftest_host_guard.py is gone, so nothing shows the guard stops what it should and nothing else")
 
+# At a commit what is staged is what lands, and what stands in the tree beside it may be another session's half-saved file. A copy in no repository of its own has the file alone.
+def asks_git(*words):
+    return subprocess.run(["git", "-C", str(root), *words], capture_output=True)
+top = asks_git("rev-parse", "--show-toplevel")
+in_its_repository = top.returncode == 0 and Path(top.stdout.decode(errors="replace").strip()).resolve() == root.resolve()
+def as_staged(name):
+    if in_its_repository:
+        shown = asks_git("show", f":scripts/{name}")
+        if shown.returncode == 0:
+            return shown.stdout
+    return (root / "scripts" / name).read_bytes()
+source = as_staged("host_guard.py").decode("utf-8", errors="replace")
+try:
+    compile(source, str(guard), "exec")
+except (SyntaxError, ValueError) as error:
+    print(f"HOST-GUARD: scripts/host_guard.py does not compile: {error}")
+    sys.exit(1)
+# A commit changing the guard carries a self-test passed on those very bytes: nothing else reads an attribute or a keyword half renamed, or what the file does when it runs.
+STAMPED = ("host_guard.py", "selftest_host_guard.py", "check_host_guard.sh")
+if in_its_repository and asks_git("diff", "--cached", "--quiet", "--", *[f"scripts/{name}" for name in STAMPED]).returncode != 0:
+    wanted = "".join(f"{hashlib.sha256(as_staged(name)).hexdigest()}  {name}\n" for name in STAMPED)
+    try:
+        passed = (root / "target" / "host-guard-self-test.passed").read_text(encoding="utf-8")
+    except (OSError, ValueError):
+        passed = ""
+    if passed != wanted:
+        breaches.append("this commit changes the guard, and its self-test has not passed on what is staged: run `bash scripts/check_host_guard.sh --self-test`, then stage what it ran")
+
 # Its lines, as written: none looser than this. The first three are the director's, or inside them; the rest were measured or chosen, and moving
 # one means moving it here too, in a commit that says why.
 limits = {}
-for node in ast.walk(ast.parse(guard.read_text(encoding="utf-8"))):
+for node in ast.walk(ast.parse(source)):
     if isinstance(node, ast.ClassDef) and node.name == "Limits":
         for item in node.body:
             if isinstance(item, ast.AnnAssign) and isinstance(item.target, ast.Name) and isinstance(item.value, ast.Constant):
@@ -63,7 +91,7 @@ if {"start_used_percent", "stop_used_percent", "panic_used_percent"} <= limits.k
 
 # And what stands beside `Limits`, which no flag reaches and the table leans on: how much a fall is and over how long, what counts as writing, how far back growth is counted.
 constants = {}
-for node in ast.parse(guard.read_text(encoding="utf-8")).body:
+for node in ast.parse(source).body:
     if isinstance(node, ast.Assign) and len(node.targets) == 1 and isinstance(node.targets[0], ast.Name) and node.targets[0].id in ("FELL_BYTES", "FELL_WINDOW_SECONDS", "GROWTH_WINDOW_SECONDS", "WRITING_BYTES"):
         constants[node.targets[0].id] = eval(compile(ast.Expression(node.value), "guard", "eval"), {"__builtins__": {}})
 for name, line in {"FELL_BYTES": 1 << 30, "WRITING_BYTES": 1 << 20}.items():
@@ -87,15 +115,14 @@ WHOLE = "\nifneq ($(strip $(shell tail -n 1 scripts/host_guard.py)),sys.exit(mai
 if WHOLE not in makefile:
     breaches.append("the Makefile does not look at whether the guard is whole: emptied, it exits 0 and a recipe through it reads as passed")
 # As `tail -n 1` reads it: a blank line after it would refuse every `make`.
-if not guard.read_text(encoding="utf-8").endswith("\n    sys.exit(main(sys.argv[1:]))\n"):
+if not source.endswith("\n    sys.exit(main(sys.argv[1:]))\n"):
     breaches.append("scripts/host_guard.py does not end with the line the Makefile looks for")
-# What a half-done rename leaves and a compile does not see, by the compiler's own table: a name read and bound nowhere. This is all a commit holds of what the file does when it
-# runs, which is the self-test's, in `integration`.
+# What a half-done rename leaves and a compile does not see, by the compiler's own table: a plain name read and bound nowhere. An attribute or a keyword it cannot read.
 def scopes(table):
     yield table
     for child in table.get_children():
         yield from scopes(child)
-module = symtable.symtable(guard.read_text(encoding="utf-8"), str(guard), "exec")
+module = symtable.symtable(source, str(guard), "exec")
 bound = set(dir(builtins)) | {"__file__"}
 for scope in scopes(module):
     for symbol in scope.get_symbols():
