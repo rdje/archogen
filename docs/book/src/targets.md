@@ -212,7 +212,7 @@ interrupt with nothing to claim. A second alarm, an adapter's say, takes a chann
 scheduling checker build them.
 
 Each alarm's interrupt is charged as any other interrupt source is, by the analysis as it stands, so what has to be right is what it is told: how close two arrivals can come. Nobody can state that of what a job
-may program, so the code writing the alarm enforces it, holding each compare a least distance past the last arrival, which costs a deadline at most that much lateness. `crates/rt-analysis/tests/alarm_model.rs` runs that design on a timeline against the analysis: with the floor no response passes its bound, and without it a set that holds on paper misses. Its rank among the others goes by the deadline it has to meet, so an alarm due soon stands ahead of a slow source. A call into generated code counts as a call of a primitive, whose cost holds
+may program, so the code writing the alarm enforces it, holding each compare a least distance past the last arrival, as far as it can know that, which costs a deadline about that much lateness. `crates/rt-analysis/tests/alarm_model.rs` runs that design on a timeline against the analysis: with the floor no response passes its bound, and without it a set that holds on paper misses. Its rank among the others goes by the deadline it has to meet, so an alarm due soon stands ahead of a slow source. A call into generated code counts as a call of a primitive, whose cost holds
 what it calls in turn. And a job runs in no interrupt, so a job hears of an alarm when a task is released, which something else must have programmed for it, since a set of tasks that only release each other has no first job.
 
 ### The first code on the target

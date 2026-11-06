@@ -411,7 +411,7 @@ timer route and a source, and a block may be named `timer`:
    obligation: no member's initialisation calls another member's code. Since `M4.1.14` and `M4.1.15` a component can
    hold hardware and instances too, a block bound to the timer whose alarm it programs: the answer holds for them,
    re-derived. A member's initialisation sets its own state; programming an alarm is a call of the timer's code, work
-   for run time, and initialisation, run masked, waits on no interrupt (§2.6); so the obligation binds hardware as it
+   for run time (`/2` amends this for a wake's first arm, `decision_release-alarm.md` §2), and initialisation, run masked, waits on no interrupt (§2.6); so the obligation binds hardware as it
    binds services. For generated code it is the emitter's (`RTP-H2`), which generates no such call; for a record it is
    stated by its initialisation entry (`RTP-H6`); `M4.10` checks the image (`RTP-H6`). Where a record states such a
    call, the lowering refuses (§1).
@@ -472,7 +472,7 @@ timer route and a source, and a block may be named `timer`:
     | each source | `service-cost`, `acknowledge-point`, `deferred-work`, `no-application-code`, `one-request-per-arrival` | `realization` |
     | each timer route | `service-cost`, `arrival-bound` | `realization` |
 
-    `/2` owes each alarm the more that `decision_release-alarm.md` §2 lists, a floor its realization enforces as its least separation and its greatest apart.
+    `/2` owes each alarm the more that `decision_release-alarm.md` §2 lists, a floor its realization enforces as its least separation, its greatest apart, and its own device's compare.
 
     A task's `figures-under-preemption` is §2.2's declaration whole, condition 8's half: its figures hold under any
     preemption and from any entry state.
