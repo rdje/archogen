@@ -823,6 +823,8 @@ def watch(root: Path, limits: Limits, once: bool, idle_seconds: float = 600.0, a
     os.chdir("/")
     memory = Memory()
     unread_said, last_seen, busy, read_at, running = 0.0, time.monotonic(), False, time.monotonic(), started_from()
+    # What it runs, for `status`: a watcher running an older file looks like any other.
+    write_note(root, "watch.code", stamp_for_the_next(running))
     while True:
         wait = 2.0
         try:
@@ -847,6 +849,7 @@ def watch(root: Path, limits: Limits, once: bool, idle_seconds: float = 600.0, a
             if again is not None:
                 if file_is_whole():
                     os.environ[STARTED_FROM] = stamp_for_the_next(stamp)
+                    record(root, kind="taken-up", reasons=f"this watcher takes up {CODE.name} as saved")
                     os.execv(sys.executable, [sys.executable, "-I", "-B", str(CODE), *again])
                 record(root, kind="unread", error=f"{CODE.name} as saved does not compile or is cut short: this watcher goes on as it was")
         # A root that is gone, a removed worktree, is watched by nobody: nothing of it can run, and its state must not bring it back. One remade at that name is another, which holds its own lock.
@@ -866,6 +869,14 @@ def watch(root: Path, limits: Limits, once: bool, idle_seconds: float = 600.0, a
         if once:
             return 0
         time.sleep(wait)
+
+
+def runs_the_file(root: Path) -> bool:
+    """Whether the watcher started from the file as it stands. One from before this note was written reads as not."""
+    try:
+        return (state_path(root) / "watch.code").read_text() == stamp_for_the_next(code_stamp())
+    except OSError:
+        return False
 
 
 def watcher_pid(root: Path) -> int | None:
@@ -1626,8 +1637,18 @@ def kills_by_name(commands: list[Command], root: Path) -> bool:
     def searches_by_name(command: Command) -> bool:
         if command.name == "pgrep":
             return goes_by_pid(command) is None
-        # `-p` or a group's `-g` in any cluster of `ps`'s plain flags, as `ps -fp 123` writes it, or a pid written plainly, `ps up 123`. Past a flag taking a value it is that value: `-opid`, `-upeter`.
-        return command.name == "ps" and not any(re.fullmatch(r"-[AaCcdEefhjLlMmrSTvwXx]*[pg]\w*|--pid.*|\d+", word) for word in command.words[1:])
+        if command.name != "ps":
+            return False
+        words = command.words[1:]
+        for at, word in enumerate(words):
+            # `-p` or a group's `-g` in any cluster of `ps`'s plain flags, as `ps -fp 123` writes it. Past a flag taking a value it is that value: `-opid`, `-upeter`.
+            if re.fullmatch(r"-[AaCcdEefhjLlMmrSTvwXx]*[pg]\w*|--pid.*", word):
+                return False
+            # Or a pid written plainly, `ps 123`, `ps up 123`, `ps -f "$PID"`, unless it is what the flag before it takes: `-U 501`, `-t 1`.
+            before = words[at - 1] if at else ""
+            if re.fullmatch(r"\d+|\$\w+|\$\{\w+\}", word.strip("'\"")) and (not before.startswith("-") or re.fullmatch(r"-[AaCcdEefhjLlMmrSTvwXx]*", before)):
+                return False
+        return True
 
     for at, command in enumerate(commands):
         if command.name in ("pkill", "killall"):
@@ -1895,6 +1916,8 @@ def status(root: Path, limits: Limits) -> int:
     except Exception as error:
         print(f"the process table cannot be read: {error}")
     print(("watcher: running, and reading the host" if healthy(root, limits) else "watcher: running, and BLIND: it has not read the host lately") if watcher_pid(root) else "watcher: not running")
+    if watcher_pid(root) and not runs_the_file(root):
+        print(f"watcher: it runs an older {CODE.name} than the one saved, and has not taken it up. If this stays, `stop` it, and the next command starts one from the file")
     try:
         print(f"peak since its start: {(state / 'peak.json').read_text(errors='replace')}")
     except OSError:

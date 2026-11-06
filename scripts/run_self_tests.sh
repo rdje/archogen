@@ -90,6 +90,9 @@ self_test() {
   arm "one that could not all be run is incomplete, no pass" 20 "incomplete"
   stub "$work/check_alpha.sh" 1; stub "$work/check_ident.sh" 20
   arm "and a failure outranks it" 1 "✗ $work/check_alpha.sh"
+  rm -f "$work"/check_*.sh
+  printf '#!/usr/bin/env bash\n[ "${1:-}" = "--self-test" ] || exit 0\necho "host-guard self-test: waiting for room, up to 9 s more"\necho "ValueError: the reason"\nexit 1\n' > "$work/check_waited.sh"
+  arm "one that waited and then died says why it died" 1 "ValueError: the reason"
   rm -f "$work"/check_*.sh; stub "$work/check_alpha.sh" 0; stub "$work/check_beta.sh" 21
   arm "a gate no row names cannot exempt itself as of another host" 1 "✗ $work/check_beta.sh"
   SELF_TESTS_ONE_HOST="$work/check_beta.sh" arm "one that reads another host is counted apart, never as passed" 0 "1 self-test(s) passed, and 1 reads another host"
@@ -129,8 +132,13 @@ while IFS= read -r gate; do
     failed=$((failed + 1))
     printf '  ✗ %-52s %3ss  its RED arms did not all pass:\n' "$gate" "$((SECONDS - started))" >&2
     # What it says it waits for says nothing of why it failed, and one that died by a traceback says only that.
-    printf '%s\n' "$out" | grep -E '^SELF-TEST|self-test|FAILED' | grep -v 'waiting for room' | head -12 | sed 's/^/      /' >&2
-    grep -qE '^SELF-TEST|self-test|FAILED' <<< "$out" || printf '%s\n' "$out" | tail -3 | sed 's/^/      /' >&2
+    said="$(printf '%s\n' "$out" | grep -vE '^host-guard( self-test)?: waiting for room')"
+    reason="$(grep -E '^SELF-TEST|self-test|FAILED' <<< "$said")"
+    if [ -n "$reason" ]; then
+      printf '%s\n' "$reason" | head -12 | sed 's/^/      /' >&2
+    else
+      printf '%s\n' "$said" | tail -3 | sed 's/^/      /' >&2
+    fi
   fi
 done <<< "$gates"
 if [ "$failed" -ne 0 ]; then

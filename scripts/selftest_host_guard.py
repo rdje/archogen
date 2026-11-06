@@ -806,6 +806,7 @@ def case_a_guard_changed_holds_from_then() -> None:
     check("a watcher takes up a file that changes", until(lambda: marker.exists()))
     check("itself, with nothing unwatched between", up(watcher))
     check("and goes on naming its root", f"--root {g.canonical(repo)}" in marker.read_text())
+    check("and says it took it up", until(lambda: log.exists() and "taken-up" in log.read_text()))
     # A save while it is coming up is another test's: this one saves once it reads.
     sampled = repo / "target" / "host-guard" / "state" / "sampled"
     was = sampled.read_text()
@@ -819,6 +820,13 @@ def case_a_guard_changed_holds_from_then() -> None:
     marker.unlink()
     copy.write_text(takes_up(good, marker))
     check("and repaired, it is taken up with nothing more", until(lambda: marker.exists()) and up(watcher))
+    says = lambda: subprocess.run([*PY, str(copy), "status", "--root", str(repo)], capture_output=True, text=True, errors="replace", timeout=30).stdout
+    check("and runs the file, which `status` leaves unsaid", until(lambda: "an older" not in says()), says())
+    note = repo / "target" / "host-guard" / "state" / "watch.code"
+    kept = note.read_text()
+    note.write_text("0:0")
+    check("one running an older file is said to", "an older" in says(), says())
+    note.write_text(kept)
     # One that compiles and fails ends it, as it would any: said by what looks.
     copy.write_text(good.replace("def hold_lock(", "def hold_lock_(", 1))
     check("one that fails when it runs ends the watcher", settle(watcher, 15))
@@ -906,6 +914,28 @@ def case_a_root_spelt_relatively_stays_that_root() -> None:
         check("and goes on reading for it, from wherever it went", until(lambda: sampled.read_text() != before) and up(watcher))
     finally:
         subprocess.run([*PY, str(copy), "stop", "--root", str(repo / "sub")], capture_output=True, timeout=30)
+
+
+def case_a_commit_finds_a_name_bound_nowhere() -> None:
+    """A half-done rename compiles, and may end the watcher: what a commit holds of it, by the compiler's own table. Each name a round's rig left half-renamed."""
+    repo = fresh("names-bound")
+    (repo / ".git").mkdir()
+    (repo / "scripts").mkdir()
+    (repo / ".claude").mkdir()
+    for name in ("Makefile", "CLAUDE.md", ".claude/settings.json", "scripts/check_host_guard.sh", "scripts/selftest_host_guard.py"):
+        shutil.copy(ROOT / name, repo / name)
+    copy = repo / "scripts" / "host_guard.py"
+    good = GUARD.read_text()
+    holds = lambda: subprocess.run(["bash", str(repo / "scripts" / "check_host_guard.sh")], capture_output=True, text=True, errors="replace")
+    copy.write_text(good)
+    done = holds()
+    check("a commit's check passes the whole file", done.returncode == 0, done.stdout + done.stderr)
+    for name in ("hold_lock", "Memory", "code_stamp", "started_from", "CODE", "tightened", "note_peak", "GIB", "ensure", "healthy", "watcher_pid", "kills_by_name", "commands_of", "stamp_for_the_next", "file_is_whole"):
+        broken = re.sub(rf"^((?:def |class )?){name}\b", rf"\g<1>{name}_", good, count=1, flags=re.M)
+        check(f"the rig renames {name}", broken != good)
+        copy.write_text(broken)
+        done = holds()
+        check(f"and refuses one with `{name}` half renamed", done.returncode == 1 and f"reads `{name}`, bound nowhere" in done.stdout, done.stdout + done.stderr)
 
 
 def case_make_looks_for_the_whole_guard() -> None:
@@ -1392,13 +1422,15 @@ def case_killing_by_name() -> None:
             "[[ $line =~ ^([[:space:]]*)#(.*)$ ]] && pkill -x rustc", "bash -s -- x <<'E'\npkill -x rustc\nE", "bash -s x <<< 'killall cargo'", 'x="$(cat <<EOF\nbody\nEOF)"\npkill -x rustc', f"pkill -f {scope}-other/x", f"ps -ax | grep {scope}-other/x | xargs kill",
             'kill "$(pgrep -x rustc)"', 'ps -ax | grep x; kill "$PID"', "for ((i=0;i<1;i++)) do pkill -x rustc; done", "if true; then for ((i=0;i<1;i++)) do pkill -x rustc; done; fi", "time for ((i=0;i<1;i++)) do pkill -x rustc; done", "pkill -v -P 123", "pkill -vP 123", "pkill -P 5,1 -x rustc", "kill -9 -1", "kill -- -1", "pkill -PIPE rustc", "pkill -FPE rustc", "ps -upeter | awk '{print $1}' | xargs kill", 'pkill -P "$(pgrep -x make)"', 'P=$(pgrep -x make); pkill -P "$P"', "pgrep -x make > p; pkill -F p", "pkill -F <(pgrep -x rustc)", "ps -ax -opid -ocommand | grep rustc | awk '{print $1}' | xargs kill", "pkill -P 1 -x rustc", "pgrep -P 1 -x rustc | xargs kill -9", f"pkill -v -f {scope}", f"pgrep -vf {scope} | xargs kill", "kill -- -$(pgrep -x rustc)", "kill -TERM -$(pgrep -f myjob)", "PGID=$(pgrep -f myjob); kill -- -$PGID", "kill -s TERM $(pgrep -x rustc)",
             f"ps -ax | grep rustc | grep -v {scope} | awk '{{print $1}}' | xargs kill", f"pgrep -x rustc | tee {scope}/pids | xargs kill", f"pkill -f '{scope} copy'",
+            "ps -U rdje -o pid=,comm= | grep rustc | awk '{print $1}' | xargs kill", "ps -U 501 -o pid=,comm= | grep rustc | awk '{print $1}' | xargs kill", "kill $(ps -u 501 | grep rustc | awk '{print $2}')",
+            "kill $(ps -G 20 | grep rustc | awk '{print $2}')", "kill $(ps -t 1 | grep rustc | awk '{print $2}')", "kill $(ps -O 1 | grep rustc | awk '{print $2}')", 'kill $(ps -U "$USER" | grep rustc | awk \'{print $2}\')',
         ):
             done = hook_says(command, scope)
             check(f"never by a name across the host: {command}", done.returncode == 2 and "never by a program's name" in done.stderr, done.stderr)
         for command in (
             f"pkill -f '{scope}/x'", f"kill $(pgrep -f {scope}/x)", "kill 123", "kill -9 123", 'kill "$(cat job.pid)"', "kill $(cat job.pid)", "kill $(jobs -p)", "git commit -m 'pkill -x rustc'",
             "rg pkill docs/", "git grep -n killall -- scripts", "find . -name pkill -print", "python3 -I -B -c pass pkill probe", "pgrep -x rustc", "ps -ax | grep rustc", "git commit -m 'kill the pgrep rig'",
-            "pkill -P 123", "pkill -P123", "pkill -fP 123 sleep", 'pkill -P "$PID"', "pkill -g 123", "ps -o pid= -g 123 | xargs kill", "ps -ax | head -3; kill -- -$$", 'ps 123; kill "$x"', 'ps up 123; kill "$x"', 'pgrep -lP "$PID"; kill "$PID"', "for w in do pkill; do echo $w; done", "kill $(pgrep -P 123)", "cat target/x/job.pid | xargs kill", f"pgrep -f {scope}/x | xargs kill", f"ps -ax | grep {scope}/x | awk '{{print $1}}' | xargs kill",
+            "pkill -P 123", "pkill -P123", "pkill -fP 123 sleep", 'pkill -P "$PID"', "pkill -g 123", "ps -o pid= -g 123 | xargs kill", "ps -ax | head -3; kill -- -$$", 'ps 123; kill "$x"', 'ps up 123; kill "$x"', 'ps "$PID" && kill "$PID"', 'ps $PID; kill $PID', 'ps -f "$PID"; kill "$PID"', 'ps -w 123; kill "$x"', 'pgrep -lP "$PID"; kill "$PID"', "for w in do pkill; do echo $w; done", "kill $(pgrep -P 123)", "cat target/x/job.pid | xargs kill", f"pgrep -f {scope}/x | xargs kill", f"ps -ax | grep {scope}/x | awk '{{print $1}}' | xargs kill",
             'grep -n "kill\\|pgrep" f', 'rg "xargs kill" scripts/', 'echo "use kill, not pgrep"', "kill 123; ps -ax | grep x", "ps -ax | grep x; kill 123", "kill $!; pgrep -x rustc", "ps -p 123; kill $(cat p)",
             "tools=(pkill killall); echo ${tools[0]}", 'case "$t" in a) echo a;; pkill|killall) echo b;; esac', "for t in a b; do case $t in a) echo a;; pkill) echo b;; esac; done", "[[ $cmd =~ ^(pkill|killall)$ ]] && echo careful",
             "(( pkill > 1 ))", "pkill() { :; }; echo", "cat <<'EOF'\npkill -x rustc\nEOF",
@@ -1648,7 +1680,7 @@ THE_REST = (
     case_only_tightened, case_check_refuses, case_a_figure_not_read_is_never_safe, case_one_process, case_all_processes, case_what_a_stopped_process_started,
     case_another_project_is_never_ours, case_a_terminal_vouches_for_nothing, case_a_root_is_exactly_itself, case_agents, case_what_holds_little_is_left_alone, case_a_job_is_stopped_whole,
     case_a_queued_make_is_no_build, case_at_a_disk_floor_what_writes_stops, case_names_and_zombies, case_a_command_line_that_is_no_text, case_pressure, case_not_ours, case_growing,
-    case_a_small_writer_is_counted, case_the_watcher_outlives_its_own_trouble, case_a_guard_changed_holds_from_then, case_a_root_remade_is_another, case_a_root_that_is_gone_stays_gone, case_a_stale_pid_names_nobody, case_the_watcher_stays_while_a_job_runs,
+    case_a_small_writer_is_counted, case_the_watcher_outlives_its_own_trouble, case_a_commit_finds_a_name_bound_nowhere, case_a_guard_changed_holds_from_then, case_a_root_remade_is_another, case_a_root_that_is_gone_stays_gone, case_a_stale_pid_names_nobody, case_the_watcher_stays_while_a_job_runs,
     case_what_is_not_the_table_is_blindness, case_a_blind_watcher_is_said, case_the_hook_passes_nothing_it_cannot_read, case_killing_by_name, case_hook, case_a_damaged_log, case_run,
 )
 

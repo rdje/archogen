@@ -19,7 +19,7 @@ if [ "${1:-}" = "--self-test" ]; then
     exec python3 -I -B "$ROOT/scripts/selftest_host_guard.py"
 fi
 python3 -I -B - "$ROOT" <<'PY'
-import ast, json, re, sys
+import ast, builtins, json, re, symtable, sys
 from pathlib import Path
 
 root = Path(sys.argv[1])
@@ -89,6 +89,20 @@ if WHOLE not in makefile:
 # As `tail -n 1` reads it: a blank line after it would refuse every `make`.
 if not guard.read_text(encoding="utf-8").endswith("\n    sys.exit(main(sys.argv[1:]))\n"):
     breaches.append("scripts/host_guard.py does not end with the line the Makefile looks for")
+# What a half-done rename leaves and a compile does not see, by the compiler's own table: a name read and bound nowhere. This is all a commit holds of what the file does when it
+# runs, which is the self-test's, in `integration`.
+def scopes(table):
+    yield table
+    for child in table.get_children():
+        yield from scopes(child)
+module = symtable.symtable(guard.read_text(encoding="utf-8"), str(guard), "exec")
+bound = set(dir(builtins)) | {"__file__"}
+for scope in scopes(module):
+    for symbol in scope.get_symbols():
+        if (scope is module and (symbol.is_assigned() or symbol.is_imported() or symbol.is_namespace())) or (symbol.is_declared_global() and symbol.is_assigned()):
+            bound.add(symbol.get_name())
+for name in sorted({symbol.get_name() for scope in scopes(module) for symbol in scope.get_symbols() if symbol.is_referenced() and symbol.is_global()} - bound):
+    breaches.append(f"scripts/host_guard.py reads `{name}`, bound nowhere: a half-done rename, which compiles and fails when it runs")
 RECIPES = {
     "focused": ["$(GUARD) cargo xtask verify --tier focused"],
     "integration": ["$(GUARD) cargo xtask verify --tier integration"],

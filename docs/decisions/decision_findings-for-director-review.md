@@ -286,6 +286,12 @@ if we agree then go ahead". `M3.5.1` designs both, `M2.21` taking the scheduling
 
 **A suggestion.** The stop line, 85% or pressure level 2, keeps stopping this repository's small jobs, tests and commits of some 0.4 GiB, because of other projects' load. Each stop has cost a rerun and has lost nothing. Stopping them frees little, against what those projects hold, so a higher stop line for a job holding little could save the reruns, at the cost of holding more when the host is already short. The lines stand as they are, and `HOST-GUARD` holds them: moving one is the director's word.
 
+## 18. The real watcher ran an old image for four hours (`2026-11-06`) — **for your information, nothing waits on it**
+
+Found while answering the guard's round 14. The watcher on this host had been up 9 h 38 min and was running an image from before `prove` was taken out. From `08:21` it said `as saved does not run` of each new file, since none has that verb, and went on as it was. So rounds 12 to 14's watcher had only ever run in the self-test's copies, and no reader's rig or check looked at the real one's age.
+
+It did its job through those hours: its lines are the same, and it stopped what it should at `85%` and `88%`, its log says so. It is restarted, from the file as it stands. `status` now says when a watcher runs an older file than the one saved, which nothing did, and the record says why a change to the way a watcher takes itself up cannot reach one older than it.
+
 ## A note on what "done" means so far
 
 M0 and M1 are complete, and the shape of the claim matters. What exists is a **frontend**: a

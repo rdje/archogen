@@ -578,7 +578,7 @@ so a stopped build is not simply followed by the next. A job that holds little a
 `make` runs everything that compiles or tests through it, and first looks at whether the guard's file is whole, since one emptied by accident would exit 0 having run nothing and a recipe would read as passed. An agent's shell commands are checked before they run. `python3 scripts/host_guard.py status`
 says what it reads, who holds the most memory, and what it has stopped. It stops only this repository's processes, so it cannot make the host safe from
 another project's; it can only take its own share out of the way and say who holds the rest. What it stops is told to the agent beside its next command's result, and
-what it refuses before a command runs is three things: what it cannot read, stopping by a program's name, and a heavy command with no room. `HOST-GUARD` keeps all of this wired in. Nobody has to watch it: the director's word of `2026-11-06` is to observe the trend, and to say something only when RAM is over 90% and still rising.
+what it refuses before a command runs is three things: what it cannot read, stopping by a program's name or all at once, and a heavy command with no room. `HOST-GUARD` keeps all of this wired in. Nobody has to watch it: the director's word of `2026-11-06` is to observe the trend, and to say something only when RAM is over 90% and still rising.
 
 ### What CI does with an `incomplete` tier
 
