@@ -206,12 +206,14 @@ A target's file holds what its agreement with the machine checks, so what it doe
 ### What releases a task on a target
 
 On the playground the simulator's clock releases tasks. On a real machine a device has to raise that interrupt, so the kernel asks for an alarm as anything else asks, and the search binds it to a
-device that can serve, under the same rules and the same count of channels (`docs/decisions/decision_release-alarm.md`). A second alarm, an adapter's say, takes a second channel, on that device if it has
-one and on another if not. Neither this nor what follows is code yet: format `/2` and the scheduling checker build them.
+device that can serve, under the same rules and the same count of channels (`docs/decisions/decision_release-alarm.md`). It asks one that runs while the machine idles, and wired so that the core takes its
+interrupt with nothing to claim. A second alarm, an adapter's say, takes a channel of its own, and is wired through the interrupt controller. Neither this nor what follows is code yet: format `/2` and the
+scheduling checker build them.
 
-An alarm's interrupt is charged as any other interrupt source is, so nothing the analysis proved is reopened. Its ranks among the others go by the deadline each has to meet, so an alarm due soon stands
-ahead of a slow source. A call into generated code counts as a call of a primitive, whose cost holds what it calls in turn. And a job runs in no interrupt, so a job hears of an alarm only by a task being
-released: nothing else in this profile tells a job anything.
+Each alarm's interrupt is charged as any other interrupt source is, by the analysis as it stands, so what has to be right is what it is told: how close two arrivals can come, which only whoever programs the
+alarm can say. Its rank among the others goes by the deadline it has to meet, so an alarm due soon stands ahead of a slow source. A call into generated code counts as a call of a primitive, whose cost holds
+what it calls in turn. And a job runs in no interrupt, so a job hears of an alarm only by a task being released, which something else must have programmed for it: nothing else in this profile tells a job
+anything.
 
 ### The first code on the target
 

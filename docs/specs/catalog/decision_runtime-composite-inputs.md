@@ -41,7 +41,7 @@ No composite ever takes the maximum of things its definition adds.
 | Part | Symbol | Owner | What it bounds |
 | --- | --- | --- | --- |
 | a primitive's cost | `api.p`, for each primitive `p` a task can call | catalog: timing cost `api.<p>` of the runtime API record, the one that supplies `completion` (the catalog record's §12 groups); for a generated node a job calls, its realization (§7) | one call, from its first instruction to its last (§2's `primitives-out-of-line`), on the caller's behalf, excluding any service taken during the call or right after it |
-| a primitive's masked run | `masked.p` | catalog: timing cost `masked.<p>` | the longest contiguous masked stretch inside one call of `p` made with interrupts unmasked |
+| a primitive's masked run | `masked.p` | catalog: timing cost `masked.<p>`; for a generated node a job calls, its realization (§7) | the longest contiguous masked stretch inside one call of `p` made with interrupts unmasked |
 | the completion path | `completion` | catalog: timing cost `completion` | from the job's last instruction of its own code to the decided switch that follows, the scheduling decision included; a primitive the job's code ends by tail-calling is charged here and as a primitive, which over-counts and never under-counts (the fault contract's completion, R14 227) |
 | the completion path's masked run | `masked.completion` | catalog: timing cost `masked.completion` | the longest contiguous masked stretch in the completion path, up to the decided switch. The transition that follows it is added by `L`, as it is today |
 | the task's own code | `C_i^app` | application, per task | the most one job executes of the task's own code, from its first instruction after the transition in to its last. It excludes every primitive's execution and every service, and includes the application's own instrumentation |
@@ -134,6 +134,7 @@ dispatch, which claims before it knows the source, acts in the role of the servi
 - the timer service writes the compare and releases its due timer tasks;
 - a source's service claims and completes its own source, accesses its own device's registers, and releases the
   tasks bound to it;
+- a generated node that takes a channel programs that channel's compare, from a job inside its own masked run or from its alarm's service, and that alarm's service is a source's in all the above (`docs/decisions/decision_release-alarm.md` §2, `2026-11-06`; text until `RA-H5` builds it);
 - the runtime API's primitives, the completion path (added `2026-10-01`, the fault contract's R6 136), and the port's
   trap entry and exit, its transitions, its idle wake and its fault path, mask and unmask the hardware — they write the
   hart's interrupt-enable state directly; only a job calls the runtime API's `mask` and `unmask` (the profile's fault

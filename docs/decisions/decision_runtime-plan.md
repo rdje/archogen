@@ -124,7 +124,7 @@ leaf that adds it:
 - a task, or the system's own level, that would receive an interrupt's code: a timer route that names it, bound to its
   provider itself by a binding that takes a channel (model §8 rule 2) — an alarm it programs, as §2.6 reads that binding
   — or an adapter instance with a cost running its requester's code (`expiry`) whose requester it is, the one an
-  exclusive instance serves or one bound to a shared instance. No context runs a job's code in an interrupt, so a job receives an alarm or an expiry only as a release, for which `RA-H4` gives a way to write, and the
+  exclusive instance serves or one bound to a shared instance. No context runs a job's code in an interrupt, so a job receives an alarm or an expiry only as a release, for which `RA-H4` gives a way to write, by a task something else programs it for, and the
   system's own level, which has no job, stays refused (`decision_release-alarm.md` §5). It names every such receiver — each task in runtime order, then the system's own level — with what it
   would receive: first the alarms it programs, each naming the provider, then its expiries, each naming the instance
   that delivers it, each kind by those texts. So no order among them decides the message, though one receiver receives
@@ -471,6 +471,8 @@ timer route and a source, and a block may be named `timer`:
     | each node a `multiplex` obligation names | `overhead` | `realization` |
     | each source | `service-cost`, `acknowledge-point`, `deferred-work`, `no-application-code`, `one-request-per-arrival` | `realization` |
     | each timer route | `service-cost`, `arrival-bound` | `realization` |
+
+    `/2` owes each alarm the more that `decision_release-alarm.md` §2 lists, its least and greatest separation apart and each from who can state it.
 
     A task's `figures-under-preemption` is §2.2's declaration whole, condition 8's half: its figures hold under any
     preemption and from any entry state.
