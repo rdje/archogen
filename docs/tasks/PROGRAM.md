@@ -1051,7 +1051,19 @@ mdBook that is the director's window into the project.
   Commit: `ARCHOGEN-PROGRAM-1213 (leaf PROGRAM.127.20)`
 
 - ID: `PROGRAM.127.21`
-  Status: `pending` — round 21, a fresh reader over round 20's answer. It closes on a round that finds no defect, and a form written to go round the guard is a stated limit, not a defect.
+  Status: `done` — `2026-11-06`: round 21, a fresh reader over round 20's answer: 10 findings, 3 defects, the count up from 2, so answered by method. The findings and each answer are in `docs/reviews/decision_host-guard-reviews.md`.
+
+  **Acceptance checklist (`DOCTRINE_ENFORCEMENT.md`):**
+  - [x] **REPRODUCE / ISSUE** — `python3 -I -B target/p12721/work/hg.py` → `HOST-GUARD rc=0` for `focused: GUARD := true` and five others, each `make focused` exiting 0 with nothing compiled; `python3 -I -B target/p12721/work/make_stop_rig.py target/p12721/work/q3 400 0.15` → `makes started: 400; stopped by the watcher: 5`.
+  - [x] **ROOT CAUSE (WHY + WHERE)** — `git grep -n 'found.get(name) != recipe' 640b8c3f -- scripts/check_host_guard.sh` → a reading of the Makefile's text, where make's own reading decides; `git grep -n 'def reads_the_host' 640b8c3f -- scripts/host_guard.py` → a list of what a bracket may be.
+  - [x] **FIX** — `scripts/check_host_guard.sh`: `make -n` and `make -pn` on the staged Makefile, the file loaded and asked its limits, a hook's type. `scripts/host_guard.py`: `says_no_job`, `what_a_run_runs` as `main` reads, `is_number`, `words_read` past a flag's value, `arch`, `xcrun` and `script`. `scripts/selftest_host_guard.py`: each form. The record's sentences and limits.
+  - [x] **ADDRESSED (verified)** — `bash scripts/check_host_guard.sh --self-test` → `host-guard self-test: 843 passed, 0 failed, 0 not run`, the stamp equal to what is staged; `python3 -I -B target/p12721/work/hg.py` → `HOST-GUARD rc=1` for each form that left `make focused` compiling nothing, `target_specific_guard`, `pattern_specific_guard`, `shell_true_after_whole`, `ignore_special`, `makeflags_i`, `two_targets_after`, `brace_eval` and `settings_type_prompt` among them.
+  - [x] **NO REGRESSION** — `bash scripts/check_host_guard.sh` → `host-guard: OK`, exit 0; `make focused` → `tier focused: passed — 3 passed, 0 failed`, on the staged tree.
+  - [x] **LOCKSTEP** — the record, the review history and its index, these leaves and the Commit Log; `MEMORY.md`'s next action.
+  Commit: `ARCHOGEN-PROGRAM-1216 (leaf PROGRAM.127.21)`
+
+- ID: `PROGRAM.127.22`
+  Status: `pending` — round 22, a fresh reader over round 21's answer, looking hardest at `make` asked of the Makefile and the file asked of its limits. It closes on a round that finds no defect, and a form written to go round the guard is a stated limit, not a defect.
 
 - ID: `PROGRAM.128`
   Status: `done` — `2026-11-05`: by the director's word, "If you ever need new CPU, DSP, MCU, BOARD, ISA or in general digital chip PDF just look here", naming `chipdoc`'s `AGENTS.md`. The record, its index row, the book's ledger and a `TOOLBOX.md` row now start any chip document's need there. Reading it corrected three things of ours: the record and the ledger still said `REQ-007` was `requested`, fulfilled `2026-09-30`; the ledger said the corpus was off this volume; and the record said what is adopted is copied here, where most of the corpus may not be republished and this repository is public, so a fact and its citation are copied and never a document. A documents-only leaf.
@@ -1237,6 +1249,7 @@ leaf's outcome is its row in the Commit Log below, and a sealed leaf's full reco
 | `PROGRAM.127.6` | `ARCHOGEN-PROGRAM-1164 (leaf PROGRAM.127.6)` | **paused at the director's word**, at a clean tree, before round 6 began: the resume pointer and the leaf say to wait |
 | `PROGRAM.127.6` | `ARCHOGEN-PROGRAM-1165 (leaf PROGRAM.127.6)` | **the host guard's review, round 6 answered**: a volume has fallen only by more than a shared volume costs anyway; what a job takes with it said; the shell reader given a case's branches, arithmetic, arrays and `[[ ]]`, held to each `bash` here; each agent told for itself |
 | `PROGRAM.127.7` | `ARCHOGEN-PROGRAM-1168 (leaf PROGRAM.127.7)` | **the host guard's review, round 7 answered**: `make` that only asks is no build; the reader's rare misses read, each held to both `bash`es; a `kill` by a pid passes by any spelling; the root named exactly; what is told says what it leaves out |
+| `PROGRAM.127.21` | `ARCHOGEN-PROGRAM-1216 (leaf PROGRAM.127.21)` | **the host guard's review, round 21, answered by method**: `make` asked what each recipe would run, the file asked what each limit is; what `ps` brackets is a moment; a `run` read as `main` reads it; numbers as the tools read them |
 | `PROGRAM.127.20` | `ARCHOGEN-PROGRAM-1213 (leaf PROGRAM.127.20)` | **the host guard's review, round 20**: a `make` waits on through what `ps` brackets; a `run` is of the root it says before its `--`; the reader through the guard's `run` and `env -`, and numbers however spelt; what make and the limits can be told; a path holding a space is one path |
 | `PROGRAM.127.19` | `ARCHOGEN-PROGRAM-1211 (leaf PROGRAM.127.19)` | **the host guard's review, round 19 answered**: the self-test spared by its own path; what a floor counts of a process newly ours said |
 | `PROGRAM.127.18` | `ARCHOGEN-PROGRAM-1206 (leaf PROGRAM.127.18)` | **the host guard's review, round 18 answered**: the self-test spared by its own name and a job only to what `check` says; dashless `ps` read as dashed |
@@ -1338,3 +1351,4 @@ leaf's outcome is its row in the Commit Log below, and a sealed leaf's full reco
 - `2026-11-06`: `PROGRAM.127.18` done: the guard's round 18, seven findings answered, two defects; `PROGRAM.127.19` filed for round 19.
 - `2026-11-06`: `PROGRAM.127.19` done: the guard's round 19, four findings answered, two defects, both mild; `PROGRAM.127.20` filed for round 20.
 - `2026-11-06`: `PROGRAM.127.20` done: the guard's round 20, ten findings answered, two defects; `PROGRAM.127.21` filed for round 21.
+- `2026-11-06`: `PROGRAM.127.21` done: the guard's round 21, ten findings answered, three defects, by method; `PROGRAM.127.22` filed for round 22.

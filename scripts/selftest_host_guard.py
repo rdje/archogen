@@ -1130,27 +1130,54 @@ def case_a_commit_holds_what_make_and_the_limits_can_be_told() -> None:
         ("an `override`", "override GUARD := env\n" + made),
         ("a `sinclude`", "sinclude more.mk\n" + made),
         ("an `$(eval)`", "$(eval GUARD := env)\n" + made),
+        ("a `${eval}`", made + "\n${eval GUARD := true}\n"),
+        ("a target's own `GUARD`", made + "\nfocused: GUARD := true\n"),
+        ("a pattern's own `GUARD`", made + "\n%: GUARD := true\n"),
+        ("a `GUARD` by `MAKEFLAGS`", made + "\nMAKEFLAGS += GUARD=true\n"),
+        ("a second target on a line", made + "\nquick focused:\n\ttrue\n"),
+        ("a `SHELL` that runs nothing", made + "\nSHELL := /usr/bin/true\n"),
+        ("an `.IGNORE`", made + "\n.IGNORE:\n"),
+        ("a `-i` by `MAKEFLAGS`", made + "\nMAKEFLAGS += -i\n"),
     ):
         (repo / "Makefile").write_text(text)
         done = holds()
-        check(f"a Makefile with {said} is refused", done.returncode == 1 and "Makefile" in done.stdout, done.stdout + done.stderr)
+        check(f"a Makefile with {said} is refused", done.returncode == 1 and ("Makefile" in done.stdout or "`make " in done.stdout), done.stdout + done.stderr)
     (repo / "Makefile").write_text(made)
     anchor = "    panic_used_percent: float"
     check("the rig finds the line", anchor in guard_text)
     for said, text in (
         ("a plain line in `Limits`", guard_text.replace(anchor, "    panic_used_percent = 99.0\n" + anchor, 1)),
         ("a line from outside it", guard_text.replace("\nGUARD_NAME = ", "\nLimits.panic_used_percent = 99.0\nGUARD_NAME = ", 1)),
+        ("a line handed at a call", guard_text + "\nLOOSE = Limits(panic_used_percent=99.0)\n"),
     ):
         (repo / "scripts" / "host_guard.py").write_text(text)
         done = holds()
         check(f"{said} is refused", done.returncode == 1 and "Limits" in done.stdout, done.stdout + done.stderr)
+    # What reads as nothing to a reading of the text, told by the file when it runs.
+    tail = "\n    sys.exit(main(sys.argv[1:]))\n"
+    check("the rig finds the guard's end", guard_text.endswith(tail))
+    for said, line in (
+        ("`setattr`", "setattr(Limits, 'panic_used_percent', 99.0)"),
+        ("a tuple", "Limits.panic_used_percent, _x = 99.0, 1"),
+        ("`*=` on a constant", "FELL_BYTES *= 1024"),
+    ):
+        at = guard_text.index("\nif __name__")
+        (repo / "scripts" / "host_guard.py").write_text(guard_text[:at] + "\n" + line + "\n" + guard_text[at:])
+        done = holds()
+        check(f"{said} is refused, by what the file gives when it runs", done.returncode == 1 and "when the file runs" in done.stdout, done.stdout + done.stderr)
+    (repo / "scripts" / "host_guard.py").write_text(guard_text)
+    settings = repo / ".claude" / "settings.json"
+    held = settings.read_text()
+    settings.write_text(held.replace('"type": "command"', '"type": "prompt"', 1))
+    done = holds()
+    check("a hook of another type is no hook", done.returncode == 1 and "does not run" in done.stdout, done.stdout + done.stderr)
 
 
 def case_what_ps_cannot_read_says_no_job() -> None:
     """A `make` waits on through what `ps` brackets for a moment, however rarely a look falls there: the reader's 5 looks in 717."""
     root = "/x/root"
     run = f"python3 {GUARD} run --root {root} --wait 40 -- touch ran"
-    for child, waiting in (("(sysctl)", True), ("(ps)", True), ("(vm_stat)", True), ("(Python)", True), ("(cargo)", False), ("cargo build", False)):
+    for child, waiting in (("(sysctl)", True), ("(ps)", True), ("(vm_stat)", True), ("(Python)", True), ("(env)", True), ("(bash)", True), ("(sh)", True), ("(cargo)", False), ("(rustc)", False), ("cargo build", False)):
         table = [g.Process(10, 1, "make waits", "", "", 0), g.Process(11, 10, run, "", "", 0), g.Process(12, 11, child, "", "", 0)]
         by_pid = {p.pid: p for p in table}
         check(f"under a `run`, {child} says {'no job' if waiting else 'a job'}", g.only_waiting(10, by_pid, g.children_of(table), root) == waiting)
@@ -1178,6 +1205,18 @@ def case_a_kill_is_read_through_what_hides_it() -> None:
         "env - pkill x",
         "kill $(lsof -t -c cargo)",
         "top -l1 | awk '/cargo/{print $1}' | xargs kill",
+        "python3 scripts/host_guard.py run pkill -f foo",
+        "python3 scripts/host_guard.py run kill -9 -1",
+        "python3 scripts/host_guard.py run --wait 5 pkill -f foo",
+        "kill $(python3 scripts/host_guard.py run -- pgrep foo)",
+        "kill -9 $[-1]",
+        "kill -9 -0x1",
+        "pkill -P 0x1",
+        "pkill -P +1",
+        "kill $(pgrep -P 0x1)",
+        "arch -arm64 pkill foo",
+        "xcrun pkill foo",
+        "script -q /dev/null pkill foo",
     ):
         check(f"`{text}` is refused", refused(text))
     for text in (
@@ -1187,6 +1226,9 @@ def case_a_kill_is_read_through_what_hides_it() -> None:
         "pkill -P 123",
         "lsof -t -p 123",
         "env - cargo build",
+        "echo python3 scripts/host_guard.py run -- pkill foo",
+        ": scripts/host_guard.py run -- killall x",
+        "pkill -P 0x10",
     ):
         check(f"`{text}` is not", not refused(text))
     check("`env -` hides nothing it wraps", g.commands_of("env - cargo build")[0].words == ["cargo", "build"])
@@ -1203,6 +1245,9 @@ def case_a_path_holding_a_space_is_one_path() -> None:
             process = g.Process(1, 1, f"{program} {scope}/{directory}/{file}", "", "", 0)
             check(f"{program} of `{directory}/{file}` runs that file", process.script == file, process.script)
             check("and is no agent for the directory's name", not g.is_agent(process), process.programs_named)
+    for flag in ("-W ignore", "-X utf8"):
+        spaced = g.Process(1, 1, f"python3 {flag} {scope}/claude work/build.py", "", "", 0)
+        check(f"after `{flag}`, it is no agent for the directory's name", not g.is_agent(spaced), spaced.programs_named)
     relative = g.Process(1, 1, "python3 claude work/build.py x", str(scope), "", 0)
     check("relative to where it stands too", relative.script == "build.py" and not g.is_agent(relative), relative.script)
     agent = g.Process(1, 1, "node /opt/bin/claude --flag", "", "", 0)

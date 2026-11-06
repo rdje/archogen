@@ -424,3 +424,20 @@ One whole self-test in answering this ended `758 passed, 2 failed, 1 not run`, w
 | G20-10 | wording | "by a file named…" holds only for flags with no value and a path with no space, unless by this checkout's own path | It says so |
 
 Said, and left as it stands: its reader could not run a real `make focused`, a commit's compile, a real full volume, chosen pressure levels, true idle time, the census against the real watcher, real Codex, Kimi or VS Code, `onFailure` with a real crash, a 1 GiB fall, the blind 20-minute stay, or two self-tests at once. A self-test of its own read `763 passed, 0 failed, 1 not run`, rc 20, when the host took `case_a_job_under_run_outlasts_a_changed_guard` away three times, and `765 passed` on the next. A `watch --once` with its cwd in the scratch root stopped its own tool shell, its rig's error.
+
+**Round 21** — `2026-11-06`, leaf `PROGRAM.127.21`: not acceptable, 10 findings, 3 defects, after 2, 2 and 2 on the rounds before, on `640b8c3f`. The count did not fall, and G21-1 fails open, so this answers by method: what a text-reading check was passed by, ask the tool. Round 20's answers held past a make's first moments: 425 looks, none misread.
+
+| # | Kind | Finding | Answer |
+| --- | --- | --- | --- |
+| G21-1 | defect, fails open | `HOST-GUARD`'s "says anything that could without a recipe changing" was false: `focused: GUARD := true`, `quick focused:`, `${eval}`, `MAKEFLAGS += GUARD=true` and a later `SHELL` each passed, and `make focused` then exited 0 having compiled nothing | The check asks `make -n` of each recipe and `make -pn` of its shell and flags, on the staged Makefile, as the reader asks bash of a command. `.IGNORE` and `-i` read there too |
+| G21-2 | defect, mild | a `make` at its first moments was read as a build: `(env)` and `(bash)`, 9 looks in 447 up to 108 ms after its start, 5 stopped in 400 | `says_no_job`: what `ps` brackets is a moment whatever it is, but for a build by its name. At most one look late, a stated limit |
+| G21-3 | defect, mild | "reads each through the guard's own `run`" was false of a `run` with no `--`, which `main` accepts, and of a search inside one | `what_a_run_runs` reads as `main` does, and a search through one reads as itself |
+| G21-4 | gap | a path holding a space after a flag's value still made a job an agent | `words_read` looks at each of the first words |
+| G21-5 | gap | `Limits(…=99.0)`, `__post_init__`, `setattr`, a tuple and `FELL_BYTES *= 1024` passed | The file is loaded and asked, and a value handed at a call is refused |
+| G21-6 | gap | a hook of type `prompt` passed | It must be a command |
+| G21-7 | gap | "however the number is spelt" was false of `$[-1]`, `0x1` and `+1` | `is_number` reads as the tools do. `$((1234))` refused is a stated cost |
+| G21-8 | gap, false refusal | a message naming a `run` was read as one | Only a guard that is run |
+| G21-9 | gap | `arch`, `xcrun` and `script` were no wrappers to the reader | They are |
+| G21-10 | gap, rare | a sibling root's name going on with ` -`, and a root holding ` -- ` | A stated limit: a flat command line cannot tell |
+
+Said, and left as it stands: its reader could not run a real `make focused`, a commit's compile, commit fixtures, a real full volume, chosen pressure levels, true idle time, the census against the real watcher, real Codex, Kimi or VS Code, `onFailure` with a real crash, or a hung mount under `words_read`'s `isfile`. A slow writer's top sat just past the stated 13 s and 15 MiB, at 13.4 s and 16.0 MiB. `Makefile` stays out of the stamp, since `make` is now asked of it at each commit.

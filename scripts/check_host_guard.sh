@@ -19,7 +19,7 @@ if [ "${1:-}" = "--self-test" ]; then
     exec python3 -I -B "$ROOT/scripts/selftest_host_guard.py"
 fi
 python3 -I -B - "$ROOT" <<'PY'
-import ast, builtins, hashlib, json, os, re, subprocess, symtable, sys
+import ast, builtins, hashlib, json, os, re, subprocess, symtable, sys, tempfile
 from pathlib import Path
 
 root = Path(sys.argv[1])
@@ -121,6 +121,39 @@ for name, line in {"FELL_WINDOW_SECONDS": 10, "GROWTH_WINDOW_SECONDS": 900}.item
     elif constants[name] < line:
         breaches.append(f"`{name}` is {constants[name]}, looser than {line}")
 
+# And as the file gives them when it runs: `setattr`, `__post_init__`, a tuple and `*=` each read as nothing above, and a value handed to `Limits` at a call moves a line as surely.
+for node in ast.walk(ast.parse(source)):
+    if isinstance(node, ast.Call) and isinstance(node.func, ast.Name) and node.func.id == "Limits" and any(keyword.arg in limits and isinstance(keyword.value, ast.Constant) for keyword in node.keywords):
+        breaches.append(f"line {node.lineno} hands `Limits` a line of its own")
+os.makedirs(root / "target", exist_ok=True)
+with tempfile.NamedTemporaryFile(mode="wb", suffix=".py", dir=root / "target") as staged:
+    staged.write(code)
+    staged.flush()
+    reads = subprocess.run(
+        [sys.executable, "-I", "-B", "-c", (
+            "import dataclasses, importlib.util, json, sys\n"
+            "spec = importlib.util.spec_from_file_location('guard_under_check', sys.argv[1])\n"
+            "module = importlib.util.module_from_spec(spec)\n"
+            "sys.modules['guard_under_check'] = module\n"
+            "spec.loader.exec_module(module)\n"
+            "print(json.dumps({'limits': dataclasses.asdict(module.Limits()), 'on_the_class': {field.name: getattr(module.Limits, field.name, None) for field in dataclasses.fields(module.Limits)}, 'constants': {name: getattr(module, name) for name in sys.argv[2:]}}))\n"
+        ), staged.name, *constants],
+        capture_output=True, text=True, errors="replace", timeout=60, stdin=subprocess.DEVNULL,
+    )
+try:
+    given = json.loads(reads.stdout)
+except ValueError:
+    given = None
+    breaches.append(f"scripts/host_guard.py does not load, so its lines cannot be read: {reads.stderr.strip()[-300:]}")
+if given:
+    for read in ("limits", "on_the_class"):
+        for name in sorted(given[read].keys() & limits.keys()):
+            if given[read][name] != limits[name]:
+                breaches.append(f"`{name}` is written {limits[name]} and is {given[read][name]} when the file runs")
+    for name in sorted(given["constants"].keys() & constants.keys()):
+        if given["constants"][name] != constants[name]:
+            breaches.append(f"`{name}` is written {constants[name]} and is {given['constants'][name]} when the file runs")
+
 # Everything `make` compiles or tests goes through it. These recipes are written out rather than read for what they might mean: a loose reading of a shell line
 # was passed by `cargo fmt && cargo test`. Changing one means changing it here too, in a commit that says why.
 makefile = text_of("Makefile")
@@ -163,7 +196,7 @@ for line in makefile.splitlines():
     if line.startswith("\t"):
         found.setdefault(target, []).append(line.strip())
         continue
-    if re.match(r"\s*(?:\.RECIPEPREFIX|-?include|sinclude)\b", line) or "$(eval" in line:
+    if re.match(r"\s*(?:\.RECIPEPREFIX|\.ONESHELL|\.SHELLFLAGS|-?include|sinclude)\b", line) or "$(eval" in line or "${eval" in line:
         breaches.append(f"the Makefile says `{line.strip()}`, so what it runs cannot be read from it")
     named = re.match(r"([a-zA-Z_-]+)\s*:(?!=)(.*)", line)
     if named:
@@ -181,6 +214,33 @@ for name, recipe in found.items():
             if HEAVY.search(bare) and not re.fullmatch(r'echo\s+"[^"]*"', bare):
                 breaches.append(f"Makefile `{name}` runs `{command}`, which this check does not hold")
 
+# What each recipe runs and how, as make itself reads the Makefile as staged: reading its text was passed by a target's own `GUARD := true`, a second target on a line, `${eval}`, `MAKEFLAGS`, `SHELL` and `.IGNORE`, each leaving `make focused` to exit 0 having compiled nothing.
+with tempfile.NamedTemporaryFile(mode="w", encoding="utf-8", suffix=".mk", dir=root / "target") as staged_make:
+    staged_make.write(makefile)
+    staged_make.flush()
+    clean = {name: value for name, value in os.environ.items() if not name.startswith(("MAKE", "GNUMAKE")) and name != "MFLAGS"}
+    def make_says(*words):
+        return subprocess.run(["make", "-f", staged_make.name, *words], cwd=root, env=clean, capture_output=True, text=True, errors="replace", timeout=60, stdin=subprocess.DEVNULL)
+    a_guard = r"python3 -I -B scripts/host_guard\.py run --wait \d+ --"
+    try:
+        for name, recipe in RECIPES.items():
+            said = make_says("-n", name)
+            lines = said.stdout.splitlines()
+            wanted = [re.escape(line).replace(re.escape("$(GUARD)"), a_guard) for line in recipe]
+            if said.returncode != 0 or len(lines) != len(wanted) or not all(re.fullmatch(want, line) for want, line in zip(wanted, lines)):
+                breaches.append(f"`make {name}` would run {lines or said.stderr.strip()[-200:]}, and this check holds it to {recipe}")
+        database = make_says("-pn", "tiers").stdout
+        shells = re.findall(r"^SHELL\s*:?=\s*(.*)$", database, re.M)
+        if shells != ["/usr/bin/env bash"]:
+            breaches.append(f"the Makefile's `SHELL` is {shells}, so a recipe may not run as written")
+        flags = re.findall(r"^MAKEFLAGS\s*:?=\s*(.*)$", database, re.M)
+        if len(flags) != 1 or sorted(flags[0].strip()) != ["n", "p"]:
+            breaches.append(f"the Makefile sets `make`'s own flags, `{flags}`: a failing recipe could read as passed")
+        if re.search(r"^\.IGNORE\s*:", database, re.M):
+            breaches.append("the Makefile says `.IGNORE`, so a failing recipe would read as passed")
+    except (OSError, subprocess.SubprocessError) as error:
+        breaches.append(f"`make` cannot be asked what the recipes run: {error}")
+
 # Every shell command an agent runs here is checked first, a subagent's too, by exactly this, and nothing turns it off or lets it go by.
 EXPECTED = 'python3 -I -B "$CLAUDE_PROJECT_DIR/scripts/host_guard.py" hook'
 try:
@@ -195,7 +255,7 @@ held = [
     for entry in loaded.get("hooks", {}).get("PreToolUse", [])
     if entry.get("matcher") == "Bash|Monitor"
     for hook in entry.get("hooks", [])
-    if hook.get("command") == EXPECTED
+    if hook.get("command") == EXPECTED and hook.get("type") == "command"
 ]
 if not held:
     breaches.append(f".claude/settings.json does not run `{EXPECTED}` before a shell command")
