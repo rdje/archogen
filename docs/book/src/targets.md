@@ -203,6 +203,16 @@ A target's file holds what its agreement with the machine checks, so what it doe
 ⚠️ Two devices no requirement tells apart are not told apart: the policy's order chooses. And this says what is judged, not that two runs match, which is
 `M4.9`'s. No command names a target yet: that is `M4.1.7`, with the plan format that reads this rule.
 
+### What releases a task on a target
+
+On the playground the simulator's clock releases tasks. On a real machine a device has to raise that interrupt, so the kernel asks for an alarm as anything else asks, and the search binds it to a
+device that can serve, under the same rules and the same count of channels (`docs/decisions/decision_release-alarm.md`). A second alarm, an adapter's say, takes a second channel, on that device if it has
+one and on another if not. Neither this nor what follows is code yet: format `/2` and the scheduling checker build them.
+
+An alarm's interrupt is charged as any other interrupt source is, so nothing the analysis proved is reopened. Its ranks among the others go by the deadline each has to meet, so an alarm due soon stands
+ahead of a slow source. A call into generated code counts as a call of a primitive, whose cost holds what it calls in turn. And a job runs in no interrupt, so a job hears of an alarm only by a task being
+released: nothing else in this profile tells a job anything.
+
 ### The first code on the target
 
 `M2.8` asks for an architecture spike: startup, a timer interrupt, the return from it, observable output, and

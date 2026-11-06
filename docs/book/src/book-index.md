@@ -931,6 +931,7 @@ a change that leaves it stale, so it is never edited by hand.
 - What keeps a value, and what keeps a guarantee —
   [Refinement](refinement.md#what-keeps-a-value-and-what-keeps-a-guarantee)
 - What one request may cost — [The engine API](engine-api.md#what-one-request-may-cost)
+- What releases a task on a target — [Where generated systems run](targets.md#what-releases-a-task-on-a-target)
 - What S0 owed the supported path — [The S0 early generation path](s0.md#what-s0-owed-the-supported-path)
 - What that looks like today — [Verifying the toolchain](verification.md#what-that-looks-like-today)
 - What the boundary rules out — [The boundary: functionality versus

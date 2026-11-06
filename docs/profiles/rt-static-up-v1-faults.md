@@ -60,7 +60,7 @@ marked where they stand, answer the reviews of the catalog record's §14.4, in
   disable — in a primitive, a service, the trap path, a transition, the completion path, idle, initialisation or the
   fatal handler — is **not** a masked region, and §13.4's "latched" means pending in hardware there.
 - **Only a job, or its completion (rule 4), changes the depth.** A `mask` or `unmask` is a job's only when the job's own
-  code, or a primitive it called, executes it. Executed by any other context — the completion path, a service, the trap
+  code, or a primitive it called, executes it, a generated node a job calls being a primitive here (`docs/decisions/decision_release-alarm.md` §4). Executed by any other context — the completion path, a service, the trap
   path, a transition, idle, initialisation or the fatal handler — it is an assertion failure of that context (the
   completion path's attributed to its task, as rule 2 says), raised before the depth changes, whether or not a job is
   preempted beneath it. A runtime that is told no context detects the case it can see, a call with no job running. A

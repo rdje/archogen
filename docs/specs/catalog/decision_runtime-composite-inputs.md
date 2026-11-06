@@ -40,7 +40,7 @@ No composite ever takes the maximum of things its definition adds.
 
 | Part | Symbol | Owner | What it bounds |
 | --- | --- | --- | --- |
-| a primitive's cost | `api.p`, for each primitive `p` a task can call | catalog: timing cost `api.<p>` of the runtime API record, the one that supplies `completion` (the catalog record's §12 groups) | one call, from its first instruction to its last (§2's `primitives-out-of-line`), on the caller's behalf, excluding any service taken during the call or right after it |
+| a primitive's cost | `api.p`, for each primitive `p` a task can call | catalog: timing cost `api.<p>` of the runtime API record, the one that supplies `completion` (the catalog record's §12 groups); for a generated node a job calls, its realization (§7) | one call, from its first instruction to its last (§2's `primitives-out-of-line`), on the caller's behalf, excluding any service taken during the call or right after it |
 | a primitive's masked run | `masked.p` | catalog: timing cost `masked.<p>` | the longest contiguous masked stretch inside one call of `p` made with interrupts unmasked |
 | the completion path | `completion` | catalog: timing cost `completion` | from the job's last instruction of its own code to the decided switch that follows, the scheduling decision included; a primitive the job's code ends by tail-calling is charged here and as a primitive, which over-counts and never under-counts (the fault contract's completion, R14 227) |
 | the completion path's masked run | `masked.completion` | catalog: timing cost `masked.completion` | the longest contiguous masked stretch in the completion path, up to the decided switch. The transition that follows it is added by `L`, as it is today |
@@ -493,8 +493,8 @@ This record names what §12 gains; the catalog record's own review checks the wo
   `unsupported-profile`, naming the fact: no part covers that code's execution or its masked runs. Giving such calls
   parts of their own is a later leaf's.
 - **A job's call into a node's generated code**, one its task line's `uses` lists or its own `bind` lines name (§2's
-  clause on the runtime's own data; added `2026-11-04`, `M2.30`). No part covers its execution or its masked runs until
-  `M4.1.6` designs their term (the runtime plan's §2.10): until then the caller lists each such call among the task's
+  clause on the runtime's own data; added `2026-11-04`, `M2.30`). It is a primitive's call, its `api.N` and `masked.N` stated by the realization (`docs/decisions/decision_release-alarm.md` §4, `2026-11-06`), and §3 does
+  not change. Until a realization states them the caller lists each such call among the task's
   calls, under a name no primitive of the catalog has, and §6's "a primitive the catalog does not cost" leaves the task's
   composites undeclared, `analysis-inconclusive`, naming it. A call into any other generated code is the fact's `no`,
   `unsupported-profile`.

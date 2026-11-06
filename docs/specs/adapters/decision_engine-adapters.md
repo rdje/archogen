@@ -275,8 +275,8 @@ Each face that shows a plan binding an instance says it is conditional, naming e
 resolve` and `archogen explain` print them; the engine API's `Plan` gains its obligations, a field, so a minor; the
 [MCP](../../book/src/ledger.md#mcp-specification)
 tools give them beside the plan. `M4.1` carries them into the runtime plan — each cost a cost on the route of the
-provider it programs, as §7.3 asks of every interrupt source, which the analysis charges once `M4.1.6` gives that route
-a charge (`docs/decisions/decision_runtime-plan.md` §2.5) — and `M4.8`'s report lists each undischarged obligation, the
+provider it programs, as §7.3 asks of every interrupt source, which the analysis charges as a source, once `M2.21.2` carries that
+(`docs/decisions/decision_release-alarm.md` §2) — and `M4.8`'s report lists each undischarged obligation, the
 property resting on it `not-established` until it is discharged. Both are written into those leaves with this record.
 Each kind's cost says whether its interrupt runs the requester's code: `expiry`, a delivery to its requester, runs it;
 `wake`, an epoch advance no requester observes but by reading, runs the instance's alone (the runtime plan's §2.6;

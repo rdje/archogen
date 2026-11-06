@@ -27,7 +27,7 @@ The first format, `archogen-runtime-plan/1`, is for a system run on the **hosted
 devices the simulator provides (`M4.3`). Everything in it is determined by the description, the checked assignment and
 the joint rules as `.2` amends them, and three complete worked texts pin it (§3). Running on a target needs three designs
 that are not this record's: which of a target's devices a system's device is (`M4.4.1`), how timer releases and an
-adapter share one alarm (`M4.1.6`), and the sizes only catalog records state. They come with a second format, `/2`
+adapter share one alarm (`decision_release-alarm.md`, `M4.1.6`), and the sizes only catalog records state. They come with a second format, `/2`
 (§4, `.7`).
 
 A `/1` plan describes a system; it does not make its scheduling analysis conclusive. The analysis reads the platform's
@@ -124,9 +124,8 @@ leaf that adds it:
 - a task, or the system's own level, that would receive an interrupt's code: a timer route that names it, bound to its
   provider itself by a binding that takes a channel (model §8 rule 2) — an alarm it programs, as §2.6 reads that binding
   — or an adapter instance with a cost running its requester's code (`expiry`) whose requester it is, the one an
-  exclusive instance serves or one bound to a shared instance. No context runs a job's code in an interrupt, and how a
-  job receives an alarm it programs itself or an expiry, and what the system's own level's requirement for either means
-  are `M4.1.6`'s. It names every such receiver — each task in runtime order, then the system's own level — with what it
+  exclusive instance serves or one bound to a shared instance. No context runs a job's code in an interrupt, so a job receives an alarm or an expiry only as a release, for which `RA-H4` gives a way to write, and the
+  system's own level, which has no job, stays refused (`decision_release-alarm.md` §5). It names every such receiver — each task in runtime order, then the system's own level — with what it
   would receive: first the alarms it programs, each naming the provider, then its expiries, each naming the instance
   that delivers it, each kind by those texts. So no order among them decides the message, though one receiver receives
   at most one today, the search binding a requester's `counter` facts to one provider whole;
@@ -283,8 +282,8 @@ timer route and a source, and a block may be named `timer`:
      does not enable it ("is declared and the build does not enable it", `runtime.rs`, condition 5). With no task to
      release it is never due, so never taken; the composition then skips `Δ_timer`, though the timer service's cost
      still enters every source's blocking and jitter (the composite-inputs record §3). Releases start at the
-     simulator's time zero, after initialisation (`RTP-H9`). Choosing a device's alarm on a target, and sharing it
-     with an adapter's, is `M4.1.6`'s design.
+     simulator's time zero, after initialisation (`RTP-H9`). A device's alarm on a target, and sharing it
+     with an adapter's, is `decision_release-alarm.md` §1's, and comes with `/2`.
    - **Routes**: each route `Joint::check` reports, one for each provider and kind (model §8 rule 8's "for each
      provider", by kind as `joint.rs` keys it, which `M4.1.2` writes into the rule; `Obligation::Route`), its interrupt
      a timer route or a source, with the requesters the route names:
@@ -312,11 +311,11 @@ timer route and a source, and a block may be named `timer`:
      - then the sources whose separation is `unknown` or `absent`, by their interrupt's text;
      - then the timer routes, by their interrupt's text.
 
-     The timer routes come last because `/1` has no key for them: the analysis refuses them until `M4.1.6` gives them a
-     charge, and that design gives their place too, such as deadline-monotonic over an expiry's delivery bound. The
+     The timer routes come last because `/1` has no key for them: the analysis refuses them until `M2.21.2` charges them as
+     `decision_release-alarm.md` §2 says, and `/2` ranks them by the deadline each has to meet (§3 there, `RA-H1`). The
      release timer's place against the sources is the hardware's fact `external-before-timer`, which speaks of external
      interrupts; the simulator states it as `yes`, every source before the release timer, and takes a timer route before
-     it too until `.6` places one (`RTP-H9`). The emulator target, on [QEMU](../book/src/ledger.md#qemu), states `no`
+     it too, a timer route standing where a source stands (`decision_release-alarm.md` §3; `RTP-H9`). The emulator target, on [QEMU](../book/src/ledger.md#qemu), states `no`
      (the composite-inputs record §2), so a comparison of hosted and emulated runs (`M4.9`) reads each against its own
      order (`RTP-H11`).
 
@@ -349,7 +348,7 @@ timer route and a source, and a block may be named `timer`:
      interrupt no source declares: "unmodeled-interrupt-load" (`runtime.rs`). The scheduling checker gives each
      enabled item an identifier of its own kind and declares no source for a timer route (`RTP-H4`). So a system with
      a timer route, one binding an adapter or a multiplexed alarm among them, is refused `unsupported-profile` by the
-     analysis until `M4.1.6` gives that interrupt a charge. The plan carries the route, its costs and its requesters,
+     analysis until `M2.21.2` declares it the source `decision_release-alarm.md` §2 makes it. The plan carries the route, its costs and its requesters,
      and the analysis says why it cannot judge them.
    - **The interrupt model**, §7.3's per-source "masking constraints, and whether interrupt nesting is possible":
      interrupts do not nest, and every masked section masks every interrupt. These are the variant's conditions; the
@@ -433,7 +432,7 @@ timer route and a source, and a block may be named `timer`:
    | Kind | Subject | Discharged by | From |
    | --- | --- | --- | --- |
    | an adapter kind's obligation, such as `update` | the instance's text | `M4.2 M4.8`: the generated code realizes it (`RTP-H2`), and the report lists it until it is discharged | the instance's kind (the adapters record's §9) |
-   | `multiplex` | the node, an instance aside | `M4.2 M2.21.2`: its realization serves every user through its one channel and states its overhead (`RTP-H2`), and the scheduling checker charges it with the term `M4.1.6` designs (`RTP-H4`), as model §8 rule 4 asks of both | the rule below, over the system's tasks and interrupts |
+   | `multiplex` | the node, an instance aside | `M4.2 M2.21.2`: its realization serves every user through its one channel and states its overhead (`RTP-H2`), and the scheduling checker charges it within what `decision_release-alarm.md` §4 says each user's call and each route's service holds (`RA-H5`, `RA-H2`), as model §8 rule 4 asks of both | the rule below, over the system's tasks and interrupts |
    | `route` | the interrupt, `(timer-route NAME)` or `(source NAME)` | `M4.2 M4.3`: the emitter configures the enabled set (`RTP-H1`), and the simulator delivers it (`RTP-H9`) | `Obligation::Route`, one for each provider and kind |
 
    `Obligation::Placement` is `Joint::map`'s, and comes only with placement memory, which `/1` refuses. A node that
@@ -451,7 +450,7 @@ timer route and a source, and a block may be named `timer`:
    accessor, does not make: that route completes the node's own channel, the alarm the node programmed delivered back to
    it, where a source's route a handler serves brings it another's arrival, which the rule counts (R8-D1). A channel
    taken on a consumed fact makes a timer route, so a multiplexed node's system is one the analysis refuses until
-   `M4.1.6`. The heartbeat's `console.write`, used by both tasks, takes no channel and owes no `multiplex`. The lowering
+   `M2.21.2` declares that route a source (`RA-H2`). The heartbeat's `console.write`, used by both tasks, takes no channel and owes no `multiplex`. The lowering
    derives the obligation by this rule, as the joint rules give it: model §8 rule 4 states these users, and
    `Joint::check` reports each multiplexed node with them, system by system as rule 7 resolves (`M4.1.2.4`), where it
    counted the tasks and services naming a service by `uses`, over every system of the description, before.
@@ -481,7 +480,7 @@ timer route and a source, and a block may be named `timer`:
     A node in a job owes its masked runs as a task does. Of a task's call into another record's code the
     composite-inputs record's §7 says "no part covers that code's execution or its masked runs"; owing a node's call
     cost and masked runs gives generated code a job calls both parts, and the variant's condition 4 reads data shared
-    only inside declared masked sections. `M4.1.6` designs their term beside the call cost's.
+    only inside declared masked sections. They are a primitive's parts, given by the realization: `decision_release-alarm.md` §4.
 
     Every bound owed to the realization — a call cost, masked runs, a cost's terms, an overhead, a service cost, an
     arrival bound, an obliged fact — is owed with `ROADMAP.md` §7.3's record of a bound: "Every numerical bound records
@@ -883,7 +882,7 @@ Lowering the same inputs twice writes the same bytes (M4's "Repeated generation 
 - `.5`: the crate in the generator root's `(role-packages …)` in `trust/roots.eadl`, each item it
   shares with another role classified by its commit (F30); the book's chapter; and every other place that names `M4.1`
   as owner, moved as below;
-- `.6`: **the release alarm**, a design of its own, reviewed. It decides which device's alarm releases timer tasks on a
+- `.6`: **the release alarm**, a design of its own, reviewed: `decision_release-alarm.md`. It decides which device's alarm releases timer tasks on a
   target, and how an adapter's alarm shares a device with releases, each taking a channel (model §8 rule 3). It decides
   how the analysis charges a timer route's interrupts, its service cost and arrival bound, such as a wake taken as a
   timer event of the release timer under an amended condition 6; the term for a multiplexed node's overhead and for a
@@ -934,12 +933,12 @@ Lowering the same inputs twice writes the same bytes (M4's "Repeated generation 
 | `RTP-H1` | `M4.2` | The emitter moves `archogen build` onto the runtime plan for the hosted playground, on the command line alone as `ROADMAP.md` §10.4 rules, the enabled set configured as the plan writes it and the routes' ranks realized as the order the simulated controller takes them in, each source trigger the plan infers reported, a plan holding a task released by `(unknown CAUSE)` refused naming the task and its cause (`missing-fact` for every cause the routes leave — `unreached`, `(several ITEM …)`, `(faster ITEM)`, `(absent ITEM)` and `(unstated ITEM)` — each repaired by the task's own `(needs interrupt-source)` where the source the search binds for it is at least as far apart as the task, which `RTP-H24` makes the joint rules require, and `(unstated ITEM)` by stating a separation at least the task's too; `missing-fact` for `(own-unstated ITEM)`, repaired by stating one at least the task's for its own source; and `unsupported-profile` for `(own-faster ITEM)` and `(own-absent ITEM)`, which the analysis refuses under its conditions 5 and 3 and `RTP-H24` makes the search refuse), each job an engine-owned empty body that the release trace alone observes until `M4.12`'s inputs give it code, the build saying it runs no application code, the scheduler built with `from_eadl_ranks` and its slot held to the plan's index, and S0's `whole-millisecond-periods` and the profile's "one execution context runs at a time" discharged. |
 | `RTP-H2` | `M4.2` | The generated code realizes the adapters' and the multiplexed nodes' obligations, initialises no component member by calling another's code, never waits on an interrupt in initialisation, and states each cost's terms, each multiplexed node's overhead, each bound an obliged fact offered bare leaves to it, the contexts each node's code supports, and each other value the runtime plan owes to the realization, each bound with `ROADMAP.md` §7.3's record of a bound, its evidence category among it; and no node's code calls another node's code but along the plan's reaching, never along a block's or a platform's composition; and each node's code is generated by the kind its `(node …)` line writes, never read from the description. |
 | `RTP-H3` | `M4.2` | The emitter accepts a runtime plan only by lowering it again from the same inputs and comparing bytes, and marks a plan whose acceptance was taken as text experimental. |
-| `RTP-H4` | `M2.21.2` | After `M4.1.4` has written the runtime plan's goldens, the scheduling checker reads the plan with a reader of its own held to them and maps it onto the analysis's inputs: each enabled interrupt given an identifier of its own kind, so that no two share one, and no source declared for a timer route, so that its interrupt is refused as unmodeled load; where an input the analysis needs is unknown, unstated or owed, the analysis reported inconclusive, naming it, never run on a default, and a source whose separation the plan writes `absent` refused `unsupported-profile` under the variant's condition 3, naming it, as a stated zero is; a task released by `(unknown CAUSE)` mapped as `RTP-H1` maps its cause — every cause but `(own-faster ITEM)` and `(own-absent ITEM)` reported inconclusive, naming the task, its cause, the owed `trigger` and the clause `RTP-H1` names as its repair, and those two refused `unsupported-profile`, naming the task and its cause, a source the plan writes `absent` refused under condition 3 as above whatever releases the task — never analysed on an assumed release; each term `M4.1.6` designs, a timer route's charge and a multiplexed node's overhead among them, charged once it exists; a refusal under the plan's source order worded as one another order may admit, and an order searched with Audsley's algorithm over a bound counting each source ahead at its no-loss limit, one it finds confirmed with the composition and named as the repair. |
+| `RTP-H4` | `M2.21.2` | After `M4.1.4` has written the runtime plan's goldens, the scheduling checker reads the plan with a reader of its own held to them and maps it onto the analysis's inputs: each enabled interrupt given an identifier of its own kind, so that no two share one, and a timer route declared a source as `RA-H2` says; where an input the analysis needs is unknown, unstated or owed, the analysis reported inconclusive, naming it, never run on a default, and a source whose separation the plan writes `absent` refused `unsupported-profile` under the variant's condition 3, naming it, as a stated zero is; a task released by `(unknown CAUSE)` mapped as `RTP-H1` maps its cause — every cause but `(own-faster ITEM)` and `(own-absent ITEM)` reported inconclusive, naming the task, its cause, the owed `trigger` and the clause `RTP-H1` names as its repair, and those two refused `unsupported-profile`, naming the task and its cause, a source the plan writes `absent` refused under condition 3 as above whatever releases the task — never analysed on an assumed release; a timer route's charge and a node's call cost as `RA-H2` and `RA-H5` say, a multiplexed node's overhead standing inside them; a refusal under the plan's source order worded as one another order may admit, and an order searched with Audsley's algorithm over a bound counting each source ahead at its no-loss limit, one it finds confirmed with the composition and named as the repair. |
 | `RTP-H5` | `M4.12` | The application inputs have a format — each task's entry point; its execution bound, its OS calls with their counts, its calls into nodes — only into those its task line's `uses` lists and its own `bind` lines name, a node past them called through the code of a node those lines name (§2), with the most one job makes into each — its masked runs and its stack bound, each with `ROADMAP.md` §7.3's record of a bound and its evidence category a fact of its own; its task facts, declarations that it masks only through the runtime API and that its own figures hold under any preemption and from any entry state, and the application's `leaves-interrupt-hardware-alone` — that `archogen-runtime-plan/2` carries. |
 | `RTP-H6` | `M4.10` | The catalog records state what the runtime plan owes them — supported contexts, an initialisation entry that never waits on an interrupt and names any other component member's code it calls, and each source's service cost — amending the catalog record's §12 and §14.4, and the image is checked: no initialisation step waits on an interrupt, and no component member's initialisation calls another member's code. |
 | `RTP-H7` | `M4.7` | The build's metadata carries the runtime plan's sha256 and its provenance, the whole lock data of `ROADMAP.md` §10.3 is written, `--locked` is honoured, and S0's `no-lock-data` is discharged. |
 | `RTP-H8` | `M4.4.1` | A system's devices are put in correspondence with a target's — which target device each system device is, by a rule the lowering of `archogen-runtime-plan/2` reads — before `M4.1.7` designs that format. |
-| `RTP-H9` | `M4.3` | The hosted simulator runs initialisation to its last step with interrupts masked and enables them at time zero, then releases each timer-released task from its own exact clock at its nominal releases from time zero and each task released by `(source X every)` at each arrival of X and at no other time; takes its timer only when a release is due; takes every route before the release timer when both are pending — its `external-before-timer` for a source's, and for a timer route its own order until `M4.1.6` places one — and the routes in the plan's rank order; nests no interrupt and masks every interrupt in a masked section; raises no interrupt the plan does not enable; models each device the plan names, each node its `(node …)` line writes `block` or `platform`, its kind read from the plan and never from the description, a timer route's alarm included; lets no source arrive before the first enabling, nor sooner after its last arrival than the separation the plan states for it, a source whose separation it states as zero, `unknown` or `absent` arriving only as the run's scenario states, which the run names beside its result; and states every platform input and fact the analysis variant and the composition read, `external-before-timer` and each source's `external` among them, in the form the scheduling checker reads, and realizes `releases-after-initialisation` for the caller to declare, as the composite-inputs record's §2 has it. |
+| `RTP-H9` | `M4.3` | The hosted simulator runs initialisation to its last step with interrupts masked and enables them at time zero, then releases each timer-released task from its own exact clock at its nominal releases from time zero and each task released by `(source X every)` at each arrival of X and at no other time; takes its timer only when a release is due; takes every route before the release timer when both are pending — its `external-before-timer` for a source's, and for a timer route where a source stands, `decision_release-alarm.md` §3 — and the routes in the plan's rank order; nests no interrupt and masks every interrupt in a masked section; raises no interrupt the plan does not enable; models each device the plan names, each node its `(node …)` line writes `block` or `platform`, its kind read from the plan and never from the description, a timer route's alarm included; lets no source arrive before the first enabling, nor sooner after its last arrival than the separation the plan states for it, a source whose separation it states as zero, `unknown` or `absent` arriving only as the run's scenario states, which the run names beside its result; and states every platform input and fact the analysis variant and the composition read, `external-before-timer` and each source's `external` among them, in the form the scheduling checker reads, and realizes `releases-after-initialisation` for the caller to declare, as the composite-inputs record's §2 has it. |
 | `RTP-H10` | `M4.10` | Once a catalog record can be a provider (`M3.7`), the runtime plan's lowering judges the record's supported contexts against the context line of each node it serves, by inclusion, and refuses `unsupported-profile` a context the record does not include, and an initialisation component whose members' records state that one's initialisation calls another's code. |
 | `RTP-H11` | `M4.9` | A comparison of a hosted run and an emulated one reads each run against its own platform's `external-before-timer`, the simulator's `yes` and the emulator's `no`, never one run's order against the other's. |
 | `RTP-H12` | `M2.30` | If the composition's soundness needs a fact of the application's beyond `leaves-interrupt-hardware-alone`, the runtime plan owes it with the others, its §2.2, §2.10 and `RTP-H5` moving in the same change. |
@@ -976,7 +975,7 @@ Lowering the same inputs twice writes the same bytes (M4's "Repeated generation 
 - **Why interrupts are named by kind, and every route ranked.** One provider can raise a timer route and a source, and
   a block may be named `timer`. Named by provider alone, the analysis would read a timer route as the release timer or
   a source, and charge nothing for it. Ranked after the sources, a device's alarm has a place in the simulator's order
-  until `.6` gives it its own.
+  until `/2` ranks it (`decision_release-alarm.md` §3).
 - The plan writes canonical S-expression text because it quotes eADL values and `/2`'s lines word for word: one form
   for both keeps them as written.
 
@@ -986,7 +985,7 @@ Lowering the same inputs twice writes the same bytes (M4's "Repeated generation 
 - **A target in `/1`** (rounds 1 to 3): it needs the device correspondence and the release alarm, which `/1` would
   have decided for other leaves; round 3 showed that a target lowered by its rules needed choices in six places.
 - **The release timer as the device bound for `tick-rate`** (rounds 2 and 3): `tick-rate` belongs to a counter, which
-  may raise no interrupt, and the rule ignored the channels an adapter takes. That question is `.6`'s.
+  may raise no interrupt, and the rule ignored the channels an adapter takes. `decision_release-alarm.md` §1 answers it.
 - **Enabling the release timer only where a task is timer-released** (round 3): the analysis declares it on every
   system and refuses a build that does not enable it, and a timer with nothing due is never taken.
 - **`some` for a source faster than its task** (rounds 2 and 3): the analysis would assume a release at most once per
@@ -1004,8 +1003,8 @@ Lowering the same inputs twice writes the same bytes (M4's "Repeated generation 
 - **Audsley's assignment in the lowering** needs the sources' costs and a schedulability test, the realization's and
   the scheduling checker's, and the composition's test is not one it is proven optimal for (§2.5).
 - **Ranking a timer route among the sources** (round 5's wording, by separation) ranked it after every source
-  anyway, its separation being `programmed`; and a device's alarm needs a key of its own, such as an expiry's delivery
-  bound, which `.6` decides.
+  anyway, its separation being `programmed`; and a device's alarm needs a key of its own, the deadline it has to meet, which
+  `decision_release-alarm.md` §3 gives.
 - **A source for each adapter cost** duplicates its provider's route, and the analysis refuses two sources of one name.
 
 ## How to apply
