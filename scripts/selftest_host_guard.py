@@ -994,6 +994,27 @@ def case_a_commit_holds_what_is_staged() -> None:
     check("one that parses and does not compile is refused", done.returncode == 1 and "does not compile" in done.stdout, done.stdout + done.stderr)
 
 
+def case_a_job_named_like_the_guard_is_a_job() -> None:
+    """`check` and `status` say what `run` would: a script whose name merely ends in this file's is a job like any, the self-test's own run among them."""
+    scope = fresh("named-like")
+    (scope / ".git").mkdir()
+    named = scope / "my_host_guard.py"
+    named.write_text("import time\ntime.sleep(30)\n")
+    job = spawn([*PY, str(GUARD), "run", "--root", str(scope), "--", *PY, str(named)], scope)
+    if run_refused(job, "a job named like the guard is a job"):
+        return
+    try:
+        check("its job has started", until(lambda: "my_host_guard.py" in subprocess.run(["ps", "-axww", "-o", "command="], capture_output=True, text=True, errors="replace", timeout=30).stdout))
+        done = guard("check", root=scope)
+        check("`check` says it is not clear", "not clear" in done.stdout and done.returncode != 0, done.stdout + done.stderr)
+        done = guard("status", root=scope)
+        check("and `status` says one may not start", "a heavy job may start" not in done.stdout, done.stdout)
+    finally:
+        job.terminate()
+        settle(job, 15)
+        guard("stop", root=scope)
+
+
 def case_a_stamp_is_of_a_whole_run_of_these_bytes() -> None:
     repo = fresh("stamped")
     scripts = repo / "scripts"
@@ -1008,6 +1029,7 @@ def case_a_stamp_is_of_a_whole_run_of_these_bytes() -> None:
     for name in ("host_guard.py", "selftest_host_guard.py", "check_host_guard.sh"):
         (elsewhere / name).write_text(name)
     check("a copy leaves none in the repository it lies in", "a copy" in leave_the_stamp([], before, repo, elsewhere) and not stamp.exists())
+    check("nor where that repository has no `scripts`", "could not be written" in leave_the_stamp([], before, repo / "none", elsewhere))
     (scripts / "host_guard.py").write_text("saved during the run")
     check("a save during the run leaves none", "changed" in leave_the_stamp([], before, repo, scripts) and not stamp.exists())
     (scripts / "host_guard.py").write_text("host_guard.py")
@@ -1565,6 +1587,7 @@ def case_killing_by_name() -> None:
             'kill "$(pgrep -x rustc)"', 'ps -ax | grep x; kill "$PID"', "for ((i=0;i<1;i++)) do pkill -x rustc; done", "if true; then for ((i=0;i<1;i++)) do pkill -x rustc; done; fi", "time for ((i=0;i<1;i++)) do pkill -x rustc; done", "pkill -v -P 123", "pkill -vP 123", "pkill -P 5,1 -x rustc", "kill -9 -1", "kill -- -1", "pkill -PIPE rustc", "pkill -FPE rustc", "ps -upeter | awk '{print $1}' | xargs kill", 'pkill -P "$(pgrep -x make)"', 'P=$(pgrep -x make); pkill -P "$P"', "pgrep -x make > p; pkill -F p", "pkill -F <(pgrep -x rustc)", "ps -ax -opid -ocommand | grep rustc | awk '{print $1}' | xargs kill", "pkill -P 1 -x rustc", "pgrep -P 1 -x rustc | xargs kill -9", f"pkill -v -f {scope}", f"pgrep -vf {scope} | xargs kill", "kill -- -$(pgrep -x rustc)", "kill -TERM -$(pgrep -f myjob)", "PGID=$(pgrep -f myjob); kill -- -$PGID", "kill -s TERM $(pgrep -x rustc)",
             f"ps -ax | grep rustc | grep -v {scope} | awk '{{print $1}}' | xargs kill", f"pgrep -x rustc | tee {scope}/pids | xargs kill", f"pkill -f '{scope} copy'",
             "ps -U rdje -o pid=,comm= | grep rustc | awk '{print $1}' | xargs kill", "ps -U 501 -o pid=,comm= | grep rustc | awk '{print $1}' | xargs kill", "kill $(ps -u 501 | grep rustc | awk '{print $2}')",
+            "ps -dp 1 | awk '{print $1}' | xargs kill", "ps -d -p 1 -o pid= | xargs kill", "kill $(ps -dp 1 -o pid=,command= | grep rustc | awk '{print $1}')",
             "ps -ef -p 1 | grep rustc | awk '{print $2}' | xargs kill", "ps -Ap 1 | grep rustc | awk '{print $2}' | xargs kill", "ps -axp 1 | grep rustc | awk '{print $2}' | xargs kill", "ps -ep 1 | grep rustc | awk '{print $2}' | xargs kill", "ps -Ao pid= -p 1 | grep rustc | xargs kill", "ps -A -g 1 | grep rustc | awk '{print $2}' | xargs kill", "ps -axg 1 | grep rustc | awk '{print $2}' | xargs kill", "ps -G 20 1 | grep rustc | awk '{print $2}' | xargs kill", "ps ax 1 | grep rustc | awk '{print $1}' | xargs kill",
             "kill $(ps -G 20 | grep rustc | awk '{print $2}')", "kill $(ps -t 1 | grep rustc | awk '{print $2}')", "kill $(ps -O 1 | grep rustc | awk '{print $2}')", 'kill $(ps -U "$USER" | grep rustc | awk \'{print $2}\')',
         ):
@@ -1573,7 +1596,7 @@ def case_killing_by_name() -> None:
         for command in (
             f"pkill -f '{scope}/x'", f"kill $(pgrep -f {scope}/x)", "kill 123", "kill -9 123", 'kill "$(cat job.pid)"', "kill $(cat job.pid)", "kill $(jobs -p)", "git commit -m 'pkill -x rustc'",
             "rg pkill docs/", "git grep -n killall -- scripts", "find . -name pkill -print", "python3 -I -B -c pass pkill probe", "pgrep -x rustc", "ps -ax | grep rustc", "git commit -m 'kill the pgrep rig'",
-            "pkill -P 123", "pkill -P123", "pkill -fP 123 sleep", 'pkill -P "$PID"', "pkill -g 123", "ps -o pid= -g 123 | xargs kill", "ps -ax | head -3; kill -- -$$", 'ps 123; kill "$x"', 'ps up 123; kill "$x"', 'ps "$PID" && kill "$PID"', 'ps $PID; kill $PID', 'ps -f "$PID"; kill "$PID"', 'ps -w 123; kill "$x"', 'ps $$; kill "$x"', 'ps "$(cat job.pid)"; kill "$x"', 'ps "$@"; kill "$@"', 'ps "${PIDS[@]}"; kill "${PIDS[@]}"', 'kill "$(ps -o ppid= -p$$)"', 'ps -p$PID -o ppid= | xargs kill', 'ps `cat job.pid`; kill "$x"', 'ps "$a,$b"; kill "$a"', 'ps -opid= "$PID"; kill "$x"', 'ps -xp 123; kill "$x"', 'pgrep -lP "$PID"; kill "$PID"', "for w in do pkill; do echo $w; done", "kill $(pgrep -P 123)", "cat target/x/job.pid | xargs kill", f"pgrep -f {scope}/x | xargs kill", f"ps -ax | grep {scope}/x | awk '{{print $1}}' | xargs kill",
+            "pkill -P 123", "pkill -P123", "pkill -fP 123 sleep", 'pkill -P "$PID"', "pkill -g 123", "ps -o pid= -g 123 | xargs kill", "ps -ax | head -3; kill -- -$$", 'ps 123; kill "$x"', 'ps up 123; kill "$x"', 'ps "$PID" && kill "$PID"', 'ps $PID; kill $PID', 'ps -f "$PID"; kill "$PID"', 'ps -w 123; kill "$x"', 'ps $$; kill "$x"', 'ps "$(cat job.pid)"; kill "$x"', 'ps "$@"; kill "$@"', 'ps "${PIDS[@]}"; kill "${PIDS[@]}"', 'kill "$(ps -o ppid= -p$$)"', 'ps -p$PID -o ppid= | xargs kill', 'ps `cat job.pid`; kill "$x"', 'ps "$a,$b"; kill "$a"', 'ps -opid= "$PID"; kill "$x"', 'ps -xp 123; kill "$x"', 'ps -M "$PID"; kill "$PID"', 'pgrep -lP "$PID"; kill "$PID"', "for w in do pkill; do echo $w; done", "kill $(pgrep -P 123)", "cat target/x/job.pid | xargs kill", f"pgrep -f {scope}/x | xargs kill", f"ps -ax | grep {scope}/x | awk '{{print $1}}' | xargs kill",
             'grep -n "kill\\|pgrep" f', 'rg "xargs kill" scripts/', 'echo "use kill, not pgrep"', "kill 123; ps -ax | grep x", "ps -ax | grep x; kill 123", "kill $!; pgrep -x rustc", "ps -p 123; kill $(cat p)",
             "tools=(pkill killall); echo ${tools[0]}", 'case "$t" in a) echo a;; pkill|killall) echo b;; esac', "for t in a b; do case $t in a) echo a;; pkill) echo b;; esac; done", "[[ $cmd =~ ^(pkill|killall)$ ]] && echo careful",
             "(( pkill > 1 ))", "pkill() { :; }; echo", "cat <<'EOF'\npkill -x rustc\nEOF",
@@ -1823,7 +1846,7 @@ THE_REST = (
     case_only_tightened, case_check_refuses, case_a_figure_not_read_is_never_safe, case_one_process, case_all_processes, case_what_a_stopped_process_started,
     case_another_project_is_never_ours, case_a_terminal_vouches_for_nothing, case_a_root_is_exactly_itself, case_agents, case_what_holds_little_is_left_alone, case_a_job_is_stopped_whole,
     case_a_queued_make_is_no_build, case_at_a_disk_floor_what_writes_stops, case_names_and_zombies, case_a_command_line_that_is_no_text, case_pressure, case_not_ours, case_growing,
-    case_a_small_writer_is_counted, case_the_watcher_outlives_its_own_trouble, case_a_commit_finds_a_name_bound_nowhere, case_a_commit_holds_what_is_staged, case_a_stamp_is_of_a_whole_run_of_these_bytes, case_a_clean_leaves_a_watcher_named, case_a_guard_changed_holds_from_then, case_a_root_remade_is_another, case_a_root_that_is_gone_stays_gone, case_a_stale_pid_names_nobody, case_the_watcher_stays_while_a_job_runs,
+    case_a_small_writer_is_counted, case_the_watcher_outlives_its_own_trouble, case_a_commit_finds_a_name_bound_nowhere, case_a_commit_holds_what_is_staged, case_a_stamp_is_of_a_whole_run_of_these_bytes, case_a_job_named_like_the_guard_is_a_job, case_a_clean_leaves_a_watcher_named, case_a_guard_changed_holds_from_then, case_a_root_remade_is_another, case_a_root_that_is_gone_stays_gone, case_a_stale_pid_names_nobody, case_the_watcher_stays_while_a_job_runs,
     case_what_is_not_the_table_is_blindness, case_a_blind_watcher_is_said, case_the_hook_passes_nothing_it_cannot_read, case_killing_by_name, case_hook, case_a_damaged_log, case_run,
 )
 
@@ -1879,9 +1902,9 @@ def leave_the_stamp(names: list[str], before: str, root: Path, scripts: Path) ->
     """That these very bytes passed whole, which a commit changing them is asked for (`scripts/check_host_guard.sh`), or why not. A case by name is no run of the whole, a copy is no run of the repository it lies in, and what changed during the run did not pass."""
     if names:
         return "a case by name is no run of the whole"
-    if not scripts.samefile(root / "scripts"):
-        return "a copy is no run of the repository it lies in"
     try:
+        if not scripts.samefile(root / "scripts"):
+            return "a copy is no run of the repository it lies in"
         if stamp_of(scripts) != before:
             return "what ran changed while it ran"
         (root / "target").mkdir(exist_ok=True)

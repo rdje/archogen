@@ -360,7 +360,7 @@ AGENT = re.compile(r"claude|codex|kimi|gemini|aider|cursor|copilot|opencode|goos
 INFRASTRUCTURE = {"login", "sshd", "mosh-server", "tmux", "screen", "zellij", "abduco", "dtach", "iterm2", "terminal", "code", "alacritty", "kitty", "ghostty", "wezterm-gui", "caffeinate"}
 APPLICATION = ("/Applications/", "/System/", "/usr/libexec/", "/usr/sbin/")
 # This interpreter and this file by their own paths, since a checkout's path may hold a space (the repository may be moved anywhere).
-GUARD_PROCESS = re.compile(r"^(?:\S*[Pp]ython\S*|" + re.escape(sys.executable) + r")\s+(?:-\S+\s+)*(?:\S*host_guard\.py|" + re.escape(str(CODE)) + r")(?:\s|$)")
+GUARD_PROCESS = re.compile(r"^(?:\S*[Pp]ython\S*|" + re.escape(sys.executable) + r")\s+(?:-\S+\s+)*(?:(?:\S*/)?host_guard\.py|" + re.escape(str(CODE)) + r")(?:\s|$)")
 SHELL_FLAGS_WITH_VALUES = {"--init-file", "--rcfile", "-o", "+o", "-O", "+O", "--init-command"}
 # What spawns more for as long as it lives, however little it holds.
 BUILDS = {"cargo", "rustc", "rustdoc", "clippy-driver", "make", "gmake"}
@@ -1645,7 +1645,7 @@ def kills_by_name(commands: list[Command], root: Path) -> bool:
         words = command.words[1:]
         # What selects more than a pid does, and beside a pid prints all it selects: `ps -ef -p 1`, `ps -Ap 1`, `ps ax 1`, `ps -U 501 1`.
         plain = "AaCcdEefhjLlMmrSTvwXx"
-        if any(re.fullmatch(rf"-[{plain}]*[Aae]\S*|-[{plain}]*[UuGt].*", word) for word in words):
+        if any(re.fullmatch(rf"-[{plain}]*[Aaed]\S*|-[{plain}]*[UuGt].*", word) for word in words):
             return True
         if words and re.fullmatch(r"[A-Za-z]*[Aae][A-Za-z]*", words[0]):
             return True
@@ -1656,7 +1656,7 @@ def kills_by_name(commands: list[Command], root: Path) -> bool:
                 return False
             # Or a pid written plainly, however a shell spells one, or several: `ps 123`, `ps up 123`, `ps -f "$PID"`, `ps $$`, `ps "$(cat job.pid)"`, `` ps `cat job.pid` ``, `ps "$a,$b"`, unless it is what the flag before it takes: `-O 1`.
             before = words[at - 1] if at else ""
-            if re.fullmatch(rf"{a_pid}(?:,{a_pid})*", word.strip("'\""), re.S) and not re.fullmatch(rf"-[{plain}]*[oOkMNW]", before):
+            if re.fullmatch(rf"{a_pid}(?:,{a_pid})*", word.strip("'\""), re.S) and not re.fullmatch(rf"-[{plain}]*[oOkNW]", before):
                 return False
         return True
 

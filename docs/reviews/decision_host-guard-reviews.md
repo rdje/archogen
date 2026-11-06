@@ -365,3 +365,18 @@ Said, and left as it stands: its reader could not run real `make focused`, a com
 Found in answering: the stamp's first run refused to stamp itself, `what ran changed while it ran`, since a later line of `main` reused the name the starting hash was held in. It failed closed, as it should, and the name is its own now. And round 15's watcher took each of these saves up as they came, `status` saying so, which is the first this host has run of what rounds 12 to 15 said.
 
 Said, and left as it stands: its reader could not run the brief's list, `main` in a copy with no `.git`, which would have written the real stamp and so is by import, or `run_self_tests.sh --self-test`. `ps -w ax 1` passes, and `ps` itself rejects it. An inherited `GIT_DIR` makes a copy read that repository's index, on no commit's path. It read `status` several times at the real root, and left nothing running.
+
+**Round 17** — `2026-11-06`: not acceptable, 8 findings, 1 defect, mild, after 15, 12, 5, 6, 13, 2, 1, 1, 1, 3, 2, 3, 5, 2, 4 and 4. Its fixtures are under `target/p12717/work/`, and it committed only there. Round 16's stamp and what it reads as staged held through `git commit -a`, a path commit, a linked worktree and the volume's other spelling. Of 106 `ps` and `kill` forms only `-M` and `-d` were off, and it re-derived the measurements, all of which held. Its whole self-test ended `746 passed, 0 failed, 2 not run`, rc 20, `case_run` taken away and retried twice under load, and left no stamp, as the record says.
+
+| # | Kind | Finding | Answer |
+| --- | --- | --- | --- |
+| G17-1 | defect, mild | "`check` and `status` say what `run` would" was false beside a `run` whose job is the self-test: `heavy_running` dropped children matching `GUARD_PROCESS`, meant for the watcher, and `selftest_host_guard.py` matched it, as any name ending so did: `check` clear, `run --wait 0` refused | This file's name, by a path's last part, and not any name ending in it |
+| G17-2 | gap, fails open by two rare events | all is read as staged but the check itself, which runs from the tree: a hook taken off and staged, the check emptied in the tree, rc 0; and an unstaged edit of it refuses an unrelated commit | Said: something must run from the tree, and this does. It takes that file emptied and a hook taken off in one commit |
+| G17-3 | gap | `-d` is "like `-A`, but excludes session leaders", and read as a plain flag: `ps -dp 1` prints 91 lines | It selects |
+| G17-4 | gap | false refusal: `ps -M "$PID"; kill "$PID"`, `-M` taking no value here | It takes none |
+| G17-5 | gap | a stamp compares the start and the end, so a save and restore during a run is not seen; and a copy whose nearest repository has no `scripts` raised after a passing run | The first is said. The second says why not, as the others do |
+| G17-6 | wording | "a merge or a cherry-pick": neither do a revert nor a rebase | All four |
+| G17-7 | wording | "`make` and this repository's commit checks are what stand then" no longer said what they hold, the check reading what is staged | It says what each does |
+| G17-8 | wording | "where the commit changes it": three files; "beside a job of ours": a build or a `run` | Each says so |
+
+Said, and left as it stands: its reader could not run real `make focused`, a real full volume, chosen pressure levels, true idle and blind times, the census against the real watcher, real Codex, Kimi or VS Code, `onFailure` with a real crash, `run_self_tests.sh --self-test`, or re-derive `ri_logical_writes`. Its idle pace read 1.73 s against a stated 2, unexplained. `run` at the real root moved `seen.run`, so a later `run` did not repeat a stop already said. A safety check refused one rig command, which it reissued without the removal.
