@@ -164,3 +164,17 @@ Said, and left as it stands: no realization exists, so a real read-back's lag, a
 | RA9-10 | wording | §5's "a chain's segment delivers nothing" of a last segment whose read finds the deadline due | It says whose read finds none due |
 
 Said, and left as it stands: no realization exists, so a real read-back's lag, a level compare's window, a zero-count delay and first-arm timing are unmeasured, and the reader's modular rig assumes the window is the whole modulus. Acknowledge at exit is argued, wakes were not run on modular reads, and RA9-2, RA9-3 and RA9-5 to RA9-8 are by reading, since no conversion code, trigger or `/2` exists.
+
+**Round 10** — `2026-11-06`, leaf `M4.1.6.10`: not acceptable, 7 findings, 3 defects, after 9, 9, 7, 5, 7, 6, 7, 6 and 3, on `40138a0c`. The sums, the protocol and the source term gave no finding, its reader re-running them and deriving none. The defects sit in `H` and `ρ` and one role sentence.
+
+| # | Kind | Finding | Answer |
+| --- | --- | --- | --- |
+| RA10-1 | defect, round 9's | "otherwise its `unambiguous-horizon`" gave silence a value, so RA8-1 came back: a device reaching 2^16 on a modulus of 2^32, saying nothing, held, and no write reached the next release. No hand-off named `supported-horizon`, so a target had no way to speak | No fallback. The release requester asks it, the joint rules ask it of an alarm's device, and `RA-H1` carries a target's statement of it with what checks it |
+| RA10-2 | defect | a compare coarser than its counter had no way to say so, and "the compare's own" was false of it: on a step of 16, 944 of 1,500 sets arrived under the floor, the least 51% of it, and 142 past `delivery`, though no response passed a bound | `compare-step`, a fact `RA-H1` adds, which an alarm's `ρ` reads and the generated code rounds to, as the model's resolution already is |
+| RA10-3 | defect, narrow | initialisation's disarm and placeholder had no role, and the discipline allows such writes only in a role listed | Both records' roles say it |
+| RA10-4 | gap | a wake's first arm stood `P` past its read, unheld against `H` | `RA-H2` holds `P + ρ` within it |
+| RA10-5 | gap | `RA-H4` did not name rule 4, "programs" can only mean "can call", and a timer-released task bound to an alarm with no trigger was unanswered | Each said, the limit among them |
+| RA10-6 | gap | a horizon and a modulus had no stated direction, and "states one" no mapping to the relation's outcomes | What a sum lies within rounds down; a fact bare, absent or a bound has no value |
+| RA10-7 | wording | five leaves headed `RA-H` rows "quoted from" another record's ledger; "reading that alarm's floor" on a leaf where no floor exists yet | Each heading names both; the floor its realization states |
+
+Said, and left as it stands: no realization or `/2` exists, so RA10-1 and RA10-3 to RA10-6 are by reading, and no real coarser compare was measured. The rig's device rounds up, and one that truncates would arrive early, not run. No response passed its bound on a coarser compare, over 3,900 sets, so a miss stays unverified: the false `T_s` and the `delivery` breach are the finding.
