@@ -225,14 +225,26 @@ fn reads_again(sources: &SourceMap) -> Result<(), Refusal> {
         }
         // The checker reads a module beside the description, by a whole path that may have no room.
         absolute(file, &source.name)?;
-        if !std::fs::read(file).is_ok_and(|again| again == source.text.as_bytes()) {
-            return Err(refused(
-                format!(
-                    "the checker reads {} again, and it now reads differently from what the front read",
-                    source.name
-                ),
-                as_a_file,
-            ));
+        match std::fs::read(file) {
+            Ok(again) if again == source.text.as_bytes() => {}
+            Ok(_) => {
+                return Err(refused(
+                    format!(
+                        "the checker reads {} again, and it now reads differently from what the front read",
+                        source.name
+                    ),
+                    as_a_file,
+                ))
+            }
+            Err(error) => {
+                return Err(refused(
+                    format!(
+                        "the checker reads {} again, and it cannot be read now: {error}",
+                        source.name
+                    ),
+                    as_a_file,
+                ))
+            }
         }
     }
     Ok(())
@@ -256,8 +268,8 @@ pub fn reads_as_record(file: &Path) -> std::io::Result<bool> {
     Ok(bytes.len() <= RECORD_LIMIT && Record::read(&bytes, RECORD_LIMIT).is_ok())
 }
 
-/// The record's place in `dir`, the directory made and any earlier record there removed, so none is taken for this
-/// run's.
+/// The record's place in `dir`, the directory made. Each command's stage is made by this run, so nothing earlier can be this run's: what stands at that name came from elsewhere, and is
+/// never this run's to remove (`R13-2`).
 fn place_record(dir: &Path) -> Result<PathBuf, Refusal> {
     std::fs::create_dir_all(dir).map_err(|error| {
         failure(
@@ -270,20 +282,24 @@ fn place_record(dir: &Path) -> Result<PathBuf, Refusal> {
     })?;
     let dir = absolute(dir, "the record's directory")?;
     let record = dir.join(RECORD);
-    match std::fs::remove_file(&record) {
-        Ok(()) => {}
-        Err(error) if error.kind() == std::io::ErrorKind::NotFound => {}
-        Err(error) => {
-            return Err(failure(
-                format!(
-                    "cannot remove the earlier record {}: {error}",
-                    record.display()
-                ),
-                "remove it, or choose another output directory".to_owned(),
-            ))
-        }
+    match std::fs::symlink_metadata(&record) {
+        Err(error) if error.kind() == std::io::ErrorKind::NotFound => Ok(record),
+        Err(error) => Err(failure(
+            format!(
+                "cannot look at where the checker's record goes, {}: {error}",
+                record.display()
+            ),
+            "something closed this run's directory meanwhile: open it, or name another place"
+                .to_owned(),
+        )),
+        Ok(_) => Err(failure(
+            format!(
+                "{} stands where the checker's record goes, and this run did not write it",
+                record.display()
+            ),
+            "something else is using this run's directory: look at it, and move it".to_owned(),
+        )),
     }
-    Ok(record)
 }
 
 /// `file` as an absolute path, which the checker reads as the front does whatever its own directory: its directory
@@ -366,11 +382,19 @@ fn read_record(file: &Path, code: i32) -> Result<(Record, String), Refusal> {
         Err(error) if error.kind() == std::io::ErrorKind::NotFound => Err(failure(
             format!("`{PLAN_CHECKER}` exited with {code} and wrote no record, so nothing was judged"),
             format!(
-                "the checker reads what it was given and writes beside it, under {}, which this run removes after it: check that the umask \
-                 lets this user read and write what it makes, and that nothing moved it; if neither, report it, with what the checker \
+                "the checker reads what it was given and writes beside it, under {}, which this run removes after it, unless something else came to stand there: check that \
+                 the umask lets this user read and write what it makes, and that nothing moved it; if neither, report it, with what the checker \
                  wrote above",
                 file.parent().unwrap_or(file).display()
             ),
+        )),
+        // Closed while it ran: the checker and the front do not disagree, and only what closed it can say why.
+        Err(error) if error.kind() == std::io::ErrorKind::PermissionDenied => Err(failure(
+            format!(
+                "cannot read `{PLAN_CHECKER}`'s record {}, closed while the checker ran: {error}",
+                file.display()
+            ),
+            "open it and the directories above it, and run this again".to_owned(),
         )),
         Err(error) => Err(fault(format!(
             "cannot read `{PLAN_CHECKER}`'s record {}: {error}",
@@ -401,4 +425,33 @@ fn fault(message: String) -> Refusal {
         message,
         "report it, with what the checker wrote above: the checker and the front disagree about one run".to_owned(),
     )
+}
+
+#[cfg(test)]
+mod tests {
+    use super::place_record;
+    use super::RECORD;
+
+    /// `R13-2`: what stands at the record's name came from elsewhere, and goes on standing.
+    #[test]
+    fn what_stands_where_the_record_goes_is_said_and_never_removed() {
+        let dir = std::path::Path::new(env!("CARGO_MANIFEST_DIR"))
+            .join("../../target/tmp/consume-place-record");
+        let _ = std::fs::remove_dir_all(&dir);
+        let record = place_record(&dir).expect("nothing stands there");
+        assert!(!record.exists());
+        std::fs::write(&record, "mine").expect("written");
+        let refusal = place_record(&dir).expect_err("something stands there");
+        assert!(
+            refusal.message.contains("this run did not write it"),
+            "{}",
+            refusal.message
+        );
+        assert_eq!(std::fs::read_to_string(&record).expect("kept"), "mine");
+        assert_eq!(
+            record.file_name().and_then(|name| name.to_str()),
+            Some(RECORD)
+        );
+        std::fs::remove_dir_all(&dir).expect("removed");
+    }
 }

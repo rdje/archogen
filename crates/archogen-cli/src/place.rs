@@ -34,7 +34,7 @@ pub fn repair(error: &std::io::Error) -> &'static str {
         ErrorKind::NotADirectory => {
             "a name on the way to it is no directory: name a path whose parents are directories"
         }
-        ErrorKind::PermissionDenied => "name a place this user can reach and write",
+        ErrorKind::PermissionDenied => "name a place this user can reach and write, with a umask that lets it write what it makes",
         ErrorKind::AlreadyExists => {
             "a name on the way to it is a link to nothing, or something took it meanwhile: look at it, or name another place"
         }

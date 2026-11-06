@@ -738,6 +738,28 @@ impl Launch for Changing {
     }
 }
 
+/// The checker, and then a change, once it has ended.
+#[cfg(unix)]
+struct ChangingAfter {
+    change: fn(&Path),
+    dir: PathBuf,
+}
+
+#[cfg(unix)]
+impl Launch for ChangingAfter {
+    fn launch(
+        &self,
+        program: &str,
+        args: &[String],
+        out: &mut dyn Write,
+        err: &mut dyn Write,
+    ) -> Result<Launched, Unlaunched> {
+        let launched = Checker.launch(program, args, out, err);
+        (self.change)(&self.dir);
+        launched
+    }
+}
+
 #[test]
 fn a_listed_file_changed_while_a_build_runs_stays_and_is_said() {
     let root = scratch("edited-meanwhile");
@@ -1968,6 +1990,30 @@ fn out_routes() -> Vec<(&'static str, Route)> {
             }
             outcome
         }),
+        ("closed-while-it-ran", |root| {
+            if !modes_bind(root) {
+                return None;
+            }
+            let dir = root.join("x");
+            let stage = beside(&dir, ".building");
+            let _reopened = Reopened(vec![stage.clone()]);
+            let outcome = said(invoke(
+                &[
+                    "build",
+                    &example(HEARTBEAT),
+                    "--out",
+                    &dir.display().to_string(),
+                ],
+                &ChangingAfter {
+                    change: |dir| set_mode(&beside(dir, ".building"), 0o000),
+                    dir: dir.clone(),
+                },
+            ));
+            set_mode(&stage, 0o755);
+            assert!(!dir.exists());
+            assert!(stage.is_dir());
+            outcome
+        }),
         ("closed-parent", |root| {
             if !modes_bind(root) {
                 return None;
@@ -2892,6 +2938,11 @@ fn what_cannot_be_read_is_not_called_a_change() {
     closed(&dir.join("plan.txt"), 0o000, 0o644);
     closed(&dir.join("rt-core"), 0o000, 0o755);
     closed(&dir, 0o300, 0o755);
+    // The top of it or its provenance closed: `build` says to open it, and so must this.
+    for mode in [0o000, 0o200, 0o400, 0o600] {
+        closed(&dir, mode, 0o755);
+    }
+    closed(&dir.join("provenance.json"), 0o000, 0o644);
     // Opened, with nothing rebuilt, it is as it was: which is what the first answer would have denied.
     assert_eq!(explain(&shown).0, Status::Ok);
     // A build truly changed is told so, and told what works: `build` will not write over it.
@@ -2902,6 +2953,38 @@ fn what_cannot_be_read_is_not_called_a_change() {
     assert_eq!(status, Status::Usage, "`build` refuses what has changed");
     let (status, _, err) = build(&example(HEARTBEAT), &root.join("new"));
     assert_eq!(status, Status::Ok, "the repair the hint gives: {err}");
+}
+
+#[test]
+fn a_listed_directory_replaced_is_a_change_and_no_closure() {
+    // Each stands where a listed directory did: what is listed is gone, and no opening of anything answers that.
+    type Shape = (&'static str, fn(&Path));
+    let shapes: [Shape; 4] = [
+        ("a file", |at| fs::write(at, "mine").expect("written")),
+        ("a link to a file", |at| {
+            let file = at.with_extension("beside");
+            fs::write(&file, "mine").expect("written");
+            std::os::unix::fs::symlink(&file, at).expect("a link");
+        }),
+        ("a link loop", |at| {
+            std::os::unix::fs::symlink(at, at).expect("a link");
+        }),
+        ("a link to nothing", |at| {
+            std::os::unix::fs::symlink("nowhere", at).expect("a link");
+        }),
+    ];
+    for (shape, make) in shapes {
+        let root = scratch("listed-replaced");
+        let dir = root.join("out");
+        let (status, _, err) = build(&example(HEARTBEAT), &dir);
+        assert_eq!(status, Status::Ok, "{err}");
+        fs::remove_dir_all(dir.join("rt-core")).expect("removed");
+        make(&dir.join("rt-core"));
+        let err = stale(&dir.display().to_string());
+        assert!(err.contains("into a new directory"), "{shape}: {err}");
+        let (status, _, err) = build(&example(HEARTBEAT), &root.join("new"));
+        assert_eq!(status, Status::Ok, "{shape}, the repair: {err}");
+    }
 }
 
 #[test]

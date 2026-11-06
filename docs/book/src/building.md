@@ -188,6 +188,7 @@ the rule: what it says is run, and a route it does not name is promised nothing 
 | `link-on-the-way` | a link to nothing among `--out`'s parents | `usage` | `a link to nothing` | the link |
 | `link-to-a-directory-on-the-way` | a link to a directory among `--out`'s parents | `ok` | `generated` | the package, beneath what the link points at |
 | `link-loop-on-the-way` | a loop of links among `--out`'s parents | `usage` | `name another place` | the links |
+| `closed-while-it-ran` | while it runs, the stage is closed to this user, so the checker's record cannot be read | `tool-failure` | `closed while the checker ran` | no package; the stage, which it says could not be removed |
 | `closed-parent` | a parent this user cannot write | `usage` | `reach and write` | the parent, empty |
 | `reads-once` | a description that is no regular file, such as a pipe or `<(…)`, which the checker would read again | `usage` | `no regular file` | nothing made |
 | `reads-differently` | a description that reads differently the second time, such as `/dev/stdin` from a file | `usage` | `reads differently` | nothing made |
@@ -260,7 +261,7 @@ It holds the build to what `archogen build` holds an earlier one to first: every
 nothing else there but what building and looking at a package leave. A build that fails that, whose description no longer gives its
 plan, or whose record does not accept that plan from the checker it names is `stale-input`, and the command prints
 no account of a plan it did not write: the search can only speak for its own. Its repair is a build into a new directory, since `archogen build` will not write over
-one that has changed. What cannot be read is no change: a file or directory of a build closed to this user is `usage`, whose repair is to open it, and with nothing rebuilt it then reads as it did. ⚠️ A digest catches an edit and a stale file, never a
+one that has changed. What cannot be read is no change: a file or directory of a build closed to this user, the top of it or its provenance among them, is `usage`, whose repair is to open it, and with nothing rebuilt it then reads as it did. What stands where a listed directory did, a file or a link, is a change, as a file gone is. ⚠️ A digest catches an edit and a stale file, never a
 forger: whoever can write the directory can rewrite the list too. A provenance that no longer reads, or names another format, is
 `usage`, being no build this engine reads, and so is a request that misses, a requirement nobody writes, as of any description.
 

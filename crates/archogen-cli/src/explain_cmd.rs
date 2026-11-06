@@ -67,6 +67,9 @@ impl Asked {
         let root = Path::new(dir);
         let built = Built::read(root).map_err(|unbuilt| match unbuilt {
             Unbuilt::OtherFormat(said) => Unasked::OtherFormat(said),
+            Unbuilt::Closed(said) => Unasked::Unread(format!(
+                "the build {dir} cannot be read, so nothing says whether it is as it was written: {said}"
+            )),
             Unbuilt::Other(said) => Unasked::NoBuild(said),
         })?;
         match built.edited(root).or_else(|| built.foreign(root)) {
@@ -151,7 +154,7 @@ pub fn run(parsed: &Parsed, out: &mut dyn Write, err: &mut dyn Write) -> Status 
             }
             Err(Unasked::Unread(message)) => {
                 let _ = writeln!(err, "archogen: {}: {message}", Status::Usage.slug());
-                let _ = writeln!(err, "  hint: open what it could not read");
+                let _ = writeln!(err, "  hint: open what it could not read, or ask from nearer it if its path is long");
                 return Status::Usage;
             }
             Err(Unasked::OtherFormat(message)) => {

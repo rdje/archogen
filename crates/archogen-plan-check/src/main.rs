@@ -170,6 +170,16 @@ fn refuse(err: &mut dyn Write, status: Status, why: &str) -> Status {
     status
 }
 
+/// A refusal with what to do about it, as every refusal states (`docs/book/src/cli.md`).
+fn refuse_with(err: &mut dyn Write, status: Status, why: &str, repair: &str) -> Status {
+    let _ = writeln!(err, "{NAME}: {}: {why}", status.slug());
+    let _ = writeln!(err, "  hint: {repair}");
+    if status == Status::Usage {
+        let _ = writeln!(err, "{USAGE}");
+    }
+    status
+}
+
 fn run(
     args: &[String],
     input: &mut dyn BufRead,
@@ -229,23 +239,25 @@ fn run(
     let text = match std::fs::read_to_string(&description) {
         Ok(text) => text,
         Err(error) => {
-            return refuse(
+            return refuse_with(
                 err,
                 Status::Usage,
                 &format!(
                     "cannot read the description {}: {error}",
                     description.display()
                 ),
+                "name a file that exists and this user can read",
             )
         }
     };
     let plan_bytes = match std::fs::read(&plan) {
         Ok(bytes) => bytes,
         Err(error) => {
-            return refuse(
+            return refuse_with(
                 err,
                 Status::Usage,
                 &format!("cannot read the plan {}: {error}", plan.display()),
+                "name a file that exists and this user can read",
             )
         }
     };

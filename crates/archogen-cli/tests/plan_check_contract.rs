@@ -133,7 +133,14 @@ impl Case {
         .write()
     }
 
+    /// A run in a stage of its own, as each command makes one.
     fn run(&self, fake: &Fake) -> (Result<Record, archogen_cli::Refusal>, String) {
+        let _ = std::fs::remove_dir_all(self.dir.join("out/check"));
+        self.run_over(fake)
+    }
+
+    /// A run over what already stands in that stage.
+    fn run_over(&self, fake: &Fake) -> (Result<Record, archogen_cli::Refusal>, String) {
         let expected = Expected {
             description: &self.dir.join("system.eadl"),
             sources: None,
@@ -203,16 +210,26 @@ fn an_agreeing_record_is_believed_and_the_front_hands_over_absolute_paths() {
 }
 
 #[test]
-fn an_earlier_record_is_removed_so_a_checker_that_writes_none_is_refused() {
+fn a_checker_that_writes_no_record_is_refused() {
     let case = Case::new();
-    let (result, _) = case.run(&fake(Some(case.good(Status::Ok)), Ok(Ended::Code(0))));
-    assert!(result.is_ok());
-    // The record of the run before stays in the directory unless the front removes it.
     let message = refused(case.run(&fake(None, Ok(Ended::Code(0)))).0);
     assert!(
         message.contains("exited with 0 and wrote no record"),
         "{message}"
     );
+}
+
+/// `R13-2`: each command's stage is its own, so a record standing there came from elsewhere. It is not taken for this run's, and not this run's to remove.
+#[test]
+fn a_record_standing_in_a_stage_is_refused_and_left() {
+    let case = Case::new();
+    let (result, _) = case.run(&fake(Some(case.good(Status::Ok)), Ok(Ended::Code(0))));
+    assert!(result.is_ok());
+    let standing = case.dir.join("out/check").join(RECORD);
+    let before = std::fs::read(&standing).unwrap();
+    let message = refused(case.run_over(&fake(None, Ok(Ended::Code(0)))).0);
+    assert!(message.contains("this run did not write it"), "{message}");
+    assert_eq!(std::fs::read(&standing).unwrap(), before);
 }
 
 #[test]

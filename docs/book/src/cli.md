@@ -195,6 +195,7 @@ again just before it is used, and in that instant what stands there is what is u
 | `came-in-stage` | while the checker runs, something comes in the stage beside the plan | `ok` | `holding what came in it` | the plan and its record; what came in `PLAN.part`, which the next run names |
 | `stage-swapped` | while the checker runs, the stage is swapped for a link | `tool-failure` | `no longer the directory this run made` | what stood at `PLAN`; the link |
 | `stage-replaced` | while the checker runs, another directory comes to stand at the stage's name | `tool-failure` | `wrote no record` | what stood at `PLAN`; that directory, with what it holds |
+| `plan-gone-meanwhile` | while the checker runs, the plan it is judging is taken away, or something else put at its name | `tool-failure` | `is gone or no file` | what stood at `PLAN`; the stage, to be looked at |
 | `plan-edited-meanwhile` | while the checker runs, the plan it is judging is edited | `tool-failure` | `changed while the plan was judged` | what stood at `PLAN`; the stage, to be looked at |
 | `check-stands-unchecked` | a file at `PLAN.check`, with `--unchecked` | `ok` | `resolved system` | the plan, and that file |
 | `no-room-name` | a name with no room for what goes beside it | `usage` | `too long` | nothing made |

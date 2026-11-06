@@ -481,6 +481,12 @@ impl Landing {
                 )))
             }
             // Its own plan, in its own stage: a umask that closes it to its owner is the likely cause, and nothing came.
+            Err(error) if error.kind() != std::io::ErrorKind::PermissionDenied => {
+                return Err(came(format!(
+                    "{} is gone or no file, while the plan was judged: {error}",
+                    plan.display()
+                )))
+            }
             Err(error) => {
                 self.abandon();
                 return Err(usage(

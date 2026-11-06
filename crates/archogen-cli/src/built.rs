@@ -7,7 +7,7 @@
 //! its directory is.
 
 use std::collections::BTreeSet;
-use std::io::Read;
+use std::io::{ErrorKind, Read};
 use std::path::{Component, Path};
 
 use archogen_digest::{Digest, Sha256};
@@ -79,12 +79,27 @@ pub struct Built {
     whole: bool,
 }
 
+/// A link loop's error, which the standard library has no stable kind for.
+#[cfg(target_os = "linux")]
+const ELOOP: i32 = 40;
+#[cfg(not(target_os = "linux"))]
+const ELOOP: i32 = 62;
+
+/// Whether this error says what was asked for is not there as the build left it: gone, a name on the way to it now no directory, or a loop of links. Each is a change, and
+/// no opening of anything would answer it.
+fn says_it_changed(error: &std::io::Error) -> bool {
+    matches!(error.kind(), ErrorKind::NotFound | ErrorKind::NotADirectory)
+        || error.raw_os_error() == Some(ELOOP)
+}
+
 /// Why a directory records nothing this engine reads.
 #[derive(Debug)]
 pub enum Unbuilt {
     /// It is a build of a format this engine does not read: another engine's, which nothing here can judge, so only a new directory or
     /// taking that build away helps.
     OtherFormat(String),
+    /// Its provenance is closed to this user, or the directory holding it: nothing says what it is until it is opened.
+    Closed(String),
     /// Anything else, what stands there being no build, or one that does not read.
     Other(String),
 }
@@ -94,7 +109,7 @@ impl Unbuilt {
     #[must_use]
     pub fn said(self) -> String {
         match self {
-            Self::OtherFormat(said) | Self::Other(said) => said,
+            Self::OtherFormat(said) | Self::Closed(said) | Self::Other(said) => said,
         }
     }
 }
@@ -138,8 +153,15 @@ impl Built {
         let shown = dir.display();
         // A regular file, read within a bound: a link is no file a build wrote, and a pipe would never end.
         let file = dir.join(PROVENANCE_FILE);
-        let meta = std::fs::symlink_metadata(&file)
-            .map_err(|error| format!("{shown}'s `{PROVENANCE_FILE}`: {error}"))?;
+        let unread = |error: std::io::Error| {
+            let said = format!("{shown}'s `{PROVENANCE_FILE}`: {error}");
+            if error.kind() == ErrorKind::PermissionDenied {
+                Unbuilt::Closed(said)
+            } else {
+                Unbuilt::Other(said)
+            }
+        };
+        let meta = std::fs::symlink_metadata(&file).map_err(unread)?;
         if !meta.is_file() {
             return Err(format!("{shown}'s `{PROVENANCE_FILE}` is no file a build wrote").into());
         }
@@ -155,7 +177,7 @@ impl Built {
         let mut bytes = Vec::new();
         std::fs::File::open(&file)
             .and_then(|opened| opened.take(LIMIT + 1).read_to_end(&mut bytes))
-            .map_err(|error| format!("{shown}'s `{PROVENANCE_FILE}`: {error}"))?;
+            .map_err(unread)?;
         if bytes.len() as u64 > LIMIT {
             return Err(past().into());
         }
@@ -247,7 +269,7 @@ impl Built {
                         "`{name}` is no file the build wrote"
                     )))
                 }
-                Err(error) if error.kind() == std::io::ErrorKind::NotFound => {
+                Err(error) if says_it_changed(&error) => {
                     return Some(NotAsWritten::Changed(format!("`{name}`: {error}")))
                 }
                 Err(error) => return Some(NotAsWritten::Unread(format!("`{name}`: {error}"))),
@@ -257,6 +279,9 @@ impl Built {
                 Ok(false) => Some(NotAsWritten::Changed(format!(
                     "`{name}` has changed since the build wrote it"
                 ))),
+                Err(error) if says_it_changed(&error) => {
+                    Some(NotAsWritten::Changed(format!("`{name}`: {error}")))
+                }
                 Err(error) => Some(NotAsWritten::Unread(format!("`{name}`: {error}"))),
             }
         })

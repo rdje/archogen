@@ -63,6 +63,8 @@ enum Answer {
     Swapping,
     /// It accepted, and the plan it judged was edited.
     Editing,
+    /// It accepted, and the plan it judged was taken away, and a directory holding a file put at its name.
+    Removing,
     /// It wrote its record, and another directory came to stand at the stage's name, the record gone with what moved.
     Replacing,
 }
@@ -105,6 +107,7 @@ impl Launch for Checker {
             | Answer::Stray
             | Answer::Swapping
             | Answer::Editing
+            | Answer::Removing
             | Answer::Replacing => Status::Ok,
             Answer::Closing(ref dir) => {
                 #[cfg(unix)]
@@ -167,6 +170,11 @@ impl Launch for Checker {
         match self.answer {
             Answer::Stray => std::fs::write(stage.join("mine.txt"), "mine").expect("written"),
             Answer::Editing => std::fs::write(stage.join("plan"), "mine").expect("written"),
+            Answer::Removing => {
+                std::fs::remove_file(stage.join("plan")).expect("removed");
+                std::fs::create_dir(stage.join("plan")).expect("a directory");
+                std::fs::write(stage.join("plan/mine.txt"), "mine").expect("written");
+            }
             Answer::Replacing => {
                 std::fs::rename(stage, stage.with_extension("moved")).expect("moved");
                 std::fs::create_dir(stage).expect("a directory");
@@ -290,6 +298,15 @@ fn modes_bind(root: &Path) -> bool {
 const AN_EARLIER_PLAN: &str = "(format \"archogen-assignment/2\")\n(profile rt-static-up-v1)\n(system earlier)\n\
      (program \"0000000000000000000000000000000000000000000000000000000000000000\")\n(adapters adapters/1)\n";
 
+/// What stands where the tests run, to hold that a name refused makes nothing.
+#[cfg(unix)]
+fn names_here() -> std::collections::BTreeSet<std::ffi::OsString> {
+    std::fs::read_dir(".")
+        .expect("a directory")
+        .map(|entry| entry.expect("an entry").file_name())
+        .collect()
+}
+
 /// An earlier plan at `plan`.
 #[cfg(unix)]
 fn an_earlier_plan(plan: &Path) {
@@ -315,8 +332,18 @@ type Route = fn(&Path) -> Option<(Status, String)>;
 #[cfg(unix)]
 fn plan_routes() -> Vec<(&'static str, Route)> {
     vec![
-        ("no-name", |_| resolve_at(".", &[])),
-        ("empty-name", |_| resolve_at("", &[])),
+        ("no-name", |_| {
+            let before = names_here();
+            let outcome = resolve_at(".", &[]);
+            assert_eq!(names_here(), before, "something was made");
+            outcome
+        }),
+        ("empty-name", |_| {
+            let before = names_here();
+            let outcome = resolve_at("", &[]);
+            assert_eq!(names_here(), before, "something was made");
+            outcome
+        }),
         ("a-trailing-dot", |root| {
             let outcome = resolve_at(&format!("{}/.", root.join("q").display()), &[]);
             assert!(!root.join("q").exists());
@@ -381,6 +408,8 @@ fn plan_routes() -> Vec<(&'static str, Route)> {
             for notes in [
                 format!("{AN_EARLIER_PLAN}; three weeks of notes\n"),
                 format!("; three weeks of notes\n{AN_EARLIER_PLAN}"),
+                // A line out of its sorted place, which holds nothing a comment does.
+                format!("{AN_EARLIER_PLAN}(bind z.z observable-output console.uart)\n(bind a.a observable-output console.uart)\n"),
                 AN_EARLIER_PLAN.replace(
                     "(system earlier)",
                     "(system earlier) ; chosen by hand (see Ana)",
@@ -406,7 +435,18 @@ fn plan_routes() -> Vec<(&'static str, Route)> {
             assert!(archogen_api::is_a_plan(&edited), "{edited}");
             std::fs::write(&plan, &edited).expect("written");
             let outcome = resolve_at(&plan.display().to_string(), &[]);
-            assert_ne!(std::fs::read_to_string(&plan).expect("a plan"), edited);
+            let written = std::fs::read_to_string(&plan).expect("a plan");
+            assert_ne!(written, edited);
+            // One binding for another, as well as one added.
+            let replaced = written.replace("console.uart", "console.alt");
+            assert_ne!(
+                replaced, written,
+                "a plan binding nothing tests nothing: {written}"
+            );
+            assert!(archogen_api::is_a_plan(&replaced), "{replaced}");
+            std::fs::write(&plan, &replaced).expect("written");
+            resolve_at(&plan.display().to_string(), &[])?;
+            assert_eq!(std::fs::read_to_string(&plan).expect("a plan"), written);
             outcome
         }),
         ("a-plan-past-what-its-reader-holds", |root| {
@@ -964,6 +1004,26 @@ fn plan_routes() -> Vec<(&'static str, Route)> {
             );
             assert_eq!(
                 std::fs::read_to_string(root.join("p.part/plan")).expect("kept"),
+                "mine"
+            );
+            outcome
+        }),
+        ("plan-gone-meanwhile", |root| {
+            // What came is not this run's: the stage stays, with it, for whoever looks.
+            let plan = root.join("p");
+            an_earlier_plan(&plan);
+            let outcome = resolve_of(
+                &heartbeat(),
+                &plan.display().to_string(),
+                &[],
+                Answer::Removing,
+            );
+            assert_eq!(
+                std::fs::read_to_string(&plan).expect("kept"),
+                AN_EARLIER_PLAN
+            );
+            assert_eq!(
+                std::fs::read_to_string(root.join("p.part/plan/mine.txt")).expect("kept"),
                 "mine"
             );
             outcome
