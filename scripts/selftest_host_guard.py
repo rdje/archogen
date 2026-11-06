@@ -249,7 +249,7 @@ def jobs_of(pid: int) -> list[int]:
         # What it reads the host with is no job of its, though it is its child for a moment; and one gone by the time `ps` looked was such a moment.
         if not shown.strip() or os.path.basename(shown.split(" ", 1)[0].strip()) in g.READS_THE_HOST:
             continue
-        if "host_guard.py" not in shown:
+        if not g.GUARD_PROCESS.search(shown.strip()):
             found.append(child)
     return found
 
@@ -1015,6 +1015,15 @@ def case_a_job_named_like_the_guard_is_a_job() -> None:
         guard("stop", root=scope)
 
 
+def case_the_self_test_is_spared_and_a_job() -> None:
+    """Spared by its own name, so a line cannot end the run that says what it could not run; and under `run` a job, so `check` says what `run` would."""
+    selftest = g.Process(1, 0, "python3 -I -B scripts/selftest_host_guard.py", "", "", 0)
+    check("the self-test is never stopped", g.protected(selftest))
+    check("nor a path to it", g.protected(g.Process(1, 0, f"python3 {GUARD.parent}/selftest_host_guard.py case_run", "", "", 0)))
+    check("a name merely ending so is", not g.protected(g.Process(1, 0, "python3 my_selftest_host_guard.py", "", "", 0)))
+    check("nor is the guard's name its own", not g.GUARD_PROCESS.search(selftest.command))
+
+
 def case_a_stamp_is_of_a_whole_run_of_these_bytes() -> None:
     repo = fresh("stamped")
     scripts = repo / "scripts"
@@ -1587,6 +1596,7 @@ def case_killing_by_name() -> None:
             'kill "$(pgrep -x rustc)"', 'ps -ax | grep x; kill "$PID"', "for ((i=0;i<1;i++)) do pkill -x rustc; done", "if true; then for ((i=0;i<1;i++)) do pkill -x rustc; done; fi", "time for ((i=0;i<1;i++)) do pkill -x rustc; done", "pkill -v -P 123", "pkill -vP 123", "pkill -P 5,1 -x rustc", "kill -9 -1", "kill -- -1", "pkill -PIPE rustc", "pkill -FPE rustc", "ps -upeter | awk '{print $1}' | xargs kill", 'pkill -P "$(pgrep -x make)"', 'P=$(pgrep -x make); pkill -P "$P"', "pgrep -x make > p; pkill -F p", "pkill -F <(pgrep -x rustc)", "ps -ax -opid -ocommand | grep rustc | awk '{print $1}' | xargs kill", "pkill -P 1 -x rustc", "pgrep -P 1 -x rustc | xargs kill -9", f"pkill -v -f {scope}", f"pgrep -vf {scope} | xargs kill", "kill -- -$(pgrep -x rustc)", "kill -TERM -$(pgrep -f myjob)", "PGID=$(pgrep -f myjob); kill -- -$PGID", "kill -s TERM $(pgrep -x rustc)",
             f"ps -ax | grep rustc | grep -v {scope} | awk '{{print $1}}' | xargs kill", f"pgrep -x rustc | tee {scope}/pids | xargs kill", f"pkill -f '{scope} copy'",
             "ps -U rdje -o pid=,comm= | grep rustc | awk '{print $1}' | xargs kill", "ps -U 501 -o pid=,comm= | grep rustc | awk '{print $1}' | xargs kill", "kill $(ps -u 501 | grep rustc | awk '{print $2}')",
+            "ps U 501 | grep rustc | awk '{print $1}' | xargs kill", 'ps U "$USER" | grep rustc | awk \'{print $1}\' | xargs kill', "ps G 20 | grep rustc | awk '{print $1}' | xargs kill", "ps dp 1 | awk '{print $1}' | xargs kill",
             "ps -dp 1 | awk '{print $1}' | xargs kill", "ps -d -p 1 -o pid= | xargs kill", "kill $(ps -dp 1 -o pid=,command= | grep rustc | awk '{print $1}')",
             "ps -ef -p 1 | grep rustc | awk '{print $2}' | xargs kill", "ps -Ap 1 | grep rustc | awk '{print $2}' | xargs kill", "ps -axp 1 | grep rustc | awk '{print $2}' | xargs kill", "ps -ep 1 | grep rustc | awk '{print $2}' | xargs kill", "ps -Ao pid= -p 1 | grep rustc | xargs kill", "ps -A -g 1 | grep rustc | awk '{print $2}' | xargs kill", "ps -axg 1 | grep rustc | awk '{print $2}' | xargs kill", "ps -G 20 1 | grep rustc | awk '{print $2}' | xargs kill", "ps ax 1 | grep rustc | awk '{print $1}' | xargs kill",
             "kill $(ps -G 20 | grep rustc | awk '{print $2}')", "kill $(ps -t 1 | grep rustc | awk '{print $2}')", "kill $(ps -O 1 | grep rustc | awk '{print $2}')", 'kill $(ps -U "$USER" | grep rustc | awk \'{print $2}\')',
@@ -1846,7 +1856,7 @@ THE_REST = (
     case_only_tightened, case_check_refuses, case_a_figure_not_read_is_never_safe, case_one_process, case_all_processes, case_what_a_stopped_process_started,
     case_another_project_is_never_ours, case_a_terminal_vouches_for_nothing, case_a_root_is_exactly_itself, case_agents, case_what_holds_little_is_left_alone, case_a_job_is_stopped_whole,
     case_a_queued_make_is_no_build, case_at_a_disk_floor_what_writes_stops, case_names_and_zombies, case_a_command_line_that_is_no_text, case_pressure, case_not_ours, case_growing,
-    case_a_small_writer_is_counted, case_the_watcher_outlives_its_own_trouble, case_a_commit_finds_a_name_bound_nowhere, case_a_commit_holds_what_is_staged, case_a_stamp_is_of_a_whole_run_of_these_bytes, case_a_job_named_like_the_guard_is_a_job, case_a_clean_leaves_a_watcher_named, case_a_guard_changed_holds_from_then, case_a_root_remade_is_another, case_a_root_that_is_gone_stays_gone, case_a_stale_pid_names_nobody, case_the_watcher_stays_while_a_job_runs,
+    case_a_small_writer_is_counted, case_the_watcher_outlives_its_own_trouble, case_a_commit_finds_a_name_bound_nowhere, case_a_commit_holds_what_is_staged, case_a_stamp_is_of_a_whole_run_of_these_bytes, case_the_self_test_is_spared_and_a_job, case_a_job_named_like_the_guard_is_a_job, case_a_clean_leaves_a_watcher_named, case_a_guard_changed_holds_from_then, case_a_root_remade_is_another, case_a_root_that_is_gone_stays_gone, case_a_stale_pid_names_nobody, case_the_watcher_stays_while_a_job_runs,
     case_what_is_not_the_table_is_blindness, case_a_blind_watcher_is_said, case_the_hook_passes_nothing_it_cannot_read, case_killing_by_name, case_hook, case_a_damaged_log, case_run,
 )
 

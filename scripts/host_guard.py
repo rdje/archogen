@@ -360,6 +360,8 @@ AGENT = re.compile(r"claude|codex|kimi|gemini|aider|cursor|copilot|opencode|goos
 INFRASTRUCTURE = {"login", "sshd", "mosh-server", "tmux", "screen", "zellij", "abduco", "dtach", "iterm2", "terminal", "code", "alacritty", "kitty", "ghostty", "wezterm-gui", "caffeinate"}
 APPLICATION = ("/Applications/", "/System/", "/usr/libexec/", "/usr/sbin/")
 # This interpreter and this file by their own paths, since a checkout's path may hold a space (the repository may be moved anywhere).
+# The guard's self-test is spared as the guard is, by its own name: a line stopping it would end the run that says what it could not run, and leave its rigs behind. As a `run`'s job it is a job, which `GUARD_PROCESS` alone tells.
+SELF_TEST_PROCESS = re.compile(r"^(?:\S*[Pp]ython\S*|" + re.escape(sys.executable) + r")\s+(?:-\S+\s+)*(?:\S*/)?selftest_host_guard\.py(?:\s|$)")
 GUARD_PROCESS = re.compile(r"^(?:\S*[Pp]ython\S*|" + re.escape(sys.executable) + r")\s+(?:-\S+\s+)*(?:(?:\S*/)?host_guard\.py|" + re.escape(str(CODE)) + r")(?:\s|$)")
 SHELL_FLAGS_WITH_VALUES = {"--init-file", "--rcfile", "-o", "+o", "-O", "+O", "--init-command"}
 # What spawns more for as long as it lives, however little it holds.
@@ -420,7 +422,7 @@ def is_terminal_shell(process: Process) -> bool:
 def protected(process: Process) -> bool:
     if process.name.lower() in INFRASTRUCTURE or is_agent(process) or is_terminal_shell(process):
         return True
-    return bool(GUARD_PROCESS.search(process.command)) or process.command.startswith(APPLICATION) or process.exe.startswith(APPLICATION)
+    return bool(GUARD_PROCESS.search(process.command) or SELF_TEST_PROCESS.search(process.command)) or process.command.startswith(APPLICATION) or process.exe.startswith(APPLICATION)
 
 
 def names_root(command: str, root: str) -> bool:
@@ -1647,7 +1649,8 @@ def kills_by_name(commands: list[Command], root: Path) -> bool:
         plain = "AaCcdEefhjLlMmrSTvwXx"
         if any(re.fullmatch(rf"-[{plain}]*[Aaed]\S*|-[{plain}]*[UuGt].*", word) for word in words):
             return True
-        if words and re.fullmatch(r"[A-Za-z]*[Aae][A-Za-z]*", words[0]):
+        # As BSD writes them, with no dash: `ps ax`, `ps U 501`, `ps G 20`, `ps dp 1`. A `u` is a format, as `ps up 123` writes it.
+        if words and re.fullmatch(r"[A-Za-z]*[AaedUGt][A-Za-z]*", words[0]):
             return True
         a_pid = r"(?:\d+|\$[\w$!@*]+|\$\{[^}]*\}|\$\(.*\)|`.*`)"
         for at, word in enumerate(words):

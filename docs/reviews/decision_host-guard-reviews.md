@@ -380,3 +380,17 @@ Said, and left as it stands: its reader could not run the brief's list, `main` i
 | G17-8 | wording | "where the commit changes it": three files; "beside a job of ours": a build or a `run` | Each says so |
 
 Said, and left as it stands: its reader could not run real `make focused`, a real full volume, chosen pressure levels, true idle and blind times, the census against the real watcher, real Codex, Kimi or VS Code, `onFailure` with a real crash, `run_self_tests.sh --self-test`, or re-derive `ri_logical_writes`. Its idle pace read 1.73 s against a stated 2, unexplained. `run` at the real root moved `seen.run`, so a later `run` did not repeat a stop already said. A safety check refused one rig command, which it reissued without the removal.
+
+**Round 18** — `2026-11-06`: not acceptable, 7 findings, 2 defects, one mild, after 15, 12, 5, 6, 13, 2, 1, 1, 1, 3, 2, 3, 5, 2, 4, 4 and 1. Its rigs are under `target/p12718/work/`. It timed what earlier readers could not: true idle ended at 600 s; a blind watcher refused a heavy command at 64 s and ended a job at 125 s, on the true clock, and every other measurement held. Round 17's fix did what it said, and the whole self-test passed twice, `756 passed, 0 failed, 0 not run`.
+
+| # | Kind | Finding | Answer |
+| --- | --- | --- | --- |
+| G18-1 | defect | "what is never stopped, nor counted" said the guard and its self-test, and round 17 had taken the self-test out: `protected` false of it, and `status` counted it | It is spared by its own name, exactly. A `run` of it is a job for what `check` and `status` say, and that is all |
+| G18-2 | defect, mild | so a line that reached the self-test ended it whole, with no summary, no "not run" and no exit 20, against the record: `rc=143`, through the runner too. The danger line reached it while a stub was up, and a disk floor by the code | The same answer |
+| G18-3 | gap | a self-test stopped so left rigs behind, a scratch watcher staying until idle | The same answer: it is not stopped. A kill of it by hand still leaves them, and that is a person's |
+| G18-4 | gap | dashless `ps` selecting a whole table passed: `ps U 501`, `ps G 20`, `ps dp 1`, of the family of G14-4 and G17-3 | Read as dashed. A `u` is a format, so `ps up 123` stays a pid |
+| G18-5 | gap | the self-test's `jobs_of` kept the "ends in" logic round 17 took from the guard, so its own case burned 20 s of a rig's 30 | It asks the guard's own reading |
+| G18-6 | wording | "`check` and `status` say what `run` would" has a window of up to five seconds beside a `run` waiting its turn, which holds `job.lock` that `check` does not read | Said |
+| G18-7 | wording | "each told how to wait": a refusal with no watcher says to look at `status` | "What to do" |
+
+Left as it stands, said here: "all of it can be stopped with no table to read" misses a child with its own session, which is how the self-test's rigs stand; a `kill` of a `run` leaves such a child, and the watcher sees it as ours by its root. Its reader could not run real `make focused`, a commit's compile, a real full volume, chosen pressure levels, the census against the real watcher, real Codex, Kimi or VS Code, `onFailure` with a real crash, or the blind watcher's true 20-minute stay. One `cp` of its wrote a copy of `settings.json` to `/tmp`, and the same command removed it. Both its self-tests rewrote the real stamp for the bytes they ran on.
