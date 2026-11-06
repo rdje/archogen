@@ -57,7 +57,7 @@ not a wall.
 | `network-stack` | a network protocol stack | unbounded external arrival and protocol state are outside the admitted workload model |
 | `dma` | DMA-capable devices and non-coherent transfers | needs buffer ownership, cache maintenance, ordering, addressability, and bus contention analysis |
 | `power-states` | dynamic power states and clock domains | feature availability becomes state-dependent, and transitions change timing bounds and time continuity |
-| `multicore` | more than one active core | requires an explicit memory model, inter-core interrupts, and shared-resource interference analysis |
+| `multicore` | more than one active core, by that word or by a `core-count` above one, stated or asked | requires an explicit memory model, inter-core interrupts, and shared-resource interference analysis |
 | `posix` | a POSIX personality | needs a named compliance subset, conformance tests, and specified divergences |
 
 ## Faults

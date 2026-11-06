@@ -31,7 +31,7 @@ will claim about them. It is not a preference or a default — it is the boundar
 guarantee the toolchain makes. `rt-static-up-v1` is a small, single-core, statically
 configured real-time executive:
 
-- **one active core**; one execution context runs at a time;
+- **one active core**, so `(core-count 4 tick)` is refused as `multicore` is; one execution context runs at a time;
 - **static unique task priorities**, preemption at the target's supported interrupt points,
   bounded kernel critical sections;
 - a **finite static task set** with periodic or sporadic releases, declared minimum

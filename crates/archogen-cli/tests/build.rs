@@ -224,6 +224,42 @@ fn two_periods(first: &str, second: &str) -> String {
     )
 }
 
+/// A count of cores says what the word says: more than one is out of the profile, stated or asked, and one is what it admits (leaf `M1.52`).
+#[test]
+fn more_cores_than_one_are_multicore_by_a_count() {
+    let root = scratch("core-count");
+    let file = root.join("s.eadl");
+    let description = |clauses: &str| {
+        format!(
+            "(eadl-version eadl/1)
+(defblock console.uart (offers (observable-output true) (reachable-at-privilege machine)))
+(defplatform soc (offers {clauses} (reachable-at-privilege machine)) (requires (uses console.uart)))
+(defsystem s (requires (needs observable-output)) (platform (uses soc)))
+"
+        )
+    };
+    for clause in ["(core-count 4 tick)", "(core-count 2 tick)"] {
+        fs::write(&file, description(clause)).expect("written");
+        let (status, _, err) = build(&file.display().to_string(), &root.join("out"));
+        assert_eq!(status, Status::UnsupportedProfile, "{clause}: {err}");
+        assert!(
+            err.contains("`multicore` is not admitted"),
+            "{clause}: {err}"
+        );
+        assert!(!root.join("out").exists(), "{clause}");
+    }
+    fs::write(&file, description("(core-count 1 tick)")).expect("written");
+    let (_, _, err) = build(&file.display().to_string(), &root.join("out"));
+    assert!(!err.contains("`multicore`"), "{err}");
+    fs::write(
+        &file,
+        "(eadl-version eadl/1)\n(defservice s (requires (core-count (at-least 2 tick))))\n",
+    )
+    .expect("written");
+    let (status, _, err) = build(&file.display().to_string(), &root.join("out2"));
+    assert_eq!(status, Status::UnsupportedProfile, "{err}");
+}
+
 /// A cap moves no verdict: a duplicate past any count is refused, and a later error of a higher precedence decides, however many stand before it (round 20's shapes).
 #[test]
 fn what_a_thousand_errors_hold_back_moves_no_verdict() {

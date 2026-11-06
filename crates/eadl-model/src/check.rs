@@ -476,6 +476,12 @@ fn admission(forms: &[Form], active: &Profile) -> (Vec<Diagnostic>, BTreeSet<Str
     for form in forms {
         walk(form, &mut |node| {
             let Some(name) = node_name(node) else { return };
+            // More than one active core says what the word says, by a count: a platform's `core-count` above one, or a requirement of one.
+            let name = if name == "core-count" && counts_more_than_one(node) {
+                "multicore"
+            } else {
+                name
+            };
             if let Some(exclusion) = active.exclusion(name) {
                 refused.insert(exclusion.slug.to_string());
                 errors.push(Diagnostic::error(
@@ -499,6 +505,16 @@ fn admission(forms: &[Form], active: &Profile) -> (Vec<Diagnostic>, BTreeSet<Str
         });
     }
     (errors, refused)
+}
+
+/// Whether a `core-count` clause states or asks more than one: `(core-count 4 tick)`, `(core-count (at-least 2 tick))`.
+fn counts_more_than_one(clause: &Form) -> bool {
+    let above_one =
+        |form: Option<&Form>| matches!(form, Some(Form::Integer { value, .. }) if *value > 1);
+    match clause.items().get(1) {
+        Some(Form::List { items, .. }) => above_one(items.get(1)),
+        count => above_one(count),
+    }
 }
 
 /// The name a node contributes to admission: a bare symbol, or a list's head.
