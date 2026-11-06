@@ -1041,3 +1041,127 @@ fn every_example_gets_an_answer_on_the_target_and_none_is_silently_the_descripti
         }
     }
 }
+
+/// A machine that offers what most of the corpus asks.
+const A_RICH_TARGET: &str = "
+(defblock target.timer (offers (relative-delay true) (channels 4 tick) (counter-width 64 bit) (counter-modulus (pow2 64)) (tick-rate 10 MHz) (tick-unit ns) (wrap-behavior modular) (observation-coherent true) (reachable-at-privilege machine) (region target.timer (base 0x0200_0000) (size 64 KiB))))
+(defblock target.console (offers (observable-output true) (uart true) (reachable-at-privilege machine) (region target.console (base 0x1000_0000) (size 256 byte))))
+(defblock target.irq (offers (interrupt-source true) (min-arrival-separation 1 ms) (reachable-at-privilege machine) (region target.irq (base 0x0c00_0000) (size 64 KiB))))
+(defplatform target.machine (offers (core-count 1 tick) (preemptive true) (reachable-at-privilege machine) (region target.ram (base 0x8000_0000) (size 128 MiB) (executable true))) (requires (uses target.timer target.console target.irq)))
+";
+
+fn eadl_files_under(dir: &std::path::Path, into: &mut Vec<PathBuf>) {
+    let Ok(entries) = std::fs::read_dir(dir) else {
+        return;
+    };
+    for entry in entries.flatten() {
+        let path = entry.path();
+        if path.is_dir() {
+            eadl_files_under(&path, into);
+        } else if path
+            .extension()
+            .is_some_and(|extension| extension == "eadl")
+        {
+            into.push(path);
+        }
+    }
+}
+
+/// The rule held over every system the repository's own trees describe, rather than over shapes written for it: what comes on a target binds only that target's devices, and presence refuses nothing the
+/// search resolves, so `DC-H3`'s order refuses nothing falsely. A sweep and not a list, so a description added tomorrow is in it. Its roots keep it to the examples and the crates' own fixtures.
+#[test]
+fn every_system_in_the_repository_reads_on_a_target_as_the_rule_says() {
+    let target = target_of(A_RICH_TARGET);
+    let mut files = Vec::new();
+    for dir in [
+        "examples",
+        "crates/eadl-resolve/tests",
+        "crates/archogen-plan/tests/corpus",
+        "targets",
+    ] {
+        eadl_files_under(&root().join(dir), &mut files);
+    }
+    files.sort();
+    let (mut systems, mut resolved) = (0_u32, 0_u32);
+    for file in &files {
+        let Ok(text) = std::fs::read_to_string(file) else {
+            continue;
+        };
+        let mut sources = SourceMap::new();
+        let id = sources.add("t.eadl", text.as_str()).expect("small");
+        let (doc, diagnostics) = read(&sources, id);
+        if diagnostics.has_errors() {
+            continue;
+        }
+        let declarations: Vec<Form> = doc
+            .forms
+            .into_iter()
+            .filter(|form| form.head() != Some("eadl-version"))
+            .collect();
+        for system in declarations
+            .iter()
+            .filter(|form| form.head() == Some("defsystem"))
+        {
+            systems += 1;
+            let Ok(there) = on_target(system, &declarations, &target) else {
+                continue;
+            };
+            if let Search::Resolved(plan) = run(&there.declarations, &there.system) {
+                resolved += 1;
+                let said = file.display();
+                assert!(
+                    there.presence().is_empty(),
+                    "{said}: presence refuses what the search resolves: {:?}",
+                    there.presence()
+                );
+                for provider in plan.bindings.values() {
+                    let device = plan
+                        .instances
+                        .iter()
+                        .find(|instance| instance.provider.name == *provider)
+                        .map_or(provider.as_str(), |instance| instance.over.as_str());
+                    assert!(device.starts_with("target."), "{said}: bound to {device}");
+                }
+            }
+        }
+    }
+    assert!(systems >= 180, "only {systems} systems");
+    assert!(resolved >= 100, "only {resolved} resolved");
+}
+
+#[test]
+fn another_system_named_is_no_missing_fact_and_presence_keeps_its_metadata() {
+    let declarations = forms(
+        "(defplatform o.soc (offers (core-count 1 tick) (reachable-at-privilege machine)))
+         (defsystem other (platform (uses o.soc)))
+         (defsystem s (requires (uses other)) (platform (uses o.soc)))",
+    );
+    let system = declarations
+        .iter()
+        .find(|form| form.items().get(1).and_then(Form::as_symbol) == Some("s"))
+        .expect("the system");
+    let there = on_target(system, &declarations, &real_target()).expect("read there");
+    assert!(there.presence().is_empty(), "{:?}", there.presence());
+    assert!(there.report().closure.iter().any(|name| name == "other"));
+}
+
+#[test]
+fn what_refines_what_it_composes_or_is_made_of_is_refused() {
+    for text in [
+        "(defplatform b (absent tick-rate) (offers (core-count 1 tick)) (requires (uses c)))
+         (defblock c (requires (uses a)))
+         (defblock a (refines b))
+         (defsystem s (platform (uses b)))",
+        "(defplatform p (offers (core-count 1 tick)) (requires (uses q)))
+         (defblock q (refines p) (absent tick-rate))
+         (defsystem s (platform (uses p)))",
+    ] {
+        let declarations = forms(text);
+        let refused = on_target(system_of(&declarations), &declarations, &real_target())
+            .expect_err("no machine stands on the two");
+        assert!(
+            codes(&refused).contains(&"invalid-description"),
+            "{refused:?}"
+        );
+    }
+}

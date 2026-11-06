@@ -68,3 +68,17 @@ Said, and left as it stands: its reader could not run `/2`, the configuration ch
 | DC4-6 | wording | "one platform nothing else in the file names", where the code reads composition | "Composes", in the record, the doc and the message |
 
 Said, and left as it stands: its reader could not run `/2`, the configuration checker on a target or a command naming a target, none of which exists; it used the library's `check` and search and not the command line, and built no older commit.
+
+**Round 5** — `2026-11-06`, leaf `M4.4.1.5`: not acceptable, 7 findings, 5 defects, after 5, 3, 6 and 2, all low in reach and none yielding a wrong device, on `896560f5`. Its reader swept 235 files and 213 systems onto a rich target: 157 clean and resolved, 24 clean and refused by the search, 30 refused by `on_target`, 6 presence refusing what the search resolves, all DC5-2, and of 163 resolved none binding a device not the target's. A count that does not fall is a reason for method, and that sweep is it: `every_system_in_the_repository_reads_on_a_target_as_the_rule_says` holds those invariants in the tree, so a description added tomorrow is in it.
+
+| # | Kind | Finding | Answer |
+| --- | --- | --- | --- |
+| DC5-1 | defect | a contradiction was judged by nothing on a target: that check lives in presence, `DC-H3` skipped presence on the description, and `collect_asking` drops a service's offer. `(defservice d (offers sha-accel) (absent sha-accel) …)` resolved | `DC-H3` keeps a contradiction among what it asks of the description: "reject contradictory declarations" holds of a file, whatever it runs on. By reading only; no command names a target yet |
+| DC5-2 | defect | presence gave a false `missing-fact` for a system the description declares: `asking` filtered it out, and what is not asked was no longer read. 6 corpus systems | `FactMap::declare`: what is not asked is still a declaration, and its name no fact. `M1.46` is to refuse the shape |
+| DC5-3 | defect, low | refinement looped with composition was misread both ways, `what_the_machine_is` able to remove every name: `b` composes `c` composes `a`, `a` refines `b` | Refused before anything reads it: `refining_its_own_parts`, `invalid-description`. A refinement says one thing again, and no machine stands on the two |
+| DC5-4 | defect, low | "a provider's own `needs` is outside the closure" was false: every `uses` is requested and `needs` edges followed, so a composed device's need is inside, used or not | The sentence is gone, and what is so is said, and is `M3.4.17`'s |
+| DC5-5 | defect, low, older | `(sha-accel false)` answers a need outside the vocabulary, presence reading the offer by name and the search binding nothing | Filed: `M3.4.17`. Stated in the record |
+| DC5-6 | gap | the closure's metadata had no carrier on a target: `presence()` kept only diagnostics | `OnTarget::report`, and `DC-H3` carries it |
+| DC5-7 | wording | "a block or a platform and nothing else", when the search binds an adapter's instance too; `(multicore false)` as an example `check` refuses first | Each said as it is |
+
+Said, and left as it stands: its reader could not run `/2`, the configuration checker on a target or a command naming a target, so `DC-H3`'s order is judged by emulation, and built no older commit. It read one line beyond the leaf its brief allowed in `docs/tasks/M3.md`.

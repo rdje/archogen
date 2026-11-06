@@ -272,6 +272,13 @@ impl FactMap {
         }
     }
 
+    /// That `form` is a declaration: its name is no fact, and all else it says is read by nothing here.
+    pub fn declare(&mut self, form: &Form) {
+        if let Some(name) = form.items().get(1).and_then(Form::as_symbol) {
+            self.declared.insert(name.to_string());
+        }
+    }
+
     /// [`collect`](Self::collect), for a declaration whose offers answer nothing where the machine is another's: a service or a policy, to which the search binds nothing. It asks, and is
     /// what it is (`docs/decisions/decision_device-correspondence.md`).
     pub fn collect_asking(&mut self, form: &Form) {

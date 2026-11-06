@@ -12,7 +12,7 @@ use std::collections::{BTreeMap, BTreeSet};
 
 use eadl_front::{Diagnostic, Form, Label, Span};
 use eadl_model::check::{default_profile, out_of_profile};
-use eadl_model::presence::{composition, FactMap};
+use eadl_model::presence::{composition, FactMap, PresenceReport};
 use eadl_model::refinement::Facets;
 
 use crate::joint::System;
@@ -172,22 +172,28 @@ pub struct OnTarget {
 
 impl OnTarget {
     /// What presence says of the system there (model §2 and §7 rule 1), as `archogen check` says it of any description, of what asks and of what can answer: a need on a fact the vocabulary
-    /// does not declare is judged by nothing else, the search binding nothing for it. What offers is the machine, since the search binds a block or a platform and nothing else, so a service's
-    /// offer answers nothing here, and the plan it would let come is for a machine without the device. What the system does not reach neither asks nor answers.
-    /// The command that names a target asks this before the search (`DC-H3`).
+    /// does not declare is judged by nothing else, the search binding nothing for it. What offers is the machine, since the search binds a block, a platform or an adapter over one and nothing
+    /// else, so a service's offer answers nothing here, and the plan it would let come is for a machine without the device. What the system does not reach neither asks nor answers, and its name is
+    /// still a declaration's. The command that names a target asks this before the search (`DC-H3`).
     #[must_use]
-    pub fn presence(&self) -> Vec<Diagnostic> {
+    pub fn report(&self) -> PresenceReport {
         let mut facts = FactMap::new();
         for form in &self.declarations {
             if is_hardware(form) {
                 facts.collect(form);
             } else if declared_name(form).is_some_and(|name| self.asking.contains(name)) {
                 facts.collect_asking(form);
+            } else {
+                facts.declare(form);
             }
         }
-        facts
-            .check_excluding(&out_of_profile(&self.declarations, default_profile()))
-            .diagnostics
+        facts.check_excluding(&out_of_profile(&self.declarations, default_profile()))
+    }
+
+    /// What [`report`](Self::report) refuses.
+    #[must_use]
+    pub fn presence(&self) -> Vec<Diagnostic> {
+        self.report().diagnostics
     }
 }
 
@@ -301,6 +307,53 @@ fn what_the_machine_is<'s>(named: &[&'s str], declared: &BTreeMap<&str, &Form>) 
             })
         })
         .collect()
+}
+
+/// Each of `hardware` that refines, up its chain, what composes it or what it composes, with what it refines: a more abstract saying of one thing does not hold that thing, or it in turn, and no machine stands
+/// on the two.
+fn refining_its_own_parts(
+    hardware: &BTreeSet<String>,
+    declared: &BTreeMap<&str, &Form>,
+) -> Vec<(String, String, Span)> {
+    let composes = |whole: &str, part: &str| {
+        let mut seen: BTreeSet<String> = BTreeSet::from([whole.to_owned()]);
+        let mut todo = vec![whole.to_owned()];
+        while let Some(at) = todo.pop() {
+            let made = declared
+                .get(at.as_str())
+                .filter(|form| is_hardware(form))
+                .map(|form| composition(form))
+                .unwrap_or_default();
+            for name in made {
+                if name == part {
+                    return true;
+                }
+                if seen.insert(name.clone()) {
+                    todo.push(name);
+                }
+            }
+        }
+        false
+    };
+    let mut found = Vec::new();
+    for name in hardware {
+        let mut seen: BTreeSet<String> = BTreeSet::from([name.clone()]);
+        let mut at = name.clone();
+        while let Some((up, span)) = declared
+            .get(at.as_str())
+            .filter(|form| is_hardware(form))
+            .and_then(|form| Facets::of(form).0.refines)
+        {
+            if composes(&up, name) || composes(name, &up) {
+                found.push((name.clone(), up.clone(), span));
+            }
+            if !seen.insert(up.clone()) {
+                break;
+            }
+            at = up;
+        }
+    }
+    found
 }
 
 /// The declarations whose absences the whole machine owes: the one all the system's hardware is made of, as the clause says it, with what forms a cycle with it, and each up the chain it
@@ -477,6 +530,14 @@ pub fn on_target(
         .map(|form| Facets::of(form).0)
         .collect();
     let hardware = System::read(system, declarations).hardware;
+    for (name, up, span) in refining_its_own_parts(&hardware, &declared) {
+        errors.push(Diagnostic::error(
+            "invalid-description",
+            format!("`{name}` refines `{up}`, and one of them composes the other, so no machine stands on the two"),
+            Label::new(span, "refines it here"),
+            "a refinement says the same thing again: compose the device, or refine what it is made of, and not both",
+        ));
+    }
     for platform in declarations_speaking_for_the_machine(&named, &hardware, &declared) {
         let facets = Facets::of(platform).0;
         for (fact, span) in facets.absences() {
