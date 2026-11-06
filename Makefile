@@ -21,9 +21,9 @@ help:
 # Everything that compiles or tests goes through the host guard, because this machine is shared: it waits for room, runs at lower
 # priority on a third of the cores, and is stopped before it endangers the host (docs/decisions/decision_host-guard.md).
 GUARD := python3 -I -B scripts/host_guard.py run --wait 1800 --
-# A guard emptied or cut short exits 0 having run nothing, and a recipe through it would read as passed.
-ifneq ($(shell python3 -I -B scripts/host_guard.py prove 2>/dev/null),host-guard: this file runs)
-$(error scripts/host_guard.py does not run, so nothing here would be guarded or run: python3 -I -B scripts/host_guard.py prove says why)
+# A guard emptied or cut short exits 0 having run nothing, and a recipe through it would read as passed. One broken any other way exits with its error. So this looks at the file and runs nothing.
+ifneq ($(strip $(shell tail -n 1 scripts/host_guard.py)),sys.exit(main(sys.argv[1:])))
+$(error scripts/host_guard.py is not whole, so nothing here would be guarded or run: restore it)
 endif
 
 # ROADMAP.md §14.3, through the runner in xtask/. `incomplete` (exit 20) is NOT a pass: a

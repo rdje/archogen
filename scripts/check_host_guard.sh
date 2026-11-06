@@ -82,8 +82,12 @@ for name, line in {"FELL_WINDOW_SECONDS": 10, "GROWTH_WINDOW_SECONDS": 900}.item
 makefile = (root / "Makefile").read_text(encoding="utf-8")
 if len(re.findall(r"^GUARD\s*[:+?]?=", makefile, re.M)) != 1 or not re.search(r"^GUARD\s*:=\s*python3 -I -B scripts/host_guard\.py run --wait \d+ --\s*$", makefile, re.M):
     breaches.append("the Makefile's `GUARD` is not `python3 -I -B scripts/host_guard.py run --wait SECONDS --`, defined once")
-if "$(shell python3 -I -B scripts/host_guard.py prove 2>/dev/null),host-guard: this file runs)" not in makefile:
-    breaches.append("the Makefile does not ask the guard whether it runs: emptied, it exits 0 and a recipe through it reads as passed")
+# Whole, each line at its line's start and in this order: a comment, a warning or the other test would keep the words and lose the question.
+WHOLE = "\nifneq ($(strip $(shell tail -n 1 scripts/host_guard.py)),sys.exit(main(sys.argv[1:])))\n$(error scripts/host_guard.py is not whole, so nothing here would be guarded or run: restore it)\nendif\n"
+if WHOLE not in makefile:
+    breaches.append("the Makefile does not look at whether the guard is whole: emptied, it exits 0 and a recipe through it reads as passed")
+if guard.read_text(encoding="utf-8").rstrip("\n").splitlines()[-1].strip() != "sys.exit(main(sys.argv[1:]))":
+    breaches.append("scripts/host_guard.py does not end with the line the Makefile looks for")
 RECIPES = {
     "focused": ["$(GUARD) cargo xtask verify --tier focused"],
     "integration": ["$(GUARD) cargo xtask verify --tier integration"],
