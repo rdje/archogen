@@ -6,7 +6,7 @@
 - **Owner / source:** raised during the M0 + M1 build; recorded here so they survive the session
 - **External sources:** [QEMU](../book/src/ledger.md#qemu) — version, scope and limits in the ledger
 
-Fourteen items are recorded here so they survive the session. Three are outside an implementer's
+Seventeen items are recorded here so they survive the session. Three are outside an implementer's
 authority to settle; the fourth (§4) is a measurement about the programme's own evidence that you
 should see even though it is already fixed; the sixth (§6) is a review of **your own amendment**
 by the model that has never read the implementation. Each is tracked as work, so nothing here
@@ -279,6 +279,12 @@ launch its role executables — §10.4's safety argument then no longer holds fo
 own executable"; then, on `archogen analyze` running the executable `archogen-analyze` as git runs `git-foo`, the
 human CLI alone allowed to run its own sibling executables and the programmatic surface still running nothing: "Then
 if we agree then go ahead". `M3.5.1` designs both, `M2.21` taking the scheduling checker's shape from it.
+
+## 17. The guard's stop line and other projects' load (`2026-11-06`) — **yours to rule, nothing waits on it**
+
+**A finding.** A reader of the guard's round 6 measured the host at 93.9% RAM at 20:21 local on `2026-11-05`, past the line the director names as where it may crash, with another project's `rustc` holding 14 to 15 GiB. The guard stopped only what is this repository's, as it should: it cannot make the host safe from another project, only take its own share out of the way and say who holds the rest (`docs/decisions/decision_host-guard.md`). So this is a fact about the shared host, for whoever owns those projects' builds.
+
+**A suggestion.** The stop line, 85% or pressure level 2, keeps stopping this repository's small jobs, tests and commits of some 0.4 GiB, because of other projects' load. Each stop has cost a rerun and has lost nothing. Stopping them frees little, against what those projects hold, so a higher stop line for a job holding little could save the reruns, at the cost of holding more when the host is already short. The lines stand as they are, and `HOST-GUARD` holds them: moving one is the director's word.
 
 ## A note on what "done" means so far
 

@@ -590,11 +590,199 @@ fn a_service_it_reaches_naming_hardware_is_refused_like_the_system_with_a_repair
   (platform (uses soc.here)))
 ";
     let declarations = forms(through);
-    assert!(on_target(system_of(&declarations), &declarations, &real_target()).is_ok());
-    // A service the system does not reach says nothing of it.
+    let there = on_target(system_of(&declarations), &declarations, &real_target())
+        .expect("it can be read there");
+    assert!(there.presence().is_empty(), "{:?}", there.presence());
+    // A service the system does not reach says nothing of it, to the search or to presence.
     let unreached = format!("{A_SYSTEM} (defservice unused.one (requires (uses console.uart)))");
     let declarations = forms(&unreached);
-    assert!(on_target(system_of(&declarations), &declarations, &real_target()).is_ok());
+    let there = on_target(system_of(&declarations), &declarations, &real_target())
+        .expect("it can be read there");
+    assert!(there.presence().is_empty(), "{:?}", there.presence());
+}
+
+/// A description whose hardware offers `sha-accel`, which no target here does, and no vocabulary declares.
+const ACCEL: &str = "
+(defblock accel (offers sha-accel (reachable-at-privilege machine)))
+(defplatform soc.here
+  (offers (core-count 1 tick) (reachable-at-privilege machine))
+  (requires (uses accel)))
+";
+
+#[test]
+fn a_need_outside_the_vocabulary_is_judged_wherever_the_system_writes_it() {
+    for system in [
+        "(defsystem s (requires (needs sha-accel)) (platform (uses soc.here)))",
+        "(defsystem s (needs sha-accel) (platform (uses soc.here)))",
+        "(defsystem s (task t (period 10 ms) (deadline 10 ms) (deadline-from release) (priority 1) (needs sha-accel)) (platform (uses soc.here)))",
+        "(defsystem s (platform (uses soc.here) (needs sha-accel)))",
+        "(defservice hash (requires (needs sha-accel))) (defsystem s (requires (needs hash)) (platform (uses soc.here)))",
+        "(defservice hash (requires (needs sha-accel))) (defsystem s (requires (uses hash)) (platform (uses soc.here)))",
+    ] {
+        let declarations = forms(&format!("{ACCEL} {system}"));
+        let there = on_target(system_of(&declarations), &declarations, &real_target())
+            .expect("it can be read there");
+        assert_eq!(codes(&there.presence()), ["missing-fact"], "{system}");
+    }
+}
+
+#[test]
+fn what_the_system_does_not_reach_asks_nothing_of_the_machine_and_may_yet_serve_it() {
+    let console = "
+(defblock console.uart (offers (observable-output true) (reachable-at-privilege machine)))
+(defplatform soc.here
+  (offers (core-count 1 tick) (reachable-at-privilege machine))
+  (requires (uses console.uart)))
+(defservice console.write (requires (needs observable-output)))
+(defsystem s (requires (uses console.write)) (platform (uses soc.here)))
+";
+    for beside in [
+        // A service naming the replaced block; one using another that needs what no machine here has; a policy naming the replaced platform.
+        "(defservice unused.one (requires (uses console.uart)))",
+        "(defservice u.one (requires (uses u.two))) (defservice u.two (requires (needs sha-accel)))",
+        "(defpolicy p.unused (requires (uses soc.here)))",
+        // A service only another system reaches, naming that system's block: gone with it.
+        "(defblock o.dev (offers (tick-rate 10 MHz) (reachable-at-privilege machine)))
+         (defplatform o.soc (offers (core-count 1 tick) (reachable-at-privilege machine)) (requires (uses o.dev)))
+         (defservice o.svc (requires (uses o.dev)))
+         (defsystem other (requires (uses o.svc)) (platform (uses o.soc)))",
+    ] {
+        let declarations = forms(&format!("{console} {beside}"));
+        let system = declarations
+            .iter()
+            .find(|form| form.items().get(1).and_then(Form::as_symbol) == Some("s"))
+            .expect("the system");
+        let there = on_target(system, &declarations, &real_target()).expect("read there");
+        assert!(
+            there.presence().is_empty(),
+            "{beside}: {:?}",
+            there.presence()
+        );
+    }
+    // What it says of itself stands: a kept service that offers a fact is an offer, as anywhere, and what the system reaches asks.
+    let declarations = forms(&format!(
+        "{console} (defservice hash (requires (needs sha-accel))) (defservice offers.it (offers sha-accel))
+         (defsystem t (requires (uses hash)) (platform (uses soc.here)))"
+    ));
+    let system = declarations
+        .iter()
+        .find(|form| form.items().get(1).and_then(Form::as_symbol) == Some("t"))
+        .expect("the system");
+    let there = on_target(system, &declarations, &real_target()).expect("read there");
+    assert!(there.presence().is_empty(), "{:?}", there.presence());
+    assert!(there
+        .declarations
+        .iter()
+        .any(|form| form.items().get(1).and_then(Form::as_symbol) == Some("offers.it")));
+}
+
+#[test]
+fn what_the_profile_excludes_is_not_said_again_as_missing() {
+    let declarations = forms(&example("bounded-queue"));
+    let there = on_target(
+        system_of(&declarations),
+        &declarations,
+        &target_of(A_WHOLE_TARGET),
+    )
+    .expect("it can be read there");
+    assert!(
+        there
+            .presence()
+            .iter()
+            .all(|d| !d.message.contains("general-ipc")),
+        "{:?}",
+        there.presence()
+    );
+}
+
+#[test]
+fn two_platform_clauses_are_refused_rather_than_read_as_one() {
+    let declarations = forms(
+        "(defplatform a (offers (core-count 1 tick) (reachable-at-privilege machine)))
+         (defplatform b (offers (core-count 1 tick) (reachable-at-privilege machine)))
+         (defsystem s (platform (uses a)) (platform (uses b)))",
+    );
+    let refused = on_target(system_of(&declarations), &declarations, &real_target())
+        .expect_err("two clauses");
+    assert_eq!(codes(&refused), ["schema-cardinality"]);
+}
+
+#[test]
+fn what_a_clause_stands_on_is_read_by_composition_and_refinement_alone() {
+    let target = "
+(defblock target.timer (offers (tick-rate 10 MHz) (reachable-at-privilege machine)))
+(defblock target.console (offers (observable-output true) (reachable-at-privilege machine)))
+(defplatform target.machine
+  (offers (core-count 1 tick) (reachable-at-privilege machine))
+  (requires (uses target.timer target.console)))
+";
+    let read = |text: &str| {
+        let declarations = forms(&format!(
+            "(defservice console.write (requires (needs observable-output))) {text}"
+        ));
+        on_target(system_of(&declarations), &declarations, &target_of(target)).map(|_| ())
+    };
+    let q = "(defblock q.block (offers (observable-output true) (reachable-at-privilege machine)))
+             (defplatform p.top (absent tick-rate) (offers (core-count 1 tick)) (requires (needs q.block)))";
+    // What it `needs` is no part of it, so these are two a clause stands on, and one's absence is not the machine's.
+    assert!(read(&format!(
+        "{q} (defsystem s (requires (uses console.write)) (platform (uses p.top q.block)))"
+    ))
+    .is_ok());
+    // Named alone, it is the machine.
+    assert_eq!(
+        codes(
+            &read(&format!(
+                "{q} (defsystem s (requires (uses console.write)) (platform (uses p.top)))"
+            ))
+            .expect_err("alone")
+        ),
+        ["refinement-violated"]
+    );
+    // A cycle named whole is one machine, read as its first name, as naming that name alone is.
+    let cycle =
+        "(defblock c.a (absent tick-rate) (offers (observable-output true)) (requires (uses c.b)))
+                 (defblock c.b (requires (uses c.a)))";
+    for clause in ["c.a c.b", "c.b c.a", "c.a"] {
+        assert_eq!(
+            codes(
+                &read(&format!(
+                    "{cycle} (defsystem s (requires (uses console.write)) (platform (uses {clause})))"
+                ))
+                .expect_err("the cycle's absence")
+            ),
+            ["refinement-violated"],
+            "{clause}"
+        );
+    }
+    // A platform and what it refines, both named, read as the one that refines it.
+    let chain = "(defplatform y.up (absent tick-rate) (offers (core-count 1 tick)))
+                 (defplatform y.p (refines y.up) (offers (core-count 1 tick) (observable-output true)))";
+    for clause in ["y.p y.up", "y.p"] {
+        assert_eq!(
+            codes(
+                &read(&format!(
+                    "{chain} (defsystem s (requires (uses console.write)) (platform (uses {clause})))"
+                ))
+                .expect_err("the chain's absence")
+            ),
+            ["refinement-violated"],
+            "{clause}"
+        );
+    }
+}
+
+#[test]
+fn a_target_s_file_composes_by_uses_alone() {
+    let refused = Target::read(
+        &forms(
+            "(defblock only.needed (offers (tick-rate 10 MHz)))
+             (defplatform t (requires (needs only.needed)))",
+        ),
+        file_start(),
+    )
+    .expect_err("a `needs` is no composition");
+    assert_eq!(codes(&refused), ["invalid-description"]);
 }
 
 #[test]

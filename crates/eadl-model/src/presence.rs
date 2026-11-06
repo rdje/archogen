@@ -180,7 +180,8 @@ pub struct FactMap {
     declared: BTreeSet<String>,
     /// `name` → the facts and services it needs.
     needs: BTreeMap<String, Vec<(String, Span)>>,
-    /// What the system requests.
+    /// What the system requests: every `uses`, and a system's own `needs`, its tasks and its clauses among it. A
+    /// `needs` of anything else is an edge, followed only once what wrote it is reached.
     requested: Vec<(String, Span)>,
     /// Each block's and platform's direct composition, by [`composition`] (leaf `M3.4.8`).
     composes: BTreeMap<String, Vec<String>>,
@@ -237,6 +238,7 @@ impl FactMap {
         if matches!(form.head(), Some("defblock" | "defplatform")) {
             self.composes.insert(owner.clone(), composition(form));
         }
+        let asks = form.head() == Some("defsystem");
 
         for clause in form.items().iter().skip(1) {
             let Some(head) = clause.head() else { continue };
@@ -245,6 +247,9 @@ impl FactMap {
                 "absent" => self.record(&mut Slot::Absent, clause, &owner),
                 "needs" => {
                     for name in names_in(clause) {
+                        if asks {
+                            self.requested.push(name.clone());
+                        }
                         self.needs.entry(owner.clone()).or_default().push(name);
                     }
                 }
@@ -261,16 +266,27 @@ impl FactMap {
                 _ => {
                     // `requires` and other clauses can nest `uses`/`needs`, so recurse into
                     // anything that is not itself a presence clause.
-                    self.collect_nested(clause, &owner);
+                    self.collect_nested(clause, &owner, asks);
                 }
             }
         }
     }
 
-    fn collect_nested(&mut self, clause: &Form, owner: &str) {
+    /// [`collect`](Self::collect), for a declaration nothing requested reaches: it says what it offers and what it is, and asks nothing, so a `uses` of
+    /// its is no request (`docs/decisions/decision_device-correspondence.md`).
+    pub fn collect_unreached(&mut self, form: &Form) {
+        let requested = self.requested.len();
+        self.collect(form);
+        self.requested.truncate(requested);
+    }
+
+    fn collect_nested(&mut self, clause: &Form, owner: &str, asks: bool) {
         match clause.head() {
             Some("needs") => {
                 for name in names_in(clause) {
+                    if asks {
+                        self.requested.push(name.clone());
+                    }
                     self.needs.entry(owner.to_string()).or_default().push(name);
                 }
             }
@@ -282,7 +298,7 @@ impl FactMap {
             _ => {
                 for item in clause.items().iter().skip(1) {
                     if matches!(item, Form::List { .. }) {
-                        self.collect_nested(item, owner);
+                        self.collect_nested(item, owner, asks);
                     }
                 }
             }
@@ -813,6 +829,50 @@ mod tests {
         ] {
             assert!(closure.contains(name), "`{name}` missing from {closure:?}");
         }
+    }
+
+    #[test]
+    fn what_a_system_needs_is_requested_wherever_it_writes_it_and_only_a_system() {
+        for system in [
+            "(defsystem s (requires (needs sha-accel)))",
+            "(defsystem s (needs sha-accel))",
+            "(defsystem s (task t (needs sha-accel)))",
+            "(defsystem s (platform (needs sha-accel)))",
+            "(defservice hash (requires (needs sha-accel))) (defsystem s (requires (needs hash)))",
+            "(defservice hash (requires (needs sha-accel))) (defsystem s (requires (uses hash)))",
+        ] {
+            let (map, _) = map_of(system);
+            assert!(map.closure().contains("sha-accel"), "{system}");
+            assert!(
+                map.check()
+                    .diagnostics
+                    .iter()
+                    .any(|d| d.code == "missing-fact"),
+                "{system}"
+            );
+        }
+        // A service nothing requests asks nothing, as before.
+        let (map, _) = map_of("(defservice hash (requires (needs sha-accel)))");
+        assert!(map.closure().is_empty());
+    }
+
+    #[test]
+    fn a_declaration_nothing_reaches_says_what_it_offers_and_asks_nothing() {
+        let mut sources = SourceMap::new();
+        let id = sources
+            .add("t.eadl", "(defservice unused (offers sha-accel) (requires (uses a.block) (needs other-fact))) (defsystem s (requires (needs sha-accel)))")
+            .expect("small");
+        let (doc, _) = read(&sources, id);
+        let mut map = FactMap::new();
+        map.collect_unreached(&doc.forms[0]);
+        map.collect(&doc.forms[1]);
+        assert_eq!(map.presence("sha-accel"), Presence::Offered);
+        assert_eq!(
+            map.closure(),
+            BTreeSet::from(["sha-accel".to_string()]),
+            "neither its `uses` nor its `needs` is asked"
+        );
+        assert!(map.check().diagnostics.is_empty());
     }
 
     #[test]

@@ -458,6 +458,12 @@ fn push(findings: &mut Vec<Finding>, verdict: Verdict, diagnostics: Vec<Diagnost
 /// §3.1: "A request for these features returns an unsupported-profile diagnostic **rather than
 /// silently reducing the requested guarantee**." The refusal names the capability and the
 /// obligation admitting it would add, so it reads as a statement about work rather than a wall.
+/// What `forms` ask that `active` excludes, which presence does not say again: another reading of a description's presence uses this to say what `check` says.
+#[must_use]
+pub fn out_of_profile(forms: &[Form], active: &Profile) -> BTreeSet<String> {
+    admission(forms, active).1
+}
+
 fn admission(forms: &[Form], active: &Profile) -> (Vec<Diagnostic>, BTreeSet<String>) {
     let mut errors = Vec::new();
     let mut refused: BTreeSet<String> = BTreeSet::new();

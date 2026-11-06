@@ -11,7 +11,8 @@
 use std::collections::{BTreeMap, BTreeSet};
 
 use eadl_front::{Diagnostic, Form, Label, Span};
-use eadl_model::presence::FactMap;
+use eadl_model::check::{default_profile, out_of_profile};
+use eadl_model::presence::{composition, FactMap};
 use eadl_model::refinement::Facets;
 
 use crate::joint::System;
@@ -96,14 +97,13 @@ impl Target {
                 );
             }
         }
-        let named: BTreeSet<&str> = declared
+        let named: BTreeSet<String> = declared
             .values()
-            .flat_map(|form| names_in(form))
-            .map(|(name, _)| name)
+            .flat_map(|form| composition(form))
             .collect();
         let roots: Vec<(&str, &Form)> = declared
             .iter()
-            .filter(|(name, form)| form.head() == Some("defplatform") && !named.contains(*name))
+            .filter(|(name, form)| form.head() == Some("defplatform") && !named.contains(**name))
             .map(|(name, form)| (*name, *form))
             .collect();
         let [(platform, root)] = roots.as_slice() else {
@@ -126,11 +126,11 @@ impl Target {
             ));
             return Err(errors);
         };
-        let mut composed: BTreeSet<&str> = BTreeSet::from([*platform]);
+        let mut composed: BTreeSet<String> = BTreeSet::from([(*platform).to_owned()]);
         let mut todo: Vec<&Form> = vec![*root];
         while let Some(at) = todo.pop() {
-            for (name, _) in names_in(at) {
-                if let Some(next) = declared.get(name) {
+            for name in composition(at) {
+                if let Some(next) = declared.get(name.as_str()) {
                     if composed.insert(name) {
                         todo.push(next);
                     }
@@ -138,7 +138,7 @@ impl Target {
             }
         }
         for (name, form) in &declared {
-            if !composed.contains(name) {
+            if !composed.contains(*name) {
                 errors.push(Diagnostic::error(
                     "invalid-description",
                     format!("`{name}` is declared by a target's file, and `{platform}` does not compose it"),
@@ -164,20 +164,29 @@ pub struct OnTarget {
     /// The system, its `platform` clause the target's.
     pub system: Form,
     /// What the system reads there: the description's declarations with that system in its place and its hardware gone, and the target's. Another
-    /// system is gone too, but for one it names, which `M1.46` refuses. So nothing the target replaces can answer for it.
+    /// system is gone too, but for one it names, which `M1.46` is to refuse. So nothing the target replaces can answer for it.
     pub declarations: Vec<Form>,
+    /// Those of `declarations` that ask anything of the machine: the system, what it reaches, and the target's own. Another may yet be a provider, and says what it offers.
+    pub asking: BTreeSet<String>,
 }
 
 impl OnTarget {
-    /// What presence says of the system there (model §2 and §7 rule 1), as `archogen check` says it of any description: a need on a fact the vocabulary does not
-    /// declare is judged by nothing else, the search binding nothing for it. The command that names a target asks this before the search (`DC-H3`).
+    /// What presence says of the system there (model §2 and §7 rule 1), as `archogen check` says it of any description, and of what it asks alone: a need on a fact the vocabulary does
+    /// not declare is judged by nothing else, the search binding nothing for it, and a service the system does not reach, its hardware gone, asks nothing of a machine it may never run on.
+    /// The command that names a target asks this before the search (`DC-H3`).
     #[must_use]
     pub fn presence(&self) -> Vec<Diagnostic> {
         let mut facts = FactMap::new();
         for form in &self.declarations {
-            facts.collect(form);
+            if declared_name(form).is_some_and(|name| self.asking.contains(name)) {
+                facts.collect(form);
+            } else {
+                facts.collect_unreached(form);
+            }
         }
-        facts.check().diagnostics
+        facts
+            .check_excluding(&out_of_profile(&self.declarations, default_profile()))
+            .diagnostics
     }
 }
 
@@ -245,22 +254,24 @@ fn named_by_clause<'s>(system: &'s Form, declared: &BTreeMap<&str, &Form>) -> Ve
         .collect()
 }
 
-/// Whether `whole` composes `part`, through every `uses` and `needs` it writes, at any depth.
-fn composes(whole: &str, part: &str, declared: &BTreeMap<&str, &Form>) -> bool {
-    let mut seen: BTreeSet<&str> = BTreeSet::from([whole]);
-    let mut todo = vec![whole];
+/// Whether `part` is of `whole`: what it composes, as model §2 rule 1 reads composition, or the more abstract saying of it that it refines (§3 rule 3), at any depth.
+fn holds(whole: &str, part: &str, declared: &BTreeMap<&str, &Form>) -> bool {
+    let mut seen: BTreeSet<String> = BTreeSet::from([whole.to_owned()]);
+    let mut todo = vec![whole.to_owned()];
     while let Some(at) = todo.pop() {
-        let Some((_, form)) = declared
-            .get_key_value(at)
-            .filter(|(_, form)| is_hardware(form))
+        let Some(form) = declared
+            .get(at.as_str())
+            .copied()
+            .filter(|form| is_hardware(form))
         else {
             continue;
         };
-        for (name, _) in names_in(form) {
+        let refined = Facets::of(form).0.refines.map(|(up, _)| up);
+        for name in composition(form).into_iter().chain(refined) {
             if name == part {
                 return true;
             }
-            if seen.insert(name) {
+            if seen.insert(name.clone()) {
                 todo.push(name);
             }
         }
@@ -268,16 +279,19 @@ fn composes(whole: &str, part: &str, declared: &BTreeMap<&str, &Form>) -> bool {
     false
 }
 
-/// What the machine is made of, as the clause says it: each piece of hardware it names, once, but for one another of them composes, which is part of that one.
+/// What the machine is made of, as the clause says it: each piece of hardware it names, once, but for one that is of another of them. In a cycle each is of the
+/// other, and there is no whole: its first name stands for it, so a cycle named whole is not read as no machine.
 fn what_the_machine_is<'s>(named: &[&'s str], declared: &BTreeMap<&str, &Form>) -> Vec<&'s str> {
     let distinct: BTreeSet<&'s str> = named.iter().copied().collect();
     distinct
         .iter()
         .copied()
         .filter(|name| {
-            !distinct
-                .iter()
-                .any(|other| other != name && composes(other, name, declared))
+            !distinct.iter().any(|other| {
+                other != name
+                    && holds(other, name, declared)
+                    && (other < name || !holds(name, other, declared))
+            })
         })
         .collect()
 }
@@ -326,8 +340,8 @@ fn declarations_named_by(form: &Form) -> Vec<(String, Span)> {
 ///
 /// What keeps it from being read there, the search not having run: a name the target declares too; a file naming what only the other
 /// declares, since each says what it holds with no help from the other; a block or platform the system, a task, or a service or a policy it
-/// reaches names itself, which no requirement can stand for; and an absence the platform it runs on declares that the target offers (model
-/// §3 rule 3).
+/// reaches names itself, which no requirement can stand for; an absence the platform it runs on declares that the target offers (model
+/// §3 rule 3); and two `platform` clauses, which read as one would hide what `check` says of them.
 pub fn on_target(
     system: &Form,
     declarations: &[Form],
@@ -381,6 +395,22 @@ pub fn on_target(
             }
         }
     }
+    if let [_, second, ..] = system
+        .items()
+        .iter()
+        .filter(|item| item.head() == Some("platform"))
+        .collect::<Vec<_>>()[..]
+    {
+        errors.push(Diagnostic::error(
+            "schema-cardinality",
+            format!(
+                "`{}` writes two `platform` clauses, and a system has at most one",
+                declared_name(system).unwrap_or("the system")
+            ),
+            Label::new(second.span(), "the second here"),
+            "keep one: it is replaced by the target's, and two read as one would hide this",
+        ));
+    }
     let named = named_by_clause(system, &declared);
     let mut items: Vec<Form> = system
         .items()
@@ -399,7 +429,8 @@ pub fn on_target(
         span: system.span(),
     };
     // What the system runs on is the target's now, so a name of hardware still standing, its own or in what it reaches from there, says nothing of the machine.
-    let reached = System::read(&on_it, declarations).reached;
+    let read_there = System::read(&on_it, declarations);
+    let reached = read_there.reached.clone();
     let reached = reached
         .iter()
         .filter_map(|name| declared.get_key_value(name.as_str()))
@@ -445,7 +476,14 @@ pub fn on_target(
     if !errors.is_empty() {
         return Err(errors);
     }
-    let other_systems = System::read(&on_it, declarations).other_systems;
+    let other_systems = read_there.other_systems;
+    let asking = read_there
+        .reached
+        .into_iter()
+        .filter(|name| !other_systems.contains(name))
+        .chain(declared_name(system).map(str::to_owned))
+        .chain(theirs.keys().map(|name| (*name).to_owned()))
+        .collect();
     let declarations = declarations
         .iter()
         .filter(|form| !is_hardware(form))
@@ -465,6 +503,7 @@ pub fn on_target(
     Ok(OnTarget {
         system: on_it,
         declarations,
+        asking,
     })
 }
 

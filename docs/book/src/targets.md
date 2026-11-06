@@ -187,7 +187,7 @@ are one device, and nothing has to, because a description says what it asks for.
 searches again. The device then bound for "`console.write` needs observable output" is the device `console.uart` was
 (`docs/decisions/decision_device-correspondence.md`; `crates/eadl-resolve/src/target.rs`).
 
-The description's own hardware is then gone from what is read, so nothing the target replaces can answer for it. So everything a target build says of a device is the target's. A description's rate, width and regions do not reach it, each requirement is judged again at
+The description's own hardware is then gone from what is read, so nothing the target replaces can answer for it. A service the system does not reach may still serve it, and asks nothing of a machine it may never run on. So everything a target build says of a device is the target's. A description's rate, width and regions do not reach it, each requirement is judged again at
 the target's providers, what a system's `platform` clause asks beside its hardware among them, and the joint rules read the target's memory map. One device may become two, two may become one, and an adapter a better device no
 longer needs is gone. What no device can serve is the refusal any system gets.
 
@@ -196,7 +196,8 @@ The engine refuses these before it searches, because no requirement can answer t
 - a name both the description and the target declare;
 - a file naming what only the other declares, since each must say what it holds by itself: read together, the target's name would find the description's device and bind it;
 - a system, a task, or a service or policy the system reaches, naming a block or a platform itself, where it could say what it asks of one;
-- a fact the one declaration a system's platform clause stands on declares absent that the target offers. Another's absence covers what it is made of, and says nothing of a device beside it.
+- a fact the one declaration a system's platform clause stands on declares absent that the target offers. Another's absence covers what it is made of, and says nothing of a device beside it;
+- two `platform` clauses on one system, which read as one would hide that it has two.
 
 A target's file holds what its agreement with the machine checks, so what it does not state it does not offer. A system that declares a fact absent lands on a target that is silent about it, even where the machine has the device.
 

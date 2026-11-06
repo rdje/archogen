@@ -17,7 +17,7 @@
   the hosted playground; `PROGRAM` → `PROGRAM.34`, the director's.
 - **The host is shared:** every heavy job goes through `scripts/host_guard.py`, one at a time (`docs/decisions/decision_host-guard.md`). A reader's brief says so.
 - **Next action:** `PROGRAM.127.11`, the guard's review, round 11; then `M4.2.3.3.15`, round 15 of the hosted build's review, a fresh reader over round 14's rule and the routes' tables; then
-  `M4.1.6.2`, round 2 of the release alarm's review (`M4.1.6` done); `M4.4.1.3`, round 3 of the device correspondence's review (`M4.4.1` done);
+  `M4.1.6.2`, round 2 of the release alarm's review (`M4.1.6` done); `M4.4.1.4`, round 4 of the device correspondence's review (`M4.4.1` done);
   and `M4.3.5`; `M4.3.4` waits on `M2.21`. The runtime plan's design is accepted (`M4.1.1` done).
   `M3.2.7` and `M3.5.9`, full verification, wait for the
   features (doctrine 22).

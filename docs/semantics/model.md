@@ -95,7 +95,7 @@ A platform declares what it **offers** and what it declares **absent**; a system
    offered only outside the system's hardware or only by a service, which the search binds to nothing, is accepted
    here and refused by the search until `M3.4.7` makes the check adopt its verdict.
 3. **A required fact that nothing describes is missing.** It lies inside the dependency closure of what
-   the system requests, so no decision that depends on it can be made: `missing-fact`.
+   the system requests, by `uses` or `needs` wherever it writes them, its tasks and its clause among it, so no decision that depends on it can be made: `missing-fact`.
    **Rules 2 and 3 and the engine's adapters** (`SR-H9`; leaf `M3.2.4`, `docs/specs/adapters/decision_engine-adapters.md`
    §7). For a required fact one of the engine's adapter kinds **adds** — offers, not passed through from itself, and
    not named in what it requires beneath — both rules ask whether one block or platform of the description offers,
