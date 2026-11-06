@@ -454,7 +454,9 @@ impl Place {
     fn abandon(&self) {
         // Only what this run made: what has come to stand at that name since is not this run's to remove.
         if place::identity(&self.stage) == self.made_stage {
-            consume::remove_record(&self.stage);
+            if self.written.checker_ran.get() {
+                consume::remove_record(&self.stage);
+            }
             self.written.remove_from(&self.stage);
         }
         self.unmake();
@@ -622,8 +624,7 @@ impl Build<'_> {
         };
         let emitted = emit(&inputs, generator).map_err(Failed::Refused)?;
         for file in &emitted.files {
-            write_file(self.stage, &file.path, &file.contents)?;
-            self.written.note(&file.path, file.contents.as_bytes());
+            write_file(self.written, self.stage, &file.path, &file.contents)?;
         }
         Ok(emitted)
     }
@@ -631,9 +632,7 @@ impl Build<'_> {
     /// The assignment written in the stage, and the installed checker run over it.
     fn checked(&self, launcher: &dyn Launch, err: &mut dyn Write) -> Result<Checked, Failed> {
         let assignment = self.stage.join(ASSIGNMENT_FILE);
-        write_file(self.stage, ASSIGNMENT_FILE, &self.plan.text)?;
-        self.written
-            .note(ASSIGNMENT_FILE, self.plan.text.as_bytes());
+        write_file(self.written, self.stage, ASSIGNMENT_FILE, &self.plan.text)?;
         // The record's name is the checker's to fill: here nothing earlier can be this run's.
         if std::fs::symlink_metadata(self.stage.join(consume::RECORD)).is_ok() {
             return Err(Failed::Came(self.stage.join(consume::RECORD)));
@@ -658,9 +657,14 @@ impl Build<'_> {
             plan_sha256: Digest::of(self.plan.text.as_bytes()),
             profile,
         };
+        let ran = &self.written.checker_ran;
         let checked =
-            consume::check_plan(launcher, &expected, self.stage, err).map_err(|refusal| {
-                Failed::Unchecked(refusal, self.stage.join(consume::RECORD).exists())
+            consume::check_plan(launcher, &expected, self.stage, ran, err).map_err(|refusal| {
+                // A record that stood there before the checker was handed the stage is no report of this run's.
+                Failed::Unchecked(
+                    refusal,
+                    ran.get() && self.stage.join(consume::RECORD).exists(),
+                )
             })?;
         if checked.record.status() != Status::Ok {
             return Err(Failed::Disagreed(Box::new(checked)));
@@ -726,7 +730,7 @@ fn refused(failed: &Failed, path: &str, err: &mut dyn Write) -> Status {
             if *kept {
                 let _ = writeln!(
                     err,
-                    "  the assignment and the record stay in the build's `.building` directory, for that report"
+                    "  the assignment and the record stay in the build's `.building` directory, and the next run refuses while they stand: look at them, and remove them"
                 );
             }
             refusal.status
@@ -744,7 +748,7 @@ fn refused(failed: &Failed, path: &str, err: &mut dyn Write) -> Status {
             let _ = writeln!(
                 err,
                 "  hint: report it, with the plan and the record the build left in its `.building` directory: one of \
-                 the two programs misreads this description"
+                 the two programs misreads this description. The next run refuses while they stand, so remove them once it is made"
             );
             status
         }
@@ -770,7 +774,7 @@ fn refused(failed: &Failed, path: &str, err: &mut dyn Write) -> Status {
             );
             let _ = writeln!(
                 err,
-                "  hint: it stays in the build's `.building` directory: look at it and at what else writes there, then remove it"
+                "  hint: it stays in the build's `.building` directory, and the next run refuses while it stands: look at it and at what else writes there, then remove it"
             );
             Status::ToolFailure
         }
@@ -782,58 +786,26 @@ fn refused(failed: &Failed, path: &str, err: &mut dyn Write) -> Status {
     }
 }
 
-/// `contents` written at `name` in `stage`, each directory on the way made if absent and otherwise a real one, and the file new:
-/// `fs::write` would write through a link, and over what something else put there. What this run wrote there already, the
-/// assignment or the checker's record, is written once. A name a module brought that leaves no room in a path is the place's.
-fn write_file(stage: &Path, name: &str, contents: &str) -> Result<(), Failed> {
-    let failed = |what: &str, at: &Path, error: &std::io::Error| {
-        let message = format!("cannot {what} {}: {error}", at.display());
-        if error.kind() == ErrorKind::InvalidFilename {
-            Failed::Usage(message, place::repair(error).to_owned())
-        } else {
-            Failed::Tool(message)
-        }
-    };
-    let mut at = stage.to_path_buf();
-    for part in Path::new(name)
-        .parent()
-        .into_iter()
-        .flat_map(Path::components)
-    {
-        at.push(part);
-        match std::fs::symlink_metadata(&at) {
-            Ok(meta) if meta.is_dir() => {}
-            Ok(_) => return Err(Failed::Came(at)),
-            Err(error) if error.kind() == ErrorKind::NotFound => match std::fs::create_dir(&at) {
-                Ok(()) => {}
-                Err(error) if error.kind() == ErrorKind::AlreadyExists => {
-                    return Err(Failed::Came(at))
+/// `contents` written at `name` in `stage`, by the one way a stage is written. A name a module brought that leaves no room in a path is the place's.
+fn write_file(
+    written: &place::Written,
+    stage: &Path,
+    name: &str,
+    contents: &str,
+) -> Result<(), Failed> {
+    written
+        .write(stage, name, contents.as_bytes())
+        .map_err(|not_written| match not_written {
+            place::NotWritten::Came(at) => Failed::Came(at),
+            place::NotWritten::Failed(what, at, error) => {
+                let message = format!("cannot {what} {}: {error}", at.display());
+                if error.kind() == ErrorKind::InvalidFilename {
+                    Failed::Usage(message, place::repair(&error).to_owned())
+                } else {
+                    Failed::Tool(message)
                 }
-                Err(error) => return Err(failed("make the directory", &at, &error)),
-            },
-            Err(error) => return Err(failed("make the directory", &at, &error)),
-        }
-    }
-    let file = stage.join(name);
-    match std::fs::OpenOptions::new()
-        .write(true)
-        .create_new(true)
-        .open(&file)
-    {
-        Ok(mut opened) => opened
-            .write_all(contents.as_bytes())
-            .map_err(|error| failed("write", &file, &error)),
-        Err(error) if error.kind() == ErrorKind::AlreadyExists => {
-            let same = std::fs::symlink_metadata(&file).is_ok_and(|meta| meta.is_file())
-                && std::fs::read(&file).is_ok_and(|bytes| bytes == contents.as_bytes());
-            if same {
-                Ok(())
-            } else {
-                Err(Failed::Came(file))
             }
-        }
-        Err(error) => Err(failed("write", &file, &error)),
-    }
+        })
 }
 
 /// What was built, what it holds and what it did not do.

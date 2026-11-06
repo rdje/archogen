@@ -13,6 +13,7 @@
 //! the description itself wanting — a status of the description's own, or a stale plan the front wrote moments ago —
 //! is the two roles disagreeing about one input, which no single verdict may hide: `tool-failure` naming both.
 
+use std::cell::Cell;
 use std::io::{Read, Write};
 use std::path::{Path, PathBuf};
 
@@ -23,6 +24,7 @@ use archogen_outcome::record::{Judged, Record};
 
 use crate::cli::Refusal;
 use crate::launch::{Ended, Launch};
+use crate::place;
 use crate::status::Status;
 
 /// The configuration checker's executable.
@@ -74,7 +76,8 @@ pub struct Checked {
 }
 
 /// Run the configuration checker through `launcher` over the plan `expected` names, its record written in `dir`, a
-/// directory of the front's own under the command's output; its standard error relayed to `err`.
+/// directory of the front's own under the command's output; its standard error relayed to `err`. `ran` is set once the checker is handed that directory, nothing then standing at its
+/// record's name: only then is what stands there the checker's, and a run's to remove.
 ///
 /// Returns what the front can believe of that run ([`Checked`]).
 ///
@@ -86,6 +89,7 @@ pub fn check_plan(
     launcher: &dyn Launch,
     expected: &Expected<'_>,
     dir: &Path,
+    ran: &Cell<bool>,
     err: &mut dyn Write,
 ) -> Result<Checked, Refusal> {
     let record_file = place_record(dir)?;
@@ -97,7 +101,7 @@ pub fn check_plan(
                 "the checker reads the description again, and {} cannot be read now: {error}",
                 expected.description.display()
             ),
-            repair: "open it, and the directories above it".to_owned(),
+            repair: put_it_back(&error).to_owned(),
         });
     }
     if !std::fs::metadata(expected.description).is_ok_and(|meta| meta.is_file()) {
@@ -124,15 +128,18 @@ pub fn check_plan(
         description.to_string_lossy().into_owned(),
         plan.to_string_lossy().into_owned(),
     ];
+    ran.set(true);
     let launched = launcher
         .launch(PLAN_CHECKER, &args, &mut std::io::sink(), err)
         .map_err(|unlaunched| failure(unlaunched.message, unlaunched.repair))?;
     let code = match launched.ended {
         Ended::Code(code) => code,
+        // Nothing disagrees: it did not finish.
         Ended::Abnormally(how) => {
-            return Err(fault(format!(
-                "`{PLAN_CHECKER}` ended without an exit code: {how}"
-            )))
+            return Err(failure(
+                format!("`{PLAN_CHECKER}` ended without an exit code: {how}"),
+                "nothing was judged, so run this again: if nothing else stopped it and it ends the same way, report it, with what it wrote above".to_owned(),
+            ))
         }
     };
     let (record, text) = read_record(&record_file, code)?;
@@ -224,14 +231,26 @@ fn reads_again(sources: &SourceMap) -> Result<(), Refusal> {
             continue;
         }
         let file = Path::new(&source.name);
-        if !std::fs::metadata(file).is_ok_and(|meta| meta.is_file()) {
-            return Err(refused(
-                format!(
-                    "the checker reads {} again, and it is no regular file, which could read differently or never end",
-                    source.name
-                ),
-                as_a_file,
-            ));
+        match std::fs::metadata(file) {
+            Ok(meta) if meta.is_file() => {}
+            Ok(_) => {
+                return Err(refused(
+                    format!(
+                        "the checker reads {} again, and it is no regular file, which could read differently or never end",
+                        source.name
+                    ),
+                    as_a_file,
+                ))
+            }
+            Err(error) => {
+                return Err(refused(
+                    format!(
+                        "the checker reads {} again, and it cannot be read now: {error}",
+                        source.name
+                    ),
+                    put_it_back(&error),
+                ))
+            }
         }
         // The checker reads a module beside the description, by a whole path that may have no room.
         absolute(file, &source.name)?;
@@ -260,7 +279,17 @@ fn reads_again(sources: &SourceMap) -> Result<(), Refusal> {
     Ok(())
 }
 
-/// The checker's record out of `dir`, if it is a regular file and a record: the one file in a stage this run did not write itself, and its own program did.
+/// The repair for a file the front read that the checker cannot read again, by what stopped it.
+fn put_it_back(error: &std::io::Error) -> &'static str {
+    if error.kind() == std::io::ErrorKind::NotFound {
+        "it stood when the front read it: put it back, and run this again"
+    } else {
+        "open it, and the directories above it"
+    }
+}
+
+/// The checker's record out of `dir`, if it is a regular file and a record: the one file in a stage this run did not write itself, and its own program did. So it is asked only of a run whose
+/// checker was handed the stage: before that, nothing at that name is this run's, whatever it reads as.
 pub fn remove_record(dir: &Path) {
     let record = dir.join(RECORD);
     if std::fs::symlink_metadata(&record).is_ok_and(|meta| meta.is_file())
@@ -382,7 +411,7 @@ fn absolute(file: &Path, what: &str) -> Result<PathBuf, Refusal> {
 /// The record at `file`, which the checker that exited with `code` wrote, and its text.
 fn read_record(file: &Path, code: i32) -> Result<(Record, String), Refusal> {
     let mut bytes = Vec::new();
-    let read = std::fs::File::open(file).and_then(|opened| {
+    let read = place::open_regular(file).and_then(|opened| {
         opened
             .take(u64::try_from(RECORD_LIMIT).unwrap_or(u64::MAX) + 1)
             .read_to_end(&mut bytes)
@@ -421,10 +450,14 @@ fn read_record(file: &Path, code: i32) -> Result<(Record, String), Refusal> {
             ),
             "open it and the directories above it: nothing was judged".to_owned(),
         )),
-        Err(error) => Err(fault(format!(
-            "cannot read `{PLAN_CHECKER}`'s record {}: {error}",
-            file.display()
-        ))),
+        // Something else stands where it goes, or on the way there: nothing disagrees.
+        Err(error) => Err(failure(
+            format!(
+                "cannot read `{PLAN_CHECKER}`'s record {}: {error}",
+                file.display()
+            ),
+            "something else changed this run's directory while the checker ran, so nothing was judged: look at it, and at what else writes there".to_owned(),
+        )),
     }
 }
 
@@ -454,8 +487,77 @@ fn fault(message: String) -> Refusal {
 
 #[cfg(test)]
 mod tests {
-    use super::place_record;
-    use super::RECORD;
+    use super::{check_plan, place_record, remove_record, Expected, RECORD};
+    use crate::launch::{Launch, Launched, Unlaunched};
+    use archogen_digest::Digest;
+    use archogen_outcome::record::{Judged, Producer, Record, Subject};
+    use std::cell::Cell;
+    use std::io::Write;
+    use std::path::Path;
+
+    struct NeverRun;
+
+    impl Launch for NeverRun {
+        fn launch(
+            &self,
+            _program: &str,
+            _args: &[String],
+            _out: &mut dyn Write,
+            _err: &mut dyn Write,
+        ) -> Result<Launched, Unlaunched> {
+            panic!("a record stands there, so no checker is handed the stage");
+        }
+    }
+
+    /// `R15-3`: a record that came before the checker was handed the stage reads as one, and is not this run's.
+    #[test]
+    fn a_record_no_checker_of_this_run_wrote_is_never_this_run_s_to_remove() {
+        let dir = Path::new(env!("CARGO_MANIFEST_DIR")).join("../../target/tmp/consume-came-first");
+        let _ = std::fs::remove_dir_all(&dir);
+        std::fs::create_dir_all(&dir).expect("made");
+        let record = Record::new(
+            Producer {
+                name: super::PLAN_CHECKER.to_owned(),
+                sha256: Digest::of(b"another"),
+            },
+            Subject {
+                program: Digest::of(b"another"),
+                judged: Judged::Plan(Digest::of(b"another")),
+            },
+            "rt-static-up-v1".to_owned(),
+            crate::status::Status::Ok,
+            Vec::new(),
+        )
+        .expect("a record")
+        .write();
+        let standing = dir.join(RECORD);
+        std::fs::write(&standing, &record).expect("written");
+        assert!(super::reads_as_record(&standing).expect("read"));
+        let ran = Cell::new(false);
+        let refusal = check_plan(
+            &NeverRun,
+            &Expected {
+                description: &dir.join("description"),
+                sources: None,
+                plan: &dir.join("plan"),
+                program: Digest::of(b"another"),
+                plan_sha256: Digest::of(b"another"),
+                profile: "rt-static-up-v1",
+            },
+            &dir,
+            &ran,
+            &mut Vec::new(),
+        )
+        .expect_err("it stands there");
+        assert!(refusal.message.contains("this run did not write it"));
+        assert!(!ran.get());
+        // As each command's way out asks.
+        if ran.get() {
+            remove_record(&dir);
+        }
+        assert_eq!(std::fs::read_to_string(&standing).expect("kept"), record);
+        std::fs::remove_dir_all(&dir).expect("removed");
+    }
 
     /// `R13-2`: what stands at the record's name came from elsewhere, and goes on standing.
     #[test]

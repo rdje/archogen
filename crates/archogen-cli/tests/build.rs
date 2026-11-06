@@ -2356,6 +2356,33 @@ fn out_routes() -> Vec<(&'static str, Route)> {
             assert!(said.contains("could not be removed"), "{said}");
             outcome
         }),
+        ("parent-shut-meanwhile", |root| {
+            if !modes_bind(root) {
+                return None;
+            }
+            let parent = root.join("p");
+            let _reopened = Reopened(vec![parent.clone()]);
+            fs::create_dir(&parent).expect("a directory");
+            let dir = parent.join("x");
+            let outcome = said(invoke(
+                &[
+                    "build",
+                    &example(HEARTBEAT),
+                    "--out",
+                    &dir.display().to_string(),
+                ],
+                &ChangingAfter {
+                    change: |dir| set_mode(dir.parent().expect("a parent"), 0o000),
+                    dir: dir.clone(),
+                },
+            ));
+            set_mode(&parent, 0o755);
+            assert!(!dir.exists());
+            assert!(beside(&dir, ".building").is_dir());
+            let said = outcome.as_ref().map_or("", |(_, said)| said.as_str());
+            assert!(said.contains("cannot be looked at"), "{said}");
+            outcome
+        }),
         ("filled-in-stage", |root| {
             let dir = root.join("x");
             let outcome = build_meddled(&dir, |dir| {

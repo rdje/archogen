@@ -67,6 +67,8 @@ enum Answer {
     Removing,
     /// It wrote its record, and the stage was closed to this user.
     ClosingStage,
+    /// It wrote its record, and the directory the stage lies in was closed to this user.
+    ClosingParent,
     /// Something came in the stage, and it wrote no record.
     StrayNoRecord,
     /// It wrote its record, and another directory came to stand at the stage's name, the record gone with what moved.
@@ -113,6 +115,7 @@ impl Launch for Checker {
             | Answer::Editing
             | Answer::Removing
             | Answer::ClosingStage
+            | Answer::ClosingParent
             | Answer::Replacing => Status::Ok,
             Answer::Closing(ref dir) => {
                 #[cfg(unix)]
@@ -190,6 +193,15 @@ impl Launch for Checker {
                 use std::os::unix::fs::PermissionsExt;
                 std::fs::set_permissions(stage, std::fs::Permissions::from_mode(0o000))
                     .expect("its mode");
+            }
+            #[cfg(unix)]
+            Answer::ClosingParent => {
+                use std::os::unix::fs::PermissionsExt;
+                std::fs::set_permissions(
+                    stage.parent().expect("a parent"),
+                    std::fs::Permissions::from_mode(0o000),
+                )
+                .expect("its mode");
             }
             Answer::Removing => {
                 std::fs::remove_file(stage.join("plan")).expect("removed");
@@ -1051,6 +1063,28 @@ fn plan_routes() -> Vec<(&'static str, Route)> {
             assert!(root.join("p.part").is_dir());
             let said = outcome.as_ref().map_or("", |(_, said)| said.as_str());
             assert!(said.contains("could not be removed"), "{said}");
+            outcome
+        }),
+        ("parent-shut-meanwhile", |root| {
+            use std::os::unix::fs::PermissionsExt;
+            if !modes_bind(root) {
+                return None;
+            }
+            let parent = root.join("in");
+            std::fs::create_dir(&parent).expect("a directory");
+            let plan = parent.join("p");
+            let outcome = resolve_of(
+                &heartbeat(),
+                &plan.display().to_string(),
+                &[],
+                Answer::ClosingParent,
+            );
+            std::fs::set_permissions(&parent, std::fs::Permissions::from_mode(0o755))
+                .expect("its mode");
+            assert!(!plan.exists());
+            assert!(parent.join("p.part").is_dir());
+            let said = outcome.as_ref().map_or("", |(_, said)| said.as_str());
+            assert!(said.contains("cannot be looked at"), "{said}");
             outcome
         }),
         ("came-on-a-refusal", |root| {

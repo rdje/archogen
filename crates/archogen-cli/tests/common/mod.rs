@@ -81,7 +81,17 @@ impl Launch for Checker {
         // `--profile P --result R -- DESCRIPTION PLAN`, as the front hands them over.
         let (asked, result, description, plan) = (&args[1], &args[3], &args[5], &args[6]);
         let text = std::fs::read_to_string(description).expect("the description");
-        let plan_bytes = std::fs::read(plan).expect("the plan the front wrote");
+        // As the real one does: what it cannot read or write leaves no record of it, and ends with its failure.
+        let could_not = || {
+            Ok(Launched {
+                ended: Ended::Code(Status::ToolFailure.code()),
+                sha256: checker_digest(),
+                front: front_digest(),
+            })
+        };
+        let Ok(plan_bytes) = std::fs::read(plan) else {
+            return could_not();
+        };
         let modules = DirectoryModules::new(
             Path::new(description)
                 .parent()
@@ -102,7 +112,10 @@ impl Launch for Checker {
             },
         )
         .expect("judged");
-        std::fs::write(result, record.write()).expect("the record written");
+        if std::fs::write(result, record.write()).is_err() {
+            let _ = std::fs::remove_file(result);
+            return could_not();
+        }
         Ok(Launched {
             ended: Ended::Code(record.status().code()),
             sha256: checker_digest(),

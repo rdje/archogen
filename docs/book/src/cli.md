@@ -146,6 +146,7 @@ record or an empty file. A plan is known by the engine's own reader of the forma
 writes. So a description, a module, a file of notes, a plan with a comment in it and a plan of another format are all no plan, however each
 is named. ⚠️ An edit that leaves the text canonical, one binding changed for another or one added where the search would sort it, is still a plan, and the next run replaces it: canonical
 text carries no digest of itself, so nothing can tell. A plan is the search's output, and what you choose belongs in the description.
+A run knows what it wrote from the moment it stands, by the file it is and not by what it reads as: on a refusal a file it could not finish goes, and a record or a plan that came at that name stays, whatever it reads as. What stands where a plan or a record should be and is no regular file is refused, and never waited on or followed.
 `crates/archogen-cli/src/place.rs` is how this command and
 `archogen build` read a place, and [Building a system](building.md) has `build`'s table. Each row below is a fixture of
 `crates/archogen-cli/tests/resolve.rs`, which runs it; a row with no fixture, or a fixture with no row, fails. A route it does not name is
@@ -197,6 +198,7 @@ again just before it is used, and in that instant what stands there is what is u
 | `stage-replaced` | while the checker runs, another directory comes to stand at the stage's name | `tool-failure` | `wrote no record` | what stood at `PLAN`; that directory, with what it holds |
 | `plan-gone-meanwhile` | while the checker runs, the plan it is judging is taken away, closed, or something else put at its name | `tool-failure` | `is gone, closed or no file` | what stood at `PLAN`; the stage, to be looked at |
 | `closed-while-it-ran` | while the checker runs, the stage is closed to this user | `tool-failure` | `closed while the checker ran` | what stood at `PLAN`; the stage, which it says could not be removed |
+| `parent-shut-meanwhile` | while the checker runs, the directory `PLAN` lies in is closed to this user, so the stage cannot be looked at | `tool-failure` | `closed while the checker ran` | what stood at `PLAN`; the stage, which it says it cannot look at and may stand |
 | `came-on-a-refusal` | while the checker runs, something comes in the stage, and the run is then refused | `tool-failure` | `wrote no record` | what stood at `PLAN`; the stage with what came, which it says, and nothing this run wrote |
 | `plan-edited-meanwhile` | while the checker runs, the plan it is judging is edited | `tool-failure` | `changed while the plan was judged` | what stood at `PLAN`; the stage, to be looked at |
 | `check-stands-unchecked` | a file at `PLAN.check`, with `--unchecked` | `ok` | `resolved system` | the plan, and that file |

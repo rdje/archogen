@@ -2,10 +2,11 @@
 //! route does is a row of a table a test runs: `docs/book/src/building.md`'s for `build`, `docs/book/src/cli.md`'s for `resolve`.
 //! So this file says how to read a place, and no sentence here says what happens to one.
 
-use std::cell::RefCell;
+use std::cell::{Cell, RefCell};
 use std::fs::Metadata;
 use std::io::{ErrorKind, Write};
 use std::path::{Component, Path, PathBuf};
+use std::time::SystemTime;
 
 use archogen_digest::Digest;
 
@@ -41,64 +42,184 @@ pub fn way_to(dir: &Path, name: &str) -> Way {
     Way::Real
 }
 
-/// What a run has written in a stage of its own, each file as it wrote it. On a refusal that much goes, each only if it is still as written, and what came stays with the stage, which
-/// is said. This is the rule for every route of both commands: a run removes what it wrote, and nothing else.
+/// A file a run wrote in its stage, known from the moment it stands, before a byte is in it.
+struct WrittenFile {
+    name: String,
+    /// What tells it from a file that comes to stand at its name, which no contents can: another of the same length, or closed, is another.
+    identity: (u64, u64),
+    /// Its length, when it was last written and its digest, once it is written whole. Without them it is what a failed write left, a part of what it would have held.
+    whole: Option<(u64, Option<SystemTime>, Digest)>,
+}
+
+/// What a run has made in a stage of its own: each directory and each file, from the moment it stands, so that one it could not finish is its own too. On a refusal that much goes,
+/// a file only if it is still the one it wrote, and what came stays with the stage, which is said. This is the rule for every route of both commands: a run removes what it wrote, and
+/// nothing else. It is one way to write in a stage, so no file written there can miss it.
 #[derive(Default)]
-pub struct Written(RefCell<Vec<(String, u64, Digest)>>);
+pub struct Written {
+    directories: RefCell<Vec<PathBuf>>,
+    files: RefCell<Vec<WrittenFile>>,
+    /// Whether the checker was handed the stage, nothing then standing at its record's name: only then is what stands there its.
+    pub checker_ran: Cell<bool>,
+}
+
+/// Why a file could not be written in a stage.
+pub enum NotWritten {
+    /// Something else stands where it, or a directory on the way to it, goes.
+    Came(PathBuf),
+    /// What could not be done, to what, and why.
+    Failed(&'static str, PathBuf, std::io::Error),
+}
 
 impl Written {
-    /// `name` is written in the stage, holding `contents`.
-    pub fn note(&self, name: &str, contents: &[u8]) {
-        self.0.borrow_mut().push((
-            name.to_owned(),
-            u64::try_from(contents.len()).unwrap_or(u64::MAX),
-            Digest::of(contents),
-        ));
-    }
-
-    /// Each file this run wrote out of `stage`, still as written and reached through real directories; then each directory that held them, and the stage, where that leaves them empty.
-    pub fn remove_from(&self, stage: &Path) {
-        let written = self.0.borrow();
-        let mut held: Vec<PathBuf> = Vec::new();
-        for (name, length, digest) in written.iter() {
-            let mut up = Path::new(name).parent();
-            while let Some(at) = up.filter(|at| !at.as_os_str().is_empty()) {
-                if !held.iter().any(|known| known == at) {
-                    held.push(at.to_path_buf());
+    /// `contents` written at `name` in `stage`, each directory on the way made if absent and otherwise a real one, and the file new: `fs::write` would write through a link, and over what
+    /// something else put there. A file there already that holds exactly this is not written again, and is not this call's: the checker's record among them.
+    ///
+    /// # Errors
+    ///
+    /// What stands in the way, or what the host refused.
+    pub fn write(&self, stage: &Path, name: &str, contents: &[u8]) -> Result<(), NotWritten> {
+        let mut at = stage.to_path_buf();
+        for part in Path::new(name)
+            .parent()
+            .into_iter()
+            .flat_map(Path::components)
+        {
+            at.push(part);
+            match std::fs::symlink_metadata(&at) {
+                Ok(meta) if meta.is_dir() => {}
+                Ok(_) => return Err(NotWritten::Came(at)),
+                Err(error) if error.kind() == ErrorKind::NotFound => {
+                    match std::fs::create_dir(&at) {
+                        Ok(()) => self.directories.borrow_mut().push(at.clone()),
+                        Err(error) if error.kind() == ErrorKind::AlreadyExists => {
+                            return Err(NotWritten::Came(at))
+                        }
+                        Err(error) => {
+                            return Err(NotWritten::Failed("make the directory", at, error))
+                        }
+                    }
                 }
-                up = at.parent();
-            }
-            if !matches!(way_to(stage, name), Way::Real) {
-                continue;
-            }
-            let file = stage.join(name);
-            // A file of its length that the umask closed to its owner, as this run wrote it, cannot be read to tell, and is taken for what it is.
-            let still = std::fs::symlink_metadata(&file)
-                .is_ok_and(|meta| meta.is_file() && meta.len() == *length)
-                && match std::fs::read(&file) {
-                    Ok(bytes) => Digest::of(&bytes) == *digest,
-                    Err(error) => error.kind() == ErrorKind::PermissionDenied,
-                };
-            if still {
-                let _ = std::fs::remove_file(&file);
+                Err(error) => return Err(NotWritten::Failed("make the directory", at, error)),
             }
         }
-        held.sort_by_key(|at| std::cmp::Reverse(at.components().count()));
-        for at in held {
-            let _ = std::fs::remove_dir(stage.join(at));
+        let file = stage.join(name);
+        let mut opened = match std::fs::OpenOptions::new()
+            .write(true)
+            .create_new(true)
+            .open(&file)
+        {
+            Ok(opened) => opened,
+            Err(error) if error.kind() == ErrorKind::AlreadyExists => {
+                let same = std::fs::symlink_metadata(&file).is_ok_and(|meta| meta.is_file())
+                    && std::fs::read(&file).is_ok_and(|bytes| bytes == contents);
+                return if same {
+                    Ok(())
+                } else {
+                    Err(NotWritten::Came(file))
+                };
+            }
+            Err(error) => return Err(NotWritten::Failed("write", file, error)),
+        };
+        let identity = match opened.metadata() {
+            Ok(meta) => identity_of(&meta),
+            Err(error) => return Err(NotWritten::Failed("write", file, error)),
+        };
+        let at = self.files.borrow().len();
+        self.files.borrow_mut().push(WrittenFile {
+            name: name.to_owned(),
+            identity,
+            whole: None,
+        });
+        if let Err(error) = opened.write_all(contents) {
+            return Err(NotWritten::Failed("write", file, error));
+        }
+        if let Ok(meta) = opened.metadata() {
+            self.files.borrow_mut()[at].whole =
+                Some((meta.len(), meta.modified().ok(), Digest::of(contents)));
+        }
+        Ok(())
+    }
+
+    /// Each file this run wrote out of `stage`, still the file it wrote and reached through real directories; then each directory it made, and the stage, where that leaves them empty.
+    pub fn remove_from(&self, stage: &Path) {
+        for file in self.files.borrow().iter() {
+            if !matches!(way_to(stage, &file.name), Way::Real) {
+                continue;
+            }
+            let path = stage.join(&file.name);
+            let Ok(meta) = std::fs::symlink_metadata(&path) else {
+                continue;
+            };
+            let its = meta.is_file()
+                && identity_of(&meta) == file.identity
+                && file.whole.as_ref().is_none_or(|(length, when, digest)| {
+                    meta.len() == *length
+                        && meta.modified().ok() == *when
+                        // One the umask closed to its owner, as this run wrote it, cannot be read to tell, and it is the same file, last written then.
+                        && match std::fs::read(&path) {
+                            Ok(bytes) => Digest::of(&bytes) == *digest,
+                            Err(error) => error.kind() == ErrorKind::PermissionDenied,
+                        }
+                });
+            if its {
+                let _ = std::fs::remove_file(&path);
+            }
+        }
+        // Made outermost first, so gone innermost first.
+        for directory in self.directories.borrow().iter().rev() {
+            let _ = std::fs::remove_dir(directory);
         }
         let _ = std::fs::remove_dir(stage);
     }
 }
 
-/// What a refused run says of a stage that stands: that the next run refuses while it does, and what to do. It always says so, so that no stage is found with nothing having said it.
+/// What tells one file from another at the same name.
+#[cfg(unix)]
+fn identity_of(meta: &Metadata) -> (u64, u64) {
+    use std::os::unix::fs::MetadataExt;
+    (meta.dev(), meta.ino())
+}
+
+/// What tells one file from another at the same name: here, nothing `std` reads, so its length and its time do alone.
+#[cfg(not(unix))]
+fn identity_of(_meta: &Metadata) -> (u64, u64) {
+    (0, 0)
+}
+
+/// `path`, opened to read if it is a regular file: never through a link, and never a pipe, which nobody may ever end. A file no longer one is a refusal of its own kind.
+///
+/// # Errors
+///
+/// What stopped it, `InvalidInput` for what is no regular file.
+pub fn open_regular(path: &Path) -> std::io::Result<std::fs::File> {
+    if !std::fs::symlink_metadata(path)?.is_file() {
+        return Err(std::io::Error::new(
+            ErrorKind::InvalidInput,
+            "it is no regular file",
+        ));
+    }
+    std::fs::File::open(path)
+}
+
+/// What a refused run says of a stage that may stand: that the next run refuses while it does, and what to do. It always says so, so that no stage is found with nothing having been said of it. Only a name
+/// found absent is absent: one that cannot be looked at may stand.
 pub fn say_it_stays(stage: &Path, err: &mut dyn Write) {
-    if std::fs::symlink_metadata(stage).is_ok() {
-        let _ = writeln!(
-            err,
-            "  {} could not be removed, or holds what this run did not write, and the next run refuses while it stands: look at it, and remove it",
-            stage.display()
-        );
+    match std::fs::symlink_metadata(stage) {
+        Err(error) if error.kind() == ErrorKind::NotFound => {}
+        Err(error) => {
+            let _ = writeln!(
+                err,
+                "  {} cannot be looked at ({error}), so it may stand, and the next run refuses while it does: open what closes it, look at it, and remove it",
+                stage.display()
+            );
+        }
+        Ok(_) => {
+            let _ = writeln!(
+                err,
+                "  {} could not be removed, or holds what this run did not write, and the next run refuses while it stands: look at it, and remove it",
+                stage.display()
+            );
+        }
     }
 }
 

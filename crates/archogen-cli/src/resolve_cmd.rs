@@ -114,10 +114,15 @@ pub fn run(
         Ok(landing) => landing,
         Err(unwritten) => return refused(unwritten, err),
     };
-    if let Err(unwritten) = landing.open(&plan.text) {
+    if let Err(unwritten) = landing.open() {
         return refused(unwritten, err);
     }
     let landing = landing;
+    if let Err(unwritten) = landing.write_plan(&plan.text) {
+        let status = refused(unwritten, err);
+        place::say_it_stays(&landing.stage, err);
+        return status;
+    }
     // A landing refused may leave the stage, and the next run refuses while it stands, so that is said.
     let land = |checked: bool, err: &mut dyn Write| -> Option<Status> {
         match landing.land(&plan.text, checked) {
@@ -129,13 +134,7 @@ pub fn run(
             }
             Err(unwritten) => {
                 let status = refused(unwritten, err);
-                if landing.stage.exists() {
-                    let _ = writeln!(
-                        err,
-                        "  {} stays, and the next run refuses while it stands: look at it, and remove it",
-                        landing.stage.display()
-                    );
-                }
+                place::say_it_stays(&landing.stage, err);
                 Some(status)
             }
         }
@@ -193,10 +192,14 @@ pub fn run(
     };
     let record_file = landing.check.join(consume::RECORD);
     let record_in_stage = landing.stage.join(consume::RECORD);
-    // A stage this run made holds no record yet: one there came from elsewhere, and is no report of this run's.
-    let came_first = std::fs::symlink_metadata(&record_in_stage).is_ok();
-    match consume::check_plan(launcher, &expected, &landing.stage, err)
-        .map(|checked| checked.record)
+    match consume::check_plan(
+        launcher,
+        &expected,
+        &landing.stage,
+        &landing.written.checker_ran,
+        err,
+    )
+    .map(|checked| checked.record)
     {
         Ok(record) if record.status() == Status::Ok => {
             if let Some(status) = land(true, err) {
@@ -224,14 +227,15 @@ pub fn run(
             let _ = writeln!(
                 err,
                 "  hint: report it, with the checker's findings above: one of the two programs misreads this \
-                 description. The plan and the record stay in {}, for that report, and whatever stood at its name is as it was",
+                 description. The plan and the record stay in {}, for that report, and whatever stood at its name is as it was; \
+                 the next run refuses while they stand, so remove them once it is made",
                 landing.stage.display()
             );
             record.status()
         }
         Err(refusal) => {
-            // A record that does not hold together is what a report needs; with none, nothing was judged and nothing stays.
-            let kept = !came_first && record_in_stage.exists();
+            // What the checker left is what looking into this needs; with none, nothing was judged and nothing stays. One that stood there before it ran is no report of this run's.
+            let kept = landing.written.checker_ran.get() && record_in_stage.exists();
             if !kept {
                 landing.abandon();
             }
@@ -245,7 +249,7 @@ pub fn run(
             if kept {
                 let _ = writeln!(
                     err,
-                    "  the plan and the record stay in {}, for that report, and whatever stood at its name is as it was",
+                    "  the plan and the record stay in {}, and whatever stood at its name is as it was; the next run refuses while they stand: look at them, and remove them",
                     landing.stage.display()
                 );
             } else {
@@ -391,9 +395,8 @@ impl Landing {
         self.stage.join(PLAN_IN_STAGE)
     }
 
-    /// The stage made, by this run alone, and `text` written in it, the identity that tells it from what may come to stand at its
-    /// name taken at once.
-    fn open(&mut self, text: &str) -> Result<(), Unwritten> {
+    /// The stage made, by this run alone, the identity that tells it from what may come to stand at its name taken at once.
+    fn open(&mut self) -> Result<(), Unwritten> {
         place::make_private(&self.stage).map_err(|error| {
             // Never the stage, if this call did not make it. One it made and could not close is empty, and goes only if it still is.
             if error.kind() != ErrorKind::AlreadyExists {
@@ -409,16 +412,31 @@ impl Landing {
             )
         })?;
         self.made_stage = place::identity(&self.stage);
-        std::fs::write(self.plan_in_stage(), text).map_err(|error| {
-            self.abandon();
-            Unwritten {
-                status: Status::ToolFailure,
-                message: format!("cannot write the plan: {error}"),
-                repair: "check that its disk has room".to_owned(),
-            }
-        })?;
-        self.written.note(PLAN_IN_STAGE, text.as_bytes());
         Ok(())
+    }
+
+    /// `text` written in the stage. What of it could be written goes with the rest on a refusal.
+    fn write_plan(&self, text: &str) -> Result<(), Unwritten> {
+        self.written
+            .write(&self.stage, PLAN_IN_STAGE, text.as_bytes())
+            .map_err(|not_written| {
+                self.abandon();
+                let (message, repair) = match not_written {
+                    place::NotWritten::Came(at) => (
+                        format!("{} stands where the plan goes, and this run did not write it", at.display()),
+                        "something else is using this run's directory: look at it, and move it",
+                    ),
+                    place::NotWritten::Failed(_, _, error) => (
+                        format!("cannot write the plan: {error}"),
+                        "check that its disk has room, and that the umask lets this user write what it makes",
+                    ),
+                };
+                Unwritten {
+                    status: Status::ToolFailure,
+                    message,
+                    repair: repair.to_owned(),
+                }
+            })
     }
 
     /// An earlier record standing at the record's name, whose mode the new one takes and which goes aside until the plan stands. With
@@ -482,7 +500,11 @@ impl Landing {
                 self.stage.display()
             )));
         }
-        match std::fs::read(&plan) {
+        let read = place::open_regular(&plan).and_then(|mut opened| {
+            let mut bytes = Vec::new();
+            opened.read_to_end(&mut bytes).map(|_| bytes)
+        });
+        match read {
             Ok(bytes) if bytes == text.as_bytes() => {}
             Ok(_) => {
                 return Err(came(format!(
@@ -644,7 +666,9 @@ impl Landing {
     fn abandon(&self) {
         // Only what this run made: what has come to stand at that name since is not this run's to remove.
         if place::identity(&self.stage) == self.made_stage {
-            consume::remove_record(&self.stage);
+            if self.written.checker_ran.get() {
+                consume::remove_record(&self.stage);
+            }
             self.written.remove_from(&self.stage);
         }
         place::unmake(&self.made);
