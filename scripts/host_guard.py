@@ -144,6 +144,8 @@ def state_path(root: Path) -> Path:
 
 
 def state_dir(root: Path) -> Path:
+    if not root.is_dir():
+        raise FileNotFoundError(f"{root} is gone")
     state = state_path(root)
     state.mkdir(parents=True, exist_ok=True)
     return state
@@ -357,7 +359,8 @@ def processes() -> list[Process]:
 AGENT = re.compile(r"claude|codex|kimi|gemini|aider|cursor|copilot|opencode|goose", re.I)
 INFRASTRUCTURE = {"login", "sshd", "mosh-server", "tmux", "screen", "zellij", "abduco", "dtach", "iterm2", "terminal", "code", "alacritty", "kitty", "ghostty", "wezterm-gui", "caffeinate"}
 APPLICATION = ("/Applications/", "/System/", "/usr/libexec/", "/usr/sbin/")
-GUARD_PROCESS = re.compile(r"^\S*[Pp]ython\S*\s+(?:-\S+\s+)*\S*host_guard\.py(?:\s|$)")
+# This interpreter and this file by their own paths, since a checkout's path may hold a space (the repository may be moved anywhere).
+GUARD_PROCESS = re.compile(r"^(?:\S*[Pp]ython\S*|" + re.escape(sys.executable) + r")\s+(?:-\S+\s+)*(?:\S*host_guard\.py|" + re.escape(str(CODE)) + r")(?:\s|$)")
 SHELL_FLAGS_WITH_VALUES = {"--init-file", "--rcfile", "-o", "+o", "-O", "+O", "--init-command"}
 # What spawns more for as long as it lives, however little it holds.
 BUILDS = {"cargo", "rustc", "rustdoc", "clippy-driver", "make", "gmake"}
@@ -421,8 +424,8 @@ def protected(process: Process) -> bool:
 
 
 def names_root(command: str, root: str) -> bool:
-    """Whether a guard's command line says `--root` is exactly this root, and not one whose name merely begins the same."""
-    return re.search(r"--root\s+" + re.escape(root) + r"(?:\s|$)", command) is not None
+    """Whether a guard's command line says `--root` is exactly this root, and not one whose name merely begins the same, a space among what may follow: a flag follows a root, or nothing, as `main` writes it."""
+    return re.search(r"--root\s+" + re.escape(root) + r"(?:\s+-|\s*$)", command) is not None
 
 
 def is_run_of(process: Process, root: str) -> bool:
@@ -765,6 +768,15 @@ def hold_lock(root: Path) -> int | None:
     return fd
 
 
+def code_reads() -> bool:
+    """Whether this file as it now stands would run: a guard saved broken must not end the one watching."""
+    try:
+        compile(CODE.read_bytes(), str(CODE), "exec", dont_inherit=True)
+    except (OSError, SyntaxError, ValueError):
+        return False
+    return True
+
+
 def write_note(root: Path, name: str, text: str) -> None:
     try:
         (state_dir(root) / name).write_text(text)
@@ -811,7 +823,13 @@ def watch(root: Path, limits: Limits, once: bool, idle_seconds: float = 600.0, a
             write_note(root, "watch.pid", str(os.getpid()))
         # A guard changed under a watcher holds from now, not from when nothing of ours next runs. The lock closes with the old image and the new one takes it.
         if arguments is not None and code_stamp() not in (None, code):
-            os.execv(sys.executable, [sys.executable, "-I", "-B", str(CODE), *arguments])
+            if code_reads():
+                os.execv(sys.executable, [sys.executable, "-I", "-B", str(CODE), *arguments])
+            code = code_stamp()
+            record(root, kind="unread", error=f"{CODE.name} as saved does not read: this watcher goes on as it was")
+        # A root that is gone, a removed worktree, is watched by nobody: nothing of it can run, and its state must not bring it back.
+        if not root.is_dir():
+            return 0
         try:
             fresh = time.time() - (state_path(root) / "heartbeat").stat().st_mtime < idle_seconds
         except OSError:
@@ -919,7 +937,8 @@ REDIRECTION = re.compile(r"\d*(?:<<<|<<-|<<|<>|<&|>>|>&|>\||<|>)|&>>|&>")
 ARRAY_ASSIGNMENT = re.compile(r"[A-Za-z_]\w*\+?=")
 A_FUNCTION = re.compile(r"\(\s*\)")
 A_DESCRIPTOR_VARIABLE = re.compile(r"\{[A-Za-z_]\w*\}")
-A_SUBSTITUTION_ALONE = re.compile(r"(?:\$\(…\)|`…`|\s)+")
+A_SUBSTITUTION_ALONE = re.compile(r"-?(?:\$\(…\)|`…`|\s)+")
+A_PLAIN_TARGET = re.compile(r"-?\d+|%\S*|\$[!$]")
 BEFORE_A_COMMAND = {"if", "then", "elif", "else", "while", "until", "do", "!", "{", "coproc"}
 NOT_A_COMMAND = {"for", "select", "case", "esac", "fi", "done", "}", "[[", "]]"}
 # What runs another command: the flags of its that take a value, and how many plain words stand before the command.
@@ -1000,8 +1019,11 @@ def unwrapped(words: list[str]) -> tuple[list[str], bool]:
             rest, at = words[1:], 0
             while at < len(rest):
                 word = rest[at]
-                if name == "env" and word in ("-S", "--split-string") and at + 1 < len(rest):
-                    rest = rest[:at] + rest[at + 1].split() + rest[at + 2 :]  # What it is given is what it runs.
+                split = re.fullmatch(r"-[a-zA-Z0]*S(.*)", word, re.S) if name == "env" else None
+                if split and split.group(1):
+                    rest = rest[:at] + split.group(1).split() + rest[at + 1 :]  # What it is given is what it runs.
+                elif name == "env" and (split or word == "--split-string") and at + 1 < len(rest):
+                    rest = rest[:at] + rest[at + 1].split() + rest[at + 2 :]
                 elif word in takes_a_value:
                     at += 2
                 elif word.startswith("-") and word != "-":
@@ -1141,8 +1163,8 @@ class ShellReader:
         finish()
         return closing == "case"
 
-    def blanks(self, newlines: bool = False) -> None:
-        """Past blanks, and with `newlines` past them and comments too."""
+    def blanks(self, newlines: bool = False, a_word_begins_after: str = " \t\n;&|()") -> None:
+        """Past blanks, and with `newlines` past them and comments too. A `#` begins a comment only where a word could begin, which in a `[[ ]]` is after a blank alone: `)#(` in a regular expression is none."""
         text = self.text
         while self.at < len(text):
             c = text[self.at]
@@ -1151,8 +1173,8 @@ class ShellReader:
             elif newlines and c == "\n":
                 self.at += 1
                 self.read_here_docs()
-            elif newlines and c == "#" and (self.at == 0 or text[self.at - 1] in " \t\n"):
-                end = text.find("\n", self.at)  # Only where a word could begin: `)#(` in a regular expression is none.
+            elif newlines and c == "#" and (self.at == 0 or text[self.at - 1] in a_word_begins_after):
+                end = text.find("\n", self.at)
                 self.at = len(text) if end < 0 else end
             else:
                 return
@@ -1194,7 +1216,7 @@ class ShellReader:
         """A `[[ … ]]`: text but for what a substitution in it runs, whatever a pattern or a regular expression in it says, `(`, `|`, `<` and `&&` among it."""
         text = self.text
         while self.at < len(text):
-            self.blanks(newlines=True)
+            self.blanks(newlines=True, a_word_begins_after=" \t\n")
             if text[self.at : self.at + 2] == "]]" and text[self.at + 2 : self.at + 3] in ("", " ", "\t", "\n", ";", "&", "|", ")", "#", "<", ">"):
                 self.at += 2
                 return
@@ -1386,7 +1408,7 @@ class ShellReader:
                 line = text[self.at : end]
                 plain = line.lstrip("\t") if strip_tabs else line
                 # Inside a substitution a delimiter may close on its `)`, which is then the substitution's.
-                if self.substitutions and plain.startswith(delimiter + ")"):
+                if self.substitutions and plain.startswith(delimiter) and plain[len(delimiter) :].lstrip(" \t").startswith(")"):
                     self.at += len(line) - len(plain) + len(delimiter)
                     break
                 self.at = end + 1
@@ -1436,31 +1458,39 @@ ASKING_FLAGS = {"-V", "-vV", "--version", "--help", "-h"}
 # `make` of a recipe that goes through the guard and waits for room by itself.
 MAKE_GUARDED = {"focused", "integration", "tiers", "gate", "check", "clippy", "test", "book", "help", "hooks", "fmt"}
 MAKE_FLAGS_WITH_VALUES = {"-I", "-l", "-o", "-W", "--include-dir", "--load-average", "--old-file", "--what-if"}
-# Asked of `make`, these run no recipe.
-MAKE_ASKS = {"-n", "--dry-run", "--just-print", "--recon", "--version", "-v", "--help", "-h"}
+# Asked of `make`, these run no recipe. The letters are read as a cluster reads them, up to one that takes the rest as its value.
+MAKE_ASKS = {"--dry-run", "--just-print", "--recon", "--question", "--version", "--help"}
+MAKE_ASKS_IN_A_CLUSTER = re.compile(r"-[abdeikLmprRsStwBO]*[nqvh]")
+# What a cargo alias runs: `--help` after one goes to a program it first compiles.
+CARGO_ALIASES = {"xtask"}
 
 
-def make_only_asks(arguments: list[str]) -> bool:
-    """Whether `make` given these runs no recipe, or only the one that says what there is."""
-    return arguments[:1] == ["help"] or any(word in MAKE_ASKS for word in arguments)
-
-
-def make_is_guarded(arguments: list[str]) -> bool:
-    """Whether `make` with these runs only what goes through the guard here: another directory or makefile may run anything, and with no target it may too."""
+def make_targets(arguments: list[str]) -> list[str]:
     targets, at = [], 0
     while at < len(arguments):
         word = arguments[at]
-        if word in MAKE_ASKS:
-            return True
-        if word in ("-C", "-f", "--directory", "--file", "--makefile") or word.startswith(("-C", "-f", "--directory=", "--file=", "--makefile=")):
-            return False
-        if word in MAKE_FLAGS_WITH_VALUES:
+        if word in MAKE_FLAGS_WITH_VALUES or word in ("-C", "-f", "--directory", "--file", "--makefile"):
             at += 1
         elif word in ("-j", "--jobs") and arguments[at + 1 : at + 2] and arguments[at + 1].isdigit():
             at += 1
         elif not word.startswith("-") and not ASSIGNMENT.match(word):
             targets.append(word)
         at += 1
+    return targets
+
+
+def make_only_asks(arguments: list[str]) -> bool:
+    """Whether `make` given these runs no recipe, or only the one that says what there is."""
+    return make_targets(arguments) == ["help"] or any(word in MAKE_ASKS or MAKE_ASKS_IN_A_CLUSTER.match(word) for word in arguments)
+
+
+def make_is_guarded(arguments: list[str]) -> bool:
+    """Whether `make` with these runs only what goes through the guard here: another directory or makefile may run anything, and with no target it may too."""
+    if make_only_asks(arguments):
+        return True
+    if any(word in ("-C", "-f", "--directory", "--file", "--makefile") or word.startswith(("-C", "-f", "--directory=", "--file=", "--makefile=")) for word in arguments):
+        return False
+    targets = make_targets(arguments)
     return bool(targets) and all(target in MAKE_GUARDED for target in targets)
 
 
@@ -1484,7 +1514,7 @@ def is_heavy(words: list[str]) -> bool:
     name, arguments = os.path.basename(words[0]), words[1:]
     if name == "cargo":
         subcommand = plain_word(arguments, CARGO_FLAGS_WITH_VALUES)
-        return subcommand is not None and subcommand not in CARGO_ONLY_ASKS and not only_asks(arguments)
+        return subcommand is not None and subcommand not in CARGO_ONLY_ASKS and (subcommand in CARGO_ALIASES or not only_asks(arguments))
     if name in MAKES:
         return not make_is_guarded(arguments)
     if name in ("rustc", "rustdoc", "clippy-driver", "mdbook"):
@@ -1495,14 +1525,42 @@ def is_heavy(words: list[str]) -> bool:
     return (name.startswith(("cargo-", "qemu-system")) or name in ("archogen", "archogen-plan-check", "build_book.sh")) and not only_asks(arguments)
 
 
+def kill_targets(arguments: list[str]) -> list[str]:
+    """What `kill` given these signals, as it reads them: a signal is `-s NAME`, `-n NUMBER`, or `-NAME` or `-NUMBER` before any target, and `--` ends them. So `-$(…)` and `-$GROUP`, a process group, are targets."""
+    targets: list[str] = []
+    at = 0
+    while at < len(arguments):
+        word = arguments[at]
+        if word == "--":
+            return targets + arguments[at + 1 :]
+        if word in ("-s", "-n", "--signal"):
+            at += 2
+            continue
+        if targets or not re.fullmatch(r"-[A-Za-z0-9+]+", word):
+            targets.append(word)
+        at += 1
+    return targets
+
+
 def kills_by_name(commands: list[Command], root: Path) -> bool:
     """Whether these stop processes by a name rather than a pid, with nothing saying it means this repository's: `pkill` or `killall` naming no path here, or `kill` of what a search
     of the process table found. A search names this root if anything in its pipeline does. `-P` goes by a parent's pid, and `kill` of numbers by theirs, whatever else ran before."""
     text = str(root)
 
     def names_this_root(word: str) -> bool:
-        # Exactly it: `archogen-other` begins the same, and a name's own characters do not end a path.
-        return re.search(re.escape(text) + r"(?![\w.-])", word) is not None
+        # Exactly it: `archogen-other` and `archogen copy` begin the same, and neither a name's own characters nor a space end a path.
+        return re.search(re.escape(text) + r"(?![\w. -])", word) is not None
+
+    def pipeline_names_this_root(search: Command) -> bool:
+        # What it excludes or where it saves what it found says nothing of which processes it means (G8-4).
+        for other in commands:
+            if other.pipeline != search.pipeline or other.name == "tee":
+                continue
+            if other.name in ("grep", "egrep", "fgrep", "rg") and any(re.fullmatch(r"-\w*v\w*|--invert-match", word) for word in other.words[1:]):
+                continue
+            if any(names_this_root(word) for word in other.words):
+                return True
+        return False
 
     def by_pid(command: Command, *flags: str) -> bool:
         return any(word.startswith(flags) for word in command.words[1:])
@@ -1518,12 +1576,12 @@ def kills_by_name(commands: list[Command], root: Path) -> bool:
             if not (command.name == "pkill" and by_pid(command, "-P", "-F")) and not any(names_this_root(word) for word in command.words[1:]):
                 return True
         elif command.name == "kill":
-            targets = [word for word in command.words[1:] if not word.startswith("-")]
-            if command.fed or not all(re.fullmatch(r"\d+|%\S*|\$[!$]", word) for word in targets):
+            targets = kill_targets(command.words[1:])
+            if command.fed or not all(A_PLAIN_TARGET.fullmatch(word) for word in targets):
                 # What a substitution alone feeds it is what that substitution ran. A variable may hold what anything before it found.
-                alone = not command.fed and all(A_SUBSTITUTION_ALONE.fullmatch(word) or re.fullmatch(r"\d+|%\S*|\$[!$]", word) for word in targets)
+                alone = not command.fed and all(A_SUBSTITUTION_ALONE.fullmatch(word) or A_PLAIN_TARGET.fullmatch(word) for word in targets)
                 for search in commands[command.own_from if alone else 0 : at]:
-                    if searches_by_name(search) and not any(names_this_root(word) for other in commands if other.pipeline == search.pipeline for word in other.words):
+                    if searches_by_name(search) and not pipeline_names_this_root(search):
                         return True
     return False
 
@@ -1701,6 +1759,9 @@ def hook(root: Path, limits: Limits) -> int:
     command cannot hurt, the watcher holds what turns out otherwise, and a host in trouble must stay readable and repairable."""
     try:
         given = json.load(sys.stdin)
+        # A tool that opens a socket and runs no shell has nothing to read, as `Monitor` can.
+        if given.get("tool_name") not in (None, "Bash") and "command" not in given["tool_input"]:
+            return 0
         command = given["tool_input"]["command"]
         # A subagent shares its session's id, and has an `agent_id` of its own: each is told for itself, or a stop goes to whichever runs a command first.
         session = str(given.get("session_id", "")) + str(given.get("agent_id", ""))
@@ -1812,7 +1873,13 @@ def main(argv: list[str]) -> int:
     root = canonical(root)
     # A `run` says whose it is on its command line, which is how the watcher knows its job is ours, wherever it was started from.
     if verb == "run" and not named:
-        os.execv(sys.executable, [sys.executable, "-I", "-B", str(Path(__file__).resolve()), "run", "--root", str(root), *argv[1:]])
+        rest = list(argv[1:])
+        at = 0
+        while at < len(rest) and rest[at] in ("--wait", "--limits", "--once"):
+            at += 1 if rest[at] == "--once" else 2
+        if rest[at : at + 1] != ["--"]:
+            rest.insert(at, "--")  # So that a flag always follows the root, which is how a `run` is known.
+        os.execv(sys.executable, [sys.executable, "-I", "-B", str(Path(__file__).resolve()), "run", "--root", str(root), *rest])
     try:
         limits = tightened(overrides)
     except ValueError as error:

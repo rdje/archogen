@@ -115,6 +115,25 @@ def guard(*args: str, stdin: str | None = None, root: Path | None = None, limits
     return subprocess.run([*PY, str(GUARD), verb, *flags, *rest], input=stdin, capture_output=True, text=True, errors="replace", timeout=60, env=env)
 
 
+def until(condition, seconds: float = 20) -> bool:
+    """Whether `condition` comes true in time. A fixed wait for a job to begin reads a loaded host's slowness as a failure."""
+    deadline = time.monotonic() + seconds
+    while time.monotonic() < deadline:
+        if condition():
+            return True
+        time.sleep(0.05)
+    return bool(condition())
+
+
+def run_refused(job: subprocess.Popen, what: str) -> bool:
+    """Whether the host filled between this test's look and `run`'s own, so that `run` started nothing: that says nothing of what the case asks, and is said as not run."""
+    until(lambda: jobs_of(job.pid) or job.poll() is not None)
+    if job.poll() == g.UNCLEAR:
+        not_run.append(f"{what} (the host filled meanwhile)")
+        return True
+    return False
+
+
 def host_clear() -> bool:
     """Whether the host itself would let a heavy job start. No limit can be loosened to test what happens when it would, so while another project
     holds the memory the cases that need it cannot run: said, and never counted as passing. The host's room alone, and not `check`, which also counts a build of ours: a stub of this
@@ -190,6 +209,9 @@ def jobs_of(pid: int) -> list[int]:
     found = []
     for child in children(pid):
         shown = subprocess.run(["ps", "-ww", "-o", "command=", "-p", str(child)], capture_output=True, text=True).stdout
+        # What it reads the host with is no job of its, though it is its child for a moment; and one gone by the time `ps` looked was such a moment.
+        if not shown.strip() or os.path.basename(shown.split(" ", 1)[0].strip()) in g.READS_THE_HOST:
+            continue
         if "host_guard.py" not in shown:
             found.append(child)
     return found
@@ -418,11 +440,12 @@ def case_a_root_is_exactly_itself() -> None:
         return
     job = subprocess.Popen([*PY, str(GUARD), "run", "--root", str(a_other), "--", "bash", "-c", "exec -a cargo sleep 20"], cwd=base, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, start_new_session=True)
     started.append(job)
-    time.sleep(0.8)
+    if run_refused(job, "another root whose name begins the same is not ours"):
+        return
     its_job = jobs_of(job.pid)
     watch_once(a, PANIC)
     time.sleep(0.2)
-    check("another root's job, whose name begins the same, is not ours", bool(its_job) and all(pid_up(pid) for pid in its_job), its_job)
+    check("another root's job, whose name begins the same, is not ours", bool(its_job) and all(pid_up(pid) for pid in its_job), (its_job, job.poll(), children(job.pid)))
     guard("stop", root=a_other)
     time.sleep(0.5)
     watcher = looping_watcher(a_other, {})
@@ -579,9 +602,11 @@ def case_a_job_is_stopped_whole() -> None:
     script = f"while :; do echo x >> {steps}; (exec -a cargo sleep 30); done"
     job = subprocess.Popen([*PY, str(GUARD), "run", "--root", str(scope), "--", "bash", "-c", script], cwd=scope, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, start_new_session=True)
     started.append(job)
-    time.sleep(0.8)
+    if run_refused(job, "a job is stopped whole"):
+        return
+    until(lambda: jobs_of(job.pid) and g.watcher_pid(scope))
     guard("stop", root=scope)
-    time.sleep(0.5)
+    until(lambda: not g.watcher_pid(scope))
     watcher = looping_watcher(scope, PANIC)
     check("the danger line ends the script around a build, not only the build", settle(job, 8))
     check("so it starts no other", steps.exists() and len(steps.read_text().splitlines()) == 1, steps.read_text() if steps.exists() else "")
@@ -612,10 +637,10 @@ def case_a_queued_make_is_no_build() -> None:
     (scope / "Makefile").write_text(f"waits:\n\t{sys.executable} -I -B {GUARD} run --root {scope} --limits '{limits}' --wait 40 -- touch {scope}/ran\nruns:\n\t{sys.executable} -I -B {GUARD} run --root {scope} --wait 40 -- sleep 30\n")
     try:
         make = spawn(["make", "waits"], scope)
-        time.sleep(1.2)
+        until(lambda: g.watcher_pid(scope))
         # Its `run` started a watcher of the default lines, which holds the lock: with that left, the watcher below would read nothing and any answer would pass.
         guard("stop", root=scope)
-        time.sleep(0.5)
+        until(lambda: not g.watcher_pid(scope))
         mine = g.ours(g.processes(), scope, os.getpid())
         check("a real `make` waiting its turn is seen, and seen to wait", [(p.name, p.waiting, p.spawns) for p in mine] == [("make", True, False)], [(p.name, p.waiting, p.spawns) for p in mine])
         watch_once(scope, PANIC)
@@ -628,9 +653,9 @@ def case_a_queued_make_is_no_build() -> None:
             not_run.append("a `make` whose job has started is a build")
             return
         make = spawn(["make", "runs"], scope)
-        time.sleep(1.2)
+        until(lambda: g.watcher_pid(scope) and any(p.name == "make" and p.spawns and not p.waiting for p in g.ours(g.processes(), scope, os.getpid())))
         guard("stop", root=scope)
-        time.sleep(0.5)
+        until(lambda: not g.watcher_pid(scope))
         mine = g.ours(g.processes(), scope, os.getpid())
         check("once its job has started, it is seen to be one", any(p.name == "make" and p.spawns and not p.waiting for p in mine), [(p.name, p.waiting, p.spawns) for p in mine])
         # A watcher its own `run` started has that `make` for a parent, and must hold it all the same.
@@ -731,6 +756,42 @@ def case_at_a_disk_floor_what_writes_stops() -> None:
         check("at a floor, a script of `rm` and `du` runs to its end, so disk can be freed", ended and (scope / "ended").exists(), stopped_events(scope)[-1:])
     watcher.terminate()
     watcher.wait(timeout=5)
+
+
+def case_a_guard_saved_broken_ends_nothing() -> None:
+    repo = fresh("broken-save")
+    (repo / ".git").mkdir()
+    (repo / "scripts").mkdir()
+    copy = repo / "scripts" / "host_guard.py"
+    shutil.copy(GUARD, copy)
+    watcher = spawn([*PY, str(copy), "watch", "--root", str(repo)], repo)
+    try:
+        until(lambda: (repo / "target" / "host-guard" / "state" / "sampled").exists())
+        good = copy.read_text()
+        copy.write_text(good + "\ndef broken(:\n")
+        log = repo / "target" / "host-guard" / "state" / "events.log"
+        check("and that is said", until(lambda: log.exists() and "does not read" in log.read_text(errors="replace")))
+        check("a guard saved with a syntax error does not end the watcher", up(watcher))
+        marker = repo / "repaired"
+        head = "from __future__ import annotations\n"
+        copy.write_text(good.replace(head, head + f"open({str(marker)!r}, 'w').close()\n", 1))
+        check("repaired, it holds from then", until(lambda: marker.exists()))
+    finally:
+        subprocess.run([*PY, str(copy), "stop", "--root", str(repo)], capture_output=True, timeout=30)
+
+
+def case_a_root_that_is_gone_stays_gone() -> None:
+    base = fresh("root-gone")
+    scope = base / "scope"
+    scope.mkdir()
+    watcher = looping_watcher(scope, {})
+    until(lambda: (scope / "state" / "sampled").exists())
+    shutil.rmtree(scope)
+    check("its watcher ends", settle(watcher, 10))
+    time.sleep(0.5)
+    check("and does not bring it back", not scope.exists())
+    report = subprocess.run([*PY, str(GUARD), "run", "--root", str(scope), "--", "true"], capture_output=True, text=True, timeout=30)
+    check("and a `run` there says so and runs nothing", report.returncode == 75 and "gone" in report.stderr, report.stderr)
 
 
 def case_a_new_script_is_taken_up() -> None:
@@ -992,6 +1053,7 @@ def case_what_counts_as_heavy() -> None:
         "cargo --locked build", "cargo --config x build", "make", "make -f other.mk focused", "qemu-system-riscv32 -M virt", "mdbook build", "rustc x.rs", "xargs cargo build", "eval 'cargo build'",
         "cargo test -- --help", "cargo run -- --version", "make --jobs 4 other", "bash -euo pipefail scripts/build_book.sh", "bash -c -- 'cargo build'", "bash -euo pipefail -c 'cargo build'", "bash <<'E'\ncargo build\nE",
         "bash -s -- x <<'E'\ncargo build\nE", "bash -s x <<< 'cargo build'", "bash /dev/stdin <<'E'\ncargo build\nE", "source /dev/stdin <<'E'\ncargo build\nE", 'x="$(cat <<EOF\nbody\nEOF)" && cargo build',
+        "cargo xtask --help", "cargo xtask verify --help", "make -Cvendor all", "make -f x.mk all", "env -S'cargo build'", "env -vS 'cargo build'", 'x="$(cat <<EOF\nbody\nEOF )" && cargo build', "case q in q) ls;;#it's\nesac; cargo build", "x=(#it's\n b); cargo build",
         "a[0]=x cargo build", "echo ${x:-'}'} ; cargo build", "env -S 'cargo build'", "coproc name { cargo build; }", "{fd}>log cargo build", "[[ a == a ]]>log; cargo build", "if [[ '#c' =~ ^([[:space:]]*)#(.*)$ ]]; then cargo build; fi",
         "bash <<< 'cargo build'", "trap 'cargo build' EXIT", "echo $(( $(cargo build) + 1 ))", 'x="$(if true; then case y in y) cargo build;; esac; fi)"', "x=( $(cargo build) )", "[[ -n $(cargo metadata --format-version 1 >x; cargo build) ]]",
     ):
@@ -1007,7 +1069,7 @@ def case_what_counts_as_heavy() -> None:
         "rustc --explain E0308", "cargo build --help", "cargo update -p serde", "cargo add serde", "cargo remove serde", "cargo info serde", "cargo clippy --version", "cargo generate-lockfile", "cargo fetch", "mdbook help",
         "qemu-system-riscv32 --version", "archogen --help", "archogen help build", "archogen-plan-check --help", "make --jobs 4 focused", "names=(rustc cargo); echo ${names[0]}", "(( make > 1 ))", "((make>1)) && ls",
         "[[ $x == cargo ]]", "[[ $x =~ ^(cargo|make)$ ]] && ls", "case $x in cargo|make) ls;; esac", "cargo() { ls; }", "function make { ls; }",
-        "make --version", "make --help", "gmake -v", "make -h", "for x in a; do make() { ls; }; done", "if true; then cargo() { :; }; fi", "bash -n -c 'cargo build'", "sh -n <<'E'\ncargo build\nE", "zsh -n <<'E'\ncargo build\nE", "command -pv cargo",
+        "make --version", "make --help", "gmake -v", "make -h", "make -qp", "make -ns all", "make -nj4 all", "make -j4 help", "make -C sub -n", "make -f x.mk --help", "env ls", "kill -TERM 1",  "for x in a; do make() { ls; }; done", "if true; then cargo() { :; }; fi", "bash -n -c 'cargo build'", "sh -n <<'E'\ncargo build\nE", "zsh -n <<'E'\ncargo build\nE", "command -pv cargo",
     ):
         check(f"not heavy: {light!r}", not heavy_text(light))
 
@@ -1036,6 +1098,8 @@ THE_SHELL_RUNS_THESE = (
     "bash <<< 'cargo build'", "sh <<'EOF'\ncargo build\nEOF", "tools=(pkill killall); echo ${tools[0]}", "names=(rustc cargo); echo ${names[0]}", "x=( $(cargo build) )", "x+=(a b); ls", "(( make > 1 ))", "((make>1)); ls",
     "[[ a < b && c > d || e == f ]]; ls", "[[ -z $(cargo build) ]]; ls", "if [[ -n $(ls) ]]; then cargo build; fi", "for t in a b; do case $t in a) ls;; b) cargo build;; esac; done",
     "pkill() { :; }; ls", "function make { :; }; ls", "function cargo() { :; }; ls",
+    # What round 8's reader found parting them.
+    "env -vS 'cargo build'", 'x="$(cat <<EOF\nbody\nEOF )" && cargo build', "case q in q) ls;;#it's\nesac; cargo build", "x=(#it's\n b); cargo build", "[[ x =~ a#b ]]; cargo build",
     # What round 7's reader found parting them.
     "if [[ '#c' =~ ^([[:space:]]*)#(.*)$ ]]; then cargo build; fi", "[[ a == a ]]>log; cargo build", "bash -s -- x <<'E'\ncargo build\nE", "bash -s x <<< 'cargo build'", "bash /dev/stdin <<'E'\ncargo build\nE",
     'x="$(cat <<EOF\nbody\nEOF)" && cargo build', "a[0]=x cargo build", "echo ${x:-'}'} ; cargo build", "env -S 'cargo build'", "for x in a; do g() { :; }; done; ls", "if true; then h() { :; }; fi; ls", "bash -n -c 'cargo build'; ls", "command -pv cargo; ls",
@@ -1158,6 +1222,9 @@ def the_reader_against(bash: str) -> None:
     check("`-n` runs nothing it reads", g.shell_only_parses(["-n"]) and g.shell_only_parses(["-en"]) and not g.shell_only_parses(["-e", "x"]) and not g.shell_only_parses(["--norc"]))
     for quiet, asks in (("make --version", False), ("make --help", False), ("gmake -v", False), ("make -n focused", False), ("make help", False), ("make focused", True), ("cargo build --help", False), ("cargo build", True)):
         check(f"a build only if it builds: {quiet}", g.Process(1, 0, quiet, "", "", 0).spawns == asks)
+    check("a root whose name a space goes on is another", not g.names_root("python3 host_guard.py run --root /x/a copy -- ls", "/x/a") and g.names_root("python3 host_guard.py run --root /x/a -- ls", "/x/a") and g.names_root("python3 host_guard.py status --root /x/a", "/x/a"))
+    check("this interpreter running this file is the guard, a space in its path or not", g.protected(g.Process(1, 0, f"{sys.executable} -I -B {g.CODE} watch --root /x", "", "", 0)))
+    check("`kill`'s targets are read as it reads them", g.kill_targets(["-9", "-$(…)"]) == ["-$(…)"] and g.kill_targets(["--", "-$G"]) == ["-$G"] and g.kill_targets(["-s", "TERM", "12"]) == ["12"] and g.kill_targets(["-TERM", "12"]) == ["12"])
     check("a shell told nothing is a terminal, whatever its options", g.is_terminal_shell(proc(1, "bash -eo pipefail")) and g.is_terminal_shell(proc(1, "bash --rcfile f")))
     check("and one told a command, wherever `-c` stands, is none", not g.is_terminal_shell(proc(1, "bash -euo pipefail -c x")) and not g.is_terminal_shell(proc(1, "bash -c -- x")))
 
@@ -1181,7 +1248,8 @@ def case_killing_by_name() -> None:
             'arch="$(case "$(uname -m)" in arm64) echo a;; *) echo b;; esac)"; pkill -x rustc', 'x="$(case y in y) echo a;; esac )"\npkill -x rustc', "(( y = 1 << 3 ))\npkill -x rustc", "((x<<=1)); killall cargo", "echo $[1<<2]; pkill rustc",
             "bash -euo pipefail -c 'pkill -x rustc'", "bash -eo pipefail -c 'pkill -x rustc'", "bash -c -- 'pkill -x rustc'", "trap 'pkill -x rustc' EXIT", "bash <<'EOF'\npkill -x rustc\nEOF", "bash <<< 'pkill -x rustc'", "case y in y) pkill -x rustc;; esac",
             "[[ $line =~ ^([[:space:]]*)#(.*)$ ]] && pkill -x rustc", "bash -s -- x <<'E'\npkill -x rustc\nE", "bash -s x <<< 'killall cargo'", 'x="$(cat <<EOF\nbody\nEOF)"\npkill -x rustc', f"pkill -f {scope}-other/x", f"ps -ax | grep {scope}-other/x | xargs kill",
-            'kill "$(pgrep -x rustc)"', 'ps -ax | grep x; kill "$PID"',
+            'kill "$(pgrep -x rustc)"', 'ps -ax | grep x; kill "$PID"', "kill -- -$(pgrep -x rustc)", "kill -TERM -$(pgrep -f myjob)", "PGID=$(pgrep -f myjob); kill -- -$PGID", "kill -s TERM $(pgrep -x rustc)",
+            f"ps -ax | grep rustc | grep -v {scope} | awk '{{print $1}}' | xargs kill", f"pgrep -x rustc | tee {scope}/pids | xargs kill", f"pkill -f '{scope} copy'",
         ):
             done = hook_says(command, scope)
             check(f"never by a name across the host: {command}", done.returncode == 2 and "never by a program's name" in done.stderr, done.stderr)
@@ -1193,7 +1261,7 @@ def case_killing_by_name() -> None:
             "tools=(pkill killall); echo ${tools[0]}", 'case "$t" in a) echo a;; pkill|killall) echo b;; esac', "for t in a b; do case $t in a) echo a;; pkill) echo b;; esac; done", "[[ $cmd =~ ^(pkill|killall)$ ]] && echo careful",
             "(( pkill > 1 ))", "pkill() { :; }; echo", "cat <<'EOF'\npkill -x rustc\nEOF",
             f"ps -ax |\n grep {scope}/x |\n awk '{{print $1}}' |\n xargs kill", 'ps -fp "$PID" && kill "$PID"', "pkill -F job.pid", "pgrep -F job.pid | xargs kill", 'ps -ax | head; kill "$(cat job.pid)"', "if true; then pkill() { :; }; fi",
-            "bash -n -c 'pkill -x rustc'", "sh -n <<'E'\npkill -x rustc\nE",
+            "bash -n -c 'pkill -x rustc'", "sh -n <<'E'\npkill -x rustc\nE", "ps -ax | head; kill -s TERM 123", "ps -ax | head; kill -TERM 123", "ps -ax | head; kill -- -123", 'kill -- -"$(cat job.pgid)"',
         ):
             done = hook_says(command, scope)
             check(f"not by a name across the host: {command}", done.returncode == 0, done.stderr)
@@ -1270,6 +1338,9 @@ def case_hook() -> None:
         check("`make` of a guarded recipe waits by itself, so the hook lets it", hook_says("make focused", scope, {"start_used_percent": 0}).returncode == 0)
         time.sleep(0.5)
         check("the hook started a watcher", "watcher: running" in guard("status", root=scope).stdout)
+        check("`Monitor` is read as a shell command", guard("hook", stdin=json.dumps({"tool_name": "Monitor", "tool_input": {"command": "pkill -x rustc"}}), root=scope).returncode == 2)
+        check("and with a socket and no shell it has nothing to read", guard("hook", stdin=json.dumps({"tool_name": "Monitor", "tool_input": {"ws": {"url": "wss://x"}}}), root=scope).returncode == 0)
+        check("a shell tool with no command is still refused", guard("hook", stdin=json.dumps({"tool_name": "Bash", "tool_input": {}}), root=scope).returncode == 2)
         check("a heavy command the guard runs is not refused for being one", hook_says("python3 scripts/host_guard.py run --wait 1800 -- bash -c 'cd x && cargo test'", scope, {"start_used_percent": 0}).returncode == 0)
         check("nor `cargo clean`, at a disk floor, where it is needed", hook_says("cargo clean", scope, {"stop_repo_free_gib": 1e9}).returncode == 0)
     finally:
@@ -1353,13 +1424,13 @@ def case_run() -> None:
         check("a heavy command is refused beside it, whatever its job is called", done.returncode == 2 and "one heavy job" in done.stderr, done.stderr)
         first.wait(timeout=15)
         # Two `make`s, each waiting in its own `run`, must not take each other for a running build: one goes, then the other.
-        for name in ("one", "two"):
-            spawn(["bash", "-c", f"exec -a make bash -c '{sys.executable} -I -B {GUARD} run --root {scope} --wait 25 -- bash -c \"sleep 1; touch {scope}/{name}\"; true'"], scope)
+        makes = [spawn(["bash", "-c", f"exec -a make bash -c '{sys.executable} -I -B {GUARD} run --root {scope} --wait 25 -- bash -c \"sleep 1; touch {scope}/{name}\"; true'"], scope) for name in ("one", "two")]
         deadline = time.monotonic() + 20
         while time.monotonic() < deadline and not ((scope / "one").exists() and (scope / "two").exists()):
             time.sleep(0.2)
         check("two `make`s take turns rather than waiting on each other", (scope / "one").exists() and (scope / "two").exists())
-        time.sleep(0.5)
+        # On a loaded host the second may still hold its turn, which the next step would read as its own refusal.
+        until(lambda: all(make.poll() is not None for make in makes), 40)
         # What a job leaves behind holds no turn: it is no job of a `run`, and nothing could find it.
         left = scope / "left-pid"
         done = guard("run", "--", "bash", "-c", f"nohup sleep 20 >/dev/null 2>&1 & echo $! > {left}", root=scope)
@@ -1434,19 +1505,52 @@ THE_REST = (
     case_only_tightened, case_check_refuses, case_a_figure_not_read_is_never_safe, case_one_process, case_all_processes, case_what_a_stopped_process_started,
     case_another_project_is_never_ours, case_a_terminal_vouches_for_nothing, case_a_root_is_exactly_itself, case_agents, case_what_holds_little_is_left_alone, case_a_job_is_stopped_whole,
     case_a_queued_make_is_no_build, case_at_a_disk_floor_what_writes_stops, case_names_and_zombies, case_a_command_line_that_is_no_text, case_pressure, case_not_ours, case_growing,
-    case_a_small_writer_is_counted, case_the_watcher_outlives_its_own_trouble, case_a_new_script_is_taken_up, case_a_stale_pid_names_nobody, case_the_watcher_stays_while_a_job_runs,
+    case_a_small_writer_is_counted, case_the_watcher_outlives_its_own_trouble, case_a_new_script_is_taken_up, case_a_guard_saved_broken_ends_nothing, case_a_root_that_is_gone_stays_gone, case_a_stale_pid_names_nobody, case_the_watcher_stays_while_a_job_runs,
     case_what_is_not_the_table_is_blindness, case_a_blind_watcher_is_said, case_the_hook_passes_nothing_it_cannot_read, case_killing_by_name, case_hook, case_a_damaged_log, case_run,
 )
 
 
+def real_stops_since(offset: int) -> list[str]:
+    """What this repository's real watcher has stopped since `offset` in its log. This test's rigs sit under this root, so on a full host it stops them too, and a stub named after a build first."""
+    log = ROOT / "target" / "host-guard" / "state" / "events.log"
+    try:
+        with open(log, "rb") as lines:
+            lines.seek(offset)
+            text = lines.read().decode("utf-8", "replace")
+    except OSError:
+        return []
+    stops = []
+    for line in text.splitlines():
+        try:
+            event = json.loads(line)
+        except ValueError:
+            continue
+        if isinstance(event, dict) and event.get("kind") == "stopped":
+            stops.extend(str(stopped.get("name")) for stopped in event.get("stopped", []) if isinstance(stopped, dict))
+    return stops
+
+
+def real_log_size() -> int:
+    try:
+        return (ROOT / "target" / "host-guard" / "state" / "events.log").stat().st_size
+    except OSError:
+        return 0
+
+
 def run_case(case) -> None:
     before = len(failures)
+    offset = real_log_size()
     try:
         case()
     except Exception as error:
         check(f"{case.__name__} ran to its end", False, repr(error))
     finally:
         clean_up()
+    # What the real watcher stopped under a case says nothing of what the case asks: said as not run, and only when the log shows it did stop something then.
+    stopped = real_stops_since(offset) if len(failures) > before else []
+    if stopped:
+        not_run.extend(f"{what} (the real watcher stopped {', '.join(stopped[:3])} under it)" for what in failures[before:])
+        del failures[before:]
     print(f"  {case.__name__}: {'ok' if len(failures) == before else 'FAILED'}", flush=True)
 
 

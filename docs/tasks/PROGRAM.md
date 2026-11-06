@@ -895,7 +895,19 @@ mdBook that is the director's window into the project.
   Commit: `ARCHOGEN-PROGRAM-1168 (leaf PROGRAM.127.7)`
 
 - ID: `PROGRAM.127.8`
-  Status: `pending` — round 8, a fresh reader over round 7's answer. It closes on a round that finds no defect, and a form written to go round the guard is a stated limit, not a defect.
+  Status: `done` — `2026-11-06`: round 8, a fresh reader over round 7's answer: 14 findings, 1 defect, after 15, 12, 5, 6, 13, 2 and 1. `kill` of a process group found by name passed; `kill` is now read as it reads its words. Beside it `Monitor` is checked; a checkout's path may hold a space, and a root a space goes on is another; a guard saved broken ends nothing, and a root that is gone stays gone; the self-test waits on what it waits for, and `integration` runs it. The findings and each answer are in `docs/reviews/decision_host-guard-reviews.md`.
+
+  **Acceptance checklist (`DOCTRINE_ENFORCEMENT.md`):**
+  - [x] **REPRODUCE / ISSUE** — the reader's rigs on `e3232b6f`, `target/p1278/work/`: `rig_d.py` → `kill -- -$(pgrep -x rustc)` rc=0, `kill -TERM -$(pgrep -f myjob)` rc=0, `PGID=$(pgrep -f myjob); kill -- -$PGID` rc=0, against `kill -9 $(pgrep -x rustc)` rc=2; `rig_b.py`, a checkout whose path holds a space → `protected False`, its watcher counted among ours and signalled; `rig_f.py` → `saved with a syntax error: watcher alive: False rc 1`; `selftest1.log`, at a load near 30 → `556 passed, 7 failed`.
+  - [x] **ROOT CAUSE (WHY + WHERE)** — `git grep -n 'if not word.startswith("-")\]\|GUARD_PROCESS = re.compile\|if entry.get("matcher") == "Bash"' e3232b6f -- scripts/host_guard.py scripts/check_host_guard.sh` → every word beginning `-` dropped from `kill`'s targets; `\S*` before the script's name, which a space ends; a matcher missing `Monitor`. `git grep -n 'time.sleep(0.8)\|time.sleep(1.2)' e3232b6f -- scripts/selftest_host_guard.py` → fixed waits for a job to begin.
+  - [x] **FIX** — `scripts/host_guard.py`: `kill_targets`, `pipeline_names_this_root`, `GUARD_PROCESS` by this interpreter's and this file's own paths, `names_root`, `make_targets` and clusters, `CARGO_ALIASES`, `code_reads`, a root gone ends its watcher. `scripts/selftest_host_guard.py`: `until`, `case_a_guard_saved_broken_ends_nothing`, `case_a_root_that_is_gone_stays_gone`. `scripts/check_host_guard.sh`: `--self-test`, the matcher. `.claude/settings.json`: `Bash|Monitor`. The record, the review history and its index.
+  - [x] **ADDRESSED (verified)** — `python3 -I -B scripts/selftest_host_guard.py` → `host-guard self-test: 606 passed, 0 failed, 0 not run`, exit 0, no `scripts/__pycache__`; among them each of `rig_d.py`'s forms refused, and a file saved broken leaving the watcher up and saying so.
+  - [x] **NO REGRESSION** — `bash scripts/check_host_guard.sh` → `host-guard: OK`, exit 0; `make focused` → `tier focused: passed — 3 passed, 0 failed`, on the staged tree, through the guard.
+  - [x] **LOCKSTEP** — the record, the review history and its index, these leaves and the Commit Log; `MEMORY.md`'s next action.
+  Commit: `ARCHOGEN-PROGRAM-1171 (leaf PROGRAM.127.8)`
+
+- ID: `PROGRAM.127.9`
+  Status: `pending` — round 9, a fresh reader over round 8's answer. It closes on a round that finds no defect, and a form written to go round the guard is a stated limit, not a defect.
 
 - ID: `PROGRAM.128`
   Status: `done` — `2026-11-05`: by the director's word, "If you ever need new CPU, DSP, MCU, BOARD, ISA or in general digital chip PDF just look here", naming `chipdoc`'s `AGENTS.md`. The record, its index row, the book's ledger and a `TOOLBOX.md` row now start any chip document's need there. Reading it corrected three things of ours: the record and the ledger still said `REQ-007` was `requested`, fulfilled `2026-09-30`; the ledger said the corpus was off this volume; and the record said what is adopted is copied here, where most of the corpus may not be republished and this repository is public, so a fact and its citation are copied and never a document. A documents-only leaf.
@@ -1069,6 +1081,7 @@ leaf's outcome is its row in the Commit Log below, and a sealed leaf's full reco
 | `PROGRAM.127.6` | `ARCHOGEN-PROGRAM-1164 (leaf PROGRAM.127.6)` | **paused at the director's word**, at a clean tree, before round 6 began: the resume pointer and the leaf say to wait |
 | `PROGRAM.127.6` | `ARCHOGEN-PROGRAM-1165 (leaf PROGRAM.127.6)` | **the host guard's review, round 6 answered**: a volume has fallen only by more than a shared volume costs anyway; what a job takes with it said; the shell reader given a case's branches, arithmetic, arrays and `[[ ]]`, held to each `bash` here; each agent told for itself |
 | `PROGRAM.127.7` | `ARCHOGEN-PROGRAM-1168 (leaf PROGRAM.127.7)` | **the host guard's review, round 7 answered**: `make` that only asks is no build; the reader's rare misses read, each held to both `bash`es; a `kill` by a pid passes by any spelling; the root named exactly; what is told says what it leaves out |
+| `PROGRAM.127.8` | `ARCHOGEN-PROGRAM-1171 (leaf PROGRAM.127.8)` | **the host guard's review, round 8 answered**: `kill` read as it reads its words, so a process group found by name is refused; `Monitor` checked; a space in a checkout's path; a guard saved broken ends nothing |
 | `PROGRAM.129` | `ARCHOGEN-PROGRAM-1169 (leaf PROGRAM.129)` | **the director's word on RAM**: observe the trend, and say something only when it is over 90% and still rising; the guard's lines stand as they are |
 | `PROGRAM.128` | `ARCHOGEN-PROGRAM-1162 (leaf PROGRAM.128)` | **a chip's document starts at `chipdoc`'s `AGENTS.md`**, the director's word: the record, its index row, the ledger and `TOOLBOX.md`; `REQ-007` fulfilled, the corpus on this volume, and a document never copied into this public repository, each corrected |
 
@@ -1139,3 +1152,5 @@ leaf's outcome is its row in the Commit Log below, and a sealed leaf's full reco
 - `2026-11-05`: `PROGRAM.127.7` done: the guard's round 7, thirteen findings answered, one a defect; `PROGRAM.127.8` filed for round 8.
 
 - `2026-11-06`: `PROGRAM.129` done: the director's word on RAM, in the record and the book.
+
+- `2026-11-06`: `PROGRAM.127.8` done: the guard's round 8, fourteen findings answered, one a defect; `PROGRAM.127.9` filed for round 9.

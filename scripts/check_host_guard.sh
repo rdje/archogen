@@ -10,6 +10,17 @@
 # Exit:  0 = held · 1 = a breach, named
 set -uo pipefail
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)" || exit 2
+# That it stops what it should is the self-test's, and this is how the `self-tests` step of `integration` runs it: it reads macOS alone, and 20 says what the host did not let it run, which fails nothing.
+if [ "${1:-}" = "--self-test" ]; then
+    if [ "$(uname -s)" != "Darwin" ]; then
+        echo "host-guard self-test: not run: it reads macOS alone"
+        exit 0
+    fi
+    python3 -I -B "$ROOT/scripts/selftest_host_guard.py"
+    status=$?
+    [ "$status" -eq 20 ] && exit 0
+    exit "$status"
+fi
 python3 -I -B - "$ROOT" <<'PY'
 import ast, json, re, sys
 from pathlib import Path
@@ -122,7 +133,7 @@ if loaded.get("disableAllHooks"):
 held = [
     hook
     for entry in loaded.get("hooks", {}).get("PreToolUse", [])
-    if entry.get("matcher") == "Bash"
+    if entry.get("matcher") == "Bash|Monitor"
     for hook in entry.get("hooks", [])
     if hook.get("command") == EXPECTED
 ]
