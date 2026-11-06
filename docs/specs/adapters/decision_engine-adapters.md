@@ -88,7 +88,8 @@ rule 13's one provider of its function:
   values to poke into hardware timer registers" ([`linux-timekeeping`](../../book/src/ledger.md#linux-timekeeping)). How
   far ahead it can be programmed is how far its time base disambiguates — the provider's `unambiguous-horizon`, derived
   there from its modulus and rate (relation record §4) — so `supported-horizon` passes it through; a deadline past one
-  delay's reach is chained. A requester's `delivery-bound` becomes the instance's obligation.
+  delay's reach is chained. That is what a search can say. Where the time base is that counter itself, a deadline is also read past, by as much
+  as its delivery lets it wait, and only the scheduling checker knows how much, so it holds the rest (`decision_release-alarm.md` §2's `room`). A requester's `delivery-bound` becomes the instance's obligation.
 - **`epoch-extender`** is the relation record §4's: "a horizon that long over that hardware is an epoch extender's, a
   provider in its own right offering the horizon alone, or, where a service needs the counter's other facts of one
   provider (`SR-H14`), its extended modulus and rate beside them", and `M3.3.6`'s "offers its extended width beside its

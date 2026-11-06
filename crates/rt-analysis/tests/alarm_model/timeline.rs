@@ -21,7 +21,7 @@ pub struct AlarmSpec {
     pub reach: i64,
     pub rank: i64,
     pub floored: bool,
-    /// How far into its service the read of the time falls; `read_at + lag` lies within `c_s`.
+    /// How far into its service the read of the time falls; `read_at`, the lag to the landing and the lag to the read after it lie within `c_s`.
     pub read_at: u64,
     pub wake: Option<i64>,
 }
@@ -63,8 +63,10 @@ pub enum Device {
 #[derive(Clone, Debug)]
 pub struct LagModel {
     pub max: u64,
-    /// The landing's actual lag, by turns, each at most `max`.
+    /// The landing's actual lag, by turns, each at most `max`; and the next turn's, from the landing to the read after it.
     pub pattern: Vec<u64>,
+    /// How far past that the read after the landing falls, which the record's `λ` says is nothing.
+    pub past: u64,
 }
 
 #[derive(Debug, Default, Clone)]
@@ -179,10 +181,14 @@ impl Run<'_> {
         let lag_max = i64::try_from(self.lag.max).expect("small");
         let actual =
             i64::try_from(self.lag.pattern[al.writes % self.lag.pattern.len()]).expect("small");
+        let back = i64::try_from(
+            self.lag.pattern[(al.writes + 1) % self.lag.pattern.len()] + self.lag.past,
+        )
+        .expect("small");
         al.writes += 1;
         let land = read + actual;
         if self.know == Know::WhatItReadAndWrote {
-            self.what_it_read_and_wrote(al, read, land, deadline, measured);
+            self.what_it_read_and_wrote(al, read, land, land + back, deadline, measured);
             return;
         }
         // A compare reached at this very instant has raised: a read there sees it, and no write undoes it.
@@ -268,6 +274,7 @@ impl Run<'_> {
         al: &mut Alarm,
         read: i64,
         land: i64,
+        read_back: i64,
         deadline: Option<i64>,
         measured: &mut Measured,
     ) {
@@ -322,9 +329,9 @@ impl Run<'_> {
         });
         if let Some(v) = value {
             match self.device {
-                // Read again after the landing, still masked: at or before that, it has arrived or will at once.
-                Device::Compare if v <= land => {
-                    al.code_last = Some(al.code_last.map_or(land, |last| last.max(land)));
+                // Read again within the lag of the landing, still masked: at or before that, it has arrived or will at once. `v` is the value rounded up, as the compare holds it.
+                Device::Compare if v <= read_back => {
+                    al.code_last = Some(al.code_last.map_or(read_back, |last| last.max(read_back)));
                     al.shadow = None;
                 }
                 _ => al.shadow = Some(v),

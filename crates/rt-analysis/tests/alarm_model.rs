@@ -224,7 +224,7 @@ fn random_set(
         s: r.pick(&[1, 1, 2, 3]),
         c_rel: r.pick(&[1, 2, 4]),
         completion: r.pick(&[1, 2, 3]),
-        arm: (lag_max + 1).max(r.pick(&[1, 2, 3, 5])),
+        arm: (2 * lag_max + 1).max(r.pick(&[1, 2, 3, 5])),
         delta: if overheads { r.pick(&[0, 1, 2]) } else { 0 },
         gamma: if overheads { r.pick(&[0, 1, 2, 3]) } else { 0 },
         res: if overheads {
@@ -238,7 +238,7 @@ fn random_set(
     let n_alarms = if two_alarms { 2 } else { 1 };
     let mut alarms = Vec::new();
     for a in 0..n_alarms {
-        let c_s = r.pick(&[2, 3, 5, 8, 12]).max(1 + lag_max);
+        let c_s = r.pick(&[2, 3, 5, 8, 12]).max(1 + 2 * lag_max);
         alarms.push(AlarmSpec {
             c_s,
             t_s: r.pick(&[8, 12, 17, 25, 40, 60, 100]),
@@ -320,12 +320,144 @@ fn random_set(
 /// What `delivery` charges, by the record's §2: what lies between the programmed time and the match, then `J_s` and the service. A write in a service lands inside it, and the floor is read off an arrival
 /// the code bounds from above, by the lag on a compare and by twice that on a delay, which also lands late itself.
 fn delivery(device: Device, lag: i64, rho: i64, floor: i64, j_s: i64, c_s: i64) -> i64 {
-    let floored = match device {
-        Device::Compare => floor + lag,
-        Device::Delay => floor + 2 * lag,
+    charge(
+        "delivery",
+        device,
+        Inputs {
+            t_s: floor,
+            lag,
+            rho,
+            j_s,
+            c_s,
+            p: 0,
+            reach: 0,
+        },
+    )
+}
+
+/// The record, whose §2 table of sums this reads and runs: a charge here is the cell there, so the two cannot differ.
+const RECORD: &str = include_str!("../../../docs/decisions/decision_release-alarm.md");
+
+#[derive(Clone, Copy)]
+struct Inputs {
+    t_s: i64,
+    lag: i64,
+    rho: i64,
+    j_s: i64,
+    c_s: i64,
+    p: i64,
+    reach: i64,
+}
+
+/// What the record's table writes for `sum` on `device`.
+fn cell(sum: &str, device: Device) -> &'static str {
+    let (_, table) = RECORD
+        .split_once("<!-- machine-read: alarm-sums -->")
+        .expect("the record's table of sums");
+    let row = table
+        .lines()
+        .find(|line| line.starts_with(&format!("| `{sum}` |")))
+        .expect("the sum's row");
+    let cells: Vec<&str> = row.split('|').map(str::trim).collect();
+    cells[match device {
+        Device::Compare => 3,
+        Device::Delay => 4,
+    }]
+    .trim_matches('`')
+}
+
+/// A cell, read as it is written: sums of names, `2λ`, and `max(…, …)`.
+struct Cell<'c> {
+    rest: &'c str,
+    device: Device,
+    inputs: Inputs,
+}
+
+impl Cell<'_> {
+    fn eat(&mut self, what: &str) -> bool {
+        match self.rest.trim_start().strip_prefix(what) {
+            Some(rest) => {
+                self.rest = rest;
+                true
+            }
+            None => false,
+        }
+    }
+
+    fn sum(&mut self) -> i64 {
+        let mut total = self.term();
+        while self.eat("+") {
+            total += self.term();
+        }
+        total
+    }
+
+    fn term(&mut self) -> i64 {
+        if self.eat("max(") {
+            let mut most = self.sum();
+            while self.eat(",") {
+                most = most.max(self.sum());
+            }
+            assert!(self.eat(")"), "a `max` unclosed at `{}`", self.rest);
+            return most;
+        }
+        let times = if self.eat("2") { 2 } else { 1 };
+        let i = self.inputs;
+        for (name, value) in [
+            ("J_s", i.j_s),
+            ("C_s", i.c_s),
+            ("T_s", i.t_s),
+            ("λ", i.lag),
+            ("ρ", i.rho),
+            ("P", i.p),
+            ("R", i.reach),
+        ] {
+            if self.eat(name) {
+                return times * value;
+            }
+        }
+        assert!(self.eat("delivery"), "no such input at `{}`", self.rest);
+        charge("delivery", self.device, i)
+    }
+}
+
+/// `sum` on `device`, as the record's table writes it.
+fn charge(sum: &str, device: Device, inputs: Inputs) -> i64 {
+    let mut reader = Cell {
+        rest: cell(sum, device),
+        device,
+        inputs,
     };
-    // A floored compare is then rounded up, so the rounding adds to it.
-    lag.max(j_s + c_s).max(floored) + rho + j_s + c_s
+    let value = reader.sum();
+    assert!(
+        reader.rest.trim().is_empty(),
+        "`{sum}`'s cell ends in `{}`",
+        reader.rest
+    );
+    value
+}
+
+/// That the table reads as it is written, by figures worked by hand, so a sweep over it is no sweep over a misreading.
+#[test]
+fn the_record_s_sums_read_as_they_are_written() {
+    let i = Inputs {
+        t_s: 10,
+        lag: 1,
+        rho: 3,
+        j_s: 5,
+        c_s: 2,
+        p: 64,
+        reach: 100,
+    };
+    assert_eq!(charge("delivery", Device::Compare, i), 11 + 3 + 7);
+    assert_eq!(charge("delivery", Device::Delay, i), 12 + 3 + 7);
+    assert_eq!(charge("update", Device::Compare, i), 64 + 3 + 7);
+    assert_eq!(charge("update", Device::Delay, i), 64 + 1 + 3 + 7);
+    assert_eq!(charge("room", Device::Compare, i), 100 + 21);
+    assert_eq!(charge("room", Device::Delay, i), 100 + 22);
+    // Where a service's own length is what a deadline waits on.
+    let slow = Inputs { j_s: 30, ..i };
+    assert_eq!(charge("delivery", Device::Compare, slow), 32 + 3 + 32);
 }
 
 /// Random sets the analysis holds, each run under each pattern of lags: no arrivals under the floor, none lost, no response past its bound, no deadline delivered past `delivery`. How many sets and
@@ -358,7 +490,11 @@ fn sweep(
                 plat: p,
                 know,
                 device,
-                lag: LagModel { max: lag, pattern },
+                lag: LagModel {
+                    max: lag,
+                    pattern,
+                    past: 0,
+                },
                 horizon: 8_000,
             }
             .go();
@@ -582,6 +718,7 @@ fn with_no_floor_a_chain_passes_the_analysis_and_misses() {
     let at_once = || LagModel {
         max: 0,
         pattern: vec![0],
+        past: 0,
     };
     let unfloored = [alarm(10, 100, 100, false)];
     let (bound, _) =
@@ -637,6 +774,7 @@ fn a_floor_off_the_value_written_breaks_at_a_lag_and_the_protocol_holds() {
     let late = || LagModel {
         max: 4,
         pattern: vec![4],
+        past: 0,
     };
     let run = once(
         &tasks,
@@ -672,6 +810,7 @@ fn a_rate_is_no_separation() {
     let lag = LagModel {
         max: 0,
         pattern: vec![0],
+        past: 0,
     };
     let run = once(
         &tasks,
@@ -689,50 +828,126 @@ fn a_rate_is_no_separation() {
 #[test]
 fn a_wake_keeps_its_floor_and_its_read_to_read() {
     let mut r = Rng(0xDEAD_BEEF_1357_9BDF);
-    let (mut judged, mut tries) = (0_u32, 0_u64);
-    while judged < 100 && tries < 400_000 {
-        tries += 1;
-        let (mut tasks, mut alarms, p) = random_set(&mut r, true, false, true, 0);
-        let every = r.pick(&[17_i64, 25, 40, 64, 100]);
-        let c_s = alarms[1].c_s;
-        alarms[1].wake = Some(every);
-        alarms[1].t_s = u64::try_from(every).expect("small");
-        alarms[1].read_at = 1 + r.below(c_s);
-        alarms[1].reach = 10_000;
-        for task in &mut tasks {
-            for arm in &mut task.arms {
-                arm.0 = 0;
+    for device in [Device::Compare, Device::Delay] {
+        for lag in [0_u64, 1, 2, 4, 8] {
+            let (mut judged, mut tries) = (0_u32, 0_u64);
+            while judged < 12 && tries < 400_000 {
+                tries += 1;
+                let (mut tasks, mut alarms, p) = random_set(&mut r, true, false, true, lag);
+                let every = r.pick(&[17_i64, 25, 40, 64, 100]);
+                let c_s = alarms[1].c_s;
+                alarms[1].wake = Some(every);
+                // The realization's floor, at its step or under it.
+                let floor = if r.below(2) == 0 { every } else { every / 2 };
+                alarms[1].t_s = u64::try_from(floor).expect("small");
+                alarms[1].read_at = 1 + r.below(c_s - 2 * lag);
+                alarms[1].reach = 10_000;
+                for task in &mut tasks {
+                    for arm in &mut task.arms {
+                        arm.0 = 0;
+                    }
+                }
+                let Some((_, j)) = bounds(&tasks, &alarms, p) else {
+                    continue;
+                };
+                judged += 1;
+                for pattern in [vec![lag], vec![0], vec![0, lag], vec![lag, 0, 0]] {
+                    let run = once(
+                        &tasks,
+                        &alarms,
+                        p,
+                        Know::WhatItReadAndWrote,
+                        device,
+                        LagModel {
+                            max: lag,
+                            pattern,
+                            past: 0,
+                        },
+                        8_000,
+                    );
+                    let held = charge(
+                        "update",
+                        device,
+                        Inputs {
+                            t_s: floor,
+                            lag: i64::try_from(lag).expect("small"),
+                            rho: i64::try_from(p.res - 1).expect("small"),
+                            j_s: j[1],
+                            c_s: i64::try_from(c_s).expect("small"),
+                            p: every,
+                            reach: 0,
+                        },
+                    );
+                    assert!(
+                        run.longest_read_to_read[1] <= held,
+                        "{} against {held}, {device:?}, lag {lag}: {tasks:?} {alarms:?} {p:?}",
+                        run.longest_read_to_read[1]
+                    );
+                    assert!(
+                        run.least_separation(1) >= floor,
+                        "{device:?}, lag {lag}: {tasks:?} {alarms:?} {p:?}"
+                    );
+                }
             }
+            assert_eq!(judged, 12, "{device:?}, lag {lag}");
         }
+    }
+}
+
+/// What the code's bound rests on: a read after the landing farther than `λ` from it stands that much past the arrival, and the sum no longer holds. The record's `λ` covers it, and nothing else would owe it.
+#[test]
+fn a_read_after_the_landing_past_the_lag_breaks_the_sum() {
+    let mut r = Rng(0x4444_5555_9BDF_0246);
+    let (mut judged, mut over, mut tries) = (0_u32, 0_u32, 0_u64);
+    let lag = 4_u64;
+    while judged < 300 && over == 0 && tries < 400_000 {
+        tries += 1;
+        let two = r.below(3) == 0;
+        let (tasks, alarms, mut p) = random_set(&mut r, two, false, true, lag);
+        p.arm = p.arm.max(2 * lag + 1 + 40);
         let Some((_, j)) = bounds(&tasks, &alarms, p) else {
             continue;
         };
         judged += 1;
-        let run = once(
-            &tasks,
-            &alarms,
-            p,
-            Know::Omniscient,
-            Device::Compare,
-            LagModel {
-                max: 0,
-                pattern: vec![0],
-            },
-            8_000,
-        );
-        let rho = i64::try_from(p.res - 1).expect("small");
-        let charge = every + rho + j[1] + i64::try_from(c_s).expect("small");
-        assert!(
-            run.longest_read_to_read[1] <= charge,
-            "{} against {charge}: {tasks:?} {alarms:?} {p:?}",
-            run.longest_read_to_read[1]
-        );
-        assert!(
-            run.least_separation(1) >= every,
-            "{tasks:?} {alarms:?} {p:?}"
-        );
+        for pattern in [
+            vec![lag],
+            vec![0],
+            vec![0, lag],
+            vec![lag, 0, 0],
+            vec![0, 0, lag],
+        ] {
+            let run = once(
+                &tasks,
+                &alarms,
+                p,
+                Know::WhatItReadAndWrote,
+                Device::Compare,
+                LagModel {
+                    max: lag,
+                    pattern,
+                    past: 40,
+                },
+                8_000,
+            );
+            for (a, alarm) in alarms.iter().enumerate() {
+                let held = delivery(
+                    Device::Compare,
+                    i64::try_from(lag).expect("small"),
+                    i64::try_from(p.res - 1).expect("small"),
+                    i64::try_from(alarm.t_s).expect("small"),
+                    j[a],
+                    i64::try_from(alarm.c_s).expect("small"),
+                );
+                if run.latest_delivery[a] > held {
+                    over += 1;
+                }
+            }
+        }
     }
-    assert_eq!(judged, 100);
+    assert!(
+        over > 0,
+        "a read this far past the landing broke nothing, of {judged} sets"
+    );
 }
 
 /// A floored compare is then rounded up, so the rounding adds to the floor and no `max` holds it: the design's fourth reader's case, a coarse compare with a deadline just past the floor.
@@ -754,6 +969,7 @@ fn a_floored_compare_is_rounded_up_so_the_rounding_adds() {
         LagModel {
             max: 0,
             pattern: vec![0],
+            past: 0,
         },
         4_000,
     );
@@ -813,4 +1029,58 @@ fn a_modular_counter_tells_a_deadline_past_from_one_ahead_only_within_its_modulu
         "a deadline floored past its time is read as far ahead"
     );
     assert!(room(100, 64, 1, 69, 256));
+    // The record's `room`, run: within one modulus is exactly what reads right, on each kind of device.
+    for device in [Device::Compare, Device::Delay] {
+        for reach in [15_i64, 100, 238] {
+            for t_s in [8_i64, 64] {
+                for lag in [0_i64, 1, 5] {
+                    let i = Inputs {
+                        t_s,
+                        lag,
+                        rho: 3,
+                        j_s: 2,
+                        c_s: 1,
+                        p: 0,
+                        reach,
+                    };
+                    let past = charge("delivery", device, i);
+                    for modulus in [64_i64, 256, 1024] {
+                        assert_eq!(
+                            reads_right(modulus, reach.max(t_s + lag), past),
+                            charge("room", device, i) < modulus,
+                            "{device:?}, modulus {modulus}, reach {reach}, floor {t_s}, lag {lag}"
+                        );
+                    }
+                }
+            }
+        }
+    }
+    // `R` is a deadline's and not a chain's segment: a segment of 30 has room in 256, and a deadline 238 ahead reads as one 18 past.
+    assert!(reads_right(256, 30, 18));
+    assert!(!reads_right(256, 238, 18));
+    // The floor on a counter that may idle past a wrap: judged within its own window it holds a deadline back no longer than that window, whatever the arrival's age, and holds it for as long as the floor is real.
+    let held_back = |modulus: i64, t_s: i64, lag: i64, age: i64| {
+        let ahead = (t_s - age).rem_euclid(modulus);
+        if ahead <= t_s + lag {
+            ahead
+        } else {
+            0
+        }
+    };
+    for modulus in [64_i64, 256] {
+        for t_s in [1_i64, 10, 17] {
+            for lag in [0_i64, 1, 4] {
+                for age in 0..4 * modulus {
+                    let held = held_back(modulus, t_s, lag, age);
+                    assert!(held <= t_s + lag, "{modulus} {t_s} {lag} {age}");
+                    if age <= t_s {
+                        assert_eq!(held, t_s - age, "{modulus} {t_s} {lag} {age}");
+                    }
+                }
+            }
+        }
+    }
+    // Judged within the reach, the only window that was named, `R` of 100, an arrival 200 ago holds a deadline back 66, against a window of 11.
+    assert_eq!((10_i64 - 200).rem_euclid(256), 66);
+    assert_eq!(held_back(256, 10, 1, 200), 0);
 }
