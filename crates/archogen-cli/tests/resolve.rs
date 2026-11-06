@@ -71,6 +71,8 @@ enum Answer {
     ClosingParent,
     /// Something came in the stage, and it wrote no record.
     StrayNoRecord,
+    /// Something came at its record's own name, so it refused and wrote none.
+    AtTheRecord,
     /// It wrote its record, and another directory came to stand at the stage's name, the record gone with what moved.
     Replacing,
 }
@@ -126,6 +128,14 @@ impl Launch for Checker {
                 }
                 let _ = dir;
                 Status::Ok
+            }
+            Answer::AtTheRecord => {
+                std::fs::write(&args[3], "mine").expect("written");
+                return Ok(Launched {
+                    ended: Ended::Code(Status::ToolFailure.code()),
+                    sha256: verified(),
+                    front: Digest::of(b"the front that ran it"),
+                });
             }
             Answer::StrayNoRecord => {
                 // `--profile P --result R -- DESCRIPTION PLAN`, as the front hands them over.
@@ -1113,6 +1123,40 @@ fn plan_routes() -> Vec<(&'static str, Route)> {
             assert!(parent.join("p.part").is_dir());
             let said = outcome.as_ref().map_or("", |(_, said)| said.as_str());
             assert!(said.contains("cannot be looked at"), "{said}");
+            outcome
+        }),
+        ("came-at-the-record", |root| {
+            let plan = root.join("p");
+            an_earlier_plan(&plan);
+            let outcome = resolve_of(
+                &heartbeat(),
+                &plan.display().to_string(),
+                &[],
+                Answer::AtTheRecord,
+            );
+            assert_eq!(
+                std::fs::read_to_string(&plan).expect("kept"),
+                AN_EARLIER_PLAN
+            );
+            assert_eq!(
+                std::fs::read_to_string(root.join("p.part/plan-check.json")).expect("kept"),
+                "mine"
+            );
+            let said = outcome.as_ref().map_or("", |(_, said)| said.as_str());
+            assert!(said.contains("remove the stage"), "{said}");
+            outcome
+        }),
+        ("junk", |root| {
+            let file = root.join("junk.eadl");
+            std::fs::write(&file, "x\n".repeat(5000)).expect("written");
+            let plan = root.join("p");
+            let outcome = resolve_of(
+                &file.display().to_string(),
+                &plan.display().to_string(),
+                &[],
+                Answer::Record(Status::Ok),
+            );
+            assert!(!plan.exists() && !root.join("p.part").exists());
             outcome
         }),
         ("came-on-a-refusal", |root| {

@@ -38,7 +38,8 @@ use std::collections::BTreeSet;
 
 use eadl_front::language_version::{declarations, is_identifier};
 use eadl_front::{
-    read, Diagnostic, Form, Instance, Label, Program, SourceId, SourceMap, Span, Verdict,
+    read, Diagnostic, Diagnostics, Form, Instance, Label, Program, SourceId, SourceMap, Span,
+    Verdict, MOST_ERRORS,
 };
 
 use crate::boundary;
@@ -340,6 +341,10 @@ fn passes(
     // ── boundary (F27) ───────────────────────────────────────────────────────────────────────
     let mut boundary_errors = Vec::new();
     for form in &forms {
+        // Each pass stops gathering where nothing more would be said: a file of junk that reads as forms costs a host what each error costs.
+        if boundary_errors.len() > MOST_ERRORS {
+            break;
+        }
         if let Err(diagnostic) = boundary::check(form) {
             boundary_errors.push(*diagnostic);
         }
@@ -360,6 +365,9 @@ fn passes(
         .collect();
     let mut schema_errors = Vec::new();
     for form in &declared {
+        if schema_errors.len() > MOST_ERRORS {
+            break;
+        }
         schema_errors.extend(validate(registry, form));
     }
     // §7 rule 6: a name is declared once — across declarations, so after the per-declaration frame.
@@ -427,10 +435,8 @@ fn passes(
         .map(|finding| finding.verdict)
         .max_by_key(|verdict| verdict.precedence())
         .unwrap_or(Verdict::Ok);
-    let diagnostics: Vec<Diagnostic> = findings
-        .into_iter()
-        .flat_map(|finding| finding.diagnostics)
-        .collect();
+    let diagnostics =
+        Diagnostics::held(findings.into_iter().flat_map(|finding| finding.diagnostics));
 
     Outcome {
         verdict: if diagnostics.is_empty() {

@@ -200,6 +200,8 @@ again just before it is used, and in that instant what stands there is what is u
 | `plan-gone-meanwhile` | while the checker runs, the plan it is judging is taken away, closed, or something else put at its name | `tool-failure` | `is gone, closed or no file` | what stood at `PLAN`; the stage, to be looked at |
 | `closed-while-it-ran` | while the checker runs, the stage is closed to this user | `tool-failure` | `closed while the checker ran` | what stood at `PLAN`; the stage, which it says could not be removed |
 | `parent-shut-meanwhile` | while the checker runs, the directory `PLAN` lies in is closed to this user, so the stage cannot be looked at | `tool-failure` | `closed while the checker ran` | what stood at `PLAN`; the stage, which it says it cannot look at and may stand |
+| `came-at-the-record` | while the checker runs, something comes at its record's own name in the stage | `tool-failure` | `not a result record` | what stood at `PLAN`; the stage, with what came, to be looked at |
+| `junk` | a file of junk, past a thousand errors | `invalid-description` | `goes unsaid` | nothing made |
 | `came-on-a-refusal` | while the checker runs, something comes in the stage, and the run is then refused | `tool-failure` | `wrote no record` | what stood at `PLAN`; the stage with what came, which it says, and nothing this run wrote |
 | `plan-edited-meanwhile` | while the checker runs, the plan it is judging is edited | `tool-failure` | `changed while the plan was judged` | what stood at `PLAN`; the stage, to be looked at |
 | `check-stands-unchecked` | a file at `PLAN.check`, with `--unchecked` | `ok` | `resolved system` | the plan, and that file |

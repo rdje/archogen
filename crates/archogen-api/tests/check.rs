@@ -325,4 +325,23 @@ fn an_answer_is_as_bounded_as_its_request() {
         rendered.len(),
         text.len()
     );
+    // What a check says is bounded whatever the request, in each shape that drew the most: junk on one line, on many, that reads as forms, and a system of tasks.
+    let mut most = 0;
+    for shape in [
+        "x ".repeat(60_000),
+        "x\n".repeat(60_000),
+        "\0".repeat(120_000),
+        "1.2.3 ".repeat(20_000),
+        "(defsystem s (task t))\n".repeat(5_000),
+    ] {
+        let response = archogen_api::check(&Request {
+            name: "junk.eadl",
+            text: &shape,
+            profile: None,
+            modules: &archogen_api::NoModules,
+        });
+        assert_eq!(response.diagnostics.len(), 1001, "{}", &shape[..8]);
+        most = most.max(response.render_diagnostics().len());
+    }
+    assert!(most < 1024 * 1024, "{most} bytes rendered");
 }

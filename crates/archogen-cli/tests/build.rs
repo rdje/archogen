@@ -231,7 +231,7 @@ fn a_duration_past_the_ticks_is_told_a_repair_that_works() {
     fs::write(&file, two_periods("1 ns", "20000000000 s")).expect("written");
     let (status, _, err) = build(&file.display().to_string(), &root.join("out"));
     assert_eq!(status.slug(), "unsupported-profile", "{err}");
-    assert!(err.contains("the coarsest they all share"), "{err}");
+    assert!(err.contains("least common denominator"), "{err}");
     assert!(err.contains("  hint: "), "{err}");
     assert!(!err.contains("deadline as a whole number"), "{err}");
     // What it tells to do, done: the longest nearer the shortest.
@@ -805,6 +805,29 @@ impl Launch for ChangingAfter {
         let launched = Checker.launch(program, args, out, err);
         (self.change)(&self.dir);
         launched
+    }
+}
+
+/// While the checker runs, something comes at its record's own name, so it refuses and writes none.
+#[cfg(unix)]
+struct AtTheRecord;
+
+#[cfg(unix)]
+impl Launch for AtTheRecord {
+    fn launch(
+        &self,
+        _program: &str,
+        args: &[String],
+        _out: &mut dyn Write,
+        _err: &mut dyn Write,
+    ) -> Result<Launched, Unlaunched> {
+        // `--profile P --result R -- DESCRIPTION PLAN`, as the front hands them over.
+        fs::write(&args[3], "mine").expect("written");
+        Ok(Launched {
+            ended: Ended::Code(Status::ToolFailure.code()),
+            sha256: checker_digest(),
+            front: front_digest(),
+        })
     }
 }
 
@@ -2041,12 +2064,32 @@ fn out_routes() -> Vec<(&'static str, Route)> {
         }),
         ("junk", |root| {
             let file = root.join("junk.eadl");
-            fs::write(&file, ")".repeat(5000)).expect("written");
             let dir = root.join("x");
-            let outcome = said(build(&file.display().to_string(), &dir));
-            assert!(!dir.exists());
-            let (_, words) = outcome.as_ref().expect("it ran");
-            assert_eq!(words.matches("error[").count(), 1001, "{words}");
+            // Junk that does not read, and junk that reads as forms each later pass refuses.
+            let shapes = [
+                ")".repeat(5000),
+                "\"".repeat(5000),
+                "x ".repeat(5000),
+                "x\n".repeat(5000),
+                "1.2.3 ".repeat(5000),
+                "(defsystem s (task t))\n".repeat(5000),
+            ];
+            let mut outcome = None;
+            for shape in shapes {
+                fs::write(&file, &shape).expect("written");
+                let run = said(build(&file.display().to_string(), &dir));
+                assert!(!dir.exists());
+                let (_, words) = run.as_ref().expect("it ran");
+                assert_eq!(
+                    words.matches("error[").count(),
+                    1001,
+                    "{}: {}",
+                    &shape[..8],
+                    &words[..200.min(words.len())]
+                );
+                assert!(words.contains("error[too-many-errors]"), "{}", &shape[..8]);
+                outcome = run;
+            }
             outcome
         }),
         ("no-room-path", |root| {
@@ -2111,6 +2154,26 @@ fn out_routes() -> Vec<(&'static str, Route)> {
             assert!(stage.is_dir());
             let said = outcome.as_ref().map_or("", |(_, said)| said.as_str());
             assert!(said.contains("could not be removed"), "{said}");
+            outcome
+        }),
+        ("came-at-the-record", |root| {
+            let dir = root.join("x");
+            let outcome = said(invoke(
+                &[
+                    "build",
+                    &example(HEARTBEAT),
+                    "--out",
+                    &dir.display().to_string(),
+                ],
+                &AtTheRecord,
+            ));
+            let stage = beside(&dir, ".building");
+            assert_eq!(
+                fs::read_to_string(stage.join("plan-check.json")).expect("kept"),
+                "mine"
+            );
+            let (_, words) = outcome.as_ref().expect("it ran");
+            assert!(words.contains("remove the stage"), "{words}");
             outcome
         }),
         ("came-on-a-refusal", |root| {

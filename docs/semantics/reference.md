@@ -474,7 +474,7 @@ cheapest diagnostic to write is the most expensive to receive.
    severities as well as codes, so adding a warning is a change to this sentence and not only to the
    code.
 2. **Reading does not stop at the first error.** Every malformed literal in a description is reported
-   in one pass, so a file with three typos costs one edit cycle rather than three.
+   in one pass, up to what `too-many-errors` holds, so a file with three typos costs one edit cycle rather than three.
 3. **A code names a rule, not a call site.** `read-malformed-number` fires wherever a digit-led atom
    turns out not to be a number, and the message names the offending text and which shape of mistake
    it was — `1.2.3`, `0x` and `0x_10` are refused for different reasons and say so. A new call site

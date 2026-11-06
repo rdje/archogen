@@ -179,18 +179,19 @@ the rule: what it says is run, and a route it does not name is promised nothing 
 | `closed-within` | an earlier build with a directory this user cannot read | `usage` | `open what it could not read` | all of it |
 | `listed-gone` | an earlier build with a listed file removed | `usage` | `cannot be replaced` | the rest of it |
 | `a-provenance-past-what-it-reads` | a provenance larger than this engine reads one, told by its length without reading it | `usage` | `larger than this engine reads one` | all of it |
-| `flagged` | a flag on `--out`, found at the last step, where the platform has flags | `tool-failure` | `any flag on either` | all of it; nothing this run wrote |
+| `flagged` | a flag on `--out`, found at the last step, where the platform has flags | `tool-failure` | `any flag or access list on either` | all of it; nothing this run wrote |
 | `other-format` | a provenance of a format this engine does not read | `usage` | `this engine reads` | all of it |
 | `stage-stands` | anything at `DIR.building` | `usage` | `a build that stopped may have left it` | it |
 | `aside-stands` | anything at `DIR.replaced` | `usage` | `kept there what could not go` | it |
 | `no-room-name` | a name with no room for `.building` beside it | `usage` | `too long` | nothing made |
-| `junk` | a file of junk, past a thousand errors | `invalid-description` | `goes unsaid` | nothing made |
+| `junk` | a file of junk that reads or does not, past a thousand errors | `invalid-description` | `goes unsaid` | nothing made |
 | `no-room-path` | a path with no room for what a build writes beneath it, as the checker is handed it | `usage` | `leaves no room in a path` | nothing made |
 | `file-on-the-way` | a file among `--out`'s parents | `usage` | `is no directory` | the file |
 | `link-on-the-way` | a link to nothing among `--out`'s parents | `usage` | `a link to nothing` | the link |
 | `link-to-a-directory-on-the-way` | a link to a directory among `--out`'s parents | `ok` | `generated` | the package, beneath what the link points at |
 | `link-loop-on-the-way` | a loop of links among `--out`'s parents | `usage` | `name another place` | the links |
 | `closed-while-it-ran` | while it runs, the stage is closed to this user, so the checker's record cannot be read | `tool-failure` | `closed while the checker ran` | no package; the stage, which it says could not be removed |
+| `came-at-the-record` | while the checker runs, something comes at its record's own name in the stage | `tool-failure` | `not a result record` | no package; the stage, with what came, to be looked at |
 | `came-on-a-refusal` | while it runs, something comes in the stage, and the run is then refused | `tool-failure` | `wrote no record` | no package; the stage with what came, which it says, and nothing this run wrote |
 | `closed-parent` | a parent this user cannot write | `usage` | `reach and write` | the parent, empty |
 | `reads-once` | a description that is no regular file, such as a pipe or `<(…)`, which the checker would read again | `usage` | `no regular file` | nothing made |

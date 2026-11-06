@@ -349,7 +349,7 @@ fn run(
             err,
             "  hint: {}",
             if kind == std::io::ErrorKind::AlreadyExists {
-                "look at what came there, move it, and run this again; or name another file"
+                "look at what stands there now, move it if it should stay, and run this again; or name another file"
             } else {
                 "check that its directory can be written, that no limit or access list holds what this user writes there, and that its disk has room; or name another file"
             }
@@ -550,7 +550,7 @@ fn write(path: &Path, text: &str, judged: Option<Standing>) -> std::io::Result<(
             } else {
                 Err(std::io::Error::new(
                     std::io::ErrorKind::AlreadyExists,
-                    "something else came to stand there while this ran, and it stays",
+                    "what stands at that name is no longer what stood there when this began, and it is left as it is",
                 ))
             }
         });

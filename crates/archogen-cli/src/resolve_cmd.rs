@@ -629,7 +629,7 @@ impl Landing {
                         "cannot move the earlier record {}: {error}{stranded}",
                         record.display()
                     ),
-                    "check its mode and its directory's, and any flag on it",
+                    "check its mode and its directory's, and any flag or access list on either",
                 ));
             }
             moved_out = true;
@@ -658,7 +658,7 @@ impl Landing {
             let stranded = undo(moved_in, moved_out, placed);
             return Err(failed(
                 format!("cannot write the plan {out}: {error}{stranded}"),
-                "check that what stands at that name can be replaced, and any flag on it",
+                "check that its directory takes a new name, and that what stands at that name can be replaced, and any flag or access list on either",
             ));
         }
         if moved_out {

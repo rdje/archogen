@@ -51,7 +51,7 @@
 
 use std::collections::BTreeMap;
 
-use eadl_front::{Diagnostic, Form, Label};
+use eadl_front::{Diagnostic, Form, Label, MOST_ERRORS};
 
 use crate::boundary;
 use crate::quantity::Quantity;
@@ -720,6 +720,9 @@ pub fn duplicate_names(registry: &Registry, forms: &[&Form]) -> Vec<Diagnostic> 
     let mut first: BTreeMap<&str, &Form> = BTreeMap::new();
     let mut errors = Vec::new();
     for form in forms {
+        if errors.len() > MOST_ERRORS {
+            break;
+        }
         let named = form
             .head()
             .and_then(|head| registry.kind(head))
@@ -764,11 +767,15 @@ pub fn duplicate_names(registry: &Registry, forms: &[&Form]) -> Vec<Diagnostic> 
 pub fn duplicate_task_names(forms: &[&Form]) -> Vec<Diagnostic> {
     let mut errors = Vec::new();
     for system in forms.iter().filter(|form| form.head() == Some("defsystem")) {
+        if errors.len() > MOST_ERRORS {
+            break;
+        }
         let mut first: BTreeMap<&str, &Form> = BTreeMap::new();
         for name_form in system
             .items()
             .iter()
             .filter(|item| item.head() == Some("task"))
+            .take(MOST_ERRORS.saturating_mul(2))
             .filter_map(|task| task.items().get(1))
         {
             let Some(name) = name_form.as_symbol() else {

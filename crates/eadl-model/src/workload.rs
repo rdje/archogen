@@ -48,7 +48,7 @@
 
 use std::collections::BTreeMap;
 
-use eadl_front::{Diagnostic, Form, Label, Span};
+use eadl_front::{Diagnostic, Form, Label, Span, MOST_ERRORS};
 
 use crate::quantity::{Dimension, Quantity};
 
@@ -81,6 +81,9 @@ pub fn check(forms: &[Form]) -> Vec<Diagnostic> {
     for system in forms.iter().filter(|f| f.head() == Some("defsystem")) {
         let tasks = collect(system);
         for task in &tasks {
+            if diagnostics.len() > MOST_ERRORS {
+                return diagnostics;
+            }
             release_model(task, &mut diagnostics);
             durations(task, &mut diagnostics);
             constrained_deadline(task, &mut diagnostics);

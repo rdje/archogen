@@ -190,8 +190,9 @@ language's limits still apply to it, because they belong to the language.
 The answer is bounded with the request. A diagnostic quotes the line it points into, and a line longer than 160
 characters is quoted as a window of that many around the span, cut with `…` (`crates/eadl-front/src/diagnostic.rs`,
 leaf `API.6.6`). Before that window, one line of a million unclosed forms drew 257 diagnostics that each quoted it
-whole: an answer of 1.5 GB for a request of 1 MB. `crates/archogen-api/tests/check.rs` holds the rendered answer
-to a small multiple of its request.
+whole: an answer of 1.5 GB for a request of 1 MB. A check says a thousand errors and no more, whatever else there is to say
+(`too-many-errors`), and each pass stops gathering there, so a request's answer is at most that many windows, however long the
+request. `crates/archogen-api/tests/check.rs` holds that over the shapes that drew the most.
 
 ### How the command line is held to it
 

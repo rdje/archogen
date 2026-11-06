@@ -315,8 +315,14 @@ fn what_comes_at_the_result_while_the_checker_runs_stays() {
         let said = String::from_utf8_lossy(&output.stderr);
         assert_eq!(output.status.code(), Some(70), "{case}: {said}");
         assert_eq!(std::fs::read_to_string(&result).unwrap(), "mine", "{case}");
-        assert!(said.contains("came to stand there"), "{case}: {said}");
-        assert!(said.contains("look at what came there"), "{case}: {said}");
+        assert!(
+            said.contains("no longer what stood there"),
+            "{case}: {said}"
+        );
+        assert!(
+            said.contains("look at what stands there now"),
+            "{case}: {said}"
+        );
         assert!(!said.contains("disk has room"), "{case}: {said}");
         assert!(!dir.join("result.json.part").exists(), "{case}");
     }

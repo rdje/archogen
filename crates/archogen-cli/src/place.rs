@@ -283,7 +283,7 @@ pub fn repair(error: &std::io::Error) -> &'static str {
         }
         ErrorKind::PermissionDenied => "name a place this user can reach and write, with a umask that lets it write what it makes and no flag or access list against it",
         ErrorKind::AlreadyExists => {
-            "a name on the way to it is a link to nothing, or something took it meanwhile: look at it, or name another place"
+            "a name on the way to it is a link to nothing, closed to this user by an access list, or something took it meanwhile: look at it, or name another place"
         }
         _ => "name another place, nearer the root if its path is long",
     }

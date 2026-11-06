@@ -485,7 +485,7 @@ fn failure(message: String, repair: String) -> Refusal {
 fn fault(message: String) -> Refusal {
     failure(
         message,
-        "report it, with what the checker wrote above: the checker and the front disagree about one run".to_owned(),
+        "if what the checker wrote above says something changed at its record's name, look at what stands there, remove the stage, and run this again; if not, report it, with what it wrote: the checker and the front disagree about one run".to_owned(),
     )
 }
 

@@ -393,6 +393,16 @@ impl Diagnostics {
         self.items.push(diagnostic);
     }
 
+    /// `diagnostics` as a set would hold them, for a pass that gathers its own list.
+    #[must_use]
+    pub fn held(diagnostics: impl IntoIterator<Item = Diagnostic>) -> Vec<Diagnostic> {
+        let mut set = Self::new();
+        for diagnostic in diagnostics {
+            set.push(diagnostic);
+        }
+        set.items
+    }
+
     /// Everything recorded, in the order it was recorded.
     #[must_use]
     pub fn items(&self) -> &[Diagnostic] {

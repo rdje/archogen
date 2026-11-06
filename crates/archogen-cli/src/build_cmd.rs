@@ -263,7 +263,7 @@ impl Unplaced {
             ),
             Self::Renaming(error) => (
                 error.to_string(),
-                "a build renames `--out`, so check its parent's permissions, that it is no mount point, and any flag on either"
+                "a build renames `--out`, so check its parent's permissions, that it is no mount point, and any flag or access list on either"
                     .to_owned(),
             ),
             Self::Stranded { error, again } => (
