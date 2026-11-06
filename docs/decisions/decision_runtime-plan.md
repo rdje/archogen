@@ -472,7 +472,7 @@ timer route and a source, and a block may be named `timer`:
     | each source | `service-cost`, `acknowledge-point`, `deferred-work`, `no-application-code`, `one-request-per-arrival` | `realization` |
     | each timer route | `service-cost`, `arrival-bound` | `realization` |
 
-    `/2` owes each alarm the more that `decision_release-alarm.md` §2 lists, a floor its realization enforces as its least separation, the step a wake's service programs, the lag from a read to a landing and to the read after it, how far ahead a deadline stands, and its own device's compare.
+    `/2` owes each alarm the more that `decision_release-alarm.md` §2 lists, a floor its realization enforces as its least separation, the step a wake's service programs, the lag from a read to a landing and to the read after it, how far ahead a deadline stands and how long what writes it may take, and its own device's compare.
 
     A task's `figures-under-preemption` is §2.2's declaration whole, condition 8's half: its figures hold under any
     preemption and from any entry state.

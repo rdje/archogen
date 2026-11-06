@@ -24,6 +24,8 @@ pub struct AlarmSpec {
     /// How far into its service the read of the time falls; `read_at`, the lag to the landing and the lag to the read after it lie within `c_s`.
     pub read_at: u64,
     pub wake: Option<i64>,
+    /// Its service also programs that alarm, this far past its read, as the role allows a service that calls a node.
+    pub calls: Option<(usize, i64)>,
 }
 
 #[derive(Clone, Copy, Debug)]
@@ -280,7 +282,13 @@ impl Run<'_> {
     ) {
         let lag_max = i64::try_from(self.lag.max).expect("small");
         let t_s = i64::try_from(al.spec.t_s).expect("small");
+        // Its own service alone: any other write, another alarm's service among them, takes a job's rule.
         let is_service = deadline.is_none();
+        // A read is a whole tick of the counter, and the true time is up to `ρ` past it.
+        let res = i64::try_from(self.plat.res).expect("small");
+        let rho = res - 1;
+        let seen = read.div_euclid(res) * res;
+        let seen_back = read_back.div_euclid(res) * res;
         // A compare reached at this very instant has raised: a read there sees it, and no write undoes it.
         if al.fires.is_some_and(|f| read >= f) {
             al.fires = None;
@@ -295,15 +303,15 @@ impl Run<'_> {
         if let Some(d) = deadline {
             al.pending.push((d, land));
         }
-        // What a value arrives by, at the latest, where it arrives at all: a delay lands late by its lag.
+        // What a value arrives by, at the latest, where it arrives at all: a delay lands late by its lag and what its read was behind.
         let latest = |value: i64| match self.device {
             Device::Compare => value,
-            Device::Delay => value + lag_max,
+            Device::Delay => value + lag_max + rho,
         };
         // A service: the compare standing, if at or before this read, is the one that raised it.
         if is_service {
             if let Some(standing) = al.shadow {
-                if standing <= read {
+                if standing <= seen {
                     al.code_last = Some(
                         al.code_last
                             .map_or(latest(standing), |last| last.max(latest(standing))),
@@ -313,25 +321,32 @@ impl Run<'_> {
             }
         }
         // A compare standing that may match by the read and the lag is left: its service picks up what is pending.
-        if al.shadow.is_some_and(|standing| standing <= read + lag_max) {
+        if al
+            .shadow
+            .is_some_and(|standing| standing <= seen + rho + lag_max)
+        {
             return;
         }
         let next = al.pending.iter().map(|p| p.0).chain(al.wake_next).min();
         let value = next.map(|n| {
-            let mut at = n.min(read + al.spec.reach).max(read);
+            let mut at = n.min(seen + al.spec.reach).max(seen);
             if let Some(last) = al.code_last {
                 at = at.max(last + t_s);
             }
             match self.device {
                 Device::Compare => ceil_to(at, self.plat.res),
-                Device::Delay => read + ceil_to(at - read, self.plat.res),
+                Device::Delay => seen + ceil_to(at - seen, self.plat.res),
             }
         });
         if let Some(v) = value {
+            if v - seen > al.spec.reach + rho {
+                measured.programmed_past_reach += 1;
+            }
             match self.device {
-                // Read again within the lag of the landing, still masked: at or before that, it has arrived or will at once. `v` is the value rounded up, as the compare holds it.
-                Device::Compare if v <= read_back => {
-                    al.code_last = Some(al.code_last.map_or(read_back, |last| last.max(read_back)));
+                // Read again within the lag of the landing, still masked: at or before that, it has arrived or will at once, and nothing stands. `v` is the value rounded up, as the compare holds it, on one grid with the read.
+                Device::Compare if v <= seen_back => {
+                    let bound = seen_back + rho;
+                    al.code_last = Some(al.code_last.map_or(bound, |last| last.max(bound)));
                     al.shadow = None;
                 }
                 _ => al.shadow = Some(v),
@@ -339,7 +354,7 @@ impl Run<'_> {
         } else {
             al.shadow = None;
         }
-        al.inflight = Some((land, value, read));
+        al.inflight = Some((land, value, seen));
     }
 
     fn land(&self, al: &mut Alarm, t: i64) {
@@ -529,6 +544,7 @@ impl Run<'_> {
                 }
                 Some(Doing::Alarm { a, left, done }) => {
                     let (left, done) = (left - 1, done + 1);
+                    let mut calls = None;
                     let al = &mut alarms[a];
                     if done == al.spec.read_at {
                         if let Some(last) = al.last_read {
@@ -536,17 +552,29 @@ impl Run<'_> {
                                 measured.longest_read_to_read[a].max(now - last);
                         }
                         al.last_read = Some(now);
+                        // What the code sees due: its read is a whole tick, under the protocol that says so.
+                        let res = i64::try_from(self.plat.res).expect("small");
+                        let seen = if self.know == Know::WhatItReadAndWrote {
+                            now.div_euclid(res) * res
+                        } else {
+                            now
+                        };
                         let (delivered, kept): (Vec<_>, Vec<_>) =
-                            al.pending.iter().copied().partition(|(d, _)| *d <= now);
+                            al.pending.iter().copied().partition(|(d, _)| *d <= seen);
                         al.pending = kept;
                         al.being_delivered.extend(delivered);
                         if let (Some(every), Some(next)) = (al.spec.wake, al.wake_next) {
-                            if next <= now {
+                            if next <= seen {
                                 al.wake_next = Some((now / every + 1) * every);
                             }
                         }
                         self.read_event(al, now, None, &mut measured);
+                        calls = al.spec.calls;
                     }
+                    if let Some((to, ahead)) = calls {
+                        self.read_event(&mut alarms[to], now, Some(now + ahead), &mut measured);
+                    }
+                    let al = &mut alarms[a];
                     doing = (left > 0).then_some(Doing::Alarm { a, left, done });
                     if left == 0 {
                         let arrival = al.serving_arrival;
