@@ -147,3 +147,20 @@ Said, and left as it stands: no realization exists, so a real read-back's lag, a
 | RA8-9 | wording | "the protocol holds the same set at 47" was of a set outside the protocol's conditions; "at its landing and not at `v`"; §5's "the timer or a source" narrower than `RA-H4`; the device record's rule 1 "unchanged" beside its own `/2` sentence | The named set stands inside the conditions, the first kept as what it is; `v` arrives at its landing or at `v`, whichever is later; §5 is as wide as `RA-H4`; rule 1 says what `/2` adds |
 
 Said, and left as it stands: no realization exists, so a real read-back's lag, a level window, a zero-count delay, first-arm timing and what a device does with a write past `H` are unmeasured. RA8-1, RA8-5 and RA8-6 are by reading, RA8-2's breach is the sum on modular arithmetic and not a timeline, and RA8-4's is an analogue, since neither fact is in the vocabulary yet.
+
+**Round 9** — `2026-11-06`, leaf `M4.1.6.9`: not acceptable, 10 findings, 3 defects, after 9, 9, 7, 5, 7, 6, 7 and 6, on `9039b0f2`. The sums, the protocol and the source term held: each cell right by hand on both kinds, 6,000 timelines at the least modulus holding `room` with the record's modular reads added, closest 0.924, and 304 of 1,200 late at 0.6 of it, so the check is not vacuous. All three defects come of round 8's answer to RA8-7.
+
+| # | Kind | Finding | Answer |
+| --- | --- | --- | --- |
+| RA9-1 | defect | an alarm's `ρ` and `H` could not be stated where round 8 put them: the catalog's §12 holds one `compare-rounding` to a target, the timer service's, and an alarm is generated code, in no record. The release timer's record and an alarm's on one target are refused | Taken back. Both are read off facts of the device bound, so no record states them for an alarm |
+| RA9-2 | defect | `H` is a capacity called a cost, so it converted upward: 1500 ns became 2 µs, and a value stood past what the device reaches | `H` rounds down to the analysis's unit where each cost rounds up, `RA-H2` |
+| RA9-3 | defect, narrow | "a target does not state `H`" was false of a direct deadline: the relation's programming range is `supported-horizon`, "a capacity", so one figure had two statements and nothing compared them | One statement: `supported-horizon`, or with none `unambiguous-horizon` |
+| RA9-4 | gap | nothing said what the analysis is told of a task released only on some arrivals, and "only some" has no check: `T_i` 200 on a floor of 20 held and ran 320 releases 20 apart, 617 against a bound of 297 | It is told every arrival, whose `T_i ≤ T_s` is the check, `RA-H4` |
+| RA9-5 | gap, older | the catalog's §12 "`T_s` \| description" and the variant's §1 stood against the table's owner | `RA-H5` moves them |
+| RA9-6 | gap | `RA-H7`'s "the scheduling checker leaves `room` inconclusive" sat on a format's leaf | `RA-H2` carries it |
+| RA9-7 | gap | a first job was judged one hop out: T released by A, A programmed only from B's service, B programmed by nothing, passed | Read off the graph of who programs what, §5 and `RA-H4` |
+| RA9-8 | gap | the release timer's first write was not held within `H` | The first stands no farther, time zero being what the port's transition reads, and `RA-H1` says so of the epoch |
+| RA9-9 | wording | the plan's §2.5 "declares no source for a timer route" against `RTP-H4` | It says `/1` |
+| RA9-10 | wording | §5's "a chain's segment delivers nothing" of a last segment whose read finds the deadline due | It says whose read finds none due |
+
+Said, and left as it stands: no realization exists, so a real read-back's lag, a level compare's window, a zero-count delay and first-arm timing are unmeasured, and the reader's modular rig assumes the window is the whole modulus. Acknowledge at exit is argued, wakes were not run on modular reads, and RA9-2, RA9-3 and RA9-5 to RA9-8 are by reading, since no conversion code, trigger or `/2` exists.

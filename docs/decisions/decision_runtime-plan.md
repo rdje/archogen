@@ -346,7 +346,7 @@ timer route and a source, and a block may be named `timer`:
      The analysis variant analyses one timer, the release timer, and model §8 rule 8 leaves a second timer to it. Its
      condition 5 compares the enabled set with the declared one, the sources and `timer`, and refuses an enabled
      interrupt no source declares: "unmodeled-interrupt-load" (`runtime.rs`). The scheduling checker gives each
-     enabled item an identifier of its own kind and declares no source for a timer route (`RTP-H4`). So a system with
+     enabled item an identifier of its own kind and, in `/1`, declares no source for a timer route (`RTP-H4`). So a system with
      a timer route, one binding an adapter or a multiplexed alarm among them, is refused `unsupported-profile` by the
      analysis until `M2.21.2` declares each alarm on it the source `decision_release-alarm.md` §2 makes it. The plan carries the route, its costs and its requesters,
      and the analysis says why it cannot judge them.
