@@ -98,3 +98,20 @@ Said, and left as it stands: its reader could not run `/2`, the configuration ch
 | DC6-9 | wording | the book's list of refusals omitted the sixth row | It has it |
 
 Said, and left as it stands: its reader could not run `/2`, the configuration checker on a target or a command naming a target, and built no older commit. It read the `M1.46` leaf and grepped `docs/reviews/INDEX.md`, past its search paths.
+
+**Round 7** — `2026-11-06`, leaf `M4.4.1.7`: not acceptable, 10 findings, 2 defects, after 5, 3, 6, 2, 5 and 4, both low in reach, neither binding a wrong device and no corpus file having either shape. Its reader put 244 systems on eight targets. No binding, instance or placement fell outside a target, hardware equalled the target's set every time, `correspond`'s partition was exact, and presence refused nothing the search resolved.
+
+| # | Kind | Finding | Answer |
+| --- | --- | --- | --- |
+| DC7-1 | defect, low | DC6-1's answer read another system whole, so a need one of its tasks wrote was "required by this system", though `System::read` reaches it for its own level and model §8 rule 4 says its tasks are its own; one step removed the same need was not | It asks at its own level. Its tasks are visible and ask nothing |
+| DC7-2 | defect, low, by emulation | what only the search refuses of a description's own forms was judged by nothing on a target where the form is replaced hardware or an unnamed system, two values of one fact among it: `DC-H3` left out "whatever `M3.4.7` adds of the search's verdict", against DC5-1 | `DC-H3` keeps all of the search that refuses a description's own forms, `invalid-description` wherever it is said, and leaves out only what a plan's absence says |
+| DC7-3 | gap | the sweep left out `docs/semantics/cases`, its invariant false there of what `check` refuses first, and held less than a reader's rig: no hardware equal to the target's, no placement, no presence refusing nothing resolved, and a floor that would survive losing every module tree | The root is in, what the profile excludes is excepted, and it holds those, with a floor of its own for trees |
+| DC7-4 | gap | `on_target` gives bare `refinement-violated`, which `check` reports as `infeasible-configuration` and `Verdict::of_code` as `invalid-description`, and nothing said which the command reports | `DC-H3` says: the verdict `check` gives that code |
+| DC7-5 | gap | a target's own refinement loop passed, though "no machine stands on a loop" | Refused, by the same rule |
+| DC7-6 | gap | replaced hardware's and an unnamed system's facts leave `outside_closure`, the replaced names staying, unexplained beside a kept service's | Said: neither is part of what runs there |
+| DC7-7 | gap | a target's need named as an unrelated block of the description was refused with no word of renaming, unlike the mirror case | The repair says so |
+| DC7-8 | wording | "`prepare` asks of a tree" is narrower than the code | Of a tree and of a plain description |
+| DC7-9 | wording | `on_target`'s `# Errors` omitted the loop | It has it |
+| DC7-10 | wording, older | model §7 rule 3's "A service's offers are read and refused alike": `offer::read_service` has only test callers, so two values on a service resolve; §2 rule 2's "refused by the search" is false of a fact outside the vocabulary | Filed under `M3.4.17`, which holds what is older here |
+
+Said, and left as it stands: its reader could not run `/2`, the configuration checker on a target or a command naming a target, so `DC-H3`'s order is emulated, and it built no older commit. It read the opening of `M3.4.7` and, by an over-wide range, that file's sections after `M3.4.16`, past its search paths; no sealed case and no history.

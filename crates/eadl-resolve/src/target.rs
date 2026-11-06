@@ -56,7 +56,7 @@ impl Target {
     ///
     /// Each thing that makes the file no target: a declaration of anything but hardware; one with no name, or a name two declarations
     /// bear; no one platform that nothing else in the file composes; or a block or platform that platform does not compose, which would be a
-    /// device the machine does not have.
+    /// device the machine does not have; or hardware that refines what leads back to it, on which no machine stands.
     pub fn read(forms: &[Form], file: Span) -> Result<Self, Vec<Diagnostic>> {
         let mut errors = Vec::new();
         let forms: Vec<&Form> = forms
@@ -137,6 +137,7 @@ impl Target {
                 }
             }
         }
+        errors.extend(loops_refused(&composed, &declared));
         for (name, form) in &declared {
             if !composed.contains(*name) {
                 errors.push(Diagnostic::error(
@@ -186,6 +187,14 @@ impl OnTarget {
         for form in &self.declarations {
             if is_hardware(form) {
                 facts.collect(form);
+            } else if form.head() == Some("defsystem")
+                && declared_name(form) != declared_name(&self.system)
+            {
+                // Another system asks at its own level, as the system reading it reaches it: its tasks are that system's (model §8 rule 4), and only visible here.
+                facts.declare(form);
+                if declared_name(form).is_some_and(|name| self.asking.contains(name)) {
+                    facts.collect_asking(&own_level(form));
+                }
             } else if declared_name(form).is_some_and(|name| self.asking.contains(name)) {
                 facts.collect_asking(form);
             } else {
@@ -199,6 +208,19 @@ impl OnTarget {
     #[must_use]
     pub fn presence(&self) -> Vec<Diagnostic> {
         self.report().diagnostics
+    }
+}
+
+/// A system with its tasks taken out.
+fn own_level(system: &Form) -> Form {
+    Form::List {
+        items: system
+            .items()
+            .iter()
+            .filter(|item| item.head() != Some("task"))
+            .cloned()
+            .collect(),
+        span: system.span(),
     }
 }
 
@@ -365,6 +387,21 @@ fn refining_in_a_loop(
     found
 }
 
+/// What [`refining_in_a_loop`] finds, refused, of a description's hardware and of a target's.
+fn loops_refused(hardware: &BTreeSet<String>, declared: &BTreeMap<&str, &Form>) -> Vec<Diagnostic> {
+    refining_in_a_loop(hardware, declared)
+        .into_iter()
+        .map(|(name, up, span)| {
+            Diagnostic::error(
+                "invalid-description",
+                format!("`{name}` refines `{up}`, which leads back to it through what they compose and refine, so no machine stands on them"),
+                Label::new(span, "refines it here"),
+                "a refinement says the same thing again: compose the device, or refine what it is made of, and not both",
+            )
+        })
+        .collect()
+}
+
 /// The declarations whose absences the whole machine owes: the one all the system's hardware is made of, as the clause says it, with what forms a cycle with it, and each up the chain it
 /// refines (model §3 rule 3). Another's absence covers what it is made of and no more (model §2 rule 1), so it says nothing of a device beside it, and neither does one's among two that make the
 /// machine, nor one's beside hardware the system has that it does not compose, a block it only `needs`.
@@ -443,7 +480,7 @@ fn declarations_named_by(form: &Form) -> Vec<(String, Span)> {
 /// What keeps it from being read there, the search not having run: a name the target declares too; a file naming what only the other
 /// declares, since each says what it holds with no help from the other; a block or platform the system, a task, or a service or a policy it
 /// reaches names itself, which no requirement can stand for; an absence the platform it runs on declares that the target offers (model
-/// §3 rule 3); and two `platform` clauses, which read as one would hide what `check` says of them.
+/// §3 rule 3); hardware the system has that refines what leads back to it; and two `platform` clauses, which read as one would hide what `check` says of them.
 pub fn on_target(
     system: &Form,
     declarations: &[Form],
@@ -480,7 +517,7 @@ pub fn on_target(
                     "invalid-description",
                     format!("the target's file names `{name}`, which only the description declares"),
                     Label::new(span, "names it here"),
-                    "a target's file says what the machine is by itself: declare the device there, or remove the name",
+                    "a target's file says what the machine is by itself: declare the device there, or remove the name; if the name is a fact it means, rename the description's declaration",
                 ));
             }
         }
@@ -566,14 +603,7 @@ pub fn on_target(
         .map(|form| Facets::of(form).0)
         .collect();
     let hardware = System::read(system, declarations).hardware;
-    for (name, up, span) in refining_in_a_loop(&hardware, &declared) {
-        errors.push(Diagnostic::error(
-            "invalid-description",
-            format!("`{name}` refines `{up}`, which leads back to it through what they compose and refine, so no machine stands on them"),
-            Label::new(span, "refines it here"),
-            "a refinement says the same thing again: compose the device, or refine what it is made of, and not both",
-        ));
-    }
+    errors.extend(loops_refused(&hardware, &declared));
     for platform in declarations_speaking_for_the_machine(&named, &hardware, &declared) {
         let facets = Facets::of(platform).0;
         for (fact, span) in facets.absences() {

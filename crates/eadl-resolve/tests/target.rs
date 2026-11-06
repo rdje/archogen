@@ -1114,12 +1114,13 @@ fn every_system_under_the_roots_reads_on_a_target_as_the_rule_says() {
         "crates/archogen-plan/tests/corpus",
         "docs/semantics/boundary",
         "docs/semantics/modules",
+        "docs/semantics/cases",
         "targets",
     ] {
         eadl_files_under(&root().join(dir), &mut files);
     }
     files.sort();
-    let (mut systems, mut resolved) = (0_u32, 0_u32);
+    let (mut systems, mut resolved, mut in_trees) = (0_u32, 0_u32, 0_u32);
     for machine in [A_RICH_TARGET, A_WHOLE_TARGET] {
         let target = target_of(machine);
         let theirs: Vec<String> = target
@@ -1138,16 +1139,44 @@ fn every_system_under_the_roots_reads_on_a_target_as_the_rule_says() {
             .map(|form| eadl_model::refinement::Facets::of(form).0)
             .collect();
         for file in &files {
+            let a_tree =
+                std::fs::read_to_string(file).is_ok_and(|text| text.contains("(defmodule"));
             for (system, declarations) in systems_of(file) {
                 systems += 1;
+                if a_tree {
+                    in_trees += 1;
+                }
                 let Ok(there) = on_target(&system, &declarations, &target) else {
                     continue;
                 };
+                let said = file.display();
+                // The hardware a system has there is the target's, and nothing else.
+                let hardware = System::read(&there.system, &there.declarations).hardware;
+                assert_eq!(
+                    hardware
+                        .iter()
+                        .map(String::as_str)
+                        .collect::<std::collections::BTreeSet<_>>(),
+                    theirs.iter().map(String::as_str).collect(),
+                    "{said}"
+                );
                 let Search::Resolved(plan) = run(&there.declarations, &there.system) else {
                     continue;
                 };
                 resolved += 1;
-                let said = file.display();
+                for instance in &plan.instances {
+                    assert!(
+                        theirs.contains(&instance.over),
+                        "{said}: an instance over {}",
+                        instance.over
+                    );
+                }
+                if let Some((placed, _)) = &plan.placement {
+                    assert!(
+                        theirs.iter().any(|name| name == placed),
+                        "{said}: placed on {placed}"
+                    );
+                }
                 let bound: Vec<&str> = plan
                     .bindings
                     .keys()
@@ -1165,7 +1194,18 @@ fn every_system_under_the_roots_reads_on_a_target_as_the_rule_says() {
                     );
                 }
                 let report = there.report();
-                if report.diagnostics.is_empty() {
+                // Presence refuses nothing the search resolves: a description added here that does says why, or this is wrong.
+                assert!(
+                    report.diagnostics.is_empty(),
+                    "{said}: resolved, and presence says {:?}",
+                    report.diagnostics
+                );
+                // What the profile excludes `check` refuses first, so nothing is owed of it here.
+                let excluded = eadl_model::check::out_of_profile(
+                    &there.declarations,
+                    eadl_model::check::default_profile(),
+                );
+                if excluded.is_empty() {
                     let named =
                         |name: &str| {
                             there.declarations.iter().any(|form| {
@@ -1184,8 +1224,56 @@ fn every_system_under_the_roots_reads_on_a_target_as_the_rule_says() {
             }
         }
     }
-    assert!(systems >= 400, "only {systems} systems");
+    assert!(systems >= 480, "only {systems} systems");
     assert!(resolved >= 100, "only {resolved} resolved");
+    assert!(in_trees >= 20, "only {in_trees} from a module tree");
+}
+
+/// No machine stands on a loop, a target's among them, and a name it takes from the description says how to go on.
+#[test]
+fn a_target_s_own_loop_and_a_name_it_takes_are_refused() {
+    let Err(looped) = Target::read(
+        &forms(
+            "(defplatform l.b (refines l.m) (offers (observable-output true) (core-count 1 tick) (reachable-at-privilege machine)))
+             (defplatform l.m (refines l.b) (uses l.b) (offers (core-count 1 tick) (reachable-at-privilege machine)))",
+        ),
+        file_start(),
+    ) else {
+        panic!("a target's own loop is refused");
+    };
+    assert!(
+        looped
+            .iter()
+            .any(|d| d.message.contains("leads back to it")),
+        "{looped:?}"
+    );
+    let declarations = forms(
+        "(defblock sha-accel (offers (x true)))
+         (defblock console.uart (offers (observable-output true) (reachable-at-privilege machine)))
+         (defplatform soc (offers (core-count 1 tick) (reachable-at-privilege machine)) (requires (uses console.uart)))
+         (defsystem s (platform (uses soc)))",
+    );
+    let refused = on_target(
+        &declarations[3],
+        &declarations,
+        &target_of(
+            "(defblock t.a (offers (sha-accel true) (observable-output true) (reachable-at-privilege machine)) (requires (needs sha-accel)))
+             (defplatform t.m (offers (core-count 1 tick) (reachable-at-privilege machine)) (requires (uses t.a)))",
+        ),
+    );
+    let Err(said) = refused else {
+        panic!("a name it takes is refused");
+    };
+    let named = said
+        .iter()
+        .find(|d| d.message.contains("which only the description declares"))
+        .expect("the refusal of the name");
+    assert!(
+        named
+            .repair
+            .contains("rename the description's declaration"),
+        "{said:?}"
+    );
 }
 
 #[test]
@@ -1202,6 +1290,26 @@ fn another_system_named_is_no_missing_fact_and_presence_keeps_its_metadata() {
     let there = on_target(system, &declarations, &real_target()).expect("read there");
     assert!(there.presence().is_empty(), "{:?}", there.presence());
     assert!(there.report().closure.iter().any(|name| name == "other"));
+    // Its tasks are that system's: a need one writes asks nothing of this one, directly or through what it uses, and the search serves neither.
+    for task_asks in ["(needs sha-accel)", "(uses hash)"] {
+        let text = format!(
+            "(defplatform o.soc (offers (core-count 1 tick) (reachable-at-privilege machine)))
+             (defservice hash (requires (needs sha-accel)))
+             (defsystem other (task o (period 10 ms) (deadline 10 ms) (deadline-from release) (priority 1) (on-overrun fault) {task_asks}) (platform (uses o.soc)))
+             (defsystem s (requires (uses other)) (platform (uses o.soc)))"
+        );
+        let declarations = forms(&text);
+        let system = declarations
+            .iter()
+            .find(|form| form.items().get(1).and_then(Form::as_symbol) == Some("s"))
+            .expect("the system");
+        let there = on_target(system, &declarations, &real_target()).expect("read there");
+        assert!(
+            there.presence().is_empty(),
+            "{task_asks}: {:?}",
+            there.presence()
+        );
+    }
     // What the other system asks is asked, and what only that system's replaced hardware reaches is not.
     let declarations = forms(
         "(defplatform o.soc (offers (core-count 1 tick) (reachable-at-privilege machine)))
