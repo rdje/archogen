@@ -76,6 +76,13 @@ for node in ast.walk(ast.parse(source)):
         for item in node.body:
             if isinstance(item, ast.AnnAssign) and isinstance(item.target, ast.Name) and isinstance(item.value, ast.Constant):
                 limits[item.target.id] = item.value.value
+            elif isinstance(item, (ast.Assign, ast.AugAssign, ast.AnnAssign)):
+                breaches.append(f"`Limits` sets something at line {item.lineno} that is not one written line with one written value, which is all this check reads")
+    # A line moved from outside the class is moved all the same.
+    elif isinstance(node, (ast.Assign, ast.AugAssign, ast.AnnAssign)):
+        for target in node.targets if isinstance(node, ast.Assign) else [node.target]:
+            if isinstance(target, ast.Attribute) and isinstance(target.value, ast.Name) and target.value.id == "Limits":
+                breaches.append(f"line {node.lineno} sets `Limits.{target.attr}` from outside it")
 AT_MOST = {
     "start_used_percent": 70, "stop_used_percent": 85, "panic_used_percent": 88, "start_pressure_level": 2, "stop_pressure_level": 2, "panic_pressure_level": 4,
     "start_swap_gib": 16, "stop_swap_growth_gib": 3, "all_processes_gib": 6, "one_process_gib": 3, "processes": 512, "stop_disk_growth_gib": 50,
@@ -117,7 +124,7 @@ for name, line in {"FELL_WINDOW_SECONDS": 10, "GROWTH_WINDOW_SECONDS": 900}.item
 # Everything `make` compiles or tests goes through it. These recipes are written out rather than read for what they might mean: a loose reading of a shell line
 # was passed by `cargo fmt && cargo test`. Changing one means changing it here too, in a commit that says why.
 makefile = text_of("Makefile")
-if len(re.findall(r"^GUARD\s*[:+?]?=", makefile, re.M)) != 1 or not re.search(r"^GUARD\s*:=\s*python3 -I -B scripts/host_guard\.py run --wait \d+ --\s*$", makefile, re.M):
+if len(re.findall(r"^\s*(?:(?:override|export|unexport|private|define)\s+)*GUARD\b(?:\s*(?:::?:?|[+?!])?=|\s*$)", makefile, re.M)) != 1 or not re.search(r"^GUARD\s*:=\s*python3 -I -B scripts/host_guard\.py run --wait \d+ --\s*$", makefile, re.M):
     breaches.append("the Makefile's `GUARD` is not `python3 -I -B scripts/host_guard.py run --wait SECONDS --`, defined once")
 # Whole, each line at its line's start and in this order: a comment, a warning or the other test would keep the words and lose the question.
 WHOLE = "\nifneq ($(strip $(shell tail -n 1 scripts/host_guard.py)),sys.exit(main(sys.argv[1:])))\n$(error scripts/host_guard.py is not whole, so nothing here would be guarded or run: restore it)\nendif\n"
@@ -156,7 +163,7 @@ for line in makefile.splitlines():
     if line.startswith("\t"):
         found.setdefault(target, []).append(line.strip())
         continue
-    if re.match(r"\s*(?:\.RECIPEPREFIX|-?include)\b", line):
+    if re.match(r"\s*(?:\.RECIPEPREFIX|-?include|sinclude)\b", line) or "$(eval" in line:
         breaches.append(f"the Makefile says `{line.strip()}`, so what it runs cannot be read from it")
     named = re.match(r"([a-zA-Z_-]+)\s*:(?!=)(.*)", line)
     if named:

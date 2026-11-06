@@ -407,3 +407,20 @@ Left as it stands, said here: "all of it can be stopped with no table to read" m
 Said, and left as it stands: its reader could not run a real `make focused`, a commit's compile, a real full volume, chosen pressure levels, the census against the real watcher, real Codex, Kimi or VS Code, `onFailure` with a real crash, the blind watcher's true stay, `run_self_tests.sh --self-test`, or commit fixtures for `HOST-GUARD`. Two self-tests at once share `target/host-guard/selftest/`, which it did not measure. A watcher blind from its very start refuses sooner, heavy at 6 s and a job ended at 70 s, failing closed. A slow writer at a floor stopped at 27 s and 16 MiB, just past the record's "some".
 
 One whole self-test in answering this ended `758 passed, 2 failed, 1 not run`, with the host under other projects' load: `case_a_queued_make_is_no_build`'s `make` was gone at its check, its job's `--wait` being 40 s. The case then passed alone three times of three, and the whole run passed on a host at 50%, `765 passed, 0 failed, 0 not run`. That its 40 s ran out is the likely reading and is not shown, and the next reader may hold it to that.
+
+**Round 20** — `2026-11-06`, leaf `PROGRAM.127.20`: not acceptable, 10 findings, 2 defects, after 15, 12, 5, 6, 13, 2, 1, 1, 1, 3, 2, 3, 5, 2, 4, 4, 1, 2 and 2, on `ee53e991`. No finding fails open in ordinary work. Round 19's answers held: a spaced checkout's self-test spared by its path, a floor's counting, 110 forms of `ps` against the real one.
+
+| # | Kind | Finding | Answer |
+| --- | --- | --- | --- |
+| G20-1 | defect | a `make` queued in its `run` was read as a build when `ps` showed a child of the `run` as `(sysctl)` or `(Python)`, 5 looks in 717, so it was stopped at the danger line at 10, 137 and 238 s, and `heavy_running` counted it. The case held one sample | `reads_the_host` says what `ps` brackets for a moment is what it would be, and a `(cargo)` stays a job. `case_what_ps_cannot_read_says_no_job`. A candidate for round 19's `758 passed, 2 failed`, not shown |
+| G20-2 | defect, mild, rare | a `run` of another root whose job says `--root THISROOT` was read as this root's | `names_root` reads a guard's words before its `--`. `case_a_job_naming_a_root_is_not_that_root_s` |
+| G20-3 | gap | the reader did not read through the guard's own `run`, where a refusal sends an agent | `kills_by_name` reads what a `run` is told to run. A substitution inside it is a stated limit |
+| G20-4 | gap | `kill -9 -01`, `kill -9 $((-1))`, `pkill -P 01` passed as literal spellings | Read as numbers |
+| G20-5 | gap | `lsof -c` and `top` listed the table past the search | Read as searches; another program is a stated limit |
+| G20-6 | gap | `env -` hid what it wraps | It is `env -i` |
+| G20-7 | gap | `override GUARD`, `sinclude`, a plain line in `Limits` and one from outside it passed `HOST-GUARD` | Each is refused, `$(eval)` too. `case_a_commit_holds_what_make_and_the_limits_can_be_told` |
+| G20-8 | gap | in a path holding a space a directory's name could make a job an agent | `words_read` takes the path whole, by the file standing there. `case_a_path_holding_a_space_is_one_path` |
+| G20-9 | wording | "short of an agent, a terminal, a `run` under it or the guard's self-test" omitted the rest of `protected` | It says what is protected |
+| G20-10 | wording | "by a file named…" holds only for flags with no value and a path with no space, unless by this checkout's own path | It says so |
+
+Said, and left as it stands: its reader could not run a real `make focused`, a commit's compile, a real full volume, chosen pressure levels, true idle time, the census against the real watcher, real Codex, Kimi or VS Code, `onFailure` with a real crash, a 1 GiB fall, the blind 20-minute stay, or two self-tests at once. A self-test of its own read `763 passed, 0 failed, 1 not run`, rc 20, when the host took `case_a_job_under_run_outlasts_a_changed_guard` away three times, and `765 passed` on the next. A `watch --once` with its cwd in the scratch root stopped its own tool shell, its rig's error.

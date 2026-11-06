@@ -1114,6 +1114,101 @@ def case_a_commit_finds_a_name_bound_nowhere() -> None:
         check(f"and refuses one with `{name}` half renamed", done.returncode == 1 and f"reads `{name}`, bound nowhere" in done.stdout, done.stdout + done.stderr)
 
 
+def case_a_commit_holds_what_make_and_the_limits_can_be_told() -> None:
+    """What each round's reader wrote past the check: each reads as what it does, with no stamp in question."""
+    repo = fresh("make-told")
+    (repo / ".git").mkdir()
+    (repo / "scripts").mkdir()
+    (repo / ".claude").mkdir()
+    for name in ("Makefile", "CLAUDE.md", ".claude/settings.json", "scripts/check_host_guard.sh", "scripts/selftest_host_guard.py", "scripts/host_guard.py"):
+        shutil.copy(ROOT / name, repo / name)
+    holds = lambda: subprocess.run(["bash", str(repo / "scripts" / "check_host_guard.sh")], capture_output=True, text=True, errors="replace")
+    made, guard_text = (repo / "Makefile").read_text(), GUARD.read_text()
+    done = holds()
+    check("the whole tree passes", done.returncode == 0, done.stdout + done.stderr)
+    for said, text in (
+        ("an `override`", "override GUARD := env\n" + made),
+        ("a `sinclude`", "sinclude more.mk\n" + made),
+        ("an `$(eval)`", "$(eval GUARD := env)\n" + made),
+    ):
+        (repo / "Makefile").write_text(text)
+        done = holds()
+        check(f"a Makefile with {said} is refused", done.returncode == 1 and "Makefile" in done.stdout, done.stdout + done.stderr)
+    (repo / "Makefile").write_text(made)
+    anchor = "    panic_used_percent: float"
+    check("the rig finds the line", anchor in guard_text)
+    for said, text in (
+        ("a plain line in `Limits`", guard_text.replace(anchor, "    panic_used_percent = 99.0\n" + anchor, 1)),
+        ("a line from outside it", guard_text.replace("\nGUARD_NAME = ", "\nLimits.panic_used_percent = 99.0\nGUARD_NAME = ", 1)),
+    ):
+        (repo / "scripts" / "host_guard.py").write_text(text)
+        done = holds()
+        check(f"{said} is refused", done.returncode == 1 and "Limits" in done.stdout, done.stdout + done.stderr)
+
+
+def case_what_ps_cannot_read_says_no_job() -> None:
+    """A `make` waits on through what `ps` brackets for a moment, however rarely a look falls there: the reader's 5 looks in 717."""
+    root = "/x/root"
+    run = f"python3 {GUARD} run --root {root} --wait 40 -- touch ran"
+    for child, waiting in (("(sysctl)", True), ("(ps)", True), ("(vm_stat)", True), ("(Python)", True), ("(cargo)", False), ("cargo build", False)):
+        table = [g.Process(10, 1, "make waits", "", "", 0), g.Process(11, 10, run, "", "", 0), g.Process(12, 11, child, "", "", 0)]
+        by_pid = {p.pid: p for p in table}
+        check(f"under a `run`, {child} says {'no job' if waiting else 'a job'}", g.only_waiting(10, by_pid, g.children_of(table), root) == waiting)
+
+
+def case_a_job_naming_a_root_is_not_that_root_s() -> None:
+    """What follows a guard's `--` is its job's, and a job may say anything."""
+    other = f"python3 {GUARD} run --root /a --wait 40 -- bash -c 'x --root /b'"
+    check("a `run` is of the root it says", g.names_root(other, "/a"))
+    check("and not of one its job says", not g.names_root(other, "/b"))
+    check("nor where the job ends in it", not g.names_root(f"python3 {GUARD} run --root /a -- x --root /b", "/b"))
+    check("a watcher names its root", g.names_root(f"python3 {GUARD} watch --root /b", "/b"))
+
+
+def case_a_kill_is_read_through_what_hides_it() -> None:
+    root = Path("/x/root")
+    refused = lambda text: g.kills_by_name(g.commands_of(text), root)
+    for text in (
+        f"python3 {GUARD} run --wait 5 -- pkill -x cargo",
+        "python3 scripts/host_guard.py run -- killall cargo",
+        "kill -9 -01",
+        "kill -9 -001",
+        "kill -9 $((-1))",
+        "pkill -P 01",
+        "env - pkill x",
+        "kill $(lsof -t -c cargo)",
+        "top -l1 | awk '/cargo/{print $1}' | xargs kill",
+    ):
+        check(f"`{text}` is refused", refused(text))
+    for text in (
+        f"python3 {GUARD} run --wait 5 -- cargo build",
+        "kill -9 123",
+        "kill -0 -01",
+        "pkill -P 123",
+        "lsof -t -p 123",
+        "env - cargo build",
+    ):
+        check(f"`{text}` is not", not refused(text))
+    check("`env -` hides nothing it wraps", g.commands_of("env - cargo build")[0].words == ["cargo", "build"])
+
+
+def case_a_path_holding_a_space_is_one_path() -> None:
+    scope = fresh("spaced-script")
+    for directory in ("claude work", "plain work"):
+        (scope / directory).mkdir()
+        (scope / directory / "build.py").write_text("")
+        (scope / directory / "run.sh").write_text("")
+    for program, file in (("python3", "build.py"), ("bash", "run.sh")):
+        for directory in ("claude work", "plain work"):
+            process = g.Process(1, 1, f"{program} {scope}/{directory}/{file}", "", "", 0)
+            check(f"{program} of `{directory}/{file}` runs that file", process.script == file, process.script)
+            check("and is no agent for the directory's name", not g.is_agent(process), process.programs_named)
+    relative = g.Process(1, 1, "python3 claude work/build.py x", str(scope), "", 0)
+    check("relative to where it stands too", relative.script == "build.py" and not g.is_agent(relative), relative.script)
+    agent = g.Process(1, 1, "node /opt/bin/claude --flag", "", "", 0)
+    check("a real agent stays one", g.is_agent(agent))
+
+
 def case_make_looks_for_the_whole_guard() -> None:
     repo = fresh("make-asks")
     (repo / ".git").mkdir()
@@ -1853,7 +1948,9 @@ def case_run() -> None:
 
 
 # What holds nothing and reads nothing of the host: these say the same on a host of any state.
-PURE = (case_each_line_judges_alone, case_growth_is_of_the_last_minutes, case_what_counts_as_heavy, case_the_reader_sees_what_the_shell_runs, case_where_a_root_is)
+PURE = (    case_a_commit_holds_what_make_and_the_limits_can_be_told, case_what_ps_cannot_read_says_no_job, case_a_job_naming_a_root_is_not_that_root_s,
+    case_a_kill_is_read_through_what_hides_it, case_a_path_holding_a_space_is_one_path,
+case_each_line_judges_alone, case_growth_is_of_the_last_minutes, case_what_counts_as_heavy, case_the_reader_sees_what_the_shell_runs, case_where_a_root_is)
 THE_REST = (
     case_a_job_under_run_outlasts_a_changed_guard, case_a_watcher_ended_by_its_own_error_says_so, case_a_root_spelt_relatively_stays_that_root, case_make_looks_for_the_whole_guard,
     case_only_tightened, case_check_refuses, case_a_figure_not_read_is_never_safe, case_one_process, case_all_processes, case_what_a_stopped_process_started,

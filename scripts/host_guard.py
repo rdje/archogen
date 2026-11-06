@@ -31,6 +31,7 @@ import itertools
 import json
 import os
 import re
+import shlex
 import signal
 import subprocess
 import sys
@@ -261,15 +262,36 @@ class Process:
         return os.path.basename(self.command.split(" ", 1)[0]) if self.command else ""
 
     @property
+    def unread_name(self) -> str:
+        """The name `ps` brackets, `(sysctl)`, for a process whose words it cannot read, one starting or ending; nothing otherwise."""
+        return self.command[1:-1] if re.fullmatch(r"\([^()]*\)", self.command) else ""
+
+    @property
     def arguments(self) -> str:
         return self.command[len(self.exe) :] if self.exe and self.command.startswith(self.exe) else self.command.partition(" ")[2]
+
+    @property
+    def words_read(self) -> list[str]:
+        """Its arguments, the path it runs whole: `ps` gives one line, so a space in a path reads as two words, and the first could be any name, an agent's among them. The file standing there says where the path ends."""
+        words = self.arguments.split()
+        for at, word in enumerate(words):
+            if word.startswith("-"):
+                continue
+            if os.path.isfile(os.path.join(self.cwd, word)) or "/" not in " ".join(words[at : at + 2]):
+                return words
+            for end in range(at + 2, min(at + 9, len(words) + 1)):
+                whole = " ".join(words[at:end])
+                if os.path.isfile(os.path.join(self.cwd, whole)):
+                    return [*words[:at], whole, *words[end:]]
+            return words
+        return words
 
     @property
     def script(self) -> str:
         """What an interpreter runs, by its file's name; nothing otherwise."""
         if not (self.name in INTERPRETERS or self.name.startswith("python")):
             return ""
-        for word in self.arguments.split():
+        for word in self.words_read:
             if not word.startswith("-"):
                 return os.path.basename(word)
         return ""
@@ -280,7 +302,7 @@ class Process:
         there, or at a file with an extension or a `-m` or `-c`, which is what it runs: what follows is that program's own arguments, a directory named after an agent among them."""
         if not self.script:
             return []
-        words = self.arguments.split()[:6]
+        words = self.words_read[:6]
         for at, word in enumerate(words):
             if word in ("-m", "-c"):
                 return []
@@ -362,6 +384,7 @@ APPLICATION = ("/Applications/", "/System/", "/usr/libexec/", "/usr/sbin/")
 # This interpreter and this file by their own paths, since a checkout's path may hold a space (the repository may be moved anywhere).
 # The guard's self-test is spared as the guard is, by its own name: a line stopping it would end the run that says what it could not run, and leave its rigs behind. As a `run`'s job it is a job, which `GUARD_PROCESS` alone tells.
 SELF_TEST_PROCESS = re.compile(r"^(?:\S*[Pp]ython\S*|" + re.escape(sys.executable) + r")\s+(?:-\S+\s+)*(?:(?:\S*/)?selftest_host_guard\.py|" + re.escape(str(CODE.with_name("selftest_host_guard.py"))) + r")(?:\s|$)")
+GUARD_NAME = "host_guard.py"
 GUARD_PROCESS = re.compile(r"^(?:\S*[Pp]ython\S*|" + re.escape(sys.executable) + r")\s+(?:-\S+\s+)*(?:(?:\S*/)?host_guard\.py|" + re.escape(str(CODE)) + r")(?:\s|$)")
 SHELL_FLAGS_WITH_VALUES = {"--init-file", "--rcfile", "-o", "+o", "-O", "+O", "--init-command"}
 # What spawns more for as long as it lives, however little it holds.
@@ -426,8 +449,9 @@ def protected(process: Process) -> bool:
 
 
 def names_root(command: str, root: str) -> bool:
-    """Whether a guard's command line says `--root` is exactly this root, and not one whose name merely begins the same, a space among what may follow: a flag follows a root, or nothing, as `main` writes it."""
-    return re.search(r"--root\s+" + re.escape(root) + r"(?:\s+-|\s*$)", command) is not None
+    """Whether a guard's command line says `--root` is exactly this root, and not one whose name merely begins the same, a space among what may follow: a flag follows a root, or nothing, as `main` writes it. What follows its `--` is its job's words, and a job may name any root."""
+    own = re.split(r"\s--(?:\s|$)", command, maxsplit=1)[0]
+    return re.search(r"--root\s+" + re.escape(root) + r"(?:\s+-|\s*$)", own) is not None
 
 
 def is_run_of(process: Process, root: str) -> bool:
@@ -451,6 +475,12 @@ def children_of(table: list[Process]) -> dict[int, list[int]]:
     return children
 
 
+def reads_the_host(process: Process) -> bool:
+    """Whether it is a tool the guard reads the host with. `(sysctl)` is one starting or ending, and `(Python)` the guard's own fork before it becomes that, or the job, which the next look tells. A `(cargo)` stays what it says."""
+    unread = process.unread_name
+    return process.name in READS_THE_HOST or unread in READS_THE_HOST or unread == "Python"
+
+
 def only_waiting(pid: int, by_pid: dict[int, Process], children: dict[int, list[int]], root: str) -> bool:
     """Whether what `pid` has started is at most a `run` still waiting its turn: a shell, the guard, and what reads the host or its file. So a `make` still reading its Makefile holds no build."""
     todo = list(children.get(pid, []))
@@ -458,7 +488,7 @@ def only_waiting(pid: int, by_pid: dict[int, Process], children: dict[int, list[
         process = by_pid.get(todo.pop())
         if process is None:
             continue
-        if not (GUARD_PROCESS.search(process.command) or process.name in SHELLS or process.name in READS_THE_HOST or process.name == "tail"):
+        if not (GUARD_PROCESS.search(process.command) or process.name in SHELLS or reads_the_host(process) or process.name == "tail"):
             return False
         # A `run` of this root that has started its job has a child that is none of these, which the walk then meets.
         todo.extend(children.get(process.pid, []))
@@ -1081,6 +1111,8 @@ def unwrapped(words: list[str]) -> tuple[list[str], bool]:
                     rest = rest[:at] + rest[at + 1].split() + rest[at + 2 :]
                 elif word in takes_a_value:
                     at += 2
+                elif name == "env" and word == "-":
+                    at += 1
                 elif word.startswith("-") and word != "-":
                     if name == "command" and re.fullmatch(r"-\w*[vV]\w*", word):
                         return [], False
@@ -1601,10 +1633,23 @@ def kill_targets(arguments: list[str]) -> list[str]:
     return targets
 
 
+def what_a_run_runs(words: list[str]) -> list[str]:
+    """What `words`, a guard's `run`, are told to run; nothing of anything else."""
+    at = next((at for at, word in enumerate(words) if os.path.basename(word) == GUARD_NAME), None)
+    if at is None or words[at + 1 : at + 2] != ["run"] or "--" not in words[at + 2 :]:
+        return []
+    return words[words.index("--", at + 2) + 1 :]
+
+
 def kills_by_name(commands: list[Command], root: Path) -> bool:
     """Whether these stop processes by a name rather than a pid, with nothing saying it means this repository's: `pkill` or `killall` naming no path here, or `kill` of what a search
     of the process table found. A search names this root if anything in its pipeline does. `-P` goes by a parent's pid, and `kill` of numbers by theirs, whatever else ran before."""
     text = str(root)
+    # What the guard's own `run` is told to run is that command, and a refusal sends an agent there.
+    for command in commands:
+        told = what_a_run_runs(command.words)
+        if told and kills_by_name(commands_of(shlex.join(told)), root):
+            return True
 
     def names_this_root(word: str) -> bool:
         # Exactly it: `archogen-other` and `archogen copy` begin the same, and neither a name's own characters nor a space end a path.
@@ -1635,13 +1680,19 @@ def kills_by_name(commands: list[Command], root: Path) -> bool:
             flag = None if word in ("-PIPE", "-PROF", "-FPE") else re.fullmatch(r"-[acfilLnoqSvx]*([PFg])(.*)", word, re.S)
             if flag:
                 value = flag.group(2) or (words[at + 1] if at + 1 < len(words) else "")
-                if flag.group(1) != "P" or "1" not in value.strip("'\"").split(","):
+                # However a number is spelt: `pkill -P 01` is `-P 1`, and `$((…))` could be.
+                if flag.group(1) != "P" or not any(re.fullmatch(r"0*1|\$\(\(.*", each) for each in value.strip("'\"").split(",")):
                     return value
         return None
 
     def searches_by_name(command: Command) -> bool:
         if command.name == "pgrep":
             return goes_by_pid(command) is None
+        # Others that list the table, by a name or for a pipeline to pick from.
+        if command.name in ("top", "htop"):
+            return True
+        if command.name == "lsof":
+            return any(re.fullmatch(r"-[a-zA-Z]*c.*", word) for word in command.words[1:])
         if command.name != "ps":
             return False
         words = command.words[1:]
@@ -1680,8 +1731,8 @@ def kills_by_name(commands: list[Command], root: Path) -> bool:
             if command.words[1:2] in (["-0"], ["-s"]) and (command.words[1] == "-0" or command.words[2:3] == ["0"]):
                 continue
             targets = kill_targets(command.words[1:])
-            # -1 is every process this user may signal, on all of the host.
-            if "-1" in targets:
+            # -1 is every process this user may signal, on all of the host, however a number is spelt.
+            if any(re.fullmatch(r"-0*1", word) or "$((" in word for word in targets):
                 return True
             if command.fed or not all(A_PLAIN_TARGET.fullmatch(word) for word in targets):
                 # What a substitution alone feeds it is what that substitution ran. A variable may hold what anything before it found.
@@ -1705,7 +1756,7 @@ def heavy_running(root: Path) -> list[Process]:
         if process.pid not in line and is_run_of(process, text):
             # The watcher it may have started is its child too, and no job; nor are the tools it reads the host with.
             job = [by_pid[pid] for pid in children.get(process.pid, []) if pid in by_pid and not GUARD_PROCESS.search(by_pid[pid].command)]
-            if any(child.name not in ("ps", "sysctl", "vm_stat") for child in job):
+            if any(not reads_the_host(child) for child in job):
                 running.append(process)
     return running
 
