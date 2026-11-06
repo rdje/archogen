@@ -3,7 +3,7 @@
 - version: eadl/1
 - date: 2026-11-06
 - leaf: M4.2.3.3.20 (`docs/tasks/M4.md`)
-- status: pending
+- status: applied
 - constructs: docs/semantics/reference.md#diagnostics, docs/semantics/reference.md#normative-sources
 - invalidates: none
 
