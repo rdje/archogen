@@ -55,7 +55,7 @@ impl Target {
     /// # Errors
     ///
     /// Each thing that makes the file no target: a declaration of anything but hardware; one with no name, or a name two declarations
-    /// bear; no one platform that nothing else in the file names; or a block or platform that platform does not compose, which would be a
+    /// bear; no one platform that nothing else in the file composes; or a block or platform that platform does not compose, which would be a
     /// device the machine does not have.
     pub fn read(forms: &[Form], file: Span) -> Result<Self, Vec<Diagnostic>> {
         let mut errors = Vec::new();
@@ -115,10 +115,10 @@ impl Target {
             errors.push(Diagnostic::error(
                 "invalid-description",
                 if roots.is_empty() {
-                    "a target's file declares one platform nothing else in it names, and this declares none".to_owned()
+                    "a target's file declares one platform nothing else in it composes, and this declares none".to_owned()
                 } else {
                     format!(
-                        "a target's file declares one platform nothing else in it names, and this declares {found}"
+                        "a target's file declares one platform nothing else in it composes, and this declares {found}"
                     )
                 },
                 Label::new(roots.first().map_or(file, |(_, form)| form.span()), "here"),
@@ -166,22 +166,23 @@ pub struct OnTarget {
     /// What the system reads there: the description's declarations with that system in its place and its hardware gone, and the target's. Another
     /// system is gone too, but for one it names, which `M1.46` is to refuse. So nothing the target replaces can answer for it.
     pub declarations: Vec<Form>,
-    /// Those of `declarations` that ask anything of the machine: the system, what it reaches, and the target's own. Another may yet be a provider, and says what it offers.
+    /// Those of `declarations` that are the description's and ask anything of the machine: the system, and what it reaches.
     pub asking: BTreeSet<String>,
 }
 
 impl OnTarget {
-    /// What presence says of the system there (model §2 and §7 rule 1), as `archogen check` says it of any description, and of what it asks alone: a need on a fact the vocabulary does
-    /// not declare is judged by nothing else, the search binding nothing for it, and a service the system does not reach, its hardware gone, asks nothing of a machine it may never run on.
+    /// What presence says of the system there (model §2 and §7 rule 1), as `archogen check` says it of any description, of what asks and of what can answer: a need on a fact the vocabulary
+    /// does not declare is judged by nothing else, the search binding nothing for it. What offers is the machine, since the search binds a block or a platform and nothing else, so a service's
+    /// offer answers nothing here, and the plan it would let come is for a machine without the device. What the system does not reach neither asks nor answers.
     /// The command that names a target asks this before the search (`DC-H3`).
     #[must_use]
     pub fn presence(&self) -> Vec<Diagnostic> {
         let mut facts = FactMap::new();
         for form in &self.declarations {
-            if declared_name(form).is_some_and(|name| self.asking.contains(name)) {
+            if is_hardware(form) {
                 facts.collect(form);
-            } else {
-                facts.collect_unreached(form);
+            } else if declared_name(form).is_some_and(|name| self.asking.contains(name)) {
+                facts.collect_asking(form);
             }
         }
         facts
@@ -254,25 +255,31 @@ fn named_by_clause<'s>(system: &'s Form, declared: &BTreeMap<&str, &Form>) -> Ve
         .collect()
 }
 
-/// Whether `part` is of `whole`: what it composes, as model §2 rule 1 reads composition, or the more abstract saying of it that it refines (§3 rule 3), at any depth.
+/// Whether `part` is of `whole`: what it composes, as model §2 rule 1 reads composition, at any depth, or the more abstract saying of one of those that it refines (§3 rule 3). That says the same
+/// thing again and brings no blocks of its own (§8 rule 7), so what the refined one composes is not of it.
 fn holds(whole: &str, part: &str, declared: &BTreeMap<&str, &Form>) -> bool {
-    let mut seen: BTreeSet<String> = BTreeSet::from([whole.to_owned()]);
+    let of = |name: &str| declared.get(name).copied().filter(|form| is_hardware(form));
+    let mut made_of: BTreeSet<String> = BTreeSet::from([whole.to_owned()]);
     let mut todo = vec![whole.to_owned()];
     while let Some(at) = todo.pop() {
-        let Some(form) = declared
-            .get(at.as_str())
-            .copied()
-            .filter(|form| is_hardware(form))
-        else {
-            continue;
-        };
-        let refined = Facets::of(form).0.refines.map(|(up, _)| up);
-        for name in composition(form).into_iter().chain(refined) {
+        for name in of(&at).map(composition).unwrap_or_default() {
             if name == part {
                 return true;
             }
-            if seen.insert(name.clone()) {
+            if made_of.insert(name.clone()) {
                 todo.push(name);
+            }
+        }
+    }
+    let mut seen = made_of.clone();
+    let mut todo: Vec<String> = made_of.into_iter().collect();
+    while let Some(at) = todo.pop() {
+        if let Some((up, _)) = of(&at).and_then(|form| Facets::of(form).0.refines) {
+            if up == part {
+                return true;
+            }
+            if seen.insert(up.clone()) {
+                todo.push(up);
             }
         }
     }
@@ -280,7 +287,7 @@ fn holds(whole: &str, part: &str, declared: &BTreeMap<&str, &Form>) -> bool {
 }
 
 /// What the machine is made of, as the clause says it: each piece of hardware it names, once, but for one that is of another of them. In a cycle each is of the
-/// other, and there is no whole: its first name stands for it, so a cycle named whole is not read as no machine.
+/// other, and there is no whole: one stands for all of it, each of whose absences then speaks, so no name moves the verdict.
 fn what_the_machine_is<'s>(named: &[&'s str], declared: &BTreeMap<&str, &Form>) -> Vec<&'s str> {
     let distinct: BTreeSet<&'s str> = named.iter().copied().collect();
     distinct
@@ -296,28 +303,40 @@ fn what_the_machine_is<'s>(named: &[&'s str], declared: &BTreeMap<&str, &Form>) 
         .collect()
 }
 
-/// The declarations whose absences the whole machine owes: the one all the system's hardware is made of, as the clause says it, and each up the chain it refines
-/// (model §3 rule 3). Another's absence covers what it is made of and no more (model §2 rule 1), so it says nothing of a device beside it, and neither does one's
-/// among two that make the machine.
+/// The declarations whose absences the whole machine owes: the one all the system's hardware is made of, as the clause says it, with what forms a cycle with it, and each up the chain it
+/// refines (model §3 rule 3). Another's absence covers what it is made of and no more (model §2 rule 1), so it says nothing of a device beside it, and neither does one's among two that make the
+/// machine, nor one's beside hardware the system has that it does not compose, a block it only `needs`.
 fn declarations_speaking_for_the_machine<'d>(
     named: &[&str],
+    hardware: &BTreeSet<String>,
     declared: &BTreeMap<&str, &'d Form>,
 ) -> Vec<&'d Form> {
     let [only] = what_the_machine_is(named, declared)[..] else {
         return Vec::new();
     };
+    if !hardware
+        .iter()
+        .all(|part| part == only || holds(only, part, declared))
+    {
+        return Vec::new();
+    }
     let mut seen: BTreeSet<&str> = BTreeSet::new();
     let mut platforms = Vec::new();
-    let mut at = declared.get_key_value(only);
-    while let Some((name, form)) = at {
-        if !is_hardware(form) || !seen.insert(*name) {
-            break;
+    let cycle = declared.keys().copied().filter(|name| {
+        *name == only || (holds(only, name, declared) && holds(name, only, declared))
+    });
+    for name in cycle {
+        let mut at = declared.get_key_value(name);
+        while let Some((name, form)) = at {
+            if !is_hardware(form) || !seen.insert(*name) {
+                break;
+            }
+            platforms.push(*form);
+            at = Facets::of(form)
+                .0
+                .refines
+                .and_then(|(up, _)| declared.get_key_value(up.as_str()));
         }
-        platforms.push(*form);
-        at = Facets::of(form)
-            .0
-            .refines
-            .and_then(|(up, _)| declared.get_key_value(up.as_str()));
     }
     platforms
 }
@@ -457,7 +476,8 @@ pub fn on_target(
         .iter()
         .map(|form| Facets::of(form).0)
         .collect();
-    for platform in declarations_speaking_for_the_machine(&named, &declared) {
+    let hardware = System::read(system, declarations).hardware;
+    for platform in declarations_speaking_for_the_machine(&named, &hardware, &declared) {
         let facets = Facets::of(platform).0;
         for (fact, span) in facets.absences() {
             if let Some(offerer) = offered.iter().find(|target| target.offers_fact(fact)) {
@@ -482,7 +502,6 @@ pub fn on_target(
         .into_iter()
         .filter(|name| !other_systems.contains(name))
         .chain(declared_name(system).map(str::to_owned))
-        .chain(theirs.keys().map(|name| (*name).to_owned()))
         .collect();
     let declarations = declarations
         .iter()

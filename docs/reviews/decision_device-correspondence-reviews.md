@@ -55,3 +55,16 @@ Said, and left as it stands: its reader could not run the configuration checker 
 | DC3-9 | wording | "which `M1.46` refuses" is future, and "`correspond` needs both" ambiguous | Each said as it is |
 
 Said, and left as it stands: its reader could not run `/2`, the configuration checker on a target or a command naming a target, none of which exists. One rig build did not start inside its wait, since other work held the guard, and it reran it.
+
+**Round 4** — `2026-11-06`, leaf `M4.4.1.4`: not acceptable, 6 findings, 2 defects, after 5, 3 and 6, on `bb9e9740`. Its reader held the new closure start over 256 flat corpus files and 10 module-tree roots with no verdict moved, an emulated comparison, and put 207 systems on one target: 86 resolved, each with clean presence, and presence refused nothing that resolved. 83 plans on both sides, none with a target-side device not the target's. All four hand-offs held word for word, and `DC-H3` can be carried, by splitting `passes`, not filtering a result, since presence's codes overlap other passes'.
+
+| # | Kind | Finding | Answer |
+| --- | --- | --- | --- |
+| DC4-1 | defect | a provider chosen by its offer asked nothing, though presence relied on that offer: `(defservice sha.driver (offers sha-accel) (requires (uses accel)))` beside a system needing `sha-accel`, `accel` replaced, gave a plan for a machine without the device, DC2-1 by another route, from DC3-2's answer | What answers is the machine. The search binds a block or a platform and nothing else, so on a target a service's offer answers nothing, reached or not, `FactMap::collect_asking`, and what the system does not reach is not read at all. A test takes the reader's B1, a kept offer and a reached one |
+| DC4-2 | defect, low | "what a clause stands on" did not match the system's hardware: `(uses p.top)`, `p.top` only needing `q.block`, was refused where `(uses p.top q.block)` read, each with the same hardware; and `holds` followed what a refined platform composes, against rule 7's "`refines` is no edge", refusing `(uses a.top b.timer)`. `tests/target.rs`'s "named alone, it is the machine" held the first as right | A declaration speaks for the machine only where all the hardware `System::read` gives is of it, and what it refines is of it but brings no blocks. The test now says so, with the reader's two shapes |
+| DC4-3 | gap | in a cycle a rename moved the verdict, "first name" being sort order, and a later member's absence dropped | One stands for the cycle and each of its absences speaks. A test takes the absence on each member, by every clause |
+| DC4-4 | gap | a system's `(needs unambiguous-horizon)` is now `missing-fact` while the search binds it: "older than this" held only for a service's need. No corpus file has the shape | Said as it is, and `M3.4.17`'s |
+| DC4-5 | gap | older: a provider's `needs` is outside the closure, though `ROADMAP.md` §5.3 names provider preconditions | Said, and `M3.4.17`'s |
+| DC4-6 | wording | "one platform nothing else in the file names", where the code reads composition | "Composes", in the record, the doc and the message |
+
+Said, and left as it stands: its reader could not run `/2`, the configuration checker on a target or a command naming a target, none of which exists; it used the library's `check` and search and not the command line, and built no older commit.

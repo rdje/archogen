@@ -272,12 +272,12 @@ impl FactMap {
         }
     }
 
-    /// [`collect`](Self::collect), for a declaration nothing requested reaches: it says what it offers and what it is, and asks nothing, so a `uses` of
-    /// its is no request (`docs/decisions/decision_device-correspondence.md`).
-    pub fn collect_unreached(&mut self, form: &Form) {
-        let requested = self.requested.len();
+    /// [`collect`](Self::collect), for a declaration whose offers answer nothing where the machine is another's: a service or a policy, to which the search binds nothing. It asks, and is
+    /// what it is (`docs/decisions/decision_device-correspondence.md`).
+    pub fn collect_asking(&mut self, form: &Form) {
+        let offered = std::mem::take(&mut self.offered);
         self.collect(form);
-        self.requested.truncate(requested);
+        self.offered = offered;
     }
 
     fn collect_nested(&mut self, clause: &Form, owner: &str, asks: bool) {
@@ -857,22 +857,25 @@ mod tests {
     }
 
     #[test]
-    fn a_declaration_nothing_reaches_says_what_it_offers_and_asks_nothing() {
+    fn a_declaration_that_only_asks_answers_nothing_it_offers() {
         let mut sources = SourceMap::new();
         let id = sources
-            .add("t.eadl", "(defservice unused (offers sha-accel) (requires (uses a.block) (needs other-fact))) (defsystem s (requires (needs sha-accel)))")
+            .add("t.eadl", "(defservice driver (offers sha-accel) (requires (needs other-fact))) (defsystem s (requires (uses driver) (needs sha-accel)))")
             .expect("small");
         let (doc, _) = read(&sources, id);
         let mut map = FactMap::new();
-        map.collect_unreached(&doc.forms[0]);
+        map.collect_asking(&doc.forms[0]);
         map.collect(&doc.forms[1]);
-        assert_eq!(map.presence("sha-accel"), Presence::Offered);
+        assert_eq!(map.presence("sha-accel"), Presence::Undescribed);
+        assert!(map.closure().contains("other-fact"), "it still asks");
         assert_eq!(
-            map.closure(),
-            BTreeSet::from(["sha-accel".to_string()]),
-            "neither its `uses` nor its `needs` is asked"
+            map.check()
+                .diagnostics
+                .iter()
+                .filter(|d| d.code == "missing-fact")
+                .count(),
+            2
         );
-        assert!(map.check().diagnostics.is_empty());
     }
 
     #[test]

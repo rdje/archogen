@@ -627,7 +627,7 @@ fn a_need_outside_the_vocabulary_is_judged_wherever_the_system_writes_it() {
 }
 
 #[test]
-fn what_the_system_does_not_reach_asks_nothing_of_the_machine_and_may_yet_serve_it() {
+fn what_the_system_does_not_reach_neither_asks_nor_answers() {
     let console = "
 (defblock console.uart (offers (observable-output true) (reachable-at-privilege machine)))
 (defplatform soc.here
@@ -659,21 +659,23 @@ fn what_the_system_does_not_reach_asks_nothing_of_the_machine_and_may_yet_serve_
             there.presence()
         );
     }
-    // What it says of itself stands: a kept service that offers a fact is an offer, as anywhere, and what the system reaches asks.
-    let declarations = forms(&format!(
-        "{console} (defservice hash (requires (needs sha-accel))) (defservice offers.it (offers sha-accel))
-         (defsystem t (requires (uses hash)) (platform (uses soc.here)))"
-    ));
-    let system = declarations
-        .iter()
-        .find(|form| form.items().get(1).and_then(Form::as_symbol) == Some("t"))
-        .expect("the system");
-    let there = on_target(system, &declarations, &real_target()).expect("read there");
-    assert!(there.presence().is_empty(), "{:?}", there.presence());
-    assert!(there
-        .declarations
-        .iter()
-        .any(|form| form.items().get(1).and_then(Form::as_symbol) == Some("offers.it")));
+    // What the machine lacks, a service's offer does not answer, reached or not: the search binds it nothing, and the plan would be for a machine without the device.
+    for beside in [
+        "(defservice sha.driver (offers sha-accel) (requires (uses console.uart)))
+         (defsystem t (requires (needs sha-accel)) (platform (uses soc.here)))",
+        "(defservice hash (requires (needs sha-accel))) (defservice offers.it (offers sha-accel))
+         (defsystem t (requires (uses hash)) (platform (uses soc.here)))",
+        "(defservice offers.it (offers sha-accel))
+         (defsystem t (requires (uses offers.it) (needs sha-accel)) (platform (uses soc.here)))",
+    ] {
+        let declarations = forms(&format!("{console} {beside}"));
+        let system = declarations
+            .iter()
+            .find(|form| form.items().get(1).and_then(Form::as_symbol) == Some("t"))
+            .expect("the system");
+        let there = on_target(system, &declarations, &real_target()).expect("read there");
+        assert_eq!(codes(&there.presence()), ["missing-fact"], "{beside}");
+    }
 }
 
 #[test]
@@ -724,25 +726,53 @@ fn what_a_clause_stands_on_is_read_by_composition_and_refinement_alone() {
     };
     let q = "(defblock q.block (offers (observable-output true) (reachable-at-privilege machine)))
              (defplatform p.top (absent tick-rate) (offers (core-count 1 tick)) (requires (needs q.block)))";
-    // What it `needs` is no part of it, so these are two a clause stands on, and one's absence is not the machine's.
+    // What it `needs` is no part of it, so its absence is not the machine's, one clause naming both or naming it alone: the system has that block whichever.
     assert!(read(&format!(
         "{q} (defsystem s (requires (uses console.write)) (platform (uses p.top q.block)))"
     ))
     .is_ok());
-    // Named alone, it is the machine.
+    assert!(read(&format!(
+        "{q} (defsystem s (requires (uses console.write)) (platform (uses p.top)))"
+    ))
+    .is_ok());
+    // What it composes is of it, so named alone it is the machine.
+    let composed = "(defblock q.part (offers (observable-output true) (reachable-at-privilege machine)))
+                    (defplatform p.whole (absent tick-rate) (offers (core-count 1 tick)) (requires (uses q.part)))";
     assert_eq!(
         codes(
             &read(&format!(
-                "{q} (defsystem s (requires (uses console.write)) (platform (uses p.top)))"
+                "{composed} (defsystem s (requires (uses console.write)) (platform (uses p.whole)))"
             ))
             .expect_err("alone")
         ),
         ["refinement-violated"]
     );
-    // A cycle named whole is one machine, read as its first name, as naming that name alone is.
+    // What it refines says it again and brings no blocks: what that one composes is not of it, so the block beside it is a second.
+    let refining = "(defblock b.timer (offers (tick-rate 1 MHz) (reachable-at-privilege machine)))
+                    (defplatform x.up (offers (core-count 1 tick)) (requires (uses b.timer)))
+                    (defplatform a.top (refines x.up) (absent tick-rate) (offers (core-count 1 tick) (observable-output true)))";
+    assert!(read(&format!(
+        "{refining} (defsystem s (requires (uses console.write)) (platform (uses a.top b.timer)))"
+    ))
+    .is_ok());
+    // A cycle named whole is one machine, whichever of it holds the absence and whatever each is called.
     let cycle =
         "(defblock c.a (absent tick-rate) (offers (observable-output true)) (requires (uses c.b)))
                  (defblock c.b (requires (uses c.a)))";
+    let later = "(defblock c.a (offers (observable-output true)) (requires (uses c.b)))
+         (defblock c.b (absent tick-rate) (requires (uses c.a)))";
+    for clause in ["c.a c.b", "c.b c.a", "c.a", "c.b"] {
+        assert_eq!(
+            codes(
+                &read(&format!(
+                    "{later} (defsystem s (requires (uses console.write)) (platform (uses {clause})))"
+                ))
+                .expect_err("the cycle's absence")
+            ),
+            ["refinement-violated"],
+            "{clause}"
+        );
+    }
     for clause in ["c.a c.b", "c.b c.a", "c.a"] {
         assert_eq!(
             codes(

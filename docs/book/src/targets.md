@@ -187,7 +187,7 @@ are one device, and nothing has to, because a description says what it asks for.
 searches again. The device then bound for "`console.write` needs observable output" is the device `console.uart` was
 (`docs/decisions/decision_device-correspondence.md`; `crates/eadl-resolve/src/target.rs`).
 
-The description's own hardware is then gone from what is read, so nothing the target replaces can answer for it. A service the system does not reach may still serve it, and asks nothing of a machine it may never run on. So everything a target build says of a device is the target's. A description's rate, width and regions do not reach it, each requirement is judged again at
+The description's own hardware is then gone from what is read, so nothing the target replaces can answer for it. What the system does not reach neither asks nor answers, and a service's offer answers nothing there, since only a device can serve. So everything a target build says of a device is the target's. A description's rate, width and regions do not reach it, each requirement is judged again at
 the target's providers, what a system's `platform` clause asks beside its hardware among them, and the joint rules read the target's memory map. One device may become two, two may become one, and an adapter a better device no
 longer needs is gone. What no device can serve is the refusal any system gets.
 
