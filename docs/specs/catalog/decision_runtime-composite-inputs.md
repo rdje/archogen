@@ -134,7 +134,7 @@ dispatch, which claims before it knows the source, acts in the role of the servi
 - the timer service writes the compare and releases its due timer tasks;
 - a source's service claims and completes its own source, accesses its own device's registers, and releases the
   tasks bound to it;
-- a generated node that takes a channel programs that channel's compare, and any generated node bound to that device reads its counter, from a job inside its own masked run or from a service that calls it, a wake first armed as the last step of its node's phase of initialisation, and that alarm's service alone claims and completes it, a source's in all the above (`docs/decisions/decision_release-alarm.md` §2, `2026-11-06`; text until `RA-H5` builds it);
+- a generated node that takes a channel programs that channel's compare, and any generated node bound to that device reads its counter, from a job inside its own masked run or from a service that calls it, a wake first armed at the port's transition, and that alarm's service alone claims and completes it, a source's in all the above (`docs/decisions/decision_release-alarm.md` §2, `2026-11-06`; text until `RA-H5` builds it);
 - the runtime API's primitives, the completion path (added `2026-10-01`, the fault contract's R6 136), and the port's
   trap entry and exit, its transitions, its idle wake and its fault path, mask and unmask the hardware — they write the
   hart's interrupt-enable state directly; only a job calls the runtime API's `mask` and `unmask` (the profile's fault
@@ -156,7 +156,7 @@ dispatch, which claims before it knows the source, acts in the role of the servi
   leaves none pending at the first enabling of interrupts that no arrival made. Two writes are one record's alone,
   so the facts that depend on them are reviewed with the code that makes them: the counter's first value, and the
   compare's, are written only by code of the record that supplies `timer-service` (`reprograms-only-in-service`);
-  and a declared source's device is read and written only by code of the record that supplies `service.<source>`, in
+  and a declared source's device is read and written only by code of the record that supplies `service.<source>`, or for an alarm by the role above, in
   initialisation as at run time, whose `one-request-per-arrival.<source>` basis covers that configuration. The
   hart's trap state is written only by code of the record that supplies `switch`, in initialisation as on its trap
   path, whose facts are about the code it points traps at. Which record writes the controller's configuration and

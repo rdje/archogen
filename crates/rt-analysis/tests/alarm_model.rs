@@ -227,7 +227,11 @@ fn random_set(
         arm: (lag_max + 1).max(r.pick(&[1, 2, 3, 5])),
         delta: if overheads { r.pick(&[0, 1, 2]) } else { 0 },
         gamma: if overheads { r.pick(&[0, 1, 2, 3]) } else { 0 },
-        res: if overheads { r.pick(&[1, 2, 4, 5]) } else { 1 },
+        res: if overheads {
+            r.pick(&[1, 2, 4, 5, 8, 16])
+        } else {
+            1
+        },
         wake: r.pick(&[0, 1, 2]),
         external_first: r.below(2) == 0,
     };
@@ -320,7 +324,8 @@ fn delivery(device: Device, lag: i64, rho: i64, floor: i64, j_s: i64, c_s: i64) 
         Device::Compare => floor + lag,
         Device::Delay => floor + 2 * lag,
     };
-    rho.max(lag.max(j_s + c_s)).max(floored) + j_s + c_s
+    // A floored compare is then rounded up, so the rounding adds to it.
+    lag.max(j_s + c_s).max(floored) + rho + j_s + c_s
 }
 
 /// Random sets the analysis holds, each run under each pattern of lags: no arrivals under the floor, none lost, no response past its bound, no deadline delivered past `delivery`. How many sets and
@@ -464,7 +469,7 @@ fn with_what_code_can_know_the_floor_holds_at_each_lag_on_a_level_compare() {
                 false,
                 false,
                 false,
-                Know::ReadBack,
+                Know::WhatItReadAndWrote,
                 Device::Compare,
                 lag
             ),
@@ -477,7 +482,7 @@ fn with_what_code_can_know_the_floor_holds_at_each_lag_on_a_level_compare() {
                 true,
                 false,
                 true,
-                Know::ReadBack,
+                Know::WhatItReadAndWrote,
                 Device::Compare,
                 lag
             ),
@@ -497,11 +502,24 @@ fn on_a_delay_only_device_the_floor_holds_and_delivery_costs_twice_the_lag() {
                 false,
                 false,
                 false,
-                Know::ReadBack,
+                Know::WhatItReadAndWrote,
                 Device::Delay,
                 lag
             ),
             (40, 160)
+        );
+        assert_eq!(
+            sweep(
+                0x4357_9BDF_0246_8ACF + lag,
+                20,
+                false,
+                false,
+                true,
+                Know::WhatItReadAndWrote,
+                Device::Delay,
+                lag
+            ),
+            (20, 80)
         );
     }
 }
@@ -635,7 +653,7 @@ fn a_floor_off_the_value_written_breaks_at_a_lag_and_the_protocol_holds() {
         &tasks,
         &alarms,
         p,
-        Know::ReadBack,
+        Know::WhatItReadAndWrote,
         Device::Compare,
         late(),
         12_000,
@@ -702,7 +720,8 @@ fn a_wake_keeps_its_floor_and_its_read_to_read() {
             },
             8_000,
         );
-        let charge = every + j[1] + i64::try_from(c_s).expect("small");
+        let rho = i64::try_from(p.res - 1).expect("small");
+        let charge = every + rho + j[1] + i64::try_from(c_s).expect("small");
         assert!(
             run.longest_read_to_read[1] <= charge,
             "{} against {charge}: {tasks:?} {alarms:?} {p:?}",
@@ -714,6 +733,44 @@ fn a_wake_keeps_its_floor_and_its_read_to_read() {
         );
     }
     assert_eq!(judged, 100);
+}
+
+/// A floored compare is then rounded up, so the rounding adds to the floor and no `max` holds it: the design's fourth reader's case, a coarse compare with a deadline just past the floor.
+#[test]
+fn a_floored_compare_is_rounded_up_so_the_rounding_adds() {
+    let tasks = vec![task("t0", 1, 128, 1, vec![(0, 1), (0, 18)], 2, None)];
+    let alarms = [alarm(2, 17, 10_000, true)];
+    let mut p = plain(1, 1, 1, 1, 0, true);
+    p.res = 16;
+    let Some((_, j)) = bounds(&tasks, &alarms, p) else {
+        panic!("the analysis holds it");
+    };
+    let run = once(
+        &tasks,
+        &alarms,
+        p,
+        Know::WhatItReadAndWrote,
+        Device::Compare,
+        LagModel {
+            max: 0,
+            pattern: vec![0],
+        },
+        4_000,
+    );
+    let (rho, floor, c_s) = (15, 17, 2);
+    let charge = delivery(Device::Compare, 0, rho, floor, j[0], c_s);
+    assert!(
+        run.latest_delivery[0] <= charge,
+        "{} against {charge}",
+        run.latest_delivery[0]
+    );
+    // The sum a `max` over them would give does not hold it.
+    assert!(
+        run.latest_delivery[0] > rho.max(floor) + j[0] + c_s,
+        "{} and J_s {}",
+        run.latest_delivery[0],
+        j[0]
+    );
 }
 
 /// A deadline read off a modular counter, past at most `lag` or ahead at most `reach`: where `reach + lag` passes what one wrap tells apart, a deadline ahead and one past read the same. A floored compare stands `T_s`
@@ -742,11 +799,18 @@ fn a_modular_counter_tells_a_deadline_past_from_one_ahead_only_within_its_modulu
             }
         }
     }
-    let room =
-        |reach: i64, t_s: i64, lag: i64, modulus: i64| reads_right(modulus, reach.max(t_s), lag);
-    assert!(room(15, 8, 5, 64));
+    // What stands ahead and what is read past: the floor stands `T_s` and a lag past a read, and a deadline is read past by as much as `delivery` lets it wait.
+    let room = |reach: i64, t_s: i64, lag: i64, past: i64, modulus: i64| {
+        reads_right(modulus, reach.max(t_s + lag), past)
+    };
+    assert!(room(15, 8, 5, 30, 64));
     assert!(
-        !room(15, 62, 5, 64),
+        !room(15, 62, 5, 5, 64),
         "the floor's reach, and not the delay's"
     );
+    assert!(
+        !room(100, 64, 1, 69, 128),
+        "a deadline floored past its time is read as far ahead"
+    );
+    assert!(room(100, 64, 1, 69, 256));
 }

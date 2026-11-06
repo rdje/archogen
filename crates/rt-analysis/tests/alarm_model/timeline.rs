@@ -47,9 +47,9 @@ pub enum Know {
     Omniscient,
     /// The last compare value it wrote that had been reached at its read.
     ValueWritten,
-    /// Bounded from above: it reads the time after each write inside the same masked run, and takes as arrived a compare that may match
-    /// before the next write lands.
-    ReadBack,
+    /// The record's protocol, as it says it: a compare standing that may match by the read and the lag is left, and its service picks up what is pending. Otherwise it writes, and reads the time again in the
+    /// same masked run, which bounds the last arrival from above.
+    WhatItReadAndWrote,
 }
 
 #[derive(Clone, Copy, PartialEq, Eq, Debug)]
@@ -123,8 +123,6 @@ struct Alarm {
     last_read: Option<i64>,
     being_delivered: Vec<(i64, i64)>,
     writes: usize,
-    rewritten_after_fire: bool,
-    awaiting_service: bool,
 }
 
 #[derive(Clone, Copy)]
@@ -159,14 +157,6 @@ fn ceil_to(value: i64, res: u64) -> i64 {
     }
 }
 
-fn trace_on(t: i64) -> bool {
-    std::env::var("RA3_TRACE").ok().is_some_and(|v| {
-        let mut parts = v.split(',').map(|p| p.parse::<i64>().unwrap_or(0));
-        let (a, b) = (parts.next().unwrap_or(0), parts.next().unwrap_or(0));
-        t >= a && t <= b
-    })
-}
-
 pub struct Run<'a> {
     pub tasks: &'a [TaskSpec],
     pub alarms: &'a [AlarmSpec],
@@ -179,14 +169,6 @@ pub struct Run<'a> {
 
 impl Run<'_> {
     /// The earliest the compare standing can raise, as the code reckons it from its shadow.
-    fn earliest_of(&self, shadow: i64) -> i64 {
-        let lag_max = i64::try_from(self.lag.max).expect("small");
-        match self.device {
-            Device::Compare => shadow,
-            Device::Delay => shadow - lag_max,
-        }
-    }
-
     fn read_event(
         &self,
         al: &mut Alarm,
@@ -198,11 +180,11 @@ impl Run<'_> {
         let actual =
             i64::try_from(self.lag.pattern[al.writes % self.lag.pattern.len()]).expect("small");
         al.writes += 1;
-        if trace_on(read) {
-            println!("read {read} deadline {deadline:?} pending {:?} shadow {:?} code_last {:?} last_arrival {:?} fires {:?} request {:?} awaiting {} rewritten {}", al.pending, al.shadow, al.code_last, al.last_arrival, al.fires, al.request, al.awaiting_service, al.rewritten_after_fire);
-        }
         let land = read + actual;
-        let is_service = deadline.is_none();
+        if self.know == Know::WhatItReadAndWrote {
+            self.what_it_read_and_wrote(al, read, land, deadline, measured);
+            return;
+        }
         // A compare reached at this very instant has raised: a read there sees it, and no write undoes it.
         if self.know != Know::Omniscient && al.fires.is_some_and(|f| read >= f) {
             al.fires = None;
@@ -235,43 +217,10 @@ impl Run<'_> {
                     }
                 }
             }
-            Know::ReadBack => {
-                if is_service {
-                    // A trap came. What it serves is the compare standing, unless a job wrote after it knew that had raised.
-                    if !al.rewritten_after_fire {
-                        if let Some(s) = al.shadow.take() {
-                            al.code_last = Some(al.code_last.map_or(s, |l| l.max(s)));
-                        }
-                    }
-                    al.rewritten_after_fire = false;
-                    al.awaiting_service = false;
-                } else {
-                    if let Some(s) = al.shadow {
-                        if s <= read {
-                            al.code_last = Some(al.code_last.map_or(s, |l| l.max(s)));
-                            al.shadow = None;
-                            al.awaiting_service = true;
-                        }
-                    }
-                    // Its request is pending at the controller, which a job's masked run can read.
-                    if al.request.is_some() {
-                        al.awaiting_service = true;
-                    }
-                }
-                // A compare that may raise before this write lands is left: the service it raises picks up what is pending.
-                if al
-                    .shadow
-                    .is_some_and(|s| self.earliest_of(s) <= read + lag_max)
-                {
-                    unneeded = true;
-                }
-            }
+            Know::WhatItReadAndWrote => unreachable!("its own path"),
         }
         if unneeded {
             return;
-        }
-        if self.know == Know::ReadBack && !is_service && al.awaiting_service {
-            al.rewritten_after_fire = true;
         }
         let next = al.pending.iter().map(|p| p.0).chain(al.wake_next).min();
         let t_s = i64::try_from(al.spec.t_s).expect("small");
@@ -290,23 +239,16 @@ impl Run<'_> {
                     at = at.max(last + t_s);
                 }
             }
-            ceil_to(at, self.plat.res)
+            match self.device {
+                Device::Compare => ceil_to(at, self.plat.res),
+                // A delay counts from where it lands: rounded from the read, so that it is never early.
+                Device::Delay => read + ceil_to(at - read, self.plat.res),
+            }
         });
         // What it will know from reading again after the write, in the same masked run.
         if let Some(v) = value {
-            let ub = read + lag_max;
             match self.device {
-                Device::Compare => {
-                    if self.know == Know::ReadBack && v <= ub {
-                        al.code_last = Some(al.code_last.map_or(ub, |l| l.max(ub)));
-                        al.shadow = None;
-                        if !is_service {
-                            al.awaiting_service = true;
-                        }
-                    } else {
-                        al.shadow = Some(v);
-                    }
-                }
+                Device::Compare => al.shadow = Some(v),
                 Device::Delay => {
                     // Fires at landing + (v - read), at most this.
                     al.shadow = Some(v.max(read) + lag_max);
@@ -318,11 +260,77 @@ impl Run<'_> {
         } else {
             al.shadow = None;
         }
-        if trace_on(read) {
-            println!(
-                "   write value {value:?} lands {land} shadow {:?} code_last {:?}",
-                al.shadow, al.code_last
-            );
+        al.inflight = Some((land, value, read));
+    }
+
+    fn what_it_read_and_wrote(
+        &self,
+        al: &mut Alarm,
+        read: i64,
+        land: i64,
+        deadline: Option<i64>,
+        measured: &mut Measured,
+    ) {
+        let lag_max = i64::try_from(self.lag.max).expect("small");
+        let t_s = i64::try_from(al.spec.t_s).expect("small");
+        let is_service = deadline.is_none();
+        // A compare reached at this very instant has raised: a read there sees it, and no write undoes it.
+        if al.fires.is_some_and(|f| read >= f) {
+            al.fires = None;
+            if al.request.is_some() {
+                measured.merged += 1;
+            } else {
+                al.request = Some(read);
+                al.last_arrival = Some(read);
+                measured.arrivals[al.index].push(read);
+            }
+        }
+        if let Some(d) = deadline {
+            al.pending.push((d, land));
+        }
+        // What a value arrives by, at the latest, where it arrives at all: a delay lands late by its lag.
+        let latest = |value: i64| match self.device {
+            Device::Compare => value,
+            Device::Delay => value + lag_max,
+        };
+        // A service: the compare standing, if at or before this read, is the one that raised it.
+        if is_service {
+            if let Some(standing) = al.shadow {
+                if standing <= read {
+                    al.code_last = Some(
+                        al.code_last
+                            .map_or(latest(standing), |last| last.max(latest(standing))),
+                    );
+                    al.shadow = None;
+                }
+            }
+        }
+        // A compare standing that may match by the read and the lag is left: its service picks up what is pending.
+        if al.shadow.is_some_and(|standing| standing <= read + lag_max) {
+            return;
+        }
+        let next = al.pending.iter().map(|p| p.0).chain(al.wake_next).min();
+        let value = next.map(|n| {
+            let mut at = n.min(read + al.spec.reach).max(read);
+            if let Some(last) = al.code_last {
+                at = at.max(last + t_s);
+            }
+            match self.device {
+                Device::Compare => ceil_to(at, self.plat.res),
+                Device::Delay => read + ceil_to(at - read, self.plat.res),
+            }
+        });
+        if let Some(v) = value {
+            match self.device {
+                // Read again after the landing, still masked: at or before that, it has arrived or will at once.
+                Device::Compare if v <= land => {
+                    al.code_last = Some(al.code_last.map_or(land, |last| last.max(land)));
+                    al.shadow = None;
+                }
+                _ => al.shadow = Some(v),
+            }
+        } else {
+            al.shadow = None;
         }
         al.inflight = Some((land, value, read));
     }
@@ -408,8 +416,6 @@ impl Run<'_> {
                 last_read: None,
                 being_delivered: Vec::new(),
                 writes: 0,
-                rewritten_after_fire: false,
-                awaiting_service: false,
             })
             .collect();
         for al in &mut alarms {
@@ -443,9 +449,6 @@ impl Run<'_> {
                 self.land(al, t);
                 if al.fires.is_some_and(|f| t >= f) {
                     al.fires = None;
-                    if trace_on(t) {
-                        println!("arrival at {t}, request pending {:?}", al.request);
-                    }
                     if al.request.is_some() {
                         // The level line is already up: no second request, and no second arrival to separate.
                         measured.merged += 1;
