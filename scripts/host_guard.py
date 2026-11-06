@@ -11,6 +11,7 @@ crash. So the limits below hold well inside them, on what the whole host uses, a
     host_guard.py watch            the watcher itself; one per repository
     host_guard.py hook             the harness's check before a shell command: exit 2 refuses it
     host_guard.py status           what it reads now, and what it has stopped
+    host_guard.py prove            this file reads the host and judges, acting on nothing: what a watcher asks of a changed guard before taking it up
     host_guard.py stop             the watcher stopped, for a handoff
 
 It reads macOS, the host this runs on, by macOS's own figures: Activity Monitor's sum for RAM, the kernel's memory pressure level, swap, and
@@ -78,8 +79,8 @@ CODE = Path(__file__).resolve()
 GROWTH_WINDOW_SECONDS = 900.0
 # What a job must have written since the last sample to count as writing, at a disk floor.
 WRITING_BYTES = 1 << 20
-# What a volume must lose within this long to have fallen, at a floor with no writer seen. Other projects cost this shared volume up to 67 MiB in a half second and 355 MiB in ten seconds, measured
-# `2026-11-05`, so a smaller fall says nothing of ours, and a script of `rm` was stopped for one: a floor's way out. `check_host_guard.sh` holds these and the windows beside `Limits`.
+# What a volume must lose within this long to have fallen, at a floor with no writer seen. Other projects move this shared volume's figure by hundreds of MiB, the record says what was measured, so a
+# small fall says nothing of ours, and a script of `rm` was stopped for one: a floor's way out. `check_host_guard.sh` holds these and the windows beside `Limits`.
 FELL_BYTES = 1 << 30
 FELL_WINDOW_SECONDS = 10.0
 LOG_AT_MOST = 1 << 20  # What the log keeps, and the most any read of it can cost.
@@ -768,13 +769,30 @@ def hold_lock(root: Path) -> int | None:
     return fd
 
 
-def code_reads() -> bool:
-    """Whether this file as it now stands would run: a guard saved broken must not end the one watching."""
+PROVEN = "host-guard: this file runs"
+
+
+def code_runs(root: Path) -> bool:
+    """Whether this file as it now stands runs: a guard saved broken, a half-done edit that compiles among it, must not end the one watching. So it is asked to read the host and to judge,
+    in a process of its own, and to say so: an emptied file says nothing, and exits 0."""
     try:
-        compile(CODE.read_bytes(), str(CODE), "exec", dont_inherit=True)
-    except (OSError, SyntaxError, ValueError):
+        done = subprocess.run([sys.executable, "-I", "-B", str(CODE), "prove", "--root", str(root)], capture_output=True, text=True, errors="replace", timeout=60, check=False, stdin=subprocess.DEVNULL)
+    except (OSError, subprocess.SubprocessError):
         return False
-    return True
+    return done.returncode == 0 and done.stdout.strip() == PROVEN
+
+
+def prove(root: Path, limits: Limits) -> int:
+    """What `code_runs` asks: one reading and one judgement, acting on nothing."""
+    reading = read_host(root)
+    table = processes()
+    mine = ours(table, root, os.getpid())
+    judged(reading, mine, limits, None, Memory().moved(reading, mine))
+    commands = commands_of("true | cat")
+    kills_by_name(commands, root)
+    any(is_heavy(each.words) for each in commands)
+    print(PROVEN)
+    return 0
 
 
 def write_note(root: Path, name: str, text: str) -> None:
@@ -801,6 +819,7 @@ def watch(root: Path, limits: Limits, once: bool, idle_seconds: float = 600.0, a
         (state_path(root) / "peak.json").unlink(missing_ok=True)
     except OSError:
         pass
+    held_inode = os.stat(root).st_ino
     os.chdir("/")
     memory = Memory()
     unread_said, last_seen, busy, code = 0.0, time.monotonic(), False, code_stamp()
@@ -823,12 +842,15 @@ def watch(root: Path, limits: Limits, once: bool, idle_seconds: float = 600.0, a
             write_note(root, "watch.pid", str(os.getpid()))
         # A guard changed under a watcher holds from now, not from when nothing of ours next runs. The lock closes with the old image and the new one takes it.
         if arguments is not None and code_stamp() not in (None, code):
-            if code_reads():
+            if code_runs(root):
                 os.execv(sys.executable, [sys.executable, "-I", "-B", str(CODE), *arguments])
             code = code_stamp()
-            record(root, kind="unread", error=f"{CODE.name} as saved does not read: this watcher goes on as it was")
-        # A root that is gone, a removed worktree, is watched by nobody: nothing of it can run, and its state must not bring it back.
-        if not root.is_dir():
+            record(root, kind="unread", error=f"{CODE.name} as saved does not run: this watcher goes on as it was")
+        # A root that is gone, a removed worktree, is watched by nobody: nothing of it can run, and its state must not bring it back. One remade at that name is another, which holds its own lock.
+        try:
+            if os.stat(root).st_ino != held_inode:
+                return 0
+        except OSError:
             return 0
         try:
             fresh = time.time() - (state_path(root) / "heartbeat").stat().st_mtime < idle_seconds
@@ -1145,7 +1167,10 @@ class ShellReader:
             else:
                 continued = False
                 word = self.word()[0]
-                if A_DESCRIPTOR_VARIABLE.fullmatch(word) and REDIRECTION.match(text, self.at):
+                # A `for` or `select` needs no `;` before its body: what follows its header is commands.
+                if word in ("do", "{") and words[:1] in (["for"], ["select"]):
+                    words = []
+                elif A_DESCRIPTOR_VARIABLE.fullmatch(word) and REDIRECTION.match(text, self.at):
                     pass  # `{fd}>log`: where a redirection puts a descriptor, and no word of the command.
                 elif at_start and word == "case":
                     self.case()
@@ -1471,7 +1496,7 @@ def make_targets(arguments: list[str]) -> list[str]:
         word = arguments[at]
         if word in MAKE_FLAGS_WITH_VALUES or word in ("-C", "-f", "--directory", "--file", "--makefile"):
             at += 1
-        elif word in ("-j", "--jobs") and arguments[at + 1 : at + 2] and arguments[at + 1].isdigit():
+        elif word in ("-j", "--jobs") and arguments[at + 1 : at + 2] and (arguments[at + 1].isdigit() or arguments[at + 1].startswith("$")):
             at += 1
         elif not word.startswith("-") and not ASSIGNMENT.match(word):
             targets.append(word)
@@ -1549,33 +1574,49 @@ def kills_by_name(commands: list[Command], root: Path) -> bool:
 
     def names_this_root(word: str) -> bool:
         # Exactly it: `archogen-other` and `archogen copy` begin the same, and neither a name's own characters nor a space end a path.
-        return re.search(re.escape(text) + r"(?![\w. -])", word) is not None
+        return re.search(re.escape(text) + r"(?![\w -]|\.\w)", word) is not None
 
     def pipeline_names_this_root(search: Command) -> bool:
         # What it excludes or where it saves what it found says nothing of which processes it means (G8-4).
         for other in commands:
             if other.pipeline != search.pipeline or other.name == "tee":
                 continue
-            if other.name in ("grep", "egrep", "fgrep", "rg") and any(re.fullmatch(r"-\w*v\w*|--invert-match", word) for word in other.words[1:]):
+            if inverted(other):
                 continue
             if any(names_this_root(word) for word in other.words):
                 return True
         return False
 
-    def by_pid(command: Command, *flags: str) -> bool:
-        return any(word.startswith(flags) for word in command.words[1:])
+    def inverted(command: Command) -> bool:
+        # What it excludes says nothing of which processes it means, and `pkill -v` of a path stops all that is not it.
+        return command.name in ("grep", "egrep", "fgrep", "rg", "pgrep", "pkill") and any(re.fullmatch(r"-[a-zA-Z]*v[a-zA-Z]*|--invert-match|--inverse", word) for word in command.words[1:])
+
+    def by_pid(command: Command) -> bool:
+        """By a pid file, or by a parent's pid, which 1 is not: every orphan on the host has it for a parent."""
+        words = command.words[1:]
+        if any(word.startswith("-F") for word in words):
+            return True
+        for at, word in enumerate(words):
+            parent = word[2:] if word.startswith("-P") else ""
+            parent = parent or (words[at + 1] if word == "-P" and at + 1 < len(words) else "")
+            if word.startswith("-P") and parent.strip("'\"") != "1":
+                return True
+        return False
 
     def searches_by_name(command: Command) -> bool:
         if command.name == "pgrep":
-            return not by_pid(command, "-P", "-F")
+            return not by_pid(command)
         # `-p` in any cluster, as `ps -fp 123` writes it.
         return command.name == "ps" and not any(re.fullmatch(r"-\w*p\w*|--pid.*", word) for word in command.words[1:])
 
     for at, command in enumerate(commands):
         if command.name in ("pkill", "killall"):
-            if not (command.name == "pkill" and by_pid(command, "-P", "-F")) and not any(names_this_root(word) for word in command.words[1:]):
+            if not (command.name == "pkill" and by_pid(command)) and (inverted(command) or not any(names_this_root(word) for word in command.words[1:])):
                 return True
         elif command.name == "kill":
+            # Signal 0 stops nothing: it asks whether a process stands.
+            if command.words[1:2] in (["-0"], ["-s"]) and (command.words[1] == "-0" or command.words[2:3] == ["0"]):
+                continue
             targets = kill_targets(command.words[1:])
             if command.fed or not all(A_PLAIN_TARGET.fullmatch(word) for word in targets):
                 # What a substitution alone feeds it is what that substitution ran. A variable may hold what anything before it found.
@@ -1872,14 +1913,19 @@ def main(argv: list[str]) -> int:
             overrides = json.loads(args.pop(0))
     root = canonical(root)
     # A `run` says whose it is on its command line, which is how the watcher knows its job is ours, wherever it was started from.
-    if verb == "run" and not named:
-        rest = list(argv[1:])
-        at = 0
-        while at < len(rest) and rest[at] in ("--wait", "--limits", "--once"):
-            at += 1 if rest[at] == "--once" else 2
+    # A `run` is known by what follows its root, the root's own spelling and a flag, so it writes both, as named or not.
+    if verb == "run":
+        rest, at = list(argv[1:]), 0
+        while at < len(rest) and rest[at] in ("--root", "--wait", "--limits", "--once"):
+            if rest[at] == "--root":
+                del rest[at : at + 2]
+            else:
+                at += 1 if rest[at] == "--once" else 2
         if rest[at : at + 1] != ["--"]:
-            rest.insert(at, "--")  # So that a flag always follows the root, which is how a `run` is known.
-        os.execv(sys.executable, [sys.executable, "-I", "-B", str(Path(__file__).resolve()), "run", "--root", str(root), *rest])
+            rest.insert(at, "--")
+        written = ["run", "--root", str(root), *rest]
+        if written != list(argv):
+            os.execv(sys.executable, [sys.executable, "-I", "-B", str(Path(__file__).resolve()), *written])
     try:
         limits = tightened(overrides)
     except ValueError as error:
@@ -1908,6 +1954,8 @@ def main(argv: list[str]) -> int:
         return hook(root, limits)
     if verb == "status":
         return status(root, limits)
+    if verb == "prove":
+        return prove(root, limits)
     if verb == "stop":
         pid = watcher_pid(root)
         if pid:

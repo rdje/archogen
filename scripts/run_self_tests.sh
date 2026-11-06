@@ -18,7 +18,7 @@
 # here first rather than on the runner. Measured when it was added: all 23 passed under it — each scratch
 # repository that commits sets its own identity — so this guards the next arm, not a known one.
 #
-# CONTRACT: exit 0 = every self-test passed; 1 = at least one failed, each named; 2 = nothing to run.
+# CONTRACT: exit 0 = every self-test passed; 1 = at least one failed, each named; 2 = nothing to run; 20 = none failed and at least one could not all be run, which is no pass.
 # `--self-test` runs this runner's own arms against stub gates in `target/doctrine_scratch/`.
 # Seams, for those arms only: `SELF_TESTS_GLOB` (where gates are looked for) and `SELF_TESTS_HARNESS` (the
 # outside harness).
@@ -98,12 +98,18 @@ if [ -z "$gates" ]; then
   echo "SELF-TESTS: no gate carries a --self-test under '$GLOB' — nothing ran, which is not a pass" >&2
   exit 2
 fi
-passed=0; failed=0
+passed=0; failed=0; incomplete=0
 while IFS= read -r gate; do
   started=$SECONDS
-  if out="$(bare bash "$gate" --self-test 2>&1)"; then
+  out="$(bare bash "$gate" --self-test 2>&1)"
+  status=$?
+  if [ "$status" -eq 0 ]; then
     passed=$((passed + 1))
     printf '  ✓ %-52s %3ss  %s\n' "$gate" "$((SECONDS - started))" "$(printf '%s\n' "$out" | tail -1)"
+  elif [ "$status" -eq 20 ]; then
+    # Could not all be run, which is neither: `ROADMAP.md` §14.3's incomplete, said and carried up.
+    incomplete=$((incomplete + 1))
+    printf '  ? %-52s %3ss  %s\n' "$gate" "$((SECONDS - started))" "$(printf '%s\n' "$out" | grep -E 'self-test:' | tail -1)"
   else
     failed=$((failed + 1))
     printf '  ✗ %-52s %3ss  its RED arms did not all pass:\n' "$gate" "$((SECONDS - started))" >&2
@@ -113,6 +119,10 @@ done <<< "$gates"
 if [ "$failed" -ne 0 ]; then
   echo "SELF-TESTS: $failed of $((passed + failed)) self-test(s) failed — a gate that cannot show it fails is a gate nobody knows works" >&2
   exit 1
+fi
+if [ "$incomplete" -ne 0 ]; then
+  echo "self-tests: incomplete — $passed passed, and $incomplete could not all be run, which is no pass"
+  exit 20
 fi
 echo "self-tests: OK — $passed self-test(s) passed"
 exit 0
