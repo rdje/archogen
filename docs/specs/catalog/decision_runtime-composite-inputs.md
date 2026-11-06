@@ -134,7 +134,7 @@ dispatch, which claims before it knows the source, acts in the role of the servi
 - the timer service writes the compare and releases its due timer tasks;
 - a source's service claims and completes its own source, accesses its own device's registers, and releases the
   tasks bound to it;
-- a generated node that takes a channel programs that channel's compare, from a job inside its own masked run or from its alarm's service, and that alarm's service is a source's in all the above (`docs/decisions/decision_release-alarm.md` §2, `2026-11-06`; text until `RA-H5` builds it);
+- a generated node that takes a channel programs that channel's compare and reads that device's counter, from a job inside its own masked run or from its alarm's service, a wake first armed as the last masked step of initialisation, and that alarm's service is a source's in all the above (`docs/decisions/decision_release-alarm.md` §2, `2026-11-06`; text until `RA-H5` builds it);
 - the runtime API's primitives, the completion path (added `2026-10-01`, the fault contract's R6 136), and the port's
   trap entry and exit, its transitions, its idle wake and its fault path, mask and unmask the hardware — they write the
   hart's interrupt-enable state directly; only a job calls the runtime API's `mask` and `unmask` (the profile's fault

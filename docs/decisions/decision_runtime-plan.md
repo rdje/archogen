@@ -311,7 +311,7 @@ timer route and a source, and a block may be named `timer`:
      - then the sources whose separation is `unknown` or `absent`, by their interrupt's text;
      - then the timer routes, by their interrupt's text.
 
-     The timer routes come last because `/1` has no key for them: the analysis refuses them until `M2.21.2` charges them as
+     The timer routes come last because `/1` has no key for them: the analysis refuses them until `M2.21.2` charges each alarm on them as
      `decision_release-alarm.md` §2 says, and `/2` ranks them by the deadline each has to meet (§3 there, `RA-H1`). The
      release timer's place against the sources is the hardware's fact `external-before-timer`, which speaks of external
      interrupts; the simulator states it as `yes`, every source before the release timer, and takes a timer route before
@@ -348,7 +348,7 @@ timer route and a source, and a block may be named `timer`:
      interrupt no source declares: "unmodeled-interrupt-load" (`runtime.rs`). The scheduling checker gives each
      enabled item an identifier of its own kind and declares no source for a timer route (`RTP-H4`). So a system with
      a timer route, one binding an adapter or a multiplexed alarm among them, is refused `unsupported-profile` by the
-     analysis until `M2.21.2` declares it the source `decision_release-alarm.md` §2 makes it. The plan carries the route, its costs and its requesters,
+     analysis until `M2.21.2` declares each alarm on it the source `decision_release-alarm.md` §2 makes it. The plan carries the route, its costs and its requesters,
      and the analysis says why it cannot judge them.
    - **The interrupt model**, §7.3's per-source "masking constraints, and whether interrupt nesting is possible":
      interrupts do not nest, and every masked section masks every interrupt. These are the variant's conditions; the
@@ -472,7 +472,7 @@ timer route and a source, and a block may be named `timer`:
     | each source | `service-cost`, `acknowledge-point`, `deferred-work`, `no-application-code`, `one-request-per-arrival` | `realization` |
     | each timer route | `service-cost`, `arrival-bound` | `realization` |
 
-    `/2` owes each alarm the more that `decision_release-alarm.md` §2 lists, its least and greatest separation apart and each from who can state it.
+    `/2` owes each alarm the more that `decision_release-alarm.md` §2 lists, a floor its realization enforces as its least separation and its greatest apart.
 
     A task's `figures-under-preemption` is §2.2's declaration whole, condition 8's half: its figures hold under any
     preemption and from any entry state.

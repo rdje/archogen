@@ -351,7 +351,7 @@ written from this section alone (`crates/archogen-plan-check/src/joint.rs`, `M3.
    interrupt, timer routes included, and on a target the platform's non-maskable interrupts and traps, and no other
    (`docs/decisions/decision_runtime-plan.md` §2.5; `M4.1.2.2`), as the analysis requires
    (`docs/specs/analysis/decision_runtime-analysis-variant.md`, *enabled sources*). A route is an obligation, never a
-   finding: a timer route is charged by the analysis as a source (`docs/decisions/decision_release-alarm.md` §2). Given the system's level
+   finding: each alarm on a timer route is charged by the analysis as a source of its own (`docs/decisions/decision_release-alarm.md` §2). Given the system's level
    (rule 9), a route carries it: the level the interrupt is delivered at.
 9. **Privilege** (`M3.3.4.1`; `SR-H11`, `SR-H12`). Given the level a plan binds one system's callers to — a level of
    `reachable-at-privilege`'s domain, the profile's — `rt-static-up-v1`'s Privilege row states `machine`
