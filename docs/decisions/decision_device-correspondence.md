@@ -18,8 +18,8 @@ needs observable output" is the device `console.uart` was. If no device can serv
 
 1. **`S` on `T` is `S` with `T`'s platform in its `platform` clause.** The hardware the clause's own `uses` names is replaced by that platform, and a
    clause given where `S` wrote none. All else a clause holds stays, a requirement or a service, since it is the system's own side (`docs/semantics/model.md`
-   §7 rule 4). The system is then read as any system (§8 rule 7): its hardware is what that platform composes. Search, joint rules and checker run
-   unchanged, each requirement judged again at `T`'s providers. Nothing here decides what satisfies what.
+   §7 rule 4). The description's hardware is then gone from what is read, and so is another system, so nothing the target replaces can answer for it. The system is read as any system (§8 rule 7): its hardware is what that platform composes. Presence, search, joint rules and checker run
+   unchanged, each requirement judged again at `T`'s providers, and a need on a fact the vocabulary does not declare by presence, as §7 rule 1 has it: the search binds nothing for one (`OnTarget::presence`). Nothing here decides what satisfies what.
 2. **So everything `archogen-runtime-plan/2` lowers of a device is `T`'s.** A plan `A_T` of `S` on `T` binds only `T`'s devices, and an adapter
    only over them; the lowering reads `A_T` and never reads a device of the description. A description's rate, width, base address and regions do
    not reach a target build, and the analysis reads `T`'s.
@@ -39,12 +39,12 @@ reads so, unchanged.
 | a name both the description and the target declare | `schema-duplicate-name` | a name means one declaration, and a device taken for another by name is what this rule exists not to do |
 | a target's file naming what only the description declares, or a description naming what only the target declares, by `uses`, `needs` or `refines` | `invalid-description`, `infeasible-configuration` | each file says what it holds with no help from the other. Read together, the target's name would find the description's device and bind it, and the description could be read only beside that one target |
 | the system, a task, or a service or a policy the system reaches on the target naming a block or platform itself, by `uses` or `needs`, anywhere but its `platform` clause's own `uses` | `infeasible-configuration` | no requirement stands for a name, so nothing says which target device it is. The repair is to say what is asked of it |
-| the one platform the system's clause names, or one up the chain it refines, declaring a fact absent that the target offers | `refinement-violated` | model §3 rule 3 and `ROADMAP.md` §5.3: an absence is a constraint something relies on, and no requirement carries it. It is read as rule 3 reads an offer |
+| the one declaration the system's clause stands on, or one up the chain it refines, declaring a fact absent that the target offers | `refinement-violated` | model §3 rule 3 and `ROADMAP.md` §5.3: an absence is a constraint something relies on, and no requirement carries it. It is read as rule 3 reads an offer |
 
-Only that one platform speaks for the machine, since all the system's hardware is what it is made of. An absence covers what it is made of and no more, and another declaration's offer is "two statements of two devices" (model §2 rule 1). So a block's own absence, a composed platform's and that of one of two platforms a clause names are not carried: another device may offer the fact, and a requirement that relies on one is judged at whichever device serves it.
+A clause stands on one declaration where all it names is that one, however often it is named, or a part of it. Only that one speaks for the machine, since all the system's hardware is what it is made of. An absence covers what it is made of and no more, and another declaration's offer is "two statements of two devices" (model §2 rule 1). So what a composed block or platform declares absent, and one of two that a clause stands on, are not carried, though it happen to be all there is beneath: it spoke of itself and not of the machine, and a requirement that relies on one is judged at whichever device serves it.
 
 **What the description's hardware is, then.** One platform the system can run on, and its proof that the requirements can be met there. A
-description need not have a plan of its own to be put on a target, and `correspond` needs both.
+description need not have a plan of its own to be put on a target, nor pass `check` over hardware of its own, and `correspond` needs both.
 
 **Hand-offs.** Each is carried, word for word, by the leaf it names.
 
@@ -53,7 +53,7 @@ description need not have a plan of its own to be put on a target, and `correspo
 | --- | --- | --- |
 | `DC-H1` | `M4.1.7` | A target's file states what systems' requirements read of its devices, a counter's width, modulus, coherence and relative delay among them, each with what checks it, since `targets/riscv-virt-up.eadl` holds nothing its agreement does not check and a system asking them of it is refused `missing-fact` until then. |
 | `DC-H2` | `M4.1.7` | The configuration checker puts a system on a target by a reader of its own and judges the plan there, the target in the plan's identity, as it reads a plan today; `crates/eadl-resolve/src/target.rs` is the generator's. |
-| `DC-H3` | `M4.1.7` | The command that names a target runs `archogen check`'s judgement on the description and on the target's file each alone, before they are read together, since each must stand alone and read together a schema error of one can be hidden by the other. |
+| `DC-H3` | `M4.1.7` | The command that names a target runs `archogen check`'s judgement on the target's file alone, and on what `on_target` gives, the description's own hardware gone, before the search: a description need not be checked over hardware of its own, and presence judges what the search binds nothing for, `OnTarget::presence`. |
 | `DC-H4` | `M4.1.7` | A target with no placement memory is refused, since no playground provides memory there, and what the profile asks of a machine, one active core among it, is judged of any target named, where `cargo xtask target-agreement` holds only the shipped ones. |
 
 ## Why
@@ -71,7 +71,7 @@ description need not have a plan of its own to be put on a target, and `correspo
 - **By name.** A target's `target.console` and a description's `console.uart` share no name, and two machines' devices should not have to.
 - **A map written by hand**, `console.uart` is `target.console`, one per system and target. Each pair would be a claim, and checking it means judging the
   requirements at the target's device, which is this rule; so where facts tell devices apart it adds a file and no knowledge. Where they do not, the
-  policy already orders candidates (`Policy::prefer`), by device name: one order for the whole system, so two requesters asking the same fact get one device under any order, and what differs is then said as a fact.
+  policy already orders candidates (`Policy::prefer`), by device name: one order for the whole system, so two requesters asking the same shared fact get one device under any order, and what differs is then said as a fact.
 - **Device by device, as a refinement of the description's device** (model §3). A value "is kept only by the same value", so a 64-bit target counter would
   not stand for a 32-bit one, though every requirement is better met; `target.timer` offers no `region device.timer`, so every concrete region would
   refuse; and neither a split nor an adapter a better device no longer needs can be said.
@@ -85,11 +85,11 @@ description need not have a plan of its own to be put on a target, and `correspo
 - A `/2` plan names only a target's devices; a line naming a description's device, were one wanted, is a report made by `correspond`.
 - ⚠️ **Two devices no requirement tells apart are not told apart.** With two UARTs on a target, "which is the console" is the policy's order, then the search's stable
   one, and that order is one for the whole system, so it cannot give two requesters two equal UARTs. A designer who cares says what differs. This is the limit of matching by what is asked, stated rather than worked around.
-- ⚠️ **Silence is not an offer.** A target's file holds what its agreement checks, so a fact it does not state is not offered: a system declaring `interrupt-source` absent lands on `riscv-virt-up`, whose controller is present and unstated (`decision_target-platform-description.md` §2). That is how model §3 rule 3 reads an absence, and `DC-H1` is how a fact comes to be stated. A fact stated with any value counts as offered, as that rule reads it, so `(multicore false)` is refused as offering `multicore`.
+- ⚠️ **Silence is not an offer.** A target's file holds what its agreement checks, so a fact it does not state is not offered: a system declaring `interrupt-source` absent lands on `riscv-virt-up`, whose controller is present and unstated (`decision_target-platform-description.md` §2). That is how model §3 rule 3 reads an absence, by the fact's name, and `DC-H1` is how a fact comes to be stated. So a fact stated with any value counts as offered, `(multicore false)` being refused as offering `multicore`, and a derived fact's absence meets only its own name, `(absent unambiguous-horizon)` landing on a target that offers its inputs.
 - ⚠️ **What is claimed is what is judged.** Two plans agreeing on requirements says nothing of a run on one matching a run on the other: that comparison is `M4.9`'s.
 - A service naming a device is refused here with a repair that works on a target, before the search's own refusal (`M1.49`), whose repair, to compose the device into the platform, does nothing where that platform is replaced.
 - Nothing yet names a target on the command line, and `/2` does not exist: `M4.1.7` owns the input and the lowering, `M4.1.6` which device's alarm releases tasks.
-- Today, of the five `examples/`, only `s0-heartbeat` has a plan of its own and on a target: the rest wait on `M3.7`, each refused `missing-fact` on either. `tests/target.rs`
+- Today, of the five `examples/`, only `s0-heartbeat` has a plan of its own and on a target: the rest wait on `M3.7`, or in `bounded-queue`'s case on a later profile, each refused `missing-fact` by the search on either. `tests/target.rs`
   therefore holds the rule's other cases on fixtures written there, a target stating what `riscv-virt-up`'s file does not yet.
 
 ## Review
@@ -97,3 +97,4 @@ description need not have a plan of its own to be put on a target, and `correspo
 | Round | Findings | Defects | Verdict |
 | --- | --- | --- | --- |
 | 1 | 14 | 5 (DC1-1 to DC1-5), beside 7 gaps and 2 of wording | `2026-11-05`, not acceptable — answered: only the hardware a clause names is replaced, and all else it holds is judged on the target; each file stands alone, in both directions; only the platform all the hardware is made of speaks for the machine; a target's file holds one declaration per name |
+| 2 | 10 | 3 (DC2-1 to DC2-3), beside 3 gaps and 4 of wording | `2026-11-06`, not acceptable — answered: the description's hardware is gone from what a system reads on a target, so nothing replaced can answer for it, and presence judges there what the search binds nothing for; `DC-H3` asks of what `on_target` gives; a clause stands on what it means, however it is written |

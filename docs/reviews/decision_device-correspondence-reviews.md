@@ -22,3 +22,20 @@ The independent review of [`docs/decisions/decision_device-correspondence.md`](.
 | DC1-14 | wording | model §8 rule 10's "a system's regions against a target's own map are `M4.4`'s" was stale beside the record's "They do not" | Said as it is |
 
 Said, and left as it stands: its reader did not run a module tree through `resolved_declarations` on a target, judging by reading that it is the same forms; `/2`, its lowering and the checker's reader do not exist. It stated that it read `docs/tasks/M4.md` for the hand-offs and grepped `docs/profiles/rt-static-up-v1.md` and `xtask/src/target.rs`, beyond the search paths given. No sealed case read, no history searched.
+
+**Round 2** — `2026-11-06`, leaf `M4.4.1.2`: not acceptable, 10 findings, 3 defects, all this design's. Its reader put 229 corpus systems on one target: 203 read there, 26 refused with a true message, 173 resolved, and 202 of the 203 read identically to the same system with its hardware removed. That measurement is what the answer rests on. Round 1's answers held but for what is below, as did the rule, `correspond`, and the hand-offs word for word.
+
+| # | Kind | Finding | Answer |
+| --- | --- | --- | --- |
+| DC2-1 | defect | a need on a fact the vocabulary does not declare was judged on no target: `check` read the description's own block, the search bound nothing, and a plan came for a machine without the device | The description's hardware is gone from what a system reads on a target, so nothing replaced can answer for it, and `OnTarget::presence` judges there what the search binds nothing for, as model §7 rule 1 says |
+| DC2-2 | defect | `DC-H3` asked `check` of the description alone, which refuses a description rule 1 admits: one with no clause, or whose own hardware is silent | `DC-H3` asks it of the target's file alone and of what `on_target` gives |
+| DC2-3 | defect | one platform named twice, or beside a part of itself, dropped its absence, since names were counted | `what_the_machine_is`: each once, but for what another composes |
+| DC2-4 | gap | an absence up a chain through a block was lost, and a lone block's, and the reason stated for a sole composed platform did not hold there | The chain goes through a block, a lone block is the machine, and a composed one's is stated as what it spoke of: itself |
+| DC2-5 | gap | `(absent unambiguous-horizon)` lands on a target offering its inputs. Older than this design | Stated, beside `(multicore false)`, as that rule reads by name |
+| DC2-6 | gap | a target device named like a fact outside the vocabulary refuses a description that already uses `needs` | The repair says so: rename the device |
+| DC2-7 | wording | "do not reach the joint rules at all" was false, since `Joint::new` read the replaced hardware | True now |
+| DC2-8 | wording | "the rest wait on `M3.7`" was false of `bounded-queue` | Said, and in the test |
+| DC2-9 | wording | "two requesters asking the same fact get one device" was false of a consumed fact | A shared fact |
+| DC2-10 | wording | the search's message said "the description's own blocks and platforms" of a target's. Older | The system's |
+
+Said, and left as it stands: its reader could not run the configuration checker on a target or `/2`, since neither reader exists, so rule 1's "checker" is `DC-H2`'s to hold. An older half of DC2-1 remains on a description's own hardware, where a block outside it offers the fact and `check` and the search both pass: 3 such names in 242 files, none in an example, and `M3.4.7`'s adopted verdict will not cover it. Filed as `M3.4.16`. It stated that it read `docs/tasks/M1.md`, `M3.md`, `docs/profiles/rt-static-up-v1.md` and the runtime plan's reviews, and grepped `DOCTRINE_ENFORCEMENT.md` and the guard, beyond the paths given. No sealed case read, no history searched.

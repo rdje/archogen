@@ -877,7 +877,7 @@ fn unmet(
         String::new()
     } else {
         format!(
-            "; the search looked at the description's own blocks and platforms and at the engine's adapters — {} — \
+            "; the search looked at the system's own blocks and platforms and at the engine's adapters — {} — \
              and the engine realizes a requirement no other way yet, catalog records being M3.7's, so this is missing \
              engine support, not proof that no realization exists",
             if kinds.is_empty() {

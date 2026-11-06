@@ -252,7 +252,7 @@ fn what_the_real_target_does_not_state_is_said_and_no_plan_guessed() {
 }
 
 /// `examples/periodic-three`'s hardware, its region where it writes it, with the facts a plan of its own needs. That example has no
-/// plan of its own yet: `release-accuracy` and `priorities` wait on a realization (`M3.7`), on any hardware.
+/// plan of its own yet: `release-accuracy` and `priorities` wait on a realization (`M3.7`), on any hardware, and `bounded-queue` is refused by the profile.
 const A_REGION_AT_THE_TARGET_S_CONSOLE: &str = "
 (defblock timer.counter
   (offers
@@ -661,12 +661,102 @@ fn a_platform_s_absence_is_kept_and_a_block_s_speaks_for_the_block() {
 (defsystem s (requires (uses console.write)) (platform (uses soc.a soc.b)))
 ";
     assert!(absent_on(two_named).is_ok());
+    // The one a clause stands on, however it is written: named twice, or beside a part of itself.
+    for clause in ["(uses soc.here soc.here)", "(uses soc.here console.uart)"] {
+        let twice = on_platform.replace(
+            "(platform (uses soc.here))",
+            &format!("(platform {clause})"),
+        );
+        assert_eq!(
+            codes(&absent_on(&twice).expect_err("the same machine")),
+            vec!["refinement-violated"],
+            "{clause}"
+        );
+    }
+    // A lone block is the machine, and what it refines goes with it, a block's absence up a chain among it.
+    let lone = "
+(defblock only.one
+  (absent tick-rate)
+  (offers (observable-output true) (reachable-at-privilege machine)))
+(defservice console.write (requires (needs observable-output)))
+(defsystem s (requires (uses console.write)) (platform (uses only.one)))
+";
+    assert_eq!(
+        codes(&absent_on(lone).expect_err("all of it")),
+        vec!["refinement-violated"]
+    );
+    let up_a_block = format!(
+        "(defblock soc.up (absent tick-rate)) {}",
+        A_SYSTEM.replace(
+            "(defplatform soc.here",
+            "(defplatform soc.here (refines soc.up)"
+        )
+    );
+    assert_eq!(
+        codes(&absent_on(&up_a_block).expect_err("kept")),
+        vec!["refinement-violated"]
+    );
     // A block says it of itself alone: another device may offer the fact.
     let on_block = A_SYSTEM.replace(
         "(defblock console.uart\n  (offers",
         "(defblock console.uart\n  (absent tick-rate)\n  (offers",
     );
     assert!(absent_on(&on_block).is_ok());
+}
+
+#[test]
+fn what_the_target_replaces_is_gone_and_cannot_answer_for_it() {
+    // A need on a fact the vocabulary does not declare: the search binds nothing for it, and presence is what judges it.
+    let text = "
+(defblock accel (offers sha-accel (reachable-at-privilege machine)))
+(defplatform soc.here
+  (offers (core-count 1 tick) (reachable-at-privilege machine))
+  (requires (uses accel)))
+(defservice hash (requires (needs sha-accel)))
+(defsystem s (requires (uses hash)) (platform (uses soc.here)))
+";
+    let declarations = forms(text);
+    let moved = on_target(system_of(&declarations), &declarations, &real_target())
+        .expect("it can be read there");
+    assert!(
+        moved.declarations.iter().all(|form| !matches!(
+            form.items().get(1).and_then(Form::as_symbol),
+            Some("accel" | "soc.here")
+        )),
+        "the description's hardware reaches the target"
+    );
+    let found = moved.presence();
+    assert_eq!(codes(&found), vec!["missing-fact"], "{found:?}");
+    assert!(found[0].message.contains("sha-accel"), "{found:?}");
+    // A target that offers it answers.
+    let offering = "
+(defblock t.accel (offers sha-accel (reachable-at-privilege machine)))
+(defplatform t
+  (offers (core-count 1 tick) (reachable-at-privilege machine))
+  (requires (uses t.accel)))
+";
+    let there = on_target(
+        system_of(&declarations),
+        &declarations,
+        &target_of(offering),
+    )
+    .expect("it can be read there");
+    assert!(there.presence().is_empty(), "{:?}", there.presence());
+    // Another system of the description does not come along, nor does what it says.
+    let two = format!("{text} (defsystem other (requires (needs nothing-at-all)))");
+    let declarations = forms(&two);
+    let system = declarations
+        .iter()
+        .find(|form| form.items().get(1).and_then(Form::as_symbol) == Some("s"))
+        .expect("the system");
+    let there =
+        on_target(system, &declarations, &target_of(offering)).expect("it can be read there");
+    assert!(there.presence().is_empty(), "{:?}", there.presence());
+    // Nor does a description need a clause, or a device of its own for what it asks: judged on the target alone.
+    let no_clause = forms(&text.replace("(platform (uses soc.here))", ""));
+    let there = on_target(system_of(&no_clause), &no_clause, &target_of(offering))
+        .expect("it can be read there");
+    assert!(there.presence().is_empty(), "{:?}", there.presence());
 }
 
 #[test]
@@ -722,7 +812,7 @@ fn every_example_gets_an_answer_on_the_target_and_none_is_silently_the_descripti
                 there.bindings
             ),
             Search::Refused { diagnostics, .. } => {
-                // Each waits on `M3.7`, as it does on its own hardware.
+                // Each waits on `M3.7`, or on a later profile, as it does on its own hardware.
                 assert!(!diagnostics.is_empty(), "{name}");
                 assert!(
                     diagnostics.iter().all(|d| d.code == "missing-fact"),
