@@ -16,6 +16,8 @@ use archogen_emit::{
 };
 use archogen_json::Value;
 
+use crate::place::{self, Way};
+
 /// The most of a provenance the command reads, so that what is not one cannot take all there is.
 const LIMIT: u64 = 1 << 30;
 
@@ -155,7 +157,11 @@ impl Built {
         let file = dir.join(PROVENANCE_FILE);
         let unread = |error: std::io::Error| {
             let said = format!("{shown}'s `{PROVENANCE_FILE}`: {error}");
-            if error.kind() == ErrorKind::PermissionDenied {
+            // A build is no less one for being closed, or named by a path past what can be named.
+            if matches!(
+                error.kind(),
+                ErrorKind::PermissionDenied | ErrorKind::InvalidFilename
+            ) {
                 Unbuilt::Closed(said)
             } else {
                 Unbuilt::Other(said)
@@ -262,6 +268,11 @@ impl Built {
         self.files.iter().find_map(|listed| {
             let name = &listed.name;
             let file = dir.join(name);
+            match place::way_to(dir, name) {
+                Way::Real => {}
+                Way::Changed(said) => return Some(NotAsWritten::Changed(said)),
+                Way::Unread(said) => return Some(NotAsWritten::Unread(said)),
+            }
             let meta = match std::fs::symlink_metadata(&file) {
                 Ok(meta) if meta.is_file() => meta,
                 Ok(_) => {

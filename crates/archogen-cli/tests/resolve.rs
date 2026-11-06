@@ -65,6 +65,10 @@ enum Answer {
     Editing,
     /// It accepted, and the plan it judged was taken away, and a directory holding a file put at its name.
     Removing,
+    /// It wrote its record, and the stage was closed to this user.
+    ClosingStage,
+    /// Something came in the stage, and it wrote no record.
+    StrayNoRecord,
     /// It wrote its record, and another directory came to stand at the stage's name, the record gone with what moved.
     Replacing,
 }
@@ -108,6 +112,7 @@ impl Launch for Checker {
             | Answer::Swapping
             | Answer::Editing
             | Answer::Removing
+            | Answer::ClosingStage
             | Answer::Replacing => Status::Ok,
             Answer::Closing(ref dir) => {
                 #[cfg(unix)]
@@ -118,6 +123,16 @@ impl Launch for Checker {
                 }
                 let _ = dir;
                 Status::Ok
+            }
+            Answer::StrayNoRecord => {
+                // `--profile P --result R -- DESCRIPTION PLAN`, as the front hands them over.
+                let stage = Path::new(&args[3]).parent().expect("a stage");
+                std::fs::write(stage.join("mine.txt"), "mine").expect("written");
+                return Ok(Launched {
+                    ended: Ended::Code(Status::ToolFailure.code()),
+                    sha256: verified(),
+                    front: Digest::of(b"the front that ran it"),
+                });
             }
             Answer::NoRecord => {
                 return Ok(Launched {
@@ -170,6 +185,12 @@ impl Launch for Checker {
         match self.answer {
             Answer::Stray => std::fs::write(stage.join("mine.txt"), "mine").expect("written"),
             Answer::Editing => std::fs::write(stage.join("plan"), "mine").expect("written"),
+            #[cfg(unix)]
+            Answer::ClosingStage => {
+                use std::os::unix::fs::PermissionsExt;
+                std::fs::set_permissions(stage, std::fs::Permissions::from_mode(0o000))
+                    .expect("its mode");
+            }
             Answer::Removing => {
                 std::fs::remove_file(stage.join("plan")).expect("removed");
                 std::fs::create_dir(stage.join("plan")).expect("a directory");
@@ -1006,6 +1027,56 @@ fn plan_routes() -> Vec<(&'static str, Route)> {
                 std::fs::read_to_string(root.join("p.part/plan")).expect("kept"),
                 "mine"
             );
+            outcome
+        }),
+        ("closed-while-it-ran", |root| {
+            use std::os::unix::fs::PermissionsExt;
+            if !modes_bind(root) {
+                return None;
+            }
+            let plan = root.join("p");
+            an_earlier_plan(&plan);
+            let outcome = resolve_of(
+                &heartbeat(),
+                &plan.display().to_string(),
+                &[],
+                Answer::ClosingStage,
+            );
+            std::fs::set_permissions(root.join("p.part"), std::fs::Permissions::from_mode(0o700))
+                .expect("its mode");
+            assert_eq!(
+                std::fs::read_to_string(&plan).expect("kept"),
+                AN_EARLIER_PLAN
+            );
+            assert!(root.join("p.part").is_dir());
+            let said = outcome.as_ref().map_or("", |(_, said)| said.as_str());
+            assert!(said.contains("could not be removed"), "{said}");
+            outcome
+        }),
+        ("came-on-a-refusal", |root| {
+            // What came stays, with the stage, and it is said; what this run wrote goes.
+            let plan = root.join("p");
+            an_earlier_plan(&plan);
+            let outcome = resolve_of(
+                &heartbeat(),
+                &plan.display().to_string(),
+                &[],
+                Answer::StrayNoRecord,
+            );
+            assert_eq!(
+                std::fs::read_to_string(&plan).expect("kept"),
+                AN_EARLIER_PLAN
+            );
+            assert_eq!(
+                std::fs::read_to_string(root.join("p.part/mine.txt")).expect("kept"),
+                "mine"
+            );
+            assert!(
+                !root.join("p.part/plan").exists(),
+                "what this run wrote stays"
+            );
+            let said = outcome.as_ref().map_or("", |(_, said)| said.as_str());
+            assert!(said.contains("holds what this run did not write"), "{said}");
             outcome
         }),
         ("plan-gone-meanwhile", |root| {

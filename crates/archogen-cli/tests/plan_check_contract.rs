@@ -1,6 +1,6 @@
 //! The front's contract for a result it consumes (leaf `M3.5.1.4.3`), held with a fake launcher that writes a record
-//! where the front told it to and ends as the case says: the arguments the front hands over, an earlier record
-//! removed, and every way the record, the process and the front's own reckoning can disagree refused as
+//! where the front told it to and ends as the case says: the arguments the front hands over, a record standing there
+//! refused and left, and every way the record, the process and the front's own reckoning can disagree refused as
 //! `tool-failure`, naming what disagreed.
 
 use std::cell::RefCell;

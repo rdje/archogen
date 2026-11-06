@@ -90,6 +90,16 @@ pub fn check_plan(
 ) -> Result<Checked, Refusal> {
     let record_file = place_record(dir)?;
     // The checker reads it again, so what reads only once would read empty to it, or never end.
+    if let Err(error) = std::fs::metadata(expected.description) {
+        return Err(Refusal {
+            status: Status::Usage,
+            message: format!(
+                "the checker reads the description again, and {} cannot be read now: {error}",
+                expected.description.display()
+            ),
+            repair: "open it, and the directories above it".to_owned(),
+        });
+    }
     if !std::fs::metadata(expected.description).is_ok_and(|meta| meta.is_file()) {
         return Err(Refusal {
             status: Status::Usage,
@@ -250,6 +260,16 @@ fn reads_again(sources: &SourceMap) -> Result<(), Refusal> {
     Ok(())
 }
 
+/// The checker's record out of `dir`, if it is a regular file and a record: the one file in a stage this run did not write itself, and its own program did.
+pub fn remove_record(dir: &Path) {
+    let record = dir.join(RECORD);
+    if std::fs::symlink_metadata(&record).is_ok_and(|meta| meta.is_file())
+        && reads_as_record(&record).unwrap_or(false)
+    {
+        let _ = std::fs::remove_file(&record);
+    }
+}
+
 /// Whether `file` reads as a checker's record, read within the bound a record has. What could not be read is an error and no
 /// answer: refusing it is the caller's, since it cannot say.
 ///
@@ -308,10 +328,15 @@ fn place_record(dir: &Path) -> Result<PathBuf, Refusal> {
 fn absolute(file: &Path, what: &str) -> Result<PathBuf, Refusal> {
     let nearer = "run it from a directory nearer the root, or move what it names nearer it";
     let unnamed = |error: std::io::Error| {
-        let message = format!(
-            "cannot name {what}, {}, absolutely: {error}",
-            file.display()
-        );
+        // Where what it is called is its path, the path is not said twice.
+        let message = if file.as_os_str() == what {
+            format!("cannot name {what} absolutely: {error}")
+        } else {
+            format!(
+                "cannot name {what}, {}, absolutely: {error}",
+                file.display()
+            )
+        };
         match error.kind() {
             std::io::ErrorKind::NotFound => {
                 failure(message, "check that it still exists".to_owned())
@@ -394,7 +419,7 @@ fn read_record(file: &Path, code: i32) -> Result<(Record, String), Refusal> {
                 "cannot read `{PLAN_CHECKER}`'s record {}, closed while the checker ran: {error}",
                 file.display()
             ),
-            "open it and the directories above it, and run this again".to_owned(),
+            "open it and the directories above it: nothing was judged".to_owned(),
         )),
         Err(error) => Err(fault(format!(
             "cannot read `{PLAN_CHECKER}`'s record {}: {error}",

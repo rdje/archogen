@@ -246,7 +246,7 @@ fn run(
                     "cannot read the description {}: {error}",
                     description.display()
                 ),
-                "name a file that exists and this user can read",
+                "name a file that exists, is UTF-8 text and this user can read",
             )
         }
     };
@@ -278,10 +278,11 @@ fn run(
         },
     );
     if let Some((file, error)) = modules.unreadable().first() {
-        return refuse(
+        return refuse_with(
             err,
             Status::Usage,
             &format!("cannot read {file}, which the description imports: {error}"),
+            "name a module that exists, is UTF-8 text and this user can read",
         );
     }
     let record = match judged {

@@ -97,7 +97,12 @@ pub(crate) fn ask_with<T>(
                 "archogen: {}: cannot read {path}: {error}",
                 Status::Usage.slug()
             );
-            let _ = writeln!(err, "  hint: give the path of an eADL description");
+            let hint = if error.kind() == std::io::ErrorKind::PermissionDenied {
+                "open it, and the directories above it"
+            } else {
+                "give the path of an eADL description"
+            };
+            let _ = writeln!(err, "  hint: {hint}");
             return Err(Status::Usage);
         }
     };

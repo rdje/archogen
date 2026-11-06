@@ -2,9 +2,105 @@
 //! route does is a row of a table a test runs: `docs/book/src/building.md`'s for `build`, `docs/book/src/cli.md`'s for `resolve`.
 //! So this file says how to read a place, and no sentence here says what happens to one.
 
+use std::cell::RefCell;
 use std::fs::Metadata;
-use std::io::ErrorKind;
+use std::io::{ErrorKind, Write};
 use std::path::{Component, Path, PathBuf};
+
+use archogen_digest::Digest;
+
+/// What stands on the way to `name` under `dir`.
+pub enum Way {
+    /// Real directories, all the way to the name's own parent.
+    Real,
+    /// A file, a link or nothing, where a directory was: what stands there is not what was left.
+    Changed(String),
+    /// A directory closed to this user, or a path past what can be named: nothing says what lies beyond.
+    Unread(String),
+}
+
+/// How `name` is reached from `dir`. A link is never followed: one on the way is a change, whatever it points at, so nothing about what it points at can make that unanswerable.
+#[must_use]
+pub fn way_to(dir: &Path, name: &str) -> Way {
+    let mut at = dir.to_path_buf();
+    for part in Path::new(name)
+        .parent()
+        .into_iter()
+        .flat_map(Path::components)
+    {
+        at.push(part);
+        match std::fs::symlink_metadata(&at) {
+            Ok(meta) if meta.is_dir() => {}
+            Ok(_) => return Way::Changed(format!("`{name}`: {} is no directory", at.display())),
+            Err(error) if error.kind() == ErrorKind::NotFound => {
+                return Way::Changed(format!("`{name}`: {error}"))
+            }
+            Err(error) => return Way::Unread(format!("`{name}`: {error}")),
+        }
+    }
+    Way::Real
+}
+
+/// What a run has written in a stage of its own, each file as it wrote it. On a refusal that much goes, each only if it is still as written, and what came stays with the stage, which
+/// is said. This is the rule for every route of both commands: a run removes what it wrote, and nothing else.
+#[derive(Default)]
+pub struct Written(RefCell<Vec<(String, u64, Digest)>>);
+
+impl Written {
+    /// `name` is written in the stage, holding `contents`.
+    pub fn note(&self, name: &str, contents: &[u8]) {
+        self.0.borrow_mut().push((
+            name.to_owned(),
+            u64::try_from(contents.len()).unwrap_or(u64::MAX),
+            Digest::of(contents),
+        ));
+    }
+
+    /// Each file this run wrote out of `stage`, still as written and reached through real directories; then each directory that held them, and the stage, where that leaves them empty.
+    pub fn remove_from(&self, stage: &Path) {
+        let written = self.0.borrow();
+        let mut held: Vec<PathBuf> = Vec::new();
+        for (name, length, digest) in written.iter() {
+            let mut up = Path::new(name).parent();
+            while let Some(at) = up.filter(|at| !at.as_os_str().is_empty()) {
+                if !held.iter().any(|known| known == at) {
+                    held.push(at.to_path_buf());
+                }
+                up = at.parent();
+            }
+            if !matches!(way_to(stage, name), Way::Real) {
+                continue;
+            }
+            let file = stage.join(name);
+            // A file of its length that the umask closed to its owner, as this run wrote it, cannot be read to tell, and is taken for what it is.
+            let still = std::fs::symlink_metadata(&file)
+                .is_ok_and(|meta| meta.is_file() && meta.len() == *length)
+                && match std::fs::read(&file) {
+                    Ok(bytes) => Digest::of(&bytes) == *digest,
+                    Err(error) => error.kind() == ErrorKind::PermissionDenied,
+                };
+            if still {
+                let _ = std::fs::remove_file(&file);
+            }
+        }
+        held.sort_by_key(|at| std::cmp::Reverse(at.components().count()));
+        for at in held {
+            let _ = std::fs::remove_dir(stage.join(at));
+        }
+        let _ = std::fs::remove_dir(stage);
+    }
+}
+
+/// What a refused run says of a stage that stands: that the next run refuses while it does, and what to do. It always says so, so that no stage is found with nothing having said it.
+pub fn say_it_stays(stage: &Path, err: &mut dyn Write) {
+    if std::fs::symlink_metadata(stage).is_ok() {
+        let _ = writeln!(
+            err,
+            "  {} could not be removed, or holds what this run did not write, and the next run refuses while it stands: look at it, and remove it",
+            stage.display()
+        );
+    }
+}
 
 /// Why a place cannot be used: what, and its repair. Always `usage`, nothing having been written.
 pub struct Refused {

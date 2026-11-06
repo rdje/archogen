@@ -149,7 +149,7 @@ file is written. So `DIR` holds at every moment what stood there, nothing, or th
 found it. Your changes belong in the description, not in the output.
 
 ⛔ **A build deletes nothing it did not write**, but for two things: an empty directory at `--out`, which it takes, and its own stage,
-which on a refusal goes with anything put in it, unless the table says it stays: for a report, or because something else wrote there. Of an earlier
+of which on a refusal what this run wrote goes. What came in it stays with it, and is said, as is a stage that cannot be removed, unless the table says it stays for a report. Of an earlier
 build it removes each file `provenance.json` lists, one by one and only if still the regular file it wrote, then the directories that
 held them where that leaves them empty. What building and looking at a package leave at its top, `target`, `Cargo.lock` and `.DS_Store`,
 is neither judged nor deleted: it moves to the new package, so a rebuild keeps cargo's work.
@@ -189,6 +189,7 @@ the rule: what it says is run, and a route it does not name is promised nothing 
 | `link-to-a-directory-on-the-way` | a link to a directory among `--out`'s parents | `ok` | `generated` | the package, beneath what the link points at |
 | `link-loop-on-the-way` | a loop of links among `--out`'s parents | `usage` | `name another place` | the links |
 | `closed-while-it-ran` | while it runs, the stage is closed to this user, so the checker's record cannot be read | `tool-failure` | `closed while the checker ran` | no package; the stage, which it says could not be removed |
+| `came-on-a-refusal` | while it runs, something comes in the stage, and the run is then refused | `tool-failure` | `wrote no record` | no package; the stage with what came, which it says, and nothing this run wrote |
 | `closed-parent` | a parent this user cannot write | `usage` | `reach and write` | the parent, empty |
 | `reads-once` | a description that is no regular file, such as a pipe or `<(…)`, which the checker would read again | `usage` | `no regular file` | nothing made |
 | `reads-differently` | a description that reads differently the second time, such as `/dev/stdin` from a file | `usage` | `reads differently` | nothing made |

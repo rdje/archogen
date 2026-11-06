@@ -169,7 +169,7 @@ pub fn run(parsed: &Parsed, out: &mut dyn Write, err: &mut dyn Write) -> Status 
                 let _ = writeln!(err, "archogen: {}: {message}", Status::Usage.slug());
                 let _ = writeln!(
                     err,
-                    "  hint: give the path of an eADL description, or a directory `archogen build` wrote"
+                    "  hint: give the path of an eADL description, or a directory `archogen build` wrote and this user can read"
                 );
                 return Status::Usage;
             }

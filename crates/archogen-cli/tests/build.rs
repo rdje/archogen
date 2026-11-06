@@ -760,6 +760,30 @@ impl Launch for ChangingAfter {
     }
 }
 
+/// While the checker runs, something comes in the stage, and the checker writes no record.
+#[cfg(unix)]
+struct StrayNoRecord {
+    dir: PathBuf,
+}
+
+#[cfg(unix)]
+impl Launch for StrayNoRecord {
+    fn launch(
+        &self,
+        _program: &str,
+        _args: &[String],
+        _out: &mut dyn Write,
+        _err: &mut dyn Write,
+    ) -> Result<Launched, Unlaunched> {
+        fs::write(beside(&self.dir, ".building").join("mine.txt"), "mine").expect("written");
+        Ok(Launched {
+            ended: Ended::Code(Status::ToolFailure.code()),
+            sha256: checker_digest(),
+            front: front_digest(),
+        })
+    }
+}
+
 #[test]
 fn a_listed_file_changed_while_a_build_runs_stays_and_is_said() {
     let root = scratch("edited-meanwhile");
@@ -2012,6 +2036,33 @@ fn out_routes() -> Vec<(&'static str, Route)> {
             set_mode(&stage, 0o755);
             assert!(!dir.exists());
             assert!(stage.is_dir());
+            let said = outcome.as_ref().map_or("", |(_, said)| said.as_str());
+            assert!(said.contains("could not be removed"), "{said}");
+            outcome
+        }),
+        ("came-on-a-refusal", |root| {
+            // What came stays, with the stage, and it is said; what this run wrote goes.
+            let dir = root.join("x");
+            let outcome = said(invoke(
+                &[
+                    "build",
+                    &example(HEARTBEAT),
+                    "--out",
+                    &dir.display().to_string(),
+                ],
+                &StrayNoRecord { dir: dir.clone() },
+            ));
+            let stage = beside(&dir, ".building");
+            assert_eq!(
+                fs::read_to_string(stage.join("mine.txt")).expect("kept"),
+                "mine"
+            );
+            assert!(
+                !stage.join("assignment.eadl").exists(),
+                "what this run wrote stays"
+            );
+            let said = outcome.as_ref().map_or("", |(_, said)| said.as_str());
+            assert!(said.contains("holds what this run did not write"), "{said}");
             outcome
         }),
         ("closed-parent", |root| {
@@ -2959,7 +3010,7 @@ fn what_cannot_be_read_is_not_called_a_change() {
 fn a_listed_directory_replaced_is_a_change_and_no_closure() {
     // Each stands where a listed directory did: what is listed is gone, and no opening of anything answers that.
     type Shape = (&'static str, fn(&Path));
-    let shapes: [Shape; 4] = [
+    let shapes: [Shape; 6] = [
         ("a file", |at| fs::write(at, "mine").expect("written")),
         ("a link to a file", |at| {
             let file = at.with_extension("beside");
@@ -2971,6 +3022,16 @@ fn a_listed_directory_replaced_is_a_change_and_no_closure() {
         }),
         ("a link to nothing", |at| {
             std::os::unix::fs::symlink("nowhere", at).expect("a link");
+        }),
+        // A link is a change whatever it points at: one it cannot follow must not make that unanswerable.
+        ("a link to a directory closed to this user", |at| {
+            let shut = at.with_extension("shut");
+            fs::create_dir(&shut).expect("a directory");
+            set_mode(&shut, 0o000);
+            std::os::unix::fs::symlink(&shut, at).expect("a link");
+        }),
+        ("a link past what can be named", |at| {
+            std::os::unix::fs::symlink("x".repeat(1000), at).expect("a link");
         }),
     ];
     for (shape, make) in shapes {
@@ -2984,6 +3045,11 @@ fn a_listed_directory_replaced_is_a_change_and_no_closure() {
         assert!(err.contains("into a new directory"), "{shape}: {err}");
         let (status, _, err) = build(&example(HEARTBEAT), &root.join("new"));
         assert_eq!(status, Status::Ok, "{shape}, the repair: {err}");
+        // So that the next shape's scratch can remove it.
+        let shut = dir.join("rt-core.shut");
+        if shut.exists() {
+            set_mode(&shut, 0o755);
+        }
     }
 }
 

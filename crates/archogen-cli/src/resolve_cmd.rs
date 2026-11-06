@@ -174,6 +174,7 @@ pub fn run(
     }
     let Some(program) = Digest::parse(&format!("sha256:{}", plan.program)) else {
         landing.abandon();
+        place::say_it_stays(&landing.stage, err);
         let _ = writeln!(
             err,
             "archogen: {}: the engine named the program by `{}`, which is no digest",
@@ -192,6 +193,8 @@ pub fn run(
     };
     let record_file = landing.check.join(consume::RECORD);
     let record_in_stage = landing.stage.join(consume::RECORD);
+    // A stage this run made holds no record yet: one there came from elsewhere, and is no report of this run's.
+    let came_first = std::fs::symlink_metadata(&record_in_stage).is_ok();
     match consume::check_plan(launcher, &expected, &landing.stage, err)
         .map(|checked| checked.record)
     {
@@ -228,7 +231,7 @@ pub fn run(
         }
         Err(refusal) => {
             // A record that does not hold together is what a report needs; with none, nothing was judged and nothing stays.
-            let kept = record_in_stage.exists();
+            let kept = !came_first && record_in_stage.exists();
             if !kept {
                 landing.abandon();
             }
@@ -245,6 +248,8 @@ pub fn run(
                     "  the plan and the record stay in {}, for that report, and whatever stood at its name is as it was",
                     landing.stage.display()
                 );
+            } else {
+                place::say_it_stays(&landing.stage, err);
             }
             refusal.status
         }
@@ -315,6 +320,8 @@ struct Landing {
     made: Vec<PathBuf>,
     /// The directory this run made as the stage, told apart from one that comes to stand at its name.
     made_stage: Option<(u64, u64)>,
+    /// What this run wrote in the stage, which on a refusal is all that goes.
+    written: place::Written,
 }
 
 impl Landing {
@@ -375,6 +382,7 @@ impl Landing {
             check,
             made,
             made_stage: None,
+            written: place::Written::default(),
         })
     }
 
@@ -408,7 +416,9 @@ impl Landing {
                 message: format!("cannot write the plan: {error}"),
                 repair: "check that its disk has room".to_owned(),
             }
-        })
+        })?;
+        self.written.note(PLAN_IN_STAGE, text.as_bytes());
+        Ok(())
     }
 
     /// An earlier record standing at the record's name, whose mode the new one takes and which goes aside until the plan stands. With
@@ -481,9 +491,10 @@ impl Landing {
                 )))
             }
             // Its own plan, in its own stage: a umask that closes it to its owner is the likely cause, and nothing came.
-            Err(error) if error.kind() != std::io::ErrorKind::PermissionDenied => {
+            // Gone, closed or no file. Where the checker has just read it, that can only be something that came, and it stays with the stage; only with none can it be the umask.
+            Err(error) if checked || error.kind() != std::io::ErrorKind::PermissionDenied => {
                 return Err(came(format!(
-                    "{} is gone or no file, while the plan was judged: {error}",
+                    "{} is gone, closed or no file, while the plan was judged: {error}",
                     plan.display()
                 )))
             }
@@ -629,11 +640,12 @@ impl Landing {
         Ok(said)
     }
 
-    /// What this run wrote gone, with the directories it made where they stayed empty.
+    /// What this run wrote gone, with the directories it made where they stayed empty. What came stays with the stage, which is said.
     fn abandon(&self) {
         // Only what this run made: what has come to stand at that name since is not this run's to remove.
         if place::identity(&self.stage) == self.made_stage {
-            let _ = std::fs::remove_dir_all(&self.stage);
+            consume::remove_record(&self.stage);
+            self.written.remove_from(&self.stage);
         }
         place::unmake(&self.made);
     }

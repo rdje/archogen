@@ -113,6 +113,7 @@ pub fn run(
         elaborated,
         stage: &place.stage,
         made_stage: place.made_stage,
+        written: &place.written,
     };
     let emitted = match built.generate(launcher, err) {
         Ok(emitted) => emitted,
@@ -120,7 +121,11 @@ pub fn run(
             if !failed.keeps_the_stage() {
                 place.abandon();
             }
-            return refused(&failed, path, err);
+            let status = refused(&failed, path, err);
+            if !failed.keeps_the_stage() {
+                place::say_it_stays(&place.stage, err);
+            }
+            return status;
         }
     };
     match place.land() {
@@ -150,13 +155,8 @@ pub fn run(
                 place.dir.display()
             );
             let _ = writeln!(err, "  hint: {repair}");
-            // It could not be removed, and the next build refuses while it stands, so it is said.
-            if !matches!(unplaced, Unplaced::StageGone) && place.stage.exists() {
-                let _ = writeln!(
-                    err,
-                    "  {} could not be removed, and the next build refuses while it stands: remove it",
-                    place.stage.display()
-                );
+            if !matches!(unplaced, Unplaced::StageGone) {
+                place::say_it_stays(&place.stage, err);
             }
             return Status::ToolFailure;
         }
@@ -296,6 +296,8 @@ struct Place {
     fresh: Option<Permissions>,
     /// The directory this run made as the stage, told apart from one that comes to stand at its name.
     made_stage: Option<(u64, u64)>,
+    /// What this run wrote in the stage, which on a refusal is all that goes.
+    written: place::Written,
 }
 
 impl Place {
@@ -391,6 +393,7 @@ impl Place {
             made,
             fresh: None,
             made_stage: None,
+            written: place::Written::default(),
         })
     }
 
@@ -447,11 +450,12 @@ impl Place {
         place::unmake(&self.made);
     }
 
-    /// The stage gone, with whatever this run made to reach it that stayed empty.
+    /// What this run wrote gone, with whatever it made to reach the stage that stayed empty. What came stays with the stage, which is said.
     fn abandon(&self) {
         // Only what this run made: what has come to stand at that name since is not this run's to remove.
         if place::identity(&self.stage) == self.made_stage {
-            let _ = std::fs::remove_dir_all(&self.stage);
+            consume::remove_record(&self.stage);
+            self.written.remove_from(&self.stage);
         }
         self.unmake();
     }
@@ -577,6 +581,8 @@ struct Build<'a> {
     stage: &'a Path,
     /// What the stage is, which it must still be when the package is written in it.
     made_stage: Option<(u64, u64)>,
+    /// What this run has written there.
+    written: &'a place::Written,
 }
 
 impl Build<'_> {
@@ -617,6 +623,7 @@ impl Build<'_> {
         let emitted = emit(&inputs, generator).map_err(Failed::Refused)?;
         for file in &emitted.files {
             write_file(self.stage, &file.path, &file.contents)?;
+            self.written.note(&file.path, file.contents.as_bytes());
         }
         Ok(emitted)
     }
@@ -625,7 +632,9 @@ impl Build<'_> {
     fn checked(&self, launcher: &dyn Launch, err: &mut dyn Write) -> Result<Checked, Failed> {
         let assignment = self.stage.join(ASSIGNMENT_FILE);
         write_file(self.stage, ASSIGNMENT_FILE, &self.plan.text)?;
-        // The record's name is the checker's to fill, and the front removes an earlier one: here nothing earlier can be this run's.
+        self.written
+            .note(ASSIGNMENT_FILE, self.plan.text.as_bytes());
+        // The record's name is the checker's to fill: here nothing earlier can be this run's.
         if std::fs::symlink_metadata(self.stage.join(consume::RECORD)).is_ok() {
             return Err(Failed::Came(self.stage.join(consume::RECORD)));
         }

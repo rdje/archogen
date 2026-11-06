@@ -139,7 +139,7 @@ cannot resolve writes no plan and exits with the search's verdict — `periodic-
 timer offering a width and no modulus and its policy's constraints waiting on the catalog — and `--locked` is refused
 until lock data exists (`M4.7`). `--system` names the system when a description declares several.
 
-**An output replaces only what its own kind wrote.** Everything a run writes stays in a private directory, `PLAN.part`, where the
+**An output replaces only what its own kind wrote, and a run removes only what it wrote.** Everything a run writes stays in a private directory, `PLAN.part`, where the
 checker judges it, and it lands only on acceptance, or under `--unchecked`: the record in `PLAN.check/`, then the plan at `PLAN`. So what
 stands at either name stands until there is a plan that may replace it, and a plan replaces only a plan or an empty file, a record only a
 record or an empty file. A plan is known by the engine's own reader of the format, which takes only text in the canonical form the search
@@ -195,7 +195,9 @@ again just before it is used, and in that instant what stands there is what is u
 | `came-in-stage` | while the checker runs, something comes in the stage beside the plan | `ok` | `holding what came in it` | the plan and its record; what came in `PLAN.part`, which the next run names |
 | `stage-swapped` | while the checker runs, the stage is swapped for a link | `tool-failure` | `no longer the directory this run made` | what stood at `PLAN`; the link |
 | `stage-replaced` | while the checker runs, another directory comes to stand at the stage's name | `tool-failure` | `wrote no record` | what stood at `PLAN`; that directory, with what it holds |
-| `plan-gone-meanwhile` | while the checker runs, the plan it is judging is taken away, or something else put at its name | `tool-failure` | `is gone or no file` | what stood at `PLAN`; the stage, to be looked at |
+| `plan-gone-meanwhile` | while the checker runs, the plan it is judging is taken away, closed, or something else put at its name | `tool-failure` | `is gone, closed or no file` | what stood at `PLAN`; the stage, to be looked at |
+| `closed-while-it-ran` | while the checker runs, the stage is closed to this user | `tool-failure` | `closed while the checker ran` | what stood at `PLAN`; the stage, which it says could not be removed |
+| `came-on-a-refusal` | while the checker runs, something comes in the stage, and the run is then refused | `tool-failure` | `wrote no record` | what stood at `PLAN`; the stage with what came, which it says, and nothing this run wrote |
 | `plan-edited-meanwhile` | while the checker runs, the plan it is judging is edited | `tool-failure` | `changed while the plan was judged` | what stood at `PLAN`; the stage, to be looked at |
 | `check-stands-unchecked` | a file at `PLAN.check`, with `--unchecked` | `ok` | `resolved system` | the plan, and that file |
 | `no-room-name` | a name with no room for what goes beside it | `usage` | `too long` | nothing made |
