@@ -3,7 +3,7 @@
 - version: eadl/1
 - date: 2026-11-06
 - leaf: M4.2.3.3.21 (`docs/tasks/M4.md`)
-- status: pending
+- status: applied
 - constructs: docs/semantics/reference.md#diagnostics
 - invalidates: a description with a symbol of more than 256 characters; the longest tracked symbol is 57 characters, so none in this repository
 
