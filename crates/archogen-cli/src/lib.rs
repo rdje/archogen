@@ -68,17 +68,29 @@ where
     A: IntoIterator<Item = S>,
     S: Into<String>,
 {
+    let args: Vec<String> = args.into_iter().map(Into::into).collect();
+    if args.iter().any(|arg| arg.contains(['\n', '\r'])) {
+        return report(
+            &mut Printable(err),
+            &Refusal {
+                status: Status::Usage,
+                message: "an argument holds a line break, which could write a line of a run's own"
+                    .to_owned(),
+                repair: "give paths and names this tool can print".to_owned(),
+            },
+        );
+    }
     match cli::parse(args) {
         Ok(Invocation::Help(None)) => emit(out, &cli::help_overview()),
         Ok(Invocation::Help(Some(name))) => match spec::command(name).and_then(|spec| spec.sibling)
         {
             // A sibling's help is its own: the front holds none of its options to describe.
             Some(program) => sibling(program, &["--help".to_owned()], launcher, out, err),
-            None => emit(out, &cli::help_command(name)),
+            None => emit(&mut Printable(out), &cli::help_command(name)),
         },
         Ok(Invocation::Version) => emit(out, &format!("archogen {VERSION}\n")),
         Ok(Invocation::Run(parsed)) => dispatch(&parsed, input, launcher, out, err),
-        Err(refusal) => report(err, &refusal),
+        Err(refusal) => report(&mut Printable(err), &refusal),
     }
 }
 

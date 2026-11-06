@@ -153,6 +153,9 @@ impl Severity {
     }
 }
 
+/// The most further places one error names. A search's refusal names each provider it asked, so with no limit a thousand errors of a thousand labels answered far more than each sentence's own limit says.
+const MOST_LABELS: usize = 32;
+
 /// The most characters of one sentence of a diagnostic that it keeps, each then printed as it prints. A message quotes names whole, a name may be any length, and a thousand errors each quoting one were an answer thousands of times its request (leaf `M4.2.3.3.20`).
 pub const MOST_SAID: usize = 1024;
 
@@ -398,11 +401,13 @@ const BEFORE: usize = 40;
 #[must_use]
 pub fn fit_name(name: &str) -> String {
     let length = name.chars().count();
+    // A name is said within a line of its own words, so a line break in one could write a line of a run's own.
+    let one_line = |said: String| said.replace('\n', "\\u{a}");
     if length <= MOST_SAID {
-        return fit(name.to_owned());
+        return one_line(fit(name.to_owned()));
     }
     let tail: String = name.chars().skip(length - MOST_SAID + 1).collect();
-    format!("…{}", fit(tail))
+    format!("…{}", one_line(fit(tail)))
 }
 
 /// The text to quote for a line, the span's column in that text (0-based), and how many characters the caret may
@@ -470,7 +475,16 @@ impl Diagnostics {
     }
 
     /// Record one. Past [`MOST_ERRORS`] errors one last says so, where the next would have been, and no more are kept.
-    pub fn push(&mut self, diagnostic: Diagnostic) {
+    pub fn push(&mut self, mut diagnostic: Diagnostic) {
+        if diagnostic.secondary.len() > MOST_LABELS {
+            let more = diagnostic.secondary.len() - MOST_LABELS;
+            diagnostic.secondary.truncate(MOST_LABELS);
+            let span = diagnostic.secondary[MOST_LABELS - 1].span;
+            diagnostic.secondary.push(Label::new(
+                span,
+                format!("and {more} more like this go unsaid"),
+            ));
+        }
         if diagnostic.severity == Severity::Error {
             self.errors = self.errors.saturating_add(1);
             if self.errors == MOST_ERRORS + 1 {

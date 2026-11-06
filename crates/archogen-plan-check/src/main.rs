@@ -62,7 +62,15 @@ The exit code is the result's status, as `archogen` writes it: 0 ok; 2 usage, no
 plan written for another description — resolve again; 10 to 13 the description's own status; 70 tool-failure, a
 corrupted plan or a checker that could not finish.";
 
+/// What this process may hold at once, whatever a description's shape asks of it.
+#[global_allocator]
+static CEILING: archogen_transport::ceiling::Ceiling = archogen_transport::ceiling::Ceiling;
+
 fn main() -> ExitCode {
+    if let Err(why) = archogen_transport::ceiling::from_environment() {
+        let status = refuse(&mut std::io::stderr().lock(), Status::Usage, &why);
+        return ExitCode::from(u8::try_from(status.code()).unwrap_or(2));
+    }
     // `std::env::args` panics on an argument that is no text, and exit 101 is a code no status has.
     let args: Result<Vec<String>, _> = std::env::args_os()
         .skip(1)
@@ -76,6 +84,14 @@ fn main() -> ExitCode {
         );
         return ExitCode::from(u8::try_from(status.code()).unwrap_or(2));
     };
+    if args.iter().any(|arg| arg.contains(['\n', '\r'])) {
+        let status = refuse(
+            &mut std::io::stderr().lock(),
+            Status::Usage,
+            "an argument holds a line break, which could write a line of a run's own",
+        );
+        return ExitCode::from(u8::try_from(status.code()).unwrap_or(2));
+    }
     let status = run(
         &args,
         &mut std::io::stdin().lock(),

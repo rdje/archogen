@@ -171,8 +171,8 @@ Asking the same instance the same question twice gives the same answer, and
 
 The language already bounds the shapes that multiply work. A list nests at most 256 deep, and a module tree
 has at most 1 024 instances and 16-module import chains ([Reading a description](reading.md),
-[Modules and composition](modules.md)), and a name at most 256 characters. What is left grows with the text: measured
-on a debug build, 1 MB of description checked in 0.36 s and held 82 MB, and 5 MB took 1.95 s and 383 MB. No sentence can say that of every shape, so `crates/archogen-api/tests/cost.rs` counts what a request holds at its most for each shape a review has found to cost it.
+[Modules and composition](modules.md)), and a symbol as written at most 256 characters. What is left grows with the text: measured
+on a debug build, 1 MB of description checked in 0.36 s and held 82 MB, and 5 MB took 1.95 s and 383 MB. No sentence can say that of every shape, and what compares pairs grows with the pairs and not with the text. So `crates/archogen-api/tests/cost.rs` counts what a request holds at its most for each shape a review has found to cost it, and each row says what its text reaches, since a fixture refused before the cost holds nothing, and how many pairs it compares.
 
 So an instance gives each request a **byte budget**, counted over the description and every module text
 elaboration loads. Each instance reloads its module, so a module imported a hundred times counts a hundred
@@ -187,11 +187,20 @@ and through the modules.
 The command line asks with no budget. It is its own consumer and trusts the files it was given. The
 language's limits still apply to it, because they belong to the language.
 
+**One process has a ceiling.** A budget bounds the text, what compares pairs can ask far more than its text, and no list
+of shapes is ever whole. So `archogen` and `archogen-plan-check` count what they hold as they allocate it, and past
+2048 MiB stop there, saying so on standard error, with `analysis-inconclusive`: a resource limit prevented a conclusion, and
+nothing was judged (`crates/archogen-transport/src/ceiling.rs`, held by `crates/archogen-cli/tests/hosted_limits.rs`). It
+is the instance's, as a budget is: `ARCHOGEN_MEMORY_MIB` sets it where the program starts, and nothing a request says reaches
+it. An allocation cannot be unwound, so it ends the process and not the request. A server ends there, and a client starts it
+again having lost nothing, since it is stateless between requests; a run leaves what any stopped run leaves. A wasm binding
+and a program using the API as a library are held by what holds them, their host's memory and their own process.
+
 The answer is bounded with the request. A diagnostic quotes the line it points into, and a line longer than 160
 characters is quoted as a window of that many around the span, cut with `…` (`crates/eadl-front/src/diagnostic.rs`,
 leaf `API.6.6`). Before that window, one line of a million unclosed forms drew 257 diagnostics that each quoted it
 whole: an answer of 1.5 GB for a request of 1 MB. A check says a thousand errors and no more, whatever else there is to say
-(`too-many-errors`), and each sentence of one has a limit of its own, a source's name among them, so what it says of errors is bounded, however long the request and however short. A closure says of each fact what needed it, in names at most 256 characters, so it grows with the facts.
+(`too-many-errors`), and each sentence of one has a limit of its own, a source's name among them, as has how many places one error names, so what it says of errors is bounded, however long the request and however short. A closure says of each fact what needed it, in a name as qualified, at most 256 characters for each of the 16 modules it came through, so it grows with the facts.
 The most severe of what was found decides the status whether or not it was said: a pass stops gathering early only where every error of it carries one verdict.
 `crates/archogen-api/tests/check.rs` holds that over the shapes that drew the most.
 

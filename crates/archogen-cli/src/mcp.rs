@@ -497,7 +497,7 @@ fn explain(arguments: &Value) -> Result<Value, Failure> {
                                 let source = sources.get(span.source)?;
                                 let at = source.position(span.start);
                                 Some(object(vec![
-                                    ("name", string(&source.name)),
+                                    ("name", string(&eadl_front::fit_name(&source.name))),
                                     ("line", integer(i64::from(at.line))),
                                     ("column", integer(i64::from(at.column))),
                                 ]))

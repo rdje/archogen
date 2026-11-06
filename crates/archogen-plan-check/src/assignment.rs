@@ -273,7 +273,7 @@ impl Assignment {
         let id = sources
             .add("assignment", text)
             .map_err(|e| Refusal::Unreadable(e.to_string()))?;
-        let (document, diagnostics) = eadl_front::read(&sources, id);
+        let (document, diagnostics) = eadl_front::read_record(&sources, id);
         if diagnostics.has_errors() {
             return Err(Refusal::Unreadable(diagnostics.render(&sources)));
         }
@@ -464,7 +464,7 @@ fn one_form(text: &str) -> Result<Form, Refusal> {
     let id = sources
         .add("assignment", text)
         .map_err(|e| Refusal::Unreadable(e.to_string()))?;
-    let (document, diagnostics) = eadl_front::read(&sources, id);
+    let (document, diagnostics) = eadl_front::read_record(&sources, id);
     if diagnostics.has_errors() {
         return Err(Refusal::Unreadable(diagnostics.render(&sources)));
     }

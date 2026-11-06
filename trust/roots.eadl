@@ -377,3 +377,15 @@
   (rule "path")
   (sha256 "79e261019d5fdfa251075a64fb9a21ec17e0cdf55d05b5cabb3d8227220be53d")
   (reason "crates/rt-analysis/src/cost.rs:543: a variable named `path` inside `panic!`, no attribute"))
+
+(defadmit
+  (file "crates/archogen-cli/src/main.rs")
+  (rule "global_allocator")
+  (sha256 "6a4af6d63ab7f98df9d7f4fc434dc98a2abe303b39c9b834afc7fc5a6002e572")
+  (reason "crates/archogen-cli/src/main.rs:14: what this process may hold at once, `archogen_transport::ceiling::Ceiling`, which counts and then calls the system's allocator and stops the process past `ARCHOGEN_MEMORY_MIB`: it holds no value any output reads"))
+
+(defadmit
+  (file "crates/archogen-plan-check/src/main.rs")
+  (rule "global_allocator")
+  (sha256 "6a4af6d63ab7f98df9d7f4fc434dc98a2abe303b39c9b834afc7fc5a6002e572")
+  (reason "crates/archogen-plan-check/src/main.rs:66: what this process may hold at once, `archogen_transport::ceiling::Ceiling`, which counts and then calls the system's allocator and stops the process past `ARCHOGEN_MEMORY_MIB`: it holds no value any output reads"))

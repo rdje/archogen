@@ -20,6 +20,8 @@
 //!
 //! ⛔ It reads with `archogen-json` under the bound its server gives, and spawns nothing and touches no file.
 
+pub mod ceiling;
+
 use std::io::{self, BufRead, Write};
 
 use archogen_json::{self as json, Number, Value};

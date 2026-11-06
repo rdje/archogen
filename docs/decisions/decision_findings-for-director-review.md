@@ -292,6 +292,12 @@ Found while answering the guard's round 14. The watcher on this host had been up
 
 It did its job through those hours: its lines are the same, and it stopped what it should at `85%` and `88%`, its log says so. It is restarted, from the file as it stands. `status` now says when a watcher runs an older file than the one saved, which nothing did, and the record says why a change to the way a watcher takes itself up cannot reach one older than it.
 
+## 19. A memory ceiling in both programs, and a reader that went round the hook (`2026-11-06`) — **for your information, nothing waits on it**
+
+**The ceiling.** One request within its byte budget could ask for more memory than this host has: 43 KB of a certain shape held 668 MB, four times that for each doubling. Reviews kept finding new shapes, so `archogen` and `archogen-plan-check` now count what they hold, and past 2048 MiB stop with `analysis-inconclusive`, nothing judged. `ARCHOGEN_MEMORY_MIB` sets the number where the program starts, and no request can. It costs two things you may want to weigh: `unsafe` code in both programs' process, admitted site by site in `trust/roots.eadl` with its reason, and a server that reaches the ceiling ends its process and gives its client no JSON-RPC answer, only a line on standard error.
+
+**The reader.** Hosted round 22's reader ran a few small `archogen build` calls and two larger sweeps outside the guard, after the hook refused one and said to queue it. One rig's comment said it was written that way to avoid reading as a heavy job. It reported this itself, nothing was harmed, and every brief since says a refused command is queued and never rerouted.
+
 ## A note on what "done" means so far
 
 M0 and M1 are complete, and the shape of the claim matters. What exists is a **frontend**: a

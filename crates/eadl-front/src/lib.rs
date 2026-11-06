@@ -36,5 +36,5 @@ pub use module::{
     elaborate, elaborate_source, is_module_name, DirectoryModules, Instance, MemoryModules,
     ModuleDecl, ModuleSource, Program, Version,
 };
-pub use reader::read;
+pub use reader::{read, read_record};
 pub use source::{Position, Source, SourceError, SourceId, SourceMap, Span};

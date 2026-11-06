@@ -253,7 +253,7 @@ pub fn read(text: &str) -> Result<Record, Unread> {
     let id = sources
         .add(FORMAT, text)
         .map_err(|e| Unread(e.to_string()))?;
-    let (document, diagnostics) = eadl_front::read(&sources, id);
+    let (document, diagnostics) = eadl_front::read_record(&sources, id);
     if diagnostics.has_errors() || !document.comments.is_empty() {
         return Err(Unread(
             "the record does not read as clauses with no comment".to_string(),

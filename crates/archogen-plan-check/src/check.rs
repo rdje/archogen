@@ -431,7 +431,7 @@ pub(crate) fn at(sources: &SourceMap, span: Span, message: &str) -> Label {
 pub(crate) fn label(name: &str, text: &str, head: &str) -> Label {
     let mut sources = SourceMap::new();
     let position = sources.add(name, text).ok().and_then(|id| {
-        let (document, _) = eadl_front::read(&sources, id);
+        let (document, _) = eadl_front::read_record(&sources, id);
         let span = document
             .forms
             .iter()

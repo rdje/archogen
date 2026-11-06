@@ -801,7 +801,7 @@ impl<'a> RecordText<'a> {
         let mut binds = BTreeMap::new();
         let mut sources = SourceMap::new();
         if let Ok(id) = sources.add(name, text) {
-            let (document, _) = eadl_front::read(&sources, id);
+            let (document, _) = eadl_front::read_record(&sources, id);
             for form in document.forms.iter().filter(|f| f.head() == Some("bind")) {
                 if let (Some(source), [_, requester, Form::Symbol { name: fact, .. }, _]) =
                     (sources.get(id), form.items())

@@ -10,9 +10,23 @@ use std::process::ExitCode;
 
 mod sibling;
 
+/// What this process may hold at once, whatever a description's shape asks of it.
+#[global_allocator]
+static CEILING: archogen_transport::ceiling::Ceiling = archogen_transport::ceiling::Ceiling;
+
 fn main() -> ExitCode {
     let mut stdout = archogen_cli::Watched::new(std::io::stdout().lock());
     let mut stderr = std::io::stderr().lock();
+
+    if let Err(why) = archogen_transport::ceiling::from_environment() {
+        let usage = archogen_cli::Status::Usage;
+        let _ = writeln!(stderr, "archogen: {}: {why}", usage.slug());
+        let _ = writeln!(
+            stderr,
+            "  hint: give a whole number of MiB, or leave it unset"
+        );
+        return ExitCode::from(u8::try_from(usage.code()).unwrap_or(2));
+    }
 
     // `std::env::args` panics on an argument that is no text, and exit 101 is a code no status has.
     let args: Result<Vec<String>, _> = std::env::args_os()

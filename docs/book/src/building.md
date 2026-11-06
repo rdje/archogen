@@ -185,7 +185,7 @@ the rule: what it says is run, and a route it does not name is promised nothing 
 | `aside-stands` | anything at `DIR.replaced` | `usage` | `kept there what could not go` | it |
 | `no-room-name` | a name with no room for `.building` beside it | `usage` | `too long` | nothing made |
 | `junk` | a file of junk that reads or does not, past a thousand errors | `invalid-description` | `goes unsaid` | nothing made |
-| `no-provider` | a search finds nothing to meet a need | `infeasible-configuration` | `no plan was written` | nothing made; each refusal said once |
+| `no-provider` | a search finds nothing to meet a need, each provider stating what refuses it | `infeasible-configuration` | `no plan was written` | nothing made; each refusal said once |
 | `no-room-path` | a path with no room for what a build writes beneath it, as the checker is handed it | `usage` | `leaves no room in a path` | nothing made |
 | `file-on-the-way` | a file among `--out`'s parents | `usage` | `is no directory` | the file |
 | `link-on-the-way` | a link to nothing among `--out`'s parents | `usage` | `a link to nothing` | the link |

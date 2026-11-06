@@ -326,6 +326,7 @@ fn print_account(account: &Account, response: &Response, planned: bool, out: &mu
                 "  no provider meets it: {}: {}",
                 unmet.code, unmet.message
             );
+            let _ = writeln!(out, "  hint: {}", unmet.repair);
         }
         (None, None) if !planned => {
             let met: Vec<String> = account
@@ -336,7 +337,7 @@ fn print_account(account: &Account, response: &Response, planned: bool, out: &mu
                 .collect();
             let _ = writeln!(
                 out,
-                "  met alone by {}; no plan was written: another requirement stops the search (below)",
+                "  met alone by {}; no plan was written: what stopped the search is below",
                 met.join(", ")
             );
         }

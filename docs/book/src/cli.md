@@ -202,7 +202,7 @@ again just before it is used, and in that instant what stands there is what is u
 | `parent-shut-meanwhile` | while the checker runs, the directory `PLAN` lies in is closed to this user, so the stage cannot be looked at | `tool-failure` | `closed while the checker ran` | what stood at `PLAN`; the stage, which it says it cannot look at and may stand |
 | `came-at-the-record` | while the checker runs, something comes at its record's own name in the stage | `tool-failure` | `not a result record` | what stood at `PLAN`; the stage, with what came, to be looked at |
 | `junk` | a file of junk, past a thousand errors | `invalid-description` | `goes unsaid` | nothing made |
-| `many-unmet` | a search with over a thousand needs nothing meets | `infeasible-configuration` | `goes unsaid` | nothing made |
+| `many-unmet` | a search with over a thousand needs nothing meets, each provider stating what refuses them | `infeasible-configuration` | `goes unsaid` | nothing made |
 | `came-on-a-refusal` | while the checker runs, something comes in the stage, and the run is then refused | `tool-failure` | `wrote no record` | what stood at `PLAN`; the stage with what came, which it says, and nothing this run wrote |
 | `plan-edited-meanwhile` | while the checker runs, the plan it is judging is edited | `tool-failure` | `changed while the plan was judged` | what stood at `PLAN`; the stage, to be looked at |
 | `check-stands-unchecked` | a file at `PLAN.check`, with `--unchecked` | `ok` | `resolved system` | the plan, and that file |
@@ -284,6 +284,8 @@ are the `ROADMAP.md` §5.5 vocabulary:
 | `15` | `not-established` | a sufficient analysis did not establish the requested property |
 | `16` | `counterexample` | a validated witness violates a named property |
 | `70` | `tool-failure` | internal failure or an unavailable required tool |
+
+A run past its memory ceiling is `analysis-inconclusive`, with nothing judged ([What one request may cost](engine-api.md)). An argument holding a line break is `usage`, as one that is no UTF-8 is, since what a run says of it could write a line of its own.
 
 **Process-level statuses** say what happened to *the invocation*. They make no claim about
 any description:

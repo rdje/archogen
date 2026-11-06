@@ -627,8 +627,9 @@ a change that leaves it stale, so it is never edited by hand.
   costs](versions.md), [Annex C: Trust proof records](annex-trust-proofs.md)
 - **provider** — [definition](glossary.md), [Introduction](introduction.md), [The boundary: functionality versus
   implementation](boundary.md), [Presence, absence, and relevance](presence.md), [Matching an offer to a
-  requirement](matching.md), [Checking a plan](plan-check.md), [The S0 early generation path](s0.md), [The archogen
-  command line](cli.md), [The engine API](engine-api.md), [What is versioned, and what changing it costs](versions.md)
+  requirement](matching.md), [Checking a plan](plan-check.md), [Building a system](building.md), [The S0 early
+  generation path](s0.md), [The archogen command line](cli.md), [The engine API](engine-api.md), [What is versioned, and
+  what changing it costs](versions.md)
 - Publication guard for renderer control bytes — [Annex C: Trust proof
   records](annex-trust-proofs.md#publication-guard-for-renderer-control-bytes)
 
@@ -879,9 +880,9 @@ a change that leaves it stale, so it is never edited by hand.
 - **UART** — [definition](glossary.md), [A tour: from a description to a board](tour.md), [Where generated systems
   run](targets.md)
 - **UTC** — [definition](glossary.md), [Annex C: Trust proof records](annex-trust-proofs.md)
-- **UTF-8** — [definition](glossary.md), [Checks that must not share a mistake: the trust gate](trust.md), [Verifying
-  the toolchain](verification.md), [Annex B: The checks that keep the repository honest](annex-repository.md), [Annex C:
-  Trust proof records](annex-trust-proofs.md)
+- **UTF-8** — [definition](glossary.md), [Checks that must not share a mistake: the trust gate](trust.md), [The archogen
+  command line](cli.md), [Verifying the toolchain](verification.md), [Annex B: The checks that keep the repository
+  honest](annex-repository.md), [Annex C: Trust proof records](annex-trust-proofs.md)
 
 ## V
 

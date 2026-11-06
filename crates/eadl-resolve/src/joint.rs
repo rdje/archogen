@@ -2168,6 +2168,7 @@ impl<'v> Joint<'v> {
                 });
             }
         }
+        let mut contradictions = 0_usize;
         for (i, (owner, memory)) in regions.iter().enumerate() {
             if !memory.is_memory() {
                 continue;
@@ -2188,8 +2189,10 @@ impl<'v> Joint<'v> {
                 if m0 < o1 && o0 < m1 {
                     if other.reserved {
                         holes.push(((*other_owner).to_string(), (*other).clone()));
-                    } else if (!other.is_memory() || i < j) && map.refused.len() <= MOST_ERRORS {
+                    } else if (!other.is_memory() || i < j) && contradictions <= MOST_ERRORS {
                         // One kind, one verdict: more of it moves none, and n regions at one base are n² of them.
+                        // Counted apart from the list, which holds another verdict's beside these.
+                        contradictions += 1;
                         map.refused.push(Finding::MapContradiction {
                             system: system.name.clone(),
                             memory: ((*owner).to_string(), (*memory).clone()),

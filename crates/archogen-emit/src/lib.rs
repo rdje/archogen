@@ -312,6 +312,9 @@ fn literal(text: &str) -> String {
     format!("{text:?}")
 }
 
+/// The most of a system's name that a package's name holds.
+const MOST_IN_A_PACKAGE_NAME: usize = 128;
+
 /// A Cargo package name for a system's name: total and deterministic, and a label, never its identity.
 fn package_name(system: &str) -> String {
     let mut body = String::with_capacity(system.len());
@@ -322,7 +325,10 @@ fn package_name(system: &str) -> String {
             body.push('-');
         }
     }
-    format!("system-{}", body.trim_matches('-'))
+    // Cargo makes file names of it, with a hash and more, and a file name holds 255 bytes: the system's own name can
+    // pass that, and what tells two systems apart is the plan's digest. Each character here is one byte.
+    let cut = &body[..body.len().min(MOST_IN_A_PACKAGE_NAME)];
+    format!("system-{}", cut.trim_matches('-'))
 }
 
 /// The manifest of the system's own package, the root of its workspace, so it builds wherever it is written.

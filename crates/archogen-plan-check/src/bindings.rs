@@ -681,7 +681,7 @@ fn places(name: &str, text: &str) -> BTreeMap<(Requester, String), Label> {
     let Ok(id) = sources.add(name, text) else {
         return BTreeMap::new();
     };
-    let (document, _) = eadl_front::read(&sources, id);
+    let (document, _) = eadl_front::read_record(&sources, id);
     let Some(source) = sources.get(id) else {
         return BTreeMap::new();
     };
