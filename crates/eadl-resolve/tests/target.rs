@@ -1102,7 +1102,7 @@ fn systems_of(file: &std::path::Path) -> Vec<(Form, Vec<Form>)> {
         .collect()
 }
 
-/// The rule held over the systems the repository's trees describe under its roots, modules among them, on two machines, rather than over shapes written for it. What comes on a target binds that target's devices
+/// The rule held over the systems the repository's trees describe under its roots, modules among them, on three machines, rather than over shapes written for it. What comes on a target binds that target's devices
 /// and no other, by what it declares. And where presence is clean and a plan comes, each fact the system depends on is one the plan binds or the machine states, which is the harm three rounds of this review
 /// found: a plan for a machine without the device. A description added under these roots is in it.
 #[test]
@@ -1155,8 +1155,16 @@ fn every_system_under_the_roots_reads_on_a_target_as_the_rule_says() {
                 // What the target replaces and a system not named are gone from what is read there.
                 let theirs_or_kept = |form: &Form| {
                     let name = form.items().get(1).and_then(Form::as_symbol);
-                    !matches!(form.head(), Some("defblock" | "defplatform"))
-                        || name.is_some_and(|name| theirs.iter().any(|one| one == name))
+                    match form.head() {
+                        Some("defblock" | "defplatform") => {
+                            name.is_some_and(|name| theirs.iter().any(|one| one == name))
+                        }
+                        Some("defsystem") => name.is_some_and(|name| {
+                            there.asking.contains(name)
+                                || Some(name) == system.items().get(1).and_then(Form::as_symbol)
+                        }),
+                        _ => true,
+                    }
                 };
                 assert!(there.declarations.iter().all(theirs_or_kept), "{said}");
                 // The hardware a system has there is the target's, and nothing else.
@@ -1302,6 +1310,19 @@ fn a_target_s_own_loop_and_a_name_it_takes_are_refused() {
         listed.iter().any(|d| d.message.contains("holds a list")),
         "{listed:?}"
     );
+    let Err(listed) = Target::read(
+        &forms(
+            "(defblock l.dev (offers (observable-output true) (reachable-at-privilege machine)))
+             (defplatform l.top (offers (core-count 1 tick) (reachable-at-privilege machine)) (requires (needs (uses l.dev))))",
+        ),
+        file_start(),
+    ) else {
+        panic!("a `needs` holding a list is refused");
+    };
+    assert!(
+        listed.iter().any(|d| d.message.contains("holds a list")),
+        "{listed:?}"
+    );
     let declarations = forms(
         "(defblock sha-accel (offers (x true)))
          (defblock console.uart (offers (observable-output true) (reachable-at-privilege machine)))
@@ -1345,6 +1366,11 @@ fn another_system_named_is_no_missing_fact_and_presence_keeps_its_metadata() {
     let there = on_target(system, &declarations, &real_target()).expect("read there");
     assert!(there.presence().is_empty(), "{:?}", there.presence());
     assert!(there.report().closure.iter().any(|name| name == "other"));
+    assert!(
+        !there.report().closure.iter().any(|name| name == "o.soc"),
+        "{:?}",
+        there.report().closure
+    );
     // Its tasks are that system's: a need one writes asks nothing of this one, directly or through what it uses, and the search serves neither.
     for task_asks in ["(needs sha-accel)", "(uses hash)"] {
         let text = format!(
@@ -1385,6 +1411,7 @@ fn another_system_named_is_no_missing_fact_and_presence_keeps_its_metadata() {
         let Err(said) = on_target(system, &declarations, &target_of(A_WHOLE_TARGET)) else {
             panic!("{names}: a replaced name answered it");
         };
+        // And the report says nothing of a platform that is gone, by a clause that stands on the target.
         assert!(
             said.iter().any(|d| d.code == "infeasible-configuration"
                 && d.message.contains("`other` names `o.dev`")),

@@ -131,3 +131,16 @@ Said, and left as it stands: its reader could not run `/2`, the configuration ch
 | DC8-9 | wording | round 7's row above round 6's; the refusals' heading; `only_described`'s words | In order, and each says what is so |
 
 Said, and left as it stands: its reader could not run `/2`, the configuration checker on a target or a command naming a target, so `DC-H3`'s order is judged by reading and library calls, and it built no older commit. Reading `M3.4.16` also printed the first row of `docs/tasks/M3.md`'s frontier.
+
+**Round 9** — `2026-11-06`, leaf `M4.4.1.9`: **acceptable, the review closes**, 6 findings, no defect, after 5, 3, 6, 2, 5, 4, 2 and 1. A first reader of this round stalled with no report and was replaced; this one reused nothing it concluded. Its reader built two metamorphic relations of its own over all 244 systems of 319 files. A target that is the system's own hardware renamed gave 172 plans identical modulo names, with placement, and 21 refusals of the same verdict, none differing, 51 not comparable. A description with all its hardware removed gave the same presence, closure and search in all 1,899 comparisons, on 9 targets. The sweep over the search paths on 9 targets had no breach, and 30,000 generated pairs had no disagreement and no plan for a machine without the device.
+
+| # | Kind | Finding | Answer |
+| --- | --- | --- | --- |
+| DC9-1 | gap | the sweep held less than it said: any `defsystem` passed "a system not named", and its doc said two machines where it has three. The behaviour was right, by the reader's rig | It holds that, and says three |
+| DC9-2 | gap | `Target::read` passed `(requires (needs (uses t.a)))`, `composition` walking into a `needs` and a system's reading not, so "one set" was false of it, by DC8-5's other spelling | A `needs` holding a list is refused too |
+| DC9-3 | gap | a named other system's clause stayed unreplaced in `declarations`, so the report's closure named a replaced platform, though round 8 reads it on the target. No verdict moved | Its clause stands on the target there too |
+| DC9-4 | wording | the book's list omitted round 8's refusal | It has it |
+| DC9-5 | wording | row 3 and `# Errors` did not name another system | They do |
+| DC9-6 | wording | "with no word of why" overstated: the search names the operand | It says what is so: refused by the search, far from where this is written |
+
+Said, and left as it stands: its reader could not run `/2`, the configuration checker on a target or a command naming a target, so `DC-H3`'s order is judged by reading and library calls, which is `M4.1.7`'s to build. Presence refused what the search resolved in 8,535 generated pairs, by its reading needs outside the vocabulary, which the search binds nothing for, and which `M3.4.17` holds; its rig does not break that count down. A nameless system gives a clean report and a plan, and `check` refuses it first, as `DC-H3` asks.

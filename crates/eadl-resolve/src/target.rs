@@ -138,12 +138,12 @@ impl Target {
             }
         }
         errors.extend(loops_refused(&composed, &declared));
-        // What a system reads as hardware is a plain name, and what this composes is read as more: one set, or every system on it is refused with no word of why.
+        // What a system reads as hardware is a plain name, and what this composes is read as more: one set, or every system on it is refused by the search, far from where this is written.
         for form in declared.values() {
             for span in uses_a_list(form) {
                 errors.push(Diagnostic::error(
                     "invalid-description",
-                    "a target composes its devices by plain names, and this `uses` holds a list".to_owned(),
+                    "a target composes its devices by plain names, and this `uses` or `needs` holds a list".to_owned(),
                     Label::new(span, "here"),
                     "write the name alone: a system on this machine reads a plain name as its hardware, and nothing else",
                 ));
@@ -222,12 +222,12 @@ impl OnTarget {
     }
 }
 
-/// Where `form`, composing, holds a list among what it `uses`.
+/// Where `form`, composing, holds a list among what it `uses` or `needs`: `composition` walks into either, and a system's reading does not.
 fn uses_a_list(form: &Form) -> Vec<Span> {
     fn walk(form: &Form, out: &mut Vec<Span>) {
         match form.head() {
             Some("offers" | "absent" | "refines") => {}
-            Some("uses") => out.extend(
+            Some("uses" | "needs") => out.extend(
                 form.items()
                     .iter()
                     .skip(1)
@@ -519,7 +519,7 @@ fn declarations_named_by(form: &Form) -> Vec<(String, Span)> {
 /// # Errors
 ///
 /// What keeps it from being read there, the search not having run: a name the target declares too; a file naming what only the other
-/// declares, since each says what it holds with no help from the other; a block or platform the system, a task, or a service or a policy it
+/// declares, since each says what it holds with no help from the other; a block or platform the system, a task, another system it names, or a service or a policy it
 /// reaches names itself, which no requirement can stand for; an absence the platform it runs on declares that the target offers (model
 /// §3 rule 3); hardware the system has that refines what leads back to it; and two `platform` clauses, which read as one would hide what `check` says of them.
 pub fn on_target(
@@ -705,6 +705,24 @@ pub fn on_target(
                 && !declared_name(form).is_some_and(|name| other_systems.contains(name))
             {
                 None
+            } else if form.head() == Some("defsystem") {
+                // Named, it stands on the target too, as it is read above: a replaced platform is no part of what it says there.
+                let mut items: Vec<Form> = form
+                    .items()
+                    .iter()
+                    .filter(|item| item.head() != Some("platform"))
+                    .cloned()
+                    .collect();
+                items.push(clause_on_target(
+                    form,
+                    &declared,
+                    &target.platform,
+                    target.span,
+                ));
+                Some(Form::List {
+                    items,
+                    span: form.span(),
+                })
             } else {
                 Some(form.clone())
             }

@@ -195,10 +195,11 @@ The engine refuses these before it searches, because no requirement can answer t
 
 - a name both the description and the target declare;
 - a file naming what only the other declares, since each must say what it holds by itself: read together, the target's name would find the description's device and bind it;
-- a system, a task, or a service or policy the system reaches, naming a block or a platform itself, where it could say what it asks of one;
+- a system, a task, another system it names, or a service or policy the system reaches, naming a block or a platform itself, where it could say what it asks of one;
 - a fact the one declaration a system's platform clause stands on declares absent that the target offers. Another's absence covers what it is made of, and says nothing of a device beside it;
 - two `platform` clauses on one system, which read as one would hide that it has two;
-- hardware, a target's as well, that refines what leads back to it, on which no machine stands.
+- hardware, a target's as well, that refines what leads back to it, on which no machine stands;
+- a target's `uses` or `needs` holding a list, which a system would not read as hardware.
 
 A target's file holds what its agreement with the machine checks, so what it does not state it does not offer. A system that declares a fact absent lands on a target that is silent about it, even where the machine has the device.
 
