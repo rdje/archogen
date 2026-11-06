@@ -82,3 +82,19 @@ Said, and left as it stands: its reader could not run `/2`, the configuration ch
 | DC5-7 | wording | "a block or a platform and nothing else", when the search binds an adapter's instance too; `(multicore false)` as an example `check` refuses first | Each said as it is |
 
 Said, and left as it stands: its reader could not run `/2`, the configuration checker on a target or a command naming a target, so `DC-H3`'s order is judged by emulation, and built no older commit. It read one line beyond the leaf its brief allowed in `docs/tasks/M3.md`.
+
+**Round 6** — `2026-11-06`, leaf `M4.4.1.6`: not acceptable, 9 findings, 4 defects, after 5, 3, 6, 2 and 5, all low in reach, none binding a wrong device, and no corpus file has any of their shapes. Its reader swept wider than the test: 289 files read, 242 systems with module trees elaborated, on six targets, 73 to 182 plans each, and no breach of any of its invariants: devices bound the target's by membership, placement the target's, hardware equal to the target's, `correspond`'s partition exact, no need unjudged. Over 20,000 generated shapes and seven kinds of change, renaming hardware and clause order among them, some 200,000 comparisons, no verdict moved.
+
+| # | Kind | Finding | Answer |
+| --- | --- | --- | --- |
+| DC6-1 | defect, low | a named other system was read wrongly both ways: its need unjudged though the search serves it, and what it reached through replaced hardware asked. DC5-2's answer was half right | It asks, its replaced hardware's names being declarations' and no facts, and reach on a target stops at what the target replaces. `M1.46` is to refuse the name |
+| DC6-2 | defect, low, by emulation | `DC-H3` lost model §7 rule 4 for a module tree: it lives in the API's `prepare` alone, which cannot be reused since it asks `check` of the description's own hardware | `DC-H3` names it |
+| DC6-3 | defect, low | a loop through two refinements was not refused, and was misread: `declarations_speaking_for_the_machine` read a cycle of `holds`, where the record says composition | A cycle speaks by composition alone, and any loop through a refinement is refused, `refining_in_a_loop` |
+| DC6-4 | defect, low | the report's metadata lost a kept service's need and offer, where model §2 rule 4 has them stay visible | `FactMap::mentioned`: what answers nothing stays visible |
+| DC6-5 | gap | the sweep claimed more than it held: 208 of 242 systems, a `defmodule` file's skipped; "presence refuses nothing the search resolves" true of the corpus and not the rule; one target; a prefix for membership | Module trees elaborated, more roots, two machines, membership. It now holds the harm itself: where presence is clean and a plan comes, each fact depended on is bound or stated |
+| DC6-6 | gap | `DC-H3` and `M3.4.7` will collide: "every pass" would ask a verdict on the description's own hardware | `DC-H3` leaves out what `M3.4.7` adds of the search's verdict |
+| DC6-7 | gap | `refining_its_own_parts` was wider than its reason, refusing a platform refining what it composes with no loop, and its test was off the schema | Only a loop is refused, and the test's shapes are platforms |
+| DC6-8 | wording | "refused before anything reads it": the code goes on reading, so a `refinement-violated` may stand beside the refusal | Said here: a refusal may have company, and the verdict does not move |
+| DC6-9 | wording | the book's list of refusals omitted the sixth row | It has it |
+
+Said, and left as it stands: its reader could not run `/2`, the configuration checker on a target or a command naming a target, and built no older commit. It read the `M1.46` leaf and grepped `docs/reviews/INDEX.md`, past its search paths.

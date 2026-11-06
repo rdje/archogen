@@ -166,8 +166,10 @@ pub struct OnTarget {
     /// What the system reads there: the description's declarations with that system in its place and its hardware gone, and the target's. Another
     /// system is gone too, but for one it names, which `M1.46` is to refuse. So nothing the target replaces can answer for it.
     pub declarations: Vec<Form>,
-    /// Those of `declarations` that are the description's and ask anything of the machine: the system, and what it reaches.
+    /// Those of `declarations` that are the description's and ask anything of the machine: the system, and what it reaches, another system among them.
     pub asking: BTreeSet<String>,
+    /// The hardware of the description, gone from `declarations`: a name a kept declaration may still say, which is no fact.
+    pub replaced: BTreeSet<String>,
 }
 
 impl OnTarget {
@@ -178,6 +180,9 @@ impl OnTarget {
     #[must_use]
     pub fn report(&self) -> PresenceReport {
         let mut facts = FactMap::new();
+        for name in &self.replaced {
+            facts.declare_name(name);
+        }
         for form in &self.declarations {
             if is_hardware(form) {
                 facts.collect(form);
@@ -309,23 +314,27 @@ fn what_the_machine_is<'s>(named: &[&'s str], declared: &BTreeMap<&str, &Form>) 
         .collect()
 }
 
-/// Each of `hardware` that refines, up its chain, what composes it or what it composes, with what it refines: a more abstract saying of one thing does not hold that thing, or it in turn, and no machine stands
-/// on the two.
-fn refining_its_own_parts(
+/// Each piece of hardware a system has, through what it composes and refines, that refines what leads back to it: a more abstract saying of one thing cannot be made of that thing, and no machine stands on a
+/// loop. With what it refines, and where.
+fn refining_in_a_loop(
     hardware: &BTreeSet<String>,
     declared: &BTreeMap<&str, &Form>,
 ) -> Vec<(String, String, Span)> {
-    let composes = |whole: &str, part: &str| {
-        let mut seen: BTreeSet<String> = BTreeSet::from([whole.to_owned()]);
-        let mut todo = vec![whole.to_owned()];
+    let next = |at: &str| -> Vec<String> {
+        let Some(form) = declared.get(at).filter(|form| is_hardware(form)) else {
+            return Vec::new();
+        };
+        composition(form)
+            .into_iter()
+            .chain(Facets::of(form).0.refines.map(|(up, _)| up))
+            .collect()
+    };
+    let leads_to = |from: &str, to: &str| {
+        let mut seen: BTreeSet<String> = BTreeSet::from([from.to_owned()]);
+        let mut todo = vec![from.to_owned()];
         while let Some(at) = todo.pop() {
-            let made = declared
-                .get(at.as_str())
-                .filter(|form| is_hardware(form))
-                .map(|form| composition(form))
-                .unwrap_or_default();
-            for name in made {
-                if name == part {
+            for name in next(&at) {
+                if name == to {
                     return true;
                 }
                 if seen.insert(name.clone()) {
@@ -335,24 +344,24 @@ fn refining_its_own_parts(
         }
         false
     };
+    let mut seen: BTreeSet<String> = hardware.clone();
+    let mut todo: Vec<String> = hardware.iter().cloned().collect();
     let mut found = Vec::new();
-    for name in hardware {
-        let mut seen: BTreeSet<String> = BTreeSet::from([name.clone()]);
-        let mut at = name.clone();
-        while let Some((up, span)) = declared
-            .get(at.as_str())
-            .filter(|form| is_hardware(form))
-            .and_then(|form| Facets::of(form).0.refines)
-        {
-            if composes(&up, name) || composes(name, &up) {
-                found.push((name.clone(), up.clone(), span));
+    while let Some(at) = todo.pop() {
+        if let Some(form) = declared.get(at.as_str()).filter(|form| is_hardware(form)) {
+            if let Some((up, span)) = Facets::of(form).0.refines {
+                if up == at || leads_to(&up, &at) {
+                    found.push((at.clone(), up, span));
+                }
             }
-            if !seen.insert(up.clone()) {
-                break;
+        }
+        for name in next(&at) {
+            if seen.insert(name.clone()) {
+                todo.push(name);
             }
-            at = up;
         }
     }
+    found.sort_by(|a, b| (&a.0, &a.1).cmp(&(&b.0, &b.1)));
     found
 }
 
@@ -375,9 +384,30 @@ fn declarations_speaking_for_the_machine<'d>(
     }
     let mut seen: BTreeSet<&str> = BTreeSet::new();
     let mut platforms = Vec::new();
-    let cycle = declared.keys().copied().filter(|name| {
-        *name == only || (holds(only, name, declared) && holds(name, only, declared))
-    });
+    let composes = |whole: &str, part: &str| {
+        let mut seen: BTreeSet<String> = BTreeSet::from([whole.to_owned()]);
+        let mut todo = vec![whole.to_owned()];
+        while let Some(at) = todo.pop() {
+            let made = declared
+                .get(at.as_str())
+                .filter(|form| is_hardware(form))
+                .map(|form| composition(form))
+                .unwrap_or_default();
+            for name in made {
+                if name == part {
+                    return true;
+                }
+                if seen.insert(name.clone()) {
+                    todo.push(name);
+                }
+            }
+        }
+        false
+    };
+    let cycle = declared
+        .keys()
+        .copied()
+        .filter(|name| *name == only || (composes(only, name) && composes(name, only)));
     for name in cycle {
         let mut at = declared.get_key_value(name);
         while let Some((name, form)) = at {
@@ -501,7 +531,13 @@ pub fn on_target(
         span: system.span(),
     };
     // What the system runs on is the target's now, so a name of hardware still standing, its own or in what it reaches from there, says nothing of the machine.
-    let read_there = System::read(&on_it, declarations);
+    // What is reached only through hardware the target replaces is not reached there.
+    let kept: Vec<Form> = declarations
+        .iter()
+        .filter(|form| !is_hardware(form))
+        .cloned()
+        .collect();
+    let read_there = System::read(&on_it, &kept);
     let reached = read_there.reached.clone();
     let reached = reached
         .iter()
@@ -530,10 +566,10 @@ pub fn on_target(
         .map(|form| Facets::of(form).0)
         .collect();
     let hardware = System::read(system, declarations).hardware;
-    for (name, up, span) in refining_its_own_parts(&hardware, &declared) {
+    for (name, up, span) in refining_in_a_loop(&hardware, &declared) {
         errors.push(Diagnostic::error(
             "invalid-description",
-            format!("`{name}` refines `{up}`, and one of them composes the other, so no machine stands on the two"),
+            format!("`{name}` refines `{up}`, which leads back to it through what they compose and refine, so no machine stands on them"),
             Label::new(span, "refines it here"),
             "a refinement says the same thing again: compose the device, or refine what it is made of, and not both",
         ));
@@ -561,8 +597,12 @@ pub fn on_target(
     let asking = read_there
         .reached
         .into_iter()
-        .filter(|name| !other_systems.contains(name))
         .chain(declared_name(system).map(str::to_owned))
+        .collect();
+    let replaced = declared
+        .iter()
+        .filter(|(_, form)| is_hardware(form))
+        .map(|(name, _)| (*name).to_owned())
         .collect();
     let declarations = declarations
         .iter()
@@ -584,6 +624,7 @@ pub fn on_target(
         system: on_it,
         declarations,
         asking,
+        replaced,
     })
 }
 

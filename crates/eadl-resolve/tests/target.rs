@@ -1067,65 +1067,124 @@ fn eadl_files_under(dir: &std::path::Path, into: &mut Vec<PathBuf>) {
     }
 }
 
-/// The rule held over every system the repository's own trees describe, rather than over shapes written for it: what comes on a target binds only that target's devices, and presence refuses nothing the
-/// search resolves, so `DC-H3`'s order refuses nothing falsely. A sweep and not a list, so a description added tomorrow is in it. Its roots keep it to the examples and the crates' own fixtures.
+/// Each system of `file` as it reads, a module tree flattened as a build flattens it, with the declarations it reads among.
+fn systems_of(file: &std::path::Path) -> Vec<(Form, Vec<Form>)> {
+    let Ok(text) = std::fs::read_to_string(file) else {
+        return Vec::new();
+    };
+    let mut sources = SourceMap::new();
+    let Ok(id) = sources.add("t.eadl", text.as_str()) else {
+        return Vec::new();
+    };
+    let (doc, diagnostics) = read(&sources, id);
+    if diagnostics.has_errors() {
+        return Vec::new();
+    }
+    let forms: Vec<Form> = doc
+        .forms
+        .into_iter()
+        .filter(|form| form.head() != Some("eadl-version"))
+        .collect();
+    let declarations = if forms.iter().any(|form| form.head() == Some("defmodule")) {
+        let modules = eadl_front::DirectoryModules::new(file.parent().expect("a parent"));
+        let (program, diagnostics) = eadl_front::elaborate_source(&mut sources, &modules, id);
+        if diagnostics.has_errors() {
+            return Vec::new();
+        }
+        eadl_model::check::resolved_declarations(&program).0
+    } else {
+        forms
+    };
+    declarations
+        .iter()
+        .filter(|form| form.head() == Some("defsystem"))
+        .map(|system| (system.clone(), declarations.clone()))
+        .collect()
+}
+
+/// The rule held over the systems the repository's trees describe under its roots, modules among them, on two machines, rather than over shapes written for it. What comes on a target binds that target's devices
+/// and no other, by what it declares. And where presence is clean and a plan comes, each fact the system depends on is one the plan binds or the machine states, which is the harm three rounds of this review
+/// found: a plan for a machine without the device. A description added under these roots is in it.
 #[test]
-fn every_system_in_the_repository_reads_on_a_target_as_the_rule_says() {
-    let target = target_of(A_RICH_TARGET);
+fn every_system_under_the_roots_reads_on_a_target_as_the_rule_says() {
     let mut files = Vec::new();
     for dir in [
         "examples",
         "crates/eadl-resolve/tests",
         "crates/archogen-plan/tests/corpus",
+        "docs/semantics/boundary",
+        "docs/semantics/modules",
         "targets",
     ] {
         eadl_files_under(&root().join(dir), &mut files);
     }
     files.sort();
     let (mut systems, mut resolved) = (0_u32, 0_u32);
-    for file in &files {
-        let Ok(text) = std::fs::read_to_string(file) else {
-            continue;
-        };
-        let mut sources = SourceMap::new();
-        let id = sources.add("t.eadl", text.as_str()).expect("small");
-        let (doc, diagnostics) = read(&sources, id);
-        if diagnostics.has_errors() {
-            continue;
-        }
-        let declarations: Vec<Form> = doc
-            .forms
-            .into_iter()
-            .filter(|form| form.head() != Some("eadl-version"))
-            .collect();
-        for system in declarations
+    for machine in [A_RICH_TARGET, A_WHOLE_TARGET] {
+        let target = target_of(machine);
+        let theirs: Vec<String> = target
+            .declarations
             .iter()
-            .filter(|form| form.head() == Some("defsystem"))
-        {
-            systems += 1;
-            let Ok(there) = on_target(system, &declarations, &target) else {
-                continue;
-            };
-            if let Search::Resolved(plan) = run(&there.declarations, &there.system) {
+            .filter_map(|form| {
+                form.items()
+                    .get(1)
+                    .and_then(Form::as_symbol)
+                    .map(str::to_owned)
+            })
+            .collect();
+        let offered: Vec<eadl_model::refinement::Facets> = target
+            .declarations
+            .iter()
+            .map(|form| eadl_model::refinement::Facets::of(form).0)
+            .collect();
+        for file in &files {
+            for (system, declarations) in systems_of(file) {
+                systems += 1;
+                let Ok(there) = on_target(&system, &declarations, &target) else {
+                    continue;
+                };
+                let Search::Resolved(plan) = run(&there.declarations, &there.system) else {
+                    continue;
+                };
                 resolved += 1;
                 let said = file.display();
-                assert!(
-                    there.presence().is_empty(),
-                    "{said}: presence refuses what the search resolves: {:?}",
-                    there.presence()
-                );
+                let bound: Vec<&str> = plan
+                    .bindings
+                    .keys()
+                    .map(|(_, fact)| fact.as_str())
+                    .collect();
                 for provider in plan.bindings.values() {
                     let device = plan
                         .instances
                         .iter()
                         .find(|instance| instance.provider.name == *provider)
                         .map_or(provider.as_str(), |instance| instance.over.as_str());
-                    assert!(device.starts_with("target."), "{said}: bound to {device}");
+                    assert!(
+                        theirs.iter().any(|name| name == device),
+                        "{said}: bound to {device}"
+                    );
+                }
+                let report = there.report();
+                if report.diagnostics.is_empty() {
+                    let named =
+                        |name: &str| {
+                            there.declarations.iter().any(|form| {
+                                form.items().get(1).and_then(Form::as_symbol) == Some(name)
+                            }) || there.replaced.contains(name)
+                        };
+                    for fact in &report.closure {
+                        assert!(
+                            named(fact)
+                                || bound.contains(&fact.as_str())
+                                || offered.iter().any(|device| device.offers_fact(fact)),
+                            "{said}: `{fact}` is depended on, and nothing on this machine answers it"
+                        );
+                    }
                 }
             }
         }
     }
-    assert!(systems >= 180, "only {systems} systems");
+    assert!(systems >= 400, "only {systems} systems");
     assert!(resolved >= 100, "only {resolved} resolved");
 }
 
@@ -1143,25 +1202,87 @@ fn another_system_named_is_no_missing_fact_and_presence_keeps_its_metadata() {
     let there = on_target(system, &declarations, &real_target()).expect("read there");
     assert!(there.presence().is_empty(), "{:?}", there.presence());
     assert!(there.report().closure.iter().any(|name| name == "other"));
+    // What the other system asks is asked, and what only that system's replaced hardware reaches is not.
+    let declarations = forms(
+        "(defplatform o.soc (offers (core-count 1 tick) (reachable-at-privilege machine)))
+         (defsystem other (requires (needs sha-accel)) (platform (uses o.soc)))
+         (defsystem s (requires (uses other)) (platform (uses o.soc)))",
+    );
+    let system = declarations
+        .iter()
+        .find(|form| form.items().get(1).and_then(Form::as_symbol) == Some("s"))
+        .expect("the system");
+    let there = on_target(system, &declarations, &real_target()).expect("read there");
+    assert_eq!(codes(&there.presence()), ["missing-fact"]);
+    let declarations = forms(
+        "(defservice helper (requires (needs sha-accel)))
+         (defblock o.dev (requires (uses helper)))
+         (defplatform o.soc (offers (core-count 1 tick) (reachable-at-privilege machine)) (requires (uses o.dev)))
+         (defsystem other (platform (uses o.soc)))
+         (defsystem s (requires (uses other)) (platform (uses o.soc)))",
+    );
+    let system = declarations
+        .iter()
+        .find(|form| form.items().get(1).and_then(Form::as_symbol) == Some("s"))
+        .expect("the system");
+    let there = on_target(system, &declarations, &real_target()).expect("read there");
+    assert!(there.presence().is_empty(), "{:?}", there.presence());
+    // A kept service's need and offer answer nothing, and stay visible.
+    let declarations = forms(&format!(
+        "{ACCEL} (defservice unused.one (offers sha-offered) (requires (needs sha-unread)))
+         (defsystem s (platform (uses soc.here)))"
+    ));
+    let there =
+        on_target(system_of(&declarations), &declarations, &real_target()).expect("read there");
+    let report = there.report();
+    assert!(
+        report
+            .outside_closure
+            .iter()
+            .any(|name| name == "sha-offered"),
+        "{:?}",
+        report.outside_closure
+    );
+    assert!(
+        report
+            .outside_closure
+            .iter()
+            .any(|name| name == "sha-unread"),
+        "{:?}",
+        report.outside_closure
+    );
 }
 
 #[test]
-fn what_refines_what_it_composes_or_is_made_of_is_refused() {
+fn what_refines_what_leads_back_to_it_is_refused() {
     for text in [
         "(defplatform b (absent tick-rate) (offers (core-count 1 tick)) (requires (uses c)))
-         (defblock c (requires (uses a)))
-         (defblock a (refines b))
+         (defplatform c (requires (uses a)))
+         (defplatform a (refines b))
          (defsystem s (platform (uses b)))",
         "(defplatform p (offers (core-count 1 tick)) (requires (uses q)))
-         (defblock q (refines p) (absent tick-rate))
+         (defplatform q (refines p) (absent tick-rate))
          (defsystem s (platform (uses p)))",
+        // Through two refinements.
+        "(defplatform a (offers (core-count 1 tick)) (requires (uses a1)))
+         (defplatform a1 (refines b))
+         (defplatform b (absent tick-rate) (offers (core-count 1 tick)) (requires (uses b1)))
+         (defplatform b1 (refines a))
+         (defsystem s (platform (uses a)))",
     ] {
         let declarations = forms(text);
         let refused = on_target(system_of(&declarations), &declarations, &real_target())
-            .expect_err("no machine stands on the two");
+            .expect_err("no machine stands on a loop");
         assert!(
             codes(&refused).contains(&"invalid-description"),
             "{refused:?}"
         );
     }
+    // A platform refining what it composes, with no way back, is no loop.
+    let declarations = forms(
+        "(defplatform up (offers (core-count 1 tick) (reachable-at-privilege machine)))
+         (defplatform down (refines up) (offers (core-count 1 tick) (reachable-at-privilege machine)) (requires (uses up)))
+         (defsystem s (platform (uses down)))",
+    );
+    assert!(on_target(system_of(&declarations), &declarations, &real_target()).is_ok());
 }

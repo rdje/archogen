@@ -185,6 +185,8 @@ pub struct FactMap {
     requested: Vec<(String, Span)>,
     /// Each block's and platform's direct composition, by [`composition`] (leaf `M3.4.8`).
     composes: BTreeMap<String, Vec<String>>,
+    /// What a declaration read for its name alone, or its asking alone, says beside that: it answers nothing, and stays visible (model §2 rule 4).
+    mentioned: BTreeSet<String>,
 }
 
 /// The outcome of a presence check.
@@ -272,11 +274,19 @@ impl FactMap {
         }
     }
 
-    /// That `form` is a declaration: its name is no fact, and all else it says is read by nothing here.
+    /// That `form` is a declaration: its name is no fact, and all else it says judges nothing here and stays visible.
     pub fn declare(&mut self, form: &Form) {
         if let Some(name) = form.items().get(1).and_then(Form::as_symbol) {
             self.declared.insert(name.to_string());
         }
+        let mut alone = Self::new();
+        alone.collect(form);
+        self.mentioned.extend(alone.universe());
+    }
+
+    /// That `name` is a declaration's, the declaration no longer read: a block a target replaced.
+    pub fn declare_name(&mut self, name: &str) {
+        self.declared.insert(name.to_string());
     }
 
     /// [`collect`](Self::collect), for a declaration whose offers answer nothing where the machine is another's: a service or a policy, to which the search binds nothing. It asks, and is
@@ -284,6 +294,7 @@ impl FactMap {
     pub fn collect_asking(&mut self, form: &Form) {
         let offered = std::mem::take(&mut self.offered);
         self.collect(form);
+        self.mentioned.extend(self.offered.keys().cloned());
         self.offered = offered;
     }
 
@@ -405,6 +416,7 @@ impl FactMap {
             all.extend(edges.iter().map(|(name, _)| name.clone()));
         }
         all.extend(self.requested.iter().map(|(name, _)| name.clone()));
+        all.extend(self.mentioned.iter().cloned());
         all
     }
 
