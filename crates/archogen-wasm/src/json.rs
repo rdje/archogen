@@ -61,7 +61,7 @@ fn label(json: &mut Json, label: &Label, sources: &SourceMap) {
     });
     json.raw("{");
     json.key("source");
-    json.string(name);
+    json.string(&eadl_front::fit_name(name));
     json.raw(",");
     json.key("line");
     json.integer(line);

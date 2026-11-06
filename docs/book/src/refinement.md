@@ -10,7 +10,7 @@ serial port is fine — and what it adds is shown, not hidden.
 
 > **In one minute, for engineers.** `(refines …)` is an obligation to check, not permission to trust
 > (`ROADMAP.md` §5.1.1). Its obligations are guarantee, constraint and exclusion; a violation is
-> `refinement-violated` naming the obligation, and every violation is reported. Every offer of the abstract
+> `refinement-violated` naming the obligation, and every violation is reported, up to what `too-many-errors` holds. Every offer of the abstract
 > description is an obligation: each bound is met by every value, a value it offers is kept only by the same
 > value, and `false` keeps no guarantee. Additions are allowed and reported
 > (§5.3: an unused device is not an invalid refinement), while offering what the abstract declares absent violates
@@ -60,7 +60,7 @@ error[refinement-violated]: `soc.concrete` does not offer `wrap-behavior`, which
           description offers
 ```
 
-Every violation is reported, not just the first.
+Every violation is reported, not just the first, up to what `too-many-errors` holds.
 
 ### The unused device
 

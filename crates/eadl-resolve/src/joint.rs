@@ -41,7 +41,7 @@ use std::cmp::Ordering;
 use std::collections::{BTreeMap, BTreeSet};
 use std::rc::Rc;
 
-use eadl_front::{Diagnostic, Form, Label, Span};
+use eadl_front::{Diagnostic, Form, Label, Span, MOST_ERRORS};
 use eadl_model::{Dimension, Quantity};
 
 use crate::adapter::Instance;
@@ -2188,7 +2188,8 @@ impl<'v> Joint<'v> {
                 if m0 < o1 && o0 < m1 {
                     if other.reserved {
                         holes.push(((*other_owner).to_string(), (*other).clone()));
-                    } else if !other.is_memory() || i < j {
+                    } else if (!other.is_memory() || i < j) && map.refused.len() <= MOST_ERRORS {
+                        // One kind, one verdict: more of it moves none, and n regions at one base are n² of them.
                         map.refused.push(Finding::MapContradiction {
                             system: system.name.clone(),
                             memory: ((*owner).to_string(), (*memory).clone()),
@@ -2709,10 +2710,13 @@ fn judge_pair(a: (&str, &Region), b: (&str, &Region), report: &mut Report) {
     let (a0, a1) = ra.known();
     let (b0, b1) = rb.known();
     if a0 < b1 && b0 < a1 {
-        report.conflicts.push(Finding::Overlap {
-            first: (p.to_string(), ra.clone()),
-            second: (q.to_string(), rb.clone()),
-        });
+        // One kind, one verdict: more of it moves none, and n regions of each at one base are n² of them.
+        if report.conflicts.len() <= MOST_ERRORS {
+            report.conflicts.push(Finding::Overlap {
+                first: (p.to_string(), ra.clone()),
+                second: (q.to_string(), rb.clone()),
+            });
+        }
         return;
     }
     if ra.bytes.is_none() && b0 >= a0 {

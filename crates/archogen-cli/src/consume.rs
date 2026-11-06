@@ -308,6 +308,9 @@ pub fn remove_record(dir: &Path) {
 /// What stopped it reading the file.
 pub fn reads_as_record(file: &Path) -> std::io::Result<bool> {
     let mut opened = std::fs::File::open(file)?;
+    if opened.metadata()?.len() > u64::try_from(RECORD_LIMIT).unwrap_or(u64::MAX) {
+        return Ok(false);
+    }
     let mut bytes = vec![0; A_RECORD_BEGINS.len()];
     match opened.read_exact(&mut bytes) {
         Ok(()) if bytes == A_RECORD_BEGINS => {}

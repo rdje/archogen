@@ -84,11 +84,7 @@ pub fn run(
     let response = &resolution.response;
     let (Some(plan), Some(elaborated)) = (&resolution.plan, &resolution.elaborated) else {
         if response.judged.is_none() {
-            let status = report_not_judged(response, err);
-            if !response.diagnostics.is_empty() {
-                let _ = write!(err, "{}", response.render_diagnostics());
-            }
-            return status;
+            return report_not_judged(response, err);
         }
         let _ = write!(err, "{}", response.render_diagnostics());
         let _ = writeln!(

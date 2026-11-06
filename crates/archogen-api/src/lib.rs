@@ -444,8 +444,8 @@ fn judge(request: &Request<'_>, elaborated: &mut Option<Program>) -> Response {
             sources,
             notes,
             Some(
-                "the module exists and could not be read — check its permissions and that it is \
-                 UTF-8 text"
+                "the module could not be read — check that it exists, that its name is not too long \
+                 for its filesystem, its permissions, and that it is UTF-8 text"
                     .to_string(),
             ),
             Vec::new(),

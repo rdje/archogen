@@ -171,8 +171,8 @@ Asking the same instance the same question twice gives the same answer, and
 
 The language already bounds the shapes that multiply work. A list nests at most 256 deep, and a module tree
 has at most 1 024 instances and 16-module import chains ([Reading a description](reading.md),
-[Modules and composition](modules.md)). What is left grows with the text, and in proportion to it: measured
-on a debug build, 1 MB of description checked in 0.36 s and held 82 MB, and 5 MB took 1.95 s and 383 MB.
+[Modules and composition](modules.md)), and a name at most 256 characters. What is left grows with the text: measured
+on a debug build, 1 MB of description checked in 0.36 s and held 82 MB, and 5 MB took 1.95 s and 383 MB. No sentence can say that of every shape, so `crates/archogen-api/tests/cost.rs` counts what a request holds at its most for each shape a review has found to cost it.
 
 So an instance gives each request a **byte budget**, counted over the description and every module text
 elaboration loads. Each instance reloads its module, so a module imported a hundred times counts a hundred
@@ -191,7 +191,7 @@ The answer is bounded with the request. A diagnostic quotes the line it points i
 characters is quoted as a window of that many around the span, cut with `…` (`crates/eadl-front/src/diagnostic.rs`,
 leaf `API.6.6`). Before that window, one line of a million unclosed forms drew 257 diagnostics that each quoted it
 whole: an answer of 1.5 GB for a request of 1 MB. A check says a thousand errors and no more, whatever else there is to say
-(`too-many-errors`), and each sentence of one has a limit of its own, so a request's answer is bounded, however long the request and however short.
+(`too-many-errors`), and each sentence of one has a limit of its own, a source's name among them, so what it says of errors is bounded, however long the request and however short. A closure says of each fact what needed it, in names at most 256 characters, so it grows with the facts.
 The most severe of what was found decides the status whether or not it was said: a pass stops gathering early only where every error of it carries one verdict.
 `crates/archogen-api/tests/check.rs` holds that over the shapes that drew the most.
 
@@ -339,7 +339,7 @@ module themselves.
 - **The commands not built yet.** They are no operation. The command table
   (`crates/archogen-cli/src/spec.rs`) names the leaf that owns each one, and the MCP server reports that
   leaf rather than failing.
-- **Wall-clock time.** The budget bounds the text. Most of the work is linear in it, and not all of it: a chain of refinements takes time cubic in its length. A host that needs a
+- **Wall-clock time.** The budget bounds the text. Most of the work is linear in it, and not all of it: a chain of refinements takes time cubic in its length, and many requesters against many providers more than in proportion. A host that needs a
   deadline as well enforces it around the instance. The API reads no clock, and on `wasm32-unknown-unknown`
   the standard library has none to read.
 

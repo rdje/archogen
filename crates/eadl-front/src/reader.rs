@@ -24,6 +24,9 @@ use crate::source::{SourceId, SourceMap, Span};
 /// means every conforming reader refuses the same descriptions rather than whichever its stack cannot hold.
 pub const MAX_NESTING: usize = 256;
 
+/// The most characters a symbol holds, a property of this version of the language as `MAX_NESTING` is. Every answer quotes names, per fact and per error, so one name of any length multiplied what a request could cost (leaf `M4.2.3.3.21`). The longest in the repository is 57.
+const MAX_NAME: usize = 256;
+
 /// Read one source into a document.
 ///
 /// Returns the document and every diagnostic produced. A document is returned even when there
@@ -632,6 +635,15 @@ impl<'a> Reader<'a> {
                 format!("`{}` cannot start a form", ch.escape_debug()),
                 Label::new(self.span(start, self.offset()), "unexpected here"),
                 "forms are lists `(…)`, symbols, numbers or strings",
+            ));
+            return None;
+        }
+        if self.raw[start as usize..end as usize].chars().count() > MAX_NAME {
+            self.diagnostics.push(Diagnostic::error(
+                "read-name-too-long",
+                format!("a symbol of more than {MAX_NAME} characters"),
+                Label::new(self.span(start, end), "too long"),
+                format!("a name is at most {MAX_NAME} characters: shorten it"),
             ));
             return None;
         }

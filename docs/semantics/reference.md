@@ -393,6 +393,7 @@ cheapest diagnostic to write is the most expensive to receive.
 | code | when it fires | what to do | fires on |
 | --- | --- | --- | --- |
 | `read-unclosed-list` | a `(` is never matched and the input ends inside it | add the matching `)`; the diagnostic also labels where the list opened | `check (defsystem heartbeat` |
+| `read-name-too-long` | a symbol holds more than 256 characters. Every answer quotes names, per fact and per error, so a name of any length multiplied what a request could cost; the longest in this repository is 57 | shorten it: a name is at most 256 characters | `check (defblock <257*n>)` |
 | `read-nesting-too-deep` | a list opens inside 256 others. The reader refuses it and reads nothing inside it, so no later pass meets the depth. No construct of the language nests more than a few levels, and the limit is a property of this version of the language, as the value domain is (§1 rule 9), so every reader refuses the same descriptions | flatten the description: a list may nest at most 256 deep | `check <257*(><257*)>` |
 | `too-many-errors` | a check or a search reaches its 1,001st error: a file of junk gets one error per byte, and each costs memory once said. It stands where the next one would have, and the rest go unsaid; the file still reads to its end, and what is unsaid still counts for the verdict | repair these, or give another file | `check <1001*)>` |
 | `read-unexpected-close` | a `)` appears with no list open | remove it, or add the `(` that was meant to open a list | `check (defsystem heartbeat))` |

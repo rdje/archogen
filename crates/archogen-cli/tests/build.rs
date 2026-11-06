@@ -314,6 +314,45 @@ fn what_a_thousand_errors_hold_back_moves_no_verdict() {
     }
 }
 
+/// A name has a limit in the language, as a list's depth has, and a path that would move a terminal does not.
+#[test]
+fn a_name_past_its_limit_is_refused_and_a_path_moves_no_terminal() {
+    let root = scratch("named");
+    let file = root.join("s.eadl");
+    fs::write(
+        &file,
+        format!("(defblock {} (offers (x true)))\n", "n".repeat(257)),
+    )
+    .expect("written");
+    let (status, _, err) = build(&file.display().to_string(), &root.join("out"));
+    assert_eq!(status, Status::InvalidDescription, "{err}");
+    assert!(err.contains("error[read-name-too-long]"), "{err}");
+    fs::write(
+        &file,
+        format!("(defblock {} (offers (x true)))\n", "n".repeat(256)),
+    )
+    .expect("written");
+    let (_, _, err) = build(&file.display().to_string(), &root.join("out"));
+    assert!(!err.contains("read-name-too-long"), "{err}");
+    let painted = root.join("a\u{1b}[2Jb.eadl");
+    fs::write(&painted, "(bogus)\n").expect("written");
+    let done = std::process::Command::new(env!("CARGO_BIN_EXE_archogen"))
+        .arg("check")
+        .arg(&painted)
+        .output()
+        .expect("it runs");
+    assert!(
+        !done.stderr.contains(&0x1b),
+        "{:?}",
+        String::from_utf8_lossy(&done.stderr)
+    );
+    assert!(
+        !done.stdout.contains(&0x1b),
+        "{:?}",
+        String::from_utf8_lossy(&done.stdout)
+    );
+}
+
 /// What multiplied, each bounded where it is gathered: a fact offered and declared absent n times each, one offer refined n ways; and what a description can print to a terminal.
 #[test]
 fn what_multiplies_is_bounded_and_nothing_paints_over_what_is_said() {
@@ -2227,6 +2266,26 @@ fn out_routes() -> Vec<(&'static str, Route)> {
                 assert!(words.contains("error[too-many-errors]"), "{}", &shape[..8]);
                 outcome = run;
             }
+            outcome
+        }),
+        ("no-provider", |root| {
+            // What a search refuses is said once.
+            let file = root.join("u.eadl");
+            let mut text = String::from("(eadl-version eadl/1)\n(defblock blk (offers (bus-width 8 bit) (reachable-at-privilege machine)))\n(defplatform soc (offers (core-count 1 tick) (reachable-at-privilege machine)) (requires (uses blk)))\n");
+            let mut uses = String::new();
+            for i in 0..3 {
+                text.push_str(&format!(
+                    "(defservice svc{i} (requires (needs bus-width) (bus-width 64 bit)))\n"
+                ));
+                uses.push_str(&format!("(uses svc{i}) "));
+            }
+            text.push_str(&format!("(defsystem m (task t (period 100 ms) (deadline 100 ms) (deadline-from release) (priority 1) (uses svc0) (on-overrun fault)) (requires {uses}) (platform (uses soc)))\n"));
+            fs::write(&file, text).expect("written");
+            let dir = root.join("x");
+            let outcome = said(build(&file.display().to_string(), &dir));
+            assert!(!dir.exists());
+            let (_, words) = outcome.as_ref().expect("it ran");
+            assert_eq!(words.matches("error[").count(), 3, "{words}");
             outcome
         }),
         ("no-room-path", |root| {

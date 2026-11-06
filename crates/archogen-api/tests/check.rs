@@ -328,7 +328,8 @@ fn an_answer_is_as_bounded_as_its_request() {
     // What a check says is bounded whatever the request, in each shape that drew the most: junk on one line, on many, that reads as forms, and a system of tasks; a long name quoted by each error; a long source name; a fact stated both ways n times.
     let long_name = "n".repeat(65_536);
     let many_sharing = format!(
-        "(defsystem s (task {long_name} (period 10 ms) (deadline 10 ms) (deadline-from release) (priority 1) (on-overrun fault))\n{})",
+        "(defsystem s (task {} (period 10 ms) (deadline 10 ms) (deadline-from release) (priority 1) (on-overrun fault))\n{})",
+        "n".repeat(256),
         (0..1100)
             .map(|i| format!("(task t{i} (period 10 ms) (deadline 10 ms) (deadline-from release) (priority 1) (on-overrun fault))\n"))
             .collect::<String>()

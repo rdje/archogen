@@ -153,7 +153,7 @@ impl Severity {
     }
 }
 
-/// The most characters one sentence of a diagnostic says. A message quotes names whole, a name may be any length, and a thousand errors each quoting one were an answer thousands of times its request (leaf `M4.2.3.3.20`).
+/// The most characters of one sentence of a diagnostic that it keeps, each then printed as it prints. A message quotes names whole, a name may be any length, and a thousand errors each quoting one were an answer thousands of times its request (leaf `M4.2.3.3.20`).
 pub const MOST_SAID: usize = 1024;
 
 /// A character as a diagnostic prints it: one that would move, clear or reorder what a terminal shows is written as its escape, as canonical text writes it, so a description cannot paint over what is said of it.
@@ -181,6 +181,44 @@ fn fit(text: String) -> String {
         }
     }
     out
+}
+
+/// `text` with nothing a terminal would act on, and no shorter.
+#[must_use]
+pub fn printable(text: &str) -> String {
+    text.chars()
+        .fold(String::with_capacity(text.len()), |mut out, c| {
+            match shown(c) {
+                Some(escape) => out.push_str(&escape),
+                None => out.push(c),
+            }
+            out
+        })
+}
+
+/// A writer of what a person reads, passing nothing a terminal would act on: a path, a name and a checker's words reach a person by many sentences, and this is all of them.
+pub struct Printable<W>(pub W);
+
+impl<W: std::io::Write> std::io::Write for Printable<W> {
+    fn write(&mut self, bytes: &[u8]) -> std::io::Result<usize> {
+        match std::str::from_utf8(bytes) {
+            Ok(text) => self.0.write_all(printable(text).as_bytes())?,
+            // What is no text keeps to its bytes, but for those a terminal acts on alone.
+            Err(_) => {
+                let kept: Vec<u8> = bytes
+                    .iter()
+                    .copied()
+                    .filter(|byte| !(byte.is_ascii_control() && *byte != b'\n' && *byte != b'\t'))
+                    .collect();
+                self.0.write_all(&kept)?;
+            }
+        }
+        Ok(bytes.len())
+    }
+
+    fn flush(&mut self) -> std::io::Result<()> {
+        self.0.flush()
+    }
 }
 
 /// A span with something to say about it.
@@ -357,7 +395,8 @@ pub const EXCERPT: usize = 160;
 const BEFORE: usize = 40;
 
 /// A source's name as a diagnostic prints it: its end, where one is longer than a sentence, which is what tells two paths apart; and nothing a terminal would act on.
-fn fit_name(name: &str) -> String {
+#[must_use]
+pub fn fit_name(name: &str) -> String {
     let length = name.chars().count();
     if length <= MOST_SAID {
         return fit(name.to_owned());

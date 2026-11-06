@@ -396,7 +396,7 @@ fn finding(sources: &SourceMap, diagnostic: &Diagnostic) -> Finding {
         let source = sources.get(label.span.source);
         let position = source.map(|s| s.position(label.span.start));
         Label {
-            source: source.map_or_else(String::new, |s| s.name.clone()),
+            source: source.map_or_else(String::new, |s| eadl_front::fit_name(&s.name)),
             line: position.map_or(1, |p| p.line),
             column: position.map_or(1, |p| p.column),
             message: label.message.clone(),
@@ -420,7 +420,7 @@ pub(crate) fn at(sources: &SourceMap, span: Span, message: &str) -> Label {
     let source = sources.get(span.source);
     let position = source.map(|s| s.position(span.start));
     Label {
-        source: source.map_or_else(String::new, |s| s.name.clone()),
+        source: source.map_or_else(String::new, |s| eadl_front::fit_name(&s.name)),
         line: position.map_or(1, |p| p.line),
         column: position.map_or(1, |p| p.column),
         message: message.to_owned(),

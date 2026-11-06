@@ -26,6 +26,8 @@ pub mod status;
 
 use std::io::Write;
 
+use eadl_front::Printable;
+
 use launch::{Launch, NoLaunch};
 
 /// The MCP server's JSON, [`archogen_json`] under the name it had here until leaf `M3.5.1.7` gave it a package of its
@@ -205,10 +207,19 @@ fn dispatch(
         return sibling(program, &parsed.positionals, launcher, out, err);
     }
     match spec.name {
-        "check" => return check_cmd::run(parsed, out, err),
-        "build" => return build_cmd::run(parsed, launcher, out, err),
-        "resolve" => return resolve_cmd::run(parsed, launcher, out, err),
-        "explain" => return explain_cmd::run(parsed, out, err),
+        // What these say a person reads, so nothing of a path or a name moves a terminal. `plan-check` and `mcp` write what a program reads, each escaped by its format.
+        "check" => {
+            return check_cmd::run(parsed, &mut Printable(out), &mut Printable(err));
+        }
+        "build" => {
+            return build_cmd::run(parsed, launcher, &mut Printable(out), &mut Printable(err));
+        }
+        "resolve" => {
+            return resolve_cmd::run(parsed, launcher, &mut Printable(out), &mut Printable(err));
+        }
+        "explain" => {
+            return explain_cmd::run(parsed, &mut Printable(out), &mut Printable(err));
+        }
         "mcp" => {
             return match mcp::serve(input, out) {
                 Ok(()) => Status::Ok,

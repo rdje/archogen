@@ -321,7 +321,11 @@ fn print_account(account: &Account, response: &Response, planned: bool, out: &mu
             }
         }
         (None, Some(unmet)) => {
-            let _ = writeln!(out, "  no provider meets it: {} (below)", unmet.code);
+            let _ = writeln!(
+                out,
+                "  no provider meets it: {}: {}",
+                unmet.code, unmet.message
+            );
         }
         (None, None) if !planned => {
             let met: Vec<String> = account

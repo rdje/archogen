@@ -27,7 +27,10 @@ pub mod module;
 pub mod reader;
 pub mod source;
 
-pub use diagnostic::{Diagnostic, Diagnostics, Label, Severity, Verdict, MOST_ERRORS, MOST_SAID};
+pub use diagnostic::{
+    fit_name, printable, Diagnostic, Diagnostics, Label, Printable, Severity, Verdict, MOST_ERRORS,
+    MOST_SAID,
+};
 pub use form::{Comment, Document, Form};
 pub use module::{
     elaborate, elaborate_source, is_module_name, DirectoryModules, Instance, MemoryModules,

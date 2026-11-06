@@ -80,7 +80,7 @@ fn main() -> ExitCode {
         &args,
         &mut std::io::stdin().lock(),
         &mut std::io::stdout().lock(),
-        &mut std::io::stderr().lock(),
+        &mut eadl_front::Printable(std::io::stderr().lock()),
     );
     ExitCode::from(u8::try_from(status.code()).unwrap_or(u8::MAX))
 }
@@ -458,7 +458,7 @@ fn replaceable(file: &Path) -> Result<(), (String, &'static str)> {
             "name another file, or move what stands there",
         )
     };
-    if !meta.is_file() {
+    if !meta.is_file() || meta.len() > RECORD_AT_MOST {
         return Err(no_record());
     }
     let mut bytes = Vec::new();
