@@ -361,7 +361,7 @@ INFRASTRUCTURE = {"login", "sshd", "mosh-server", "tmux", "screen", "zellij", "a
 APPLICATION = ("/Applications/", "/System/", "/usr/libexec/", "/usr/sbin/")
 # This interpreter and this file by their own paths, since a checkout's path may hold a space (the repository may be moved anywhere).
 # The guard's self-test is spared as the guard is, by its own name: a line stopping it would end the run that says what it could not run, and leave its rigs behind. As a `run`'s job it is a job, which `GUARD_PROCESS` alone tells.
-SELF_TEST_PROCESS = re.compile(r"^(?:\S*[Pp]ython\S*|" + re.escape(sys.executable) + r")\s+(?:-\S+\s+)*(?:\S*/)?selftest_host_guard\.py(?:\s|$)")
+SELF_TEST_PROCESS = re.compile(r"^(?:\S*[Pp]ython\S*|" + re.escape(sys.executable) + r")\s+(?:-\S+\s+)*(?:(?:\S*/)?selftest_host_guard\.py|" + re.escape(str(CODE.with_name("selftest_host_guard.py"))) + r")(?:\s|$)")
 GUARD_PROCESS = re.compile(r"^(?:\S*[Pp]ython\S*|" + re.escape(sys.executable) + r")\s+(?:-\S+\s+)*(?:(?:\S*/)?host_guard\.py|" + re.escape(str(CODE)) + r")(?:\s|$)")
 SHELL_FLAGS_WITH_VALUES = {"--init-file", "--rcfile", "-o", "+o", "-O", "+O", "--init-command"}
 # What spawns more for as long as it lives, however little it holds.
@@ -1645,7 +1645,7 @@ def kills_by_name(commands: list[Command], root: Path) -> bool:
         if command.name != "ps":
             return False
         words = command.words[1:]
-        # What selects more than a pid does, and beside a pid prints all it selects: `ps -ef -p 1`, `ps -Ap 1`, `ps ax 1`, `ps -U 501 1`.
+        # What selects more than a pid does, and beside a `-p` or a `-G` prints all it selects: `ps -ef -p 1`, `ps -Ap 1`, `ps -G 20 1`. Beside a plain pid some print that alone, `ps ax 1`, `ps -U 501 1`, and are refused with the rest: a rewrite is all that costs.
         plain = "AaCcdEefhjLlMmrSTvwXx"
         if any(re.fullmatch(rf"-[{plain}]*[Aaed]\S*|-[{plain}]*[UuGt].*", word) for word in words):
             return True

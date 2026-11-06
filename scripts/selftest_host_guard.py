@@ -1021,6 +1021,9 @@ def case_the_self_test_is_spared_and_a_job() -> None:
     check("the self-test is never stopped", g.protected(selftest))
     check("nor a path to it", g.protected(g.Process(1, 0, f"python3 {GUARD.parent}/selftest_host_guard.py case_run", "", "", 0)))
     check("a name merely ending so is", not g.protected(g.Process(1, 0, "python3 my_selftest_host_guard.py", "", "", 0)))
+    # A checkout's path may hold a space, as the guard's own name allows: this file's path, whatever it holds.
+    here = g.CODE.with_name("selftest_host_guard.py")
+    check("nor its own path, whatever that holds", g.protected(g.Process(1, 0, f"python3 -I -B {here}", "", "", 0)))
     check("nor is the guard's name its own", not g.GUARD_PROCESS.search(selftest.command))
 
 
