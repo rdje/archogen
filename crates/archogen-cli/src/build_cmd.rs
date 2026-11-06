@@ -719,6 +719,10 @@ fn refused(failed: &Failed, path: &str, err: &mut dyn Write) -> Status {
                 status.slug(),
                 refusal.message
             );
+            let _ = writeln!(
+                err,
+                "  hint: change what it names in the description; where it names a leaf of this project's, a build cannot carry that yet"
+            );
             status
         }
         Failed::Unchecked(refusal, kept) => {
@@ -762,7 +766,7 @@ fn refused(failed: &Failed, path: &str, err: &mut dyn Write) -> Status {
             );
             let _ = writeln!(
                 err,
-                "  hint: check that its disk has room, that no limit holds what this user may write, that the umask lets it write what it makes, and that nothing else moved or closed the build's `.building` directory"
+                "  hint: check that its disk has room, that no limit or access list holds what this user may write, that the umask lets it write what it makes, and that nothing else moved or closed the build's `.building` directory"
             );
             Status::ToolFailure
         }

@@ -356,10 +356,15 @@ fn excerpt(line: &str, column: usize) -> (String, usize, usize) {
     (text, shifted, end.saturating_sub(column).max(1))
 }
 
+/// How many errors one set holds. A file of junk gets one error per byte, at some 2 KiB each once said: a file of 64 MiB
+/// reached 3.46 GiB on a shared host (leaf `M4.2.3.3.18`), and nobody reads the thousandth.
+pub const MOST_ERRORS: usize = 1000;
+
 /// A set of diagnostics collected during one pass.
 #[derive(Debug, Clone, Default)]
 pub struct Diagnostics {
     items: Vec<Diagnostic>,
+    errors: usize,
 }
 
 impl Diagnostics {
@@ -369,8 +374,22 @@ impl Diagnostics {
         Self::default()
     }
 
-    /// Record one.
+    /// Record one. Past [`MOST_ERRORS`] errors one last says so, where the next would have been, and no more are kept.
     pub fn push(&mut self, diagnostic: Diagnostic) {
+        if diagnostic.severity == Severity::Error {
+            self.errors = self.errors.saturating_add(1);
+            if self.errors == MOST_ERRORS + 1 {
+                self.items.push(Diagnostic::error(
+                    "too-many-errors",
+                    format!("{MOST_ERRORS} errors, and what else there is goes unsaid"),
+                    Label::new(diagnostic.primary.span, "the next one is here"),
+                    "this may be no description at all: repair these, or give another file",
+                ));
+            }
+            if self.errors > MOST_ERRORS {
+                return;
+            }
+        }
         self.items.push(diagnostic);
     }
 
@@ -413,8 +432,33 @@ impl Diagnostics {
 
 #[cfg(test)]
 mod tests {
-    use super::{Diagnostic, Diagnostics, Label, Severity, Verdict, EXCERPT};
+    use super::{Diagnostic, Diagnostics, Label, Severity, Verdict, EXCERPT, MOST_ERRORS};
     use crate::source::{SourceMap, Span};
+
+    #[test]
+    fn a_set_holds_a_thousand_errors_and_says_the_rest_went_unsaid() {
+        for (junk, code) in [
+            ("\0", "read-unexpected-character"),
+            (")", "read-unexpected-close"),
+        ] {
+            for whole in [junk.repeat(5000), format!("({}", junk.repeat(5000))] {
+                let mut sources = SourceMap::new();
+                let source = sources.add("t.eadl", &whole).expect("small");
+                let (_, diagnostics) = crate::reader::read(&sources, source);
+                let last = diagnostics
+                    .items()
+                    .iter()
+                    .rposition(|item| item.code == "too-many-errors");
+                assert!(last.is_some(), "{code}: {}", diagnostics.len());
+                assert!(
+                    diagnostics.len() <= MOST_ERRORS + 1,
+                    "{code}: {}",
+                    diagnostics.len()
+                );
+                assert!(diagnostics.has_errors());
+            }
+        }
+    }
 
     // ── `Verdict::of_code`: one rule, one default, every consumer ────────────────────────────
     //

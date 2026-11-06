@@ -227,6 +227,8 @@ fn run(
         Ok(profile) => profile,
         Err(why) => return refuse(err, Status::Usage, &why),
     };
+    // What was judged to be replaceable, held to the end: what comes there while this runs is not.
+    let standing = result.as_deref().map(identity_of);
     if let Some(Err((why, repair))) = result.as_deref().map(replaceable) {
         let refused = refuse(err, Status::Usage, &why);
         let _ = writeln!(err, "  hint: {repair}");
@@ -325,18 +327,32 @@ fn run(
     render(err, record.findings());
     let status = record.status();
     let written = match &result {
-        Some(file) => write(file, &record.write())
-            .map_err(|error| format!("cannot write the result record {}: {error}", file.display())),
+        Some(file) => write(file, &record.write(), standing.flatten()).map_err(|error| {
+            (
+                error.kind(),
+                format!("cannot write the result record {}: {error}", file.display()),
+            )
+        }),
         None => out
             .write_all(record.write().as_bytes())
             .and_then(|()| out.flush())
-            .map_err(|error| format!("cannot write the result record on standard output: {error}")),
+            .map_err(|error| {
+                (
+                    error.kind(),
+                    format!("cannot write the result record on standard output: {error}"),
+                )
+            }),
     };
-    if let Err(why) = written {
+    if let Err((kind, why)) = written {
         let refused = refuse(err, Status::ToolFailure, &why);
         let _ = writeln!(
             err,
-            "  hint: check that its directory can be written and its disk has room; or name another file"
+            "  hint: {}",
+            if kind == std::io::ErrorKind::AlreadyExists {
+                "look at what came there, move it, and run this again; or name another file"
+            } else {
+                "check that its directory can be written, that no limit or access list holds what this user writes there, and that its disk has room; or name another file"
+            }
         );
         return refused;
     }
@@ -474,10 +490,36 @@ fn replaceable(file: &Path) -> Result<(), (String, &'static str)> {
     }
 }
 
+/// What tells what stands at a name from what may come to stand there, or be written into it.
+type Standing = (u64, u64, u64, i64, i64);
+
+/// What stands at `path`, if anything does.
+#[cfg(unix)]
+fn identity_of(path: &Path) -> Option<Standing> {
+    use std::os::unix::fs::MetadataExt;
+    std::fs::symlink_metadata(path).ok().map(|meta| {
+        (
+            meta.dev(),
+            meta.ino(),
+            meta.size(),
+            meta.mtime(),
+            meta.mtime_nsec(),
+        )
+    })
+}
+
+/// What stands at `path`, if anything does: here, how long it is.
+#[cfg(not(unix))]
+fn identity_of(path: &Path) -> Option<Standing> {
+    std::fs::symlink_metadata(path)
+        .ok()
+        .map(|meta| (0, 0, meta.len(), 0, 0))
+}
+
 /// Write `text` at `path` whole: beside it, in a file this run makes, then renamed into place, keeping the mode of the file it
 /// replaces, private until it does. What already stands beside it is not this run's, so it is refused and left alone, and a link
 /// there is never written through.
-fn write(path: &Path, text: &str) -> std::io::Result<()> {
+fn write(path: &Path, text: &str, judged: Option<Standing>) -> std::io::Result<()> {
     let mut part = path.as_os_str().to_owned();
     part.push(".part");
     let part = PathBuf::from(part);
@@ -501,7 +543,17 @@ fn write(path: &Path, text: &str) -> std::io::Result<()> {
             Some(meta) => std::fs::set_permissions(&part, meta.permissions()),
             None => Ok(()),
         })
-        .and_then(|()| std::fs::rename(&part, path));
+        .and_then(|()| {
+            // Looked at again just before it is used, as the chapter says: what came meanwhile is no record this judged.
+            if identity_of(path) == judged {
+                std::fs::rename(&part, path)
+            } else {
+                Err(std::io::Error::new(
+                    std::io::ErrorKind::AlreadyExists,
+                    "something else came to stand there while this ran, and it stays",
+                ))
+            }
+        });
     if let Err(error) = &placed {
         if let Err(stuck) = std::fs::remove_file(&part) {
             return Err(std::io::Error::new(

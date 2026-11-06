@@ -208,6 +208,54 @@ fn one_description_is_one_package_wherever_it_lies_and_wherever_it_goes() {
     assert_eq!(snapshot(&one_out), snapshot(&two_out));
 }
 
+/// A description of two periods, for what a build can and cannot carry in its ticks.
+fn two_periods(first: &str, second: &str) -> String {
+    format!(
+        "(eadl-version eadl/1)
+(defblock console.uart (offers (observable-output true) (reachable-at-privilege machine)))
+(defplatform host.playground (offers (core-count 1 tick) (reachable-at-privilege machine)) (requires (uses console.uart)))
+(defservice console.write (requires (needs observable-output)))
+(defsystem heartbeat
+  (task a (period {first}) (deadline {first}) (deadline-from release) (priority 1) (uses console.write) (on-overrun fault))
+  (task b (period {second}) (deadline {second}) (deadline-from release) (priority 2) (uses console.write) (on-overrun fault))
+  (requires (uses console.write))
+  (platform (uses host.playground)))
+"
+    )
+}
+
+#[test]
+fn a_duration_past_the_ticks_is_told_a_repair_that_works() {
+    let root = scratch("past-ticks");
+    let file = root.join("s.eadl");
+    fs::write(&file, two_periods("1 ns", "20000000000 s")).expect("written");
+    let (status, _, err) = build(&file.display().to_string(), &root.join("out"));
+    assert_eq!(status.slug(), "unsupported-profile", "{err}");
+    assert!(err.contains("the coarsest they all share"), "{err}");
+    assert!(err.contains("  hint: "), "{err}");
+    assert!(!err.contains("deadline as a whole number"), "{err}");
+    // What it tells to do, done: the longest nearer the shortest.
+    fs::write(&file, two_periods("1 ms", "2000 ms")).expect("written");
+    let (status, _, err) = build(&file.display().to_string(), &root.join("out"));
+    assert_eq!(status, Status::Ok, "{err}");
+}
+
+#[test]
+fn a_refusal_of_the_lowering_says_what_to_do() {
+    let root = scratch("lowering-hint");
+    for case in [
+        "both-release",
+        "from-and-alarm",
+        "periodic-source",
+        "block-needs-service",
+    ] {
+        let file = example(&format!("crates/archogen-plan/tests/corpus/{case}.eadl"));
+        let (status, _, err) = build(&file, &root.join(case));
+        assert_ne!(status, Status::Ok, "{case}");
+        assert!(err.contains("  hint: "), "{case}: {err}");
+    }
+}
+
 #[test]
 fn a_description_that_does_not_check_does_not_build() {
     // There is one frontend, so `build` can never accept what `check` refuses.
@@ -1986,6 +2034,19 @@ fn out_routes() -> Vec<(&'static str, Route)> {
         ("no-room-name", |root| {
             let outcome = build_at(&root.join("a/b").join("x".repeat(250)));
             assert_eq!(fs::read_dir(root).expect("a directory").count(), 0);
+            let (_, words) = outcome.as_ref().expect("it ran");
+            assert!(!words.contains("could not be removed"), "{words}");
+            assert!(!words.contains("cannot be looked at"), "{words}");
+            outcome
+        }),
+        ("junk", |root| {
+            let file = root.join("junk.eadl");
+            fs::write(&file, ")".repeat(5000)).expect("written");
+            let dir = root.join("x");
+            let outcome = said(build(&file.display().to_string(), &dir));
+            assert!(!dir.exists());
+            let (_, words) = outcome.as_ref().expect("it ran");
+            assert_eq!(words.matches("error[").count(), 1001, "{words}");
             outcome
         }),
         ("no-room-path", |root| {

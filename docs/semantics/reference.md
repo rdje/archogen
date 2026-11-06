@@ -35,6 +35,7 @@ this list, in both directions, by `crates/eadl-front/tests/reference.rs`.
 | source | what this reference states about it |
 | --- | --- |
 | `crates/eadl-front/src/reader.rs` | §1 numbers, §2 strings and escapes, and every diagnostic in §4 whose code begins `read-` |
+| `crates/eadl-front/src/diagnostic.rs` | how many errors one pass holds, and the one diagnostic in §4 that says the rest went unsaid, whose code begins `too-many-` |
 | `crates/eadl-front/src/form.rs` | §3 canonical form and §5 comment retention: what is printed, what is escaped, what structural equality compares, and which comments become headers |
 | `crates/eadl-front/src/module.rs` | §6 modules and imports, and every diagnostic in §4 whose code begins `module-` |
 | `crates/eadl-model/src/kind.rs` | §7 kinds and `defkind`, and every diagnostic in §4 whose code begins `schema-` |
@@ -393,6 +394,7 @@ cheapest diagnostic to write is the most expensive to receive.
 | --- | --- | --- | --- |
 | `read-unclosed-list` | a `(` is never matched and the input ends inside it | add the matching `)`; the diagnostic also labels where the list opened | `check (defsystem heartbeat` |
 | `read-nesting-too-deep` | a list opens inside 256 others. The reader refuses it and reads nothing inside it, so no later pass meets the depth. No construct of the language nests more than a few levels, and the limit is a property of this version of the language, as the value domain is (§1 rule 9), so every reader refuses the same descriptions | flatten the description: a list may nest at most 256 deep | `check <257*(><257*)>` |
+| `too-many-errors` | a pass reaches its 1,001st error: a file of junk gets one error per byte, and each costs memory once said. It stands where the next one would have, and the rest go unsaid; the file still reads to its end | repair these, or give another file | `check <1001*)>` |
 | `read-unexpected-close` | a `)` appears with no list open | remove it, or add the `(` that was meant to open a list | `check (defsystem heartbeat))` |
 | `read-unexpected-character` | a byte that can start nothing **between forms**, which in practice means a stray control character; inside a string the same byte is `read-control-character` | delete it — a form is a list `(…)`, a symbol, a number or a string | `check (defsystem heartbeat)<0x1b>` |
 | `read-missing-delimiter` | a string is followed directly by a character a symbol may contain, with no delimiter between them. The grammar requires a delimiter after every atom, and a symbol or a number runs until one, so a string is the only atom that can end without one. A byte that can start nothing there is `read-unexpected-character` instead | separate the two with a space, or move the text inside the string | `check (defsystem heartbeat (doc "a"b))` |

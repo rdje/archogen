@@ -136,6 +136,7 @@ again from the same inputs and comparing bytes.
 ```console
 $ archogen build examples/s0-heartbeat/system-unsupported.eadl --out build/x
 archogen: missing-fact: the plan cannot say what releases task `chime`, `unreached`: write the task's own `(needs interrupt-source)`, so the search binds it a source at least as far apart — nothing was generated from examples/s0-heartbeat/system-unsupported.eadl
+  hint: change what it names in the description; where it names a leaf of this project's, a build cannot carry that yet
 $ echo $?
 11
 ```
@@ -183,6 +184,7 @@ the rule: what it says is run, and a route it does not name is promised nothing 
 | `stage-stands` | anything at `DIR.building` | `usage` | `a build that stopped may have left it` | it |
 | `aside-stands` | anything at `DIR.replaced` | `usage` | `kept there what could not go` | it |
 | `no-room-name` | a name with no room for `.building` beside it | `usage` | `too long` | nothing made |
+| `junk` | a file of junk, past a thousand errors | `invalid-description` | `goes unsaid` | nothing made |
 | `no-room-path` | a path with no room for what a build writes beneath it, as the checker is handed it | `usage` | `leaves no room in a path` | nothing made |
 | `file-on-the-way` | a file among `--out`'s parents | `usage` | `is no directory` | the file |
 | `link-on-the-way` | a link to nothing among `--out`'s parents | `usage` | `a link to nothing` | the link |
@@ -223,8 +225,8 @@ the rule: what it says is run, and a route it does not name is promised nothing 
 
 No sync call is made, so none of this claims anything across a power loss. ⚠️ Nor does it hold against another program working in the same
 directory at the same instant: the standard library has no rename that refuses to replace and no directory-relative open, so each path is
-held again just before it is used, and in that instant what stands there is what is used. The checker's record is the one name a
-program's rename fills on purpose, so what comes there while the checker runs is replaced by it.
+held again just before it is used, and in that instant what stands there is what is used. The checker's record is held so too: what
+comes at its name while the checker runs stays, and the checker refuses.
 
 **The two standard streams.** If a write to standard output fails, at any byte, the command says so on standard error and exits `70`,
 as every command does: a pipe nobody reads, a full disk. What it did stands, so a package it placed is in place. ⚠️ A failure is what it can

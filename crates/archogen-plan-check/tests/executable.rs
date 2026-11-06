@@ -265,6 +265,63 @@ fn an_earlier_record_at_the_path_is_replaced() {
     assert!(!dir.join("result.json.part").exists());
 }
 
+/// What comes at the result's name after it was judged stays, and the checker refuses. The plan is read from a pipe, so the
+/// checker has judged the name once the pipe opens, and judges the plan only once this has written it.
+#[cfg(unix)]
+#[test]
+fn what_comes_at_the_result_while_the_checker_runs_stays() {
+    use std::io::Write as _;
+    use std::process::Stdio;
+    type Comes = fn(&Path);
+    let came: [(&str, Comes); 3] = [
+        ("nothing stood there", |result| {
+            std::fs::write(result, "mine").unwrap();
+        }),
+        ("over an earlier record", |result| {
+            let other = result.with_extension("other");
+            std::fs::write(&other, "mine").unwrap();
+            std::fs::rename(&other, result).unwrap();
+        }),
+        ("into an earlier record", |result| {
+            std::fs::write(result, "mine").unwrap();
+        }),
+    ];
+    for (case, comes) in came {
+        let dir = scratch();
+        let description = dir.join("system.eadl");
+        std::fs::write(&description, PLAIN).unwrap();
+        let the_plan = plan(&description, "console.write", "console.uart");
+        let result = dir.join("result.json");
+        if case != "nothing stood there" {
+            let (code, _, _) = check(&description, &the_plan);
+            assert_eq!(code, 0, "{case}");
+        }
+        let pipe = dir.join("plan.pipe");
+        let made = Command::new("mkfifo").arg(&pipe).status().unwrap();
+        assert!(made.success(), "{case}");
+        let running = Command::new(EXE)
+            .args(["--result", result.to_str().unwrap(), "--"])
+            .args([description.to_str().unwrap(), pipe.to_str().unwrap()])
+            .env_clear()
+            .stdout(Stdio::piped())
+            .stderr(Stdio::piped())
+            .spawn()
+            .unwrap();
+        let mut writer = std::fs::OpenOptions::new().write(true).open(&pipe).unwrap();
+        comes(&result);
+        writer.write_all(the_plan.as_bytes()).unwrap();
+        drop(writer);
+        let output = running.wait_with_output().unwrap();
+        let said = String::from_utf8_lossy(&output.stderr);
+        assert_eq!(output.status.code(), Some(70), "{case}: {said}");
+        assert_eq!(std::fs::read_to_string(&result).unwrap(), "mine", "{case}");
+        assert!(said.contains("came to stand there"), "{case}: {said}");
+        assert!(said.contains("look at what came there"), "{case}: {said}");
+        assert!(!said.contains("disk has room"), "{case}: {said}");
+        assert!(!dir.join("result.json.part").exists(), "{case}");
+    }
+}
+
 #[test]
 fn a_stream_that_reads_as_nothing_is_no_description_and_no_plan() {
     let dir = scratch();

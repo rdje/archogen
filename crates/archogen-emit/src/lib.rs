@@ -211,7 +211,7 @@ fn past_ticks(what: &str) -> Refusal {
     refuse(
         "unsupported-profile",
         format!(
-            "{what} does not fit this build's integer ticks, and a build never rounds a duration: state each period and deadline as a whole number of a tick all of them share"
+            "{what} does not fit this build's integer ticks, and a build never rounds a duration: every repeated duration is a whole number of one tick, the coarsest they all share, and the longest must come to under 2^64 of it: choose durations that share a coarser tick, or a longest nearer the shortest"
         ),
     )
 }

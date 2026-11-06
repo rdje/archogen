@@ -429,7 +429,7 @@ impl Landing {
                     ),
                     place::NotWritten::Failed(_, _, error) => (
                         format!("cannot write the plan: {error}"),
-                        "check that its disk has room, that no limit holds what this user may write, and that the umask lets it write what it makes",
+                        "check that its disk has room, that no limit or access list holds what this user may write, and that the umask lets it write what it makes",
                     ),
                 };
                 Unwritten {

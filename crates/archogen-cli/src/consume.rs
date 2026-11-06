@@ -441,7 +441,7 @@ fn read_record(file: &Path, code: i32) -> Result<(Record, String), Refusal> {
             format!("`{PLAN_CHECKER}` exited with {code} and wrote no record, so nothing was judged"),
             format!(
                 "the checker reads what it was given and writes beside it, under {}, which this run removes after it, unless something else came to stand there: check that \
-                 the umask lets this user read and write what it makes, and that nothing moved it; if neither, report it, with what the checker \
+                 the umask lets this user read and write what it makes, that no limit or access list holds it, and that nothing moved it; if none of those, report it, with what the checker \
                  wrote above",
                 file.parent().unwrap_or(file).display()
             ),

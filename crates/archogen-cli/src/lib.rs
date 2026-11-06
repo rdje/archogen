@@ -96,7 +96,7 @@ fn sibling(
                 status: Status::ToolFailure,
                 message: format!("`{program}` {why}"),
                 repair: format!(
-                    "run `{program}` again; if it ends so again, report it, with what it wrote above"
+                    "remove what it left beside its result, if it was given one, and run `{program}` again; if it ends so again, report it, with what it wrote above"
                 ),
             },
         },

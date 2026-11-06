@@ -135,7 +135,7 @@ archogen-plan-check [--profile ID] [--result PATH] [--] DESCRIPTION PLAN
 It reads the description — a module, whose imports it finds in the module's directory, or a plain description — and
 the plan; runs every check in order; writes its **result record**, `archogen-result/1`, to `PATH`, or to standard
 output when no path is given; and exits with the result's status code. `PATH` replaces only an empty file or a record this engine reads,
-keeping its mode: anything else there, the description or the plan among them, is refused before anything is judged. `--` before the two paths lets one begin with
+keeping its mode: anything else there, the description or the plan among them, is refused before anything is judged, and what comes there while it judges stays, and it refuses. `--` before the two paths lets one begin with
 a dash. The record names the program that ran, by its name and the fingerprint of its own file, and what
 it judged: the fingerprint of the program the description became and of the plan. So whoever started it — `archogen`,
 a script, a CI job — accepts a result only when the record and the exit code agree. A call it cannot take, or a file it
