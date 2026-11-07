@@ -520,7 +520,7 @@ def case_agents() -> None:
     check("a build it started here is stopped, and one it started elsewhere is not", len(its_children) == 2 and len(alive) == 1, (its_children, alive))
     check("a program behind an interpreter's flag is found", g.is_agent(g.Process(1, 1, "python3 -X utf8 /x/bin/kimi", "", "", 0)) and g.is_agent(g.Process(1, 1, "node --max-old-space-size 8192 /x/bin/codex", "", "", 0)))
     check("behind a flag's file too", g.is_agent(g.Process(1, 1, "node --require ./preload.js /x/bin/claude", "", "", 0)))
-    for job in ("python3 rig.py --out target/review/codex", "python3 -m pytest target/codex", "python3 -c pass target/codex", "python3 /x/rig --out target/codex"):
+    for job in ("python3 rig.py --out target/review/codex", "python3 -m pytest target/codex", "python3 -c pass target/codex", "python3 /x/rig --out target/codex", "bash -lc cd /x/codex && cargo build", "bash -ec cat /x/claude; make", "bash go /x/codex", "python3 prog /x/claude", "perl -e 1 /x/codex"):
         check(f"a directory named after one, among a program's own arguments, makes no agent: {job}", not g.is_agent(g.Process(1, 1, job, "", "", 0)))
     check("a data file named after one is no agent", not g.is_agent(g.Process(1, 1, "python3 hold.py data/gemini.json", "", "", 0)) and not g.is_agent(g.Process(1, 1, "python3 hold.py x/CLAUDE.md", "", "", 0)))
     check("a job that merely takes such a file is a job", not g.protected(g.Process(1, 1, "python3 hold.py data/gemini.json", "", "", 0)) and up(data_file))
@@ -1216,6 +1216,9 @@ def case_a_commit_holds_what_make_and_the_limits_can_be_told() -> None:
     local.write_text('{ "disableAllHooks": true, ')
     done = holds()
     check("unless it names what turns them off", done.returncode == 1 and "settings.local.json" in done.stdout, done.stdout + done.stderr)
+    local.write_bytes(b'{"x": "\xff", "disableAllHooks": true}')
+    done = holds()
+    check("and bytes that are no text hide nothing", done.returncode == 1 and "settings.local.json" in done.stdout, done.stdout + done.stderr)
     local.unlink()
     settings = repo / ".claude" / "settings.json"
     held = settings.read_text()
@@ -1809,7 +1812,8 @@ def the_reader_against(bash: str) -> None:
 
 def case_the_hook_passes_nothing_it_cannot_read() -> None:
     scope = fresh("unreadable")
-    for given in ("not json", "", "{}", "[]", "null", "5", '{"tool_input": {"cmd": "cargo build"}}', '{"tool_input": {"command": 5}}', '{"tool_input": {"command": ""}}', "[" * 100000, json.dumps({"tool_input": {"command": "$(" * 5000}})):
+    too_deep = "$(" * 600 + "x" + ")" * 600
+    for given in ("not json", "", "{}", "[]", "null", "5", '{"tool_input": {"cmd": "cargo build"}}', '{"tool_input": {"command": 5}}', '{"tool_input": {"command": ""}}', "[" * 100000, json.dumps({"tool_input": {"command": "$(" * 5000}}), json.dumps({"tool_input": {"command": f"python3 scripts/host_guard.py run -- bash -c '{too_deep}'"}})):
         done = guard("hook", stdin=given, root=scope)
         check(f"input that is no command is refused: {given[:30]!r}", done.returncode == 2 and "cannot be read" in done.stderr, done.stderr)
 
@@ -1938,7 +1942,7 @@ def case_a_damaged_log() -> None:
         state = scope / "state"
         state.mkdir()
         good = json.dumps({"kind": "stopped", "at": "now", "reasons": ["why"], "stopped": [{"pid": 1, "name": "told", "gib": 1.0, "command": "x"}]})
-        (state / "events.log").write_bytes(b"not json\n\xff\xfe\n[1]\n" + good.encode() + b'\n{"kind": "stopped"}\n')
+        (state / "events.log").write_bytes(b"not json\n\xff\xfe\n[1]\n" + b"[" * 200000 + b"\n" + good.encode() + b'\n{"kind": "stopped"}\n')
         done = hook_says("touch x", scope)
         check("bad lines do not cost the good one", done.returncode == 0 and "stopped told" in told(done), done)
         check("and are read past", told(hook_says("touch x", scope)) == "")

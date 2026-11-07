@@ -505,3 +505,17 @@ Said, and left as it stands: its reader could not run a real commit's compile, a
 Said, and left as it stands: its reader could not run a real `make focused`, a commit's compile, a real full volume, chosen pressure levels, true idle time, the census against the real watcher, real Codex, Kimi or VS Code, `onFailure` with a real crash, a 1 GiB fall or the other gates' self-tests. "Some 2" MiB/s is under about 1.9 by its measure, which reads the same. `onFailure: "block"` needs Claude Code 2.1.295 by the harness's documentation, as its reader read it, and this host's is 2.1.319.
 
 Found answering, by the whole self-test and no reader: the local settings' check read a standing half-saved file as staged where no repository holds it, so a rig's half-saved file was refused. It reads what is staged only in a repository.
+
+**Round 26** — `2026-11-07`, leaf `PROGRAM.127.26`: not acceptable, 7 findings, 2 defects, after 5, on `b8160d0b`. Both are false sentences, mild, neither shown in ordinary work on this host. Nothing failed open in ordinary work, nothing stopped what was not ours, and round 25's exact forms held over about 200 forms. Every measurement it re-derived held, the whole self-test among them, 898 passed in 7 minutes. Its rigs are `target/p12726/work/`.
+
+| # | Kind | Finding | Answer |
+| --- | --- | --- | --- |
+| G26-1 | defect, mild | "a directory named so among a program's arguments is not [spared]" did not hold: the search stopped only at an exact `-m` or `-c`, so `bash -lc`, `bash -ec`, perl's `-e` and a script with no `/` or dot ran on to the next path | The search ends at the first word that is neither a flag nor a flag's value, or at a flag that takes a program's text, a cluster ending in `c` or `e` among them. Each form is a row |
+| G26-2 | defect, mild, no harm | "A `make` counts as one whatever its recipe runs" did not hold of a recipe that is a shell alone or `tail`, read as a `make` waiting in its `run` | The sentence says so. What reads a `run` waiting has no other way to tell one |
+| G26-3 | gap | `kills_by_name` stood outside the hook's `try`, so a command too deep to read came through a `run` as a traceback, refused only by `onFailure` | It is read inside, and refused as any that cannot be read. A row |
+| G26-4 | gap | standing local settings that are no UTF-8 passed, read as nothing, where the staged reading refused the same bytes | What stands is decoded as what is staged is. A row |
+| G26-5 | gap | a line of 200,000 `[` in `events.log` raised past `except ValueError`, against "A bad line is skipped and never costs the rest" | It is skipped, by each of the three that read the log, which the whole self-test's rows showed where one alone was changed. The row's log holds one |
+| G26-6 | wording | "hears 143" holds of a job that goes when asked | 143, or 137 from one that went only when killed |
+| G26-7 | wording | "`exec -a \"(worker)\"`, which stays no job" holds of the turn, and a line stops it; and `check` read clear beside it where `run` meets its lock | Each is said |
+
+Said, and left as it stands: its reader could not run a real `make focused`, a commit's compile, a real full volume, chosen pressure levels, true idle, the census against the real watcher, a real Codex, Kimi or VS Code, `onFailure` with a real crash or a 1 GiB fall. A flag held in a variable or a pattern after `--` that reads as a flag passes the reader and is the stated courtesy. `nu -n -c` and `gmake -Onone` were read and not run, neither shown a defect.

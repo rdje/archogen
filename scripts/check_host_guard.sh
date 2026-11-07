@@ -245,8 +245,8 @@ try:
 except (ValueError, AttributeError):
     breaches.append(".claude/settings.local.json does not read, so what it turns off cannot be said")
 try:
-    standing_local = (root / ".claude" / "settings.local.json").read_text(encoding="utf-8")
-except (OSError, ValueError):
+    standing_local = (root / ".claude" / "settings.local.json").read_bytes().decode("utf-8", errors="replace")
+except OSError:
     standing_local = ""
 try:
     standing_off = turns_every_hook_off(standing_local)

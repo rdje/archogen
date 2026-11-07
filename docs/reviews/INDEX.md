@@ -15,7 +15,7 @@ No bootstrap read includes this directory.
 | Review history | Design record | Rounds | Status |
 | --- | --- | --- | --- |
 | [`decision_application-inputs-reviews.md`](decision_application-inputs-reviews.md) | [`decision_application-inputs.md`](../decisions/decision_application-inputs.md) | 1 | open |
-| [`decision_host-guard-reviews.md`](decision_host-guard-reviews.md) | [`decision_host-guard.md`](../decisions/decision_host-guard.md) | 25 | open |
+| [`decision_host-guard-reviews.md`](decision_host-guard-reviews.md) | [`decision_host-guard.md`](../decisions/decision_host-guard.md) | 26 | open |
 | [`decision_release-alarm-reviews.md`](decision_release-alarm-reviews.md) | [`decision_release-alarm.md`](../decisions/decision_release-alarm.md) | 15 | open |
 | [`decision_device-correspondence-reviews.md`](decision_device-correspondence-reviews.md) | [`decision_device-correspondence.md`](../decisions/decision_device-correspondence.md) | 9 | closed: round 9 found no defect (`M4.4.1.9`) |
 | [`decision_hosted-build-reviews.md`](decision_hosted-build-reviews.md) | [`decision_hosted-build.md`](../decisions/decision_hosted-build.md) | 25 | open |

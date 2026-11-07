@@ -301,20 +301,23 @@ class Process:
     @property
     def programs_named(self) -> list[str]:
         """The executable an interpreter runs when a flag taking a value hides it from `script`: a path with no extension, since a data file is not a program. The search ends
-        there, or at a file with an extension or a `-m` or `-c`, which is what it runs: what follows is that program's own arguments, a directory named after an agent among them."""
+        at the first word that is neither a flag nor a flag's value, which is what it runs, or at a flag that takes a program's text, a `-m` or a cluster ending in `c` or `e` as `-lc` and `-e` do: what follows is that program's own arguments, a directory named after an agent among them."""
         if not self.script:
             return []
         words = self.words_read[:6]
         for at, word in enumerate(words):
-            if word in ("-m", "-c"):
+            if word == "-m" or re.fullmatch(r"-[A-Za-z]*[ce]", word):
                 return []
-            if at and words[at - 1] in PYTHON_FLAGS_WITH_VALUES and self.name.lower().startswith("python"):
+            if word.startswith("-"):
+                continue
+            before = words[at - 1] if at else ""
+            if before in PYTHON_FLAGS_WITH_VALUES and self.name.lower().startswith("python"):
                 continue
             base = os.path.basename(word)
-            if not word.startswith("-") and "." in base and not (at and words[at - 1].startswith("--") and "=" not in words[at - 1]):
-                return []
-            if "/" in word and not word.startswith("-") and "." not in base:
-                return [base]
+            # A word after a flag may be that flag's value: one with no path, or a file after a long flag.
+            if before.startswith("-") and "=" not in before and ("/" not in word or (before.startswith("--") and "." in base)):
+                continue
+            return [base] if "/" in word and "." not in base else []
         return []
 
     @property
@@ -982,7 +985,7 @@ def unseen(root: Path, session: str = "") -> list[dict]:
     for line in text.splitlines():
         try:
             event = json.loads(line)
-        except ValueError:
+        except (ValueError, RecursionError):
             continue
         if isinstance(event, dict) and event.get("kind") == "stopped" and isinstance(event.get("stopped"), list):
             if not lately_only or when(event) >= since:
@@ -1924,7 +1927,7 @@ def run(root: Path, limits: Limits, command: list[str], wait_seconds: float = 0.
     for line in text.splitlines():
         try:
             event = json.loads(line)
-        except ValueError:
+        except (ValueError, RecursionError):
             continue
         if isinstance(event, dict) and event.get("kind") == "stopped":
             say(f"host-guard: {said_of(event)}")
@@ -1970,10 +1973,11 @@ def hook(root: Path, limits: Limits) -> int:
         if not isinstance(command, str) or not command.strip():
             raise ValueError("no command")
         commands = commands_of(command)
+        kills = kills_by_name(commands, root)
     except Exception as error:
         say(f"host-guard: refused: this cannot be read as a command to judge: {error!r}")
         return 2
-    if kills_by_name(commands, root):
+    if kills:
         say("host-guard: refused: never by a program's name across the host, which can stop another project's work. Stop what is ours by its pid, or name this repository's path in the pattern.")
         return 2
     happened: list[dict] = []
@@ -2031,7 +2035,7 @@ def status(root: Path, limits: Limits) -> int:
     for line in lines:
         try:
             event = json.loads(line)
-        except ValueError:
+        except (ValueError, RecursionError):
             continue
         if isinstance(event, dict):
             events.append(event)
