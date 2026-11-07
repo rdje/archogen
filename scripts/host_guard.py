@@ -292,8 +292,9 @@ class Process:
         if not (self.name in INTERPRETERS or self.name.startswith("python")):
             return ""
         words = self.words_read
+        takes_values = PYTHON_FLAGS_WITH_VALUES if self.name.lower().startswith("python") else ()
         for at, word in enumerate(words):
-            if not word.startswith("-") and not (at and words[at - 1] in PYTHON_FLAGS_WITH_VALUES):
+            if not word.startswith("-") and not (at and words[at - 1] in takes_values):
                 return os.path.basename(word)
         return ""
 
@@ -307,7 +308,7 @@ class Process:
         for at, word in enumerate(words):
             if word in ("-m", "-c"):
                 return []
-            if at and words[at - 1] in PYTHON_FLAGS_WITH_VALUES:
+            if at and words[at - 1] in PYTHON_FLAGS_WITH_VALUES and self.name.lower().startswith("python"):
                 continue
             base = os.path.basename(word)
             if not word.startswith("-") and "." in base and not (at and words[at - 1].startswith("--") and "=" not in words[at - 1]):
@@ -386,9 +387,9 @@ INFRASTRUCTURE = {"login", "sshd", "mosh-server", "tmux", "screen", "zellij", "a
 APPLICATION = ("/Applications/", "/System/", "/usr/libexec/", "/usr/sbin/")
 # This interpreter and this file by their own paths, since a checkout's path may hold a space (the repository may be moved anywhere).
 # The guard's self-test is spared as the guard is, by its own name: a line stopping it would end the run that says what it could not run, and leave its rigs behind. As a `run`'s job it is a job, which `GUARD_PROCESS` alone tells.
-SELF_TEST_PROCESS = re.compile(r"^(?:\S*[Pp]ython\S*|" + re.escape(sys.executable) + r")\s+(?:-\S+\s+)*(?:(?:\S*/)?selftest_host_guard\.py|" + re.escape(str(CODE.with_name("selftest_host_guard.py"))) + r")(?:\s|$)")
+SELF_TEST_PROCESS = re.compile(r"^(?:\S*[Pp]ython\S*|" + re.escape(sys.executable) + r")\s+(?:-[WX]\s+\S+\s+|-\S+\s+)*(?:(?:\S*/)?selftest_host_guard\.py|" + re.escape(str(CODE.with_name("selftest_host_guard.py"))) + r")(?:\s|$)")
 GUARD_NAME = "host_guard.py"
-GUARD_PROCESS = re.compile(r"^(?:\S*[Pp]ython\S*|" + re.escape(sys.executable) + r")\s+(?:-\S+\s+)*(?:(?:\S*/)?host_guard\.py|" + re.escape(str(CODE)) + r")(?:\s|$)")
+GUARD_PROCESS = re.compile(r"^(?:\S*[Pp]ython\S*|" + re.escape(sys.executable) + r")\s+(?:-[WX]\s+\S+\s+|-\S+\s+)*(?:(?:\S*/)?host_guard\.py|" + re.escape(str(CODE)) + r")(?:\s|$)")
 SHELL_FLAGS_WITH_VALUES = {"--init-file", "--rcfile", "-o", "+o", "-O", "+O", "--init-command"}
 # What spawns more for as long as it lives, however little it holds.
 BUILDS = {"cargo", "rustc", "rustdoc", "clippy-driver", "make", "gmake"}
@@ -1033,7 +1034,7 @@ WRAPPERS = {
     "env": ({"-u", "-P", "-S", "-C", "--unset", "--chdir", "--split-string"}, 0),
     "arch": ({"-e", "-d", "-arch"}, 0),
     "xcrun": ({"--sdk", "-sdk", "--toolchain", "-toolchain"}, 0),
-    "taskpolicy": ({"-c", "-d", "-g", "-t", "-l", "-p"}, 0),
+    "taskpolicy": ({"-c", "-d", "-g", "-t", "-l", "-p", "-m", "-j", "-P", "-S"}, 0),
     "sandbox-exec": ({"-f", "-n", "-p", "-D"}, 0),
     "script": ({"-t"}, 1),
     "nohup": (set(), 0),
@@ -1122,9 +1123,6 @@ def unwrapped(words: list[str]) -> tuple[list[str], bool]:
                     at += 1
                 elif word.startswith("-") and word != "-":
                     if name == "command" and re.fullmatch(r"-\w*[vV]\w*", word):
-                        return [], False
-                    # What these ask of it runs nothing.
-                    if name == "xcrun" and re.fullmatch(r"--?(?:f|find|show-[\w-]+|version|help|h|k|kill-cache)", word):
                         return [], False
                     at += 1
                 elif name == "env" and ASSIGNMENT.match(word):

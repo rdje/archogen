@@ -247,7 +247,8 @@ def jobs_of(pid: int) -> list[int]:
     for child in children(pid):
         shown = subprocess.run(["ps", "-ww", "-o", "command=", "-p", str(child)], capture_output=True, text=True).stdout
         # What it reads the host with is no job of its, though it is its child for a moment; and one gone by the time `ps` looked was such a moment.
-        if not shown.strip() or os.path.basename(shown.split(" ", 1)[0].strip()) in g.READS_THE_HOST:
+        # So is what `ps` cannot read for a moment, `(ps)`, or what has ended and is not yet reaped.
+        if not shown.strip() or re.fullmatch(r"\(.*\)|.*<defunct>", shown.strip()) or os.path.basename(shown.split(" ", 1)[0].strip()) in g.READS_THE_HOST:
             continue
         if not g.GUARD_PROCESS.search(shown.strip()):
             found.append(child)
@@ -972,6 +973,15 @@ def case_a_commit_holds_what_is_staged() -> None:
     settings.write_text('{"hooks": {}}')
     done = holds()
     check("and in the tree alone refuses nothing", done.returncode == 0, done.stdout + done.stderr)
+    # What lands of a `GNUmakefile` is what is staged, and one standing in the tree alone is no commit's.
+    (repo / "GNUmakefile").write_text("focused:\n\t@true\n")
+    alone = holds()
+    check("a `GNUmakefile` in the tree alone refuses nothing", alone.returncode == 0, alone.stdout + alone.stderr)
+    git("add", "GNUmakefile")
+    (repo / "GNUmakefile").unlink()
+    staged = holds()
+    check("staged and gone from the tree it is refused", staged.returncode == 1 and "GNUmakefile" in staged.stdout, staged.stdout + staged.stderr)
+    git("rm", "-q", "--cached", "GNUmakefile")
     settings.write_text(kept)
     # What the index no longer holds is gone, whatever stands in the tree.
     git("rm", "-q", "--cached", "scripts/selftest_host_guard.py")
@@ -1240,6 +1250,14 @@ def case_a_kill_is_read_through_what_hides_it() -> None:
         "taskpolicy -b pkill -x foo",
         "sandbox-exec -n no-network pkill -x foo",
         "python3 -W ignore scripts/host_guard.py run -- pkill -x foo",
+        "xcrun -k kill -9 -1",
+        "xcrun -f -r killall foo",
+        "xcrun -k pkill -x foo",
+        "xcrun -f pkill",
+        "taskpolicy -m 4096 pkill -x foo",
+        "taskpolicy -P throttle pkill -x foo",
+        "taskpolicy -S 0 kill -9 -1",
+        "taskpolicy -j 1 killall foo",
     ):
         check(f"`{text}` is refused", refused(text))
     for text in (
@@ -1252,8 +1270,6 @@ def case_a_kill_is_read_through_what_hides_it() -> None:
         "echo python3 scripts/host_guard.py run -- pkill foo",
         ": scripts/host_guard.py run -- killall x",
         "pkill -P 0x10",
-        "xcrun -f pkill",
-        "xcrun --find pkill",
     ):
         check(f"`{text}` is not", not refused(text))
     check("`env -` hides nothing it wraps", g.commands_of("env - cargo build")[0].words == ["cargo", "build"])
@@ -1275,6 +1291,10 @@ def case_a_path_holding_a_space_is_one_path() -> None:
         check(f"after `{flag}`, it is no agent for the directory's name", not g.is_agent(spaced), spaced.programs_named)
     named = g.Process(1, 1, "python3 -X pycache_prefix=/tmp/claude job.py", "", "", 0)
     check("a flag's value is not what it runs", named.script == "job.py" and not g.is_agent(named), named.script)
+    for form in ("perl -W codex.pl", "ruby -W aider.rb"):
+        check(f"`-W` is Python's alone: `{form}` runs its script", g.is_agent(g.Process(1, 1, form, "", "", 0)))
+    check("a guard after a flag's value is the guard", g.GUARD_PROCESS.search(f"python3 -W ignore {g.CODE} run"))
+    check("and the self-test", g.SELF_TEST_PROCESS.search("python3 -X dev scripts/selftest_host_guard.py"))
     relative = g.Process(1, 1, "python3 claude work/build.py x", str(scope), "", 0)
     check("relative to where it stands too", relative.script == "build.py" and not g.is_agent(relative), relative.script)
     agent = g.Process(1, 1, "node /opt/bin/claude --flag", "", "", 0)
@@ -2003,8 +2023,9 @@ def case_run() -> None:
         shutil.copy(GUARD, repo / "scripts" / "host_guard.py")
         copy = repo / "scripts" / "host_guard.py"
         away = spawn([*PY, str(copy), "run", "--", "sleep", "6"], elsewhere)
-        time.sleep(1.0)
-        said = subprocess.run([*PY, str(copy), "status"], capture_output=True, text=True, timeout=30).stdout
+        status = lambda: subprocess.run([*PY, str(copy), "status"], capture_output=True, text=True, timeout=30).stdout
+        until(lambda: "ours: 0 " not in status(), 5)
+        said = status()
         check("a `run` from another directory has its job counted as ours", "ours: 0 " not in said and "ours:" in said, said)
         away.wait(timeout=15)
         subprocess.run([*PY, str(copy), "stop"], capture_output=True, timeout=30)

@@ -218,8 +218,8 @@ for name, recipe in found.items():
 MAKEFILE_SHA256 = "f482595e32e16c6c5132ee7ca8a01b823db6754444d2e15d859cbf3b00c45be4"
 if hashlib.sha256(as_staged("Makefile") or b"").hexdigest() != MAKEFILE_SHA256:
     breaches.append("the Makefile is not the one this check holds, and `make` can be told anything: read what changed, then move `MAKEFILE_SHA256` in `scripts/check_host_guard.sh` in the same commit")
-# By the names that stand: on a volume that folds case, `makefile` opens the Makefile itself.
-standing = set(os.listdir(root))
+# By the names staged, what lands: what stands in the tree alone is another session's, and on a volume that folds case, `makefile` opens the Makefile itself.
+standing = set(asks_git("ls-files").stdout.decode(errors="replace").splitlines()) if in_its_repository else set(os.listdir(root))
 for name in ("GNUmakefile", "makefile"):
     if name in standing:
         breaches.append(f"`{name}` stands beside the Makefile, and `make` reads it first")

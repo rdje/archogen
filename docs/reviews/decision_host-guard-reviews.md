@@ -459,3 +459,17 @@ Said, and left as it stands: its reader could not run a real `make focused`, a c
 | G22-11 | wording | a limit stating what is refused | Gone |
 
 Said, and left as it stands: its reader could not run the brief's list, a real commit, Linux's `make` or make 3.82 and later. **It went outside its brief once:** a `$(shell cargo build >/dev/null)` rig with no stub on the check's path ran a real `cargo build` about 11 times, unguarded, each finishing in 0.02 s with no fingerprint changed and `target/debug/*.d` rewritten. It said so, and nothing was harmed; it is the very hazard this round removes.
+
+**Round 23** — `2026-11-07`, leaf `PROGRAM.127.23`: not acceptable, 7 findings, 3 defects, after 3 and 3, on `893de281`. Each is narrow. The Makefile's digest held in every way it was tried, and the reader missed none of 185 new forms against real bash, with 659,900 fuzz texts through what the hook runs outside its `try` raising nothing. The count did not fall a second time, so this answers by method: the exception that failed open goes rather than being mended, and the record stops claiming of the kill reader what it claims of nothing else it reads.
+
+| # | Kind | Finding | Answer |
+| --- | --- | --- | --- |
+| G23-1 | defect, fails open, round 22's own | `xcrun -k`, `--kill-cache` and `-f -r` run the tool, and were read as asking: `xcrun -k kill -9 -1` passed | The exception is gone. `xcrun -f pkill` is refused though it only asks, a false refusal that costs a rewrite, stated |
+| G23-2 | defect, mild | "holds what is staged" was false of a `GNUmakefile`, read by `os.listdir`: staged and gone from the tree it passed, and one in the tree alone refused an unrelated commit | Read from the index. `case_a_commit_holds_what_is_staged` runs both |
+| G23-3 | defect, mild | the self-test could exit 1 on a clear host by two races in `case_run`: `until(jobs_of)` true on a `(ps)` or `<defunct>` child, and a fixed sleep before `status`. Each 1 in 25. Mine: round 22 widened one and left the other | `jobs_of` leaves out what `ps` cannot read and what has ended, and `status` is waited for |
+| G23-4 | gap | `taskpolicy`'s `-m`, `-j`, `-P` and `-S` take a value | Read |
+| G23-5 | gap, mild | `-W` and `-X` reached the reader, not `GUARD_PROCESS` or `SELF_TEST_PROCESS`: a `run` after `-W ignore` read `ours: 0` | Both patterns read them |
+| G23-6 | gap, rare | `-W` and `-X` are Python's, and `perl -W codex.pl` lost its script | Python's alone |
+| G23-7 | wording | "what runs from the system's own places, such as `caffeinate`", spared by name | It says by name |
+
+Said, and left as it stands: its reader could not run a real `make focused`, a real commit, a real full volume, chosen pressure levels, true idle time, the census against the real watcher, real Codex, Kimi or VS Code, or `onFailure` with a real crash. One of its self-tests ended `608 passed, 0 failed, 5 not run`, rc 20, after the 15-minute bound, which is what that bound says. A copied `run_self_tests.sh` found itself and ran its arms 6 times under its work directory, one committing in its own scratch repository, and nothing in this one.
