@@ -178,3 +178,19 @@ Said, and left as it stands: no realization exists, so a real read-back's lag, a
 | RA10-7 | wording | five leaves headed `RA-H` rows "quoted from" another record's ledger; "reading that alarm's floor" on a leaf where no floor exists yet | Each heading names both; the floor its realization states |
 
 Said, and left as it stands: no realization or `/2` exists, so RA10-1 and RA10-3 to RA10-6 are by reading, and no real coarser compare was measured. The rig's device rounds up, and one that truncates would arrive early, not run. No response passed its bound on a coarser compare, over 3,900 sets, so a miss stays unverified: the false `T_s` and the `delivery` breach are the finding.
+
+**Round 11** — `2026-11-07`, leaf `M4.1.6.11`: not acceptable, 9 findings, 3 defects, after 9, 9, 7, 5, 7, 6, 7, 6, 3 and 3, on `4fc27744`. The sums, the protocol and the source term gave no finding: `compare-step` at or above a tick held over 9,284, 9,360 and 3,840 timelines, closest 0.923. The count did not fall a second time, so this answers by method: what kept failing was a figure with no stated owner, direction or way to its reader, so each input is a row of a table a test reads.
+
+| # | Kind | Finding | Answer |
+| --- | --- | --- | --- |
+| RA11-1 | defect, narrow, round 10's | `ρ` was unsound on a delay counting finer than its counter reads: 50 of 60 timelines under the floor, the least 3% of it, 4 merged, a deadline pending 7,919 against 79. No tracked device has this shape | A `compare-step` that is no whole number of ticks is refused, `RA-H8` |
+| RA11-2 | defect | device facts had no path to the scheduling checker: `RA-H1` gave each alarm a line with no values, so built as written every alarm stayed inconclusive | Each alarm's line holds what the table says reaches the checker by it. The table has that column, and `each_input_has_an_owner_a_direction_and_a_path_to_the_checker` reads it |
+| RA11-3 | defect, narrow, partly older | the epoch read at the transition stood before the first enabling, where composite §2 has every nominal release at or after it | The epoch is the first enabling, read ahead of by at most the step's length, and that step counts as initialisation's, `RA-H8` |
+| RA11-4 | gap | "a counter to read" named no fact | It names three |
+| RA11-5 | gap | the CLINT's exact `H` cannot be written, so no check of it can be exact | A capacity is stated at most what its source says, `RA-H8` |
+| RA11-6 | gap, older | the target record's §2 put the interrupt route with the catalog, and `alarm-wiring` is a target's statement | `RA-H8` moves it |
+| RA11-7 | wording | "a step of its device's counter" beside "`tick-rate` cannot say it" | "its device's compare" |
+| RA11-8 | wording | what a sum lies within omitted `delivery-bound` | It is a row, and said |
+| RA11-9 | wording | "what it lacks" of a task bound to an alarm itself, which a trigger does not save | It says which task, and `RA-H4` agrees |
+
+Said, and left as it stands: no realization or `/2` exists, so RA11-2, RA11-3, RA11-4 and RA11-6 are by reading, RA11-1's device is the reader's rig, a real read-back's lag and a level compare's window stay unmeasured, and `/2`'s joint-rule wording cannot be judged until written. `RA-H1` was split, `RA-H8` taking what a target states, since one line of a record holds at most 1,536 bytes.

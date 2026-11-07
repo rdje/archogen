@@ -486,6 +486,78 @@ fn the_record_s_sums_read_as_they_are_written() {
     assert_eq!(charge("write", Device::Delay, i), 10 + 1 + 6);
 }
 
+/// Each input a sum reads has a row of the record's other table: who owes it, which way it rounds and how it reaches the checker, so no hand-off can leave one with no path there. A fact a row reads is one the vocabulary has, or one the record says it adds.
+#[test]
+fn each_input_has_an_owner_a_direction_and_a_path_to_the_checker() {
+    let (_, table) = RECORD
+        .split_once("<!-- machine-read: alarm-inputs -->")
+        .expect("the record's table of inputs");
+    let mut named = Vec::new();
+    for line in table
+        .lines()
+        .skip_while(|line| !line.starts_with('|'))
+        .take_while(|line| line.starts_with('|'))
+        .skip(2)
+    {
+        let cells: Vec<&str> = line.split('|').map(str::trim).collect();
+        assert_eq!(cells.len(), 8, "{line}");
+        let name = cells[1].split('`').nth(1).expect("a named input");
+        for at in [2, 3, 4, 5, 6] {
+            assert!(!cells[at].is_empty(), "{name}: {line}");
+        }
+        let direction = cells[5].split_whitespace().next().unwrap_or_default();
+        assert!(
+            matches!(direction, "up" | "down" | "none:"),
+            "{name}: `{}`",
+            cells[5]
+        );
+        assert!(
+            cells[6].contains("(`RA-H") || cells[6].contains("computed there"),
+            "{name}: `{}`",
+            cells[6]
+        );
+        named.push(name.to_owned());
+    }
+    let sums = ["delivery", "update", "room", "write"];
+    for sum in sums {
+        for device in [Device::Compare, Device::Delay] {
+            let written = cell(sum, device);
+            for input in ["T_s", "λ", "ρ", "J_s", "C_s", "P", "R", "W"] {
+                if written.contains(input) {
+                    assert!(named.iter().any(|name| name == input), "{sum}: {input}");
+                }
+            }
+        }
+    }
+    // And what each lies within, as the sums' table has it.
+    for within in [
+        "H",
+        "delivery-bound",
+        "unambiguous-horizon",
+        "counter-modulus",
+    ] {
+        assert!(named.iter().any(|name| name == within), "{within}");
+    }
+    const VOCABULARY: &str = include_str!("../../../docs/semantics/vocabulary/vocabulary.eadl");
+    for fact in [
+        "supported-horizon",
+        "tick-rate",
+        "counter-modulus",
+        "unambiguous-horizon",
+        "delivery-bound",
+        "observation-coherent",
+    ] {
+        assert!(VOCABULARY.contains(&format!("(deffact {fact}")), "{fact}");
+    }
+    for added in ["alarm-wiring", "alarm-kind", "compare-step"] {
+        assert!(
+            !VOCABULARY.contains(&format!("(deffact {added}")),
+            "{added}: said to be added"
+        );
+        assert!(RECORD.contains(&format!("`{added}`")), "{added}");
+    }
+}
+
 /// Random sets the analysis holds, each run under each pattern of lags: no arrivals under the floor, none lost, no response past its bound, no deadline delivered past `delivery`. How many sets and
 /// timelines were judged.
 #[allow(clippy::too_many_arguments)]
