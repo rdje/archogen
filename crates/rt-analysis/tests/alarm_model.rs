@@ -620,17 +620,24 @@ fn what_it_reads(
     rate: Option<u64>,
     round: Rounding,
 ) -> Option<(Option<i64>, Option<i64>)> {
+    // A window past its modulus cannot stand whatever the rate.
+    if matches!((reads, modulus), (Reads::Within(said), Some(modulus)) if u128::from(said) >= modulus)
+    {
+        return None;
+    }
     let Some(rate) = rate else {
         return Some((None, None));
     };
     match (reads, modulus) {
-        (Reads::Within(said), Some(modulus)) if u128::from(said) >= modulus => None,
         (Reads::Within(said), Some(modulus)) => Some((
             Some(round.ticks_down(u128::from(said), rate)),
             Some(round.ticks_down(modulus - u128::from(said) - 1, rate)),
         )),
         (Reads::Within(said), None) => Some((Some(round.ticks_down(u128::from(said), rate)), None)),
-        (Reads::Magnitude, Some(modulus)) if modulus / u128::from(rate) < OPERATING_HORIZON => None,
+        // Its wrap must lie past the horizon, and at the horizon it does not.
+        (Reads::Magnitude, Some(modulus)) if modulus <= OPERATING_HORIZON * u128::from(rate) => {
+            None
+        }
         (Reads::Magnitude, Some(modulus)) => Some((
             None,
             Some(round.ticks_down(modulus - OPERATING_HORIZON * u128::from(rate) - 1, rate)),
@@ -1343,6 +1350,23 @@ fn what_the_checker_holds_of_a_line_runs() {
         }),
         Judged::Refused("write")
     );
+    // Round 16: a wrap exactly at the horizon does not lie past it, and a window past its modulus cannot stand though the rate is owed.
+    assert_eq!(
+        at_1_us(Line {
+            modulus: Some(OPERATING_HORIZON * 10_000_000),
+            ..whole
+        }),
+        Judged::Refused("compare-window")
+    );
+    assert_eq!(
+        at_1_us(Line {
+            tick_rate: None,
+            modulus: Some(256),
+            window: Some(Reads::Within(300)),
+            ..held_off
+        }),
+        Judged::Refused("compare-window")
+    );
     // Round 14: every sum whose inputs it has is checked, as the variant's §4 asks, and the verdict is the highest among them: a refusal over what is owed, and each reason kept.
     let both = Line {
         t_s: None,
@@ -1673,7 +1697,7 @@ fn rounding_at_worst_is_what_rounding_adds() {
     }
 }
 
-/// `window` is the one sum a timeline did not run, and now each sweep holds it, each claim at its service's last unit. This says it is no over-charge: some run takes a request past what a landing and its wait alone would charge, so the claim is a term and no margin.
+/// `sweep` holds `window` over its timelines, each reckoned at a claim at its service's last unit. A timeline takes a request at entry and its claim is arithmetic, so this shows no lost request: it shows a wait coming within `C_s` of a landing and its `J_s`, so that a window short of a real claim could fall under some run's. Past the service's own write the line is lowered, and `C_s` over-charges, as the record says.
 #[test]
 fn a_request_is_taken_at_its_claim_past_what_its_wait_alone_charges() {
     let mut r = Rng(0x7717_5EED_0246_8ACF);
@@ -1964,6 +1988,7 @@ fn sweep(
                     run.oldest_pending[a]
                 );
                 if device == Device::Compare {
+                    // With a wake not nothing, the timeline's wake charged to an interrupt already pending (RA4-10) can pass `J_s`, and this holds of these seeds.
                     let held = window_charge(lag_i, rho, j[a], c_s);
                     assert!(
                         run.worst_standing[a] <= held,
