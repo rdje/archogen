@@ -233,6 +233,7 @@ workspace member with none.
 - [`decision_repository-boundary-read-only.md`](docs/decisions/decision_repository-boundary-read-only.md)
 - [`decision_reviews-folder-ceiling.md`](docs/decisions/decision_reviews-folder-ceiling.md)
 - [`decision_runtime-contract-gaps.md`](docs/decisions/decision_runtime-contract-gaps.md)
+- [`decision_runtime-plan-format-2.md`](docs/decisions/decision_runtime-plan-format-2.md)
 - [`decision_runtime-plan.md`](docs/decisions/decision_runtime-plan.md)
 - [`decision_s0-retirement.md`](docs/decisions/decision_s0-retirement.md)
 - [`decision_scaffold-updater-adopted.md`](docs/decisions/decision_scaffold-updater-adopted.md)

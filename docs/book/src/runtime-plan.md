@@ -178,6 +178,19 @@ the lowering writes passes through that reader before it is returned, so the wri
 assignment and the result record they were lowered from, in `crates/archogen-plan/tests/goldens/`. Nothing rewrites them:
 each is held to its digest, and a change that would move one is a new format number (`docs/book/src/versions.md`).
 
+## On a real machine: format `/2`
+
+Everything above describes `archogen-runtime-plan/1`, a system on the hosted playground. A real machine needs more, and
+the design of `/2`, `docs/decisions/decision_runtime-plan-format-2.md`, not yet built (`M4.1.7`), says what: which machine it is, by the digest of
+its description; which device releases tasks and which each alarm takes, with each count written as the device states it, so that the
+checker alone converts it; where each stack lies; and what the interrupt controller is told. It also carries the
+application's inputs. A size only a catalog record can state stays owed until one does, and every allocation after it is owed too, since no
+address below it is known.
+
+Stacks are laid from the top of a region down and the image from the bottom up, so a rebuild of the code moves no
+allocation. A stack's size is a sum of what its owners state: a task's own bound, what the runtime's code adds in a
+call, and the frame the port saves.
+
 ## From a plan to a generated system
 
 `crates/archogen-emit` turns a plan into the files of a package that builds and runs by itself, and `archogen build` is the

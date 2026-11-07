@@ -536,6 +536,8 @@ a change that leaves it stale, so it is never edited by hand.
   records](annex-trust-proofs.md#observer-synchronization-failure-control)
 - Offered is a claim, not evidence — [Presence, absence, and relevance](presence.md#offered-is-a-claim-not-evidence)
 - Offers — [Matching an offer to a requirement](matching.md#offers)
+- On a real machine: format /2 — [The runtime plan: what the generated system is
+  told](runtime-plan.md#on-a-real-machine-format-2)
 - One device's facts: functions — [Matching an offer to a requirement](matching.md#one-devices-facts-functions)
 - One host — [Checks that must not share a mistake: the trust gate](trust.md#one-host)
 - One operation: check — [The engine API](engine-api.md#one-operation-check)
