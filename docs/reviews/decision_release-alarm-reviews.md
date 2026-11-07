@@ -242,3 +242,19 @@ Said, and left as it stands: no realization or `/2` exists, so whether a real co
 | RA14-8 | wording | The `compare-window` row cited `RA-H3`, whose row names no window; `RA-H2`'s "as `judge_release` does" covered a wake's `P + ρ`, which `judge` runs | The row gives its reason without the citation; `RA-H2` puts each with the function that runs it |
 
 Said, and left as it stands: no real windowed comparator or controller was measured, and no `/2`, realization or scheduling checker exists. RA14-1's lost request rests on a controller that drops a request when its line falls, shown on the project's own model of one. What the agreement accepts of the CLINT's fact is `M4.1.7`'s.
+
+**Round 15** — `2026-11-07`, leaf `M4.1.6.15`: not acceptable, 9 findings, 3 defects, after 3, on `d93a8799`. The second round in a row whose count does not fall, so answered by method: `window` was the one sum no timeline ran. Its rigs are `target/m4310/work/rig15`.
+
+| # | Kind | Finding | Answer |
+| --- | --- | --- | --- |
+| RA15-1 | defect, round 14's | `window`'s wait stopped at the trap's entry, and the request is taken later, by its claim: `judge` held at 45 where a claim 3 past entry got `None`, an unexpected trap | The sum is `λ + ρ + J_s + C_s`, the claim within `C_s`. The method: the timeline measures how far past its match each request is taken, its claim at its service's last unit, and every sweep holds the sum as it holds `delivery`. `a_request_is_taken_at_its_claim_past_what_its_wait_alone_charges` holds that the term is needed |
+| RA15-2 | defect, round 14's check on the variant's older reading | `(p − 1)/q` is no worst case over all release instants, a period being an exact duration: 1/3 ms at 1 MHz adds 667 ns where it said nothing | `compare-rounding` is held at least one step rounded up to the unit, which is what the worst case rounds to. `rounding_at_worst_is_what_rounding_adds` holds it over releases of periods on no grid of the unit's. The variant says less than a step |
+| RA15-3 | defect, round 14's | `RA-H8` asked one fact to be a count or a word, and a fact's domain is one | Two facts, `compare-window` and `compare-magnitude`, a device stating one |
+| RA15-4 | gap, `M2.21.2`'s | `reasons` and `release_reasons` skipped sums they could run, with no modulus or no reach | Only a missing kind, which leaves no cell to read, stops them, and what a window leaves limits a write with no reach stated |
+| RA15-5 | gap, `M2.21.2`'s | `RA-H5`'s compare said no verdict | One below is the variant's declared delay below its floor, `analysis-inconclusive`: `Judged::BelowItsFloor` |
+| RA15-6 | gap, `M4.2`'s | "a segment is capped by `H` alone" left out the count's top, past which a value reads as due at once | A whole-number compare's reach is also what the operating horizon leaves of its modulus, in `judge`, in `RA-H6` and in the sentence |
+| RA15-7 | gap, older, `M4.3.6`'s | the simulator's rate and modulus were owed by no one the rows named | The rows say its clock's, read from the plan |
+| RA15-8 | wording | "as the simulator's does" was true of `sim-playground` and not of `sim_devices`' level line | It names each |
+| RA15-9 | wording | "Most read one raw difference" named no device | "One way" |
+
+Said, and left as it stands: its reader measured waits past `J_s` in 34 of 4,320 alarm-runs on three shapes with `W_wake` not zero, the largest 1.25, none on the plain sets, and found two by hand to fit RA4-10's stated pessimism, `W_wake` charged to an interrupt already pending; a third, 11 against 10, it did not trace. The timeline's own pessimism is no bound's failure, and no sum here rests on it past `C_s`. No real comparator or controller was measured, and whether a target's controller drops a request stays unknown: one that keeps it owes none of this sum.

@@ -81,6 +81,8 @@ pub struct Measured {
     pub worst_delivery_case: Vec<(i64, i64, i64)>,
     pub longest_read_to_read: Vec<i64>,
     pub worst_wait: Vec<i64>,
+    /// Per alarm, how far past the value its compare matched a request is taken, its claim at its service's last unit.
+    pub worst_standing: Vec<i64>,
     /// A deadline still pending at the horizon, and how long.
     pub oldest_pending: Vec<i64>,
     pub programmed_past_reach: u32,
@@ -120,6 +122,8 @@ struct Alarm {
     /// When its compare matches or its delay ends.
     fires: Option<i64>,
     request: Option<i64>,
+    /// What that request's compare matched.
+    request_value: i64,
     serving_arrival: i64,
     last_arrival: Option<i64>,
     /// A write read but not landed: (land at, value or None, read).
@@ -198,12 +202,16 @@ impl Run<'_> {
             return;
         }
         // A compare reached at this very instant has raised: a read there sees it, and no write undoes it.
-        if self.know != Know::Omniscient && al.fires.is_some_and(|f| read >= f) {
+        if let Some(value) = al
+            .fires
+            .filter(|f| self.know != Know::Omniscient && read >= *f)
+        {
             al.fires = None;
             if al.request.is_some() {
                 measured.merged += 1;
             } else {
                 al.request = Some(read);
+                al.request_value = value;
                 al.last_arrival = Some(read);
                 measured.arrivals[al.index].push(read);
             }
@@ -294,12 +302,13 @@ impl Run<'_> {
         let seen = read.div_euclid(res) * res;
         let seen_back = read_back.div_euclid(res) * res;
         // A compare reached at this very instant has raised: a read there sees it, and no write undoes it.
-        if al.fires.is_some_and(|f| read >= f) {
+        if let Some(value) = al.fires.filter(|f| read >= *f) {
             al.fires = None;
             if al.request.is_some() {
                 measured.merged += 1;
             } else {
                 al.request = Some(read);
+                al.request_value = value;
                 al.last_arrival = Some(read);
                 measured.arrivals[al.index].push(read);
             }
@@ -434,6 +443,7 @@ impl Run<'_> {
                 wake_next: spec.wake,
                 fires: None,
                 request: None,
+                request_value: 0,
                 serving_arrival: 0,
                 last_arrival: None,
                 inflight: None,
@@ -460,6 +470,7 @@ impl Run<'_> {
             worst_delivery_case: vec![(0, 0, 0); n_alarms],
             longest_read_to_read: vec![0; n_alarms],
             worst_wait: vec![0; n_alarms],
+            worst_standing: vec![0; n_alarms],
             oldest_pending: vec![0; n_alarms],
             ..Measured::default()
         };
@@ -475,13 +486,14 @@ impl Run<'_> {
         for t in 0..self.horizon {
             for al in &mut alarms {
                 self.land(al, t);
-                if al.fires.is_some_and(|f| t >= f) {
+                if let Some(value) = al.fires.filter(|f| t >= *f) {
                     al.fires = None;
                     if al.request.is_some() {
                         // The level line is already up: no second request, and no second arrival to separate.
                         measured.merged += 1;
                     } else {
                         al.request = Some(t);
+                        al.request_value = value;
                         al.last_arrival = Some(t);
                         measured.arrivals[al.index].push(t);
                     }
@@ -521,6 +533,9 @@ impl Run<'_> {
                     Trap::Alarm(a) => {
                         let arrival = alarms[a].request.take().expect("pending");
                         alarms[a].serving_arrival = arrival;
+                        let claimed = t + i64::try_from(self.alarms[a].c_s).expect("small");
+                        measured.worst_standing[a] =
+                            measured.worst_standing[a].max(claimed - alarms[a].request_value);
                         measured.worst_wait[a] = measured.worst_wait[a].max(t - arrival);
                         doing = Some(Doing::Alarm {
                             a,
