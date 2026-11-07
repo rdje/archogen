@@ -1,33 +1,43 @@
 //! The application inputs' reader (leaf `M4.12`; `docs/decisions/decision_application-inputs.md`): a whole file reads, every malformed
 //! input is refused naming what is wrong, and every fact a plan owes `(by application)` is held against the three goldens.
 
-use archogen_plan::application::{read, Binary, Category, CLAUSE_PARTS, FORMAT, HELD_OF_A_TASK};
+use archogen_plan::application::{
+    read, Binary, Category, Ending, Observation, CLAUSE_CUT, CLAUSE_PARTS, FORMAT, HELD_OF_A_TASK,
+    MOST_BYTES,
+};
 use archogen_plan::contents;
 
 const BOUND: &str = r#"(value 200) (unit us) (scope "one job") (binary unbuilt) (evidence analytically-established) (locator "docs/argument.md") (basis "by the loop's bound")"#;
+const LIST: &str = r#"(scope "one job") (binary unbuilt) (evidence analytically-established) (locator "docs/argument.md") (basis "by reading")"#;
+const INITIALISATION: &str = r#"(initialisation (stack-bound (value 256) (unit byte) (scope "its deepest path") (binary unbuilt) (evidence assumed) (basis "chosen, to be measured")))"#;
 
 fn a_task(name: &str) -> String {
     format!(
         r#"(task {name}
   (entry-point "app::{name}")
   (execution-bound {BOUND})
-  (os-calls (evidence analytically-established) (locator "docs/argument.md") (basis "by reading") (call mask 2) (call unmask 2))
-  (node-calls (evidence analytically-established) (locator "docs/argument.md") (basis "by reading"))
-  (masked-runs (evidence analytically-established)
-    (run tail (value 5) (unit us) (scope "the tail's update") (binary unbuilt) (locator "docs/argument.md") (basis "four loads") (call unmask 1)))
-  (stack-bound (value 512) (unit bytes) (scope "its deepest path") (binary unbuilt) (evidence assumed) (basis "chosen, to be measured"))
+  (os-calls {LIST} (call mask 2) (call unmask 2))
+  (node-calls {LIST})
+  (masked-runs {LIST}
+    (run tail (ending unmask) (value 5) (unit us) (scope "the tail's update") (binary unbuilt) (evidence analytically-established) (locator "docs/argument.md") (basis "four loads") (call mask 1)))
+  (stack-bound (value 512) (unit byte) (scope "its deepest path") (binary unbuilt) (evidence assumed) (basis "chosen, to be measured"))
   (suspends no) (locks-scheduler no) (shares-outside-sections no)
   (masks-only-through-api yes)
-  (figures-under-preemption yes))
+  (figures-under-preemption yes)
+  (deadlines-within-reach))
 "#
     )
+}
+
+fn the_clause() -> String {
+    CLAUSE_PARTS.join(CLAUSE_CUT)
 }
 
 /// The whole line a file declares the fact by.
 fn leaves_alone() -> String {
     format!(
         "(leaves-interrupt-hardware-alone yes (clause \"{}\") (basis \"it touches no device\"))\n",
-        CLAUSE_PARTS.join(" ")
+        the_clause()
     )
 }
 
@@ -37,7 +47,8 @@ fn a_file(system: &str, tasks: &[&str]) -> String {
         r#"(format "{FORMAT}")
 (system {system})
 (target hosted-playground)
-{}{each}"#,
+{}{INITIALISATION}
+{each}"#,
         leaves_alone()
     )
 }
@@ -48,6 +59,7 @@ fn a_whole_file_reads_as_it_says() {
     assert_eq!(application.system, "heartbeat");
     assert_eq!(application.target, "hosted-playground");
     assert!(application.leaves_interrupt_hardware_alone);
+    assert_eq!(application.initialisation_stack_bound.value, 256);
     assert_eq!(application.tasks.len(), 2);
     let beat = &application.tasks[0];
     assert_eq!(beat.entry_point, "app::beat");
@@ -62,12 +74,20 @@ fn a_whole_file_reads_as_it_says() {
         beat.os_calls.calls,
         [("mask".to_owned(), 2), ("unmask".to_owned(), 2)]
     );
+    assert_eq!(beat.os_calls.scope, "one job");
+    assert_eq!(beat.os_calls.binary, Binary::Unbuilt);
     assert!(beat.node_calls.calls.is_empty());
-    assert_eq!(beat.masked_runs.runs[0].calls, [("unmask".to_owned(), 1)]);
+    assert_eq!(
+        beat.node_calls.evidence.locator.as_deref(),
+        Some("docs/argument.md")
+    );
+    assert_eq!(beat.masked_runs.runs[0].ending, Ending::Unmask);
+    assert_eq!(beat.masked_runs.runs[0].calls, [("mask".to_owned(), 1)]);
     assert_eq!(beat.stack_bound.evidence.category, Category::Assumed);
     assert!(beat.stack_bound.evidence.locator.is_none());
     assert!(beat.masks_only_through_api);
     assert!(!beat.suspends);
+    assert!(beat.deadlines_within_reach.is_empty());
 }
 
 /// Each malformed input, and a word of what it is told.
@@ -78,8 +98,11 @@ fn each_malformed_input_is_refused_saying_what_is_wrong() {
         assert!(good.contains(from), "{from}");
         good.replacen(from, to, 1)
     };
+    let bound_evidence = "(evidence analytically-established) (locator \"docs/argument.md\") (basis \"by the loop's bound\")";
     for (text, said) in [
-        ("(junk".to_owned(), "does not read"),
+        ("(junk".to_owned(), "does not read as forms: "),
+        (" ".repeat(MOST_BYTES + 1), "past the"),
+        (format!("(eadl-version eadl/1)\n{good}"), "no clause is called `eadl-version`"),
         (replaced(FORMAT, "archogen-application/2"), "this reads"),
         (replaced(&format!("(format \"{FORMAT}\")\n"), ""), "`format`"),
         (replaced("(system s)\n", ""), "`system`"),
@@ -88,44 +111,62 @@ fn each_malformed_input_is_refused_saying_what_is_wrong() {
         (replaced("(system s)", "(system s) (other x)"), "no clause is called"),
         (replaced(&leaves_alone(), ""), "leaves-interrupt-hardware-alone"),
         (replaced("hardware-alone yes (clause", "hardware-alone maybe (clause"), "`yes` or `no`"),
-        (replaced(&format!(" (clause \"{}\")", CLAUSE_PARTS.join(" ")), ""), "`clause`"),
+        (replaced(&format!(" (clause \"{}\")", the_clause()), ""), "`clause`"),
         (replaced(CLAUSE_PARTS[1], "it behaves"), "and these are others"),
+        (replaced(CLAUSE_CUT, " "), "and these are others"),
         (replaced(" (basis \"it touches no device\")", ""), "`basis`"),
+        (replaced(INITIALISATION, ""), "`initialisation`"),
+        (replaced(INITIALISATION, "(initialisation)"), "`stack-bound`"),
         (good.clone() + &a_task("t"), "written twice"),
         (replaced("(entry-point \"app::t\")", ""), "`entry-point`"),
         (replaced("(entry-point \"app::t\")", "(entry-point \"\")"), "says something"),
         (replaced("(entry-point \"app::t\")", "(entry-point app)"), "says something"),
+        (replaced("(entry-point \"app::t\")", "(entry-point \"x(); } unsafe { evil(); \")"), "a path a job can call"),
+        (replaced("(entry-point \"app::t\")", "(entry-point \"app::\")"), "a path a job can call"),
+        (replaced("(entry-point \"app::t\")", "(entry-point \"app\\n::t\")"), "holds a line break"),
+        (replaced("(scope \"one job\")", "(scope \"one \\\"job\\\"\")"), "a quote"),
         (replaced("(value 200)", "(value -1)"), "below nothing"),
         (replaced("(value 200)", "(value 1.5)"), "whole number"),
         (replaced("(value 200) ", ""), "`value`"),
         (replaced("(unit us)", "(unit parsec)"), "a unit here"),
         (replaced("(unit us) ", ""), "`unit`"),
         (replaced("(scope \"one job\") ", ""), "`scope`"),
-        (replaced("(binary unbuilt) (evidence analytically-established) (locator \"docs/argument.md\") (basis \"by the loop's bound\")", "(evidence analytically-established) (locator \"docs/argument.md\") (basis \"by the loop's bound\")"), "`binary`"),
+        (replaced(&format!("(binary unbuilt) {bound_evidence}"), bound_evidence), "`binary`"),
         (replaced("(binary unbuilt)", "(binary \"sha256:1\")"), "sha256"),
-        (replaced("(evidence analytically-established) (locator \"docs/argument.md\") (basis \"by the loop's bound\")", "(evidence analytically-established) (basis \"by the loop's bound\")"), "`locator`"),
-        (replaced("(evidence analytically-established) (locator \"docs/argument.md\") (basis \"by the loop's bound\")", "(evidence proven) (locator \"docs/argument.md\") (basis \"by the loop's bound\")"), "four categories"),
-        (replaced("(evidence analytically-established) (locator \"docs/argument.md\") (basis \"by the loop's bound\")", "(evidence analytically-established) (locator \"docs/argument.md\")"), "`basis`"),
-        (replaced("(evidence analytically-established) (locator \"docs/argument.md\") (basis \"by the loop's bound\")", "(evidence observed-maximum (observed 100) (safety-factor 1 2)) (locator \"docs/argument.md\") (basis \"b\")"), "pads"),
-        (replaced("(evidence analytically-established) (locator \"docs/argument.md\") (basis \"by the loop's bound\")", "(evidence observed-maximum (observed 100) (safety-factor 3 2)) (locator \"docs/argument.md\") (basis \"b\")"), "by that factor is 150"),
+        (replaced(bound_evidence, "(evidence analytically-established) (basis \"by the loop's bound\")"), "`locator`"),
+        (replaced(bound_evidence, "(evidence proven) (locator \"docs/argument.md\") (basis \"by the loop's bound\")"), "four categories"),
+        (replaced(bound_evidence, "(evidence analytically-established) (locator \"docs/argument.md\")"), "`basis`"),
+        (replaced(bound_evidence, "(evidence observed-maximum (observed 100) (safety-factor 1 2)) (locator \"docs/argument.md\") (basis \"b\")"), "pads"),
+        (replaced(bound_evidence, "(evidence observed-maximum (observed 100) (safety-factor 3 2)) (locator \"docs/argument.md\") (basis \"b\")"), "by that factor is 150"),
         (replaced("(call mask 2)", "(call mask 2) (call mask 1)"), "counted twice"),
         (replaced("(call mask 2)", "(call mask)"), "`(call NAME COUNT)`"),
         (replaced("(call mask 2)", "(call mask two)"), "whole number"),
-        (replaced("(node-calls (evidence analytically-established) (locator \"docs/argument.md\") (basis \"by reading\"))", ""), "`node-calls`"),
-        (replaced("(os-calls (evidence analytically-established) (locator \"docs/argument.md\") (basis \"by reading\") ", "(os-calls "), "`evidence`"),
-        (replaced("(run tail (value 5)", "(run tail (value 5) (scope \"again\")"), "written twice"),
-        (replaced("(unit bytes)", "(unit us)"), "a unit here"),
+        (replaced("(call mask 2)", "(call (other mask) 2)"), "calls no name"),
+        (replaced(&format!("(node-calls {LIST})\n"), ""), "`node-calls`"),
+        (replaced(&format!("(os-calls {LIST} "), "(os-calls "), "`scope`"),
+        (replaced(&format!("(os-calls {LIST} "), "(os-calls (scope \"one job\") (evidence assumed) (basis \"b\") "), "`binary`"),
+        (replaced(&format!("(os-calls {LIST} "), "(os-calls (scope \"one job\") (binary unbuilt) (evidence observed-maximum (observed 3) (safety-factor 2 1)) (locator \"l\") (basis \"b\") "), "a list says"),
+        (replaced(&format!("(masked-runs {LIST}"), "(masked-runs"), "`scope`"),
+        (replaced("(run tail (ending unmask) (value 5)", "(run tail (value 5)"), "one `ending`"),
+        (replaced("(run tail (ending unmask)", "(run tail (ending late)"), "`unmask` or `completion`"),
+        (replaced("(run tail (ending unmask) (value 5)", "(run tail (ending unmask) (ending completion) (value 5)"), "one `ending`"),
+        (replaced("(run tail (ending unmask) (value 5)", "(run tail (ending unmask) (value 5) (scope \"again\")"), "written twice"),
+        (replaced("(unit byte) (scope \"its deepest path\") (binary unbuilt) (evidence assumed) (basis \"chosen, to be measured\")))", "(unit us) (scope \"its deepest path\") (binary unbuilt) (evidence assumed) (basis \"chosen, to be measured\")))"), "a unit here"),
+        (replaced("(unit byte)", "(unit bytes)"), "a unit here"),
         (replaced("(suspends no) ", ""), "`suspends`"),
         (replaced("(suspends no)", "(suspends sometimes)"), "`yes` or `no`"),
         (replaced("(masks-only-through-api yes)\n", ""), "`masks-only-through-api`"),
         (replaced("(figures-under-preemption yes)", ""), "`figures-under-preemption`"),
+        (replaced("(deadlines-within-reach)", ""), "`deadlines-within-reach`"),
+        (replaced("(deadlines-within-reach)", "(deadlines-within-reach a a)"), "written twice"),
+        (replaced("(deadlines-within-reach)", "(deadlines-within-reach 1)"), "names no alarm"),
     ] {
         let refused = read(&text).expect_err(said);
         assert!(refused.to_string().contains(said), "`{said}`: {refused}");
     }
 }
 
-/// A safety factor is held to its arithmetic, and it changes no category.
+/// A safety factor is held to its arithmetic, changes no category, and what it padded is kept for what reads it.
 #[test]
 fn a_safety_factor_is_arithmetic_and_changes_no_category() {
     let text = a_file("s", &["t"]).replace(
@@ -133,29 +174,122 @@ fn a_safety_factor_is_arithmetic_and_changes_no_category() {
         "(evidence observed-maximum (observed 100) (safety-factor 2 1)) (locator \"docs/argument.md\") (basis \"seen\")",
     );
     let application = read(&text).expect("it reads");
+    let evidence = &application.tasks[0].execution_bound.evidence;
+    assert_eq!(evidence.category, Category::ObservedMaximum);
     assert_eq!(
-        application.tasks[0].execution_bound.evidence.category,
+        evidence.observation,
+        Some(Observation {
+            observed: 100,
+            numerator: 2,
+            denominator: 1
+        })
+    );
+}
+
+/// The composite-inputs record's §6: a list carries one category, a run's bound keeps its own, each with its own padding, and an empty list still says what backs it. A run that ends both ways is written once for each.
+#[test]
+fn a_run_keeps_its_own_record_and_an_empty_list_still_says_what_backs_it() {
+    let run = |name: &str, ending: &str, value: u64, evidence: &str| {
+        format!("(run {name} (ending {ending}) (value {value}) (unit us) (scope \"s\") (binary unbuilt) {evidence} (locator \"l\") (basis \"b\"))")
+    };
+    let runs = [
+        run(
+            "a",
+            "unmask",
+            150,
+            "(evidence observed-maximum (observed 100) (safety-factor 3 2))",
+        ),
+        run("a", "completion", 30, "(evidence analytically-established)"),
+        run("b", "unmask", 40, "(evidence observed-maximum)"),
+    ]
+    .join(" ");
+    let original = a_file("s", &["t"]);
+    let start = original.find("(masked-runs").expect("a list");
+    let end = original.find("(stack-bound (value 512)").expect("a bound");
+    let text = format!(
+        "{}(masked-runs {LIST} {runs})\n  {}",
+        &original[..start],
+        &original[end..]
+    );
+    let application = read(&text).expect("it reads");
+    let list = &application.tasks[0].masked_runs;
+    assert_eq!(list.evidence.category, Category::AnalyticallyEstablished);
+    assert_eq!(list.runs.len(), 3);
+    assert_eq!(
+        list.runs[0].bound.evidence.category,
         Category::ObservedMaximum
     );
+    assert_eq!(list.runs[0].ending, Ending::Unmask);
+    assert_eq!(list.runs[1].ending, Ending::Completion);
+    assert_eq!(
+        list.runs[1].bound.evidence.category,
+        Category::AnalyticallyEstablished
+    );
+    assert_eq!(list.runs[1].bound.value, 30);
+    let empty = format!(
+        "{}(masked-runs {LIST})\n  {}",
+        &original[..start],
+        &original[end..]
+    );
+    let application = read(&empty).expect("it reads");
+    let list = &application.tasks[0].masked_runs;
+    assert!(list.runs.is_empty());
+    assert_eq!(list.evidence.locator.as_deref(), Some("docs/argument.md"));
+    assert_eq!(list.scope, "one job");
+}
+
+/// A node named by a list, as a task's own `bind` line names an instance, can be called and named as an alarm.
+#[test]
+fn a_node_an_instance_names_can_be_called() {
+    let adapter = "(adapter epoch-extender timer.short)";
+    let text = a_file("s", &["t"])
+        .replace(
+            &format!("(node-calls {LIST})"),
+            &format!("(node-calls {LIST} (call {adapter} 1))"),
+        )
+        .replace(
+            "(deadlines-within-reach)",
+            &format!("(deadlines-within-reach {adapter})"),
+        );
+    let application = read(&text).expect("it reads");
+    assert_eq!(
+        application.tasks[0].node_calls.calls,
+        [(adapter.to_owned(), 1)]
+    );
+    assert_eq!(application.tasks[0].deadlines_within_reach, [adapter]);
 }
 
 /// What `RA-H7` asks of a task writing an alarm on the counter's own time base.
 #[test]
 fn a_task_says_its_deadlines_stand_within_an_alarm_s_reach() {
     let text = a_file("s", &["t"]).replace(
-        "(suspends no)",
-        "(deadlines-within-reach timer.short) (deadlines-within-reach timer.long) (suspends no)",
+        "(deadlines-within-reach)",
+        "(deadlines-within-reach timer.short timer.long)",
     );
     let application = read(&text).expect("it reads");
     assert_eq!(
         application.tasks[0].deadlines_within_reach,
         ["timer.short", "timer.long"]
     );
-    let twice = a_file("s", &["t"]).replace(
-        "(suspends no)",
-        "(deadlines-within-reach a) (deadlines-within-reach a) (suspends no)",
-    );
-    assert!(read(&twice).is_err());
+}
+
+/// The units a person may write are the language's.
+#[test]
+fn a_time_and_a_size_are_in_the_language_s_units() {
+    for unit in ["s", "ms", "us", "ns"] {
+        let text = a_file("s", &["t"]).replace(
+            "(value 200) (unit us)",
+            &format!("(value 200) (unit {unit})"),
+        );
+        assert!(read(&text).is_ok(), "{unit}");
+    }
+    for unit in ["byte", "KiB", "MiB"] {
+        let text = a_file("s", &["t"]).replace(
+            "(value 512) (unit byte)",
+            &format!("(value 512) (unit {unit})"),
+        );
+        assert!(read(&text).is_ok(), "{unit}");
+    }
 }
 
 fn golden(name: &str) -> String {
@@ -193,67 +327,145 @@ fn every_fact_a_plan_owes_the_application_is_held() {
 fn what_is_unmet_of_a_plan_is_said() {
     let plan = contents::read(&golden("heartbeat")).expect("the golden reads");
     let tasks: Vec<&str> = plan.tasks.iter().map(|task| task.name.as_str()).collect();
-    let other = read(&a_file("other", &tasks)).expect("it reads");
-    assert!(other
-        .unmet(&plan)
-        .iter()
-        .any(|said| said.contains("are for `other`")));
-    let fewer = read(&a_file(&plan.system, &tasks[..tasks.len() - 1])).expect("it reads");
-    assert!(fewer
-        .unmet(&plan)
-        .iter()
-        .any(|said| said.contains("nothing is said of the task")));
+    let said = |text: &str, of: &contents::Contents, words: &str| {
+        let application = read(text).expect("it reads");
+        assert!(
+            application
+                .unmet(of)
+                .iter()
+                .any(|said| said.contains(words)),
+            "{words}: {:?}",
+            application.unmet(of)
+        );
+    };
+    let good = a_file(&plan.system, &tasks);
+    said(&a_file("other", &tasks), &plan, "are for `other`");
+    said(
+        &a_file(&plan.system, &tasks[..tasks.len() - 1]),
+        &plan,
+        "nothing is said of the task",
+    );
     let mut more = tasks.clone();
     more.push("extra");
-    let more = read(&a_file(&plan.system, &more)).expect("it reads");
-    assert!(more
-        .unmet(&plan)
-        .iter()
-        .any(|said| said.contains("no task `extra`")));
-    // A call into a node the task's lines do not name: only through a node they do.
-    let stray = a_file(&plan.system, &tasks).replace(
-        "(basis \"by reading\"))",
-        "(basis \"by reading\") (call nowhere.node 1))",
+    said(&a_file(&plan.system, &more), &plan, "no task `extra`");
+    said(
+        &good.replace("(target hosted-playground)", "(target riscv-virt-up)"),
+        &plan,
+        "of the target `riscv-virt-up`",
     );
-    let stray = read(&stray).expect("it reads");
-    assert!(stray
-        .unmet(&plan)
-        .iter()
-        .any(|said| said.contains("calls `nowhere.node`")));
-    // A fact a plan owes that this format does not hold is said, so a new one cannot pass unread.
+    // A call into a node the task's lines do not name: only through a node they do. In its `node-calls`, and inside a masked run.
+    said(
+        &good.replace(
+            &format!("(node-calls {LIST})"),
+            &format!("(node-calls {LIST} (call nowhere.node 1))"),
+        ),
+        &plan,
+        "calls `nowhere.node`",
+    );
+    said(
+        &good.replace(
+            "(call mask 1)))",
+            "(call mask 1) (node-call nowhere.node 1)))",
+        ),
+        &plan,
+        "calls `nowhere.node`",
+    );
+    // A task's own `bind` line names an instance, whose text it calls by.
+    let adapter = "(adapter epoch-extender timer.short)";
+    let bound = good.replace(
+        &format!("(node-calls {LIST})"),
+        &format!("(node-calls {LIST} (call {adapter} 1))"),
+    );
+    let mut with = plan.clone();
+    for task in with.tasks.clone() {
+        with.binds.push(contents::Bind {
+            requester: task.identity.clone(),
+            fact: "tick-rate".to_owned(),
+            provider: adapter.to_owned(),
+        });
+    }
+    let application = read(&bound).expect("it reads");
+    assert_eq!(application.unmet(&with), Vec::<String>::new());
+    // A fact a plan owes that this format does not hold is said, so a new one cannot pass unread, whichever subject it is of.
     let mut newer = plan.clone();
     newer.owed.push(contents::Owed {
         subject: format!("(task {} {})", plan.system, tasks[0]),
         fact: "something-new".to_owned(),
         by: "application".to_owned(),
     });
-    let application = read(&a_file(&plan.system, &tasks)).expect("it reads");
-    assert!(application
-        .unmet(&newer)
-        .iter()
-        .any(|said| said.contains("something-new")));
+    said(&good, &newer, "something-new");
+    let mut of_a_node = plan.clone();
+    of_a_node.owed.push(contents::Owed {
+        subject: "console.uart".to_owned(),
+        fact: "stack-bound".to_owned(),
+        by: "application".to_owned(),
+    });
+    said(&good, &of_a_node, "`stack-bound` of console.uart");
 }
 
-/// What a file quotes is the composite-inputs record's own words, read from there: a change to them moves this, and a file declaring the old ones stops reading.
+/// What a file quotes is the composite-inputs record's own words, read from there with what stands on each side: a change to them, or a sentence added beside them, moves this, and a file declaring the old ones stops reading. The book and this format's record hold them whole, where a person is sent to read them.
 #[test]
 fn the_clause_a_file_quotes_is_the_record_s_own_words() {
-    let record = include_str!("../../../docs/specs/catalog/decision_runtime-composite-inputs.md");
-    let plain: String = record
-        .replace("**", "")
-        .split_whitespace()
-        .collect::<Vec<_>>()
-        .join(" ");
-    for part in CLAUSE_PARTS {
-        assert!(plain.contains(part), "{part}");
+    let plain = |text: &str| {
+        text.replace("**", "")
+            .split_whitespace()
+            .collect::<Vec<_>>()
+            .join(" ")
+    };
+    let record = plain(include_str!(
+        "../../../docs/specs/catalog/decision_runtime-composite-inputs.md"
+    ));
+    let book = plain(include_str!("../../../docs/book/src/runtime-plan.md"));
+    let mine = plain(include_str!(
+        "../../../docs/decisions/decision_application-inputs.md"
+    ));
+    for (before, part, after) in [
+        (
+            "for a service's application code | ",
+            CLAUSE_PARTS[0],
+            " The paragraphs below add to it |",
+        ),
+        (
+            "as assumptions | ",
+            CLAUSE_PARTS[1],
+            " (the role list below): `leaves-interrupt-hardware-alone` holds this too",
+        ),
+        (
+            "R14 231, R15 239). ",
+            CLAUSE_PARTS[2],
+            " That fact holds this too (added `2026-11-04`, `M2.30`).",
+        ),
+    ] {
+        assert!(
+            record.contains(&format!("{before}{part}{after}")),
+            "{before}|{part}|{after}"
+        );
+        assert!(book.contains(part), "the book lacks {part}");
+        assert!(mine.contains(part), "the record lacks {part}");
     }
 }
 
-/// What a yes or a no cannot carry: the fact rests on each task's stack bound, by its category, since an overrun of it is a write the clause forbids.
+/// What a yes or a no cannot carry: the fact rests on each stack bound the clause speaks of, by its category, since an overrun of one is a write it forbids: the application's initialisation's, and each task's.
 #[test]
 fn the_fact_says_what_it_rests_on() {
     let application = read(&a_file("s", &["one", "two"])).expect("it reads");
     assert_eq!(
         application.leaves_alone_rests_on(),
-        [("one", Category::Assumed), ("two", Category::Assumed)]
+        [
+            ("the application's initialisation", Category::Assumed),
+            ("one", Category::Assumed),
+            ("two", Category::Assumed)
+        ]
     );
+}
+
+/// A file this size reads in a time a person would not notice, so a list's cost is in step with its length.
+#[test]
+fn a_long_list_reads_in_step_with_its_length() {
+    let many: String = (0..80_000)
+        .map(|call| format!("(call p{call} 1) "))
+        .collect();
+    let text = a_file("s", &["t"]).replace("(call mask 2)", &many);
+    let application = read(&text).expect("it reads");
+    assert_eq!(application.tasks[0].os_calls.calls.len(), 80_001);
 }

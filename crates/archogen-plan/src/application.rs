@@ -6,12 +6,24 @@
 //! This reads the format and holds it against a plan. What carries it into a run is `archogen-runtime-plan/2`'s (`M4.1.7`), and what
 //! judges its figures is the scheduling checker's (`M2.21`).
 
+use std::collections::BTreeSet;
+
 use eadl_front::{read_record, Form, SourceMap};
 
 use crate::contents::Contents;
 
 /// The format this reads and no other.
 pub const FORMAT: &str = "archogen-application/1";
+
+/// The most of a file this reads, which a person writes and so no engine bounds by what it wrote: about 12,000 tasks at a kilobyte
+/// and a half each, and far past any set the analysis can hold.
+pub const MOST_BYTES: usize = 16 << 20;
+
+/// The only target a plan of format `/1` describes.
+pub const HOSTED_PLAYGROUND: &str = "hosted-playground";
+
+/// What joins the parts of [`CLAUSE_PARTS`] in the words a file quotes, where the record continues with what is no part of them.
+pub const CLAUSE_CUT: &str = " … ";
 
 /// What `leaves-interrupt-hardware-alone` declares, in the composite-inputs record's own words (its §2), each part read back from there by a
 /// test. A plan's owed line shows the fact's name alone, and the name no longer says what it holds, so a file declaring it quotes this
@@ -57,11 +69,24 @@ pub enum Category {
     AnalyticallyEstablished,
 }
 
+/// What an observed maximum saw and how far it was padded: what `ROADMAP.md` §7.3 asks be kept, since a padded observation is still one.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub struct Observation {
+    /// What was seen.
+    pub observed: u64,
+    /// The safety factor's numerator.
+    pub numerator: u64,
+    /// Its denominator.
+    pub denominator: u64,
+}
+
 /// What a figure rests on: its category, and where to find that out.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Evidence {
     /// Its category, a fact of its own (`RTP-H5`).
     pub category: Category,
+    /// What was seen and how far it was padded, where it says so.
+    pub observation: Option<Observation>,
     /// Where it can be checked, which all but an assumption must say.
     pub locator: Option<String>,
     /// Why it holds.
@@ -92,31 +117,53 @@ pub struct Bound {
     pub evidence: Evidence,
 }
 
-/// One masked run of a task's own code: `CS_{i,r,e}^app`, and what it calls, `n_{r,e,p}`.
+/// How a masked run ends, which the composition charges: `api.unmask` or `completion` (the composite-inputs record's §3).
+#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord)]
+pub enum Ending {
+    /// An `unmask` call ends it.
+    Unmask,
+    /// The job's completion does, no `unmask` having.
+    Completion,
+}
+
+/// One masked run of a task's own code with one of its endings: `CS_{i,r,e}^app`, and what it calls, `n_{r,e,p}`. A run that ends both ways
+/// is written twice, once for each. Its bound keeps its own category and any padding (the composite-inputs record's §6).
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct MaskedRun {
     /// Its name, which nothing else reads.
     pub name: String,
-    /// Its bound.
+    /// How this one ends.
+    pub ending: Ending,
+    /// Its bound, of the task's own code inside it.
     pub bound: Bound,
-    /// Each primitive it calls, and the most it does.
+    /// Each primitive it calls, and the most it does, other than the `mask` and the `unmask` that delimit it.
     pub calls: Vec<(String, u64)>,
+    /// Each node it calls, and the most it does.
+    pub node_calls: Vec<(String, u64)>,
 }
 
-/// Counts of calls, whose evidence category is one for them all (the plan's §2.2).
+/// Counts of calls, with `ROADMAP.md` §7.3's record for them all, a list with no call in it saying the job makes none (the plan's §2.2).
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Calls {
+    /// What they apply to.
+    pub scope: String,
+    /// The binary they belong to.
+    pub binary: Binary,
     /// What rests on it.
     pub evidence: Evidence,
     /// Each callee, and the most one job makes.
     pub calls: Vec<(String, u64)>,
 }
 
-/// Masked runs, whose evidence category is one for them all.
+/// Masked runs, with a record for the list, whose category is that of the counts inside them; each run's bound keeps its own.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct MaskedRuns {
-    /// The category of their counts and bounds.
-    pub category: Category,
+    /// What the list applies to.
+    pub scope: String,
+    /// The binary it belongs to.
+    pub binary: Binary,
+    /// What the list and its counts rest on.
+    pub evidence: Evidence,
     /// Each run.
     pub runs: Vec<MaskedRun>,
 }
@@ -149,7 +196,7 @@ pub struct Task {
     /// Whether its own figures hold under any preemption and from any entry state.
     pub figures_under_preemption: bool,
     /// Each alarm it writes on a time base that is the counter itself, whose deadlines it says stand at or after its own release and
-    /// within that alarm's `R` (`RA-H7`).
+    /// within that alarm's `R` (`RA-H7`), which may be none.
     pub deadlines_within_reach: Vec<String>,
 }
 
@@ -164,6 +211,8 @@ pub struct Application {
     pub leaves_interrupt_hardware_alone: bool,
     /// Why that holds.
     pub leaves_alone_basis: String,
+    /// The stack bound of the application's initialisation, which the boot stack holds and that declaration rests on too.
+    pub initialisation_stack_bound: Bound,
     /// Each task.
     pub tasks: Vec<Task>,
 }
@@ -203,6 +252,17 @@ fn clause<'f>(of: &str, found: &[(&'f str, &'f Form)], name: &str) -> Result<&'f
 
 fn string(of: &str, form: &Form) -> Result<String, Refused> {
     match form.items() {
+        [_, Form::Str { value, .. }]
+            if value.chars().any(|c| c.is_control() || c == '"' || c == '\\') =>
+        {
+            Err(refused(
+                of,
+                format!(
+                    "`{}` holds a line break, a quote or what is no text, which a plan's one line cannot carry",
+                    form.head().unwrap_or_default()
+                ),
+            ))
+        }
         [_, Form::Str { value, .. }] if !value.trim().is_empty() => Ok(value.clone()),
         _ => Err(refused(
             of,
@@ -260,15 +320,26 @@ fn the_natural(of: &str, form: &Form) -> Result<u64, Refused> {
     }
 }
 
-fn category(of: &str, form: &Form, value: Option<u64>) -> Result<Category, Refused> {
+fn category(
+    of: &str,
+    form: &Form,
+    value: Option<u64>,
+) -> Result<(Category, Option<Observation>), Refused> {
     let items = form.items();
     let word = items.get(1).and_then(Form::as_symbol).unwrap_or_default();
     match (word, items.get(2..).unwrap_or_default()) {
-        ("assumed", []) => Ok(Category::Assumed),
-        ("observed-maximum", []) => Ok(Category::ObservedMaximum),
-        ("externally-supplied", []) => Ok(Category::ExternallySupplied),
-        ("analytically-established", []) => Ok(Category::AnalyticallyEstablished),
+        ("assumed", []) => Ok((Category::Assumed, None)),
+        ("observed-maximum", []) => Ok((Category::ObservedMaximum, None)),
+        ("externally-supplied", []) => Ok((Category::ExternallySupplied, None)),
+        ("analytically-established", []) => Ok((Category::AnalyticallyEstablished, None)),
         ("observed-maximum", rest) => {
+            // A list's counts are each what was seen, and no one observation is any of them.
+            let Some(value) = value else {
+                return Err(refused(
+                    of,
+                    "a list's counts are each their own observation, so a list says `observed-maximum` alone",
+                ));
+            };
             let found = clauses(of, rest, &["observed", "safety-factor"])?;
             let observed = the_natural(of, clause(of, &found, "observed")?)?;
             let factor = clause(of, &found, "safety-factor")?;
@@ -285,13 +356,20 @@ fn category(of: &str, form: &Form, value: Option<u64>) -> Result<Category, Refus
             }
             let padded =
                 (u128::from(observed) * u128::from(numerator)).div_ceil(u128::from(denominator));
-            match value {
-                Some(value) if u128::from(value) != padded => Err(refused(
+            if u128::from(value) != padded {
+                return Err(refused(
                     of,
                     format!("{observed} by that factor is {padded}, and the value says {value}"),
-                )),
-                _ => Ok(Category::ObservedMaximum),
+                ));
             }
+            Ok((
+                Category::ObservedMaximum,
+                Some(Observation {
+                    observed,
+                    numerator,
+                    denominator,
+                }),
+            ))
         }
         _ => Err(refused(
             of,
@@ -304,7 +382,7 @@ fn category(of: &str, form: &Form, value: Option<u64>) -> Result<Category, Refus
 }
 
 fn evidence(of: &str, found: &[(&str, &Form)], value: Option<u64>) -> Result<Evidence, Refused> {
-    let category = category(of, clause(of, found, "evidence")?, value)?;
+    let (category, observation) = category(of, clause(of, found, "evidence")?, value)?;
     let basis = string(of, clause(of, found, "basis")?)?;
     let locator = match clause(of, found, "locator") {
         Ok(form) => Some(string(of, form)?),
@@ -318,9 +396,31 @@ fn evidence(of: &str, found: &[(&str, &Form)], value: Option<u64>) -> Result<Evi
     };
     Ok(Evidence {
         category,
+        observation,
         locator,
         basis,
     })
+}
+
+/// `(binary "sha256:…")` or `(binary unbuilt)`.
+fn binary(of: &str, form: &Form) -> Result<Binary, Refused> {
+    match form.items() {
+        [_, Form::Symbol { name, .. }] if name == "unbuilt" => Ok(Binary::Unbuilt),
+        [_, Form::Str { value, .. }]
+            if value.strip_prefix("sha256:").is_some_and(|hex| {
+                hex.len() == 64
+                    && hex
+                        .bytes()
+                        .all(|b| b.is_ascii_digit() || (b'a'..=b'f').contains(&b))
+            }) =>
+        {
+            Ok(Binary::Image(value.clone()))
+        }
+        _ => Err(refused(
+            of,
+            format!("`{}` is `\"sha256:…\"` or `unbuilt`", form.to_canonical()),
+        )),
+    }
 }
 
 fn bound(of: &str, items: &[Form], units: &[&str], extra: &[&str]) -> Result<Bound, Refused> {
@@ -337,80 +437,68 @@ fn bound(of: &str, items: &[Form], units: &[&str], extra: &[&str]) -> Result<Bou
             format!("a unit here is one of {units:?}, and this says `{unit}`"),
         ));
     }
-    let binary = clause(of, &found, "binary")?;
-    let binary = match binary.items() {
-        [_, Form::Symbol { name, .. }] if name == "unbuilt" => Binary::Unbuilt,
-        [_, Form::Str { value, .. }]
-            if value.strip_prefix("sha256:").is_some_and(|hex| {
-                hex.len() == 64
-                    && hex
-                        .bytes()
-                        .all(|b| b.is_ascii_digit() || (b'a'..=b'f').contains(&b))
-            }) =>
-        {
-            Binary::Image(value.clone())
-        }
-        _ => {
-            return Err(refused(
-                of,
-                format!("`{}` is `\"sha256:…\"` or `unbuilt`", binary.to_canonical()),
-            ))
-        }
-    };
     Ok(Bound {
         value,
         unit,
         scope: string(of, clause(of, &found, "scope")?)?,
-        binary,
+        binary: binary(of, clause(of, &found, "binary")?)?,
         evidence: evidence(of, &found, Some(value))?,
     })
 }
 
-/// `(call NAME COUNT)` each, none twice.
-fn counted(of: &str, items: &[Form]) -> Result<Vec<(String, u64)>, Refused> {
+/// What a node is written as here: its name, or an instance's `(adapter …)` text, as the plan writes it.
+fn node_text(form: &Form) -> Option<String> {
+    match form.as_symbol() {
+        Some(name) => Some(name.to_owned()),
+        None if form.head() == Some("adapter") => Some(form.to_canonical()),
+        None => None,
+    }
+}
+
+/// `(HEAD NAME COUNT)` each, none twice, `NAME` a node's text.
+fn counted(of: &str, items: &[Form], head: &str) -> Result<Vec<(String, u64)>, Refused> {
     let mut calls: Vec<(String, u64)> = Vec::new();
+    let mut seen = BTreeSet::new();
     for item in items {
-        let ["call", ..] = [item.head().unwrap_or_default()] else {
-            return Err(refused(
-                of,
-                format!("`{}` is no `(call NAME COUNT)`", item.to_canonical()),
-            ));
-        };
         let [_, name, count] = item.items() else {
             return Err(refused(
                 of,
-                format!("`{}` is no `(call NAME COUNT)`", item.to_canonical()),
+                format!("`{}` is no `({head} NAME COUNT)`", item.to_canonical()),
             ));
         };
-        let Some(name) = name.as_symbol() else {
+        let Some(name) = node_text(name) else {
             return Err(refused(
                 of,
                 format!("`{}` calls no name", item.to_canonical()),
             ));
         };
-        if calls.iter().any(|(called, _)| called == name) {
+        if !seen.insert(name.clone()) {
             return Err(refused(of, format!("`{name}` is counted twice")));
         }
-        calls.push((name.to_owned(), natural(of, count)?));
+        calls.push((name, natural(of, count)?));
     }
     Ok(calls)
 }
 
-fn calls(of: &str, form: &Form) -> Result<Calls, Refused> {
+const LIST_RECORD: &[&str] = &["scope", "binary", "evidence", "locator", "basis"];
+
+fn calls(of: &str, form: &Form, head: &str) -> Result<Calls, Refused> {
     let items = form.items().get(1..).unwrap_or_default();
     let (counts, rest): (Vec<Form>, Vec<Form>) = items
         .iter()
         .cloned()
-        .partition(|item| item.head() == Some("call"));
-    let found = clauses(of, &rest, &["evidence", "locator", "basis"])?;
+        .partition(|item| item.head() == Some(head));
+    let found = clauses(of, &rest, LIST_RECORD)?;
     Ok(Calls {
+        scope: string(of, clause(of, &found, "scope")?)?,
+        binary: binary(of, clause(of, &found, "binary")?)?,
         evidence: evidence(of, &found, None)?,
-        calls: counted(of, &counts)?,
+        calls: counted(of, &counts, head)?,
     })
 }
 
-const TIMES: &[&str] = &["ns", "us", "ms"];
-const SIZES: &[&str] = &["bytes", "KiB"];
+const TIMES: &[&str] = &["s", "ms", "us", "ns"];
+const SIZES: &[&str] = &["byte", "KiB", "MiB"];
 
 fn masked_runs(of: &str, form: &Form) -> Result<MaskedRuns, Refused> {
     let items = form.items().get(1..).unwrap_or_default();
@@ -418,9 +506,9 @@ fn masked_runs(of: &str, form: &Form) -> Result<MaskedRuns, Refused> {
         .iter()
         .cloned()
         .partition(|item| item.head() == Some("run"));
-    let found = clauses(of, &rest, &["evidence"])?;
-    let category = category(of, clause(of, &found, "evidence")?, None)?;
+    let found = clauses(of, &rest, LIST_RECORD)?;
     let mut out: Vec<MaskedRun> = Vec::new();
+    let mut seen = BTreeSet::new();
     for run in &runs {
         let [_, name, body @ ..] = run.items() else {
             return Err(refused(of, "a `run` has a name"));
@@ -428,30 +516,64 @@ fn masked_runs(of: &str, form: &Form) -> Result<MaskedRuns, Refused> {
         let Some(name) = name.as_symbol() else {
             return Err(refused(of, format!("`{}` has no name", run.to_canonical())));
         };
-        if out.iter().any(|known| known.name == name) {
-            return Err(refused(of, format!("the run `{name}` is written twice")));
-        }
-        let (calling, plain): (Vec<Form>, Vec<Form>) = body
+        let of = format!("{of} run {name}");
+        let of = of.as_str();
+        let plain: Vec<Form> = body
             .iter()
+            .filter(|item| !matches!(item.head(), Some("call" | "node-call" | "ending")))
             .cloned()
-            .partition(|item| item.head() == Some("call"));
-        let mut with_evidence = plain;
-        // The category is the runs' own, once, as the plan has it (§2.2).
-        with_evidence.push(
-            rest.iter()
-                .find(|item| item.head() == Some("evidence"))
+            .collect();
+        let those = |head: &str| -> Vec<Form> {
+            body.iter()
+                .filter(|item| item.head() == Some(head))
                 .cloned()
-                .ok_or_else(|| refused(of, "it states no `evidence`"))?,
-        );
+                .collect()
+        };
+        let endings = those("ending");
+        let [ending] = endings.as_slice() else {
+            return Err(refused(of, "it states one `ending`"));
+        };
+        let ending = match symbol(of, ending)?.as_str() {
+            "unmask" => Ending::Unmask,
+            "completion" => Ending::Completion,
+            _ => {
+                return Err(refused(
+                    of,
+                    format!("`{}` is `unmask` or `completion`", ending.to_canonical()),
+                ))
+            }
+        };
+        if !seen.insert((name.to_owned(), ending)) {
+            return Err(refused(
+                of,
+                "this run with this ending is written twice: one that ends both ways is written once for each",
+            ));
+        }
         out.push(MaskedRun {
             name: name.to_owned(),
-            bound: bound(&format!("{of} run {name}"), &with_evidence, TIMES, &[])?,
-            calls: counted(of, &calling)?,
+            ending,
+            bound: bound(of, &plain, TIMES, &[])?,
+            calls: counted(of, &those("call"), "call")?,
+            node_calls: counted(of, &those("node-call"), "node-call")?,
         });
     }
     Ok(MaskedRuns {
-        category,
+        scope: string(of, clause(of, &found, "scope")?)?,
+        binary: binary(of, clause(of, &found, "binary")?)?,
+        evidence: evidence(of, &found, None)?,
         runs: out,
+    })
+}
+
+/// Whether `text` is a path a generated job can call: names of a letter or `_`, then letters, digits or `_`, joined by `::`.
+fn is_a_path(text: &str) -> bool {
+    text.split("::").all(|name| {
+        let mut chars = name.chars();
+        chars
+            .next()
+            .is_some_and(|c| c.is_ascii_alphabetic() || c == '_')
+            && chars.all(|c| c.is_ascii_alphanumeric() || c == '_')
+            && name != "_"
     })
 }
 
@@ -467,13 +589,9 @@ fn task(form: &Form) -> Result<Task, Refused> {
     };
     let of = format!("task {name}");
     let of = of.as_str();
-    let (reach, rest): (Vec<Form>, Vec<Form>) = body
-        .iter()
-        .cloned()
-        .partition(|item| item.head() == Some("deadlines-within-reach"));
     let found = clauses(
         of,
-        &rest,
+        body,
         &[
             "entry-point",
             "execution-bound",
@@ -486,6 +604,7 @@ fn task(form: &Form) -> Result<Task, Refused> {
             "shares-outside-sections",
             "masks-only-through-api",
             "figures-under-preemption",
+            "deadlines-within-reach",
         ],
     )?;
     let fact = |name: &str| yes_or_no(of, clause(of, &found, name)?);
@@ -496,26 +615,43 @@ fn task(form: &Form) -> Result<Task, Refused> {
             .unwrap_or_default())
     };
     let mut deadlines_within_reach = Vec::new();
-    for item in &reach {
-        let alarm = symbol(of, item)?;
+    for item in body_of("deadlines-within-reach")? {
+        let Some(alarm) = node_text(item) else {
+            return Err(refused(
+                of,
+                format!("`{}` names no alarm", item.to_canonical()),
+            ));
+        };
         if deadlines_within_reach.contains(&alarm) {
             return Err(refused(of, format!("`{alarm}` is written twice")));
         }
         deadlines_within_reach.push(alarm);
     }
+    let entry_point = string(of, clause(of, &found, "entry-point")?)?;
+    if !is_a_path(&entry_point) {
+        return Err(refused(
+            of,
+            format!("`entry-point` is a path a job can call, such as `app::beat`, and this says `{entry_point}`"),
+        ));
+    }
     Ok(Task {
         name: name.to_owned(),
-        entry_point: string(of, clause(of, &found, "entry-point")?)?,
+        entry_point,
         execution_bound: bound(
             &format!("{of} execution-bound"),
             body_of("execution-bound")?,
             TIMES,
             &[],
         )?,
-        os_calls: calls(&format!("{of} os-calls"), clause(of, &found, "os-calls")?)?,
+        os_calls: calls(
+            &format!("{of} os-calls"),
+            clause(of, &found, "os-calls")?,
+            "call",
+        )?,
         node_calls: calls(
             &format!("{of} node-calls"),
             clause(of, &found, "node-calls")?,
+            "call",
         )?,
         masked_runs: masked_runs(
             &format!("{of} masked-runs"),
@@ -542,16 +678,33 @@ fn task(form: &Form) -> Result<Task, Refused> {
 ///
 /// [`Refused`], naming the clause at fault, for what does not read, is another format, or leaves out or repeats what the format holds.
 pub fn read(text: &str) -> Result<Application, Refused> {
+    if text.len() > MOST_BYTES {
+        return Err(refused(
+            "the file",
+            format!(
+                "it holds {} bytes, past the {MOST_BYTES} this reads",
+                text.len()
+            ),
+        ));
+    }
     let mut sources = SourceMap::new();
     let id = sources
         .add(FORMAT, text)
         .map_err(|error| refused("the file", error.to_string()))?;
     let (document, diagnostics) = read_record(&sources, id);
     if diagnostics.has_errors() {
-        return Err(refused("the file", "it does not read as forms"));
+        let said = diagnostics
+            .items()
+            .first()
+            .map_or("", |first| first.message.as_str());
+        return Err(refused(
+            "the file",
+            format!("it does not read as forms: {said}"),
+        ));
     }
-    let forms: Vec<Form> = document.declarations().cloned().collect();
-    let (tasks, rest): (Vec<Form>, Vec<Form>) = forms
+    // Every form, so that one a description may state and this format does not know is refused too.
+    let (tasks, rest): (Vec<Form>, Vec<Form>) = document
+        .forms
         .into_iter()
         .partition(|form| form.head() == Some("task"));
     let found = clauses(
@@ -562,6 +715,7 @@ pub fn read(text: &str) -> Result<Application, Refused> {
             "system",
             "target",
             "leaves-interrupt-hardware-alone",
+            "initialisation",
         ],
     )?;
     let format = string("format", clause("the file", &found, "format")?)?;
@@ -597,16 +751,32 @@ pub fn read(text: &str) -> Result<Application, Refused> {
         "leaves-interrupt-hardware-alone",
         clause("leaves-interrupt-hardware-alone", &grounds, "clause")?,
     )?;
-    if quoted != CLAUSE_PARTS.join(" ") {
+    if quoted != CLAUSE_PARTS.join(CLAUSE_CUT) {
         return Err(refused(
             "leaves-interrupt-hardware-alone",
-            "its `clause` quotes what it declares, in the words this format holds (`CLAUSE_PARTS`, and the book's runtime plan chapter), and these are others",
+            "its `clause` quotes what it declares, in the words the book's runtime plan chapter gives whole, and these are others",
         ));
     }
+    let initialisation = clause("the file", &found, "initialisation")?;
+    let initialisation = clauses(
+        "initialisation",
+        initialisation.items().get(1..).unwrap_or_default(),
+        &["stack-bound"],
+    )?;
+    let initialisation_stack_bound = bound(
+        "initialisation stack-bound",
+        clause("initialisation", &initialisation, "stack-bound")?
+            .items()
+            .get(1..)
+            .unwrap_or_default(),
+        SIZES,
+        &[],
+    )?;
     let mut read_tasks: Vec<Task> = Vec::new();
+    let mut names = BTreeSet::new();
     for form in &tasks {
         let one = task(form)?;
-        if read_tasks.iter().any(|known| known.name == one.name) {
+        if !names.insert(one.name.clone()) {
             return Err(refused("task", format!("`{}` is written twice", one.name)));
         }
         read_tasks.push(one);
@@ -619,23 +789,31 @@ pub fn read(text: &str) -> Result<Application, Refused> {
             "leaves-interrupt-hardware-alone",
             clause("leaves-interrupt-hardware-alone", &grounds, "basis")?,
         )?,
+        initialisation_stack_bound,
         tasks: read_tasks,
     })
 }
 
 impl Application {
-    /// What the declaration `leaves-interrupt-hardware-alone` rests on, which a yes or a no cannot carry: an overrun of a task's own stack bound
-    /// is a write the clause forbids, so the fact holds only as far as each task's bound does, each with its category.
+    /// What the declaration `leaves-interrupt-hardware-alone` rests on, which a yes or a no cannot carry: the clause counts an overrun of a code's own
+    /// stack bound among what application code must not do, in initialisation as in a job, so the fact holds only as far as each of those bounds does, each with its category. The first is the application's initialisation, and the rest each task by its name.
     #[must_use]
     pub fn leaves_alone_rests_on(&self) -> Vec<(&str, Category)> {
-        self.tasks
-            .iter()
-            .map(|task| (task.name.as_str(), task.stack_bound.evidence.category))
-            .collect()
+        core::iter::once((
+            "the application's initialisation",
+            self.initialisation_stack_bound.evidence.category,
+        ))
+        .chain(
+            self.tasks
+                .iter()
+                .map(|task| (task.name.as_str(), task.stack_bound.evidence.category)),
+        )
+        .collect()
     }
 
-    /// What these inputs leave unmet of `plan`, each in words: the system, each task as the plan has it and no other, each call into a
-    /// node its lines name (`RTP-H5`), and each fact the plan owes `(by application)`, a fact this format does not hold among them.
+    /// What these inputs leave unmet of `plan`, each in words: the system and the target, each task as the plan has it and no other, each call into a
+    /// node its lines name, in its `node-calls` and in each masked run (`RTP-H5`), and each fact the plan owes `(by application)` this format does not hold of that subject.
+    /// A primitive's name is the catalog's, and the composition refuses one no record costs.
     #[must_use]
     pub fn unmet(&self, plan: &Contents) -> Vec<String> {
         let mut unmet = Vec::new();
@@ -643,6 +821,12 @@ impl Application {
             unmet.push(format!(
                 "these are for `{}`, and the plan is of `{}`",
                 self.system, plan.system
+            ));
+        }
+        if self.target != HOSTED_PLAYGROUND {
+            unmet.push(format!(
+                "these are of the target `{}`, and this plan is of `{HOSTED_PLAYGROUND}`",
+                self.target
             ));
         }
         for task in &self.tasks {
@@ -655,7 +839,12 @@ impl Application {
                 unmet.push(format!("nothing is said of the task `{}`", task.name));
                 continue;
             };
-            for (node, _) in &mine.node_calls.calls {
+            let in_runs = mine
+                .masked_runs
+                .runs
+                .iter()
+                .flat_map(|run| run.node_calls.iter());
+            for (node, _) in mine.node_calls.calls.iter().chain(in_runs) {
                 let named = task.uses.iter().any(|used| used == node)
                     || plan
                         .binds
@@ -673,11 +862,12 @@ impl Application {
             if owed.by != "application" {
                 continue;
             }
-            let held = if owed.subject == plan.system || owed.subject.is_empty() {
+            let held = if owed.subject == plan.system {
                 owed.fact == "leaves-interrupt-hardware-alone"
-            } else {
+            } else if plan.tasks.iter().any(|task| task.identity == owed.subject) {
                 HELD_OF_A_TASK.contains(&owed.fact.as_str())
-                    || owed.fact == "leaves-interrupt-hardware-alone"
+            } else {
+                false
             };
             if !held {
                 unmet.push(format!(

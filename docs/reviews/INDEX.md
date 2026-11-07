@@ -14,6 +14,7 @@ No bootstrap read includes this directory.
 
 | Review history | Design record | Rounds | Status |
 | --- | --- | --- | --- |
+| [`decision_application-inputs-reviews.md`](decision_application-inputs-reviews.md) | [`decision_application-inputs.md`](../decisions/decision_application-inputs.md) | 1 | open |
 | [`decision_host-guard-reviews.md`](decision_host-guard-reviews.md) | [`decision_host-guard.md`](../decisions/decision_host-guard.md) | 25 | open |
 | [`decision_release-alarm-reviews.md`](decision_release-alarm-reviews.md) | [`decision_release-alarm.md`](../decisions/decision_release-alarm.md) | 14 | open |
 | [`decision_device-correspondence-reviews.md`](decision_device-correspondence-reviews.md) | [`decision_device-correspondence.md`](../decisions/decision_device-correspondence.md) | 9 | closed: round 9 found no defect (`M4.4.1.9`) |
@@ -47,6 +48,7 @@ The reviews whose counts `scripts/check_review_counts.sh` judges against their h
 record keeps a summary table, from the commit that answers its first round; a review leaves the list in the commit
 that closes it. Each line names the history, then the record, both from this folder.
 
+- `decision_application-inputs-reviews.md` with `../decisions/decision_application-inputs.md`
 - `decision_hosted-build-reviews.md` with `../decisions/decision_hosted-build.md`
 - `decision_release-alarm-reviews.md` with `../decisions/decision_release-alarm.md`
 - `decision_host-guard-reviews.md` with `../decisions/decision_host-guard.md`

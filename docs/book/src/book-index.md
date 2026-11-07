@@ -53,11 +53,11 @@ a change that leaves it stale, so it is never edited by hand.
 - An example that runs — [The engine API](engine-api.md#an-example-that-runs)
 - analysis-model — [What is versioned, and what changing it costs](versions.md#analysis-model)
 - **API** — [definition](glossary.md), [Matching an offer to a requirement](matching.md), [Generated-sources test
-  adequacy](trust-adequacy.md), [The runtime: decisions, not actions](runtime.md), [Building a system](building.md),
-  [The archogen command line](cli.md), [The engine API](engine-api.md), [Verifying the toolchain](verification.md),
-  [What this project relies on from outside](ledger.md), [What is versioned, and what changing it costs](versions.md),
-  [Annex B: The checks that keep the repository honest](annex-repository.md), [Annex C: Trust proof
-  records](annex-trust-proofs.md)
+  adequacy](trust-adequacy.md), [The runtime plan: what the generated system is told](runtime-plan.md), [The runtime:
+  decisions, not actions](runtime.md), [Building a system](building.md), [The archogen command line](cli.md), [The
+  engine API](engine-api.md), [Verifying the toolchain](verification.md), [What this project relies on from
+  outside](ledger.md), [What is versioned, and what changing it costs](versions.md), [Annex B: The checks that keep the
+  repository honest](annex-repository.md), [Annex C: Trust proof records](annex-trust-proofs.md)
 - application-inputs-format — [What is versioned, and what changing it costs](versions.md#application-inputs-format)
 - Approved disposable fixture verification — [Annex C: Trust proof
   records](annex-trust-proofs.md#approved-disposable-fixture-verification)
@@ -334,11 +334,12 @@ a change that leaves it stale, so it is never edited by hand.
 - **fan-out** — [definition](glossary.md), [Annex B: The checks that keep the repository honest](annex-repository.md)
 - **fault** — [definition](glossary.md), [A tour: from a description to a board](tour.md), [Checking a
   plan](plan-check.md), [What the scheduling checker establishes](analysis.md), [Where the engine's knowledge comes
-  from: the catalog](catalog.md), [Checks that must not share a mistake: the trust gate](trust.md), [The runtime:
-  decisions, not actions](runtime.md), [Building a system](building.md), [Where generated systems run](targets.md),
-  [Verifying the toolchain](verification.md), [What this project relies on from outside](ledger.md), [What is versioned,
-  and what changing it costs](versions.md), [Annex A: The runtime's rules in detail](annex-runtime.md), [Annex B: The
-  checks that keep the repository honest](annex-repository.md), [Annex C: Trust proof records](annex-trust-proofs.md)
+  from: the catalog](catalog.md), [Checks that must not share a mistake: the trust gate](trust.md), [The runtime plan:
+  what the generated system is told](runtime-plan.md), [The runtime: decisions, not actions](runtime.md), [Building a
+  system](building.md), [Where generated systems run](targets.md), [Verifying the toolchain](verification.md), [What
+  this project relies on from outside](ledger.md), [What is versioned, and what changing it costs](versions.md), [Annex
+  A: The runtime's rules in detail](annex-runtime.md), [Annex B: The checks that keep the repository
+  honest](annex-repository.md), [Annex C: Trust proof records](annex-trust-proofs.md)
 - Faults in detail — [Annex A: The runtime's rules in detail](annex-runtime.md#faults-in-detail)
 - Figure registration for literal fences — [Annex C: Trust proof
   records](annex-trust-proofs.md#figure-registration-for-literal-fences)
@@ -873,9 +874,9 @@ a change that leaves it stale, so it is never edited by hand.
 - Today and ahead: there is no board — [Where generated systems run](targets.md#today-and-ahead-there-is-no-board)
 - **trap** — [definition](glossary.md), [A tour: from a description to a board](tour.md), [The boundary: functionality
   versus implementation](boundary.md), [What the scheduling checker establishes](analysis.md), [Where the engine's
-  knowledge comes from: the catalog](catalog.md), [The runtime: decisions, not actions](runtime.md), [Where generated
-  systems run](targets.md), [What this project relies on from outside](ledger.md), [Annex A: The runtime's rules in
-  detail](annex-runtime.md)
+  knowledge comes from: the catalog](catalog.md), [The runtime plan: what the generated system is
+  told](runtime-plan.md), [The runtime: decisions, not actions](runtime.md), [Where generated systems run](targets.md),
+  [What this project relies on from outside](ledger.md), [Annex A: The runtime's rules in detail](annex-runtime.md)
 - Trust dependencies — [What a report may claim](evidence.md#trust-dependencies)
 - Two mechanisms now catch all three — [Describing a workload](workload.md#two-mechanisms-now-catch-all-three)
 

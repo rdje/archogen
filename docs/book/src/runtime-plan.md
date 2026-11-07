@@ -91,32 +91,48 @@ what that file answers. Its format is `archogen-application/1`.
 (format "archogen-application/1")
 (system heartbeat)
 (target hosted-playground)
-(leaves-interrupt-hardware-alone yes (clause "…the words, whole…") (basis "it touches no device"))
+(leaves-interrupt-hardware-alone yes (clause "…the words below, whole…") (basis "it touches no device"))
+(initialisation
+  (stack-bound (value 256) (unit byte) (scope "its deepest path") (binary unbuilt) (evidence assumed) (basis "chosen, to be measured")))
 (task beat
   (entry-point "app::beat")
   (execution-bound (value 200) (unit us) (scope "one job") (binary unbuilt)
                    (evidence analytically-established) (locator "docs/argument.md") (basis "by the loop's bound"))
-  (os-calls (evidence analytically-established) (locator "docs/argument.md") (basis "by reading") (call mask 2) (call unmask 2))
-  (node-calls (evidence analytically-established) (locator "docs/argument.md") (basis "by reading"))
-  (masked-runs (evidence analytically-established)
-    (run tail (value 5) (unit us) (scope "the tail's update") (binary unbuilt) (locator "docs/argument.md") (basis "four loads") (call unmask 1)))
-  (stack-bound (value 512) (unit bytes) (scope "its deepest path") (binary unbuilt) (evidence assumed) (basis "chosen, to be measured"))
+  (os-calls (scope "one job") (binary unbuilt) (evidence analytically-established) (locator "docs/argument.md") (basis "by reading")
+    (call mask 2) (call unmask 2))
+  (node-calls (scope "one job") (binary unbuilt) (evidence analytically-established) (locator "docs/argument.md") (basis "by reading")
+    (call console.write 1))
+  (masked-runs (scope "one job") (binary unbuilt) (evidence analytically-established) (locator "docs/argument.md") (basis "by reading")
+    (run tail (ending unmask) (value 5) (unit us) (scope "the tail's update") (binary unbuilt)
+              (evidence analytically-established) (locator "docs/argument.md") (basis "four loads")))
+  (stack-bound (value 512) (unit byte) (scope "its deepest path") (binary unbuilt) (evidence assumed) (basis "chosen, to be measured"))
   (suspends no) (locks-scheduler no) (shares-outside-sections no)
   (masks-only-through-api yes)
-  (figures-under-preemption yes))
+  (figures-under-preemption yes)
+  (deadlines-within-reach))
 ```
 
 - **Nothing is defaulted.** A clause left out, written twice or unknown is refused, naming it.
-- **Each bound says what it rests on**: its unit, its scope, the binary it is of, and one of `ROADMAP.md` §7.3's four categories,
-  with where to check it, unless it is an assumption, and why it holds. A safety factor is checked and changes no category, so a
+- **Each bound and each list of counts says what it rests on**: its scope, the binary it is of, and one of `ROADMAP.md` §7.3's four categories,
+  with where to check it, unless it is an assumption, and why it holds. So an empty list still says what backs it. A safety factor is checked, is kept and changes no category, so a
   padded observation is still an observation.
+- **A masked run says how it ends**, at an `unmask` or at the job's completion, since the two cost differently, and one that ends both ways is written once for each. It keeps its own evidence.
 - **The one declaration about the whole application is quoted whole.** `leaves-interrupt-hardware-alone` is what every composite
   is gated on, and its name no longer says what it holds, so the file carries the words, and a file quoting others does not read.
-  Those words count an overrun of a task's stack bound among what the code must not do, so the declaration holds only as far as
-  each stack bound does, whose category is said.
+  Those words count an overrun of code's own stack bound among what the code must not do, so the declaration holds only as far as
+  each stack bound does, the initialisation's and each task's, whose category is said.
 
-A file is held against a plan, and each thing it leaves unmet is said: another system, a task the plan does not have or one with
-nothing said of it, a call into a node the task's lines do not name, and a fact the plan owes that this format does not hold.
+The words a file quotes are these, whole, the three parts joined by ` … `:
+
+> after the first enabling of interrupts, application code runs only as a declared task's job or as a service's application code; and no application code, a task's, a service's or application initialisation's, writes the timer's counter or compare, the interrupt controller's configuration, or the hart's interrupt or trap state other than through the runtime API's masking primitives (a job's only: the fault contract, Terms) or reads or writes the controller's claim and complete registers, a read of which claims, or a declared source's device registers; no service calls a runtime primitive; and no application code releases a task or calls a runtime function other than the runtime API record's primitives and its completion path. A runtime function is any function of a catalog record's implementation, a driver's included, called after the first enabling of interrupts; before it, application initialisation reaches that hardware only through catalog functions, which `runtime-discipline.<id>` covers.
+
+> Application code calls no entry of the fault path — in initialisation, before the first enabling of interrupts, as in a job or a service's application code after it; a panic reaching the image's handler is no such call
+
+> The runtime's own data is what this section's facts read in memory or in a register a port reserves: what the scheduler holds, its mask depth among it, what the timer service holds of the next release, the plan's tables, each saved context, and what a service, a record's or generated, holds of its source. Application code writes none of it, nor any other data or code of a catalog record's implementation or of the code the build generates, but through the calls `leaves-interrupt-hardware-alone` lets it make, or into what a call between it and that code hands it to fill, and it hands no call a place in any of it to write, but what that code handed it; in initialisation as in a job or a service's application code, and by no other means, a stray pointer or an overrun of its own stack bound among them (its own stack, within its bound, is its own, and a write a guard stops writes nothing, and is the fault contract's). For this clause a runtime function is also a function of the code the build generates, but for a node's code its task line's `uses` lists or its own `bind` lines name (the runtime plan's §2.2, `RTP-H5`, `RTP-H13`), which §7 says what charges; and a job's code calls the completion path only as its last act, the path not returning to it.
+
+
+A file is held against a plan, and each thing it leaves unmet is said: another system or target, a task the plan does not have or one with
+nothing said of it, a call into a node the task's lines do not name, and a fact the plan owes that this format does not hold of that subject.
 
 ⚠️ This reads the format and no more. `archogen-runtime-plan/2` carries it (`M4.1.7`), and the scheduling checker judges its figures
 (`M2.21`), so today no figure in it reaches a verdict. The rules are `docs/decisions/decision_application-inputs.md`.
