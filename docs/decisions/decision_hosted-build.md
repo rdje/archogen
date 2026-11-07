@@ -69,7 +69,7 @@ it hands each event to an observer, and the generated `main` prints them.
 **The order of one instant** is its whole allowed-ordering policy, so that one input has one trace:
 1. a job with nothing left that takes time finishes, so its completion is recorded before a release at that instant, as `ROADMAP.md`
    §13.4 requires ("At a coincident completion/release instant, record completion before processing the new release"). It stops at an
-   unmask that lets a pending interrupt in, which is taken before the job's next instruction, its completion among them;
+   unmask that lets a pending interrupt in, which is taken before the job's next instruction, its completion among them. A job another held off, with nothing left that takes time, finishes here too, once nothing runs. So a write among what a job has left at an instant replaces a compare standing for that instant before it arrives, which it would not if something after the write took time. Generated code leaves a compare that may match (`decision_release-alarm.md` §2), so only a hand-written body can write this;
 2. an interrupt becomes pending at its arrival, whether or not anything can take it;
 3. while the hardware is unmasked, every pending interrupt is taken, one at a time and none nested: the routes in the plan's
    rank order, then the release timer, as `RTP-H9` writes it. Taking one runs entry, its releases and exit, and each
@@ -106,8 +106,10 @@ a halt's `fault` holds what `rt-core` keeps, its first report the only one. What
 never ends. So a plan whose one hyperperiod holds more than `2^20` timer releases and source arrivals is refused
 `unsupported-profile`, naming the count, rather than cut short; a run of a part of a hyperperiod, named as such, is a scenario
 `M4.3` may add. So is one instant bounded, which no count of a plan can say: a job an alarm releases can program that alarm for now, and time
-would never move, so a run takes at most `2^20` steps at one instant, and past that it stops, says so and exits 1. Generated code holds an
-alarm's floor (`RA-H6`), so this stops only what a hand-written body can write.
+would never move, so a run takes at most `2^20` steps at one instant, and past that it stops, says so and exits 1. Nor is a run bounded by a plan's count where a job programs that alarm a tick ahead, against a far horizon, so it takes at most `2^20` arrivals of its alarms too. Generated code holds an
+alarm's floor (`RA-H6`), so these stop only what a hand-written body can write.
+
+**A run has the stack it takes.** What the runtime holds and returns by value grows with a system's tasks, and a thread's default stack does not, so a description of about 9,000 tasks would build and then overflow it. The generated program runs on a thread of its own with `sim_playground::stack_for` bytes, more than a run measured to take at each path a test can reach.
 
 ### 4. The emitter
 
@@ -233,6 +235,7 @@ capability unsupported. Then the S0 crate was deleted (`M4.2.4`), and the retire
 | 22 | 14 | 6 (R22-1 to R22-6), beside 4 gaps and 4 of wording | `2026-11-06`, not acceptable, 6 after 2, 4, 5, so answered by method again: one process has a ceiling, whatever shape reaches it, in place of a cap per list. R22-1 and R22-2 were round 21's own: its cap counted a list holding another verdict, and its limit on a name refused the engine's own plan. A cap goes by its kind, a record is read without the limit, a label has a limit, a package's name fits a file name, a row of the cost test states what it reaches and what it compares |
 | 23 | 10 | 4 (R23-1 to R23-4), beside 3 gaps, 1 route and 2 of wording | `2026-11-06`, not acceptable, 4 after 6 — answered: the ceiling's method held for each program started directly and not through the front, which cleared its environment and read a checker's stop as a fault. The ceiling now reaches what the front starts, a stop there is `analysis-inconclusive` by both, what the checker would refuse of a whole path is refused first, and each refusal states a repair |
 | 24 | 10 | 2 (R24-1, R24-2), beside 5 gaps and 3 of wording | `2026-11-07`, not acceptable, 2 after 4, both in what `M4.3.5` added and reached only by a hand-written body — answered: a value already reached is a request at its write, and one instant has a limit, as a hyperperiod has. What a run says of a place or a name is now one line wherever it comes from, a generated package with no device draws no warning, and the build tests hold that of each package. |
+| 25 | 7 | 3 (R25-1 to R25-3), beside 1 route, 2 gaps and 1 of wording | `2026-11-07`, not acceptable, 3 after 2 — a job held off with nothing left finishes before its own release; a run is bounded in its alarms' arrivals as at one instant; a run has a stack that grows with its tasks. None touches a user's bytes or a verdict on a plan. |
 
 The rounds, each finding and its answer, are in
 [`docs/reviews/decision_hosted-build-reviews.md`](../reviews/decision_hosted-build-reviews.md).

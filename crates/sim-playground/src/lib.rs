@@ -368,6 +368,15 @@ pub trait Observer {
 /// How many steps a run takes at one instant before it stops: what bounds a hyperperiod's releases (`decision_hosted-build.md` §3).
 pub const MOST_STEPS_AT_ONE_INSTANT: u64 = 1 << 20;
 
+/// How many alarm arrivals a run takes before it stops. A plan's count bounds a timer's releases and a source's arrivals, and none says what a job programs, so a job an alarm releases can program that alarm a tick ahead until a far horizon.
+pub const MOST_ALARM_ARRIVALS: u64 = 1 << 20;
+
+/// The stack a run of `tasks` tasks takes, on any profile: what the runtime holds and returns by value grows with its tasks, and a thread's default does not.
+#[must_use]
+pub const fn stack_for(tasks: usize) -> usize {
+    (1 << 23) + tasks.saturating_mul(1 << 13)
+}
+
 /// How a run ended.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum Ended {
@@ -375,8 +384,10 @@ pub enum Ended {
     Horizon,
     /// The runtime halted.
     Halted,
-    /// It took [`MOST_STEPS_AT_ONE_INSTANT`] steps with time standing still: a job and what it programs keeping each other going.
+    /// It took [`MOST_STEPS_AT_ONE_INSTANT`] steps with time standing still: a body that long, or a job and what it programs keeping each other going.
     NoProgress,
+    /// It took [`MOST_ALARM_ARRIVALS`] arrivals of its alarms.
+    TooManyArrivals,
     /// The system could not be booted: its tasks' ranks were not the runtime's.
     NotBooted,
 }
@@ -421,6 +432,8 @@ struct Run<'s, 'o, const N: usize> {
     /// The instant steps were last counted at, and how many it has taken.
     counted_at: u64,
     steps_here: u64,
+    /// How many arrivals its alarms have had.
+    alarm_arrivals: u64,
 }
 
 impl<'s, 'o, const N: usize> Run<'s, 'o, N> {
@@ -469,6 +482,7 @@ impl<'s, 'o, const N: usize> Run<'s, 'o, N> {
             now: 0,
             counted_at: 0,
             steps_here: 0,
+            alarm_arrivals: 0,
         })
     }
 
@@ -509,6 +523,9 @@ impl<'s, 'o, const N: usize> Run<'s, 'o, N> {
                 return ended;
             }
             self.arrive();
+            if self.alarm_arrivals > MOST_ALARM_ARRIVALS {
+                return Ended::TooManyArrivals;
+            }
             if !self.masked && self.take_interrupts() {
                 return Ended::Halted;
             }
@@ -525,14 +542,24 @@ impl<'s, 'o, const N: usize> Run<'s, 'o, N> {
     }
 
     /// The running job finished, if it has nothing left that takes time, so that its completion comes before what arrives at
-    /// this instant (`ROADMAP.md` §13.4). It stops at an unmask that lets a pending interrupt in, which is taken before the job's
-    /// next instruction, its completion among them. How the run ended, where it did.
+    /// this instant (`ROADMAP.md` §13.4), and then the next that has nothing left, however it came to be held off. It stops at an
+    /// unmask that lets a pending interrupt in, which is taken before the job's next instruction, its completion among them. How
+    /// the run ended, where it did.
     fn finish_what_is_due(&mut self) -> Option<Ended> {
         loop {
             let interrupted = !self.masked
                 && (self.timer_pending || self.pending.iter().any(|pending| *pending > 0));
-            if interrupted || !self.has_no_time_left() {
+            if interrupted {
                 return None;
+            }
+            if !self.has_no_time_left() {
+                if !self.next_has_no_time_left() {
+                    return None;
+                }
+                if self.decide() {
+                    return Some(Ended::Halted);
+                }
+                continue;
             }
             match self.advance() {
                 Advance::Halted => return Some(Ended::Halted),
@@ -542,13 +569,28 @@ impl<'s, 'o, const N: usize> Run<'s, 'o, N> {
         }
     }
 
-    /// Whether a job is running with nothing left that takes time. It carries on from what it last found, so a job reads its body
-    /// once however long that is, and what a run costs stays in step with the steps it takes.
+    /// Whether a job is running with nothing left that takes time.
     fn has_no_time_left(&mut self) -> bool {
         let Some(task) = (0..N).find(|task| self.scheduler.state(*task) == TaskState::Running)
         else {
             return false;
         };
+        self.holds_no_time(task)
+    }
+
+    /// Whether nothing is running, and what would run next has nothing left that takes time. The index is the rank, as the scheduler's decision reads it.
+    fn next_has_no_time_left(&mut self) -> bool {
+        if (0..N).any(|task| self.scheduler.state(task) == TaskState::Running) {
+            return false;
+        }
+        (0..N)
+            .find(|task| self.scheduler.state(*task) == TaskState::Ready)
+            .is_some_and(|task| self.holds_no_time(task))
+    }
+
+    /// Whether `task`'s job has nothing left that takes time. It carries on from what it last found, so a job reads its body once
+    /// however long that is, and what a run costs stays in step with the steps it takes.
+    fn holds_no_time(&mut self, task: usize) -> bool {
         let job = self.jobs[task];
         if job.left != 0 {
             return false;
@@ -582,6 +624,7 @@ impl<'s, 'o, const N: usize> Run<'s, 'o, N> {
             if source.alarm && self.compares[place].is_some_and(|at| at <= self.now) {
                 self.compares[place] = None;
                 self.pending[place] = self.pending[place].saturating_add(1);
+                self.alarm_arrivals += 1;
                 self.emit(Event::InterruptPending(Interrupt::Alarm(source.name)));
             }
         }
@@ -830,6 +873,7 @@ impl<'s, 'o, const N: usize> Run<'s, 'o, N> {
                 if at <= self.now {
                     self.compares[alarm] = None;
                     self.pending[alarm] = self.pending[alarm].saturating_add(1);
+                    self.alarm_arrivals += 1;
                     self.emit(Event::InterruptPending(Interrupt::Alarm(name)));
                 } else {
                     self.compares[alarm] = Some(at);

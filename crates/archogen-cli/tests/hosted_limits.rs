@@ -171,6 +171,20 @@ fn a_line_break_no_argument_holds_is_refused() {
                 "{command} {out}: {said}"
             );
             assert!(!real.join("out").exists(), "{command} {out}");
+            let listed = |place: &std::path::Path| {
+                let mut names: Vec<String> = std::fs::read_dir(place)
+                    .expect("the directory")
+                    .map(|entry| entry.expect("an entry").file_name().display().to_string())
+                    .collect();
+                names.sort();
+                names
+            };
+            assert_eq!(listed(&real), ["h.eadl"], "{command} {out}: nothing made");
+            assert_eq!(
+                listed(&dir),
+                ["a\nb", "h.eadl", "link"],
+                "{command} {out}: nothing made"
+            );
         }
     }
 }

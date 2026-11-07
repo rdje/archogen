@@ -524,7 +524,7 @@ fn main_rs(
         "use std::process::ExitCode;".to_owned(),
         String::new(),
         "use rt_core::OverrunPolicy;".to_owned(),
-        "use sim_playground::{run, Device, DeviceKind, Ended, Observer, Source, Stamped, System, Task, Trigger};".to_owned(),
+        "use sim_playground::{run, stack_for, Device, DeviceKind, Ended, Observer, Source, Stamped, System, Task, Trigger};".to_owned(),
         String::new(),
     ];
     let mut entries = Vec::new();
@@ -723,7 +723,7 @@ fn main_rs(
             "    }",
             "}",
             "",
-            "fn main() -> ExitCode {",
+            "fn go() -> ExitCode {",
             "    for line in HEADER {",
             "        println!(\"; {line}\");",
             "    }",
@@ -742,11 +742,32 @@ fn main_rs(
             "            eprintln!(\"this run took too many steps with time standing still, and stopped there\");",
             "            ExitCode::from(1)",
             "        }",
+            "        Ended::TooManyArrivals => {",
+            "            eprintln!(\"this run took too many arrivals of its alarms, and stopped there\");",
+            "            ExitCode::from(1)",
+            "        }",
             "        Ended::NotBooted => {",
             "            eprintln!(\"the generated tables are not the runtime's: a defect of the engine, so report it\");",
             "            ExitCode::from(70)",
             "        }",
             "    }",
+            "}",
+            "",
+            "fn main() -> ExitCode {",
+        ]
+        .map(str::to_owned),
+    );
+    lines.push(format!(
+        "    let stack = stack_for({});",
+        contents.tasks.len()
+    ));
+    lines.extend(
+        [
+            "    let Ok(running) = std::thread::Builder::new().stack_size(stack).spawn(go) else {",
+            "        eprintln!(\"this machine cannot give this run the {stack} bytes of stack it takes\");",
+            "        return ExitCode::from(1);",
+            "    };",
+            "    running.join().unwrap_or(ExitCode::from(101))",
             "}",
         ]
         .map(str::to_owned),

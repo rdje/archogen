@@ -1493,6 +1493,12 @@ fn plan_routes() -> Vec<(&'static str, Route)> {
                 Answer::Record(Status::Ok),
             );
             assert!(!root.join("p").exists());
+            let mut left: Vec<String> = std::fs::read_dir(root)
+                .expect("the directory")
+                .map(|entry| entry.expect("an entry").file_name().display().to_string())
+                .collect();
+            left.sort();
+            assert_eq!(left, ["a\nb", "link"], "nothing made");
             outcome
         }),
         ("no-checker", |root| {

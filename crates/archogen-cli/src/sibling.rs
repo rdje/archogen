@@ -172,7 +172,11 @@ fn manifest(dir: &Path, program: &str) -> Result<Manifest, Unlaunched> {
     match read {
         Ok(_) => Manifest::read(&bytes, MANIFEST_LIMIT).map_err(|refusal| {
             refused(
-                format!("the install manifest {}: {refusal}", place(&file)),
+                format!(
+                    "the install manifest {}: {}",
+                    place(&file),
+                    refusal.to_string().replace('\n', "\\u{a}")
+                ),
                 "install the toolchain again",
             )
         }),

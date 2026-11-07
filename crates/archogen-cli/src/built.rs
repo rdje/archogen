@@ -204,13 +204,15 @@ impl Built {
         let format = text("format")?;
         if format != PROVENANCE_FORMAT {
             return Err(Unbuilt::OtherFormat(format!(
-                "{shown} is a build of `{format}`, and this engine reads `{PROVENANCE_FORMAT}`"
+                "{shown} is a build of `{}`, and this engine reads `{PROVENANCE_FORMAT}`",
+                eadl_front::fit_name(&format)
             )));
         }
         let description = text("description")?;
         if !inside(&description) {
             return Err(format!(
-                "{shown}/{PROVENANCE_FILE} names the description `{description}`, which lies outside the build"
+                "{shown}/{PROVENANCE_FILE} names the description `{}`, which lies outside the build",
+                eadl_front::fit_name(&description)
             )
             .into());
         }
@@ -222,8 +224,9 @@ impl Built {
             let path = entry.get("path").and_then(Value::as_str).unwrap_or("");
             let sha256 = entry.get("sha256").and_then(Value::as_str).unwrap_or("");
             if !inside(path) {
+                let said = eadl_front::fit_name(path);
                 return Err(format!(
-                    "{shown}/{PROVENANCE_FILE} lists the file `{path}`, which lies outside the build"
+                    "{shown}/{PROVENANCE_FILE} lists the file `{said}`, which lies outside the build"
                 )
                 .into());
             }

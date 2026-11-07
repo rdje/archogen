@@ -2357,6 +2357,13 @@ fn out_routes() -> Vec<(&'static str, Route)> {
                 &Checker,
             ));
             assert!(!dir.exists());
+            assert!(!beside(&dir, ".building").exists());
+            let mut left: Vec<String> = fs::read_dir(root)
+                .expect("the directory")
+                .map(|entry| entry.expect("an entry").file_name().display().to_string())
+                .collect();
+            left.sort();
+            assert_eq!(left, ["a\nb", "link"], "nothing made");
             outcome
         }),
         ("no-room-path", |root| {
@@ -3851,4 +3858,29 @@ fn a_directory_that_is_no_build_is_a_usage_error_naming_what_it_lacks() {
     let (status, _, err) = explain(&target);
     assert_eq!(status, Status::Usage, "{err}");
     assert!(err.contains("this engine reads"), "{err}");
+}
+
+/// What a hand-edited provenance holds is said on one line like any other name, so it can write nothing that reads as a line of the program's.
+#[test]
+fn a_forged_provenance_is_said_on_one_line() {
+    let root = tempfile_like_scratch("forged-provenance");
+    for said in [
+        r#"{"format": "x\nall clear: accepted\ny"}"#,
+        r#"{"format": "archogen-build-provenance/5", "description": "../x\nall clear: accepted\ny"}"#,
+    ] {
+        fs::write(root.join(archogen_emit::PROVENANCE_FILE), said).expect("written");
+        let Err(unbuilt) = archogen_cli::built::Built::read(&root) else {
+            panic!("{said}: read as a build");
+        };
+        let text = unbuilt.said();
+        assert!(!text.contains('\n'), "{said}: {text}");
+    }
+}
+
+/// A new directory for one test, under the scratch the harness keeps for this crate's tests.
+fn tempfile_like_scratch(name: &str) -> PathBuf {
+    let dir = PathBuf::from(env!("CARGO_TARGET_TMPDIR")).join(name);
+    let _ = fs::remove_dir_all(&dir);
+    fs::create_dir_all(&dir).expect("a directory");
+    dir
 }

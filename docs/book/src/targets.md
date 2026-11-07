@@ -62,7 +62,7 @@ decides; then the running job goes on. While a job holds interrupts masked, an a
 the unmask, before the job's next instruction, even if that is its last. A job's body is data, a list of *run this long*, *mask*, *unmask*, *read* or *write a device*, *program an alarm*. Until an application's own inputs exist, a
 generated system's bodies are empty, so its jobs start and complete at one instant, and only the releases are informative;
 the simulator's own tests run longer bodies, so preemption, masking and overrun are held today. A job an alarm releases could program
-that alarm for now, and time would never move, so a run takes at most `sim_playground::MOST_STEPS_AT_ONE_INSTANT` steps at one instant, and past that it stops, says so and exits 1.
+that alarm for now, and time would never move, so a run takes at most `sim_playground::MOST_STEPS_AT_ONE_INSTANT` steps at one instant, and past that it stops, says so and exits 1, and so too at `sim_playground::MOST_ALARM_ARRIVALS` arrivals of its alarms.
 
 When something goes wrong the trace says so in the words the fault paths' record, `docs/profiles/rt-static-up-v1-faults-observation.md`,
 fixes, so a hosted run and a target's can be compared: `1/50 s fault overrun late skip-late-job nominal 1/50 s` is one late job abandoned,

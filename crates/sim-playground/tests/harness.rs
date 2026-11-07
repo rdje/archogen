@@ -3,8 +3,8 @@
 
 use rt_core::OverrunPolicy;
 use sim_playground::{
-    run, Device, DeviceKind, Ended, Observer, Source, Stamped, Step, System, Task, Trigger,
-    MOST_STEPS_AT_ONE_INSTANT,
+    run, stack_for, Device, DeviceKind, Ended, Observer, Source, Stamped, Step, System, Task,
+    Trigger, MOST_ALARM_ARRIVALS, MOST_STEPS_AT_ONE_INSTANT,
 };
 
 /// Every event as the trace writes it.
@@ -786,5 +786,165 @@ fn only_what_passes_the_limit_at_one_instant_stops() {
     assert_eq!(
         run::<1>(&system(&tasks, &[], 2), &mut Counted::default()),
         Ended::Horizon
+    );
+}
+
+fn second_timed(tasks: &[Task<'_>], sources: &[Source<'_>], horizon: u64) -> (Ended, Vec<String>) {
+    let (ended, lines) = trace::<2>(&System {
+        ticks_per_second: 1,
+        ..system(tasks, sources, horizon)
+    });
+    (ended, lines)
+}
+
+/// A job a source's job held off has done all its work, and what is left of it takes no time: it finishes before its own next release, however it came to be held off.
+#[test]
+fn a_job_held_off_with_nothing_left_finishes_before_its_own_release() {
+    let sources = [Source {
+        name: "s",
+        separation: Some(7),
+        alarm: false,
+    }];
+    let high = [Step::Run(5)];
+    let masked = [Step::Mask, Step::Run(3), Step::Unmask];
+    let tasks = [
+        Task {
+            name: "high",
+            rank: 1,
+            policy: OverrunPolicy::Fault,
+            trigger: Trigger::Source(0),
+            body: &high,
+        },
+        timer("low", 2, 13, &masked),
+    ];
+    let (ended, lines) = second_timed(&tasks, &sources, 14);
+    assert_eq!(ended, Ended::Horizon, "{lines:#?}");
+    let at = |said: &str| {
+        lines
+            .iter()
+            .position(|line| line == said)
+            .unwrap_or_else(|| panic!("no `{said}` in {lines:#?}"))
+    };
+    assert!(at("13 s complete high") < at("13 s complete low"));
+    assert!(at("13 s complete low") < at("13 s release low nominal 13 s"));
+    assert!(
+        !lines.iter().any(|line| line.contains("fault")),
+        "{lines:#?}"
+    );
+    // The same for a job an alarm's job held off at its own write.
+    let sources = [alarm("a")];
+    let woken_body = [Step::Run(10)];
+    let writes = [
+        Step::Program { alarm: 0, ahead: 0 },
+        Step::Mask,
+        Step::Unmask,
+    ];
+    let tasks = [woken(&woken_body), timer("low", 2, 10, &writes)];
+    let (ended, lines) = second_timed(&tasks, &sources, 10);
+    assert_eq!(ended, Ended::Horizon, "{lines:#?}");
+    assert!(
+        !lines.iter().any(|line| line.contains("fault")),
+        "{lines:#?}"
+    );
+}
+
+/// A job that programs its own alarm a tick ahead moves time, so no limit on one instant stops it, and a far horizon would never come: the run stops at its arrivals, the same way each time. One within them ends at its horizon.
+#[test]
+fn a_run_of_its_alarms_arriving_ever_onward_ends() {
+    let sources = [alarm("a")];
+    let onward = [Step::Program { alarm: 0, ahead: 1 }];
+    let tasks = [woken(&onward), timer("arms", 2, 1 << 62, &onward)];
+    let far = system(&tasks, &sources, 1 << 62);
+    let (mut once, mut again) = (Counted::default(), Counted::default());
+    assert_eq!(run::<2>(&far, &mut once), Ended::TooManyArrivals);
+    assert_eq!(run::<2>(&far, &mut again), Ended::TooManyArrivals);
+    assert_eq!(once.0, again.0);
+    let within = System {
+        horizon: MOST_ALARM_ARRIVALS,
+        ..far
+    };
+    assert_eq!(run::<2>(&within, &mut Counted::default()), Ended::Horizon);
+}
+
+/// The order of one instant, where it reaches a compare standing: a write among what a job has left there replaces it before it arrives, and with a step after it that takes time the compare arrives first. Across jobs too: what one left standing the next can replace.
+#[test]
+fn a_write_among_what_a_job_has_left_replaces_what_stood_for_that_instant() {
+    let sources = [alarm("a")];
+    let arrivals = |lines: &[String]| -> Vec<String> {
+        lines
+            .iter()
+            .filter(|line| line.ends_with(" pending alarm a"))
+            .cloned()
+            .collect()
+    };
+    let replaces = [
+        Step::Program { alarm: 0, ahead: 5 },
+        Step::Run(5),
+        Step::Program { alarm: 0, ahead: 7 },
+    ];
+    let tasks = [timer("job", 1, 100, &replaces)];
+    let (_, lines) = trace_at_one_tick_a_second::<1>(&tasks, &sources, 20);
+    assert_eq!(arrivals(&lines), ["12 s pending alarm a"], "{lines:#?}");
+    let stands = [
+        Step::Program { alarm: 0, ahead: 5 },
+        Step::Run(5),
+        Step::Program { alarm: 0, ahead: 7 },
+        Step::Run(1),
+    ];
+    let tasks = [timer("job", 1, 100, &stands)];
+    let (_, lines) = trace_at_one_tick_a_second::<1>(&tasks, &sources, 20);
+    assert_eq!(
+        arrivals(&lines),
+        ["5 s pending alarm a", "12 s pending alarm a"],
+        "{lines:#?}"
+    );
+    let high = [Step::Program { alarm: 0, ahead: 3 }];
+    let low = [Step::Run(3), Step::Program { alarm: 0, ahead: 9 }];
+    let tasks = [timer("high", 1, 100, &high), timer("low", 2, 100, &low)];
+    let (_, lines) = trace_at_one_tick_a_second::<2>(&tasks, &sources, 20);
+    assert_eq!(arrivals(&lines), ["12 s pending alarm a"], "{lines:#?}");
+}
+
+fn trace_at_one_tick_a_second<const N: usize>(
+    tasks: &[Task<'_>],
+    sources: &[Source<'_>],
+    horizon: u64,
+) -> (Ended, Vec<String>) {
+    trace::<N>(&System {
+        ticks_per_second: 1,
+        ..system(tasks, sources, horizon)
+    })
+}
+
+/// What a run holds and returns by value grows with its tasks, past a thread's default at about 9,000 of them in a test's profile. So the stack it says it takes must hold one of 10,000, each path a job's mask, its preemption and an overrun reach among it.
+#[test]
+fn a_run_of_many_tasks_fits_the_stack_it_says_it_takes() {
+    const MANY: usize = 10_000;
+    let running = std::thread::Builder::new()
+        .stack_size(stack_for(MANY))
+        .spawn(|| {
+            let names: Vec<String> = (0..MANY).map(|task| format!("t{task}")).collect();
+            let work = [Step::Mask, Step::Unmask, Step::Run(1)];
+            let tasks: Vec<Task<'_>> = names
+                .iter()
+                .enumerate()
+                .map(|(place, name)| {
+                    timer(
+                        name,
+                        i64::try_from(place).expect("it fits") + 1,
+                        if place < 2 { 1 } else { 4 },
+                        if place < 3 { &work } else { &[] },
+                    )
+                })
+                .collect();
+            run::<MANY>(&system(&tasks, &[], 4), &mut Counted::default())
+        })
+        .expect("a thread");
+    assert!(
+        matches!(
+            running.join().expect("no overflow"),
+            Ended::Horizon | Ended::Halted
+        ),
+        "it ended as a run ends"
     );
 }
