@@ -489,7 +489,7 @@ fn the_record_s_sums_read_as_they_are_written() {
     assert_eq!(charge("room", Device::Delay, i), 100 + 3 + 28 + 9);
     assert_eq!(charge("write", Device::Compare, i), 10 + 1 + 6);
     assert_eq!(charge("write", Device::Delay, i), 10 + 1 + 6);
-    assert_eq!(charge("window", Device::Compare, i), 1 + 3);
+    assert_eq!(charge("window", Device::Compare, i), 1 + 3 + 5);
 }
 
 /// A hand-off's row of the record.
@@ -510,13 +510,13 @@ struct Line {
     /// Ticks in a second.
     tick_rate: Option<u64>,
     /// In ticks.
-    modulus: Option<u64>,
+    modulus: Option<u128>,
     /// `supported-horizon`, in nanoseconds.
     reach: Option<u64>,
     /// `compare-step`, in ticks.
     step: Option<u64>,
-    /// `compare-window`, in ticks.
-    window: Option<u64>,
+    /// `compare-window`.
+    window: Option<Reads>,
     /// `unambiguous-horizon`, in nanoseconds, for a wake.
     horizon: Option<u64>,
     /// `delivery-bound`, in nanoseconds, for an expiry.
@@ -570,8 +570,8 @@ impl Rounding {
     }
 
     /// A count of ticks that a sum lies within.
-    fn ticks_down(self, ticks: u64, rate: u64) -> i64 {
-        self.down(u128::from(ticks) * 1_000_000_000 / u128::from(rate))
+    fn ticks_down(self, ticks: u128, rate: u64) -> i64 {
+        self.down(ticks * 1_000_000_000 / u128::from(rate))
     }
 }
 
@@ -580,149 +580,232 @@ fn separation(t_s: u64, unit: u64) -> i64 {
     Rounding { unit }.down(u128::from(t_s))
 }
 
-/// What the scheduling checker holds of one alarm, the record's sums as its table writes them, each input arriving as the table of inputs says and rounding as it says: a run of `RA-H2`, so that what a line lacks shows as what it lacks. `unit` is the analysis's, in nanoseconds. `ρ` is one whole step: a step less one unit would rest on every event falling on the unit, as a timeline's do and a machine's do not.
-fn judge(line: Line, unit: u64) -> Judged {
+/// How a compare reads a value against its count, which its device states as `compare-window` (§2's `window`).
+#[derive(Clone, Copy, PartialEq, Eq)]
+enum Reads {
+    /// One raw difference on the modulus: a value up to this many ticks past reads as due, and any other as ahead.
+    Within(u64),
+    /// The two as whole numbers, `count ≥ value`, which is right only short of a wrap and fits no window.
+    Magnitude,
+}
+
+/// The longest a system is taken to run, in seconds: a hundred years, the record's figure for `ROADMAP.md` §6.2's operating horizon, and as far as a compare that reads whole numbers is told apart.
+const OPERATING_HORIZON: u128 = 3_155_760_000;
+
+/// What a compare's reading asks of a due value and leaves of a modulus, each where it has one, or nothing where the device's statement cannot stand.
+fn what_it_reads(
+    reads: Reads,
+    modulus: u128,
+    rate: u64,
+    round: Rounding,
+) -> Option<(Option<i64>, Option<i64>)> {
+    match reads {
+        Reads::Within(said) if u128::from(said) >= modulus => None,
+        Reads::Within(said) => Some((
+            Some(round.ticks_down(u128::from(said), rate)),
+            Some(round.ticks_down(modulus - u128::from(said) - 1, rate)),
+        )),
+        Reads::Magnitude if modulus / u128::from(rate) < OPERATING_HORIZON => None,
+        Reads::Magnitude => Some((None, None)),
+    }
+}
+
+/// Every reason the scheduling checker gives of one alarm, the record's sums as its table writes them, each input arriving as the table of inputs says and rounding as it says: a run of `RA-H2`, so that what a line lacks shows as what it lacks. It checks every sum whose inputs it has, as the variant's §4 asks, and a sum missing an input says only that the input is owed. `unit` is the analysis's, in nanoseconds. `ρ` is one whole step: a step less one unit would rest on every event falling on the unit, as a timeline's do and a machine's do not.
+fn reasons(line: Line, unit: u64) -> Vec<Judged> {
     let round = Rounding { unit };
-    let Some(rate) = line.tick_rate else {
-        return Judged::Owed("tick-rate");
-    };
-    let Some(modulus) = line.modulus else {
-        return Judged::Owed("counter-modulus");
+    let simulated = line.simulated;
+    let on_the_counter = !line.wake && line.counter_itself;
+    let compare = !simulated && line.device == Some(Device::Compare);
+    let mut found = said_owed(&[
+        (line.tick_rate.is_none(), "tick-rate"),
+        (line.modulus.is_none(), "counter-modulus"),
+        (!simulated && line.device.is_none(), "alarm-kind"),
+        (!simulated && line.reach.is_none(), "supported-horizon"),
+        (!simulated && line.step.is_none(), "compare-step"),
+        (line.t_s.is_none(), "T_s"),
+        (!simulated && line.lag.is_none(), "λ"),
+        (line.c_s.is_none(), "C_s"),
+        (compare && line.window.is_none(), "compare-window"),
+        (line.wake && line.p.is_none(), "P"),
+        (
+            on_the_counter && !line.stated_by_the_application,
+            "the application's statement",
+        ),
+        (on_the_counter && line.r.is_none(), "R"),
+        (line.wake && line.horizon.is_none(), "unambiguous-horizon"),
+        (!line.wake && line.bound.is_none(), "delivery-bound"),
+    ]);
+    let (Some(rate), Some(modulus)) = (line.tick_rate, line.modulus) else {
+        return found;
     };
     if rate == 0 || modulus == 0 {
-        return Judged::Refused("a counter of no rate or modulus");
+        found.push(Judged::Refused("a counter of no rate or modulus"));
+        return found;
     }
-    let line = if line.simulated {
-        Line {
-            device: Some(Device::Compare),
-            reach: Some(
-                u64::try_from(u128::from(modulus - 1) * 1_000_000_000 / u128::from(rate))
-                    .unwrap_or(u64::MAX),
-            ),
-            window: Some(0),
-            lag: Some(0),
-            ..line
-        }
+    let Some(device) = (if simulated {
+        Some(Device::Compare)
     } else {
-        line
+        line.device
+    }) else {
+        return found;
     };
-    let Some(device) = line.device else {
-        return Judged::Owed("alarm-kind");
-    };
-    let Some(reach) = line.reach else {
-        return Judged::Owed("supported-horizon");
-    };
-    let rho = if line.simulated {
+    // What this line lacks, by the name a cell writes it: a sum reading one of these says nothing but that it is owed.
+    let mut gone = Vec::new();
+    let rho = if simulated {
         0
     } else {
-        let Some(step) = line.step else {
-            return Judged::Owed("compare-step");
-        };
-        if step == 0 {
-            return Judged::Refused("compare-step");
+        match line.step {
+            Some(0) => {
+                found.push(Judged::Refused("compare-step"));
+                gone.push("ρ");
+                0
+            }
+            Some(step) => round.ticks_up(step, rate),
+            None => {
+                gone.push("ρ");
+                0
+            }
         }
-        round.ticks_up(step, rate)
     };
-    let Some(t_s) = line.t_s else {
-        return Judged::Owed("T_s");
+    let mut cost = |ns: Option<u64>, name: &'static str| {
+        ns.map_or_else(
+            || {
+                gone.push(name);
+                0
+            },
+            |ns| round.up(u128::from(ns)),
+        )
     };
-    let Some(lag) = line.lag else {
-        return Judged::Owed("λ");
-    };
-    let Some(c_s) = line.c_s else {
-        return Judged::Owed("C_s");
-    };
-    let cost = |ns: u64| round.up(u128::from(ns));
-    let c = cost(c_s);
-    // What one write reaches, and what a compare's window leaves of a modulus.
-    let mut h = round.down(u128::from(reach));
-    let mut window = 0;
-    if device == Device::Compare {
-        let Some(said) = line.window else {
-            return Judged::Owed("compare-window");
-        };
-        if said >= modulus {
-            return Judged::Refused("compare-window");
-        }
-        window = round.ticks_down(said, rate);
-        h = h.min(round.ticks_down(modulus - said - 1, rate));
-    }
-    let p = if line.wake {
-        let Some(p) = line.p else {
-            return Judged::Owed("P");
-        };
-        if t_s > p {
-            return Judged::Refused("a wake's floor");
-        }
-        cost(p)
-    } else {
-        0
-    };
-    let (r, w) = if line.wake {
-        (p, line.j_s + c)
+    let t_s = cost(line.t_s, "T_s");
+    let lag = if simulated { 0 } else { cost(line.lag, "λ") };
+    let c = cost(line.c_s, "C_s");
+    let p = if line.wake { cost(line.p, "P") } else { 0 };
+    let r = if line.wake {
+        cost(line.p, "R")
     } else if line.counter_itself {
-        if !line.stated_by_the_application {
-            return Judged::Owed("the application's statement");
-        }
-        let Some(r) = line.r else {
-            return Judged::Owed("R");
-        };
-        if line.asked_reach.is_some_and(|asked| r < asked) {
-            return Judged::Refused("R");
-        }
-        (cost(r), line.w)
+        cost(line.r, "R")
     } else {
-        (0, line.w)
+        0
+    };
+    let w = if line.wake {
+        line.j_s + cost(line.c_s, "W")
+    } else {
+        line.w
+    };
+    if line.wake && line.t_s.zip(line.p).is_some_and(|(t_s, p)| t_s > p) {
+        found.push(Judged::Refused("a wake's floor"));
+    }
+    if on_the_counter
+        && line
+            .r
+            .zip(line.asked_reach)
+            .is_some_and(|(r, asked)| r < asked)
+    {
+        found.push(Judged::Refused("R"));
+    }
+    // What a due value lies within, and what a compare's reading leaves one write.
+    let (window, leaves) = if compare {
+        match line
+            .window
+            .map(|reads| what_it_reads(reads, modulus, rate, round))
+        {
+            Some(Some(limits)) => limits,
+            Some(None) => {
+                found.push(Judged::Refused("compare-window"));
+                (None, None)
+            }
+            None => (None, None),
+        }
+    } else {
+        (None, None)
+    };
+    let h = if simulated {
+        Some(round.ticks_down(modulus - 1, rate))
+    } else {
+        line.reach.map(|reach| {
+            let reach = round.down(u128::from(reach));
+            leaves.map_or(reach, |leaves| reach.min(leaves))
+        })
     };
     let i = Inputs {
-        t_s: cost(t_s),
-        lag: cost(lag),
+        t_s,
+        lag,
         rho,
         j_s: line.j_s,
         c_s: c,
         p,
         reach: r,
         w,
-        h,
+        h: h.unwrap_or(0),
     };
-    if device == Device::Compare && charge("window", device, i) > window {
-        return Judged::Refused("window");
+    let runs = |sum: &str| {
+        let reads_none = |written: &str| !gone.iter().any(|name| written.contains(name));
+        let written = cell(sum, device);
+        reads_none(written)
+            && (!written.contains("delivery") || reads_none(cell("delivery", device)))
+    };
+    if window.is_some_and(|window| runs("window") && charge("window", device, i) > window) {
+        found.push(Judged::Refused("window"));
     }
-    if charge("write", device, i) > h {
-        return Judged::Refused("write");
+    if h.is_some_and(|h| runs("write") && charge("write", device, i) > h) {
+        found.push(Judged::Refused("write"));
     }
-    if line.counter_itself && charge("room", device, i) >= round.ticks_down(modulus, rate) {
-        return Judged::Refused("room");
+    if line.counter_itself
+        && runs("room")
+        && charge("room", device, i) >= round.ticks_down(modulus, rate)
+    {
+        found.push(Judged::Refused("room"));
     }
     if line.wake {
-        let Some(horizon) = line.horizon else {
-            return Judged::Owed("unambiguous-horizon");
-        };
-        if charge("update", device, i) > round.down(u128::from(horizon)) {
-            return Judged::Refused("update");
+        if line.horizon.is_some_and(|horizon| {
+            runs("update") && charge("update", device, i) > round.down(u128::from(horizon))
+        }) {
+            found.push(Judged::Refused("update"));
         }
-        if p + rho > h {
-            return Judged::Refused("a wake's first arm");
+        if h.is_some_and(|h| !gone.contains(&"P") && !gone.contains(&"ρ") && p + rho > h) {
+            found.push(Judged::Refused("a wake's first arm"));
         }
-    } else {
-        let Some(bound) = line.bound else {
-            return Judged::Owed("delivery-bound");
-        };
-        if charge("delivery", device, i) > round.down(u128::from(bound)) {
-            return Judged::NotEstablished("delivery");
-        }
+    } else if line.bound.is_some_and(|bound| {
+        runs("delivery") && charge("delivery", device, i) > round.down(u128::from(bound))
+    }) {
+        found.push(Judged::NotEstablished("delivery"));
     }
-    Judged::Holds
+    found
+}
+
+/// Each input a line lacks, as an owed reason.
+fn said_owed(lacking: &[(bool, &'static str)]) -> Vec<Judged> {
+    lacking
+        .iter()
+        .filter(|(lacks, _)| *lacks)
+        .map(|(_, input)| Judged::Owed(input))
+        .collect()
+}
+
+/// The verdict among all the reasons, as the variant's §4 and §5 read: `unsupported-profile`, then `not-established`, then `analysis-inconclusive`, naming the first of its kind.
+fn highest(mut found: Vec<Judged>) -> Judged {
+    found.sort_by_key(|reason| match reason {
+        Judged::Refused(_) => 0,
+        Judged::NotEstablished(_) => 1,
+        Judged::Owed(_) => 2,
+        Judged::Holds => 3,
+    });
+    found.into_iter().next().unwrap_or(Judged::Holds)
+}
+
+/// What the scheduling checker comes to of one alarm.
+fn judge(line: Line, unit: u64) -> Judged {
+    highest(reasons(line, unit))
 }
 
 /// What `/2` and the record supplying `C_rel` carry of the release timer. `(timer none)` asks none of it (`RA-H2`).
 #[derive(Clone, Copy)]
 struct ReleaseLine {
     tick_rate: Option<u64>,
-    modulus: Option<u64>,
+    modulus: Option<u128>,
     reach: Option<u64>,
     step: Option<u64>,
-    window: Option<u64>,
+    window: Option<Reads>,
     horizon: Option<u64>,
     /// In nanoseconds.
     shortest: u64,
@@ -733,61 +816,88 @@ struct ReleaseLine {
     j_release: i64,
 }
 
-/// The rest of `RA-H2`, the release timer's own holds, each owed input and refusal read as `judge`'s are.
-fn judge_release(line: ReleaseLine, unit: u64) -> Judged {
+fn greatest_common(a: u128, b: u128) -> u128 {
+    if b == 0 {
+        a
+    } else {
+        greatest_common(b, a % b)
+    }
+}
+
+/// The most that rounding up to a step adds to an instant on the unit, over all such instants and rounded up: a step of `p/q` units, in lowest terms, leaves `(p − 1)/q`. What the catalog's `compare-rounding` must bound, "the worst case over all release instants".
+fn rounding_at_worst(step: u64, rate: u64, unit: u64) -> i64 {
+    let p = u128::from(step) * 1_000_000_000;
+    let q = u128::from(rate) * u128::from(unit);
+    let common = greatest_common(p, q);
+    i64::try_from((p / common - 1).div_ceil(q / common)).unwrap_or(i64::MAX)
+}
+
+/// The rest of `RA-H2`, the release timer's own holds, each owed input and refusal read as `reasons` reads them.
+fn release_reasons(line: ReleaseLine, unit: u64) -> Vec<Judged> {
     let round = Rounding { unit };
-    let Some(rate) = line.tick_rate else {
-        return Judged::Owed("tick-rate");
-    };
-    let Some(modulus) = line.modulus else {
-        return Judged::Owed("counter-modulus");
-    };
-    let Some(reach) = line.reach else {
-        return Judged::Owed("supported-horizon");
-    };
-    let Some(step) = line.step else {
-        return Judged::Owed("compare-step");
-    };
-    let Some(said) = line.window else {
-        return Judged::Owed("compare-window");
-    };
-    let Some(horizon) = line.horizon else {
-        return Judged::Owed("unambiguous-horizon");
-    };
-    let Some(rounding) = line.rounding else {
-        return Judged::Owed("compare-rounding");
-    };
-    let Some(c_rel) = line.c_rel else {
-        return Judged::Owed("C_rel");
+    let mut found = said_owed(&[
+        (line.tick_rate.is_none(), "tick-rate"),
+        (line.modulus.is_none(), "counter-modulus"),
+        (line.reach.is_none(), "supported-horizon"),
+        (line.step.is_none(), "compare-step"),
+        (line.window.is_none(), "compare-window"),
+        (line.horizon.is_none(), "unambiguous-horizon"),
+        (line.rounding.is_none(), "compare-rounding"),
+        (line.c_rel.is_none(), "C_rel"),
+    ]);
+    let (Some(rate), Some(modulus)) = (line.tick_rate, line.modulus) else {
+        return found;
     };
     if rate == 0 || modulus == 0 {
-        return Judged::Refused("a counter of no rate or modulus");
+        found.push(Judged::Refused("a counter of no rate or modulus"));
+        return found;
     }
-    if said >= modulus {
-        return Judged::Refused("compare-window");
-    }
-    let rho = round.up(u128::from(rounding));
-    // At most a step less one unit, which is the variant's reading of a nominal instant: `RA-H5`'s compare.
-    if rho > round.ticks_up(step, rate) - 1 {
-        return Judged::Refused("compare-rounding");
+    let (window, leaves) = match line
+        .window
+        .map(|reads| what_it_reads(reads, modulus, rate, round))
+    {
+        Some(Some(limits)) => limits,
+        Some(None) => {
+            found.push(Judged::Refused("compare-window"));
+            (None, None)
+        }
+        None => (None, None),
+    };
+    let rho = line.rounding.map(|rounding| round.up(u128::from(rounding)));
+    // At least the worst case over the instants its releases can fall on: `RA-H5`'s compare. An understatement is what breaks a bound, and an overstatement a cost's upper bound.
+    if rho
+        .zip(line.step)
+        .is_some_and(|(rho, step)| step == 0 || rho < rounding_at_worst(step, rate, unit))
+    {
+        found.push(Judged::Refused("compare-rounding"));
     }
     // `SHORTEST` rounds up to a tick wherever it enters a sum of lags.
     let shortest_ticks = (u128::from(line.shortest) * u128::from(rate)).div_ceil(1_000_000_000);
     let shortest = round.up((shortest_ticks * 1_000_000_000).div_ceil(u128::from(rate)));
-    let lag = line.j_release + round.up(u128::from(c_rel));
-    if shortest + lag > round.down(u128::from(horizon)) {
-        return Judged::Refused("the release timer's horizon");
+    let lag = line
+        .c_rel
+        .map(|c_rel| line.j_release + round.up(u128::from(c_rel)));
+    if lag
+        .zip(line.horizon)
+        .is_some_and(|(lag, horizon)| shortest + lag > round.down(u128::from(horizon)))
+    {
+        found.push(Judged::Refused("the release timer's horizon"));
     }
-    if lag > round.ticks_down(said, rate) {
-        return Judged::Refused("the release timer's window");
+    if lag.zip(window).is_some_and(|(lag, window)| lag > window) {
+        found.push(Judged::Refused("the release timer's window"));
     }
-    let h = round
-        .down(u128::from(reach))
-        .min(round.ticks_down(modulus - said - 1, rate));
-    if shortest + 2 * rho > h {
-        return Judged::Refused("the release timer's write");
+    if rho.zip(line.reach).is_some_and(|(rho, reach)| {
+        let reach = round.down(u128::from(reach));
+        shortest + 2 * rho > leaves.map_or(reach, |leaves| reach.min(leaves))
+    }) {
+        found.push(Judged::Refused("the release timer's write"));
     }
-    Judged::Holds
+    found
+}
+
+/// What the scheduling checker comes to of the release timer.
+fn judge_release(line: ReleaseLine, unit: u64) -> Judged {
+    highest(release_reasons(line, unit))
 }
 
 /// Each case a round of the review found by reading, run: what a line lacks is what the checker says, and each figure reaches it.
@@ -800,7 +910,7 @@ fn what_the_checker_holds_of_a_line_runs() {
         modulus: Some(65_536),
         reach: Some(60_000_000),
         step: Some(1),
-        window: Some(32_768),
+        window: Some(Reads::Within(32_768)),
         horizon: Some(65_535_000),
         bound: Some(4_000_000),
         asked_reach: Some(2_000_000),
@@ -826,7 +936,7 @@ fn what_the_checker_holds_of_a_line_runs() {
     assert_eq!(
         at_1_us(Line {
             counter_itself: false,
-            window: Some(100),
+            window: Some(Reads::Within(100)),
             ..faster
         }),
         Judged::Refused("window")
@@ -938,11 +1048,11 @@ fn what_the_checker_holds_of_a_line_runs() {
         Judged::Refused("write")
     );
     assert_eq!(separation(1_500, 1_000), 1);
-    // Round 13: `ρ` is the whole step. At a step of 2 and `λ` of 5 a window of 7 holds and 6 does not, where a step less one unit took 6.
+    // Round 13: `ρ` is the whole step. At a step of 2, `λ` of 5 and `J_s` of 30 a window of 37 holds and 36 does not, where a step less one unit took 36.
     let epoch = Line {
         step: Some(2),
         modulus: Some(256),
-        window: Some(8),
+        window: Some(Reads::Within(40)),
         counter_itself: false,
         wake: true,
         stated_by_the_application: false,
@@ -959,14 +1069,14 @@ fn what_the_checker_holds_of_a_line_runs() {
     assert_eq!(at_1_us(epoch), Judged::Holds);
     assert_eq!(
         at_1_us(Line {
-            window: Some(7),
+            window: Some(Reads::Within(37)),
             ..epoch
         }),
         Judged::Holds
     );
     assert_eq!(
         at_1_us(Line {
-            window: Some(6),
+            window: Some(Reads::Within(36)),
             ..epoch
         }),
         Judged::Refused("window")
@@ -980,14 +1090,14 @@ fn what_the_checker_holds_of_a_line_runs() {
     };
     assert_eq!(
         at_1_ns(Line {
-            window: Some(1),
+            window: Some(Reads::Within(1)),
             ..thirds
         }),
         Judged::Refused("window")
     );
     assert_eq!(
         at_1_ns(Line {
-            window: Some(2),
+            window: Some(Reads::Within(2)),
             ..thirds
         }),
         Judged::Holds
@@ -995,20 +1105,21 @@ fn what_the_checker_holds_of_a_line_runs() {
     // And at 2 GHz half a nanosecond is one, not none and not less.
     let fine = Line {
         tick_rate: Some(2_000_000_000),
-        modulus: Some(u64::MAX),
+        modulus: Some(u128::from(u64::MAX)),
         lag: Some(0),
+        j_s: 0,
         ..good
     };
     assert_eq!(
         at_1_ns(Line {
-            window: Some(1),
+            window: Some(Reads::Within(1)),
             ..fine
         }),
         Judged::Refused("window")
     );
     assert_eq!(
         at_1_ns(Line {
-            window: Some(2),
+            window: Some(Reads::Within(2)),
             ..fine
         }),
         Judged::Holds
@@ -1017,7 +1128,7 @@ fn what_the_checker_holds_of_a_line_runs() {
     assert_eq!(
         at_1_us(Line {
             modulus: Some(256),
-            window: Some(16),
+            window: Some(Reads::Within(16)),
             step: Some(1),
             lag: Some(30_000),
             reach: Some(200_000),
@@ -1037,14 +1148,14 @@ fn what_the_checker_holds_of_a_line_runs() {
     );
     assert_eq!(
         at_1_us(Line {
-            p: Some(245_000),
+            p: Some(213_000),
             ..epoch
         }),
         Judged::Holds
     );
     assert_eq!(
         at_1_us(Line {
-            p: Some(246_000),
+            p: Some(214_000),
             ..epoch
         }),
         Judged::Refused("a wake's first arm")
@@ -1088,7 +1199,7 @@ fn what_the_checker_holds_of_a_line_runs() {
     let long_wake = Line {
         modulus: Some(65_536),
         step: Some(1),
-        window: Some(5),
+        window: Some(Reads::Within(32)),
         counter_itself: true,
         lag: Some(1_000),
         reach: Some(65_535_000),
@@ -1111,7 +1222,88 @@ fn what_the_checker_holds_of_a_line_runs() {
         }),
         Judged::Refused("room")
     );
-    // Round 13: the simulator's "has none" is no owed figure: `ρ`, `λ` and a window nothing, and one write reaching one below the modulus, which fits.
+    // Round 14: a level line that falls past its window takes a request held off past it, so a wait of 43 is no window of 16, and the sum says so. Floor 60, `C_s` 10, a job's masked write of 40, as the reader composed it.
+    let held_off = Line {
+        modulus: Some(256),
+        step: Some(1),
+        window: Some(Reads::Within(16)),
+        reach: Some(200_000),
+        counter_itself: false,
+        t_s: Some(60_000),
+        lag: Some(5_000),
+        c_s: Some(10_000),
+        bound: Some(200_000),
+        asked_reach: None,
+        r: None,
+        j_s: 43,
+        w: 0,
+        ..good
+    };
+    assert_eq!(at_1_us(held_off), Judged::Refused("window"));
+    assert_eq!(
+        at_1_us(Line {
+            window: Some(Reads::Within(48)),
+            ..held_off
+        }),
+        Judged::Refused("window")
+    );
+    assert_eq!(
+        at_1_us(Line {
+            window: Some(Reads::Within(49)),
+            ..held_off
+        }),
+        Judged::Holds
+    );
+    // Round 14: a compare that reads whole numbers has no window to hold and no cap on a segment, past an operating horizon, and short of it is refused.
+    let whole = Line {
+        modulus: Some(1 << 64),
+        tick_rate: Some(10_000_000),
+        window: Some(Reads::Magnitude),
+        reach: Some(u64::MAX),
+        ..held_off
+    };
+    assert_eq!(at_1_us(whole), Judged::Holds);
+    assert_eq!(
+        at_1_us(Line {
+            modulus: Some(1 << 32),
+            ..whole
+        }),
+        Judged::Refused("compare-window")
+    );
+    // Round 14: every sum whose inputs it has is checked, as the variant's §4 asks, and the verdict is the highest among them: a refusal over what is owed, and each reason kept.
+    let both = Line {
+        t_s: None,
+        window: Some(Reads::Within(1)),
+        ..held_off
+    };
+    assert_eq!(at_1_us(both), Judged::Refused("window"));
+    assert_eq!(
+        reasons(both, 1_000),
+        vec![Judged::Owed("T_s"), Judged::Refused("window")]
+    );
+    let late = Line {
+        bound: Some(100_000),
+        t_s: Some(60_000),
+        window: Some(Reads::Within(1)),
+        ..held_off
+    };
+    assert_eq!(
+        reasons(late, 1_000),
+        vec![
+            Judged::Refused("window"),
+            Judged::NotEstablished("delivery")
+        ]
+    );
+    assert_eq!(at_1_us(late), Judged::Refused("window"));
+    assert_eq!(
+        at_1_us(Line {
+            bound: Some(100_000),
+            window: Some(Reads::Within(49)),
+            ..held_off
+        }),
+        Judged::NotEstablished("delivery")
+    );
+    // Round 13: the simulator's "has none" is no owed figure: `ρ`, `λ` and a window nothing, and one write reaching one below the modulus, which fits. Its requests wait for their claim, so `window` holds nothing there.
     let simulated = Line {
         simulated: true,
         device: None,
@@ -1139,7 +1331,7 @@ fn what_the_checker_holds_of_the_release_timer_runs() {
         modulus: Some(65_536),
         reach: Some(60_000_000),
         step: Some(2),
-        window: Some(32_768),
+        window: Some(Reads::Within(32_768)),
         horizon: Some(65_535_000),
         shortest: 1_000_000,
         rounding: Some(1_000),
@@ -1220,7 +1412,7 @@ fn what_the_checker_holds_of_the_release_timer_runs() {
     // `J^release + C_rel`, 50, within the window.
     assert_eq!(
         at_1_us(ReleaseLine {
-            window: Some(49),
+            window: Some(Reads::Within(49)),
             ..good
         }),
         Judged::Refused("the release timer's window")
@@ -1243,19 +1435,26 @@ fn what_the_checker_holds_of_the_release_timer_runs() {
     assert_eq!(
         at_1_us(ReleaseLine {
             modulus: Some(1_052),
-            window: Some(50),
+            window: Some(Reads::Within(50)),
             horizon: Some(1_050_000),
             ..good
         }),
         Judged::Refused("the release timer's write")
     );
-    // `RA-H5`'s compare: at most a step less one unit, the variant's reading of a nominal instant.
+    // `RA-H5`'s compare: at least the worst case of a step, and more is a cost's upper bound.
+    assert_eq!(
+        at_1_us(ReleaseLine {
+            rounding: Some(0),
+            ..good
+        }),
+        Judged::Refused("compare-rounding")
+    );
     assert_eq!(
         at_1_us(ReleaseLine {
             rounding: Some(1_001),
             ..good
         }),
-        Judged::Refused("compare-rounding")
+        Judged::Holds
     );
     // `SHORTEST` rounds up to a tick before it is a sum's: 1,000.5 µs at 1 MHz is 1,001.
     assert_eq!(
@@ -1297,6 +1496,166 @@ fn a_compare_tells_a_late_value_from_a_far_one_only_within_its_modulus() {
             }
         }
     }
+}
+
+/// A level line stands while its compare reads the value as due, and a request not yet taken goes with it (`sim_devices`' `Controller::lower`). So a request held off for a `wait` past a value landed `behind` is taken then exactly where the two fit the window, and otherwise only when the count comes round: why `window` holds `J_s` as well as `λ + ρ`.
+#[test]
+fn a_request_waits_only_within_its_window() {
+    for modulus in [16_i64, 64, 256] {
+        for window in 0..modulus {
+            for behind in 0..=window {
+                for wait in 0..modulus - behind {
+                    // The first instant at or past `wait` that the line stands, counted from the landing.
+                    let taken = (wait..)
+                        .find(|since| {
+                            let raw = (-behind - since).rem_euclid(modulus);
+                            raw == 0 || raw >= modulus - window
+                        })
+                        .expect("the count comes round");
+                    if behind + wait <= window {
+                        assert_eq!(taken, wait, "{modulus} {window} {behind} {wait}");
+                    } else {
+                        assert_eq!(
+                            taken,
+                            modulus - behind,
+                            "{modulus} {window} {behind} {wait}"
+                        );
+                    }
+                }
+            }
+        }
+    }
+}
+
+/// `count ≥ value` as whole numbers against every window a device could state: even the best misreads a quarter of all pairs of a count and a value, so `compare-window` has a reading of its own for it.
+#[test]
+fn a_compare_that_reads_whole_numbers_fits_no_window() {
+    for modulus in [16_i64, 64, 256] {
+        for window in 0..modulus {
+            let misread = (0..modulus)
+                .flat_map(|count| (0..modulus).map(move |value| (count, value)))
+                .filter(|(count, value)| {
+                    let raw = (value - count).rem_euclid(modulus);
+                    (raw == 0 || raw >= modulus - window) != (count >= value)
+                })
+                .count();
+            assert!(
+                misread >= usize::try_from(modulus * modulus / 4).expect("it fits"),
+                "modulus {modulus}, window {window}: {misread}"
+            );
+        }
+    }
+}
+
+/// What the closed form says of the rounding is what rounding does: each instant on the unit over one whole cycle of a step, against real rates.
+#[test]
+fn rounding_at_worst_is_what_rounding_adds() {
+    for (step, rate, unit) in [
+        (1_u64, 24_000_000_u64, 1_u64),
+        (1, 10_000_000, 1),
+        (1, 19_200_000, 1),
+        (1, 3_000_000, 1),
+        (1, 1_500_000, 1_000),
+        (1, 32_768, 1_000),
+        (1, 1_000_000, 1_000),
+        (16, 1_000_000, 1_000),
+        (3, 7_000_000, 1),
+    ] {
+        let (p, q) = (
+            u128::from(step) * 1_000_000_000,
+            u128::from(rate) * u128::from(unit),
+        );
+        let common = greatest_common(p, q);
+        let (p, q) = (p / common, q / common);
+        // In `1/q`ths of a unit: `n` is `n·q`, and the next whole step at or past it `⌈n·q / p⌉·p`.
+        let worst = (0..p)
+            .map(|n| (n * q).div_ceil(p) * p - n * q)
+            .max()
+            .expect("a step of at least one");
+        assert_eq!(
+            i64::try_from(worst.div_ceil(q)).expect("it fits"),
+            rounding_at_worst(step, rate, unit),
+            "step {step} at {rate} Hz on {unit} ns"
+        );
+    }
+}
+
+/// The real devices the records and the reviews name, each as its target would state it, so a relation is held of the figures it will meet and not only of a round number.
+#[test]
+fn the_devices_the_records_name_read_as_they_should() {
+    let line = |rate: u64, step: u64, rounding: u64, unit: u64| {
+        judge_release(
+            ReleaseLine {
+                tick_rate: Some(rate),
+                modulus: Some(1 << 32),
+                reach: Some(60_000_000_000),
+                step: Some(step),
+                window: Some(Reads::Within(1 << 31)),
+                horizon: Some(60_000_000_000),
+                shortest: 1_000_000_000,
+                rounding: Some(rounding),
+                c_rel: Some(0),
+                j_release: 0,
+            },
+            unit,
+        )
+    };
+    // `compare-rounding`'s honest figure at each, and one below it, and one above: an overstatement is a cost's upper bound.
+    for (rate, step, unit, honest) in [
+        (24_000_000, 1, 1, 42),
+        (10_000_000, 1, 1, 99),
+        (19_200_000, 1, 1, 52),
+        (3_000_000, 1, 1, 333),
+        (32_768, 1, 1, 30_518),
+        (32_768, 1, 1_000, 31_000),
+        (1_500_000, 1, 1_000, 1_000),
+        (1_000_000, 16, 1_000, 15_000),
+    ] {
+        assert_eq!(line(rate, step, honest, unit), Judged::Holds, "{rate}");
+        assert_eq!(
+            line(rate, step, honest - unit, unit),
+            Judged::Refused("compare-rounding"),
+            "{rate}"
+        );
+        assert_eq!(
+            line(rate, step, honest + unit, unit),
+            Judged::Holds,
+            "{rate}"
+        );
+    }
+    // A step of one unit rounds nothing that falls on the unit, and more stated is still only more.
+    assert_eq!(line(1_000_000, 1, 0, 1_000), Judged::Holds);
+    assert_eq!(line(1_000_000, 1, 1_000, 1_000), Judged::Holds);
+    // A step of 16 and a rounding of nothing is the understatement a bound breaks on.
+    assert_eq!(
+        line(1_000_000, 16, 0, 1_000),
+        Judged::Refused("compare-rounding")
+    );
+    // The machine timer: `mtime` of 64 bits at 10 MHz, read as whole numbers, and a value stays due until it is rewritten.
+    let clint = ReleaseLine {
+        tick_rate: Some(10_000_000),
+        modulus: Some(1 << 64),
+        reach: Some(u64::MAX),
+        step: Some(1),
+        window: Some(Reads::Magnitude),
+        horizon: Some(u64::MAX),
+        shortest: 1_000_000,
+        rounding: Some(100),
+        c_rel: Some(50_000),
+        j_release: 1_000_000,
+    };
+    assert_eq!(judge_release(clint, 1), Judged::Holds);
+    // At 32 bits it wraps in about seven minutes, past which it misreads what no window would tell it.
+    assert_eq!(
+        judge_release(
+            ReleaseLine {
+                modulus: Some(1 << 32),
+                ..clint
+            },
+            1
+        ),
+        Judged::Refused("compare-window")
+    );
 }
 
 /// Each input a sum reads has a row of the record's other table: who owes it, which way it rounds and how it reaches the checker, so no hand-off can leave one with no path there. A fact a row reads is one the vocabulary has, or one the record says it adds.
