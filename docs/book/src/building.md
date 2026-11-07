@@ -41,10 +41,11 @@ source the plan inferred. Run what it wrote:
 
 ```console
 $ cargo run --quiet --manifest-path build/heartbeat/Cargo.toml
-; archogen-playground-trace/3
+; archogen-playground-trace/4
 ; system heartbeat
 ; plan sha256:390fb545f810c644ba38a4341dc4a158f2d586d3c728dea3879867e0fd529fa2
 ; scenario one hyperperiod, 3 ticks of 1/100 s; each source at its stated separation, from time zero
+; device console.uart block
 ; no job runs application code: each body is empty, so only the releases are informative
 ; the plan is not complete: what it owes is unmet, and this run establishes no property
 0 s initialised 1 console.uart

@@ -81,14 +81,22 @@ A mask step masks the hardware before raising the depth, an unmask lowers the de
 runs with the depth raised (`releases-never-latched`). Initialisation runs first, in the plan's steps, interrupts masked,
 and interrupts are enabled at time zero.
 
-**A body is data**: a list of steps, *run for N ticks*, *mask*, *unmask*. `/1` writes every job's as empty, so a job starts
+**A body is data**: a list of steps, *run for N ticks*, *mask*, *unmask*, *read* or *write* a device, *program* an alarm. `/1` writes every job's as empty, so a job starts
 and completes at one instant and the release trace alone observes it, until `M4.12`'s inputs give it code. The harness runs
-longer bodies all the same, so preemption, masking and overrun are exercised now, by its own tests.
+longer bodies all the same, so preemption, masking, overrun, a device's access and an alarm are exercised now, by its own tests.
+
+**Devices and alarms** (`M4.3.5`). A run holds each device the plan's `node` lines write `block` or `platform`, its kind read from there and
+never from the description, and the trace's header names each. A job's read or write of one takes no time and is shown. An alarm, a timer route,
+is a source in the plan's rank among the sources, so before the release timer. It arrives where a job's step programs it and at no other time, a
+value already reached arriving at that write and never lost, each arrival a request of its own that its trap claims, and a write replaces what stood.
+The count does not wrap, being an exact clock whose modulus is 2^64, so what one write reaches is one below that, and there is no lag and no rounding
+(`decision_release-alarm.md`, `RA-H3`). So a generated system's run shows the header's lines and no more until `M4.12`, and a timer route stays programmed by no code.
+What `crates/sim-devices` adds, a wrap, an ambiguous horizon, an edge, waits for `/2` to name a target's devices (`M4.3.6`).
 
 **A run names its scenario.** The horizon is one hyperperiod of what the run repeats (§2). Each
 source whose separation is stated arrives at exactly that separation from time zero, the densest the plan allows. One whose
 separation is zero, `unknown` or `absent`, or that the plan does not enable, does not arrive, and the trace's header says so: a run
-never claims what it did not exercise. **The trace** is `archogen-playground-trace/3`, one line an event, its time exact, its events on
+never claims what it did not exercise. **The trace** is `archogen-playground-trace/4`, one line an event, its time exact, its events on
 the fault paths the ones [`rt-static-up-v1-faults-observation.md`](../profiles/rt-static-up-v1-faults-observation.md) §2 fixes: an
 overrun one `fault` and no `release`, a task already faulted nothing, a timer-released release its nominal instant, and idle entry
 stamped only on a transition into it. Each `mask` and `unmask` that runs is shown, one that raises an assertion failure among them, and

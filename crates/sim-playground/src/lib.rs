@@ -18,7 +18,7 @@
 use rt_core::{Decision, Fatal, Fault, OverrunPolicy, Scheduler, TaskState, Transition};
 
 /// The trace's format, as [`Stamped`]'s `Display` writes it.
-pub const TRACE_FORMAT: &str = "archogen-playground-trace/3";
+pub const TRACE_FORMAT: &str = "archogen-playground-trace/4";
 
 /// One step of a job's body.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -29,6 +29,36 @@ pub enum Step {
     Mask,
     /// Unmask interrupts: the runtime's depth first, then the hardware at depth zero.
     Unmask,
+    /// Read a device, by its place in [`System::devices`]: no time passes, and the run shows it.
+    Read(usize),
+    /// Write a device, by its place in [`System::devices`]: no time passes, and the run shows it.
+    Write(usize),
+    /// Program an alarm, by its place in [`System::sources`], for this many ticks ahead of the write. A value already reached
+    /// arrives at the write and is never lost, as a level compare's does; what stood is replaced.
+    Program {
+        /// Its place.
+        alarm: usize,
+        /// How far ahead.
+        ahead: u64,
+    },
+}
+
+/// What a plan's `node` line says a device is. It is read from the plan, and never from the description (`RTP-H9`).
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum DeviceKind {
+    /// A block.
+    Block,
+    /// A platform.
+    Platform,
+}
+
+/// One device the plan names.
+#[derive(Debug, Clone, Copy)]
+pub struct Device<'a> {
+    /// Its name.
+    pub name: &'a str,
+    /// Its kind.
+    pub kind: DeviceKind,
 }
 
 /// What releases a task.
@@ -60,8 +90,10 @@ pub struct Task<'a> {
 pub struct Source<'a> {
     /// Its name.
     pub name: &'a str,
-    /// The separation it arrives at, in ticks; `None` where the plan states none, so it does not arrive.
+    /// The separation it arrives at, in ticks; `None` where the plan states none, so it does not arrive by itself.
     pub separation: Option<u64>,
+    /// Whether it is an alarm, a timer route, which arrives where a step programs it and at no other time.
+    pub alarm: bool,
 }
 
 /// A system, as a run reads it.
@@ -75,8 +107,10 @@ pub struct System<'a> {
     pub horizon: u64,
     /// Its tasks, in runtime order.
     pub tasks: &'a [Task<'a>],
-    /// Its sources, in the plan's route rank order.
+    /// Its sources, each alarm among them, in the plan's route rank order.
     pub sources: &'a [Source<'a>],
+    /// Each device the plan names.
+    pub devices: &'a [Device<'a>],
     /// Its initialisation's steps, each the nodes of one component.
     pub initialisation: &'a [&'a [&'a str]],
 }
@@ -88,6 +122,8 @@ pub enum Interrupt<'a> {
     Timer,
     /// A source.
     Source(&'a str),
+    /// An alarm.
+    Alarm(&'a str),
 }
 
 /// What a task's overrun policy did (`docs/profiles/rt-static-up-v1-faults-observation.md` §2).
@@ -139,6 +175,17 @@ pub enum Event<'a> {
     Enabled,
     /// The timer programmed for an instant, in ticks.
     TimerProgrammed {
+        /// The instant.
+        at: u64,
+    },
+    /// A job read a device.
+    DeviceRead(&'a str),
+    /// A job wrote a device.
+    DeviceWrite(&'a str),
+    /// A job programmed an alarm for an instant, in ticks.
+    AlarmProgrammed {
+        /// The alarm.
+        alarm: &'a str,
         /// The instant.
         at: u64,
     },
@@ -242,11 +289,17 @@ impl core::fmt::Display for Stamped<'_> {
         let interrupt = |interrupt: Interrupt<'_>| match interrupt {
             Interrupt::Timer => "timer".to_owned(),
             Interrupt::Source(name) => format!("source {name}"),
+            Interrupt::Alarm(name) => format!("alarm {name}"),
         };
         match self.event {
             Event::Initialised { step, node } => write!(f, "initialised {step} {node}"),
             Event::Enabled => write!(f, "enabled"),
             Event::TimerProgrammed { at } => write!(f, "timer-programmed {}", seconds(at)),
+            Event::DeviceRead(device) => write!(f, "device-read {device}"),
+            Event::DeviceWrite(device) => write!(f, "device-write {device}"),
+            Event::AlarmProgrammed { alarm, at } => {
+                write!(f, "alarm-programmed {alarm} {}", seconds(at))
+            }
             Event::InterruptPending(i) => write!(f, "pending {}", interrupt(i)),
             Event::InterruptEntry(i) => write!(f, "entry {}", interrupt(i)),
             Event::InterruptExit(i) => write!(f, "exit {}", interrupt(i)),
@@ -346,8 +399,11 @@ struct Run<'s, 'o, const N: usize> {
     releases: [u64; N],
     /// Each source's next arrival, in step with [`System::sources`].
     arrivals: Vec<Option<u64>>,
-    /// Each source's interrupt, pending.
-    pending: Vec<bool>,
+    /// Each alarm's compare, where one stands, in step with [`System::sources`].
+    compares: Vec<Option<u64>>,
+    /// How many requests each source's interrupt has pending: at most one of a source, whose two before it is taken are one, and
+    /// one per arrival of an alarm (`RA-H3`).
+    pending: Vec<u32>,
     /// The timer's interrupt, pending.
     timer_pending: bool,
     /// Whether the hardware is masked.
@@ -370,6 +426,17 @@ impl<'s, 'o, const N: usize> Run<'s, 'o, N> {
         if ranks.windows(2).any(|pair| pair[0] >= pair[1]) {
             return None;
         }
+        // A step names what the plan holds, or nothing runs.
+        let named = |step: &Step| match *step {
+            Step::Read(device) | Step::Write(device) => device < system.devices.len(),
+            Step::Program { alarm, .. } => {
+                system.sources.get(alarm).is_some_and(|source| source.alarm)
+            }
+            Step::Run(_) | Step::Mask | Step::Unmask => true,
+        };
+        if !system.tasks.iter().all(|task| task.body.iter().all(named)) {
+            return None;
+        }
         Some(Self {
             system,
             observer,
@@ -384,7 +451,8 @@ impl<'s, 'o, const N: usize> Run<'s, 'o, N> {
                 .iter()
                 .map(|source| source.separation.map(|_| 0))
                 .collect(),
-            pending: vec![false; system.sources.len()],
+            compares: vec![None; system.sources.len()],
+            pending: vec![0; system.sources.len()],
             timer_pending: false,
             masked: false,
             idle: false,
@@ -448,8 +516,8 @@ impl<'s, 'o, const N: usize> Run<'s, 'o, N> {
     /// next instruction, its completion among them. True where the runtime halted.
     fn finish_what_is_due(&mut self) -> bool {
         loop {
-            let interrupted =
-                !self.masked && (self.timer_pending || self.pending.iter().any(|pending| *pending));
+            let interrupted = !self.masked
+                && (self.timer_pending || self.pending.iter().any(|pending| *pending > 0));
             if interrupted || !self.has_no_time_left() {
                 return false;
             }
@@ -482,9 +550,17 @@ impl<'s, 'o, const N: usize> Run<'s, 'o, N> {
                 continue;
             };
             if at == self.now && at < system.horizon {
-                self.pending[place] = true;
+                self.pending[place] = 1;
                 self.arrivals[place] = at.checked_add(separation.max(1));
                 self.emit(Event::InterruptPending(Interrupt::Source(source.name)));
+            }
+        }
+        // An alarm arrives where its compare is reached, each arrival a request of its own (`RA-H3`).
+        for (place, source) in system.sources.iter().enumerate() {
+            if source.alarm && self.compares[place].is_some_and(|at| at <= self.now) {
+                self.compares[place] = None;
+                self.pending[place] = self.pending[place].saturating_add(1);
+                self.emit(Event::InterruptPending(Interrupt::Alarm(source.name)));
             }
         }
         // Only when a release is due (`RTP-H9`).
@@ -499,16 +575,21 @@ impl<'s, 'o, const N: usize> Run<'s, 'o, N> {
     fn take_interrupts(&mut self) -> bool {
         let system = self.system;
         loop {
-            if let Some(place) = self.pending.iter().position(|pending| *pending) {
-                self.pending[place] = false;
-                let name = system.sources[place].name;
-                self.emit(Event::InterruptEntry(Interrupt::Source(name)));
+            if let Some(place) = self.pending.iter().position(|pending| *pending > 0) {
+                self.pending[place] -= 1;
+                let source = system.sources[place];
+                let interrupt = if source.alarm {
+                    Interrupt::Alarm(source.name)
+                } else {
+                    Interrupt::Source(source.name)
+                };
+                self.emit(Event::InterruptEntry(interrupt));
                 for (task, spec) in system.tasks.iter().enumerate() {
                     if spec.trigger == Trigger::Source(place) && self.release(task, None) {
                         return true;
                     }
                 }
-                self.emit(Event::InterruptExit(Interrupt::Source(name)));
+                self.emit(Event::InterruptExit(interrupt));
             } else if self.timer_pending {
                 self.timer_pending = false;
                 self.emit(Event::InterruptEntry(Interrupt::Timer));
@@ -698,6 +779,26 @@ impl<'s, 'o, const N: usize> Run<'s, 'o, N> {
                 }
                 Advance::Stepped
             }
+            Some(Step::Read(device)) => {
+                self.jobs[task].step += 1;
+                self.emit(Event::DeviceRead(self.system.devices[device].name));
+                Advance::Stepped
+            }
+            Some(Step::Write(device)) => {
+                self.jobs[task].step += 1;
+                self.emit(Event::DeviceWrite(self.system.devices[device].name));
+                Advance::Stepped
+            }
+            Some(Step::Program { alarm, ahead }) => {
+                let at = self.now.saturating_add(ahead);
+                self.compares[alarm] = Some(at);
+                self.jobs[task].step += 1;
+                self.emit(Event::AlarmProgrammed {
+                    alarm: self.system.sources[alarm].name,
+                    at,
+                });
+                Advance::Stepped
+            }
             Some(Step::Run(ticks)) => {
                 let left = if job.left == 0 { ticks } else { job.left };
                 let finish = self.now.saturating_add(left);
@@ -719,10 +820,12 @@ impl<'s, 'o, const N: usize> Run<'s, 'o, N> {
     /// The instant of the next arrival or due release, after this one and within the horizon.
     fn next_event(&self) -> Option<u64> {
         let arrivals = self.arrivals.iter().flatten().copied();
+        let compares = self.compares.iter().flatten().copied();
         self.releases
             .iter()
             .copied()
             .chain(arrivals)
+            .chain(compares)
             .filter(|at| *at > self.now && *at < self.system.horizon)
             .min()
     }

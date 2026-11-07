@@ -155,7 +155,7 @@ fn a_generated_system_builds_offline_and_runs_without_an_edit() {
     let before = snapshot(&dir);
     let trace = run_package(&dir);
     assert!(
-        trace.starts_with("; archogen-playground-trace/3\n; system heartbeat\n; plan sha256:"),
+        trace.starts_with("; archogen-playground-trace/4\n; system heartbeat\n; plan sha256:"),
         "{trace}"
     );
     assert!(trace.contains("0 s release beat nominal 0 s\n"), "{trace}");
@@ -3050,7 +3050,8 @@ fn every_table_entry_resolves_from_both_ends() {
             "modules",
             "crates/archogen-plan/tests/corpus/modules/app.main.eadl",
             2,
-            1,
+            // A source and a timer route, each a line of its own.
+            2,
             4,
         ),
     ] {
@@ -3101,10 +3102,31 @@ fn every_table_entry_resolves_from_both_ends() {
                     .nth(1)
                     .and_then(|rest| rest.split('"').next())
                     .unwrap_or_else(|| panic!("{table}: {at}"));
+                let route = if at.contains("alarm: true") {
+                    format!("(timer-route {name})")
+                } else {
+                    format!("(source {name})")
+                };
                 assert!(
-                    line.starts_with("(route ") && line.contains(&format!("(source {name})")),
+                    line.starts_with("(route ") && line.contains(&route),
                     "{table}: {line}"
                 );
+            } else if table.starts_with("DEVICES[") {
+                let name = at
+                    .split("name: \"")
+                    .nth(1)
+                    .and_then(|rest| rest.split('"').next())
+                    .unwrap_or_else(|| panic!("{table}: {at}"));
+                assert!(
+                    line.starts_with(&format!("(node {name} ")),
+                    "{table}: {line}"
+                );
+                let kind = if at.contains("DeviceKind::Block") {
+                    "block"
+                } else {
+                    "platform"
+                };
+                assert!(line.contains(&format!(" {kind})")), "{table}: {line}");
             } else {
                 assert!(table.starts_with("INITIALISATION["), "{table}");
                 seen_steps += 1;

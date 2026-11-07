@@ -243,7 +243,7 @@ fn a_generated_system_builds_runs_and_writes_its_releases_in_order() {
     );
     // It says what it is, and what it did not do.
     assert!(
-        trace.starts_with("; archogen-playground-trace/3\n; system heartbeat\n; plan sha256:"),
+        trace.starts_with("; archogen-playground-trace/4\n; system heartbeat\n; plan sha256:"),
         "{trace}"
     );
     assert!(trace.contains("; no job runs application code"), "{trace}");

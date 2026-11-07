@@ -30,7 +30,7 @@ can be. A level line asserted when its service is acknowledged is served again u
 more, and two before it is taken are one, which is why `one-request-per-arrival` is a fact a source's record must state.
 
 **Why the playground does not run on these yet.** Its release timer is an exact clock with no counter to wrap, and a `/1` plan names no target
-device. Wiring them into a run is `M4.3.5`, once `M4.1.7`'s format `/2` names a target's devices (`M4.4.1`), so that the facts come from the plan
+device. Wiring them into a run is `M4.3.6`, once `M4.1.7`'s format `/2` names a target's devices (`M4.4.1`), so that the facts come from the plan
 and never from the description (`RTP-H9`). Until then they are held by their contract tests alone, and nothing is claimed of a generated system.
 
 ## Why

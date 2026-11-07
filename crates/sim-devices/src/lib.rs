@@ -2,7 +2,7 @@
 //! controller as exact state machines over ticks, each reading its contract as data, so that what a contract promises can be run
 //! and every small case of it enumerated. F13, F14 and F15 are held in `tests/contract.rs`.
 //!
-//! It does no I/O and takes no clock: a caller says what instant it is. What wires these into a run is `M4.3.5`, once a plan names a
+//! It does no I/O and takes no clock: a caller says what instant it is. What wires these into a run is `M4.3.6`, once a plan names a
 //! target's devices (`M4.1.7`): the playground's own release timer is an exact clock with no counter to wrap.
 
 #![forbid(unsafe_code)]

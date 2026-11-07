@@ -2,7 +2,9 @@
 //! exact trace it makes. A job's body is data, so what `/1` cannot yet reach, preemption, masking and overrun, is held here.
 
 use rt_core::OverrunPolicy;
-use sim_playground::{run, Ended, Observer, Source, Stamped, Step, System, Task, Trigger};
+use sim_playground::{
+    run, Device, DeviceKind, Ended, Observer, Source, Stamped, Step, System, Task, Trigger,
+};
 
 /// Every event as the trace writes it.
 #[derive(Default)]
@@ -27,6 +29,7 @@ fn system<'a>(tasks: &'a [Task<'a>], sources: &'a [Source<'a>], horizon: u64) ->
         horizon,
         tasks,
         sources,
+        devices: &[],
         initialisation: &[],
     }
 }
@@ -233,6 +236,7 @@ fn idle_is_stamped_on_a_transition_into_it_and_not_on_a_trap_that_returns_to_it(
     let sources = [Source {
         name: "s",
         separation: Some(2),
+        alarm: false,
     }];
     let tasks = [Task {
         name: "on-s",
@@ -302,10 +306,12 @@ fn the_routes_are_taken_in_rank_order_and_all_before_the_timer() {
         Source {
             name: "a",
             separation: Some(10),
+            alarm: false,
         },
         Source {
             name: "b",
             separation: Some(10),
+            alarm: false,
         },
     ];
     let tasks = [
@@ -344,10 +350,12 @@ fn a_source_arrives_at_its_stated_separation_and_one_stating_none_never() {
         Source {
             name: "stated",
             separation: Some(2),
+            alarm: false,
         },
         Source {
             name: "unstated",
             separation: None,
+            alarm: false,
         },
     ];
     let tasks = [Task {
@@ -464,7 +472,200 @@ fn one_input_has_one_trace() {
     let sources = [Source {
         name: "s",
         separation: Some(4),
+        alarm: false,
     }];
     let first = trace::<2>(&system(&tasks, &sources, 21));
     assert_eq!(first, trace::<2>(&system(&tasks, &sources, 21)));
+}
+
+fn alarm(name: &str) -> Source<'_> {
+    Source {
+        name,
+        separation: None,
+        alarm: true,
+    }
+}
+
+/// A job's read and write of a device the plan names are shown where they run, and take no time.
+#[test]
+fn a_job_s_access_to_a_device_is_shown_where_it_runs() {
+    let devices = [Device {
+        name: "dev",
+        kind: DeviceKind::Block,
+    }];
+    let tasks = [timer(
+        "job",
+        1,
+        10,
+        &[Step::Read(0), Step::Run(2), Step::Write(0)],
+    )];
+    let mut system = system(&tasks, &[], 10);
+    system.devices = &devices;
+    let (ended, lines) = trace::<1>(&system);
+    assert_eq!(ended, Ended::Horizon);
+    let at = |line: &str| lines.iter().position(|said| said == line).expect(line);
+    assert!(at("0 s start job") < at("0 s device-read dev"), "{lines:?}");
+    assert!(
+        at("0 s device-read dev") < at("1/50 s device-write dev"),
+        "{lines:?}"
+    );
+    assert!(
+        at("1/50 s device-write dev") < at("1/50 s complete job"),
+        "{lines:?}"
+    );
+}
+
+/// An alarm arrives where a step programs it and at no other time, as a request its service claims, and releases what it names.
+#[test]
+fn an_alarm_arrives_where_it_was_programmed_and_releases_its_task() {
+    let sources = [alarm("wake")];
+    let tasks = [
+        Task {
+            name: "woken",
+            rank: 1,
+            policy: OverrunPolicy::Fault,
+            trigger: Trigger::Source(0),
+            body: &[],
+        },
+        timer("arms", 2, 10, &[Step::Program { alarm: 0, ahead: 3 }]),
+    ];
+    let (ended, lines) = trace::<2>(&system(&tasks, &sources, 10));
+    assert_eq!(ended, Ended::Horizon);
+    for line in [
+        "0 s alarm-programmed wake 3/100 s",
+        "3/100 s pending alarm wake",
+        "3/100 s entry alarm wake",
+        "3/100 s release woken",
+        "3/100 s exit alarm wake",
+    ] {
+        assert!(lines.iter().any(|said| said == line), "{line}: {lines:?}");
+    }
+    assert_eq!(
+        lines
+            .iter()
+            .filter(|said| said.contains("pending alarm"))
+            .count(),
+        1,
+        "{lines:?}"
+    );
+}
+
+/// A value already reached arrives at the write and is never lost, and an unprogrammed alarm never arrives.
+#[test]
+fn a_value_already_reached_arrives_at_the_write_and_none_programmed_never() {
+    let sources = [alarm("now"), alarm("never")];
+    let tasks = [timer(
+        "arms",
+        1,
+        10,
+        &[Step::Program { alarm: 0, ahead: 0 }],
+    )];
+    let (_, lines) = trace::<1>(&system(&tasks, &sources, 10));
+    assert!(
+        lines.iter().any(|said| said == "0 s pending alarm now"),
+        "{lines:?}"
+    );
+    assert!(
+        lines.iter().any(|said| said == "0 s entry alarm now"),
+        "{lines:?}"
+    );
+    assert!(
+        !lines.iter().any(|said| said.contains("never")),
+        "{lines:?}"
+    );
+}
+
+/// Programmed inside a masked run, it waits for the unmask; each arrival is a request of its own, and a later write replaces what stood.
+#[test]
+fn an_alarm_waits_out_a_masked_run_each_arrival_a_request() {
+    let sources = [alarm("a")];
+    let body = [
+        Step::Mask,
+        Step::Program { alarm: 0, ahead: 1 },
+        Step::Run(2),
+        Step::Program { alarm: 0, ahead: 0 },
+        Step::Run(1),
+        Step::Unmask,
+    ];
+    let tasks = [timer("job", 1, 10, &body)];
+    let (_, lines) = trace::<1>(&system(&tasks, &sources, 10));
+    let count = |line: &str| lines.iter().filter(|said| *said == line).count();
+    assert_eq!(count("1/100 s pending alarm a"), 1, "{lines:?}");
+    assert_eq!(count("1/50 s pending alarm a"), 1, "{lines:?}");
+    assert_eq!(count("3/100 s entry alarm a"), 2, "{lines:?}");
+    assert!(
+        !lines.iter().any(|said| said.starts_with("0 s entry alarm")),
+        "{lines:?}"
+    );
+
+    let replaced = [
+        Step::Program { alarm: 0, ahead: 5 },
+        Step::Program { alarm: 0, ahead: 2 },
+    ];
+    let tasks = [timer("job", 1, 10, &replaced)];
+    let (_, lines) = trace::<1>(&system(&tasks, &sources, 10));
+    assert_eq!(
+        lines
+            .iter()
+            .filter(|said| said.contains("pending alarm"))
+            .count(),
+        1,
+        "{lines:?}"
+    );
+    assert!(
+        lines.iter().any(|said| said == "1/50 s pending alarm a"),
+        "{lines:?}"
+    );
+}
+
+/// An alarm stands where a source stands: in the plan's rank among them, before the release timer.
+#[test]
+fn an_alarm_stands_in_rank_among_sources_before_the_timer() {
+    let sources = [
+        alarm("first"),
+        Source {
+            name: "second",
+            separation: Some(10),
+            alarm: false,
+        },
+    ];
+    let tasks = [timer(
+        "arms",
+        1,
+        10,
+        &[Step::Program {
+            alarm: 0,
+            ahead: 10,
+        }],
+    )];
+    let (_, lines) = trace::<1>(&system(&tasks, &sources, 20));
+    let at = |line: &str| lines.iter().position(|said| said == line).expect(line);
+    assert!(
+        at("1/10 s entry alarm first") < at("1/10 s entry source second"),
+        "{lines:?}"
+    );
+    assert!(
+        at("1/10 s entry source second") < at("1/10 s entry timer"),
+        "{lines:?}"
+    );
+}
+
+/// A step naming what the plan does not hold, or a source that is no alarm, runs nothing.
+#[test]
+fn a_step_naming_what_the_plan_does_not_hold_boots_nothing() {
+    let sources = [Source {
+        name: "plain",
+        separation: None,
+        alarm: false,
+    }];
+    for body in [
+        [Step::Read(0)],
+        [Step::Write(3)],
+        [Step::Program { alarm: 0, ahead: 1 }],
+        [Step::Program { alarm: 9, ahead: 1 }],
+    ] {
+        let tasks = [timer("job", 1, 10, &body)];
+        let (ended, _) = trace::<1>(&system(&tasks, &sources, 10));
+        assert_eq!(ended, Ended::NotBooted);
+    }
 }
