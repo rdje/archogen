@@ -492,7 +492,7 @@ impl Diagnostics {
                     "too-many-errors",
                     format!("{MOST_ERRORS} errors, and what else there is goes unsaid"),
                     Label::new(diagnostic.primary.span, "the next one is here"),
-                    "this may be no description at all: repair these, or give another file",
+                    "repair these, or give another file",
                 ));
             }
             if self.errors > MOST_ERRORS {

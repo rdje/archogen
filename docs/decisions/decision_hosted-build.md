@@ -105,7 +105,9 @@ a halt's `fault` holds what `rt-core` keeps, its first report the only one. What
 **A run is bounded.** A hyperperiod that fits `u64` can still be a run nobody could read: `1 ms` against `2305843009213693951 ms`
 never ends. So a plan whose one hyperperiod holds more than `2^20` timer releases and source arrivals is refused
 `unsupported-profile`, naming the count, rather than cut short; a run of a part of a hyperperiod, named as such, is a scenario
-`M4.3` may add.
+`M4.3` may add. So is one instant bounded, which no count of a plan can say: a job an alarm releases can program that alarm for now, and time
+would never move, so a run takes at most `2^20` steps at one instant, and past that it stops, says so and exits 1. Generated code holds an
+alarm's floor (`RA-H6`), so this stops only what a hand-written body can write.
 
 ### 4. The emitter
 
@@ -230,6 +232,7 @@ capability unsupported. Then the S0 crate was deleted (`M4.2.4`), and the retire
 | 21 | 11 | 5 (R21-1 to R21-5), beside 1 gap, 2 routes and 3 of wording | `2026-11-06`, not acceptable, up from 4, so answered by method: what a request holds is measured, per shape, by what it allocates, and the chapter points at that in place of a sentence that was false of the next shape; a name has a limit in the language, which removes what multiplied through messages and the closure; a pair of regions keeps what can move a verdict; one writer passes what a person reads |
 | 22 | 14 | 6 (R22-1 to R22-6), beside 4 gaps and 4 of wording | `2026-11-06`, not acceptable, 6 after 2, 4, 5, so answered by method again: one process has a ceiling, whatever shape reaches it, in place of a cap per list. R22-1 and R22-2 were round 21's own: its cap counted a list holding another verdict, and its limit on a name refused the engine's own plan. A cap goes by its kind, a record is read without the limit, a label has a limit, a package's name fits a file name, a row of the cost test states what it reaches and what it compares |
 | 23 | 10 | 4 (R23-1 to R23-4), beside 3 gaps, 1 route and 2 of wording | `2026-11-06`, not acceptable, 4 after 6 — answered: the ceiling's method held for each program started directly and not through the front, which cleared its environment and read a checker's stop as a fault. The ceiling now reaches what the front starts, a stop there is `analysis-inconclusive` by both, what the checker would refuse of a whole path is refused first, and each refusal states a repair |
+| 24 | 10 | 2 (R24-1, R24-2), beside 5 gaps and 3 of wording | `2026-11-07`, not acceptable, 2 after 4, both in what `M4.3.5` added and reached only by a hand-written body — answered: a value already reached is a request at its write, and one instant has a limit, as a hyperperiod has. What a run says of a place or a name is now one line wherever it comes from, a generated package with no device draws no warning, and the build tests hold that of each package. |
 
 The rounds, each finding and its answer, are in
 [`docs/reviews/decision_hosted-build-reviews.md`](../reviews/decision_hosted-build-reviews.md).

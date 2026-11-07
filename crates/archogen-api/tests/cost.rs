@@ -243,7 +243,7 @@ impl Row {
     }
 }
 
-/// Each shape a round of the review found. Held at this size, since a test must end, each allowed about what it was measured to hold, so that a shape's cost doubling fails it. Each states what its text reaches, in all three commands.
+/// Each shape a round of the review found. Held at this size, since a test must end, each allowed about what its largest command was measured to hold, its three commands sharing that allowance, so that the largest's cost doubling fails it, and another's only once it passes that. Each states what its text reaches, in all three commands.
 fn rows() -> Vec<Row> {
     use Status::{InfeasibleConfiguration as Infeasible, InvalidDescription as Invalid, Ok};
     let junk = |shape, text| row(shape, text, Invalid, Invalid);

@@ -27,6 +27,11 @@ use archogen_install::{Manifest, FILE};
 /// The most of a manifest the front reads: one names the front and a handful of siblings.
 const MANIFEST_LIMIT: usize = 1 << 16;
 
+/// A place as a refusal says it: where an install stands is anyone's name, and this says it within a line of its own words.
+fn place(path: &Path) -> String {
+    eadl_front::fit_name(&path.display().to_string())
+}
+
 /// The launcher of an installed front: it runs the siblings its install's manifest names.
 #[derive(Debug, Clone, Copy, Default)]
 pub struct Installed;
@@ -45,8 +50,8 @@ impl Launch for Installed {
             return Err(refused(
                 format!(
                     "the install manifest in {} names {} as its directory, so it describes another install",
-                    dir.display(),
-                    manifest.directory()
+                    place(&dir),
+                    eadl_front::fit_name(manifest.directory())
                 ),
                 "install the toolchain again, into one directory, and run the `archogen` it places there",
             ));
@@ -55,7 +60,7 @@ impl Launch for Installed {
             refused(
                 format!(
                     "cannot read the running `archogen`, {}, to check it: {error}",
-                    front.display()
+                    place(&front)
                 ),
                 "run the `archogen` an install placed",
             )
@@ -64,28 +69,28 @@ impl Launch for Installed {
             return Err(refused(
                 format!(
                     "this `archogen` is not the one the install in {} placed, so its siblings are another build's",
-                    dir.display()
+                    place(&dir)
                 ),
                 "install the toolchain again, so the front and its siblings come from one build",
             ));
         }
         let Some(entry) = manifest.sibling(program) else {
             return Err(refused(
-                format!("the install in {} has no `{program}`", dir.display()),
+                format!("the install in {} has no `{program}`", place(&dir)),
                 "install the toolchain again from a commit whose front runs it",
             ));
         };
         let file = dir.join(&entry.name);
         let mut opened = File::open(&file).map_err(|error| {
             refused(
-                format!("cannot open `{program}` in {}: {error}", dir.display()),
+                format!("cannot open `{program}` in {}: {error}", place(&dir)),
                 "install the toolchain again",
             )
         })?;
         let mut bytes = Vec::new();
         opened.read_to_end(&mut bytes).map_err(|error| {
             refused(
-                format!("cannot read `{program}` in {}: {error}", dir.display()),
+                format!("cannot read `{program}` in {}: {error}", place(&dir)),
                 "install the toolchain again",
             )
         })?;
@@ -93,7 +98,7 @@ impl Launch for Installed {
             return Err(refused(
                 format!(
                     "`{program}` in {} is not the one the install placed: its sha256 is not the manifest's",
-                    dir.display()
+                    place(&dir)
                 ),
                 "install the toolchain again, so the front and its siblings come from one build",
             ));
@@ -109,7 +114,7 @@ impl Launch for Installed {
             .output()
             .map_err(|error| {
                 refused(
-                    format!("cannot start `{program}` in {}: {error}", dir.display()),
+                    format!("cannot start `{program}` in {}: {error}", place(&dir)),
                     "check that the install's programs are executable, and that this user has room for another process and its files; or install the toolchain again",
                 )
             })?;
@@ -148,7 +153,7 @@ fn install() -> Result<(PathBuf, PathBuf), Unlaunched> {
         })?;
     let dir = front.parent().map(Path::to_path_buf).ok_or_else(|| {
         refused(
-            format!("{} lies in no directory", front.display()),
+            format!("{} lies in no directory", place(&front)),
             "run an installed `archogen`",
         )
     })?;
@@ -167,22 +172,19 @@ fn manifest(dir: &Path, program: &str) -> Result<Manifest, Unlaunched> {
     match read {
         Ok(_) => Manifest::read(&bytes, MANIFEST_LIMIT).map_err(|refusal| {
             refused(
-                format!("the install manifest {}: {refusal}", file.display()),
+                format!("the install manifest {}: {refusal}", place(&file)),
                 "install the toolchain again",
             )
         }),
         Err(error) if error.kind() == std::io::ErrorKind::NotFound => Err(refused(
             format!(
                 "`{program}` runs from an install, and {} has no install manifest, {FILE}",
-                dir.display()
+                place(dir)
             ),
             "place the toolchain with `cargo xtask install --to DIR`, then run `DIR/archogen`",
         )),
         Err(error) => Err(refused(
-            format!(
-                "cannot read the install manifest {}: {error}",
-                file.display()
-            ),
+            format!("cannot read the install manifest {}: {error}", place(&file)),
             "install the toolchain again",
         )),
     }

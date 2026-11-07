@@ -534,11 +534,14 @@ impl Place {
 
     /// What `DIR.replaced` still holds, by name, the first few of it.
     fn remaining(&self) -> String {
+        // A name is anyone's, and this says it within a line of its own words.
         let named = |at: &Path| {
-            at.strip_prefix(&self.replaced)
-                .unwrap_or(at)
-                .display()
-                .to_string()
+            eadl_front::fit_name(
+                &at.strip_prefix(&self.replaced)
+                    .unwrap_or(at)
+                    .display()
+                    .to_string(),
+            )
         };
         let mut remains: Vec<String> = Vec::new();
         let mut pending = vec![self.replaced.clone()];

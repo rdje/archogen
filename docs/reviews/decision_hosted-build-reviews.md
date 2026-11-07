@@ -470,3 +470,22 @@ Said, and left as it stands: sizes past about 1.2 GB were not run, each 1 MiB fi
 | R23-10 | wording | "nothing was judged" with an accepting record in the stage; `archogen:` from the checker; "shorten what it was given"; requested bytes against what malloc rounds | The stop says who, and that it came to no conclusion; the chapter says what is counted |
 
 Said, and left as it stands: its reader could not run a real full disk or mount, other filesystems, Linux, another user, a sticky directory or the wasm bindings, nor a real checker past 2048 MiB, a stand-in script taking its place. On plain tasks the checker holds a little more than the search, so from about 570,000 tasks, by arithmetic, the search fits and the checker does not, and `build` has no way round but to raise the ceiling. A server stopped there still gives no JSON-RPC answer, as the chapter states.
+
+**Round 24** — `2026-11-07`, leaf `M4.2.3.3.24`: not acceptable, 10 findings, 2 defects, after 2, 4, 5, 6 and 4, on `36e1f1f5`. Both defects are in what `M4.3.5` added, reached only by a hand-written body, and neither touches a user's bytes, a later leaf or a verdict on a plan. About 800 real commands and 30,000 random bodies held the rest. A generated system's bodies are empty until `M4.12`.
+
+| # | Kind | Finding | Answer |
+| --- | --- | --- | --- |
+| R24-1 | defect, `M4.3.5`'s | a value already reached is lost or arrives late when nothing after its write takes time: `[Program{0,0}, Program{0,5}]` lost the first; `[Mask, Program{0,0}, Unmask, Write(0)]` wrote before its service, against "never lost" and "taken before the job's next instruction" | A value already reached is a request at its write, with nothing standing, so the path is one with or without `Run(1)` |
+| R24-2 | defect, `M4.3.5`'s | a run need not end: a job an alarm releases can program that alarm for now, and time never moves, against "a run is bounded" | At most `2^20` steps at one instant, then `Ended::NoProgress`, which a generated program says and exits 1 on; the limit is the hyperperiod's, a body that long still ends, and generated code holds a floor (`RA-H6`) |
+| R24-3 | gap, R23-5 incomplete | the names an aside keeps are printed raw | `Place::remaining` says each as a diagnostic says a name |
+| R24-4 | gap, older | where an install stands is printed raw, and `sibling()` wrote outside `Printable` | Each place in `sibling.rs` is said as a name, and `sibling()` writes through it; a real copy in such a directory holds that |
+| R24-5 | gap, `M4.3.5`'s | a generated package with no device draws a warning, and fails under `-D warnings` | The import only with a device, and the two tests that build a real package build it under `-D warnings`, so a warning there fails here |
+| R24-6 | gap | `line-break-in-the-whole-path` had no assertion in `resolve.rs`, and no test ran from such a place or gave `--out` by such a link | It has one, and the real program runs both, under both commands |
+| R24-7 | gap | R23-6's "a shape's cost doubling fails it" holds only of each row's largest command: three share one allowance | `cost.rs` says so. Three allowances per row would hold more, and 17 rows of them cost more than the class they would catch |
+| R24-8 | wording | `targets.md` listed three of a body's steps; two comments said trace `/3` | All six; `/4` |
+| R24-9 | wording | `cli.md`, `consume.rs`'s header and `building.md`'s step 4 had no ceiling and too little `usage` | Each does |
+| R24-10 | wording | `ARCHOGEN_MEMORY_MIB=0` and a very large value were "no whole number"; `too-many-errors` told a description of 1,001 unmet needs it may be no description | It says what a ceiling is; the repair is what the language's reference says |
+
+Found answering, and no finding of the reader's: a job's look for time left read the rest of its body at every step, a cost in the square of a body's length, which the limit's own test met as an hour. It carries on from what it last found, so a job reads its body once, and that test takes about 2 seconds.
+
+Said, and left as it stands: its reader could not run a full disk, other filesystems, Linux, another user, a sticky directory, wasm or a checker past 256 MiB. A whole path that is no text was unverified, APFS refusing to make one: `absolute` refuses it, since the checker would be handed another path, and its test runs on Linux and not on this host. A hand-built `Source{alarm: true, separation: Some}` arrives unprogrammed and `Trigger::Source(9)` boots silently; the emitter writes neither.

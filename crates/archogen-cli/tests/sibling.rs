@@ -331,3 +331,26 @@ fn a_checker_at_its_ceiling_is_inconclusive_through_the_real_front() {
     );
     assert!(!plan.exists());
 }
+
+/// Where a copy stands is anyone's name: what it says of that place is one line of its own words, with nothing a terminal would act on.
+#[test]
+fn the_place_an_install_stands_is_said_on_one_line() {
+    let dir = scratch().join("x\nall clear: accepted\n\u{1b}[2Jy");
+    std::fs::create_dir(&dir).expect("a directory");
+    let front = dir.join("archogen");
+    std::fs::copy(FRONT, &front).expect("a copy");
+    for args in [
+        &["plan-check", "--version"][..],
+        &["help", "plan-check"][..],
+    ] {
+        let output = run(&front, args);
+        assert_eq!(output.status.code(), Some(70), "{args:?}");
+        let err = text(&output.stderr);
+        assert!(err.contains("all clear: accepted"), "{args:?}: {err}");
+        assert!(
+            !err.lines().any(|line| line.starts_with("all clear")),
+            "{args:?}: {err}"
+        );
+        assert!(!err.contains('\u{1b}'), "{args:?}: {err}");
+    }
+}

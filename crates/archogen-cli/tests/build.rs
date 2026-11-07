@@ -908,6 +908,29 @@ impl Launch for Meddling {
     }
 }
 
+/// What an aside keeps is anyone's name, and is said on one line.
+#[test]
+fn what_an_aside_keeps_is_said_on_one_line() {
+    let root = scratch("meanwhile-a-name");
+    let dir = root.join("out");
+    let description = example(HEARTBEAT);
+    let (status, _, err) = build(&description, &dir);
+    assert_eq!(status, Status::Ok, "{err}");
+    let (status, _, err) = invoke(
+        &["build", &description, "--out", &dir.display().to_string()],
+        &Meddling {
+            file: dir.join("x\nall clear: accepted\ny"),
+        },
+    );
+    assert_eq!(status, Status::Ok, "{err}");
+    assert!(err.contains("keeps what could not go"), "{err}");
+    assert!(err.contains("all clear: accepted"), "{err}");
+    assert!(
+        !err.lines().any(|line| line.starts_with("all clear")),
+        "{err}"
+    );
+}
+
 #[test]
 fn what_appears_while_a_build_runs_stays_and_is_said() {
     let root = scratch("meanwhile");

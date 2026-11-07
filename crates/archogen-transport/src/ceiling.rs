@@ -50,8 +50,9 @@ pub fn from_environment(is_the_checker: bool) -> Result<(), String> {
         .filter(|mib| (1..=usize::MAX >> 20).contains(mib));
     let Some(mib) = mib else {
         return Err(format!(
-            "{VARIABLE} is `{}`, which is no whole number of MiB",
-            value.to_string_lossy().escape_debug()
+            "{VARIABLE} is `{}`, and a ceiling is a whole number of MiB from 1 to {}",
+            value.to_string_lossy().escape_debug(),
+            usize::MAX >> 20
         ));
     };
     MOST.store(mib << 20, Ordering::Relaxed);

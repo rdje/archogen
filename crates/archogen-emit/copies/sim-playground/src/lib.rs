@@ -365,6 +365,9 @@ pub trait Observer {
     fn observe(&mut self, event: Stamped<'_>);
 }
 
+/// How many steps a run takes at one instant before it stops: what bounds a hyperperiod's releases (`decision_hosted-build.md` §3).
+pub const MOST_STEPS_AT_ONE_INSTANT: u64 = 1 << 20;
+
 /// How a run ended.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum Ended {
@@ -372,16 +375,20 @@ pub enum Ended {
     Horizon,
     /// The runtime halted.
     Halted,
+    /// It took [`MOST_STEPS_AT_ONE_INSTANT`] steps with time standing still: a job and what it programs keeping each other going.
+    NoProgress,
     /// The system could not be booted: its tasks' ranks were not the runtime's.
     NotBooted,
 }
 
-/// A job under way: where its body has reached, and what is left of the step it is in.
+/// A job under way: where its body has reached, what is left of the step it is in, and how far its body is known to take no time.
 #[derive(Debug, Clone, Copy, Default)]
 struct Job {
     step: usize,
     left: u64,
     started: bool,
+    /// No step from [`Job::step`] up to this one takes time.
+    next_timed: usize,
 }
 
 /// `system` run to its horizon, each event handed to `observer`.
@@ -411,6 +418,9 @@ struct Run<'s, 'o, const N: usize> {
     /// Whether idle has been entered and nothing has run since, so that a trap returning to it stamps no entry.
     idle: bool,
     now: u64,
+    /// The instant steps were last counted at, and how many it has taken.
+    counted_at: u64,
+    steps_here: u64,
 }
 
 impl<'s, 'o, const N: usize> Run<'s, 'o, N> {
@@ -457,6 +467,8 @@ impl<'s, 'o, const N: usize> Run<'s, 'o, N> {
             masked: false,
             idle: false,
             now: 0,
+            counted_at: 0,
+            steps_here: 0,
         })
     }
 
@@ -493,8 +505,8 @@ impl<'s, 'o, const N: usize> Run<'s, 'o, N> {
             self.emit(Event::TimerProgrammed { at });
         }
         loop {
-            if self.finish_what_is_due() {
-                return Ended::Halted;
+            if let Some(ended) = self.finish_what_is_due() {
+                return ended;
             }
             self.arrive();
             if !self.masked && self.take_interrupts() {
@@ -507,39 +519,49 @@ impl<'s, 'o, const N: usize> Run<'s, 'o, N> {
                 Advance::Stepped => {}
                 Advance::Halted => return Ended::Halted,
                 Advance::Horizon => return Ended::Horizon,
+                Advance::NoProgress => return Ended::NoProgress,
             }
         }
     }
 
     /// The running job finished, if it has nothing left that takes time, so that its completion comes before what arrives at
     /// this instant (`ROADMAP.md` §13.4). It stops at an unmask that lets a pending interrupt in, which is taken before the job's
-    /// next instruction, its completion among them. True where the runtime halted.
-    fn finish_what_is_due(&mut self) -> bool {
+    /// next instruction, its completion among them. How the run ended, where it did.
+    fn finish_what_is_due(&mut self) -> Option<Ended> {
         loop {
             let interrupted = !self.masked
                 && (self.timer_pending || self.pending.iter().any(|pending| *pending > 0));
             if interrupted || !self.has_no_time_left() {
-                return false;
+                return None;
             }
-            if matches!(self.advance(), Advance::Halted) {
-                return true;
+            match self.advance() {
+                Advance::Halted => return Some(Ended::Halted),
+                Advance::NoProgress => return Some(Ended::NoProgress),
+                Advance::Stepped | Advance::Horizon => {}
             }
         }
     }
 
-    /// Whether a job is running with nothing left that takes time.
-    fn has_no_time_left(&self) -> bool {
-        (0..N)
-            .find(|task| self.scheduler.state(*task) == TaskState::Running)
-            .is_some_and(|task| {
-                let job = self.jobs[task];
-                job.left == 0
-                    && self.system.tasks[task]
-                        .body
-                        .iter()
-                        .skip(job.step)
-                        .all(|step| !matches!(step, Step::Run(ticks) if *ticks > 0))
-            })
+    /// Whether a job is running with nothing left that takes time. It carries on from what it last found, so a job reads its body
+    /// once however long that is, and what a run costs stays in step with the steps it takes.
+    fn has_no_time_left(&mut self) -> bool {
+        let Some(task) = (0..N).find(|task| self.scheduler.state(*task) == TaskState::Running)
+        else {
+            return false;
+        };
+        let job = self.jobs[task];
+        if job.left != 0 {
+            return false;
+        }
+        let body = self.system.tasks[task].body;
+        let from = job.next_timed.max(job.step);
+        let rest = body.get(from..).unwrap_or_default();
+        let found = rest
+            .iter()
+            .position(|step| matches!(step, Step::Run(ticks) if *ticks > 0))
+            .unwrap_or(rest.len());
+        self.jobs[task].next_timed = from + found;
+        from + found == body.len()
     }
 
     /// Whatever arrives at this instant becomes pending, whether or not anything can take it.
@@ -729,6 +751,15 @@ impl<'s, 'o, const N: usize> Run<'s, 'o, N> {
 
     /// The running job's body advanced to its next event, or time to the next arrival.
     fn advance(&mut self) -> Advance {
+        if self.counted_at == self.now {
+            self.steps_here += 1;
+            if self.steps_here > MOST_STEPS_AT_ONE_INSTANT {
+                return Advance::NoProgress;
+            }
+        } else {
+            self.counted_at = self.now;
+            self.steps_here = 1;
+        }
         let next = self.next_event();
         let running = (0..N).find(|task| self.scheduler.state(*task) == TaskState::Running);
         let Some(task) = running else {
@@ -791,12 +822,18 @@ impl<'s, 'o, const N: usize> Run<'s, 'o, N> {
             }
             Some(Step::Program { alarm, ahead }) => {
                 let at = self.now.saturating_add(ahead);
-                self.compares[alarm] = Some(at);
+                let name = self.system.sources[alarm].name;
                 self.jobs[task].step += 1;
-                self.emit(Event::AlarmProgrammed {
-                    alarm: self.system.sources[alarm].name,
-                    at,
-                });
+                self.emit(Event::AlarmProgrammed { alarm: name, at });
+                // A value already reached arrives at this write, so what follows at this instant cannot replace it, and an
+                // unmasked job's next step comes after its service. Any other stands, and arrives where it is reached.
+                if at <= self.now {
+                    self.compares[alarm] = None;
+                    self.pending[alarm] = self.pending[alarm].saturating_add(1);
+                    self.emit(Event::InterruptPending(Interrupt::Alarm(name)));
+                } else {
+                    self.compares[alarm] = Some(at);
+                }
                 Advance::Stepped
             }
             Some(Step::Run(ticks)) => {
@@ -839,4 +876,6 @@ enum Advance {
     Halted,
     /// The horizon was reached.
     Horizon,
+    /// Time stood still past [`MOST_STEPS_AT_ONE_INSTANT`] steps.
+    NoProgress,
 }

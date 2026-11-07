@@ -8,8 +8,8 @@
 //! plan the front computed digests of, under the profile the front asked for — so a record left by another run, or
 //! written about other inputs, is never taken for this one's.
 //!
-//! ⛔ **Anything else is `tool-failure`, naming what disagreed**: a signal, a code no status has, no record, a record
-//! that does not read, a code and a status that differ, another producer, subject or profile. And a checker that finds
+//! ⛔ **Anything else is `tool-failure`, naming what disagreed**: a signal, a code no status has, no record but with a
+//! resource limit's code, which is a checker stopped at its memory ceiling and `analysis-inconclusive`, a record that does not read, a code and a status that differ, another producer, subject or profile. And a checker that finds
 //! the description itself wanting — a status of the description's own, or a stale plan the front wrote moments ago —
 //! is the two roles disagreeing about one input, which no single verdict may hide: `tool-failure` naming both.
 
@@ -413,10 +413,12 @@ fn absolute(file: &Path, what: &str) -> Result<PathBuf, Refusal> {
         }),
         // It refuses an argument holding one, since what it says of a path would write a line of its own, and a link or the
         // place this run stands can bring one that no argument of this run holds.
-        _ if named.to_string_lossy().contains(['\n', '\r']) => Err(Refusal {
+        _ if named.to_str().is_none_or(|text| text.contains(['\n', '\r'])) => Err(Refusal {
             status: Status::Usage,
-            message: format!("the checker is handed {what} by its whole path, and that holds a line break"),
-            repair: "run this from, or give it, a place whose whole path holds none".to_owned(),
+            message: format!(
+                "the checker is handed {what} by its whole path, and that holds a line break, or what is no text"
+            ),
+            repair: "run this from, or give it, a place whose whole path is text with no line break".to_owned(),
         }),
         _ => Ok(named),
     }

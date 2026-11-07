@@ -1486,12 +1486,14 @@ fn plan_routes() -> Vec<(&'static str, Route)> {
             std::fs::copy(heartbeat(), real.join("h.eadl")).expect("copied");
             std::os::unix::fs::symlink(&real, root.join("link")).expect("a link");
             let description = root.join("link/h.eadl").display().to_string();
-            resolve_of(
+            let outcome = resolve_of(
                 &description,
                 &root.join("p").display().to_string(),
                 &[],
                 Answer::Record(Status::Ok),
-            )
+            );
+            assert!(!root.join("p").exists());
+            outcome
         }),
         ("no-checker", |root| {
             // The real executable, and no install beside it.

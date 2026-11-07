@@ -152,14 +152,53 @@ fn every_shape_stops_at_the_ceiling_with_nothing_judged() {
     }
 }
 
-/// The ceiling is `analysis-inconclusive`'s code, which the transport cannot name, and what is no ceiling is refused before anything runs.
+/// A line break no argument holds, brought by where the run stands or by a link `--out` goes through, is refused by the real program, with nothing written.
+#[test]
+fn a_line_break_no_argument_holds_is_refused() {
+    let dir = scratch();
+    let real = dir.join("a\nb");
+    std::fs::create_dir(&real).expect("a directory");
+    let text = format!("{HEAD}(defblock blk (offers (reachable-at-privilege machine)))\n{PLATFORM}(defsystem m {A_TASK} (platform (uses soc)))\n");
+    std::fs::write(real.join("h.eadl"), &text).expect("written");
+    std::fs::write(dir.join("h.eadl"), &text).expect("written");
+    std::os::unix::fs::symlink(&real, dir.join("link")).expect("a link");
+    for command in ["resolve", "build"] {
+        for (place, out) in [(&real, "out"), (&dir, "link/out")] {
+            let (code, said) = run_in(place, "2048", &[command, "h.eadl", "--out", out]);
+            assert_eq!(code, Status::Usage.code(), "{command} {out}: {said}");
+            assert!(
+                said.contains("holds a line break"),
+                "{command} {out}: {said}"
+            );
+            assert!(!real.join("out").exists(), "{command} {out}");
+        }
+    }
+}
+
+/// A whole path that is no text would reach the checker as another path. Where a filesystem can hold one.
+#[cfg(target_os = "linux")]
+#[test]
+fn a_whole_path_that_is_no_text_is_refused() {
+    use std::os::unix::ffi::OsStrExt;
+    let dir = scratch();
+    let real = dir.join(std::ffi::OsStr::from_bytes(b"a\xffb"));
+    std::fs::create_dir(&real).expect("a directory");
+    let text = format!("{HEAD}(defblock blk (offers (reachable-at-privilege machine)))\n{PLATFORM}(defsystem m {A_TASK} (platform (uses soc)))\n");
+    std::fs::write(real.join("h.eadl"), &text).expect("written");
+    let (code, said) = run_in(&real, "2048", &["resolve", "h.eadl", "--out", "out"]);
+    assert_eq!(code, Status::Usage.code(), "{said}");
+    assert!(said.contains("no text"), "{said}");
+}
+
+/// The ceiling is `analysis-inconclusive`'s code, which the transport cannot name, and what is no ceiling is refused before anything runs, saying what one is.
 #[test]
 fn a_ceiling_is_a_whole_number_of_mib() {
     let dir = scratch();
-    for bad in ["many", "0", "-1", "1.5", ""] {
+    for bad in ["many", "0", "-1", "1.5", "", "99999999999999999999"] {
         let (code, said) = run_in(&dir, bad, &["check", "s.eadl"]);
         assert_eq!(code, Status::Usage.code(), "`{bad}`: {said}");
         assert!(said.contains(VARIABLE), "`{bad}`: {said}");
+        assert!(said.contains("from 1 to"), "`{bad}`: {said}");
     }
     std::fs::write(dir.join("s.eadl"), HEAD).expect("written");
     let (code, said) = run_in(&dir, "4096", &["check", "s.eadl"]);

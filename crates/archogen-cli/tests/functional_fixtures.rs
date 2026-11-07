@@ -13,7 +13,7 @@
 //! derivation below, however convenient: it is written from the contract in `examples/s0-heartbeat/README.md`.
 //!
 //! ⭐ **What moved at `M4.2.3.1`.** The same frozen bytes, now compared with what a system generated through the search,
-//! the checker and the lowering observes. Its trace is `archogen-playground-trace/3`, so [`observation_of`] reads the
+//! the checker and the lowering observes. Its trace is `archogen-playground-trace/4`, so [`observation_of`] reads the
 //! releases out of it into the contract's form; the fixtures hold what is observed, not how it is printed. One frozen
 //! file moved, with its reason in its own header: the case S0 refused as `unsupported-profile`.
 //!
@@ -580,7 +580,7 @@ fn snapshot(dir: &Path) -> Vec<(String, Vec<u8>)> {
 }
 
 /// What the trace a generated system printed observes, in the form of `examples/s0-heartbeat/README.md`'s contract: the
-/// system, its releases and the run's length. The trace's own form is `archogen-playground-trace/3`; these fixtures hold
+/// system, its releases and the run's length. The trace's own form is `archogen-playground-trace/4`; these fixtures hold
 /// what it says, not how, so they outlive it.
 fn observation_of(trace: &str) -> String {
     let header = |prefix: &str| {
@@ -654,6 +654,8 @@ fn generate_compile_run(description: &str, dir: &Path) -> String {
         // Its own target directory: the generated crate must not share, or contend for the lock
         // on, the workspace's.
         .env("CARGO_TARGET_DIR", dir.join("target"))
+        // A warning in what we generate is a builder's failure under this flag, so it is ours here.
+        .env("RUSTFLAGS", "-D warnings")
         .output()
         .expect("cargo is runnable");
     assert!(

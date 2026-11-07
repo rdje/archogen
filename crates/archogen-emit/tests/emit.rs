@@ -196,6 +196,8 @@ fn run(emitted: &Emitted, name: &str) -> String {
         .args(["run", "-q", "--offline", "--manifest-path"])
         .arg(dir.join("Cargo.toml"))
         .env("CARGO_TARGET_DIR", dir.join("target"))
+        // A warning in what we generate is a builder's failure under this flag, so it is ours here.
+        .env("RUSTFLAGS", "-D warnings")
         .output()
         .expect("cargo runs");
     assert!(
@@ -204,6 +206,21 @@ fn run(emitted: &Emitted, name: &str) -> String {
         String::from_utf8_lossy(&output.stderr)
     );
     String::from_utf8(output.stdout).expect("text")
+}
+
+/// A system with no device draws no warning: under `-D warnings` the unused import stopped its build.
+#[test]
+fn a_generated_system_with_no_device_builds_under_no_warnings() {
+    let emitted = build_of(concat!(
+        "(eadl-version eadl/1)\n(defblock blk (offers (reachable-at-privilege machine)))\n",
+        "(defplatform soc (offers (core-count 1 tick) (reachable-at-privilege machine)) (requires (uses blk)))\n",
+        "(defsystem m (task t (period 100 ms) (deadline 100 ms) (deadline-from release) (priority 1) (on-overrun fault)) (platform (uses soc)))\n",
+    ))
+    .emitted()
+    .expect("emitted");
+    let main = file(&emitted, "src/main.rs");
+    assert!(!main.contains("DeviceKind"), "{main}");
+    assert!(run(&emitted, "no-device").contains("release t"));
 }
 
 #[test]

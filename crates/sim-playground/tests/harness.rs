@@ -4,6 +4,7 @@
 use rt_core::OverrunPolicy;
 use sim_playground::{
     run, Device, DeviceKind, Ended, Observer, Source, Stamped, Step, System, Task, Trigger,
+    MOST_STEPS_AT_ONE_INSTANT,
 };
 
 /// Every event as the trace writes it.
@@ -668,4 +669,122 @@ fn a_step_naming_what_the_plan_does_not_hold_boots_nothing() {
         let (ended, _) = trace::<1>(&system(&tasks, &sources, 10));
         assert_eq!(ended, Ended::NotBooted);
     }
+}
+
+/// A value already reached is a request at its write, whatever follows it at that instant and whether or not anything after it takes time: the next write cannot replace it, and an unmasked job's next step, its completion among them, comes after its service.
+#[test]
+fn a_value_already_reached_is_a_request_at_its_write_whatever_follows() {
+    let sources = [alarm("a")];
+    let now = Step::Program { alarm: 0, ahead: 0 };
+    let later = Step::Program { alarm: 0, ahead: 5 };
+    for (tail, ended_at) in [
+        (&[][..], "0 s complete job"),
+        (&[Step::Run(1)][..], "1/100 s complete job"),
+    ] {
+        // Each arrives where its own write says, the second standing.
+        let body = [&[now, later][..], tail].concat();
+        let tasks = [timer("job", 1, 10, &body)];
+        let (_, lines) = trace::<1>(&system(&tasks, &sources, 10));
+        let at = |line: &str| lines.iter().position(|said| said == line).expect(line);
+        assert!(at("0 s entry alarm a") < at(ended_at), "{lines:?}");
+        assert!(
+            lines.iter().any(|said| said == "1/20 s entry alarm a"),
+            "{lines:?}"
+        );
+        // Two writes of what is reached are two requests.
+        let body = [&[now, now][..], tail].concat();
+        let tasks = [timer("job", 1, 10, &body)];
+        let (_, lines) = trace::<1>(&system(&tasks, &sources, 10));
+        let entries = lines
+            .iter()
+            .filter(|said| *said == "0 s entry alarm a")
+            .count();
+        assert_eq!(entries, 2, "{lines:?}");
+    }
+    // Written masked, it waits for the unmask, and is taken before the step after it.
+    let body = [Step::Mask, now, Step::Unmask, Step::Mask, Step::Unmask];
+    let tasks = [timer("job", 1, 10, &body)];
+    let (_, lines) = trace::<1>(&system(&tasks, &sources, 10));
+    let unmasks: Vec<usize> = lines
+        .iter()
+        .enumerate()
+        .filter(|(_, said)| said.ends_with("unmask job"))
+        .map(|(at, _)| at)
+        .collect();
+    let entry = lines
+        .iter()
+        .position(|said| said == "0 s entry alarm a")
+        .expect("taken");
+    let masks_after = lines
+        .iter()
+        .enumerate()
+        .filter(|(_, said)| said.ends_with(" mask job"))
+        .map(|(at, _)| at)
+        .nth(1)
+        .expect("a second mask");
+    assert!(unmasks[0] < entry && entry < masks_after, "{lines:?}");
+}
+
+/// Counts what a run says and holds none of it, so a test of a long one costs no memory.
+#[derive(Default)]
+struct Counted(u64);
+
+impl Observer for Counted {
+    fn observe(&mut self, _: Stamped<'_>) {
+        self.0 += 1;
+    }
+}
+
+fn woken<'a>(body: &'a [Step]) -> Task<'a> {
+    Task {
+        name: "woken",
+        rank: 1,
+        policy: OverrunPolicy::SkipLateJob,
+        trigger: Trigger::Source(0),
+        body,
+    }
+}
+
+/// A job an alarm releases programming that alarm for now: time never moves, and the run says so and ends, the same way each time.
+#[test]
+fn a_run_with_time_standing_still_ends() {
+    let sources = [alarm("a")];
+    let arms = [Step::Program { alarm: 0, ahead: 0 }];
+    for body in [
+        &arms[..],
+        &[Step::Program { alarm: 0, ahead: 0 }, Step::Run(1)][..],
+    ] {
+        let tasks = [woken(body), timer("arms", 2, 10, &arms)];
+        let system = system(&tasks, &sources, 10);
+        let (mut once, mut again) = (Counted::default(), Counted::default());
+        assert_eq!(run::<2>(&system, &mut once), Ended::NoProgress);
+        assert_eq!(run::<2>(&system, &mut again), Ended::NoProgress);
+        assert_eq!(once.0, again.0);
+    }
+}
+
+/// The limit is on steps at one instant, a job's completion and the step that moves time among them, so a body that fills it ends
+/// as any does and one a step longer stops. A body this long is also what a look down the rest of it at every step would cost an
+/// hour on, so the time this takes is part of what it checks.
+#[test]
+fn only_what_passes_the_limit_at_one_instant_stops() {
+    let long = usize::try_from(MOST_STEPS_AT_ONE_INSTANT).expect("it fits");
+    for (steps, ended) in [(long - 2, Ended::Horizon), (long - 1, Ended::NoProgress)] {
+        let body = vec![Step::Run(0); steps];
+        let tasks = [timer("job", 1, 10, &body)];
+        assert_eq!(
+            run::<1>(&system(&tasks, &[], 1), &mut Counted::default()),
+            ended,
+            "{steps}"
+        );
+    }
+    // And time moving starts it again.
+    let mut body = vec![Step::Run(0); long - 1];
+    body.push(Step::Run(1));
+    body.extend(vec![Step::Run(0); long - 2]);
+    let tasks = [timer("job", 1, 10, &body)];
+    assert_eq!(
+        run::<1>(&system(&tasks, &[], 2), &mut Counted::default()),
+        Ended::Horizon
+    );
 }

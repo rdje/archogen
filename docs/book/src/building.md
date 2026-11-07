@@ -119,7 +119,7 @@ is code the engine compiles and tests, and `crates/archogen-emit/tests/emit.rs` 
 | 1 | the profile, then `--locked` | the invocation cannot be honored |
 | 2 | the engine API's `resolve`: the check, then the search | the description, or what it asks of its hardware: the same verdict `archogen check` or `archogen resolve` gives |
 | 3 | `--out`, and what stands beside it | the place: `usage`, before anything is written, and the table below says which |
-| 4 | the installed `archogen-plan-check` | it could not judge, or two programs disagree about one input: `tool-failure`; or the description or a module cannot be handed to it as a file, by a name it can read: `usage` |
+| 4 | the installed `archogen-plan-check` | it stopped at its memory ceiling: `analysis-inconclusive`; it could not judge, or two programs disagree about one input: `tool-failure`; or the description, a module, the plan or where its record goes cannot be handed to it as a file, by a name it can read: `usage` |
 | 5 | the lowering and the emitter | what this format cannot yet express |
 | 6 | writing and landing the package | the output directory: `tool-failure`, or `usage` where a name a module brought leaves no room in a path |
 

@@ -649,6 +649,14 @@ fn main_rs(
     }
     lines.push("];".to_owned());
     lines.push(String::new());
+    // What a system with no device would not use, and a warning its builder would read as ours.
+    if devices.is_empty() {
+        for line in &mut lines {
+            if line.starts_with("use sim_playground::") {
+                *line = line.replace(" DeviceKind,", "");
+            }
+        }
+    }
     lines.push(format!("const DEVICES: [Device; {}] = [", devices.len()));
     for (slot, (name, kind)) in devices.iter().enumerate() {
         lines.push(format!(
@@ -730,6 +738,10 @@ fn main_rs(
         [
             "        Ended::Horizon => ExitCode::SUCCESS,",
             "        Ended::Halted => ExitCode::from(1),",
+            "        Ended::NoProgress => {",
+            "            eprintln!(\"this run took too many steps with time standing still, and stopped there\");",
+            "            ExitCode::from(1)",
+            "        }",
             "        Ended::NotBooted => {",
             "            eprintln!(\"the generated tables are not the runtime's: a defect of the engine, so report it\");",
             "            ExitCode::from(70)",

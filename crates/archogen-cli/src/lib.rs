@@ -120,7 +120,7 @@ fn sibling(
             repair: unlaunched.repair,
         },
     };
-    report(err, &refusal)
+    report(&mut Printable(err), &refusal)
 }
 
 fn emit(out: &mut dyn Write, text: &str) -> Status {
