@@ -188,6 +188,8 @@ the rule: what it says is run, and a route it does not name is promised nothing 
 | `junk` | a file of junk that reads or does not, past a thousand errors | `invalid-description` | `goes unsaid` | nothing made |
 | `no-provider` | a search finds nothing to meet a need, each provider stating what refuses it | `infeasible-configuration` | `no plan was written` | nothing made; each refusal said once |
 | `no-room-path` | a path with no room for what a build writes beneath it, as the checker is handed it | `usage` | `leaves no room in a path` | nothing made |
+| `at-the-ceiling` | the checker reaches its memory ceiling, and writes no record | `analysis-inconclusive` | `memory ceiling` | no package; nothing this run wrote |
+| `line-break-in-the-whole-path` | a link or where the run stands brings a line break no argument holds, into what the checker would be handed | `usage` | `holds a line break` | nothing made |
 | `file-on-the-way` | a file among `--out`'s parents | `usage` | `is no directory` | the file |
 | `link-on-the-way` | a link to nothing among `--out`'s parents | `usage` | `a link to nothing` | the link |
 | `link-to-a-directory-on-the-way` | a link to a directory among `--out`'s parents | `ok` | `generated` | the package, beneath what the link points at |

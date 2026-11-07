@@ -59,7 +59,7 @@ usage: archogen-plan-check [--profile ID] [--result PATH] [--] DESCRIPTION PLAN
                    JSON-RPC message per line on standard input and output, until the input ends; alone
 
 The exit code is the result's status, as `archogen` writes it: 0 ok; 2 usage, no record written; 3 stale-input, the
-plan written for another description — resolve again; 10 to 13 the description's own status; 70 tool-failure, a
+plan written for another description — resolve again; 10 to 13 the description's own status; 14 analysis-inconclusive, its memory ceiling reached, no record written; 70 tool-failure, a
 corrupted plan or a checker that could not finish.";
 
 /// What this process may hold at once, whatever a description's shape asks of it.
@@ -67,8 +67,13 @@ corrupted plan or a checker that could not finish.";
 static CEILING: archogen_transport::ceiling::Ceiling = archogen_transport::ceiling::Ceiling;
 
 fn main() -> ExitCode {
-    if let Err(why) = archogen_transport::ceiling::from_environment() {
-        let status = refuse(&mut std::io::stderr().lock(), Status::Usage, &why);
+    if let Err(why) = archogen_transport::ceiling::from_environment(true) {
+        let status = refuse_with(
+            &mut std::io::stderr().lock(),
+            Status::Usage,
+            &why,
+            "give a whole number of MiB, or leave it unset",
+        );
         return ExitCode::from(u8::try_from(status.code()).unwrap_or(2));
     }
     // `std::env::args` panics on an argument that is no text, and exit 101 is a code no status has.
@@ -77,18 +82,20 @@ fn main() -> ExitCode {
         .map(std::ffi::OsString::into_string)
         .collect();
     let Ok(args) = args else {
-        let status = refuse(
+        let status = refuse_with(
             &mut std::io::stderr().lock(),
             Status::Usage,
             "an argument is not UTF-8",
+            "give paths and names this tool can print",
         );
         return ExitCode::from(u8::try_from(status.code()).unwrap_or(2));
     };
     if args.iter().any(|arg| arg.contains(['\n', '\r'])) {
-        let status = refuse(
+        let status = refuse_with(
             &mut std::io::stderr().lock(),
             Status::Usage,
             "an argument holds a line break, which could write a line of a run's own",
+            "give paths and names this tool can print",
         );
         return ExitCode::from(u8::try_from(status.code()).unwrap_or(2));
     }

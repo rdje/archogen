@@ -188,10 +188,10 @@ The command line asks with no budget. It is its own consumer and trusts the file
 language's limits still apply to it, because they belong to the language.
 
 **One process has a ceiling.** A budget bounds the text, what compares pairs can ask far more than its text, and no list
-of shapes is ever whole. So `archogen` and `archogen-plan-check` count what they hold as they allocate it, and past
-2048 MiB stop there, saying so on standard error, with `analysis-inconclusive`: a resource limit prevented a conclusion, and
-nothing was judged (`crates/archogen-transport/src/ceiling.rs`, held by `crates/archogen-cli/tests/hosted_limits.rs`). It
-is the instance's, as a budget is: `ARCHOGEN_MEMORY_MIB` sets it where the program starts, and nothing a request says reaches
+of shapes is ever whole. So `archogen` and `archogen-plan-check` count what they ask the allocator for, what it rounds up to beside that, and past
+2048 MiB stop there, saying so on standard error, with `analysis-inconclusive`: a resource limit prevented a conclusion
+(`crates/archogen-transport/src/ceiling.rs`, held by `crates/archogen-cli/tests/hosted_limits.rs`). It
+is the instance's, as a budget is: `ARCHOGEN_MEMORY_MIB` sets it where the program starts, the front handing it on to the checker it starts, and nothing a request says reaches
 it. An allocation cannot be unwound, so it ends the process and not the request. A server ends there, and a client starts it
 again having lost nothing, since it is stateless between requests; a run leaves what any stopped run leaves. A wasm binding
 and a program using the API as a library are held by what holds them, their host's memory and their own process.

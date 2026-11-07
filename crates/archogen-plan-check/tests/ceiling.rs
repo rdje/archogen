@@ -25,17 +25,33 @@ fn the_checker_stops_at_its_ceiling() {
         .join(format!("plan-check-ceiling-{}", std::process::id()));
     let _ = std::fs::remove_dir_all(&dir);
     std::fs::create_dir_all(&dir).expect("a scratch directory");
-    std::fs::write(dir.join("d.eadl"), "x ".repeat(4 * 1024 * 1024)).expect("written");
     std::fs::write(dir.join("p"), "(junk)").expect("written");
-    let (code, said) = checker("2", &dir, &["d.eadl", "p"]);
+    // Well above what the program itself takes, so this is the fixture's doing, as the small one beside it shows.
+    std::fs::write(dir.join("small.eadl"), "x ").expect("written");
+    let (code, said) = checker("32", &dir, &["small.eadl", "p"]);
+    assert_ne!(code, Status::AnalysisInconclusive.code(), "{said}");
+    std::fs::write(dir.join("d.eadl"), "x ".repeat(32 * 1024 * 1024)).expect("written");
+    let (code, said) = checker("32", &dir, &["d.eadl", "p"]);
     assert_eq!(code, Status::AnalysisInconclusive.code(), "{said}");
     assert!(said.contains(VARIABLE), "{said}");
+    assert!(said.starts_with("archogen-plan-check:"), "{said}");
+    std::fs::remove_file(dir.join("d.eadl")).expect("removed");
 
     let (code, said) = checker("64", &dir, &["d\nall clear.eadl", "p"]);
     assert_eq!(code, Status::Usage.code(), "{said}");
     assert!(said.contains("line break"), "{said}");
+    assert!(said.contains("hint:"), "{said}");
 
     let (code, said) = checker("many", &dir, &["d.eadl", "p"]);
     assert_eq!(code, Status::Usage.code(), "{said}");
     assert!(said.contains(VARIABLE), "{said}");
+    assert!(said.contains("hint:"), "{said}");
+    let (code, said) = checker("x\nall clear: accepted\n", &dir, &["d.eadl", "p"]);
+    assert_eq!(code, Status::Usage.code(), "{said}");
+    assert!(
+        !said
+            .lines()
+            .any(|line| line.trim() == "all clear: accepted"),
+        "{said}"
+    );
 }

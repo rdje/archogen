@@ -278,3 +278,56 @@ fn one_stream_failing_loses_the_other_nothing_and_the_sibling_s_code_stands() {
     assert_eq!(text(&output.stdout).trim(), "to-out");
     assert_eq!(output.status.code(), Some(15), "{output:?}");
 }
+
+/// The ceiling reaches what the front starts, and nothing else of its environment does (`crates/archogen-cli/src/sibling.rs`).
+#[test]
+fn the_memory_ceiling_reaches_the_checker_and_nothing_else_does() {
+    let front = install(&Spoil {
+        script: Some("#!/bin/sh\necho \"ceiling=$ARCHOGEN_MEMORY_MIB other=$OTHER\"\n"),
+        ..Spoil::default()
+    });
+    let output = std::process::Command::new(&front)
+        .args(["plan-check", "x"])
+        .env("ARCHOGEN_MEMORY_MIB", "77")
+        .env("OTHER", "set")
+        .stdin(std::process::Stdio::null())
+        .output()
+        .expect("the front runs");
+    assert_eq!(output.status.code(), Some(0), "{}", text(&output.stderr));
+    assert_eq!(text(&output.stdout), "ceiling=77 other=\n");
+}
+
+/// A checker stopped at its ceiling, through the real front, is what it says, and no fault of the toolchain's.
+#[test]
+fn a_checker_at_its_ceiling_is_inconclusive_through_the_real_front() {
+    let front = install(&Spoil {
+        script: Some("#!/bin/sh\nexit 14\n"),
+        ..Spoil::default()
+    });
+    let dir = scratch();
+    let description = dir.join("s.eadl");
+    std::fs::copy(
+        concat!(
+            env!("CARGO_MANIFEST_DIR"),
+            "/../../examples/s0-heartbeat/system.eadl"
+        ),
+        &description,
+    )
+    .expect("copied");
+    let plan = dir.join("p");
+    let output = std::process::Command::new(&front)
+        .args(["resolve"])
+        .arg(&description)
+        .arg("--out")
+        .arg(&plan)
+        .stdin(std::process::Stdio::null())
+        .output()
+        .expect("the front runs");
+    assert_eq!(output.status.code(), Some(14), "{}", text(&output.stderr));
+    assert!(
+        text(&output.stderr).contains("memory ceiling"),
+        "{}",
+        text(&output.stderr)
+    );
+    assert!(!plan.exists());
+}

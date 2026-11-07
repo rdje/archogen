@@ -336,7 +336,7 @@ impl Built {
                 let Some(name) = relative.to_str() else {
                     return Some(NotAsWritten::Changed(format!(
                         "`{}` is no file a build wrote",
-                        relative.display()
+                        eadl_front::fit_name(&relative.display().to_string())
                     )));
                 };
                 if name == PROVENANCE_FILE || CARRIED.contains(&name) {
@@ -350,7 +350,8 @@ impl Built {
                     || !(kind.is_ok_and(|kind| kind.is_file()) && listed.contains(name))
                 {
                     return Some(NotAsWritten::Changed(format!(
-                        "`{name}` is no file a build wrote"
+                        "`{}` is no file a build wrote",
+                        eadl_front::fit_name(name)
                     )));
                 }
             }

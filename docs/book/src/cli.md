@@ -222,6 +222,8 @@ again just before it is used, and in that instant what stands there is what is u
 | `refused` | the checker refuses the plan | `tool-failure` | `refuses the plan the search wrote` | what stood at `PLAN` and its record; the plan and this record in `PLAN.part`, for the report |
 | `record-unsound` | the checker's record does not hold together with what it did | `tool-failure` | `does not hold together` | what stood at `PLAN`; the plan and the record in `PLAN.part`, for the report |
 | `no-record` | the checker runs and writes no record | `tool-failure` | `wrote no record` | what stood at `PLAN` and its record; nothing this run wrote |
+| `at-the-ceiling` | the checker reaches its memory ceiling, and writes no record | `analysis-inconclusive` | `memory ceiling` | what stood at `PLAN` and its record; nothing this run wrote |
+| `line-break-in-the-whole-path` | a link or where the run stands brings a line break no argument holds, into what the checker would be handed | `usage` | `holds a line break` | nothing made |
 | `no-checker` | no install beside the command, so no checker can be run | `tool-failure` | `has no install manifest` | what stood at `PLAN`; nothing this run wrote |
 | `closed-meanwhile` | the checker accepts, and `PLAN.check` can no longer take a record | `tool-failure` | `cannot put the checker's record` | what stood at `PLAN` and its record; nothing this run wrote |
 | `a-flag-as-its-value` | `--out --unchecked`, the parser taking the next word as `--out`'s value | `ok` | `resolved system` | a plan named `--unchecked` |
@@ -285,7 +287,7 @@ are the `ROADMAP.md` §5.5 vocabulary:
 | `16` | `counterexample` | a validated witness violates a named property |
 | `70` | `tool-failure` | internal failure or an unavailable required tool |
 
-A run past its memory ceiling is `analysis-inconclusive`, with nothing judged ([What one request may cost](engine-api.md)). An argument holding a line break is `usage`, as one that is no UTF-8 is, since what a run says of it could write a line of its own.
+A run past its memory ceiling is `analysis-inconclusive` ([What one request may cost](engine-api.md)), a checker's too. It stops where it stands: what stood at `--out` is as it was, what it had made at `PLAN.part` or `DIR.building` stays, as any stopped run's does, the next run naming it, and a record a checker had accepted there judges nothing. An argument holding a line break is `usage`, as one that is no UTF-8 is, since what a run says of it could write a line of its own.
 
 **Process-level statuses** say what happened to *the invocation*. They make no claim about
 any description:

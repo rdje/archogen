@@ -186,6 +186,11 @@ struct Row {
     modules_size: usize,
     checked: Status,
     resolved: Status,
+    /// What `explain` is asked of, a fact the shape's requesters ask where it has any, and what that answers.
+    fact: &'static str,
+    explained: Status,
+    /// What a byte of its text may cost, by what its shape was measured to.
+    per_byte: usize,
     /// How many pairs it compares, and what each may cost; what grows with its text alone has none.
     pairs: usize,
     per_pair: usize,
@@ -200,6 +205,9 @@ fn row(shape: &'static str, text: String, checked: Status, resolved: Status) -> 
         modules_size: 0,
         checked,
         resolved,
+        fact: "observable-output",
+        explained: resolved,
+        per_byte: 100,
         pairs: 0,
         per_pair: 0,
     }
@@ -209,6 +217,17 @@ impl Row {
     fn pairs(mut self, pairs: usize, per_pair: usize) -> Self {
         self.pairs = pairs;
         self.per_pair = per_pair;
+        self
+    }
+
+    fn asks(mut self, fact: &'static str, explained: Status) -> Self {
+        self.fact = fact;
+        self.explained = explained;
+        self
+    }
+
+    fn per_byte(mut self, per_byte: usize) -> Self {
+        self.per_byte = per_byte;
         self
     }
 
@@ -224,17 +243,20 @@ impl Row {
     }
 }
 
-/// Each shape a round of the review found. Held at this size, since a test must end, and tight enough that a shape's cost growing fails it.
+/// Each shape a round of the review found. Held at this size, since a test must end, each allowed about what it was measured to hold, so that a shape's cost doubling fails it. Each states what its text reaches, in all three commands.
 fn rows() -> Vec<Row> {
     use Status::{InfeasibleConfiguration as Infeasible, InvalidDescription as Invalid, Ok};
     let junk = |shape, text| row(shape, text, Invalid, Invalid);
     let (deep_text, deep_modules, deep_size) = deep(500);
     vec![
-        junk("junk that does not read", "\0".repeat(128 * 1024)),
+        junk("junk that does not read", "\0".repeat(128 * 1024)).per_byte(30),
         junk("junk on one line", "x ".repeat(64 * 1024)),
         junk("junk on many", "x\n".repeat(64 * 1024)),
-        junk("malformed numbers", "1.2.3 ".repeat(20_000)),
-        row("a system of tasks", tasks(1000), Ok, Ok),
+        junk("malformed numbers", "1.2.3 ".repeat(20_000)).per_byte(10),
+        // No requirement to ask of: `explain` says so.
+        row("a system of tasks", tasks(1000), Ok, Ok)
+            .asks("observable-output", Status::Usage)
+            .per_byte(30),
         junk(
             "a fact stated both ways",
             format!(
@@ -242,23 +264,32 @@ fn rows() -> Vec<Row> {
                 "f ".repeat(1000),
                 "f ".repeat(1000)
             ),
-        ),
+        )
+        .per_byte(300),
         row(
             "one offer refined many ways",
             refined(500, 500),
             Infeasible,
             Infeasible,
-        ),
-        row("regions at one base", regions(800), Ok, Invalid),
-        row("a long name in each fact", facts(1000), Ok, Ok),
+        )
+        .per_byte(50),
+        row("regions at one base", regions(800), Ok, Invalid).per_byte(30),
+        // A fact the vocabulary does not declare is no binding's, so `explain` has nothing to say of it.
+        row("a long name in each fact", facts(1000), Ok, Ok)
+            .asks("f0", Status::Usage)
+            .per_byte(50),
         row(
             "a long source's name, answered of each requester",
             met(500, 1),
             Ok,
             Ok,
         )
-        .named("s".repeat(65_536)),
-        row("a closure in a deep module tree", deep_text, Ok, Ok).with(deep_modules, deep_size),
+        .named("s".repeat(65_536))
+        .per_byte(30),
+        row("a closure in a deep module tree", deep_text, Ok, Ok)
+            .with(deep_modules, deep_size)
+            .asks("f0", Status::Usage)
+            .per_byte(300),
         row(
             "sizeless regions on two devices",
             sizeless(150),
@@ -272,34 +303,38 @@ fn rows() -> Vec<Row> {
             Ok,
             Invalid,
         )
-        .pairs(90_000, 400),
+        .pairs(90_000, 320),
         row(
             "requesters over timers through an adapter",
             through_an_adapter(20, 20),
             Ok,
             Status::AnalysisInconclusive,
         )
-        .pairs(400, 16 * 1024),
+        .asks("tick-rate", Status::AnalysisInconclusive)
+        .pairs(400, 12 * 1024),
         row(
             "requesters each refused by each provider",
             unmet(100, 100),
             Ok,
             Infeasible,
-        ),
+        )
+        .asks("bus-width", Infeasible)
+        .per_byte(150),
         row(
             "requesters each met by each provider",
             met(100, 100),
             Ok,
             Ok,
         )
-        .pairs(10_000, 600),
+        .pairs(10_000, 350),
         row(
             "tasks through a hub of multiplexed services",
             multiplexed(100, 100),
             Ok,
             Ok,
         )
-        .pairs(10_000, 200),
+        .asks("relative-delay", Ok)
+        .per_byte(30),
     ]
 }
 
@@ -341,40 +376,48 @@ fn what_a_request_holds_is_within_each_row_s_allowance() {
                 &request,
                 &Explain {
                     system: None,
-                    fact: "observable-output",
+                    fact: row.fact,
                     requester: None,
                     task: None,
                 },
                 Limits::DEFAULT,
             );
+            status = answer.response.status;
             std::hint::black_box(answer.response.render_diagnostics());
             std::hint::black_box(answer.accounts.len());
         });
+        let explain_reached = status;
         // A floor for what any request holds, so much for each byte of its text and of its name, and so much for each pair it compares.
-        let allowed = 8 * 1024 * 1024
-            + 400 * (row.text.len() + row.name.len() + row.modules_size)
+        let allowed = 2 * 1024 * 1024
+            + row.per_byte * (row.text.len() + row.name.len() + row.modules_size)
             + row.per_pair * row.pairs;
         said.push(format!(
-            "{:.1} s, {}: {} bytes, {} pairs, allowed {} MB: check {} MB `{}`, resolve {} MB `{}`, explain {} MB",
+            "{:.1} s, {}: {} bytes, {} pairs, allowed {} KB: check {} KB `{}`, resolve {} KB `{}`, explain {} KB `{}`",
             began.elapsed().as_secs_f64(),
             row.shape,
             row.text.len(),
             row.pairs,
-            allowed >> 20,
-            checked >> 20,
+            allowed >> 10,
+            checked >> 10,
             check_reached.slug(),
-            resolved >> 20,
+            resolved >> 10,
             resolve_reached.slug(),
-            explained >> 20,
+            explained >> 10,
+            explain_reached.slug(),
         ));
-        if check_reached != row.checked || resolve_reached != row.resolved {
+        if check_reached != row.checked
+            || resolve_reached != row.resolved
+            || explain_reached != row.explained
+        {
             over.push(format!(
-                "{}: reaches `{}` and `{}`, and the row says `{}` and `{}`",
+                "{}: reaches `{}`, `{}` and `{}`, and the row says `{}`, `{}` and `{}`",
                 row.shape,
                 check_reached.slug(),
                 resolve_reached.slug(),
+                explain_reached.slug(),
                 row.checked.slug(),
-                row.resolved.slug()
+                row.resolved.slug(),
+                row.explained.slug()
             ));
         }
         for (what, held) in [

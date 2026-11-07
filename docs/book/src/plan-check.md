@@ -220,6 +220,7 @@ Not everything a description requires is served by one provider:
 | the plan was made for another description | `stale-input` | the status vocabulary's |
 | the description is refused, by the language or by the checker | the description's own: `invalid-description`, `missing-fact`, `unsupported-profile`, … | the description's |
 | the record is corrupted or does not match | `tool-failure` | the status vocabulary's |
+| it reached its memory ceiling, and wrote no record ([What one request may cost](engine-api.md)) | `analysis-inconclusive` | the status vocabulary's |
 
 A corrupted plan is the toolchain's fault — "never reported as a valid system" — so it is `tool-failure`, whatever was
 wrong with it. A stale plan is the user's input out of date, and is refused before any other check.

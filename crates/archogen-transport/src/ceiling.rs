@@ -10,7 +10,7 @@
 
 use std::alloc::{GlobalAlloc, Layout, System};
 use std::io::Write;
-use std::sync::atomic::{AtomicUsize, Ordering};
+use std::sync::atomic::{AtomicBool, AtomicUsize, Ordering};
 
 /// The variable that sets the ceiling, in MiB.
 pub const VARIABLE: &str = "ARCHOGEN_MEMORY_MIB";
@@ -22,11 +22,14 @@ pub const DEFAULT_MIB: usize = 2048;
 /// holds that this is its code: a dependency for one number would put the vocabulary beneath the transport.
 const INCONCLUSIVE: i32 = 14;
 
-/// What stopping says. It is written whole, with nothing allocated.
-const SAID: &[u8] = b"archogen: analysis-inconclusive: this run would hold more memory than its ceiling, so it stopped, and nothing was judged\n  hint: shorten what it was given, or raise ARCHOGEN_MEMORY_MIB\n";
+/// What stopping says, by each program. It is written whole, with nothing allocated. It says no more than it knows: what a run had
+/// already come to stands where it was written, and what it was holding may be a file it was not given.
+const SAID: &[u8] = b"archogen: analysis-inconclusive: this run reached its memory ceiling and stopped here, so it came to no conclusion\n  hint: raise ARCHOGEN_MEMORY_MIB, or give it less to read\n";
+const SAID_BY_THE_CHECKER: &[u8] = b"archogen-plan-check: analysis-inconclusive: this run reached its memory ceiling and stopped here, so it came to no conclusion\n  hint: raise ARCHOGEN_MEMORY_MIB, or give it less to read\n";
 
 static HELD: AtomicUsize = AtomicUsize::new(0);
 static MOST: AtomicUsize = AtomicUsize::new(DEFAULT_MIB << 20);
+static IS_THE_CHECKER: AtomicBool = AtomicBool::new(false);
 
 /// The allocator: the system's, counted.
 pub struct Ceiling;
@@ -36,7 +39,8 @@ pub struct Ceiling;
 /// # Errors
 ///
 /// What is wrong with the value, which is no whole number of MiB a process could hold.
-pub fn from_environment() -> Result<(), String> {
+pub fn from_environment(is_the_checker: bool) -> Result<(), String> {
+    IS_THE_CHECKER.store(is_the_checker, Ordering::Relaxed);
     let Some(value) = std::env::var_os(VARIABLE) else {
         return Ok(());
     };
@@ -47,7 +51,7 @@ pub fn from_environment() -> Result<(), String> {
     let Some(mib) = mib else {
         return Err(format!(
             "{VARIABLE} is `{}`, which is no whole number of MiB",
-            value.to_string_lossy()
+            value.to_string_lossy().escape_debug()
         ));
     };
     MOST.store(mib << 20, Ordering::Relaxed);
@@ -60,7 +64,12 @@ fn holds(more: usize) {
     if now > MOST.load(Ordering::Relaxed) {
         // What stopping itself allocates is not stopped.
         MOST.store(usize::MAX, Ordering::Relaxed);
-        let _ = std::io::stderr().write_all(SAID);
+        let said = if IS_THE_CHECKER.load(Ordering::Relaxed) {
+            SAID_BY_THE_CHECKER
+        } else {
+            SAID
+        };
+        let _ = std::io::stderr().write_all(said);
         std::process::exit(INCONCLUSIVE);
     }
 }

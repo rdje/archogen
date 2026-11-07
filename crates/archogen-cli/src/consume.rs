@@ -411,6 +411,13 @@ fn absolute(file: &Path, what: &str) -> Result<PathBuf, Refusal> {
             ),
             repair: nearer.to_owned(),
         }),
+        // It refuses an argument holding one, since what it says of a path would write a line of its own, and a link or the
+        // place this run stands can bring one that no argument of this run holds.
+        _ if named.to_string_lossy().contains(['\n', '\r']) => Err(Refusal {
+            status: Status::Usage,
+            message: format!("the checker is handed {what} by its whole path, and that holds a line break"),
+            repair: "run this from, or give it, a place whose whole path holds none".to_owned(),
+        }),
         _ => Ok(named),
     }
 }
@@ -439,6 +446,19 @@ fn read_record(file: &Path, code: i32) -> Result<(Record, String), Refusal> {
                 ))
             })?;
             Ok((record, text))
+        }
+        // The one way it exits so with no record: it writes one for any verdict it comes to.
+        Err(error)
+            if error.kind() == std::io::ErrorKind::NotFound
+                && code == Status::AnalysisInconclusive.code() =>
+        {
+            Err(Refusal {
+                status: Status::AnalysisInconclusive,
+                message: format!(
+                    "`{PLAN_CHECKER}` reached its memory ceiling and stopped, so this plan was not judged"
+                ),
+                repair: "raise ARCHOGEN_MEMORY_MIB, or give it less to read".to_owned(),
+            })
         }
         Err(error) if error.kind() == std::io::ErrorKind::NotFound => Err(failure(
             format!("`{PLAN_CHECKER}` exited with {code} and wrote no record, so nothing was judged"),

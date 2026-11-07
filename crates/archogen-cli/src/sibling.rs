@@ -99,10 +99,13 @@ impl Launch for Installed {
             ));
         }
         drop(bytes);
-        let output = Command::new(runnable(&opened, &file))
-            .args(args)
-            .env_clear()
-            .stdin(Stdio::null())
+        let mut command = Command::new(runnable(&opened, &file));
+        command.args(args).env_clear().stdin(Stdio::null());
+        // Nothing else of this environment reaches it: this is the instance's, and the same for what it starts.
+        if let Some(ceiling) = std::env::var_os(archogen_transport::ceiling::VARIABLE) {
+            command.env(archogen_transport::ceiling::VARIABLE, ceiling);
+        }
+        let output = command
             .output()
             .map_err(|error| {
                 refused(

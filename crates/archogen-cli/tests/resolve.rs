@@ -53,6 +53,8 @@ enum Answer {
     Unlaunched,
     /// It ran and wrote no record, as when the place given it cannot take one.
     NoRecord,
+    /// It reached its memory ceiling, and wrote none.
+    AtTheCeiling,
     /// A record whose status is not what it exits with.
     Unsound,
     /// It accepted, and this directory was closed as it did.
@@ -150,6 +152,13 @@ impl Launch for Checker {
             Answer::NoRecord => {
                 return Ok(Launched {
                     ended: Ended::Code(Status::ToolFailure.code()),
+                    sha256: verified(),
+                    front: Digest::of(b"the front that ran it"),
+                })
+            }
+            Answer::AtTheCeiling => {
+                return Ok(Launched {
+                    ended: Ended::Code(Status::AnalysisInconclusive.code()),
                     sha256: verified(),
                     front: Digest::of(b"the front that ran it"),
                 })
@@ -1452,6 +1461,37 @@ fn plan_routes() -> Vec<(&'static str, Route)> {
             );
             assert!(!root.join("p.part").exists());
             outcome
+        }),
+        ("at-the-ceiling", |root| {
+            let plan = root.join("p");
+            let record = a_checked_plan(&plan);
+            let before = std::fs::read(&plan).expect("read");
+            let outcome = resolve_of(
+                &heartbeat(),
+                &plan.display().to_string(),
+                &[],
+                Answer::AtTheCeiling,
+            );
+            assert_eq!(std::fs::read(&plan).expect("kept"), before);
+            assert_eq!(
+                std::fs::read(root.join("p.check/plan-check.json")).expect("kept"),
+                record
+            );
+            assert!(!root.join("p.part").exists());
+            outcome
+        }),
+        ("line-break-in-the-whole-path", |root| {
+            let real = root.join("a\nb");
+            std::fs::create_dir(&real).expect("a directory");
+            std::fs::copy(heartbeat(), real.join("h.eadl")).expect("copied");
+            std::os::unix::fs::symlink(&real, root.join("link")).expect("a link");
+            let description = root.join("link/h.eadl").display().to_string();
+            resolve_of(
+                &description,
+                &root.join("p").display().to_string(),
+                &[],
+                Answer::Record(Status::Ok),
+            )
         }),
         ("no-checker", |root| {
             // The real executable, and no install beside it.

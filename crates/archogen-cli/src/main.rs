@@ -18,7 +18,7 @@ fn main() -> ExitCode {
     let mut stdout = archogen_cli::Watched::new(std::io::stdout().lock());
     let mut stderr = std::io::stderr().lock();
 
-    if let Err(why) = archogen_transport::ceiling::from_environment() {
+    if let Err(why) = archogen_transport::ceiling::from_environment(false) {
         let usage = archogen_cli::Status::Usage;
         let _ = writeln!(stderr, "archogen: {}: {why}", usage.slug());
         let _ = writeln!(

@@ -1014,6 +1014,25 @@ struct StrayNoRecord {
 }
 
 #[cfg(unix)]
+/// A checker that reached its memory ceiling: it exits so, and writes no record.
+struct AtTheCeiling;
+
+impl Launch for AtTheCeiling {
+    fn launch(
+        &self,
+        _program: &str,
+        _args: &[String],
+        _out: &mut dyn std::io::Write,
+        _err: &mut dyn std::io::Write,
+    ) -> Result<Launched, Unlaunched> {
+        Ok(Launched {
+            ended: Ended::Code(Status::AnalysisInconclusive.code()),
+            sha256: common::checker_digest(),
+            front: common::front_digest(),
+        })
+    }
+}
+
 impl Launch for StrayNoRecord {
     fn launch(
         &self,
@@ -2286,6 +2305,35 @@ fn out_routes() -> Vec<(&'static str, Route)> {
             assert!(!dir.exists());
             let (_, words) = outcome.as_ref().expect("it ran");
             assert_eq!(words.matches("error[").count(), 3, "{words}");
+            outcome
+        }),
+        ("at-the-ceiling", |root| {
+            let dir = root.join("x");
+            let outcome = said(invoke(
+                &[
+                    "build",
+                    &example(HEARTBEAT),
+                    "--out",
+                    &dir.display().to_string(),
+                ],
+                &AtTheCeiling,
+            ));
+            assert!(!dir.exists());
+            assert!(!beside(&dir, ".building").exists());
+            outcome
+        }),
+        ("line-break-in-the-whole-path", |root| {
+            let real = root.join("a\nb");
+            fs::create_dir(&real).expect("a directory");
+            fs::copy(example(HEARTBEAT), real.join("h.eadl")).expect("copied");
+            std::os::unix::fs::symlink(&real, root.join("link")).expect("a link");
+            let description = root.join("link/h.eadl").display().to_string();
+            let dir = root.join("x");
+            let outcome = said(invoke(
+                &["build", &description, "--out", &dir.display().to_string()],
+                &Checker,
+            ));
+            assert!(!dir.exists());
             outcome
         }),
         ("no-room-path", |root| {

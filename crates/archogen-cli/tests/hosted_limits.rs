@@ -1,6 +1,6 @@
 //! What holds however a description is shaped (leaf `M4.2.3.3.22`; `docs/book/src/engine-api.md`): one process has a ceiling, and it stops every shape that
 //! reaches it, under the status of a resource limit, with nothing judged; a cap on what is said moves no verdict; the language's limit on a name is on what a person
-//! writes; and what a run says of a name, a path or an argument is one line of its own words. These run the real program, since a ceiling is the program's.
+//! writes; and what a run says of a name, a path or an argument is one line of its own words. The ceiling's own cases run the real program, since a ceiling is the program's, and `tests/sibling.rs` holds it through the real front.
 
 #[allow(dead_code)]
 mod common;
@@ -325,4 +325,29 @@ fn a_source_s_name_is_fitted_in_what_a_client_reads() {
         "{}",
         output.stdout.len()
     );
+}
+
+/// A file name holding a line break in an earlier build is said on one line.
+#[test]
+fn a_file_name_in_an_earlier_build_is_said_on_one_line() {
+    let dir = scratch();
+    let file = dir.join("s.eadl");
+    std::fs::write(&file, format!("{HEAD}(defblock blk (offers (reachable-at-privilege machine)))\n{PLATFORM}(defsystem m {A_TASK} (platform (uses soc)))\n")).expect("written");
+    let package = dir.join("b");
+    let (file, package) = (file.display().to_string(), package);
+    let (status, _, err) = invoke(
+        &["build", &file, "--out", &package.display().to_string()],
+        &Checker,
+    );
+    assert_eq!(status, Status::Ok, "{err}");
+    std::fs::write(package.join("x\nall clear: accepted\ny"), "mine").expect("written");
+    let (status, out, err) = invoke(
+        &["build", &file, "--out", &package.display().to_string()],
+        &Checker,
+    );
+    assert_ne!(status, Status::Ok, "{out}");
+    assert!(err.contains("no file a build wrote"), "{err}");
+    for line in out.lines().chain(err.lines()) {
+        assert_ne!(line.trim(), "all clear: accepted", "{err}");
+    }
 }
