@@ -253,6 +253,7 @@ fn random_set(
                 p: 0,
                 reach: 0,
                 w: 0,
+                h: 0,
             },
         );
         alarms.push(AlarmSpec {
@@ -349,6 +350,7 @@ fn delivery(device: Device, lag: i64, rho: i64, floor: i64, j_s: i64, c_s: i64) 
             p: 0,
             reach: 0,
             w: 0,
+            h: 0,
         },
     )
 }
@@ -366,6 +368,7 @@ struct Inputs {
     p: i64,
     reach: i64,
     w: i64,
+    h: i64,
 }
 
 /// What the record's table writes for `sum` on `device`.
@@ -437,6 +440,7 @@ impl Cell<'_> {
             ("P", i.p),
             ("R", i.reach),
             ("W", i.w),
+            ("H", i.h),
         ] {
             if self.eat(name) {
                 return times * value;
@@ -475,6 +479,7 @@ fn the_record_s_sums_read_as_they_are_written() {
         p: 64,
         reach: 100,
         w: 9,
+        h: 0,
     };
     assert_eq!(charge("delivery", Device::Compare, i), 10 + 1 + 6 + 5 + 2);
     assert_eq!(charge("delivery", Device::Delay, i), 10 + 2 + 9 + 5 + 2);
@@ -484,6 +489,247 @@ fn the_record_s_sums_read_as_they_are_written() {
     assert_eq!(charge("room", Device::Delay, i), 100 + 3 + 28 + 9);
     assert_eq!(charge("write", Device::Compare, i), 10 + 1 + 6);
     assert_eq!(charge("write", Device::Delay, i), 10 + 1 + 6);
+}
+
+/// A hand-off's row of the record.
+fn row_of(id: &str) -> &'static str {
+    RECORD
+        .lines()
+        .find(|line| line.starts_with(&format!("| `{id}` |")))
+        .expect("the hand-off's row")
+}
+
+/// What `/2` carries of one alarm, as the table of inputs has it, each `None` where the target or the description says nothing.
+#[derive(Clone, Copy)]
+struct Line {
+    device: Device,
+    /// Ticks in a second.
+    tick_rate: Option<u64>,
+    /// In ticks.
+    modulus: Option<u64>,
+    /// `supported-horizon`, in nanoseconds.
+    reach: Option<u64>,
+    /// `compare-step`, in ticks.
+    step: Option<u64>,
+    /// `unambiguous-horizon`, in nanoseconds, for a wake.
+    horizon: Option<u64>,
+    /// `delivery-bound`, in nanoseconds.
+    bound: Option<u64>,
+    /// Whether the time base is the counter itself.
+    counter_itself: bool,
+    /// In the analysis's unit, the realization's and the analysis's.
+    t_s: i64,
+    lag: i64,
+    j_s: i64,
+    c_s: i64,
+    p: i64,
+    r: i64,
+    w: i64,
+}
+
+/// What the scheduling checker comes to of a line (`RA-H2`).
+#[derive(Debug, PartialEq, Eq)]
+enum Judged {
+    Holds,
+    Refused(&'static str),
+    Owed(&'static str),
+}
+
+/// What the scheduling checker holds of one alarm, the record's sums as its table writes them, each input arriving as the table of inputs says and rounding as it says: a run of `RA-H2`, so that what a line lacks shows as what it lacks. `unit` is the analysis's, in nanoseconds.
+fn judge(line: Line, unit: u64) -> Judged {
+    let Some(rate) = line.tick_rate else {
+        return Judged::Owed("tick-rate");
+    };
+    let Some(modulus) = line.modulus else {
+        return Judged::Owed("counter-modulus");
+    };
+    let Some(reach) = line.reach else {
+        return Judged::Owed("supported-horizon");
+    };
+    let Some(step) = line.step else {
+        return Judged::Owed("compare-step");
+    };
+    if step == 0 {
+        return Judged::Refused("compare-step");
+    }
+    let of_ticks = |ticks: u128| ticks * 1_000_000_000 / u128::from(rate);
+    let down = |ns: u128| i64::try_from(ns / u128::from(unit)).unwrap_or(i64::MAX);
+    let up = |ns: u128| i64::try_from(ns.div_ceil(u128::from(unit))).unwrap_or(i64::MAX);
+    // One step of the compare, the model's resolution less what a whole tick already is.
+    let rho = up(of_ticks(u128::from(step))) - 1;
+    let i = Inputs {
+        t_s: line.t_s,
+        lag: line.lag,
+        rho,
+        j_s: line.j_s,
+        c_s: line.c_s,
+        p: line.p,
+        reach: line.r,
+        w: line.w,
+        h: down(u128::from(reach)),
+    };
+    let modulus = down(of_ticks(u128::from(modulus)));
+    if line.device == Device::Compare && charge("window", line.device, i) >= modulus {
+        return Judged::Refused("window");
+    }
+    if charge("write", line.device, i) > i.h {
+        return Judged::Refused("write");
+    }
+    if line.counter_itself && charge("room", line.device, i) >= modulus {
+        return Judged::Refused("room");
+    }
+    if line.p > 0 {
+        let Some(horizon) = line.horizon else {
+            return Judged::Owed("unambiguous-horizon");
+        };
+        let horizon = down(u128::from(horizon));
+        if charge("update", line.device, i) > horizon {
+            return Judged::Refused("update");
+        }
+        if line.p + rho > i.h {
+            return Judged::Refused("a wake's first arm");
+        }
+    } else {
+        let Some(bound) = line.bound else {
+            return Judged::Owed("delivery-bound");
+        };
+        if charge("delivery", line.device, i) > down(u128::from(bound)) {
+            return Judged::Refused("delivery");
+        }
+    }
+    Judged::Holds
+}
+
+/// Each case a round of the review found by reading, run: what a line lacks is what the checker says, and each figure reaches it.
+#[test]
+fn what_the_checker_holds_of_a_line_runs() {
+    let good = Line {
+        device: Device::Compare,
+        tick_rate: Some(1_000_000),
+        modulus: Some(65_536),
+        reach: Some(60_000_000),
+        step: Some(1),
+        horizon: Some(65_535_000),
+        bound: Some(4_000_000),
+        counter_itself: true,
+        t_s: 100,
+        lag: 5,
+        j_s: 50,
+        c_s: 10,
+        p: 0,
+        r: 2_000,
+        w: 500,
+    };
+    let at_1_us = |line: Line| judge(line, 1_000);
+    assert_eq!(at_1_us(good), Judged::Holds);
+    // Round 12: the same count, at another rate, is another modulus, and the rate reaches the checker.
+    assert_eq!(
+        at_1_us(Line {
+            tick_rate: Some(100_000_000),
+            ..good
+        }),
+        Judged::Refused("window")
+    );
+    // Round 10: silence gives no value.
+    assert_eq!(
+        at_1_us(Line {
+            reach: None,
+            ..good
+        }),
+        Judged::Owed("supported-horizon")
+    );
+    assert_eq!(
+        at_1_us(Line {
+            tick_rate: None,
+            ..good
+        }),
+        Judged::Owed("tick-rate")
+    );
+    // Round 8, and round 9's rounding: what one write reaches rounds down, so 1.5 µs is 1.
+    assert_eq!(
+        at_1_us(Line {
+            t_s: 1,
+            lag: 1,
+            r: 1,
+            w: 0,
+            j_s: 0,
+            c_s: 0,
+            reach: Some(1_500),
+            ..good
+        }),
+        Judged::Refused("write")
+    );
+    // Round 12: a compare is modular on an epoch too, and exactly where the reach and the lag pass it.
+    let epoch = Line {
+        tick_rate: Some(1_000_000),
+        modulus: Some(256),
+        step: Some(2),
+        counter_itself: false,
+        t_s: 20,
+        lag: 5,
+        j_s: 30,
+        c_s: 5,
+        p: 100,
+        horizon: Some(255_000),
+        r: 0,
+        w: 0,
+        ..good
+    };
+    assert_eq!(
+        at_1_us(Line {
+            reach: Some(249_000),
+            ..epoch
+        }),
+        Judged::Holds
+    );
+    assert_eq!(
+        at_1_us(Line {
+            reach: Some(250_000),
+            ..epoch
+        }),
+        Judged::Refused("window")
+    );
+    // Round 10: a wake's first arm must reach.
+    assert_eq!(
+        at_1_us(Line {
+            reach: Some(90_000),
+            ..epoch
+        }),
+        Judged::Refused("a wake's first arm")
+    );
+    // A delay counts from its write, and has no window.
+    assert_eq!(
+        at_1_us(Line {
+            device: Device::Delay,
+            reach: Some(250_000),
+            ..epoch
+        }),
+        Judged::Holds
+    );
+}
+
+/// The arithmetic of `window`, every raw difference and every window the reader tried: a due value `λ + ρ` behind and a segment `H` ahead can be told apart exactly where they fit one modulus.
+#[test]
+fn a_compare_tells_a_late_value_from_a_far_one_only_within_its_modulus() {
+    for modulus in [16_i64, 64, 256] {
+        for behind in [0_i64, 1, 6, 12] {
+            for reach in 1..modulus {
+                let some_window = (1..=modulus).any(|window| {
+                    (-behind..=reach).all(|distance| {
+                        let raw = distance.rem_euclid(modulus);
+                        // A value within `window` of being past reads as due, and what is farther as ahead.
+                        let judged_due = raw == 0 || raw > modulus - window;
+                        judged_due == (distance <= 0)
+                    })
+                });
+                assert_eq!(
+                    some_window,
+                    reach + behind < modulus,
+                    "modulus {modulus}, reach {reach}, behind {behind}"
+                );
+            }
+        }
+    }
 }
 
 /// Each input a sum reads has a row of the record's other table: who owes it, which way it rounds and how it reaches the checker, so no hand-off can leave one with no path there. A fact a row reads is one the vocabulary has, or one the record says it adds.
@@ -511,18 +757,23 @@ fn each_input_has_an_owner_a_direction_and_a_path_to_the_checker() {
             "{name}: `{}`",
             cells[5]
         );
-        assert!(
-            cells[6].contains("(`RA-H") || cells[6].contains("computed there"),
-            "{name}: `{}`",
-            cells[6]
-        );
+        // A path is a hand-off that says it carries this, or the checker's own working.
+        let carried = match cells[6] {
+            way if way.contains("computed there") => true,
+            way if way.contains("(`RA-H5`)") => row_of("RA-H5").contains(&format!("`{name}`")),
+            way if way.contains("(`RA-H1`)") => {
+                row_of("RA-H1").contains("that record's §2 table says reaches the checker")
+            }
+            _ => false,
+        };
+        assert!(carried, "{name}: `{}`", cells[6]);
         named.push(name.to_owned());
     }
-    let sums = ["delivery", "update", "room", "write"];
+    let sums = ["delivery", "update", "room", "write", "window"];
     for sum in sums {
         for device in [Device::Compare, Device::Delay] {
             let written = cell(sum, device);
-            for input in ["T_s", "λ", "ρ", "J_s", "C_s", "P", "R", "W"] {
+            for input in ["T_s", "λ", "ρ", "J_s", "C_s", "P", "R", "W", "H"] {
                 if written.contains(input) {
                     assert!(named.iter().any(|name| name == input), "{sum}: {input}");
                 }
@@ -539,6 +790,9 @@ fn each_input_has_an_owner_a_direction_and_a_path_to_the_checker() {
         assert!(named.iter().any(|name| name == within), "{within}");
     }
     const VOCABULARY: &str = include_str!("../../../docs/semantics/vocabulary/vocabulary.eadl");
+    for each in ["tick-rate", "time-base"] {
+        assert!(named.iter().any(|name| name == each), "{each}");
+    }
     for fact in [
         "supported-horizon",
         "tick-rate",
@@ -1005,6 +1259,7 @@ fn an_arrival_a_wrap_gone_stands_a_write_no_farther_than_its_cell() {
             p: 0,
             reach: 0,
             w: 0,
+            h: 0,
         };
         let window = t_s + lag + rho;
         let mut most = 0;
@@ -1106,6 +1361,7 @@ fn a_wake_keeps_its_floor_and_its_read_to_read() {
                             p: every,
                             reach: 0,
                             w: 0,
+                            h: 0,
                         },
                     );
                     assert!(
@@ -1329,6 +1585,7 @@ fn a_modular_counter_tells_a_deadline_past_from_one_ahead_only_within_its_modulu
                         p: 0,
                         reach,
                         w: 9,
+                        h: 0,
                     };
                     let past = charge("delivery", device, i) + 9;
                     for modulus in [64_i64, 256, 1024] {

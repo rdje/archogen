@@ -194,3 +194,21 @@ Said, and left as it stands: no realization or `/2` exists, so RA10-1 and RA10-3
 | RA11-9 | wording | "what it lacks" of a task bound to an alarm itself, which a trigger does not save | It says which task, and `RA-H4` agrees |
 
 Said, and left as it stands: no realization or `/2` exists, so RA11-2, RA11-3, RA11-4 and RA11-6 are by reading, RA11-1's device is the reader's rig, a real read-back's lag and a level compare's window stay unmeasured, and `/2`'s joint-rule wording cannot be judged until written. `RA-H1` was split, `RA-H8` taking what a target states, since one line of a record holds at most 1,536 bytes.
+
+**Round 12** — `2026-11-07`, leaf `M4.1.6.12`: not acceptable, 11 findings, 4 defects, after 9, 9, 7, 5, 7, 6, 7, 6, 3, 3 and 3, on `a9f577f9`. All four are narrow. The sums' cells and the protocol's steps gave no finding but RA12-1's missing sum. The count rose, and what falls each round is a figure's way to its reader by reading, so this answers by method: `judge`, in the model, is what the scheduling checker holds of one alarm, run on a line as `/2` carries it, so a figure with no way there cannot be read at all.
+
+| # | Kind | Finding | Answer |
+| --- | --- | --- | --- |
+| RA12-1 | defect, round 4's sentence | "A time base with an epoch of its own has no such limit" was false of a level compare, which stays modular hardware: at a modulus of 256 and `H` 255 every sum passed, and a raw difference of 5 was both a value due and a segment far ahead, no window telling them apart | `window`, `H + λ + ρ` within the modulus on any time base. `a_compare_tells_a_late_value_from_a_far_one_only_within_its_modulus` runs every window, exactly where the reader found it |
+| RA12-2 | defect, round 11's table | `tick-rate` was missing: `counter-modulus` is a count and `room` a time, so one line gave opposite verdicts at 1 MHz and 100 MHz | A row, on the line. `judge` runs both |
+| RA12-3 | defect, round 11's | the release timer's `H` and horizon had no carrier | `RA-H1` gives its line what an alarm's has |
+| RA12-4 | defect, contradiction | `RA-H8` moved the target record for the interrupt route alone, against its §3's exact compare and its How to apply | It moves all three |
+| RA12-5 | gap | `relative-delay` asked of a compare that writes absolute values | `RA-H8` reads it as the relation's comparator on a counter |
+| RA12-6 | gap | a target's `H` and `ρ` had no §7.3 record | A statement's evidence is its agreement's, said |
+| RA12-7 | gap | the transition step's length had no row, and "in that step" against the plan's "last act before" | It lies within `S`, so under `SHORTEST` once the set is admitted; the plan's words |
+| RA12-8 | gap | "the time base is the counter itself" had no row | A row, read off the bindings, the counter itself where a requester reaches both |
+| RA12-9 | gap | nothing compared `compare-rounding` with `compare-step` on the release device | `RA-H5` does |
+| RA12-10 | wording | `P`, `R` and `λ` cited `RA-H5`, which named the floor alone, and the test checked only a string; the plan owed `W` | `RA-H5` names each, and the test reads that row; the plan says the analysis computes it |
+| RA12-11 | wording, older | `M4.3.5` against `M4.3.6` | `M4.3.6` |
+
+Said, and left as it stands: no realization or `/2` exists, so a real read-back's lag and whether a real compare's window is the whole modulus stay unmeasured, and `/2`'s joint-rule wording cannot be judged until written. `judge` is a model of a hand-off and no scheduling checker: `M2.21.2` builds that.

@@ -43,5 +43,5 @@ and never from the description (`RTP-H9`). Until then they are held by their con
 ## How to apply
 
 - A change to what a contract promises changes `crates/sim-devices/tests/contract.rs` in the same commit.
-- `M4.3.5` wires them in, and `M4.9` compares a target against what they say. What a build enforces of a stated delivery bound, which the
+- `M4.3.6` wires them in, and `M4.9` compares a target against what they say. What a build enforces of a stated delivery bound, which the
   profile names `M4.5` for, is `M4.5.2`: a model of a controller enforces no bound.
