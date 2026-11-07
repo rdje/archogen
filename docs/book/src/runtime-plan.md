@@ -77,8 +77,49 @@ Most of its length is what it does not have:
 (complete no)
 ```
 
-⚠️ **`(complete no)` is true of every plan today.** Nothing yet supplies the application's own inputs (`M4.12`), so each job
-is an empty body the release trace alone observes, and a plan says so rather than implying a finished system.
+⚠️ **`(complete no)` is true of every plan today.** The application's own inputs have a format ([below](#the-applications-inputs)),
+and nothing yet carries them into a plan or a run, so each job is an empty body the release trace alone observes, and a plan
+says so rather than implying a finished system.
+
+## The application's inputs
+
+A description never says how a task's code works, so it cannot say how long that code takes, how much stack it needs or
+which calls it makes. Whoever wrote the code says, in one file per system, and the plan's `(owed … (by application))` lines are
+what that file answers. Its format is `archogen-application/1`.
+
+```text
+(format "archogen-application/1")
+(system heartbeat)
+(target hosted-playground)
+(leaves-interrupt-hardware-alone yes (clause "…the words, whole…") (basis "it touches no device"))
+(task beat
+  (entry-point "app::beat")
+  (execution-bound (value 200) (unit us) (scope "one job") (binary unbuilt)
+                   (evidence analytically-established) (locator "docs/argument.md") (basis "by the loop's bound"))
+  (os-calls (evidence analytically-established) (locator "docs/argument.md") (basis "by reading") (call mask 2) (call unmask 2))
+  (node-calls (evidence analytically-established) (locator "docs/argument.md") (basis "by reading"))
+  (masked-runs (evidence analytically-established)
+    (run tail (value 5) (unit us) (scope "the tail's update") (binary unbuilt) (locator "docs/argument.md") (basis "four loads") (call unmask 1)))
+  (stack-bound (value 512) (unit bytes) (scope "its deepest path") (binary unbuilt) (evidence assumed) (basis "chosen, to be measured"))
+  (suspends no) (locks-scheduler no) (shares-outside-sections no)
+  (masks-only-through-api yes)
+  (figures-under-preemption yes))
+```
+
+- **Nothing is defaulted.** A clause left out, written twice or unknown is refused, naming it.
+- **Each bound says what it rests on**: its unit, its scope, the binary it is of, and one of `ROADMAP.md` §7.3's four categories,
+  with where to check it, unless it is an assumption, and why it holds. A safety factor is checked and changes no category, so a
+  padded observation is still an observation.
+- **The one declaration about the whole application is quoted whole.** `leaves-interrupt-hardware-alone` is what every composite
+  is gated on, and its name no longer says what it holds, so the file carries the words, and a file quoting others does not read.
+  Those words count an overrun of a task's stack bound among what the code must not do, so the declaration holds only as far as
+  each stack bound does, whose category is said.
+
+A file is held against a plan, and each thing it leaves unmet is said: another system, a task the plan does not have or one with
+nothing said of it, a call into a node the task's lines do not name, and a fact the plan owes that this format does not hold.
+
+⚠️ This reads the format and no more. `archogen-runtime-plan/2` carries it (`M4.1.7`), and the scheduling checker judges its figures
+(`M2.21`), so today no figure in it reaches a verdict. The rules are `docs/decisions/decision_application-inputs.md`.
 
 ## The rules
 

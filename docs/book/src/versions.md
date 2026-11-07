@@ -177,6 +177,17 @@ their versioned readers and permanent refusal controls enforce their local contr
 | Pinned by | three goldens, lowered by the production entry from frozen inputs and a fixed result record, each held to its sha256 and never rewritten (`crates/archogen-plan/tests/goldens.rs`); the record's three worked texts, compared with what the code writes by `crates/archogen-plan/tests/worked.rs`, and the review's probe systems with their outcomes, `crates/archogen-plan/tests/corpus.rs`; the frozen goldens come with `M4.1.4`'s production half |
 | Keeps | a plan labelled `archogen-runtime-plan/1` has one text for one record and one description |
 
+## `application-inputs-format`
+
+| Field | Value |
+| --- | --- |
+| Surface | what a description may not state of a task's own code, in one file per system: each task's entry point, bounds with their evidence, calls and facts, and the application's quoted declaration (`M4.12`) |
+| Version | `archogen-application/1` |
+| Declared at | `const:crates/archogen-plan/src/application.rs:FORMAT` |
+| Changes when | a clause is added, removed, renamed or reinterpreted, or the words `CLAUSE_PARTS` quotes move. A reader that meets another identifier refuses the file rather than guess |
+| Pinned by | `crates/archogen-plan/tests/application.rs`: a whole file reads as it says, each malformed input is refused saying what is wrong, the quoted clause reads back from the composite-inputs record, and every fact the three golden plans owe the application is held |
+| Keeps | a file labelled `archogen-application/1` means the same to every reader of `/1`, and declares the words it quotes |
+
 ## `adapter-catalog`
 
 | Field | Value |

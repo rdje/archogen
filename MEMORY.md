@@ -18,7 +18,8 @@
 - **The host is shared:** every heavy job goes through `scripts/host_guard.py`, one at a time (`docs/decisions/decision_host-guard.md`). A reader's brief says so.
 - **Next action:** `PROGRAM.127.25`, the guard's review, round 25; then `M4.2.3.3.25`, round 25 of the hosted build's review, a fresh reader over round 24's answer; then
   `M4.1.6.14`, round 14 of the release alarm's review (`M4.1.6` done);
-  and `M4.5.2`; `M4.3.4` waits on `M2.21`, `M4.3.6` on `M4.1.7`. The runtime plan's design is accepted (`M4.1.1` done).
+  `M4.12.1`, the application inputs' review (`M4.12` done); then `M4.1.7`, format `/2`;
+  `M4.5.2` and `M4.3.6` wait on `M4.1.7`, `M4.3.4` on `M2.21`. The runtime plan's design is accepted (`M4.1.1` done).
   `M3.2.7` and `M3.5.9`, full verification, wait for the
   features (doctrine 22).
   After the first batch, runner leaves `M3.5.3.2`, `M3.5.5.7.4`, `M3.5.1.4.5`, `M3.5.1.6.6`; `M3.4.7` waits on `M3.7`.

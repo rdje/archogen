@@ -58,6 +58,7 @@ a change that leaves it stale, so it is never edited by hand.
   [What this project relies on from outside](ledger.md), [What is versioned, and what changing it costs](versions.md),
   [Annex B: The checks that keep the repository honest](annex-repository.md), [Annex C: Trust proof
   records](annex-trust-proofs.md)
+- application-inputs-format — [What is versioned, and what changing it costs](versions.md#application-inputs-format)
 - Approved disposable fixture verification — [Annex C: Trust proof
   records](annex-trust-proofs.md#approved-disposable-fixture-verification)
 - Artifact hash checks under escaped paths — [Annex C: Trust proof
@@ -552,8 +553,9 @@ a change that leaves it stale, so it is never edited by hand.
 - Outside path dependencies refused — [Annex C: Trust proof
   records](annex-trust-proofs.md#outside-path-dependencies-refused)
 - **overrun** — [definition](glossary.md), [A tour: from a description to a board](tour.md), [Describing a
-  workload](workload.md), [The runtime: decisions, not actions](runtime.md), [Where generated systems run](targets.md),
-  [Annex A: The runtime's rules in detail](annex-runtime.md)
+  workload](workload.md), [The runtime plan: what the generated system is told](runtime-plan.md), [The runtime:
+  decisions, not actions](runtime.md), [Where generated systems run](targets.md), [Annex A: The runtime's rules in
+  detail](annex-runtime.md)
 - Own-package completion assessment — [Annex C: Trust proof
   records](annex-trust-proofs.md#own-package-completion-assessment)
 
@@ -786,12 +788,14 @@ a change that leaves it stale, so it is never edited by hand.
   [Checks that must not share a mistake: the trust gate](trust.md), [The runtime plan: what the generated system is
   told](runtime-plan.md), [The runtime: decisions, not actions](runtime.md), [Building a system](building.md), [The S0
   early generation path](s0.md), [Where generated systems run](targets.md), [Verifying the toolchain](verification.md),
-  [What this project relies on from outside](ledger.md), [Annex A: The runtime's rules in detail](annex-runtime.md),
-  [Annex B: The checks that keep the repository honest](annex-repository.md), [Annex C: Trust proof
-  records](annex-trust-proofs.md)
+  [What this project relies on from outside](ledger.md), [What is versioned, and what changing it costs](versions.md),
+  [Annex A: The runtime's rules in detail](annex-runtime.md), [Annex B: The checks that keep the repository
+  honest](annex-repository.md), [Annex C: Trust proof records](annex-trust-proofs.md)
 - Test-flag naming query controls — [Annex C: Trust proof
   records](annex-trust-proofs.md#test-flag-naming-query-controls)
 - The admitted task model, enforced — [Describing a workload](workload.md#the-admitted-task-model-enforced)
+- The application's inputs — [The runtime plan: what the generated system is
+  told](runtime-plan.md#the-applications-inputs)
 - The baseline and its forms — [Checks that must not share a mistake: the trust
   gate](trust.md#the-baseline-and-its-forms)
 - The binding a web page loads — [The engine API](engine-api.md#the-binding-a-web-page-loads)

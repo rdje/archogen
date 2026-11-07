@@ -31,7 +31,7 @@ examples/s0-heartbeat/system.eadl: generated `system-heartbeat` into build/heart
   13 file(s): Cargo.toml, src/main.rs, rt-core/Cargo.toml, sim-playground/Cargo.toml, rt-core/src/lib.rs, rt-core/src/scheduler.rs, rt-core/src/fault.rs, sim-playground/src/lib.rs, plan.txt, description/system.eadl, assignment.eadl, plan-check.json, provenance.json
   checked by `archogen-plan-check`: accepted (build/heartbeat/plan-check.json)
   2 task(s), a run of 3 tick(s) of 1/100 s
-  experimental: the hosted playground: the plan's releases run, and no job holds application code; completed by M4.12
+  experimental: the hosted playground: the plan's releases run, and no job holds application code; completed by M4.13
     the plan is not complete: what it owes is unmet, and a run establishes no property. See `archogen help build`.
   next: cargo run --manifest-path build/heartbeat/Cargo.toml
 ```
@@ -288,7 +288,7 @@ nothing to release it, is refused now for what it is: a missing fact of the desc
 
 ## What this does not establish
 
-A generated system runs its releases and nothing else. No job holds application code until `M4.12`'s inputs exist, so a trace says
+A generated system runs its releases and nothing else. No job holds application code until `M4.13` reads `M4.12`'s inputs into a build, so a trace says
 nothing about what a task does or how long it takes. The plan is `(complete no)`, and it lists what is owed. Nothing here is a
 timing result, which is [the scheduling checker's](analysis.md) to give under its own assumptions, and nothing says the hosted
 playground behaves like hardware: it models no device yet (`M4.3`).

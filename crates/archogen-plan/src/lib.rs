@@ -39,6 +39,7 @@ use eadl_resolve::requirement::Requirement;
 use eadl_resolve::value::Value;
 use eadl_resolve::vocabulary::{Usage, Vocabulary};
 
+pub mod application;
 pub mod contents;
 
 /// The format's identifier (§3).

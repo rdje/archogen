@@ -274,11 +274,11 @@ pub const COMMANDS: &[CommandSpec] = &[
             },
         ],
         // ⚠️ The hosted playground only (`docs/decisions/decision_hosted-build.md`): every job's body is empty until
-        // `M4.12`'s inputs give it code, so what a build runs is its releases.
+        // `M4.13` gives it the code `M4.12`'s inputs name, so what a build runs is its releases.
         sibling: None,
         maturity: Maturity::Experimental {
             scope: "the hosted playground: the plan's releases run, and no job holds application code",
-            completed_by: "M4.12",
+            completed_by: "M4.13",
         },
         exposure: Exposure::Excluded {
             reason: "ROADMAP.md §10.4: both builds are outside the programmatic interface",
@@ -586,7 +586,7 @@ mod tests {
         let tag = build.maturity.tag();
         assert!(tag.contains("experimental"), "{tag}");
         assert!(tag.contains("no job holds application code"), "{tag}");
-        assert!(tag.contains("M4.12"), "{tag}");
+        assert!(tag.contains("M4.13"), "{tag}");
     }
 
     #[test]

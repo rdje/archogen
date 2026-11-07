@@ -82,7 +82,7 @@ runs with the depth raised (`releases-never-latched`). Initialisation runs first
 and interrupts are enabled at time zero.
 
 **A body is data**: a list of steps, *run for N ticks*, *mask*, *unmask*, *read* or *write* a device, *program* an alarm. `/1` writes every job's as empty, so a job starts
-and completes at one instant and the release trace alone observes it, until `M4.12`'s inputs give it code. The harness runs
+and completes at one instant and the release trace alone observes it, until `M4.13` gives it the code `M4.12`'s inputs name. The harness runs
 longer bodies all the same, so preemption, masking, overrun, a device's access and an alarm are exercised now, by its own tests.
 
 **Devices and alarms** (`M4.3.5`). A run holds each device the plan's `node` lines write `block` or `platform`, its kind read from there and
@@ -90,7 +90,7 @@ never from the description, and the trace's header names each. A job's read or w
 is a source in the plan's rank among the sources, so before the release timer. It arrives where a job's step programs it and at no other time, a
 value already reached arriving at that write and never lost, each arrival a request of its own that its trap claims, and a write replaces what stood.
 The count does not wrap, being an exact clock whose modulus is 2^64, so what one write reaches is one below that, and there is no lag and no rounding
-(`decision_release-alarm.md`, `RA-H3`). So a generated system's run shows the header's lines and no more until `M4.12`, and a timer route stays programmed by no code.
+(`decision_release-alarm.md`, `RA-H3`). So a generated system's run shows the header's lines and no more until `M4.13`, and a timer route stays programmed by no code.
 What `crates/sim-devices` adds, a wrap, an ambiguous horizon, an edge, waits for `/2` to name a target's devices (`M4.3.6`).
 
 **A run names its scenario.** The horizon is one hyperperiod of what the run repeats (§2). Each

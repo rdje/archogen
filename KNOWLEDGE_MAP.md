@@ -205,6 +205,7 @@ workspace member with none.
 
 - [`decision_absence-per-provider.md`](docs/decisions/decision_absence-per-provider.md)
 - [`decision_api-instance.md`](docs/decisions/decision_api-instance.md)
+- [`decision_application-inputs.md`](docs/decisions/decision_application-inputs.md)
 - [`decision_book-in-layers.md`](docs/decisions/decision_book-in-layers.md)
 - [`decision_book-unbounded.md`](docs/decisions/decision_book-unbounded.md)
 - [`decision_ceilings-bound-reads.md`](docs/decisions/decision_ceilings-bound-reads.md)

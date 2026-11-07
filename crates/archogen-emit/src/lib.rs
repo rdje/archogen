@@ -9,7 +9,7 @@
 //! ⭐ **A plan is accepted only by lowering it again** from the same inputs and comparing bytes (`RTP-H3`), so a plan that
 //! reached here by any route is the plan the checked inputs make, or nothing is generated.
 //!
-//! Each job's body is empty until `M4.12`'s inputs give it code, and the trace's header says so (`RTP-H1`).
+//! Each job's body is empty until `M4.13` gives it the code `M4.12`'s inputs name, and the trace's header says so (`RTP-H1`).
 
 #![forbid(unsafe_code)]
 
