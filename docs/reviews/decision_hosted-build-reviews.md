@@ -503,3 +503,17 @@ Said, and left as it stands: its reader could not run a full disk, other filesys
 | R25-7 | wording | `Ended::NoProgress`'s comment named one way to reach it, and a long body is another | It names both |
 
 Said, and left as it stands: its reader could not run a full disk, other filesystems, Linux, another user, a sticky directory, wasm or a checker past 64 MiB. At 4 MiB or below `archogen plan-check` stops in the front, which reads the programs whole, where the checker run alone passes at 2 MiB: "raise" works, and "give it less to read" cannot help there, which its reader called no finding.
+
+**Round 26** — `2026-11-07`, leaf `M4.2.3.3.26`: not acceptable, 7 findings, 1 defect, after 2, 4, 5, 6, 4, 2 and 3, on `9508ecb2`, older than this commit and reached by a plain description. Round 25's answers held but for its forged names and one fixture, real packages ran at up to 30,000 tasks, and all 128 rows of the two tables were true.
+
+| # | Kind | Finding | Answer |
+| --- | --- | --- | --- |
+| R26-1 | defect, older | the limit on a run counted a source's arrivals and not the tasks each releases, so three tasks on one source ran 2,097,151 releases past a limit it said it met, and 3,000 tasks on one source about 27 hours | An arrival counts as itself and each task it releases: `an_arrival_counts_with_what_it_releases` holds the edge at 2^20, and the refusal says the true count |
+| R26-2 | gap, hand-forged, R25-5 incomplete | names in a hand-edited provenance were still said raw on four routes | A line break in any name is refused at the reading, on one line, before anything says it |
+| R26-3 | gap, R25-2's own fixture | its second half ran at horizon 10, and its trace ended at `0 s start woken`, exercising nothing | Horizon 11, and it holds the order |
+| R26-4 | wording | "its preemption" in a test's comment: the shape never preempts | The comment says what it runs. A switch has no large frame |
+| R26-5 | route | a job whose last step writes a value already reached is overrun at its own release, which no sentence named | The record and the book say it, and `a_job_ending_by_writing_a_value_already_reached_serves_it_first` holds it |
+| R26-6 | wording | "at most `2^20` arrivals": the run takes one more | "Past `2^20`" |
+| R26-7 | route | the description lying inside the build it replaces, and `--out` spelled `b/`, `b/.`, `b//` or `./b`, had no row | Each has a row, held by a real run |
+
+Said, and left as it stands: its reader could not run a full disk, other filesystems, Linux, another user, a sticky directory, wasm, a checker past 512 MiB, or `explain` over thousands of requesters and providers to its end, which the guard stopped at 85% under others' load.

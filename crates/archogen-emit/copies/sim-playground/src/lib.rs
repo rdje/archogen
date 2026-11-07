@@ -368,7 +368,7 @@ pub trait Observer {
 /// How many steps a run takes at one instant before it stops: what bounds a hyperperiod's releases (`decision_hosted-build.md` §3).
 pub const MOST_STEPS_AT_ONE_INSTANT: u64 = 1 << 20;
 
-/// How many alarm arrivals a run takes before it stops. A plan's count bounds a timer's releases and a source's arrivals, and none says what a job programs, so a job an alarm releases can program that alarm a tick ahead until a far horizon.
+/// How many alarm arrivals a run takes, past which it stops. A plan's count bounds a timer's releases and a source's arrivals, and none says what a job programs, so a job an alarm releases can program that alarm a tick ahead until a far horizon.
 pub const MOST_ALARM_ARRIVALS: u64 = 1 << 20;
 
 /// The stack a run of `tasks` tasks takes, on any profile: what the runtime holds and returns by value grows with its tasks, and a thread's default does not.

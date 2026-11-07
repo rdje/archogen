@@ -2599,6 +2599,32 @@ fn out_routes() -> Vec<(&'static str, Route)> {
             assert!(!beside(&dir, ".replaced").exists());
             outcome
         }),
+        ("description-inside", |root| {
+            let dir = root.join("b");
+            let (status, _, err) = build(&example(HEARTBEAT), &dir);
+            assert_eq!(status, Status::Ok, "{err}");
+            let inside = fs::read_dir(dir.join("description"))
+                .expect("its description")
+                .map(|entry| entry.expect("an entry").path())
+                .find(|path| path.extension().is_some_and(|ext| ext == "eadl"))
+                .expect("a description");
+            let before = fs::read(&inside).expect("read");
+            let outcome = said(build(&inside.display().to_string(), &dir));
+            assert_eq!(fs::read(&inside).expect("read"), before);
+            outcome
+        }),
+        ("out-spellings", |root| {
+            let mut outcome = None;
+            for spelled in ["b/", "b/.", "b//", "./b"] {
+                outcome = said(build(&example(HEARTBEAT), &root.join(spelled)));
+                let names: Vec<String> = fs::read_dir(root)
+                    .expect("the directory")
+                    .map(|entry| entry.expect("an entry").file_name().display().to_string())
+                    .collect();
+                assert_eq!(names, ["b"], "{spelled}: one package");
+            }
+            outcome
+        }),
         ("stays-aside", |root| {
             if !modes_bind(root) {
                 return None;
@@ -3867,6 +3893,8 @@ fn a_forged_provenance_is_said_on_one_line() {
     for said in [
         r#"{"format": "x\nall clear: accepted\ny"}"#,
         r#"{"format": "archogen-build-provenance/5", "description": "../x\nall clear: accepted\ny"}"#,
+        r#"{"format": "archogen-build-provenance/5", "description": "description/s.eadl", "system": "x\nall clear: accepted\ny"}"#,
+        r#"{"format": "archogen-build-provenance/5", "description": "description/s.eadl", "system": "s", "files": [{"path": "x\nall clear: accepted\ny"}]}"#,
     ] {
         fs::write(root.join(archogen_emit::PROVENANCE_FILE), said).expect("written");
         let Err(unbuilt) = archogen_cli::built::Built::read(&root) else {

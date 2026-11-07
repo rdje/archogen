@@ -52,8 +52,8 @@ pub fn provenance_is_whole(text: &str) -> bool {
     text[start..end] == format!("sha256:{}", Digest::of(blanked.as_bytes()).hex())
 }
 
-/// The most timer releases and source arrivals a run of the hosted playground takes: a hyperperiod has no bound of its
-/// own, and one that fits `u64` can still be a run that never ends (the record's §3).
+/// The most timer releases, source arrivals and releases those arrivals make that a run of the hosted playground takes: a
+/// hyperperiod has no bound of its own, and one that fits `u64` can still be a run that never ends (the record's §3).
 pub const MOST_RELEASES: u64 = 1 << 20;
 
 /// The engine's sources every generated system holds, by the path each takes there, byte for byte.
@@ -242,19 +242,30 @@ fn silent(contents: &Contents, route: &Route) -> Option<&'static str> {
 
 /// What the run repeats, each by what a refusal would call it: the period of each task the timer releases, and the separation
 /// of each source that arrives. A task a source releases repeats only as that source does, so its own minimum separation
-/// is no part of the run; nor is a deadline or a jitter, which no table holds (the record's §2 and §3).
-fn repeating(contents: &Contents) -> Vec<(String, eadl_model::rational::Rational)> {
+/// is no part of the run; nor is a deadline or a jitter, which no table holds (the record's §2 and §3). Each with what one of it
+/// costs a run: a release is one, and an arrival is itself and each task it releases.
+fn repeating(contents: &Contents) -> Vec<(String, eadl_model::rational::Rational, u64)> {
     let mut out = Vec::new();
+    let mut releases: std::collections::BTreeMap<&str, u64> = std::collections::BTreeMap::new();
     for task in &contents.tasks {
-        if let (Trigger::Timer, Release::Period(period)) = (&task.released_by, task.release) {
-            out.push((format!("task `{}`'s period", task.name), period));
+        match (&task.released_by, task.release) {
+            (Trigger::Timer, Release::Period(period)) => {
+                out.push((format!("task `{}`'s period", task.name), period, 1));
+            }
+            (Trigger::Source(source), _) => *releases.entry(source.as_str()).or_default() += 1,
+            _ => {}
         }
     }
     for route in &contents.routes {
-        if let (Item::Source(_), None, Separation::Of(separation)) =
+        if let (Item::Source(source), None, Separation::Of(separation)) =
             (&route.item, silent(contents, route), route.separation)
         {
-            out.push((format!("{}'s separation", route_name(route)), separation));
+            let released = releases.get(source.as_str()).copied().unwrap_or(0);
+            out.push((
+                format!("{}'s separation", route_name(route)),
+                separation,
+                released.saturating_add(1),
+            ));
         }
     }
     out
@@ -263,7 +274,7 @@ fn repeating(contents: &Contents) -> Vec<(String, eadl_model::rational::Rational
 /// The tick: the least common multiple of the denominators of what the run repeats (the record's §2).
 fn tick(contents: &Contents) -> Result<Ticks, Refusal> {
     let mut per_second = 1_u64;
-    for (what, seconds) in repeating(contents) {
+    for (what, seconds, _) in repeating(contents) {
         let denominator = u64::try_from(seconds.denominator()).map_err(|_| past_ticks(&what))?;
         per_second = lcm(per_second, denominator).ok_or_else(|| past_ticks(&what))?;
     }
@@ -273,12 +284,12 @@ fn tick(contents: &Contents) -> Result<Ticks, Refusal> {
 /// One hyperperiod in ticks of what the run repeats, within [`MOST_RELEASES`] (the record's §3).
 fn horizon_of(contents: &Contents, ticks: &Ticks) -> Result<u64, Refusal> {
     let mut each = Vec::new();
-    for (what, seconds) in repeating(contents) {
+    for (what, seconds, cost) in repeating(contents) {
         let value = ticks.of(&what, seconds)?;
-        each.push((what, value));
+        each.push((what, value, cost));
     }
     let mut horizon = 1_u64;
-    for (what, value) in &each {
+    for (what, value, _) in &each {
         horizon = lcm(horizon, *value).ok_or_else(|| {
             refuse(
                 "unsupported-profile",
@@ -291,9 +302,9 @@ fn horizon_of(contents: &Contents, ticks: &Ticks) -> Result<u64, Refusal> {
     }
     let releases = each
         .iter()
-        .filter(|(_, value)| *value > 0)
-        .fold(0_u64, |total, (_, value)| {
-            total.saturating_add(horizon / value)
+        .filter(|(_, value, _)| *value > 0)
+        .fold(0_u64, |total, (_, value, cost)| {
+            total.saturating_add((horizon / value).saturating_mul(*cost))
         });
     if releases > MOST_RELEASES {
         return Err(refuse(

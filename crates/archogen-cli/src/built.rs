@@ -201,6 +201,17 @@ impl Built {
             Digest::parse(value)
                 .ok_or_else(|| format!("{shown}/{PROVENANCE_FILE}: `{name}` is no digest"))
         };
+        // No build writes a name with a line break, a path holding one being refused before it runs, so what holds one was written by hand, and is refused here on one line, before anything says it.
+        let one_line = |name: &str, value: String| -> Result<String, Unbuilt> {
+            if value.contains(['\n', '\r']) {
+                return Err(format!(
+                    "{shown}/{PROVENANCE_FILE}: `{name}` holds a line break, which no build writes: `{}`",
+                    eadl_front::fit_name(&value.replace('\r', "\\u{d}"))
+                )
+                .into());
+            }
+            Ok(value)
+        };
         let format = text("format")?;
         if format != PROVENANCE_FORMAT {
             return Err(Unbuilt::OtherFormat(format!(
@@ -208,7 +219,8 @@ impl Built {
                 eadl_front::fit_name(&format)
             )));
         }
-        let description = text("description")?;
+        let description = one_line("description", text("description")?)?;
+        let system = one_line("system", text("system")?)?;
         if !inside(&description) {
             return Err(format!(
                 "{shown}/{PROVENANCE_FILE} names the description `{}`, which lies outside the build",
@@ -221,7 +233,15 @@ impl Built {
         };
         let mut files = Vec::with_capacity(listed.len());
         for entry in listed {
-            let path = entry.get("path").and_then(Value::as_str).unwrap_or("");
+            let path = one_line(
+                "path",
+                entry
+                    .get("path")
+                    .and_then(Value::as_str)
+                    .unwrap_or("")
+                    .to_owned(),
+            )?;
+            let path = path.as_str();
             let sha256 = entry.get("sha256").and_then(Value::as_str).unwrap_or("");
             if !inside(path) {
                 let said = eadl_front::fit_name(path);
@@ -253,7 +273,7 @@ impl Built {
             .into());
         }
         Ok(Self {
-            system: text("system")?,
+            system,
             checker: digest("checker", &text("checker")?)?,
             description,
             files,

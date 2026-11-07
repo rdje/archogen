@@ -790,11 +790,15 @@ fn only_what_passes_the_limit_at_one_instant_stops() {
 }
 
 fn second_timed(tasks: &[Task<'_>], sources: &[Source<'_>], horizon: u64) -> (Ended, Vec<String>) {
-    let (ended, lines) = trace::<2>(&System {
+    let system = System {
         ticks_per_second: 1,
         ..system(tasks, sources, horizon)
-    });
-    (ended, lines)
+    };
+    if tasks.len() == 1 {
+        trace::<1>(&system)
+    } else {
+        trace::<2>(&system)
+    }
 }
 
 /// A job a source's job held off has done all its work, and what is left of it takes no time: it finishes before its own next release, however it came to be held off.
@@ -840,10 +844,31 @@ fn a_job_held_off_with_nothing_left_finishes_before_its_own_release() {
         Step::Unmask,
     ];
     let tasks = [woken(&woken_body), timer("low", 2, 10, &writes)];
-    let (ended, lines) = second_timed(&tasks, &sources, 10);
+    let (ended, lines) = second_timed(&tasks, &sources, 11);
     assert_eq!(ended, Ended::Horizon, "{lines:#?}");
+    let at = |said: &str| {
+        lines
+            .iter()
+            .position(|line| line == said)
+            .unwrap_or_else(|| panic!("no `{said}` in {lines:#?}"))
+    };
+    assert!(at("10 s complete woken") < at("10 s complete low"));
+    assert!(at("10 s complete low") < at("10 s release low nominal 10 s"));
     assert!(
         !lines.iter().any(|line| line.contains("fault")),
+        "{lines:#?}"
+    );
+}
+
+/// A last step writing a value already reached is a request at its write, whose service comes before the job's completion: so a job ending so at its own release has overrun it, the one way a job with nothing left does.
+#[test]
+fn a_job_ending_by_writing_a_value_already_reached_serves_it_first() {
+    let sources = [alarm("a")];
+    let body = [Step::Run(3), Step::Program { alarm: 0, ahead: 0 }];
+    let tasks = [timer("job", 1, 3, &body)];
+    let (_, lines) = second_timed(&tasks[..], &sources, 4);
+    assert!(
+        lines.contains(&"3 s fault overrun job fault nominal 3 s".to_owned()),
         "{lines:#?}"
     );
 }
@@ -916,7 +941,7 @@ fn trace_at_one_tick_a_second<const N: usize>(
     })
 }
 
-/// What a run holds and returns by value grows with its tasks, past a thread's default at about 9,000 of them in a test's profile. So the stack it says it takes must hold one of 10,000, each path a job's mask, its preemption and an overrun reach among it.
+/// What a run holds and returns by value grows with its tasks, past a thread's default at about 9,000 of them in a test's profile. So the stack it says it takes must hold one of 10,000, with a job's mask and an overrun among what it runs.
 #[test]
 fn a_run_of_many_tasks_fits_the_stack_it_says_it_takes() {
     const MANY: usize = 10_000;

@@ -130,7 +130,7 @@ repaired by the task's own `(needs interrupt-source)`, or `unsupported-profile` 
 comes first, since what a run would cost means nothing until it can run. A
 period or a separation the run repeats, or a hyperperiod of them, past 64 bits of ticks is `unsupported-profile`, rather than
 approximated, and so is a run of more than
-`2^20` releases and arrivals, which nobody could read: periods of `1 ms` and `2305843009213693951 ms` both fit, and that run would
+`2^20` releases and arrivals, an arrival counting with each task it releases, which nobody could read: periods of `1 ms` and `2305843009213693951 ms` both fit, and that run would
 never end. A plan that is not what its inputs lower to is `tool-failure`: `crates/archogen-emit` accepts a plan only by lowering it
 again from the same inputs and comparing bytes.
 
@@ -205,6 +205,8 @@ the rule: what it says is run, and a route it does not name is promised nothing 
 | `absent` | nothing | `ok` | `generated` | the package, at what a new directory takes there |
 | `empty` | an empty directory | `ok` | `generated` | the package, at that directory's mode |
 | `earlier` | an earlier build, with what cargo left | `ok` | `generated` | the package, at that mode, what cargo left moved to it |
+| `description-inside` | the description lies in the earlier build it replaces | `ok` | `generated` | the package, from what that description said |
+| `out-spellings` | `--out` spelled `b/`, `b/.`, `b//` or `./b` | `ok` | `generated` | the one package, at `b` |
 | `stays-aside` | an earlier build with what cannot be removed, a closed directory | `ok` | `keeps what could not go` | the package; that at `DIR.replaced`, which the next build refuses over until it is removed |
 | `closed-to-writes` | a directory closed to its owner's writes, a `555` or a `500` | `ok` | `open it if cargo stops` | the package, closed as it was |
 | `came-at-out` | while it runs, something comes to `--out`, where nothing stood | `tool-failure` | `appeared while the build ran` | what came; no package |

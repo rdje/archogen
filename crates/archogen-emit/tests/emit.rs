@@ -428,6 +428,44 @@ fn a_run_of_exactly_what_the_playground_takes_is_built() {
     );
 }
 
+/// An arrival costs a run itself and each task it releases, which sharing a source multiplies: three tasks on a source every 1 ms, and one on the timer, past what a run takes though its arrivals alone are not.
+#[test]
+fn an_arrival_counts_with_what_it_releases() {
+    let shared = |slow: &str| {
+        format!(
+            r#"(eadl-version eadl/1)
+(defblock dev (offers (interrupt-source true) (min-arrival-separation 1 ms) (reachable-at-privilege machine)))
+(defplatform p (offers (core-count 1 tick) (reachable-at-privilege machine)) (requires (uses dev)))
+(defservice evt (requires (needs interrupt-source)))
+(defsystem big
+  (task t0 (min-separation 1 ms) (deadline 1 ms) (deadline-from release) (priority 1) (uses evt))
+  (task t1 (min-separation 1 ms) (deadline 1 ms) (deadline-from release) (priority 2) (uses evt))
+  (task slow (period {slow}) (deadline {slow}) (deadline-from release) (priority 3) (on-overrun fault))
+  (requires (uses evt)) (platform (uses p)))
+"#
+        )
+    };
+    // 349525 arrivals, each with two releases, and one of the slow task's own: 2^20 to the release.
+    let emitted = build_of(&shared("349525 ms")).emitted().expect("emitted");
+    assert_eq!(emitted.horizon, 349_525);
+    let refusal = build_of(&shared("349526 ms"))
+        .emitted()
+        .expect_err("refused");
+    assert!(
+        refusal.message.contains("is 1048579 releases and arrivals"),
+        "{}",
+        refusal.message
+    );
+    let refusal = build_of(&shared("1048575 ms"))
+        .emitted()
+        .expect_err("refused");
+    assert!(
+        refusal.message.contains("is 3145726 releases and arrivals"),
+        "{}",
+        refusal.message
+    );
+}
+
 #[test]
 fn a_task_nothing_can_release_is_said_before_what_its_run_would_cost() {
     // The rest of this system is a run past the bound, and refused as one when alone. The cause and its repair are what the
