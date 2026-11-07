@@ -123,7 +123,7 @@ for name, line in {"FELL_WINDOW_SECONDS": 10, "GROWTH_WINDOW_SECONDS": 900}.item
 
 # And as the file gives them when it runs: `setattr`, `__post_init__`, a tuple and `*=` each read as nothing above, and a value handed to `Limits` at a call moves a line as surely.
 for node in ast.walk(ast.parse(source)):
-    if isinstance(node, ast.Call) and isinstance(node.func, ast.Name) and node.func.id == "Limits" and any(keyword.arg in limits and isinstance(keyword.value, ast.Constant) for keyword in node.keywords):
+    if isinstance(node, ast.Call) and isinstance(node.func, ast.Name) and node.func.id == "Limits" and (node.args or node.keywords):
         breaches.append(f"line {node.lineno} hands `Limits` a line of its own")
 os.makedirs(root / "target", exist_ok=True)
 with tempfile.NamedTemporaryFile(mode="wb", suffix=".py", dir=root / "target") as staged:
@@ -136,7 +136,7 @@ with tempfile.NamedTemporaryFile(mode="wb", suffix=".py", dir=root / "target") a
             "module = importlib.util.module_from_spec(spec)\n"
             "sys.modules['guard_under_check'] = module\n"
             "spec.loader.exec_module(module)\n"
-            "print(json.dumps({'limits': dataclasses.asdict(module.Limits()), 'on_the_class': {field.name: getattr(module.Limits, field.name, None) for field in dataclasses.fields(module.Limits)}, 'constants': {name: getattr(module, name) for name in sys.argv[2:]}}))\n"
+            "print(json.dumps({'limits': dataclasses.asdict(module.Limits()), 'on_the_class': {field.name: getattr(module.Limits, field.name, None) for field in dataclasses.fields(module.Limits)}, 'as_main_takes_them': dataclasses.asdict(module.tightened({})), 'constants': {name: getattr(module, name) for name in sys.argv[2:]}}))\n"
         ), staged.name, *constants],
         capture_output=True, text=True, errors="replace", timeout=60, stdin=subprocess.DEVNULL,
     )
@@ -146,7 +146,7 @@ except ValueError:
     given = None
     breaches.append(f"scripts/host_guard.py does not load, so its lines cannot be read: {reads.stderr.strip()[-300:]}")
 if given:
-    for read in ("limits", "on_the_class"):
+    for read in ("limits", "on_the_class", "as_main_takes_them"):
         for name in sorted(given[read].keys() & limits.keys()):
             if given[read][name] != limits[name]:
                 breaches.append(f"`{name}` is written {limits[name]} and is {given[read][name]} when the file runs")
@@ -214,32 +214,15 @@ for name, recipe in found.items():
             if HEAVY.search(bare) and not re.fullmatch(r'echo\s+"[^"]*"', bare):
                 breaches.append(f"Makefile `{name}` runs `{command}`, which this check does not hold")
 
-# What each recipe runs and how, as make itself reads the Makefile as staged: reading its text was passed by a target's own `GUARD := true`, a second target on a line, `${eval}`, `MAKEFLAGS`, `SHELL` and `.IGNORE`, each leaving `make focused` to exit 0 having compiled nothing.
-with tempfile.NamedTemporaryFile(mode="w", encoding="utf-8", suffix=".mk", dir=root / "target") as staged_make:
-    staged_make.write(makefile)
-    staged_make.flush()
-    clean = {name: value for name, value in os.environ.items() if not name.startswith(("MAKE", "GNUMAKE")) and name != "MFLAGS"}
-    def make_says(*words):
-        return subprocess.run(["make", "-f", staged_make.name, *words], cwd=root, env=clean, capture_output=True, text=True, errors="replace", timeout=60, stdin=subprocess.DEVNULL)
-    a_guard = r"python3 -I -B scripts/host_guard\.py run --wait \d+ --"
-    try:
-        for name, recipe in RECIPES.items():
-            said = make_says("-n", name)
-            lines = said.stdout.splitlines()
-            wanted = [re.escape(line).replace(re.escape("$(GUARD)"), a_guard) for line in recipe]
-            if said.returncode != 0 or len(lines) != len(wanted) or not all(re.fullmatch(want, line) for want, line in zip(wanted, lines)):
-                breaches.append(f"`make {name}` would run {lines or said.stderr.strip()[-200:]}, and this check holds it to {recipe}")
-        database = make_says("-pn", "tiers").stdout
-        shells = re.findall(r"^SHELL\s*:?=\s*(.*)$", database, re.M)
-        if shells != ["/usr/bin/env bash"]:
-            breaches.append(f"the Makefile's `SHELL` is {shells}, so a recipe may not run as written")
-        flags = re.findall(r"^MAKEFLAGS\s*:?=\s*(.*)$", database, re.M)
-        if len(flags) != 1 or sorted(flags[0].strip()) != ["n", "p"]:
-            breaches.append(f"the Makefile sets `make`'s own flags, `{flags}`: a failing recipe could read as passed")
-        if re.search(r"^\.IGNORE\s*:", database, re.M):
-            breaches.append("the Makefile says `.IGNORE`, so a failing recipe would read as passed")
-    except (OSError, subprocess.SubprocessError) as error:
-        breaches.append(f"`make` cannot be asked what the recipes run: {error}")
+# The Makefile is one text, held by its digest. Reading its text was passed by a target's own `GUARD`, `${eval}` and `MAKEFLAGS`; asking `make` then was passed by a target's own `SHELL`, `BASH_ENV`, a `PATH` and what a recipe's words do not show, and ran whatever it says at parse inside this check. A change to it moves this line, in a commit that says why, and the check changing asks the self-test.
+MAKEFILE_SHA256 = "f482595e32e16c6c5132ee7ca8a01b823db6754444d2e15d859cbf3b00c45be4"
+if hashlib.sha256(as_staged("Makefile") or b"").hexdigest() != MAKEFILE_SHA256:
+    breaches.append("the Makefile is not the one this check holds, and `make` can be told anything: read what changed, then move `MAKEFILE_SHA256` in `scripts/check_host_guard.sh` in the same commit")
+# By the names that stand: on a volume that folds case, `makefile` opens the Makefile itself.
+standing = set(os.listdir(root))
+for name in ("GNUmakefile", "makefile"):
+    if name in standing:
+        breaches.append(f"`{name}` stands beside the Makefile, and `make` reads it first")
 
 # Every shell command an agent runs here is checked first, a subagent's too, by exactly this, and nothing turns it off or lets it go by.
 EXPECTED = 'python3 -I -B "$CLAUDE_PROJECT_DIR/scripts/host_guard.py" hook'

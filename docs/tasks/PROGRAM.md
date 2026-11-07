@@ -1063,7 +1063,19 @@ mdBook that is the director's window into the project.
   Commit: `ARCHOGEN-PROGRAM-1216 (leaf PROGRAM.127.21)`
 
 - ID: `PROGRAM.127.22`
-  Status: `pending` — round 22, a fresh reader over round 21's answer, looking hardest at `make` asked of the Makefile and the file asked of its limits. It closes on a round that finds no defect, and a form written to go round the guard is a stated limit, not a defect.
+  Status: `done` — `2026-11-07`: round 22, a fresh reader over round 21's answer: 11 findings, 3 defects, 3 after 3, so answered by removing what kept failing. The findings and each answer are in `docs/reviews/decision_host-guard-reviews.md`.
+
+  **Acceptance checklist (`DOCTRINE_ENFORCEMENT.md`):**
+  - [x] **REPRODUCE / ISSUE** — `target/p12722/work/mk/try.sh a 'focused: SHELL := /usr/bin/true'` → `HOST-GUARD rc=0`, `make focused rc=0`, `ran.txt: ABSENT`; `target/p12722/work/mk/load.py`, a line set in `tightened` → `HOST-GUARD rc=0`, `status` saying 99.
+  - [x] **ROOT CAUSE (WHY + WHERE)** — `git grep -n 'make_says' 15177496 -- scripts/check_host_guard.sh` → a tool asked of a text it can be told anything by; `git grep -n 'module.Limits()' 15177496 -- scripts/check_host_guard.sh` → the class asked, where `main` takes `tightened`.
+  - [x] **FIX** — `scripts/check_host_guard.sh`: `MAKEFILE_SHA256` in place of asking `make`, `GNUmakefile` and `makefile` refused, `tightened({})` asked, any value at a call of `Limits` refused. `scripts/host_guard.py`: `taskpolicy`, `sandbox-exec`, `xcrun`'s asking flags, `PYTHON_FLAGS_WITH_VALUES`. `scripts/selftest_host_guard.py`: each form. The record's sentences and limits.
+  - [x] **ADDRESSED (verified)** — `bash scripts/check_host_guard.sh --self-test` → `host-guard self-test: 858 passed, 0 failed, 0 not run`, the stamp equal to what is staged: `case_a_commit_holds_what_make_and_the_limits_can_be_told`, a target's own `SHELL`, a `BASH_ENV`, a `$(shell)` at parse that did not run, a comment, a `GNUmakefile`, a Makefile moved with its digest passing, and what `tightened` gives.
+  - [x] **NO REGRESSION** — `bash scripts/check_host_guard.sh` → `host-guard: OK`, exit 0; `make focused` → `tier focused: passed — 3 passed, 0 failed`, on the staged tree.
+  - [x] **LOCKSTEP** — the record, the review history and its index, these leaves and the Commit Log; `MEMORY.md`'s next action.
+  Commit: `ARCHOGEN-PROGRAM-1218 (leaf PROGRAM.127.22)`
+
+- ID: `PROGRAM.127.23`
+  Status: `pending` — round 23, a fresh reader over round 22's answer, looking hardest at the Makefile's digest and at what `tightened` gives. It closes on a round that finds no defect, and a form written to go round the guard is a stated limit, not a defect.
 
 - ID: `PROGRAM.128`
   Status: `done` — `2026-11-05`: by the director's word, "If you ever need new CPU, DSP, MCU, BOARD, ISA or in general digital chip PDF just look here", naming `chipdoc`'s `AGENTS.md`. The record, its index row, the book's ledger and a `TOOLBOX.md` row now start any chip document's need there. Reading it corrected three things of ours: the record and the ledger still said `REQ-007` was `requested`, fulfilled `2026-09-30`; the ledger said the corpus was off this volume; and the record said what is adopted is copied here, where most of the corpus may not be republished and this repository is public, so a fact and its citation are copied and never a document. A documents-only leaf.
@@ -1249,6 +1261,7 @@ leaf's outcome is its row in the Commit Log below, and a sealed leaf's full reco
 | `PROGRAM.127.6` | `ARCHOGEN-PROGRAM-1164 (leaf PROGRAM.127.6)` | **paused at the director's word**, at a clean tree, before round 6 began: the resume pointer and the leaf say to wait |
 | `PROGRAM.127.6` | `ARCHOGEN-PROGRAM-1165 (leaf PROGRAM.127.6)` | **the host guard's review, round 6 answered**: a volume has fallen only by more than a shared volume costs anyway; what a job takes with it said; the shell reader given a case's branches, arithmetic, arrays and `[[ ]]`, held to each `bash` here; each agent told for itself |
 | `PROGRAM.127.7` | `ARCHOGEN-PROGRAM-1168 (leaf PROGRAM.127.7)` | **the host guard's review, round 7 answered**: `make` that only asks is no build; the reader's rare misses read, each held to both `bash`es; a `kill` by a pid passes by any spelling; the root named exactly; what is told says what it leaves out |
+| `PROGRAM.127.22` | `ARCHOGEN-PROGRAM-1218 (leaf PROGRAM.127.22)` | **the host guard's review, round 22, answered by removing what kept failing**: the Makefile held whole by a digest, `make` no longer asked; `tightened` asked of its lines; more wrappers read |
 | `PROGRAM.127.21` | `ARCHOGEN-PROGRAM-1216 (leaf PROGRAM.127.21)` | **the host guard's review, round 21, answered by method**: `make` asked what each recipe would run, the file asked what each limit is; what `ps` brackets is a moment; a `run` read as `main` reads it; numbers as the tools read them |
 | `PROGRAM.127.20` | `ARCHOGEN-PROGRAM-1213 (leaf PROGRAM.127.20)` | **the host guard's review, round 20**: a `make` waits on through what `ps` brackets; a `run` is of the root it says before its `--`; the reader through the guard's `run` and `env -`, and numbers however spelt; what make and the limits can be told; a path holding a space is one path |
 | `PROGRAM.127.19` | `ARCHOGEN-PROGRAM-1211 (leaf PROGRAM.127.19)` | **the host guard's review, round 19 answered**: the self-test spared by its own path; what a floor counts of a process newly ours said |
@@ -1352,3 +1365,4 @@ leaf's outcome is its row in the Commit Log below, and a sealed leaf's full reco
 - `2026-11-06`: `PROGRAM.127.19` done: the guard's round 19, four findings answered, two defects, both mild; `PROGRAM.127.20` filed for round 20.
 - `2026-11-06`: `PROGRAM.127.20` done: the guard's round 20, ten findings answered, two defects; `PROGRAM.127.21` filed for round 21.
 - `2026-11-06`: `PROGRAM.127.21` done: the guard's round 21, ten findings answered, three defects, by method; `PROGRAM.127.22` filed for round 22.
+- `2026-11-07`: `PROGRAM.127.22` done: the guard's round 22, eleven findings answered, three defects, by method; `PROGRAM.127.23` filed for round 23.

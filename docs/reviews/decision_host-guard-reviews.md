@@ -441,3 +441,21 @@ Said, and left as it stands: its reader could not run a real `make focused`, a c
 | G21-10 | gap, rare | a sibling root's name going on with ` -`, and a root holding ` -- ` | A stated limit: a flat command line cannot tell |
 
 Said, and left as it stands: its reader could not run a real `make focused`, a commit's compile, commit fixtures, a real full volume, chosen pressure levels, true idle time, the census against the real watcher, real Codex, Kimi or VS Code, `onFailure` with a real crash, or a hung mount under `words_read`'s `isfile`. A slow writer's top sat just past the stated 13 s and 15 MiB, at 13.4 s and 16.0 MiB. `Makefile` stays out of the stamp, since `make` is now asked of it at each commit.
+
+**Round 22** — `2026-11-07`, leaf `PROGRAM.127.22`: not acceptable, 11 findings, 3 defects, after 3 on the round before, on `15177496`. The count did not fall, and round 21's method fell to its own next forms, so this removes it. What `ps` brackets held: 1,221 looks, none misread, and 400 makes at a scratch danger line, none stopped, where round 21's reader saw 5.
+
+| # | Kind | Finding | Answer |
+| --- | --- | --- | --- |
+| G22-1 | defect, fails open | a target's own `SHELL` passed, since `-pn` reads the global one: `make focused` exited 0 having run nothing | `make` is no longer asked. The Makefile is held whole by `MAKEFILE_SHA256`, so any byte changed moves that line in the same commit, which is a change to the check and asks the self-test |
+| G22-2 | defect | a guard broken in the tree alone refused an unrelated commit, `make -n`'s `$(shell tail …)` reading the tree | Gone with it: nothing here runs `make` |
+| G22-3 | defect | "moves a line past its mark" was false of `tightened`, which is what `main` takes: `status` said 99 | The file is asked what `tightened({})` gives, and any value handed at a call of `Limits` is refused |
+| G22-4 | gap | `BASH_ENV`, a `PATH`, a `GNUmakefile`, a condition on `MAKEFLAGS`, `.PHONY` removed and a look inside `ifdef NEVER` each passed | The digest holds them all but the `GNUmakefile` and `makefile`, which are refused beside it |
+| G22-5 | gap | a `$(shell)` at parse ran unguarded, inside each check too | Nothing here runs `make` |
+| G22-6 | gap, false refusal | `xcrun -f` read as running | What it asks runs nothing |
+| G22-7 | gap | `taskpolicy`, `sandbox-exec` and a `run` after `-W ignore` passed | Read. The wrappers stay a list, a stated limit |
+| G22-8 | gap, mild | `script` took a flag's value for what runs, sparing a job | `-W` and `-X` take a value |
+| G22-9 | wording | "at most one look late" of a process that names itself a bracket | A stated limit |
+| G22-10 | wording | `is_number`'s "as `kill` … read" | It says `pgrep` |
+| G22-11 | wording | a limit stating what is refused | Gone |
+
+Said, and left as it stands: its reader could not run the brief's list, a real commit, Linux's `make` or make 3.82 and later. **It went outside its brief once:** a `$(shell cargo build >/dev/null)` rig with no stub on the check's path ran a real `cargo build` about 11 times, unguarded, each finishing in 0.02 s with no fingerprint changed and `target/debug/*.d` rewritten. It said so, and nothing was harmed; it is the very hazard this round removes.

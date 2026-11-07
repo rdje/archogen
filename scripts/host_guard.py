@@ -238,6 +238,7 @@ def start_reasons(reading: Reading, limits: Limits) -> list[str]:
 
 # ---- processes
 
+PYTHON_FLAGS_WITH_VALUES = ("-W", "-X")
 INTERPRETERS = {"python", "python3", "Python", "node", "ruby", "perl", "bash", "sh", "zsh"}
 SHELLS = {"bash", "sh", "zsh", "fish", "dash", "ksh", "csh", "tcsh", "nu", "elvish"}
 
@@ -290,8 +291,9 @@ class Process:
         """What an interpreter runs, by its file's name; nothing otherwise."""
         if not (self.name in INTERPRETERS or self.name.startswith("python")):
             return ""
-        for word in self.words_read:
-            if not word.startswith("-"):
+        words = self.words_read
+        for at, word in enumerate(words):
+            if not word.startswith("-") and not (at and words[at - 1] in PYTHON_FLAGS_WITH_VALUES):
                 return os.path.basename(word)
         return ""
 
@@ -305,6 +307,8 @@ class Process:
         for at, word in enumerate(words):
             if word in ("-m", "-c"):
                 return []
+            if at and words[at - 1] in PYTHON_FLAGS_WITH_VALUES:
+                continue
             base = os.path.basename(word)
             if not word.startswith("-") and "." in base and not (at and words[at - 1].startswith("--") and "=" not in words[at - 1]):
                 return []
@@ -1029,6 +1033,8 @@ WRAPPERS = {
     "env": ({"-u", "-P", "-S", "-C", "--unset", "--chdir", "--split-string"}, 0),
     "arch": ({"-e", "-d", "-arch"}, 0),
     "xcrun": ({"--sdk", "-sdk", "--toolchain", "-toolchain"}, 0),
+    "taskpolicy": ({"-c", "-d", "-g", "-t", "-l", "-p"}, 0),
+    "sandbox-exec": ({"-f", "-n", "-p", "-D"}, 0),
     "script": ({"-t"}, 1),
     "nohup": (set(), 0),
     "nice": ({"-n", "--adjustment"}, 0),
@@ -1116,6 +1122,9 @@ def unwrapped(words: list[str]) -> tuple[list[str], bool]:
                     at += 1
                 elif word.startswith("-") and word != "-":
                     if name == "command" and re.fullmatch(r"-\w*[vV]\w*", word):
+                        return [], False
+                    # What these ask of it runs nothing.
+                    if name == "xcrun" and re.fullmatch(r"--?(?:f|find|show-[\w-]+|version|help|h|k|kill-cache)", word):
                         return [], False
                     at += 1
                 elif name == "env" and ASSIGNMENT.match(word):
@@ -1640,7 +1649,7 @@ def what_a_run_runs(words: list[str]) -> list[str]:
     if words and (os.path.basename(words[0]) in INTERPRETERS or os.path.basename(words[0]).startswith("python")):
         at = 1
         while at < len(words) and words[at].startswith("-"):
-            at += 1
+            at += 2 if words[at] in PYTHON_FLAGS_WITH_VALUES else 1
     if words[at : at + 1] == [] or os.path.basename(words[at]) != GUARD_NAME or words[at + 1 : at + 2] != ["run"]:
         return []
     rest = words[at + 2 :]
@@ -1650,7 +1659,7 @@ def what_a_run_runs(words: list[str]) -> list[str]:
 
 
 def is_number(word: str, value: int) -> bool:
-    """Whether `word` is `value` as `kill` and `pgrep` read a number: `01`, `0x1`, `+1` and ` 1` are each 1."""
+    """Whether `word` is `value` as the widest of the tools reads a number, `pgrep`: `01`, `0x1`, `+1` and ` 1` are each 1. `kill` refuses some of them, which stops nothing."""
     text = word.strip()
     for base in (0, 10):
         try:

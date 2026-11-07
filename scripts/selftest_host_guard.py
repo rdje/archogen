@@ -1138,17 +1138,36 @@ def case_a_commit_holds_what_make_and_the_limits_can_be_told() -> None:
         ("a `SHELL` that runs nothing", made + "\nSHELL := /usr/bin/true\n"),
         ("an `.IGNORE`", made + "\n.IGNORE:\n"),
         ("a `-i` by `MAKEFLAGS`", made + "\nMAKEFLAGS += -i\n"),
+        ("a target's own `SHELL`", made + "\nfocused: SHELL := /usr/bin/true\n"),
+        ("a `BASH_ENV`", made + "\nexport BASH_ENV := ./quiet.sh\n"),
+        ("a `$(shell)` at parse", made + "\nX := $(shell echo ran >> parsed.txt)\n"),
+        ("a line that says nothing", made + "\n# a comment\n"),
     ):
         (repo / "Makefile").write_text(text)
         done = holds()
         check(f"a Makefile with {said} is refused", done.returncode == 1 and ("Makefile" in done.stdout or "`make " in done.stdout), done.stdout + done.stderr)
+    check("and what a Makefile says at parse did not run", not (repo / "parsed.txt").exists())
     (repo / "Makefile").write_text(made)
+    # A change the check is told of, in the same commit, is one it takes.
+    held = (repo / "scripts" / "check_host_guard.sh").read_text()
+    (repo / "Makefile").write_text(made + "\n# a comment\n")
+    moved = hashlib.sha256((repo / "Makefile").read_bytes()).hexdigest()
+    (repo / "scripts" / "check_host_guard.sh").write_text(re.sub(r'MAKEFILE_SHA256 = "\w+"', f'MAKEFILE_SHA256 = "{moved}"', held))
+    done = holds()
+    check("a Makefile moved with its digest passes", done.returncode == 0, done.stdout + done.stderr)
+    (repo / "scripts" / "check_host_guard.sh").write_text(held)
+    (repo / "Makefile").write_text(made)
+    (repo / "GNUmakefile").write_text("focused:\n\t@true\n")
+    done = holds()
+    check("a `GNUmakefile` beside it is refused", done.returncode == 1 and "GNUmakefile" in done.stdout, done.stdout + done.stderr)
+    (repo / "GNUmakefile").unlink()
     anchor = "    panic_used_percent: float"
     check("the rig finds the line", anchor in guard_text)
     for said, text in (
         ("a plain line in `Limits`", guard_text.replace(anchor, "    panic_used_percent = 99.0\n" + anchor, 1)),
         ("a line from outside it", guard_text.replace("\nGUARD_NAME = ", "\nLimits.panic_used_percent = 99.0\nGUARD_NAME = ", 1)),
         ("a line handed at a call", guard_text + "\nLOOSE = Limits(panic_used_percent=99.0)\n"),
+        ("a line handed by a name", guard_text + "\nLOOSE = Limits(**{'panic_used_percent': 99.0})\n"),
     ):
         (repo / "scripts" / "host_guard.py").write_text(text)
         done = holds()
@@ -1160,6 +1179,7 @@ def case_a_commit_holds_what_make_and_the_limits_can_be_told() -> None:
         ("`setattr`", "setattr(Limits, 'panic_used_percent', 99.0)"),
         ("a tuple", "Limits.panic_used_percent, _x = 99.0, 1"),
         ("`*=` on a constant", "FELL_BYTES *= 1024"),
+        ("what `tightened` gives", "__real = tightened\ndef tightened(overrides):\n    limits = __real(overrides)\n    limits.panic_used_percent = 99.0\n    return limits"),
     ):
         at = guard_text.index("\nif __name__")
         (repo / "scripts" / "host_guard.py").write_text(guard_text[:at] + "\n" + line + "\n" + guard_text[at:])
@@ -1217,6 +1237,9 @@ def case_a_kill_is_read_through_what_hides_it() -> None:
         "arch -arm64 pkill foo",
         "xcrun pkill foo",
         "script -q /dev/null pkill foo",
+        "taskpolicy -b pkill -x foo",
+        "sandbox-exec -n no-network pkill -x foo",
+        "python3 -W ignore scripts/host_guard.py run -- pkill -x foo",
     ):
         check(f"`{text}` is refused", refused(text))
     for text in (
@@ -1229,6 +1252,8 @@ def case_a_kill_is_read_through_what_hides_it() -> None:
         "echo python3 scripts/host_guard.py run -- pkill foo",
         ": scripts/host_guard.py run -- killall x",
         "pkill -P 0x10",
+        "xcrun -f pkill",
+        "xcrun --find pkill",
     ):
         check(f"`{text}` is not", not refused(text))
     check("`env -` hides nothing it wraps", g.commands_of("env - cargo build")[0].words == ["cargo", "build"])
@@ -1248,6 +1273,8 @@ def case_a_path_holding_a_space_is_one_path() -> None:
     for flag in ("-W ignore", "-X utf8"):
         spaced = g.Process(1, 1, f"python3 {flag} {scope}/claude work/build.py", "", "", 0)
         check(f"after `{flag}`, it is no agent for the directory's name", not g.is_agent(spaced), spaced.programs_named)
+    named = g.Process(1, 1, "python3 -X pycache_prefix=/tmp/claude job.py", "", "", 0)
+    check("a flag's value is not what it runs", named.script == "job.py" and not g.is_agent(named), named.script)
     relative = g.Process(1, 1, "python3 claude work/build.py x", str(scope), "", 0)
     check("relative to where it stands too", relative.script == "build.py" and not g.is_agent(relative), relative.script)
     agent = g.Process(1, 1, "node /opt/bin/claude --flag", "", "", 0)
@@ -1957,7 +1984,8 @@ def case_run() -> None:
         time.sleep(0.5)
         blind = subprocess.Popen([*PY, str(GUARD), "run", "--root", str(scope), "--limits", json.dumps({"watcher_stale_seconds": 1}), "--", "sleep", "40"], env=env, stdout=subprocess.DEVNULL, stderr=subprocess.PIPE, start_new_session=True)
         started.append(blind)
-        time.sleep(1.5)
+        # A full host takes longer than any one sleep to start it: its job standing is what this waits for.
+        until(lambda: jobs_of(blind.pid), 20)
         its_job = jobs_of(blind.pid)
         flag.write_text("")
         # The watcher this `run` started has the same `ps`, so it goes blind too.
