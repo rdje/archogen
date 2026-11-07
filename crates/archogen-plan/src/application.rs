@@ -200,6 +200,17 @@ pub struct Task {
     pub deadlines_within_reach: Vec<String>,
 }
 
+/// What holds the code a job runs (`ROADMAP.md` §1.1: "a declared, versioned source"): a crate, where it lies from this file, and a digest of what it holds there.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct Code {
+    /// Its name, the first of each entry point's names.
+    pub name: String,
+    /// Where it lies, from the file that says so.
+    pub place: String,
+    /// `sha256:…`, of its sources as `M4.13` reads them.
+    pub digest: String,
+}
+
 /// One file of application inputs.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Application {
@@ -207,6 +218,8 @@ pub struct Application {
     pub system: String,
     /// The target its bounds are of.
     pub target: String,
+    /// What holds the code its jobs run.
+    pub code: Code,
     /// That no application code touches what the runtime owns, with its grounds.
     pub leaves_interrupt_hardware_alone: bool,
     /// Why that holds.
@@ -253,17 +266,21 @@ fn clause<'f>(of: &str, found: &[(&'f str, &'f Form)], name: &str) -> Result<&'f
 fn string(of: &str, form: &Form) -> Result<String, Refused> {
     match form.items() {
         [_, Form::Str { value, .. }]
-            if value.chars().any(|c| c.is_control() || c == '"' || c == '\\') =>
+            if value
+                .chars()
+                .any(|c| c.is_control() || matches!(c, '"' | '\\' | '\u{2028}' | '\u{2029}')) =>
         {
             Err(refused(
                 of,
                 format!(
-                    "`{}` holds a line break, a quote or what is no text, which a plan's one line cannot carry",
+                    "`{}` holds a line break, a control character, a quote or a backslash, which a plan's one line cannot carry",
                     form.head().unwrap_or_default()
                 ),
             ))
         }
-        [_, Form::Str { value, .. }] if !value.trim().is_empty() => Ok(value.clone()),
+        [_, Form::Str { value, .. }] if value.chars().any(char::is_alphanumeric) => {
+            Ok(value.clone())
+        }
         _ => Err(refused(
             of,
             format!(
@@ -446,17 +463,36 @@ fn bound(of: &str, items: &[Form], units: &[&str], extra: &[&str]) -> Result<Bou
     })
 }
 
-/// What a node is written as here: its name, or an instance's `(adapter …)` text, as the plan writes it.
+/// What a node is written as here: its name, or an instance's text as the plan writes it, `(adapter KIND OVER)` or `(adapter KIND OVER REQUESTER)`, a task requester `(task SYSTEM NAME)`.
 fn node_text(form: &Form) -> Option<String> {
+    let is_a_requester = |form: &Form| {
+        form.as_symbol().is_some()
+            || (form.head() == Some("task")
+                && matches!(form.items(), [_, system, name] if system.as_symbol().is_some() && name.as_symbol().is_some()))
+    };
     match form.as_symbol() {
         Some(name) => Some(name.to_owned()),
-        None if form.head() == Some("adapter") => Some(form.to_canonical()),
-        None => None,
+        None => match form.items() {
+            [head, kind, over, rest @ ..]
+                if head.as_symbol() == Some("adapter")
+                    && kind.as_symbol().is_some()
+                    && over.as_symbol().is_some()
+                    && (rest.is_empty() || matches!(rest, [one] if is_a_requester(one))) =>
+            {
+                Some(form.to_canonical())
+            }
+            _ => None,
+        },
     }
 }
 
-/// `(HEAD NAME COUNT)` each, none twice, `NAME` a node's text.
-fn counted(of: &str, items: &[Form], head: &str) -> Result<Vec<(String, u64)>, Refused> {
+/// `(HEAD NAME COUNT)` each, none twice, `NAME` a node's text where a node is what it calls, and otherwise a primitive's name.
+fn counted(
+    of: &str,
+    items: &[Form],
+    head: &str,
+    nodes: bool,
+) -> Result<Vec<(String, u64)>, Refused> {
     let mut calls: Vec<(String, u64)> = Vec::new();
     let mut seen = BTreeSet::new();
     for item in items {
@@ -466,10 +502,23 @@ fn counted(of: &str, items: &[Form], head: &str) -> Result<Vec<(String, u64)>, R
                 format!("`{}` is no `({head} NAME COUNT)`", item.to_canonical()),
             ));
         };
-        let Some(name) = node_text(name) else {
+        let called = if nodes {
+            node_text(name)
+        } else {
+            name.as_symbol().map(str::to_owned)
+        };
+        let Some(name) = called else {
             return Err(refused(
                 of,
-                format!("`{}` calls no name", item.to_canonical()),
+                format!(
+                    "`{}` calls no {}",
+                    item.to_canonical(),
+                    if nodes {
+                        "node"
+                    } else {
+                        "primitive by its name"
+                    }
+                ),
             ));
         };
         if !seen.insert(name.clone()) {
@@ -482,7 +531,7 @@ fn counted(of: &str, items: &[Form], head: &str) -> Result<Vec<(String, u64)>, R
 
 const LIST_RECORD: &[&str] = &["scope", "binary", "evidence", "locator", "basis"];
 
-fn calls(of: &str, form: &Form, head: &str) -> Result<Calls, Refused> {
+fn calls(of: &str, form: &Form, head: &str, nodes: bool) -> Result<Calls, Refused> {
     let items = form.items().get(1..).unwrap_or_default();
     let (counts, rest): (Vec<Form>, Vec<Form>) = items
         .iter()
@@ -493,7 +542,7 @@ fn calls(of: &str, form: &Form, head: &str) -> Result<Calls, Refused> {
         scope: string(of, clause(of, &found, "scope")?)?,
         binary: binary(of, clause(of, &found, "binary")?)?,
         evidence: evidence(of, &found, None)?,
-        calls: counted(of, &counts, head)?,
+        calls: counted(of, &counts, head, nodes)?,
     })
 }
 
@@ -553,8 +602,8 @@ fn masked_runs(of: &str, form: &Form) -> Result<MaskedRuns, Refused> {
             name: name.to_owned(),
             ending,
             bound: bound(of, &plain, TIMES, &[])?,
-            calls: counted(of, &those("call"), "call")?,
-            node_calls: counted(of, &those("node-call"), "node-call")?,
+            calls: counted(of, &those("call"), "call", false)?,
+            node_calls: counted(of, &those("node-call"), "node-call", true)?,
         });
     }
     Ok(MaskedRuns {
@@ -565,19 +614,87 @@ fn masked_runs(of: &str, form: &Form) -> Result<MaskedRuns, Refused> {
     })
 }
 
-/// Whether `text` is a path a generated job can call: names of a letter or `_`, then letters, digits or `_`, joined by `::`.
-fn is_a_path(text: &str) -> bool {
-    text.split("::").all(|name| {
-        let mut chars = name.chars();
-        chars
-            .next()
-            .is_some_and(|c| c.is_ascii_alphabetic() || c == '_')
-            && chars.all(|c| c.is_ascii_alphanumeric() || c == '_')
-            && name != "_"
-    })
+/// The words Rust keeps, which no name in a path can be: a generated job writes this path as a call, and `return();` compiles.
+const KEPT_WORDS: &[&str] = &[
+    "Self", "abstract", "as", "async", "await", "become", "box", "break", "const", "continue",
+    "crate", "do", "dyn", "else", "enum", "extern", "false", "final", "fn", "for", "gen", "if",
+    "impl", "in", "let", "loop", "macro", "match", "mod", "move", "mut", "override", "priv", "pub",
+    "ref", "return", "self", "static", "struct", "super", "trait", "true", "try", "type", "typeof",
+    "unsafe", "unsized", "use", "virtual", "where", "while", "yield",
+];
+
+/// Whether `text` is a name a Rust path can hold.
+fn is_a_name(text: &str) -> bool {
+    let mut chars = text.chars();
+    chars
+        .next()
+        .is_some_and(|c| c.is_ascii_alphabetic() || c == '_')
+        && chars.all(|c| c.is_ascii_alphanumeric() || c == '_')
+        && text != "_"
+        && !KEPT_WORDS.contains(&text)
 }
 
-fn task(form: &Form) -> Result<Task, Refused> {
+/// Whether `text` is a path a generated job can call in the crate `code` names: that crate's name, then at least one more, joined by `::`.
+fn is_a_path_in(text: &str, code: &str) -> bool {
+    let names: Vec<&str> = text.split("::").collect();
+    names.len() > 1 && names[0] == code && names.iter().all(|name| is_a_name(name))
+}
+
+/// A task's own clauses, each run held against the job it is part of: what it calls the job calls, and its own code is the job's, so neither can pass the job's whole.
+fn runs_fit_their_job(
+    of: &str,
+    os_calls: &Calls,
+    node_calls: &Calls,
+    runs: &MaskedRuns,
+    execution: &Bound,
+) -> Result<(), Refused> {
+    for run in &runs.runs {
+        for (name, list, whole) in [
+            ("os-calls", &run.calls, os_calls),
+            ("node-calls", &run.node_calls, node_calls),
+        ] {
+            for (callee, count) in list {
+                let most = whole
+                    .calls
+                    .iter()
+                    .find(|(called, _)| called == callee)
+                    .map_or(0, |(_, most)| *most);
+                if *count > most {
+                    return Err(refused(
+                        of,
+                        format!(
+                            "the run `{}` calls `{callee}` {count} time(s), and its job's `{name}` says it makes {most}",
+                            run.name
+                        ),
+                    ));
+                }
+            }
+        }
+        if nanoseconds(&run.bound) > nanoseconds(execution) {
+            return Err(refused(
+                of,
+                format!(
+                    "the run `{}` is `{} {}` of the task's own code, past its job's `{} {}`",
+                    run.name, run.bound.value, run.bound.unit, execution.value, execution.unit
+                ),
+            ));
+        }
+    }
+    Ok(())
+}
+
+/// A time's bound, to compare two whatever their units.
+fn nanoseconds(bound: &Bound) -> u128 {
+    let scale: u128 = match bound.unit.as_str() {
+        "s" => 1_000_000_000,
+        "ms" => 1_000_000,
+        "us" => 1_000,
+        _ => 1,
+    };
+    u128::from(bound.value) * scale
+}
+
+fn task(form: &Form, code: &str) -> Result<Task, Refused> {
     let [_, name, body @ ..] = form.items() else {
         return Err(refused("task", "a task has a name"));
     };
@@ -615,6 +732,7 @@ fn task(form: &Form) -> Result<Task, Refused> {
             .unwrap_or_default())
     };
     let mut deadlines_within_reach = Vec::new();
+    let mut named = BTreeSet::new();
     for item in body_of("deadlines-within-reach")? {
         let Some(alarm) = node_text(item) else {
             return Err(refused(
@@ -622,41 +740,48 @@ fn task(form: &Form) -> Result<Task, Refused> {
                 format!("`{}` names no alarm", item.to_canonical()),
             ));
         };
-        if deadlines_within_reach.contains(&alarm) {
+        if !named.insert(alarm.clone()) {
             return Err(refused(of, format!("`{alarm}` is written twice")));
         }
         deadlines_within_reach.push(alarm);
     }
     let entry_point = string(of, clause(of, &found, "entry-point")?)?;
-    if !is_a_path(&entry_point) {
+    if !is_a_path_in(&entry_point, code) {
         return Err(refused(
             of,
-            format!("`entry-point` is a path a job can call, such as `app::beat`, and this says `{entry_point}`"),
+            format!("`entry-point` is a path a job can call in `{code}`, such as `{code}::beat`, a name Rust keeps being none, and this says `{entry_point}`"),
         ));
     }
+    let execution_bound = bound(
+        &format!("{of} execution-bound"),
+        body_of("execution-bound")?,
+        TIMES,
+        &[],
+    )?;
+    let os_calls = calls(
+        &format!("{of} os-calls"),
+        clause(of, &found, "os-calls")?,
+        "call",
+        false,
+    )?;
+    let node_calls = calls(
+        &format!("{of} node-calls"),
+        clause(of, &found, "node-calls")?,
+        "call",
+        true,
+    )?;
+    let masked_runs = masked_runs(
+        &format!("{of} masked-runs"),
+        clause(of, &found, "masked-runs")?,
+    )?;
+    runs_fit_their_job(of, &os_calls, &node_calls, &masked_runs, &execution_bound)?;
     Ok(Task {
         name: name.to_owned(),
         entry_point,
-        execution_bound: bound(
-            &format!("{of} execution-bound"),
-            body_of("execution-bound")?,
-            TIMES,
-            &[],
-        )?,
-        os_calls: calls(
-            &format!("{of} os-calls"),
-            clause(of, &found, "os-calls")?,
-            "call",
-        )?,
-        node_calls: calls(
-            &format!("{of} node-calls"),
-            clause(of, &found, "node-calls")?,
-            "call",
-        )?,
-        masked_runs: masked_runs(
-            &format!("{of} masked-runs"),
-            clause(of, &found, "masked-runs")?,
-        )?,
+        execution_bound,
+        os_calls,
+        node_calls,
+        masked_runs,
         stack_bound: bound(
             &format!("{of} stack-bound"),
             body_of("stack-bound")?,
@@ -687,6 +812,12 @@ pub fn read(text: &str) -> Result<Application, Refused> {
             ),
         ));
     }
+    if text.starts_with('\u{feff}') {
+        return Err(refused(
+            "the file",
+            "it begins with a byte-order mark, which is no form: save it without one",
+        ));
+    }
     let mut sources = SourceMap::new();
     let id = sources
         .add(FORMAT, text)
@@ -702,7 +833,19 @@ pub fn read(text: &str) -> Result<Application, Refused> {
             format!("it does not read as forms: {said}"),
         ));
     }
-    // Every form, so that one a description may state and this format does not know is refused too.
+    // Every form, so that one a description may state and this format does not know is refused too. Which format comes first: a later one's clauses are that format's, and no fault of this reader's words.
+    if let Some(said) = document
+        .forms
+        .iter()
+        .find(|form| form.head() == Some("format"))
+        .and_then(|form| string("format", form).ok())
+        .filter(|said| said != FORMAT)
+    {
+        return Err(refused(
+            "format",
+            format!("this reads `{FORMAT}`, and it says `{said}`"),
+        ));
+    }
     let (tasks, rest): (Vec<Form>, Vec<Form>) = document
         .forms
         .into_iter()
@@ -714,6 +857,7 @@ pub fn read(text: &str) -> Result<Application, Refused> {
             "format",
             "system",
             "target",
+            "code",
             "leaves-interrupt-hardware-alone",
             "initialisation",
         ],
@@ -772,10 +916,38 @@ pub fn read(text: &str) -> Result<Application, Refused> {
         SIZES,
         &[],
     )?;
+    let code = clause("the file", &found, "code")?;
+    let code_items = clauses(
+        "code",
+        code.items().get(1..).unwrap_or_default(),
+        &["crate", "place", "digest"],
+    )?;
+    let code = Code {
+        name: symbol("code", clause("code", &code_items, "crate")?)?,
+        place: string("code", clause("code", &code_items, "place")?)?,
+        digest: string("code", clause("code", &code_items, "digest")?)?,
+    };
+    if !is_a_name(&code.name) {
+        return Err(refused(
+            "code",
+            format!("`{}` is no name a Rust path can hold", code.name),
+        ));
+    }
+    if !code.digest.strip_prefix("sha256:").is_some_and(|hex| {
+        hex.len() == 64
+            && hex
+                .bytes()
+                .all(|b| b.is_ascii_digit() || (b'a'..=b'f').contains(&b))
+    }) {
+        return Err(refused(
+            "code",
+            format!("`digest` is `sha256:…`, and this says `{}`", code.digest),
+        ));
+    }
     let mut read_tasks: Vec<Task> = Vec::new();
     let mut names = BTreeSet::new();
     for form in &tasks {
-        let one = task(form)?;
+        let one = task(form, &code.name)?;
         if !names.insert(one.name.clone()) {
             return Err(refused("task", format!("`{}` is written twice", one.name)));
         }
@@ -784,6 +956,7 @@ pub fn read(text: &str) -> Result<Application, Refused> {
     Ok(Application {
         system: symbol("system", clause("the file", &found, "system")?)?,
         target: symbol("target", clause("the file", &found, "target")?)?,
+        code,
         leaves_interrupt_hardware_alone,
         leaves_alone_basis: string(
             "leaves-interrupt-hardware-alone",
@@ -812,8 +985,8 @@ impl Application {
     }
 
     /// What these inputs leave unmet of `plan`, each in words: the system and the target, each task as the plan has it and no other, each call into a
-    /// node its lines name, in its `node-calls` and in each masked run (`RTP-H5`), and each fact the plan owes `(by application)` this format does not hold of that subject.
-    /// A primitive's name is the catalog's, and the composition refuses one no record costs.
+    /// node its lines name, in its `node-calls` and in each masked run (`RTP-H5`), a node called as a primitive, an alarm named that the plan holds no node of, and each fact the plan owes `(by application)` this format does not hold of that subject.
+    /// A primitive's name is the catalog's: the composition leaves unresolved one no record costs.
     #[must_use]
     pub fn unmet(&self, plan: &Contents) -> Vec<String> {
         let mut unmet = Vec::new();
@@ -853,6 +1026,27 @@ impl Application {
                 if !named {
                     unmet.push(format!(
                         "the task `{}` calls `{node}`, which neither its task line nor its own `bind` lines name",
+                        task.name
+                    ));
+                }
+            }
+            let as_primitives = mine
+                .masked_runs
+                .runs
+                .iter()
+                .flat_map(|run| run.calls.iter());
+            for (name, _) in mine.os_calls.calls.iter().chain(as_primitives) {
+                if plan.nodes.iter().any(|(node, _)| node == name) {
+                    unmet.push(format!(
+                        "the task `{}` calls `{name}` as a primitive, and it is a node of this plan: write it among `node-calls`, or a run's `node-call`",
+                        task.name
+                    ));
+                }
+            }
+            for alarm in &mine.deadlines_within_reach {
+                if !plan.nodes.iter().any(|(node, _)| node == alarm) {
+                    unmet.push(format!(
+                        "the task `{}` names the alarm `{alarm}`, and this plan holds no such node",
                         task.name
                     ));
                 }

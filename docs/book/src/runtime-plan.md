@@ -91,6 +91,7 @@ what that file answers. Its format is `archogen-application/1`.
 (format "archogen-application/1")
 (system heartbeat)
 (target hosted-playground)
+(code (crate app) (place "../app") (digest "sha256:…"))
 (leaves-interrupt-hardware-alone yes (clause "…the words below, whole…") (basis "it touches no device"))
 (initialisation
   (stack-bound (value 256) (unit byte) (scope "its deepest path") (binary unbuilt) (evidence assumed) (basis "chosen, to be measured")))
@@ -116,13 +117,15 @@ what that file answers. Its format is `archogen-application/1`.
 - **Each bound and each list of counts says what it rests on**: its scope, the binary it is of, and one of `ROADMAP.md` §7.3's four categories,
   with where to check it, unless it is an assumption, and why it holds. So an empty list still says what backs it. A safety factor is checked, is kept and changes no category, so a
   padded observation is still an observation.
+- **It says which code.** `code` names the crate a job's `entry-point` is a path in, where it lies and a digest of its sources, so an entry point is no bare name.
+- **`node-calls` says which of the plan's nodes a job calls**, and how often, each as the plan writes it, and `os-calls` the runtime's primitives. `deadlines-within-reach` names each alarm the task writes on a time base that is the counter itself, saying that each deadline it writes stands at or after its own release and within what that alarm reaches.
 - **A masked run says how it ends**, at an `unmask` or at the job's completion, since the two cost differently, and one that ends both ways is written once for each. It keeps its own evidence.
 - **The one declaration about the whole application is quoted whole.** `leaves-interrupt-hardware-alone` is what every composite
   is gated on, and its name no longer says what it holds, so the file carries the words, and a file quoting others does not read.
   Those words count an overrun of code's own stack bound among what the code must not do, so the declaration holds only as far as
   each stack bound does, the initialisation's and each task's, whose category is said.
 
-The words a file quotes are these, whole, the three parts joined by ` … `:
+The words a file quotes are these, whole, the three parts joined by ` … `, "this section" being the composite-inputs record's §2 and "§7" its §7:
 
 > after the first enabling of interrupts, application code runs only as a declared task's job or as a service's application code; and no application code, a task's, a service's or application initialisation's, writes the timer's counter or compare, the interrupt controller's configuration, or the hart's interrupt or trap state other than through the runtime API's masking primitives (a job's only: the fault contract, Terms) or reads or writes the controller's claim and complete registers, a read of which claims, or a declared source's device registers; no service calls a runtime primitive; and no application code releases a task or calls a runtime function other than the runtime API record's primitives and its completion path. A runtime function is any function of a catalog record's implementation, a driver's included, called after the first enabling of interrupts; before it, application initialisation reaches that hardware only through catalog functions, which `runtime-discipline.<id>` covers.
 
@@ -134,7 +137,7 @@ The words a file quotes are these, whole, the three parts joined by ` … `:
 A file is held against a plan, and each thing it leaves unmet is said: another system or target, a task the plan does not have or one with
 nothing said of it, a call into a node the task's lines do not name, and a fact the plan owes that this format does not hold of that subject.
 
-⚠️ This reads the format and no more. `archogen-runtime-plan/2` carries it (`M4.1.7`), and the scheduling checker judges its figures
+⚠️ This reads the format and holds it against a plan, and no more. `archogen-runtime-plan/2` carries it (`M4.1.7`), and the scheduling checker judges its figures
 (`M2.21`), so today no figure in it reaches a verdict. The rules are `docs/decisions/decision_application-inputs.md`.
 
 ## The rules

@@ -22,3 +22,20 @@ The independent review of [`docs/decisions/decision_application-inputs.md`](../d
 | AI1-14 | wording | `(unit s)` was refused beside "one the language reads", and `bytes` is no unit of the language's; part 2 had no stop; "this section" named no document; How to apply named the wrong test | The language's units; the cut says where the record goes on; each is named |
 
 Said, and left as it stands: its reader could not read `M2.30`'s R1 and R7, whose wording is in no tree it could read, and judged against the sealed leaf's words. No file of this format existed outside its tests, so its text moved without a new version, which any later change will need.
+
+**Round 2** — `2026-11-07`, leaf `M4.12.1.2`: not acceptable, 10 findings, 6 defects, after 13, on `ce2c194f`. Round 1's other answers held: endings, each list's record and each run's own, the observation kept, the initialisation, the units and the clause. Its run filled every application field the composition reads from an `Application`, each with its category, and got what its hand derivation did.
+
+| # | Kind | Finding | Answer |
+| --- | --- | --- | --- |
+| AI2-1 | defect | a node's call written in `os-calls` or a run's `call` escaped `unmet` and was composed, against two sentences of the record | A primitive is written by its name alone, so an instance's text is refused there, and `unmet` says a node of the plan's called as a primitive. The sentence says what the composition does: it leaves unresolved a primitive no record costs |
+| AI2-2 | defect | the record rejected an alternative for a cost its own design has: `/2` puts the figures in the plan's text too, and an image holding the plan's digest cannot be named by a bound of that plan | The reason is the program's digest, which the checker's verdict is of. What an image holds of its plan leaves the figures out (`AI-H2`) |
+| AI2-3 | defect | "which code?" had no answer: `entry-point` was a path, and nothing said what `app` was, against `ROADMAP.md` §1.1's "a declared, versioned source" | `(code (crate …) (place …) (digest …))`, each entry point a path in that crate, which a build compares (`AI-H3`). An artifact in its place is a later version's |
+| AI2-4 | defect | `is_a_path` read keywords, and `return();` compiles and runs neither the code nor the completion path | The crate's name first and at least one more, none a word Rust keeps |
+| AI2-5 | defect | "the scheduling checker says so" had no carrier | `AI-H1`, in `M2.21.2`'s leaf |
+| AI2-6 | defect | "sets for what is seen" was false of `deadlines-within-reach`, and the test tried `os-calls` alone | A set, and the test tries it at 200,000 names |
+| AI2-7 | gap, older in its shape | nothing held a run against its job: a run's own code past its job's, a call its job does not make | Each is refused where it is read. `TaskParts` keeps its shape, this being where a person writes it |
+| AI2-8 | gap | an instance's text had no shape, and `deadlines-within-reach` was held to no plan | `(adapter KIND OVER)` or with its requester, and `unmet` says an alarm the plan holds no node of |
+| AI2-9 | gap | the book showed `node-calls` and `deadlines-within-reach` only in its example, and left two of the words' references unexplained | It says what each states and what each reference is |
+| AI2-10 | wording | a backslash's message; another format told of a clause; a byte-order mark; U+2028 and a text of U+200B alone; a nested `mask` in an example; "reads the format and no more" | Each said as it is. The record `/2` was cited from now stands |
+
+Said, and left as it stands: `/2` is not built, so whether a node's text tells two alarms on one route apart is for its review, in `decision_runtime-plan-format-2.md`. That `/2` reader may ask. Its reader could not read `M2.30`'s R1 and R7 either. The format's text moved again without a new version, no file of it existing outside its tests.

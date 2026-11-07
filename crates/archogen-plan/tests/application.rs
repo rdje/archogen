@@ -9,6 +9,7 @@ use archogen_plan::contents;
 
 const BOUND: &str = r#"(value 200) (unit us) (scope "one job") (binary unbuilt) (evidence analytically-established) (locator "docs/argument.md") (basis "by the loop's bound")"#;
 const LIST: &str = r#"(scope "one job") (binary unbuilt) (evidence analytically-established) (locator "docs/argument.md") (basis "by reading")"#;
+const CODE: &str = r#"(code (crate app) (place "app") (digest "sha256:0000000000000000000000000000000000000000000000000000000000000000"))"#;
 const INITIALISATION: &str = r#"(initialisation (stack-bound (value 256) (unit byte) (scope "its deepest path") (binary unbuilt) (evidence assumed) (basis "chosen, to be measured")))"#;
 
 fn a_task(name: &str) -> String {
@@ -16,10 +17,10 @@ fn a_task(name: &str) -> String {
         r#"(task {name}
   (entry-point "app::{name}")
   (execution-bound {BOUND})
-  (os-calls {LIST} (call mask 2) (call unmask 2))
+  (os-calls {LIST} (call mask 2) (call unmask 2) (call release 1))
   (node-calls {LIST})
   (masked-runs {LIST}
-    (run tail (ending unmask) (value 5) (unit us) (scope "the tail's update") (binary unbuilt) (evidence analytically-established) (locator "docs/argument.md") (basis "four loads") (call mask 1)))
+    (run tail (ending unmask) (value 5) (unit us) (scope "the tail's update") (binary unbuilt) (evidence analytically-established) (locator "docs/argument.md") (basis "four loads") (call release 1)))
   (stack-bound (value 512) (unit byte) (scope "its deepest path") (binary unbuilt) (evidence assumed) (basis "chosen, to be measured"))
   (suspends no) (locks-scheduler no) (shares-outside-sections no)
   (masks-only-through-api yes)
@@ -47,6 +48,7 @@ fn a_file(system: &str, tasks: &[&str]) -> String {
         r#"(format "{FORMAT}")
 (system {system})
 (target hosted-playground)
+{CODE}
 {}{INITIALISATION}
 {each}"#,
         leaves_alone()
@@ -60,6 +62,8 @@ fn a_whole_file_reads_as_it_says() {
     assert_eq!(application.target, "hosted-playground");
     assert!(application.leaves_interrupt_hardware_alone);
     assert_eq!(application.initialisation_stack_bound.value, 256);
+    assert_eq!(application.code.name, "app");
+    assert_eq!(application.code.place, "app");
     assert_eq!(application.tasks.len(), 2);
     let beat = &application.tasks[0];
     assert_eq!(beat.entry_point, "app::beat");
@@ -72,7 +76,11 @@ fn a_whole_file_reads_as_it_says() {
     );
     assert_eq!(
         beat.os_calls.calls,
-        [("mask".to_owned(), 2), ("unmask".to_owned(), 2)]
+        [
+            ("mask".to_owned(), 2),
+            ("unmask".to_owned(), 2),
+            ("release".to_owned(), 1)
+        ]
     );
     assert_eq!(beat.os_calls.scope, "one job");
     assert_eq!(beat.os_calls.binary, Binary::Unbuilt);
@@ -82,7 +90,7 @@ fn a_whole_file_reads_as_it_says() {
         Some("docs/argument.md")
     );
     assert_eq!(beat.masked_runs.runs[0].ending, Ending::Unmask);
-    assert_eq!(beat.masked_runs.runs[0].calls, [("mask".to_owned(), 1)]);
+    assert_eq!(beat.masked_runs.runs[0].calls, [("release".to_owned(), 1)]);
     assert_eq!(beat.stack_bound.evidence.category, Category::Assumed);
     assert!(beat.stack_bound.evidence.locator.is_none());
     assert!(beat.masks_only_through_api);
@@ -103,6 +111,13 @@ fn each_malformed_input_is_refused_saying_what_is_wrong() {
         ("(junk".to_owned(), "does not read as forms: "),
         (" ".repeat(MOST_BYTES + 1), "past the"),
         (format!("(eadl-version eadl/1)\n{good}"), "no clause is called `eadl-version`"),
+        (format!("\u{feff}{good}"), "byte-order mark"),
+        (replaced(&format!("{CODE}\n"), ""), "`code`"),
+        (replaced("(crate app)", "(crate 1)"), "wants one name"),
+        (replaced("(crate app)", "(crate fn)"), "no name a Rust path can hold"),
+        (replaced("(place \"app\") ", ""), "`place`"),
+        (replaced("sha256:0000000000000000000000000000000000000000000000000000000000000000", "sha256:1"), "`digest`"),
+        (replaced(FORMAT, "archogen-application/2").replace("(system s)", "(system s) (newly-added x)"), "this reads"),
         (replaced(FORMAT, "archogen-application/2"), "this reads"),
         (replaced(&format!("(format \"{FORMAT}\")\n"), ""), "`format`"),
         (replaced("(system s)\n", ""), "`system`"),
@@ -123,6 +138,12 @@ fn each_malformed_input_is_refused_saying_what_is_wrong() {
         (replaced("(entry-point \"app::t\")", "(entry-point app)"), "says something"),
         (replaced("(entry-point \"app::t\")", "(entry-point \"x(); } unsafe { evil(); \")"), "a path a job can call"),
         (replaced("(entry-point \"app::t\")", "(entry-point \"app::\")"), "a path a job can call"),
+        (replaced("(entry-point \"app::t\")", "(entry-point \"return\")"), "a path a job can call"),
+        (replaced("(entry-point \"app::t\")", "(entry-point \"app::loop\")"), "a path a job can call"),
+        (replaced("(entry-point \"app::t\")", "(entry-point \"other::t\")"), "a path a job can call"),
+        (replaced("(scope \"one job\")", "(scope \"\u{200b}\")"), "says something"),
+        (replaced("(scope \"one job\")", "(scope \"one\u{2028}job\")"), "line break"),
+        (replaced("(scope \"one job\")", "(scope \"one\\\\job\")"), "a backslash"),
         (replaced("(entry-point \"app::t\")", "(entry-point \"app\\n::t\")"), "holds a line break"),
         (replaced("(scope \"one job\")", "(scope \"one \\\"job\\\"\")"), "a quote"),
         (replaced("(value 200)", "(value -1)"), "below nothing"),
@@ -141,7 +162,14 @@ fn each_malformed_input_is_refused_saying_what_is_wrong() {
         (replaced("(call mask 2)", "(call mask 2) (call mask 1)"), "counted twice"),
         (replaced("(call mask 2)", "(call mask)"), "`(call NAME COUNT)`"),
         (replaced("(call mask 2)", "(call mask two)"), "whole number"),
-        (replaced("(call mask 2)", "(call (other mask) 2)"), "calls no name"),
+        (replaced("(call mask 2)", "(call (other mask) 2)"), "calls no primitive"),
+        (replaced("(call mask 2)", "(call (adapter x y) 2)"), "calls no primitive"),
+        (replaced(&format!("(node-calls {LIST})"), &format!("(node-calls {LIST} (call (adapter) 1))")), "calls no node"),
+        (replaced(&format!("(node-calls {LIST})"), &format!("(node-calls {LIST} (call (adapter 1 \"x\" (y)) 1))")), "calls no node"),
+        (replaced("(call release 1)))", "(call spin 5)))"), "says it makes 0"),
+        (replaced("(call release 1)))", "(call release 2)))"), "says it makes 1"),
+        (replaced("(call release 1)))", "(node-call a.node 1)))"), "says it makes 0"),
+        (replaced("(run tail (ending unmask) (value 5) (unit us)", "(run tail (ending unmask) (value 5000) (unit us)"), "past its job's"),
         (replaced(&format!("(node-calls {LIST})\n"), ""), "`node-calls`"),
         (replaced(&format!("(os-calls {LIST} "), "(os-calls "), "`scope`"),
         (replaced(&format!("(os-calls {LIST} "), "(os-calls (scope \"one job\") (evidence assumed) (basis \"b\") "), "`binary`"),
@@ -160,6 +188,7 @@ fn each_malformed_input_is_refused_saying_what_is_wrong() {
         (replaced("(deadlines-within-reach)", ""), "`deadlines-within-reach`"),
         (replaced("(deadlines-within-reach)", "(deadlines-within-reach a a)"), "written twice"),
         (replaced("(deadlines-within-reach)", "(deadlines-within-reach 1)"), "names no alarm"),
+        (replaced("(deadlines-within-reach)", "(deadlines-within-reach (adapter))"), "names no alarm"),
     ] {
         let refused = read(&text).expect_err(said);
         assert!(refused.to_string().contains(said), "`{said}`: {refused}");
@@ -279,7 +308,7 @@ fn a_time_and_a_size_are_in_the_language_s_units() {
     for unit in ["s", "ms", "us", "ns"] {
         let text = a_file("s", &["t"]).replace(
             "(value 200) (unit us)",
-            &format!("(value 200) (unit {unit})"),
+            &format!("(value 200000000) (unit {unit})"),
         );
         assert!(read(&text).is_ok(), "{unit}");
     }
@@ -363,12 +392,39 @@ fn what_is_unmet_of_a_plan_is_said() {
         "calls `nowhere.node`",
     );
     said(
-        &good.replace(
-            "(call mask 1)))",
-            "(call mask 1) (node-call nowhere.node 1)))",
-        ),
+        &good
+            .replace(
+                &format!("(node-calls {LIST})"),
+                &format!("(node-calls {LIST} (call nowhere.node 1))"),
+            )
+            .replace(
+                "(call release 1)))",
+                "(call release 1) (node-call nowhere.node 1)))",
+            ),
         &plan,
         "calls `nowhere.node`",
+    );
+    // A node called as a primitive is said, in a job's calls and a run's, and an alarm the plan holds no node of.
+    let a_node = plan.nodes[0].0.clone();
+    said(
+        &good.replace("(call mask 2)", &format!("(call {a_node} 2) (call mask 2)")),
+        &plan,
+        "as a primitive",
+    );
+    said(
+        &good
+            .replace("(call mask 2)", &format!("(call {a_node} 2) (call mask 2)"))
+            .replace("(call release 1)))", &format!("(call {a_node} 1)))")),
+        &plan,
+        "as a primitive",
+    );
+    said(
+        &good.replace(
+            "(deadlines-within-reach)",
+            "(deadlines-within-reach nowhere.alarm)",
+        ),
+        &plan,
+        "names the alarm `nowhere.alarm`",
     );
     // A task's own `bind` line names an instance, whose text it calls by.
     let adapter = "(adapter epoch-extender timer.short)";
@@ -467,5 +523,12 @@ fn a_long_list_reads_in_step_with_its_length() {
         .collect();
     let text = a_file("s", &["t"]).replace("(call mask 2)", &many);
     let application = read(&text).expect("it reads");
-    assert_eq!(application.tasks[0].os_calls.calls.len(), 80_001);
+    assert_eq!(application.tasks[0].os_calls.calls.len(), 80_002);
+    let names: String = (0..200_000).map(|name| format!("a{name} ")).collect();
+    let text = a_file("s", &["t"]).replace(
+        "(deadlines-within-reach)",
+        &format!("(deadlines-within-reach {names})"),
+    );
+    let application = read(&text).expect("it reads");
+    assert_eq!(application.tasks[0].deadlines_within_reach.len(), 200_000);
 }

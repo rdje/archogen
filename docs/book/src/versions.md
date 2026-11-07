@@ -181,7 +181,7 @@ their versioned readers and permanent refusal controls enforce their local contr
 
 | Field | Value |
 | --- | --- |
-| Surface | what a description may not state of a task's own code, in one file per system: each task's entry point, bounds with their evidence, calls and facts, and the application's quoted declaration (`M4.12`) |
+| Surface | what a description may not state of a task's own code, in one file per system: what holds its code, each task's entry point, bounds with their evidence, calls and facts, and the application's quoted declaration (`M4.12`) |
 | Version | `archogen-application/1` |
 | Declared at | `const:crates/archogen-plan/src/application.rs:FORMAT` |
 | Changes when | a clause is added, removed, renamed or reinterpreted, or the words `CLAUSE_PARTS` quotes move. A reader that meets another identifier refuses the file rather than guess |
