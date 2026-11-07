@@ -423,13 +423,14 @@ def shell_told(arguments: list[str]) -> tuple[str | None, str | None]:
 
 
 def shell_only_parses(arguments: list[str]) -> bool:
-    """Whether a shell given these is told `-n`, and not told `+n` after it: it reads what it is given and runs none of it."""
+    """Whether a shell given these is told to read what it is given and run none of it, and only as exactly that: `-n` among the plain flags that change nothing it runs. Any other flag may be what undoes it, `+n`, `+o noexec`, so it is no such telling, and what it holds is read as run."""
     told = False
     for word in arguments:
         if word == "--" or not word.startswith(("-", "+")):
             return told
-        if not word.startswith("--") and "n" in word[1:]:
-            told = word[0] == "-"
+        if not re.fullmatch(r"-[ceuxn]+", word):
+            return False
+        told = told or "n" in word
     return told
 
 
@@ -1705,15 +1706,18 @@ def kills_by_name(commands: list[Command], root: Path) -> bool:
         if inverted(command):
             return None
         words = command.words[1:]
+        values = []
         for at, word in enumerate(words):
             # A signal's name reads like a cluster, and is none.
             flag = None if word in ("-PIPE", "-PROF", "-FPE") else re.fullmatch(r"-[acfilLnoqSvx]*([PFg])(.*)", word, re.S)
             if flag:
                 value = flag.group(2) or (words[at + 1] if at + 1 < len(words) else "")
-                # However a number is spelt: `pkill -P 01` is `-P 1`, and what `$((…))` or `$[…]` works out could be.
-                if flag.group(1) != "P" or not any(is_number(each, 1) or each.startswith(("$((", "$[")) for each in value.strip("'\"").split(",")):
-                    return value
-        return None
+                # However a number is spelt: `pkill -P 01` is `-P 1`, and what `$((…))` or `$[…]` works out could be. And wherever it stands: a repeated `-P` is any of them.
+                if flag.group(1) == "P" and any(is_number(each, 1) or each.startswith(("$((", "$[")) for each in value.strip("'\"").split(",")):
+                    return None
+                values.append(value)
+        # What the caller reads it by is the least plain of them.
+        return next((value for value in values if not A_PLAIN_TARGET.fullmatch(value)), values[0] if values else None)
 
     def searches_by_name(command: Command) -> bool:
         if command.name == "pgrep":
@@ -1757,12 +1761,10 @@ def kills_by_name(commands: list[Command], root: Path) -> bool:
                     if searches_by_name(search) and not pipeline_names_this_root(search):
                         return True
         elif command.name == "kill":
-            # Signal 0 stops nothing: it asks whether a process stands.
-            if command.words[1:2] in (["-0"], ["-s"]) and (command.words[1] == "-0" or command.words[2:3] == ["0"]):
-                # A later flag is what it sends: `kill -0 -s KILL 123` stops it.
-                after = command.words[2:] if command.words[1] == "-0" else command.words[3:]
-                if not any(word in ("-s", "-n", "--signal") for word in after):
-                    continue
+            # Signal 0 stops nothing: it asks whether a process stands. Only as exactly that, `kill -0 PID` or `kill -s 0 PID`: a later flag, however it is written, may be what it sends, `-s KILL`, `-sKILL`, `-n9`, so what has one reads as any `kill` does.
+            asks = command.words[2:] if command.words[1:2] == ["-0"] else command.words[3:] if command.words[1:3] == ["-s", "0"] else None
+            if asks is not None and not any(word.startswith("-") for word in asks):
+                continue
             targets = kill_targets(command.words[1:])
             # -1 is every process this user may signal, on all of the host, however a number is spelt.
             if any(is_number(word, -1) or "$((" in word or "$[" in word for word in targets):

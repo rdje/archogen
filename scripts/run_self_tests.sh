@@ -91,6 +91,9 @@ self_test() {
   stub "$work/check_alpha.sh" 1; stub "$work/check_ident.sh" 20
   arm "and a failure outranks it" 1 "✗ $work/check_alpha.sh"
   rm -f "$work"/check_*.sh
+  printf '#!/usr/bin/env bash\n[ "${1:-}" = "--self-test" ] || exit 0\ncat > /dev/null\nexit 0\n' > "$work/check_a_reader.sh"; stub "$work/check_later.sh" 1
+  arm "a gate that reads its input ends no census: what comes after it is still seen" 1 "✗ $work/check_later.sh"
+  rm -f "$work"/check_*.sh
   printf '#!/usr/bin/env bash\n[ "${1:-}" = "--self-test" ] || exit 0\necho "host-guard self-test: waiting for room, up to 9 s more"\necho "ValueError: the reason"\nexit 1\n' > "$work/check_waited.sh"
   arm "one that waited and then died says why it died" 1 "ValueError: the reason"
   printf '#!/usr/bin/env bash\n[ "${1:-}" = "--self-test" ] || exit 0\necho "case_a: FAILED"\necho "ValueError: the real reason"\nexit 1\n' > "$work/check_waited.sh"
@@ -121,7 +124,8 @@ fi
 passed=0; failed=0; incomplete=0; elsewhere=0
 while IFS= read -r gate; do
   started=$SECONDS
-  out="$(bare bash "$gate" --self-test 2>&1)"
+  # Its input is nothing, since this loop's is the rest of the census, which a gate that reads would end.
+  out="$(bare bash "$gate" --self-test 2>&1 </dev/null)"
   status=$?
   if [ "$status" -eq 0 ]; then
     passed=$((passed + 1))

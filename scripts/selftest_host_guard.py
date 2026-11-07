@@ -575,6 +575,12 @@ def case_what_holds_little_is_left_alone() -> None:
     large = proc(3, "git gc", 100)
     targets, _, _ = g.judged(reading, [git, sed, large], limits)
     check("what holds much stops, whatever it is called", tops(targets) == {3}, tops(targets))
+    # A `make` is a build at the danger line, whatever it holds. At the stop line it goes by what it holds, as any job does.
+    small_make = proc(4, "make gate", 1)
+    targets, _, _ = g.judged(reading, [small_make], limits)
+    check("at the stop line a small `make` is left", targets == [], targets)
+    targets, _, _ = g.judged(g.Reading(90.0, 1, 50, 1.0, 1000.0, 200.0), [small_make], limits)
+    check("and at the danger line it is stopped", tops(targets) == {4}, tops(targets))
     # Small jobs apart are the ceilings' to hold.
     swarm = [proc(i, "sleep 9") for i in range(1, 7)]
     targets, reasons, _ = g.judged(g.Reading(90.0, 1, 50, 1.0, 1000.0, 200.0), swarm, g.tightened({"processes": 2}))
@@ -1203,6 +1209,13 @@ def case_a_commit_holds_what_make_and_the_limits_can_be_told() -> None:
     local.write_text('{"permissions": {}}')
     done = holds()
     check("and local settings of anything else are not", done.returncode == 0, done.stdout + done.stderr)
+    # What stands may be another session's half-saved file, as what the index holds may not.
+    local.write_text('{ "permissions": {')
+    done = holds()
+    check("nor is a half-saved file a refusal", done.returncode == 0, done.stdout + done.stderr)
+    local.write_text('{ "disableAllHooks": true, ')
+    done = holds()
+    check("unless it names what turns them off", done.returncode == 1 and "settings.local.json" in done.stdout, done.stdout + done.stderr)
     local.unlink()
     settings = repo / ".claude" / "settings.json"
     held = settings.read_text()
@@ -1268,22 +1281,38 @@ def case_a_kill_is_read_through_what_hides_it() -> None:
         "taskpolicy -j 1 killall foo",
         "kill -0 -s KILL -1",
         "kill -s 0 -s KILL -1",
+        "kill -0 -sKILL -1",
+        "kill -0 -n9 -1",
+        "kill -s 0 -n9 -1",
+        "kill -0 -1",
+        "kill -0 -01",
+        "pkill -P 1 -P 123 -x rustc",
+        "pkill -P 123 -P 1 -x rustc",
+        "kill $(pgrep -P 1 -P 123 -x rustc)",
+        "pgrep -P 123 -P 1 -x rustc | xargs kill",
         "bash -n +n -c 'pkill y'",
+        "bash -n +o noexec -c 'pkill y'",
+        "sh -n +o noexec -c 'pkill y'",
+        "zsh -n +o noexec -c 'pkill y'",
+        "bash -n +o noexec <<'E'\npkill y\nE",
+        "bash -n -o posix +n -c 'pkill y'",
     ):
         check(f"`{text}` is refused", refused(text))
     for text in (
         f"python3 {GUARD} run --wait 5 -- cargo build",
         "kill -9 123",
-        "kill -0 -01",
+        "kill -0 123",
+        'kill -0 "$PID"',
         "pkill -P 123",
+        "pkill -P 123 -P 124",
         "lsof -t -p 123",
         "env - cargo build",
         "echo python3 scripts/host_guard.py run -- pkill foo",
         ": scripts/host_guard.py run -- killall x",
         "pkill -P 0x10",
-        "kill -0 -1",
         "kill -s 0 123",
         "bash -n -c 'pkill y'",
+        "bash -nc 'pkill y'",
     ):
         check(f"`{text}` is not", not refused(text))
     check("`env -` hides nothing it wraps", g.commands_of("env - cargo build")[0].words == ["cargo", "build"])

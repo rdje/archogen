@@ -26,7 +26,7 @@ root = Path(sys.argv[1])
 breaches = []
 guard = root / "scripts" / "host_guard.py"
 
-# At a commit what is staged is what lands, and what stands in the tree beside it may be another session's half-saved file. So everything this reads is read as staged, and what the index no longer holds is gone. A copy in no repository of its own has the tree alone.
+# At a commit what is staged is what lands, and what stands in the tree beside it may be another session's half-saved file. So everything this reads is read as staged, and what the index no longer holds is gone. A copy in no repository of its own has the tree alone. The local settings are the one exception, read below.
 def asks_git(*words):
     return subprocess.run(["git", "-C", str(root), *words], capture_output=True)
 top = asks_git("rev-parse", "--show-toplevel")
@@ -233,17 +233,27 @@ except ValueError as error:
     breaches.append(f".claude/settings.json does not read: {error}")
 if loaded.get("disableAllHooks"):
     breaches.append(".claude/settings.json turns every hook off")
-# What the harness reads over it, staged or standing, a global ignore usually keeping it from any commit.
+# What the harness reads over it, a global ignore usually keeping it from any commit, so it is the one thing this also reads standing. What is staged lands, and reads or is refused.
+# What stands may be another session's half-saved file, which refuses no commit of this one's unless it names what turns the hooks off.
+def turns_every_hook_off(text):
+    return bool(text) and bool(json.loads(text).get("disableAllHooks"))
+# Outside a repository nothing is staged, and what stands is read below.
+staged_local = text_of(".claude/settings.local.json") if in_its_repository else ""
+try:
+    if turns_every_hook_off(staged_local):
+        breaches.append(".claude/settings.local.json turns every hook off")
+except (ValueError, AttributeError):
+    breaches.append(".claude/settings.local.json does not read, so what it turns off cannot be said")
 try:
     standing_local = (root / ".claude" / "settings.local.json").read_text(encoding="utf-8")
 except (OSError, ValueError):
     standing_local = ""
-for local in (text_of(".claude/settings.local.json"), standing_local):
-    try:
-        if local and json.loads(local).get("disableAllHooks"):
-            breaches.append(".claude/settings.local.json turns every hook off")
-    except (ValueError, AttributeError):
-        breaches.append(".claude/settings.local.json does not read, so what it turns off cannot be said")
+try:
+    standing_off = turns_every_hook_off(standing_local)
+except (ValueError, AttributeError):
+    standing_off = "disableAllHooks" in standing_local
+if standing_off:
+    breaches.append(".claude/settings.local.json turns every hook off, as it stands")
 held = [
     hook
     for entry in loaded.get("hooks", {}).get("PreToolUse", [])
