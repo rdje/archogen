@@ -423,13 +423,14 @@ def shell_told(arguments: list[str]) -> tuple[str | None, str | None]:
 
 
 def shell_only_parses(arguments: list[str]) -> bool:
-    """Whether a shell given these is told `-n`: it reads what it is given and runs none of it."""
+    """Whether a shell given these is told `-n`, and not told `+n` after it: it reads what it is given and runs none of it."""
+    told = False
     for word in arguments:
-        if word == "--" or not word.startswith("-"):
-            return False
+        if word == "--" or not word.startswith(("-", "+")):
+            return told
         if not word.startswith("--") and "n" in word[1:]:
-            return True
-    return False
+            told = word[0] == "-"
+    return told
 
 
 def is_agent(process: Process) -> bool:
@@ -1758,7 +1759,10 @@ def kills_by_name(commands: list[Command], root: Path) -> bool:
         elif command.name == "kill":
             # Signal 0 stops nothing: it asks whether a process stands.
             if command.words[1:2] in (["-0"], ["-s"]) and (command.words[1] == "-0" or command.words[2:3] == ["0"]):
-                continue
+                # A later flag is what it sends: `kill -0 -s KILL 123` stops it.
+                after = command.words[2:] if command.words[1] == "-0" else command.words[3:]
+                if not any(word in ("-s", "-n", "--signal") for word in after):
+                    continue
             targets = kill_targets(command.words[1:])
             # -1 is every process this user may signal, on all of the host, however a number is spelt.
             if any(is_number(word, -1) or "$((" in word or "$[" in word for word in targets):

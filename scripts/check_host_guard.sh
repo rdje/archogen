@@ -233,6 +233,17 @@ except ValueError as error:
     breaches.append(f".claude/settings.json does not read: {error}")
 if loaded.get("disableAllHooks"):
     breaches.append(".claude/settings.json turns every hook off")
+# What the harness reads over it, staged or standing, a global ignore usually keeping it from any commit.
+try:
+    standing_local = (root / ".claude" / "settings.local.json").read_text(encoding="utf-8")
+except (OSError, ValueError):
+    standing_local = ""
+for local in (text_of(".claude/settings.local.json"), standing_local):
+    try:
+        if local and json.loads(local).get("disableAllHooks"):
+            breaches.append(".claude/settings.local.json turns every hook off")
+    except (ValueError, AttributeError):
+        breaches.append(".claude/settings.local.json does not read, so what it turns off cannot be said")
 held = [
     hook
     for entry in loaded.get("hooks", {}).get("PreToolUse", [])

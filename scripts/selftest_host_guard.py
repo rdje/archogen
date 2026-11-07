@@ -1196,6 +1196,14 @@ def case_a_commit_holds_what_make_and_the_limits_can_be_told() -> None:
         done = holds()
         check(f"{said} is refused, by what the file gives when it runs", done.returncode == 1 and "when the file runs" in done.stdout, done.stdout + done.stderr)
     (repo / "scripts" / "host_guard.py").write_text(guard_text)
+    local = repo / ".claude" / "settings.local.json"
+    local.write_text('{"disableAllHooks": true}')
+    done = holds()
+    check("local settings that turn every hook off are refused", done.returncode == 1 and "settings.local.json" in done.stdout, done.stdout + done.stderr)
+    local.write_text('{"permissions": {}}')
+    done = holds()
+    check("and local settings of anything else are not", done.returncode == 0, done.stdout + done.stderr)
+    local.unlink()
     settings = repo / ".claude" / "settings.json"
     held = settings.read_text()
     settings.write_text(held.replace('"type": "command"', '"type": "prompt"', 1))
@@ -1258,6 +1266,9 @@ def case_a_kill_is_read_through_what_hides_it() -> None:
         "taskpolicy -P throttle pkill -x foo",
         "taskpolicy -S 0 kill -9 -1",
         "taskpolicy -j 1 killall foo",
+        "kill -0 -s KILL -1",
+        "kill -s 0 -s KILL -1",
+        "bash -n +n -c 'pkill y'",
     ):
         check(f"`{text}` is refused", refused(text))
     for text in (
@@ -1270,6 +1281,9 @@ def case_a_kill_is_read_through_what_hides_it() -> None:
         "echo python3 scripts/host_guard.py run -- pkill foo",
         ": scripts/host_guard.py run -- killall x",
         "pkill -P 0x10",
+        "kill -0 -1",
+        "kill -s 0 123",
+        "bash -n -c 'pkill y'",
     ):
         check(f"`{text}` is not", not refused(text))
     check("`env -` hides nothing it wraps", g.commands_of("env - cargo build")[0].words == ["cargo", "build"])

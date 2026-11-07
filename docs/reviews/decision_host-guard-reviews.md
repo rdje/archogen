@@ -473,3 +473,18 @@ Said, and left as it stands: its reader could not run the brief's list, a real c
 | G23-7 | wording | "what runs from the system's own places, such as `caffeinate`", spared by name | It says by name |
 
 Said, and left as it stands: its reader could not run a real `make focused`, a real commit, a real full volume, chosen pressure levels, true idle time, the census against the real watcher, real Codex, Kimi or VS Code, or `onFailure` with a real crash. One of its self-tests ended `608 passed, 0 failed, 5 not run`, rc 20, after the 15-minute bound, which is what that bound says. A copied `run_self_tests.sh` found itself and ran its arms 6 times under its work directory, one committing in its own scratch repository, and nothing in this one.
+
+**Round 24** — `2026-11-07`, leaf `PROGRAM.127.24`: not acceptable, 6 findings, 3 defects, after 3, 3 and 3, on `612fd4ac`. Each is narrow. Round 23's answers held: 281 kill forms and 66 heavy forms read right, a staged `GNUmakefile` refused, `run` reaching its job in 0.14 to 0.22 s 30 times of 30, and the self-test passing whole, 870 of 870. Nothing not ours was stopped.
+
+| # | Kind | Finding | Answer |
+| --- | --- | --- | --- |
+| G24-1 | defect | "this root's lines and turn hold" a nested checkout was false of its turn: a `run` there started beside this root's build, and this root's list omitted it. Harness worktrees stand there | Said as it is: its lines hold it, and its turn what shows a build by name. Waiting on an enclosing root would hold the self-test's scratch roots too |
+| G24-2 | defect | a small job through `make` was stopped at a host's line, where through `run` alone it finished: a `make` counts as a build and hands its signal on | Said as it is |
+| G24-3 | defect, mild, fails open | `kill -0 -s KILL -1` passed, a later flag undoing the exception, and `bash -n +n -c 'pkill y'` read as running nothing | Each goes on only where no later flag undoes it |
+| G24-4 | gap | a syncing writer under some 2 MiB/s at a floor's pace is never seen, where the record said seen late | Said, with the measure |
+| G24-5 | gap | `.claude/settings.local.json` with `disableAllHooks` passed | Refused, staged or standing |
+| G24-6 | gap | the hook reads a directory by `-C` and not by a `cd` | A stated limit of the courtesy |
+
+Said, and left as it stands: its reader could not run a real commit's compile, a real full volume, chosen pressure levels, the census against the real watcher, real Codex, Kimi or VS Code, or `onFailure` with a real crash, which the harness documents as blocking. An accented `--root` under `LC_ALL=C` reads as another, and this checkout's path is ASCII.
+
+**Its reader broke a hard limit once.** A fixture's `make focused`, with a staged `gnumakefile` that `make` did not read, ran the fixture's real recipe, and `cargo xtask` climbed to this workspace: `target/debug/xtask verify --tier focused` ran unstubbed for about 2 minutes beside other work. It stopped its own task by `TaskStop`, and said so. The guard's scripts, Makefile and settings were byte-identical to its copies, and `target/.rustc_info.json` and `target/debug/xtask.d` may be its. A reader's brief now says a fixture's `make` needs a stub `cargo` first on its path.

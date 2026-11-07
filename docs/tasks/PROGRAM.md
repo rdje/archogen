@@ -1087,7 +1087,19 @@ mdBook that is the director's window into the project.
   Commit: `ARCHOGEN-PROGRAM-1222 (leaf PROGRAM.127.23)`
 
 - ID: `PROGRAM.127.24`
-  Status: `pending` — round 24, a fresh reader over round 23's answer. It closes on a round that finds no defect, and a form written to go round the guard, or a reader with no line for a form, is a stated limit, not a defect.
+  Status: `done` — `2026-11-07`: round 24, a fresh reader over round 23's answer: 6 findings, 3 defects, each narrow. The findings and each answer are in `docs/reviews/decision_host-guard-reviews.md`.
+
+  **Acceptance checklist (`DOCTRINE_ENFORCEMENT.md`):**
+  - [x] **REPRODUCE / ISSUE** — `bash target/p12724/work/nested.sh` → `nested run --wait 0: STARTED-BESIDE-THIS-ROOTS-BUILD`; `bash target/p12724/work/makegate.sh` → `run` alone `rc=0`, `make gate` `rc=143`; `python3 -I -B target/p12724/work/zero.py` → the hook `rc=0` on `kill -0 -s KILL -1`.
+  - [x] **ROOT CAUSE (WHY + WHERE)** — `git grep -n "this root's lines and turn hold it" 612fd4ac -- docs/decisions/decision_host-guard.md` → a sentence the code never held; `git grep -n 'command.words\[1\] == "-0"' 612fd4ac -- scripts/host_guard.py` → an exception read from one flag.
+  - [x] **FIX** — `scripts/host_guard.py`: a later flag undoes `kill -0` and `bash -n`. `scripts/check_host_guard.sh`: local settings. `scripts/selftest_host_guard.py`: each form. The record's sentences and limits.
+  - [x] **ADDRESSED (verified)** — `bash scripts/check_host_guard.sh --self-test` → `host-guard self-test: 878 passed, 0 failed, 0 not run`, the stamp equal to what is staged: `kill -0 -s KILL -1` and `bash -n +n -c 'pkill y'` refused, `kill -0 -1` and `bash -n -c 'pkill y'` not; local settings turning every hook off refused, and any others not.
+  - [x] **NO REGRESSION** — `bash scripts/check_host_guard.sh` → `host-guard: OK`, exit 0; `make focused` → `tier focused: passed — 3 passed, 0 failed`, on the staged tree.
+  - [x] **LOCKSTEP** — the record, the review history and its index, these leaves and the Commit Log; `MEMORY.md`'s next action.
+  Commit: `ARCHOGEN-PROGRAM-1226 (leaf PROGRAM.127.24)`
+
+- ID: `PROGRAM.127.25`
+  Status: `pending` — round 25, a fresh reader over round 24's answer. It closes on a round that finds no defect, and a form written to go round the guard, or a reader with no line for a form, is a stated limit, not a defect.
 
 - ID: `PROGRAM.128`
   Status: `done` — `2026-11-05`: by the director's word, "If you ever need new CPU, DSP, MCU, BOARD, ISA or in general digital chip PDF just look here", naming `chipdoc`'s `AGENTS.md`. The record, its index row, the book's ledger and a `TOOLBOX.md` row now start any chip document's need there. Reading it corrected three things of ours: the record and the ledger still said `REQ-007` was `requested`, fulfilled `2026-09-30`; the ledger said the corpus was off this volume; and the record said what is adopted is copied here, where most of the corpus may not be republished and this repository is public, so a fact and its citation are copied and never a document. A documents-only leaf.
@@ -1297,6 +1309,7 @@ leaf's outcome is its row in the Commit Log below, and a sealed leaf's full reco
 | `PROGRAM.127.6` | `ARCHOGEN-PROGRAM-1164 (leaf PROGRAM.127.6)` | **paused at the director's word**, at a clean tree, before round 6 began: the resume pointer and the leaf say to wait |
 | `PROGRAM.127.6` | `ARCHOGEN-PROGRAM-1165 (leaf PROGRAM.127.6)` | **the host guard's review, round 6 answered**: a volume has fallen only by more than a shared volume costs anyway; what a job takes with it said; the shell reader given a case's branches, arithmetic, arrays and `[[ ]]`, held to each `bash` here; each agent told for itself |
 | `PROGRAM.127.7` | `ARCHOGEN-PROGRAM-1168 (leaf PROGRAM.127.7)` | **the host guard's review, round 7 answered**: `make` that only asks is no build; the reader's rare misses read, each held to both `bash`es; a `kill` by a pid passes by any spelling; the root named exactly; what is told says what it leaves out |
+| `PROGRAM.127.24` | `ARCHOGEN-PROGRAM-1226 (leaf PROGRAM.127.24)` | **the host guard's review, round 24**: a nested checkout's turn and a `make` at a host's line said as they are; a later flag undoing `kill -0` and `bash -n`; local settings that turn the hook off refused |
 | `PROGRAM.127.23` | `ARCHOGEN-PROGRAM-1222 (leaf PROGRAM.127.23)` | **the host guard's review, round 23, answered by method**: an exception that failed open gone; a `GNUmakefile` read from the index; the self-test's two races waited out; the kill reader said to be a courtesy |
 | `PROGRAM.127.22` | `ARCHOGEN-PROGRAM-1218 (leaf PROGRAM.127.22)` | **the host guard's review, round 22, answered by removing what kept failing**: the Makefile held whole by a digest, `make` no longer asked; `tightened` asked of its lines; more wrappers read |
 | `PROGRAM.127.21` | `ARCHOGEN-PROGRAM-1216 (leaf PROGRAM.127.21)` | **the host guard's review, round 21, answered by method**: `make` asked what each recipe would run, the file asked what each limit is; what `ps` brackets is a moment; a `run` read as `main` reads it; numbers as the tools read them |
@@ -1408,3 +1421,4 @@ leaf's outcome is its row in the Commit Log below, and a sealed leaf's full reco
 - `2026-11-07`: `PROGRAM.131` done: the M4 tree sealed, 53 leaves, `docs/tasks/` under its ceiling.
 - `2026-11-07`: `PROGRAM.127.23` done: the guard's round 23, seven findings answered, three defects, by method; `PROGRAM.127.24` filed for round 24.
 - `2026-11-07`: `PROGRAM.132` done: the twenty-fourth artifact cleanup.
+- `2026-11-07`: `PROGRAM.127.24` done: the guard's round 24, six findings answered, three defects; `PROGRAM.127.25` filed for round 25.
