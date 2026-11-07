@@ -36,7 +36,7 @@ pub struct Plat {
     pub arm: u64,
     pub delta: u64,
     pub gamma: u64,
-    /// The compare's resolution: ρ is `res - 1`.
+    /// The compare's resolution: ρ is `res - 1`, this timeline's times falling on its unit, where the record's is the whole step.
     pub res: u64,
     pub wake: u64,
     pub external_first: bool,

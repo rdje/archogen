@@ -210,7 +210,7 @@ A target's file holds what its agreement with the machine checks, so what it doe
 
 On the playground the simulator's clock releases tasks. On a real machine a device has to raise that interrupt, so the kernel asks for an alarm as anything else asks, and the search binds it to a
 device that can serve, under the same rules and the same count of channels (`docs/decisions/decision_release-alarm.md`). It asks one that runs while the machine idles, and wired so that the core takes its
-interrupt with nothing to claim. A second alarm, an adapter's say, takes a channel of its own, and is wired through the interrupt controller. How late an alarm may be delivered, how long between two reads of its counter, how far ahead it may stand and how far one write may reach are four sums in that record's table, which the model that holds them reads and runs. Neither this nor what follows is code yet: format `/2` and the
+interrupt with nothing to claim. A second alarm, an adapter's say, takes a channel of its own, and is wired through the interrupt controller. How late an alarm may be delivered, how long between two reads of its counter, how far ahead it may stand, how far one write may reach and how late a value may land and still read as due are five sums in that record's table, which the model that holds them reads and runs. Neither this nor what follows is code yet: format `/2` and the
 scheduling checker build them.
 
 Each alarm's interrupt is charged as any other interrupt source is, by the analysis as it stands, so what has to be right is what it is told: how close two arrivals can come. Nobody can state that of what a job

@@ -15,7 +15,7 @@ No bootstrap read includes this directory.
 | Review history | Design record | Rounds | Status |
 | --- | --- | --- | --- |
 | [`decision_host-guard-reviews.md`](decision_host-guard-reviews.md) | [`decision_host-guard.md`](../decisions/decision_host-guard.md) | 24 | open |
-| [`decision_release-alarm-reviews.md`](decision_release-alarm-reviews.md) | [`decision_release-alarm.md`](../decisions/decision_release-alarm.md) | 12 | open |
+| [`decision_release-alarm-reviews.md`](decision_release-alarm-reviews.md) | [`decision_release-alarm.md`](../decisions/decision_release-alarm.md) | 13 | open |
 | [`decision_device-correspondence-reviews.md`](decision_device-correspondence-reviews.md) | [`decision_device-correspondence.md`](../decisions/decision_device-correspondence.md) | 9 | closed: round 9 found no defect (`M4.4.1.9`) |
 | [`decision_hosted-build-reviews.md`](decision_hosted-build-reviews.md) | [`decision_hosted-build.md`](../decisions/decision_hosted-build.md) | 23 | open |
 | [`decision_catalog-records-reviews.md`](decision_catalog-records-reviews.md) | [`decision_catalog-records.md`](../specs/catalog/decision_catalog-records.md) | 16 | closed: the record met its closure rule on round 16 (`M2.7.1`) |
