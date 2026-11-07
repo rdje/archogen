@@ -190,9 +190,10 @@ checker alone converts it; where each stack lies; and what the interrupt control
 application's inputs. A size only a catalog record can state stays owed until one does, and every allocation after it is owed too, since no
 address below it is known.
 
-Stacks are laid from the top of a region down and the image from the bottom up, so a rebuild of the code moves no
-allocation. A stack's size is a sum of what its owners state: a task's own bound, what the runtime's code adds in a
-call, and the frame the port saves.
+Stacks are laid from the top of a region down and the image from the bottom up, so a change in the image's size moves no
+allocation. A stack's size is what its owners state: a task's own bound, the most the runtime's code adds in a
+call, and the frame the port saves. What the generated code uses of a stack comes of that code, so a first plan generates it with those figures
+owed, and a second, from a file stating them, generates the same code: what an image holds of its plan leaves the figures out.
 
 ## From a plan to a generated system
 

@@ -16,8 +16,9 @@
 - **Active tree:** `M4` → frontier `M4.1`, the accepted runtime plan, the model's amendments done (`M4.1.2`): `/1` for
   the hosted playground; `PROGRAM` → `PROGRAM.34`, the director's.
 - **The host is shared:** every heavy job goes through `scripts/host_guard.py`, one at a time (`docs/decisions/decision_host-guard.md`). A reader's brief says so.
-- **Next action:** `PROGRAM.127.27`, the guard's review, round 27; then `M4.2.3.3.27`, round 27 of the hosted build's review, a fresh reader over round 26's answer; then
-  `M4.12.1.3`, the application inputs' round 3 (`M4.12` done); then `M4.1.7.2`, format `/2`'s review;
+- **Next action:** land what is prepared, each tree's last Log line saying what: `PROGRAM.127.27` (`target/p12727/mine/final.diff`, self-test first), then `M4.2.3.3.27`
+  (`target/m4324/mine/final.diff`, tested), each numbered by landing order and then a fresh reader for its next round. Then readers for `M4.12.1.3`, the application inputs'
+  round 3, and `M4.1.7.2.2`, format `/2`'s round 2 (`M4.1.6`'s review closed). Then `M3.4.16` and `M3.4.17`, P3.
   `M4.5.2` and `M4.3.6` wait on `M4.1.7`, `M4.3.4` on `M2.21`. The runtime plan's design is accepted (`M4.1.1` done).
   `M3.2.7` and `M3.5.9`, full verification, wait for the
   features (doctrine 22).

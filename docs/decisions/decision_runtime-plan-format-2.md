@@ -2,24 +2,40 @@
 
 - **Type:** `decision`
 - **Date:** `2026-11-07`
-- **Status:** `active` — written by leaf `M4.1.7.1`; nothing here is code yet, and it is under review in leaf `M4.1.7.2`
+- **Status:** `active` — written by leaf `M4.1.7.1`; nothing here is code yet, and it is under review in leaf `M4.1.7.2`, in `docs/reviews/decision_runtime-plan-format-2-reviews.md`
 - **External sources:** none: this record decides how the engine lowers its own records
-- **Owner / source:** leaf `M4.1.7` (`docs/tasks/M4.md`), from `decision_runtime-plan.md` §4 `.7` and `docs/reviews/decision_runtime-plan-reviews.md`'s "Kept for `M4.1.7`"; the hand-offs `RA-H1`, `RA-H8` (`decision_release-alarm.md`), `DC-H1` to `DC-H4` (`decision_device-correspondence.md`) and `RTP-H5` (`decision_application-inputs.md`); `ROADMAP.md` §6.2, §7.3 and §10.3.
+- **Owner / source:** leaf `M4.1.7` (`docs/tasks/M4.md`), from `decision_runtime-plan.md` §4 `.7` and `docs/reviews/decision_runtime-plan-reviews.md`'s "Kept for `M4.1.7`"; the hand-offs `RA-H1`, `RA-H8` (`decision_release-alarm.md`), `DC-H1` to `DC-H4` (`decision_device-correspondence.md`), `RTP-H5` and `AI-H2` (`decision_application-inputs.md`); `ROADMAP.md` §6.2, §7.3 and §10.3.
 
 ## The fact / decision
 
-**In plain words.** A runtime plan says what a checked assignment turns into. The first format, `/1`, describes a system on the hosted playground, where the simulator provides the clock, the memory and the devices, and it has no line for a figure about a task's own code, so it is never complete. Format `/2` is the same plan with what a real machine adds: which machine it is, which device releases tasks and which each alarm takes, how each count on those devices becomes a time, where each stack lies in memory, and what the interrupt controller is told. It also carries what the application's inputs say, so that what `/1` could only list as owed can be stated.
+**In plain words.** A runtime plan says what a checked assignment turns into. The first format, `/1`, describes a system on the hosted playground, where the simulator provides the clock, the memory and the devices, and it has no line for a figure about a task's own code, so it is never complete. Format `/2` is the same plan with what a real machine adds: which machine it is, which device releases tasks and which each alarm takes, how each count on those devices becomes a time, where each stack lies in memory, and what the interrupt controller is told. It also carries what the application's inputs and the generated code's statements say, so that what `/1` could only list as owed can be stated.
 
 The rule that keeps it honest is `/1`'s: nothing is invented. A size only a catalog record can state is owed until a record states it, and every allocation after it is owed too. A plan with an owed figure says `(complete no)`.
 
-`/1` stays as it is, frozen, and a command with neither of the two new inputs still writes it.
+`/1` stays as it is, frozen, and a command with none of the new inputs still writes it.
 
 ### 1. What is given, and on what command
 
-`--target FILE` names a target's file, read by `Target::read` as `decision_device-correspondence.md` says, and `--application FILE` the application's inputs, read by `archogen_plan::application` (`decision_application-inputs.md`). Either on `resolve`, `plan-check` or `build` asks for `/2`, and `check` takes `--target`. A file is named by its path and identified by what it holds, never found by a name under a directory of targets, since an installed tool carries none. The hosted playground is `/2`'s name for no target, written `(target hosted-playground)`, as an application's file writes it, and reached by `--application` alone: `M4.13` builds it first.
+Three files can be named, on `resolve`, `plan-check` and `build`, each by its path and identified by what it holds, never found by a name under a directory, since an installed tool carries none. Naming any asks for `/2`, and `check` takes `--target`.
 
-- **The target in the identity** (R3-4, R5-R4). A plan on a target writes `(target NAME "HEX")`, `NAME` the file's one platform and `HEX` the sha256 of its forms' program text as `eadl_resolve::plan::program_text` writes a program's, so a comment moves no plan. An assignment on a target is `archogen-assignment/3`, which adds that same line after `(program …)`; `/2` stays the hosted one. A plan's application is `(application "HEX")`, the sha256 of the file's bytes, since a figure's evidence and its basis are part of what was said. A file's own `(target …)` is held against the plan's: an application's bounds are of one target (`decision_application-inputs.md`).
-- **What `check` does with a target** is `DC-H3`, as that hand-off writes it, and a target with no placement memory, or a machine the profile refuses, is refused there and at `resolve` (`DC-H4`). The profile's "one active core" reads a target's `core-count`.
+| Option | The file | Read by |
+| --- | --- | --- |
+| `--target FILE` | a target, its hardware alone | `Target::read` (`decision_device-correspondence.md`) |
+| `--application FILE` | `archogen-application/1` | `archogen_plan::application` (`decision_application-inputs.md`) |
+| `--realization FILE` | `archogen-realization/1`, what the generated code states of itself, each bound with its record | its reader, `RPF-H3`'s |
+
+The catalog is a fourth input and no option: the tool's own, by the selection §5 names.
+
+**The hosted playground** is `/2`'s name for no target, `(target hosted-playground)`, as an application's file writes it, reached by `--application` or `--realization` alone. `M4.13` builds it first. What it holds is `/1`'s, with these and no others: `(epoch simulator)`, `(timer simulator …)`, each alarm's line as §3 writes one `simulated`, the application's and the realization's lines, `(region …)` for each region the description's hardware states, `use device` and none else, and none of §5's placement, allocations or image, a system with placement memory staying refused as `/1` refuses it.
+
+**How a build gets figures of its own code.** `/1`'s `RTP-H3` lowers again from the same inputs, and the figures of generated code come from code generated from the plan, so the realization's file cannot be an input of the first plan. It need not be. A first plan with the figures owed is complete in all that shapes code, and generates. What that code states, measured or derived, goes in the file, and a second plan is lowered from the same inputs and that file. Its code is the first's, since no figure moves code: **the code identity**.
+
+**The code identity** is the sha256 of the plan's text less each line and field a figure is: `(application …)`, `(realization …)`, each `(task-inputs …)` but its entry point, `(initialisation-inputs …)`, each `(realization-figure …)`, each `(allocation …)`, `(image …)`, each `(owed …)` and `(complete …)`. That is what an image holds of its plan, in place of `/1`'s digest of the whole text, and what a bound's `binary` names an image by: an image holding that identity. So a bound can name the image the plan builds, which it could not if the image held the plan's own digest, and re-measuring moves the plan and not the code (`AI-H2`). An allocation is written in the linker's input, so two images of one code identity can differ in where a stack lies, and a bound holds of either, a code's cost being taken as independent of where its stack lies. ⚠️ That is an assumption, stated here and in what the checker names.
+
+- **The target in the identity** (R3-4, R5-R4). A plan on a target writes `(target NAME "HEX")`, `NAME` the file's one platform and `HEX` the sha256 of its forms' program text as `eadl_resolve::plan::program_text` writes a program's, so a comment moves no plan. An assignment on a target is `archogen-assignment/3`, which adds that same line after `(program …)`; `/2` stays the hosted one.
+- **The application and the realization in the identity.** `(application "HEX")` and `(realization "HEX")` are the sha256 of each file's canonical text, so a comment moves neither, and a figure's evidence and its basis, which are forms, do. A file is held against the plan by `Application::unmet`, each thing unmet refused `invalid-description`, a file's own `(target …)` against the plan's among them.
+- **The catalog in the identity.** `(catalog "HEX" NAME)`: the catalog's hash (`archogen_catalog::hash`), and the name its records go by for this target, the platform's `catalog-target` (§2), `none` where a target states none or the plan is hosted, so that no record is read and every figure is owed.
+- **What `check` does with a target** is `DC-H3`, as that hand-off writes it, and a target with no placement memory is refused `infeasible-configuration`, or a machine the profile refuses as the profile says, there and at `resolve` (`DC-H4`). The profile's "one active core" reads a target's `core-count`.
 - **The checker** reads the target itself (`DC-H2`): `archogen-plan-check` gains `--target` and a reader of its own, puts the system on it as that record's rule 1 says, and judges the assignment there, the digest in the record compared with the file it was given. A record whose target differs is `stale-input`, "resolve again", as a program's is. It holds what `RA-H1` adds, the release requester among it.
 - **A locked build.** Each digest above is lock data (`RTP-H7`).
 
@@ -29,13 +45,17 @@ A target states more than `riscv-virt-up` says today, each with what checks it (
 
 | Fact | Of | What it is | What checks it on `riscv-virt-up` |
 | --- | --- | --- | --- |
-| `counter-modulus`, `counter-width`, `observation-coherent`, `relative-delay`, `alarm-wiring`, `alarm-kind`, `compare-step`, `compare-window` or `compare-magnitude`, `supported-horizon` | the timer | `RA-H8`, `DC-H1` | the [privileged specification](../book/src/ledger.md#riscv-privileged)'s `mtime` and `mtimecmp`, cited by the agreement: 64 bits, `core`, `level-compare`, a step of 1, `compare-magnitude` |
-| `controller-levels`, a count | a controller | how many priorities it distinguishes above its threshold | none on `riscv-virt-up`, which claims no controller, and so no external source |
-| `controller-line`, a count | a source, or an alarm wired to a controller | its line at the controller, which is also its identifier for a priority write | none, as above |
-| `non-maskable-interrupts`, a count | the platform | how many sources no mask stops | the device tree's `riscv,isa` holding no `smrnmi` |
+| `counter-modulus` or `counter-modulus-power`, `counter-width`, `observation-coherent`, `relative-delay`, `alarm-wiring`, `alarm-kind`, `compare-step`, `compare-window` or `compare-magnitude`, `supported-horizon`, `unambiguous-horizon` | the timer | `RA-H8`, `DC-H1` | the [privileged specification](../book/src/ledger.md#riscv-privileged)'s `mtime` and `mtimecmp`, cited by the agreement: `counter-modulus-power` 64, `core`, `level-compare`, a step of 1, `compare-magnitude` |
+| `counter-modulus-power`, a count | the timer | that its modulus is 2 to this power, for one no integer of `eadl/1` holds. A need of `counter-modulus` is met by it, and `/2` writes the modulus whole | as above |
+| `catalog-target`, a name | the platform | the name a catalog record's `(target …)` goes by for this machine, the selection's | that the `.env`'s stem is that name |
+| `non-maskable-interrupts`, a count | the platform | how many sources no mask stops | the device tree's `riscv,isa` holding no `smrnmi`, which says so of the emulated hart alone |
 | `firmware-traps`, a count | the platform | how many traps firmware beneath the image takes | `targets/riscv-virt-up.env`'s `-bios none` |
 
 **Silence gives no value.** A target that does not state a fact a system needs is refused `missing-fact` by what asks, as `RA-H1` has it. `targets/riscv-virt-up.eadl` keeps saying nothing its agreement does not check, so these arrive with the agreement's rules (`M4.1.7.3`).
+
+**How a compare is read.** A device states `compare-window` or `(compare-magnitude true)`. `(compare-magnitude false)` says nothing, as an absent fact does, so it needs the other. Both, or a magnitude beside a window, is `invalid-description`, naming the device (`decision_release-alarm.md`, RA16-4).
+
+**A controller's levels and each source's line stay the catalog's** (model §8 rule 8, "its line and context, and the latency are the catalog's"), read by §5's selection (`RPF-H1`), so a target's file says neither.
 
 **Non-maskable interrupts and firmware traps** (R4-D15). The variant's condition 5 masks every interrupt in a masked section and reads each of these as a source. A source no mask stops breaks that condition, so a target stating either above zero is refused `unsupported-profile`, naming the count, and `/2`'s enabled set holds neither. Model §8 rule 8's "on a target, the platform's non-maskable interrupts and traps" is then true of `/2` by having none. A format that admits one names it, which a count cannot, so it comes with a variant that charges it.
 
@@ -51,115 +71,135 @@ A target states more than `riscv-virt-up` says today, each with what checks it (
 (program "HEX")
 (assignment "HEX")
 (adapters VERSION)
+(catalog "HEX" NAME)
 (application "HEX")                     ; where inputs are given
-(record ID "HEX")                       ; each catalog record a figure here comes from, by its id
+(realization "HEX")                     ; where that file is given
+(code NAME "PLACE" "DIGEST")            ; where inputs are given
+(record ID "HEX")                       ; each catalog record a figure here comes from
 (task …)                                ; as /1
 (task-inputs (task SYSTEM NAME) …)      ; each task, where inputs are given
-(declared leaves-interrupt-hardware-alone (clause "…") (basis "…"))  ; where inputs are given
+(declared leaves-interrupt-hardware-alone yes|no (clause "…") (basis "…"))  ; where inputs are given
 (initialisation-inputs (stack-bound …))  ; where inputs are given
+(realization-figure NODE FACT BOUND)    ; each the realization's file states
 (bind …)                                ; as /1, `(release SYSTEM)` a requester
 (instance …)                            ; as /1
 (epoch simulator) | (epoch first-enabling)
-(timer simulator (releases …)) | (timer none) | (timer (device NODE) COUNTER (rounding FIGURE) (first-compare transition) (releases …))
-(alarm ITEM (device NODE) COUNTER (kind KIND) (time-base BASE) (horizon DUR|none) (delivery-bound DUR|none))   ; each alarm
-(route INT ITEM …)                      ; /1's, with (controller LINE PRIORITY) where it reaches one
+(timer simulator (releases …)) | (timer none) | (timer (device NODE) COUNTER (horizon DUR) (rounding FIGURE) (first-compare transition) (releases …))
+(alarm NODE (device PROVIDER) COUNTER|simulated (kind KIND) (time-base BASE) (horizon DUR|none) (delivery-bound DUR|none))   ; each alarm
+(route INT ITEM …)                      ; /1's, with (controller LINE PRIORITY) or (controller owed) last, where it reaches one
 (enabled ITEM …)
 (interrupt-model (nesting no) (masking all))
-(region NAME PROVIDER (base INT) (size INT|unsized) (use USE) (requesters REQ …))  ; a target's
+(region NAME PROVIDER (base INT) (size INT|unsized) (use USE) (requesters REQ …))
 (placement PROVIDER REGION)             ; a target's
 (allocation UNIT (base INT) (guard INT) (bytes INT) (align INT) (origin ORIGIN …))
 (allocation UNIT owed (needs NEED …))
-(image (floor INT) (limit INT|owed) (truncated-by NAME …))
+(image (floor INT) (limit INT|owed) (truncated-by NAME …))   ; a target's
 (node …) (context …) (depends …) (step …) (obligation …) (owed …) (complete yes|no)
 ```
 
-- `COUNTER` is `(tick-rate R) (modulus M) (reach DUR) (step S) (window W)`: `R` a whole number of hertz, `M` and `S` whole numbers of ticks, `W` a count, or `magnitude` where the device states `compare-magnitude` (`RA-H8`). An alarm on a delay writes no `(window …)`. These are exactly what `decision_release-alarm.md` §2's inputs table says reaches the checker by a plan's line, `tick-rate` and the two counts unconverted, so the checker rounds each as that table says and the plan writes no converted figure. `M` of `2^64` is written whole. `reach` is a duration where a target can state one, and `(reach none)` where the search asked none of it, which the checker reads as owed.
+**An alarm's identity is its node.** Model §8 rule 8 reports one route for each provider and kind, and a device of two channels gives one route two alarms (`decision_release-alarm.md` §2, "one line per alarm"). So `NODE` is the text of what takes the channel, the requester bound to it, a name or an instance's `(adapter …)` text, as the application's `deadlines-within-reach` names it, and two alarms on one device are two lines. In `/2` a route's `ITEM` for an alarm is `(alarm NODE)`, one route for each, and a source's and the release timer's are as in `/1`. Ranks follow that record's §3, ties by `NODE`'s text.
+
+**Values:**
+- `COUNTER` is `(tick-rate R) (modulus M) (reach DUR) (step S) (window W)`: `R` a whole number of hertz, `M` and `S` whole numbers of ticks, `W` a count, or `magnitude` where the device states `compare-magnitude`. An alarm on a delay writes no `(window …)`. These are exactly what `decision_release-alarm.md` §2's inputs table says reaches the checker by a plan's line, `tick-rate` and the two counts unconverted, so the checker rounds each as that table says and the plan writes no converted figure. `M` of `2^64` is written whole, by this format's own reader, which `crates/archogen-plan/src/contents.rs` has and whose integers reach 128 bits. `reach` is a duration where a target can state one, and `(reach none)` where it states none, which the checker reads as owed.
+- `simulated` in place of `COUNTER`: the simulator's clock, whose `ρ`, `λ` and window are nothing and whose reach is its counter's (`RA-H3`), its rate and modulus the harness's. A line with no `COUNTER` asks none of these, and `reasons`' simulated line holds that.
+- `(horizon DUR)` on the timer is the device's `unambiguous-horizon`, which `RA-H2` holds the release timer's sum within, and on an alarm a wake's provider's; `none` on an expiry, whose row says so.
 - `FIGURE` is a catalog figure, `(value DUR) (record ID) (category CATEGORY)`, or `owed`. It is `compare-rounding` here.
 - `KIND` is `level-compare` or `delay`. `BASE` is `counter`, the time base being the counter itself, or `epoch`, read off the plan's bindings as §2's table says.
 - `USE` is `placement`, `executable`, `reserved` or `device`. A region `(reserved true)` is `reserved`, one executable and not reserved `placement` where it is the one chosen and otherwise `executable`, and any other `device`.
 - `UNIT` is `(stack boot)`, `(stack interrupt)`, `(stack (task SYSTEM NAME))`, or `(table NAME)`, a table being what the catalog says a generated system holds in memory.
-- `ORIGIN` names where a figure came from: `(application NAME)`, `(record ID NAME)` or `(realization NODE NAME)`. `NEED` is one such, for a figure not yet stated.
-- `(task-inputs …)` writes `decision_application-inputs.md`'s clause for a task, canonically and sorted by each list's own key, since a file's order is the person's, each bound with its `ROADMAP.md` §7.3 record and category, so a consumer reads one artifact. `(initialisation-inputs …)` writes the initialisation's. `(owed … (by application))` is written only for what the file leaves unstated, and the format's reader refuses a file leaving anything unstated, so with inputs given none remains.
-- **`RA-H7`.** A task writing an alarm whose `BASE` is `counter` must name it in its `deadlines-within-reach`, or that alarm's `room` is owed (`RA-H2`), which the plan writes `(owed (task SYSTEM NAME) deadlines-within-reach (by application))`.
+- `ORIGIN` names where a figure came from: `(application NAME FACT)`, `(record ID FACT)` or `(realization NODE FACT)`. `NEED` is `(application NAME FACT)`, `(record FACT)` or `(realization NODE FACT)`, for a figure not yet stated: no record being named where none states it.
+- `(task-inputs …)` writes `decision_application-inputs.md`'s clause for a task in that record's order: `entry-point`, `execution-bound`, `os-calls`, `node-calls`, `masked-runs`, `stack-bound`, then the yes-or-no facts, then `deadlines-within-reach`. Each list is sorted by its callee's text, runs by name and then ending, and a bound writes its value as a `DUR` or a size in whole bytes, so `1 KiB` and `1024 byte` are one text, with its `ROADMAP.md` §7.3 record as the file has it.
+- `(realization-figure …)` writes one bound the file states, `FACT` as `decision_runtime-plan.md` §2.10 names it or one this record adds, `node-stack`, `service-stack`, `initialisation-stack`.
+- **`RA-H7`.** A task writing an alarm whose `BASE` is `counter` must name it in its `deadlines-within-reach`, or that alarm's `room` is owed (`RA-H2`), which the plan writes `(owed (task SYSTEM NAME) deadlines-within-reach (by application))`, the one `(by application)` line a read file can leave.
 
-**An alarm and the release timer each have one line**, as `RA-H1` says, and ranks follow `decision_release-alarm.md` §3. The requester is `(release SYSTEM)` in a `bind` line, in the record's order for a name (`eadl_resolve::plan`). `(release SYSTEM)` is no node: the search binds it and nothing it does is code the plan places, as the system's own level's is not.
+**`(owed …)`, as `/2` writes it.** `SUBJECT` gains `(alarm NODE)` and a `UNIT`. `OWNER` gains `catalog`. `FACT` gains, of an alarm by `realization`, `floor`, `step`, `reach-ahead`, `lag` and `service-cost`, `decision_release-alarm.md` §2's `T_s`, `P`, `R`, `λ` and `C_s`; and, of a `UNIT` by `catalog`, `trap-frame`, `guard`, `alignment`, `fault-path-stack`, `idle-stack`, `trap-path-stack`, `timer-service-stack`, `primitive-stack`, `completion-stack`, `table-size`. Only what no input states is written.
+
+**Orders.** `record` lines by id; `task-inputs` by runtime index; `realization-figure` by node's text, then fact; `alarm` lines by `NODE`'s text; `region` by base, then name; `allocation` in §5's order, the owed ones among them; `truncated-by` by base; on a line, `origin` and `needs` items by owner, `application`, `record`, `realization`, then by text.
+
+**`(obligation …)`** gains `placement`, its subject the placement region's name, discharged by `M4.4`, for `Obligation::Placement`, whose holes the `(region …)` lines name.
+
+`(release SYSTEM)` is no node: the search binds it and nothing it does is code the plan places, as the system's own level's is not.
 
 ### 4. Time on a machine
 
-**The epoch** (R3-8, `RA-H8`) is the first enabling. The port's transition reads the counter ahead of it by at most its own length, and the release timer's first compare is written for that read as the last act before the transition, which `reprograms-only-in-service` counts as initialisation's, so `(first-compare transition)` states what the generated code does and `/2` writes no count for it. A hosted plan writes `(epoch simulator)`, which is `RTP-H9`'s.
+**The epoch** (R3-8, `RA-H8`). The port's transition is the first enabling, and code cannot know that instant, only what it read before it. So the last act of initialisation reads the counter at `r` and counts nominal releases from `e = r + S`, `S` the switch record's bound on the transition, and writes the first compare at the ceiling of `e`, which `reprograms-only-in-service` counts as initialisation's. So `e` is at or after the first enabling and by at most `S`, every nominal release is at or after it, as `releases-after-initialisation` asks, and none fires before its nominal time. `(first-compare transition)` states what the generated code does, and `/2` writes no count for it. A hosted plan writes `(epoch simulator)`, which is `RTP-H9`'s.
 
-**Each compare at the ceiling of its release** (R5-R4). A task's nominal release is `k·T`, an exact duration, and the code writes the first value on the compare's step at or past it, counted from the epoch's read. `/2` writes the exact durations, so the generated code does this, never the plan: `RA-H6` for an alarm, and the catalog's `timer-service` record for the release timer, whose rounding is `compare-rounding`. **The horizon over consecutive releases** is what the release requester asks, `(unambiguous-horizon (at-least SHORTEST))`, with `decision_release-alarm.md` §1's sums, so no other test is written.
+**Each compare at the ceiling of its release** (R5-R4). A task's nominal release is `e + k·T`, an exact duration past `e`, and the code writes the first value on the compare's step at or past it. `/2` writes the exact durations, so the generated code does this, never the plan: `RA-H6` for an alarm, and the catalog's `timer-service` record for the release timer, whose rounding is `compare-rounding`. **The horizon over consecutive releases** is what the release requester asks, `(unambiguous-horizon (at-least SHORTEST))`, with `decision_release-alarm.md` §1's sums, so no other test is written.
 
-**The checker's sums** are `RA-H2`'s, from `(timer …)` and `(alarm …)`, and this record adds none.
+**The checker's sums** are `RA-H2`'s, from `(timer …)` and `(alarm …)`, and this record adds none. The platform's timing figures, `S`, `W_wake`, `γ` and `δ`, are the catalog's, read by the checker through `(catalog …)`'s selection, and a plan writes none of them.
 
 ### 5. Memory
 
-**Which regions** (R3-2, R5-R4). `Joint::map` over the target's hardware (`decision_device-correspondence.md`, whose "every block and platform its file declares" is that hardware) gives the map, and its findings refuse: `MapContradiction`, `MemoryAllHoles`, `PlacementUnsized`, each `invalid-description` where it is, naming the target's file. One `(region …)` line for each, by base, then name. Its `requesters` are those bound to its provider, for §10.3's "resource ownership".
+**Which regions** (R3-2, R5-R4). `Joint::map` over the target's hardware (`decision_device-correspondence.md`, whose "every block and platform its file declares" is that hardware) gives the map, and its findings refuse: `MapContradiction` and `MemoryAllHoles` `invalid-description`, and `PlacementUnsized` `missing-fact`, each naming the target's file. One `(region …)` line for each, by base, then name. Its `requesters` are those bound to its provider, for §10.3's "resource ownership".
 
 **Which is placement memory** (R3-2, R15-R9). The search's: an assignment's `(placement PROVIDER REGION)` names both, and `eadl_resolve::plan::rebuild` keeps both, which R15-R9 found it did not. Where a target has several regions that could serve, the search takes the lowest base, then the provider's and the region's text, so a rename moves nothing else. `(placement …)` is written beside the map.
 
-**The image lies at the bottom, every allocation at the top** (R3-9). The image starts at the placement region's base, as the port's reset entry requires of a machine that starts there, and grows up. Every allocation lies above it, in a fixed order, so nothing the image's size changes moves an allocation, and a rebuild of the code moves no plan. `(image (floor BASE) (limit LOWEST) …)` states where the image may lie: `LOWEST` the lowest allocation's base, or `owed` while one is. That the linked image stays under the limit is `M4.4`'s to check, since no plan knows its size (`RPF-H2`).
+**What the catalog is read by.** `archogen_catalog::selection`, `Selection { profile, target }`, `target` the `(catalog …)` line's name.
 
-**The formula** (R3-10). A unit is `[base, base + guard + bytes)`, its guard at the low end, so that a stack growing down reaches its guard first. Tables carry `(guard 0)`. Units are laid from the top of the region down, by a cursor that only descends:
+**The image lies at the bottom, every allocation at the top** (R3-9). The image starts at the floor and grows up, and every allocation lies above it, in a fixed order, so a change in the image's size moves no allocation, and code of one identity is laid out the same however its figures fall. `(image (floor F) (limit L) (truncated-by NAME …))` says where it may lie. `F` is the placement region's base, or past a hole that covers that base. `L` is the less of the lowest allocation's base and the base of the lowest hole at or above `F`, since a contiguous image crosses no hole, rule 10's "a hole the plan avoids"; `owed` while the lowest allocation is, a hole's base then still naming a limit in `truncated-by`. `truncated-by` names the hole at `L`, where one is. A hole covering the base to the region's end is `MemoryAllHoles`. That the linked image stays in `[F, L)` is `M4.4`'s to check, since no plan knows its size (`RPF-H2`).
+
+**The formula** (R3-10). A unit is `[base, base + guard + bytes)`, its guard at the low end, so that a stack growing down reaches its guard first. Tables carry `(guard 0)`. Units are laid from the top of the region down, by a cursor that only descends. `(align A)` is a stack's top's alignment and a table's base's:
 
 ```text
 cursor := the placement region's end
 for each unit, in order:
-    top  := cursor rounded down to the unit's alignment
-    base := top - bytes - guard
+    top  := a stack's: cursor rounded down to A; a table's: cursor
+    base := top - bytes - guard, a table's rounded down to A
     if [base, top) meets a hole: cursor := that hole's base, and lay this unit again
-    if base < the placement region's base: refuse, "no room"
+    if base < F: refuse, "no room"
     cursor := base
 ```
 
 - **The order:** the boot stack, the interrupt stack, each task's stack by runtime index, then each table by name, so a task added at the bottom moves only what lies below it.
 - **An owed unit makes every later unit owed**, since no base below it is known, and `(allocation UNIT owed (needs …))` says what each lacks. Nothing is written as a guess.
-- **A hole with no size** reaches the region's end (model §8 rule 10, `M4.1.2.5`), so it takes the region's top, and the cursor starts at its base. `M4.4` names one that truncates an image, with a request for its size (`RPF-H2`). `(truncated-by …)` lists them.
+- **A hole with no size** reaches the region's end (model §8 rule 10, `M4.1.2.5`), so it takes the region's top, and the cursor starts at its base. `M4.4` names one that truncates an image, with a request for its size (`RPF-H2`).
 - **No room** is `infeasible-configuration`, naming the unit, its size and what the region holds, with the repair to give the system a larger region or to lower a bound.
 
-**The stacks** (R3-9, R3-11, R3-R9, `RTP-H5`):
+**The stacks** (R3-9, R3-11, R3-R9, `RTP-H5`). What runs on a stack runs in turn, so a stack holds the largest of them and not their sum, on top of what is under them all. A trap frame is the port's, one for whatever a stack's code is stopped by.
 
 | Unit | `bytes` | Whose figures |
 | --- | --- | --- |
-| a task's | its `stack-bound`, plus the largest node stack of any node its `node-calls` name, plus one trap frame | the application, the realization (`RPF-H3`), the catalog (`RPF-H1`) |
-| the interrupt's | the largest service stack among the routes, plus the fault path's use, plus one trap frame: interrupts do not nest, a service's fault is the one more thing that can arrive, and the fault path runs last | the realization, the catalog |
-| the boot's | the largest of what each initialisation step uses, plus the application's initialisation, its `initialisation` clause, and at least what the idle context uses once the port's transition has run: this stack holds all three in turn | the realization, the application, the catalog |
+| a task's | its `stack-bound`, plus the largest of: each node's `node-stack` its `node-calls` name, each `primitive-stack` its `os-calls` name, the `completion-stack`, and the fault entry's use, a panic reaching it; plus one trap frame | the application, the realization (`RPF-H3`), the catalog (`RPF-H1`) |
+| the interrupt's | the largest of: each route's `service-stack`, and the `timer-service-stack` with the decision and the transition it runs; plus the `trap-path-stack`; plus the `fault-path-stack`, since a service's fault is the one more thing that can arrive and runs last; plus one trap frame | the realization, the catalog |
+| the boot's | the largest of: each initialisation step's `initialisation-stack`, the application's initialisation, its `initialisation` clause, and the `idle-stack` once the port's transition has run: this stack holds each in turn; plus one trap frame | the realization, the application, the catalog |
 
-So a stack is a sum of three owners' figures, each with its record of a bound. `(origin …)` names each one, the weakest category among them being what the composition's §6 reads. The application's figure is the bound of its own code alone (`stack-allocation.eadl`), and the allocation here is the engine's, as that boundary asks.
+`(origin …)` names each figure entered, the weakest category among them being what the composition's §6 reads. The application's figure is the bound of its own code alone (`stack-allocation.eadl`), and the allocation here is the engine's, as that boundary asks. A task with a `node-call` in a masked run has it in `node-calls` too, as its reader holds.
 
-**The catalog's numbers** (R3-R6). The trap frame, the guard, each alignment, each table's size, the fault path's use and the idle context's are the records' (`RPF-H1`), each read by `archogen_catalog::selection` for this profile and this target, each record named by a `(record …)` line and its category written in an `ORIGIN`. Until a record states one, it is owed `(by catalog)`, a fourth owner in §3's `owed` lines, and every allocation it enters is owed.
+**The catalog's numbers** (R3-R6). The trap frame, the guard, each alignment, each table's size, the fault path's use, the trap path's, the timer service's, each primitive's, the completion's and the idle context's are the records' (`RPF-H1`), each record named by a `(record …)` line and its category written in an `ORIGIN`. A table's size is a function of a system's counts, its tasks, its sources and its alarms, which a record states as a base and a size per each. Until a record states one, it is owed `(by catalog)`, and every allocation it enters is owed.
 
 ### 6. The controller
 
-**Ranks onto levels** (R4-D15, R5-R4). Each route that reaches a controller gets `(controller LINE PRIORITY)`: `LINE` the source's `controller-line`, and `PRIORITY` the priority a write gives it. Rank 1 takes the highest level, and each rank after it the next, so the order the plan set is the order the controller takes them in. Levels count up from just above the threshold, which `/2` holds at its lowest, so `PRIORITY` is `controller-levels` less the number of such routes ahead of it. Where the routes outnumber the levels the system is refused `unsupported-profile`, naming the count and the levels, since two on one level would take an order `/2` does not set. A route wired to the core has no line and no level: `alarm-wiring core`, which the release timer alone may be (`decision_release-alarm.md` §1).
+**Ranks onto levels** (R4-D15, R5-R4). Each route that reaches a controller writes `(controller LINE PRIORITY)` last on its line: `LINE` the source's line at the controller and `PRIORITY` the priority a write gives it, each from the catalog's record of that controller, or `(controller owed)` until one states them, with `(owed ITEM controller-line (by catalog))`. Rank 1 takes the highest level, and each rank after it the next, so the order the plan set is the order the controller takes them in. Levels count up from just above the threshold, which `/2` holds at its lowest, so `PRIORITY` is `controller-levels` less the number of such routes ahead of it. Where the routes outnumber the levels the system is refused `unsupported-profile`, naming the count and the levels, since two on one level would take an order `/2` does not set. A device of `channels 2` has two lines, as the record says of it. A route wired to the core has no line and no level: `alarm-wiring core`, which the release timer alone may be (`decision_release-alarm.md` §1), so it writes no `(controller …)`.
 
 **What this does not do:** it writes no enable. The generated code reads `(enabled …)` and `(route …)` and writes them (`RTP-H13`).
 
 ### 7. The rest of what was kept
 
-- **The release requester, the alarms' sums and their ranks** are `decision_release-alarm.md`'s, and `RA-H1`'s lines land here.
-- **A multiplexed node's users stay as `/1` counts them**, by what reaches it (R18-R6, round 29's better decision). A job's declared calls into nodes are `node-calls`, and counting by them would remove a user who never calls, whose whole effect is to drop an overhead. A set the over-count refuses is one the analysis refuses for its charge, and a sound refusal is what is in hand, so no format moves for it: it is a change to what `Joint::check` counts, for when a set needs it, and asks no line of `/2`.
+- **The release requester, the alarms' sums and their ranks** are `decision_release-alarm.md`'s, and `RA-H1`'s lines land here. **The runtime plan's §2.7 is amended** as `RA-H1` says: a wake's first arm and a compare that cannot be disarmed are written in initialisation. **Whether a port can realize an alarm as a request a claim takes** is the port record's, a target's `alarm-wiring` saying what is there: `riscv-virt-up` has the release timer alone.
+- **A multiplexed node's users stay as `/1` counts them**, by what reaches it (R18-R6, round 29's better decision). A job's declared calls into nodes are `node-calls`, and counting by them would remove a user who never calls, whose whole effect is to drop an overhead. So a system the over-count charges more is one the analysis judges at that charge, which is sound, and no format moves for it: it is a change to what `Joint::check` counts, for when a set needs it, and asks no line of `/2`.
 - **The target's own timer where a system binds its own** (R3-1). `decision_device-correspondence.md` answers it: a device of the description is the target device bound for the same requirement.
-- **Refusals `/1` makes that `/2` does not:** placement memory, and `(by application)` facts left owed when inputs are given. **Refusals `/1` makes that stay:** a system with no task, a deadline from another event, what a job would receive of an interrupt. A plan on a target adds those above, each before anything is lowered and in this record's order: a target's own refusals, `missing-fact` from the joint rules, then no room and too few levels while lowering.
+- **Refusals `/1` makes that `/2` does not:** placement memory, on a target, and `(by application)` facts left owed when inputs are given. **Refusals `/1` makes that stay:** a system with no task, a deadline from another event, what a job would receive of an interrupt. A plan on a target adds those above, each before anything is lowered and in this record's order: a target's own refusals, `missing-fact` from the joint rules, an application's unmet, then no room and too few levels while lowering.
 
 ### 8. What it hands on
 
 <!-- machine-read: handoffs -->
 | Id | Leaf | Obligation |
 | --- | --- | --- |
-| `RPF-H1` | `M4.10` | The catalog's records state the trap frame, the stack guard, each stack's and table's alignment, the fault path's stack use, the idle context's stack use and each table a generated system holds, each with its bound's record, read for a profile and target by `archogen_catalog::selection`. |
-| `RPF-H2` | `M4.4` | The linked image is checked against `/2`'s `(image …)` line: it starts at `floor`, ends at or below `limit`, and is refused naming the size it would need where a hole with no size truncates it. |
-| `RPF-H3` | `M4.2` | The generated code states each node's stack use in a job, each service's and each initialisation step's, each with its bound's record, as what `RTP-H2` lists. |
+| `RPF-H1` | `M4.10` | The catalog's records state the trap frame, the stack guard, each stack's and table's alignment, the fault path's, the trap path's, the timer service's, each primitive's, the completion path's and the idle context's stack use, each table a generated system holds as a base and a size per task, source and alarm, and a controller's levels and each source's line, each with its bound's record, read for a profile and target by `archogen_catalog::selection`. |
+| `RPF-H2` | `M4.4` | The linked image is checked against `/2`'s `(image …)` line: it starts at or past `floor`, ends at or below `limit`, holds the code identity of the plan, and is refused naming the size it would need where a hole truncates it. |
+| `RPF-H3` | `M4.2` | The generated code states each node's stack use in a job, each service's and each initialisation step's, each with its bound's record, as what `RTP-H2` lists, in a format of its own, `archogen-realization/1`, with its reader and its version row, the file a second plan is lowered from; and an image holds the plan's code identity and not its digest. |
 
 ## Why
 
 **A second format and not a growing one.** `/1` is frozen, and its goldens hold a hosted plan's every byte. A target's lines change what a plan is, so a reader must know which it reads.
 
-**Two inputs, one format.** Application inputs and a target are independent: a hosted system has a task's code before any board does. `(target playground)` lets one format hold both, so `M4.13` is not a third.
+**Three inputs, one format.** Application inputs, what generated code states and a target are independent: a hosted system has a task's code before any board does. `(target hosted-playground)` lets one format hold all three, so `M4.13` is not a fourth.
 
 **Every count unconverted.** The inputs table's rounding is the checker's: a modulus rounds down by `tick-rate`, a step up, and a plan's own conversion would leave one direction for two readers to disagree on.
 
-**Allocations from the top.** A rebuild of the code then moves no allocation, so a plan stays the plan through a change of a task's code, and `M4.4` checks one number.
+**Allocations from the top.** A change in the image's size then moves no allocation, and `M4.4` checks a range.
+
+**Two plans, one code.** The realization's figures come of generated code, so asking them of the first plan is a cycle, and a fixed table of them in the emitter would be a guess that nothing measures. The code identity is what lets the second plan say so without moving the first's code.
 
 **Rejected: `--target NAME` finding a file in a directory.** An installed tool holds no such directory, and a name is no identity: the digest is.
 
@@ -167,12 +207,17 @@ So a stack is a sum of three owners' figures, each with its record of a bound. `
 
 **Rejected: writing a compare's tick values in the plan.** The sequence has no end, and each value depends on the epoch's read at run time.
 
+**Rejected: `riscv-virt-up` stating a modulus it does not have, the largest integer `eadl/1` holds.** `counter-modulus` is exact, since wrapping arithmetic depends on the modulus itself (`decision_substitutability-relation.md`).
+
 ## How to apply
 
 - `M4.1.7.2` is this record's review, a fresh reader each round. It closes on a round that finds no defect, and then `M4.1.7.3` to `M4.1.7.7` build it: the vocabulary, each target's statements and the agreement's rules; `--target` and `check`; the search's release requester, with the joint rules and the checker; the lowering's lines and their goldens; and `build`'s and the checker's readers. Each is filed when this closes.
+- This record amends `decision_release-alarm.md`: its `RA-H8`'s epoch reads as §4 says, and a need of `counter-modulus` is met by `counter-modulus-power`.
 - Consumers read `/2` as they read `/1`: by a reader held to its goldens, never by matching text.
 - Related: [[decision_runtime-plan]], [[decision_release-alarm]], [[decision_device-correspondence]], [[decision_application-inputs]], [[decision_target-platform-description]].
 
 ## Review
 
-Not yet reviewed: leaf `M4.1.7.2`, whose rounds will be in `docs/reviews/decision_runtime-plan-format-2-reviews.md`.
+| Round | Findings | Defects | Verdict |
+| --- | --- | --- | --- |
+| 1 | 17 | 15 (RP1-1 to RP1-15), beside 1 gap and 1 of wording | `2026-11-07`, not acceptable — answered: a stack's sum holds what runs on it, a realization's figures come by a third file and a second plan of one code identity, an alarm has an identity of its own, a modulus past `eadl/1`'s integers can be stated, the epoch is at or after the first enabling, a controller's lines stay the catalog's, and each order and owed line is written. The cursor, the priorities, the alarm's line and each kept question held. |
