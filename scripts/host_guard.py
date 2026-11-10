@@ -36,7 +36,6 @@ import signal
 import subprocess
 import sys
 import time
-import unicodedata
 from collections import deque
 from dataclasses import asdict, dataclass, field, fields
 from pathlib import Path
@@ -125,8 +124,9 @@ def repository_root() -> Path:
 
 
 def canonical(root: Path) -> Path:
-    """A root as the volume spells it. This volume ignores a name's case and its Unicode form, keeping those it was made with, and what the kernel says of a process's directory is that
-    spelling: spelt otherwise, nothing would be ours."""
+    """A root as the kernel spells it. This volume ignores a name's case and its Unicode form, keeping those it was made with, and one directory can be reached by more than one path;
+    what the kernel says of a process's directory is one spelling, and spelt otherwise nothing would be ours. So the spelling is the kernel's own of the directory this opens, held to be
+    that directory by what both open and by no comparison of names, which no folding of this language's is the volume's (round 34: `ß` and `SS`)."""
     resolved = root.resolve()
     try:
         fd = os.open(str(resolved), os.O_RDONLY)
@@ -134,12 +134,12 @@ def canonical(root: Path) -> Path:
         return resolved
     try:
         spelt = fcntl.fcntl(fd, fcntl.F_GETPATH, bytes(1024)).split(b"\0", 1)[0].decode()
+        same = bool(spelt) and os.path.samestat(os.fstat(fd), os.stat(spelt))
     except (OSError, ValueError):
         return resolved
     finally:
         os.close(fd)
-    folded = lambda name: unicodedata.normalize("NFD", name).lower()
-    return Path(spelt) if folded(spelt) == folded(str(resolved)) else resolved
+    return Path(spelt) if same else resolved
 
 
 def state_path(root: Path) -> Path:
@@ -285,7 +285,7 @@ SHELLS = {"bash", "sh", "zsh", "fish", "dash", "ksh", "csh", "tcsh", "nu", "elvi
 def interpreter_reads(kind: str, words: list[str]) -> tuple[str, int]:
     """The word an interpreter of this kind is given to run, among the words past its own name, and where the words after it begin: as it reads its own flags, the first word that is no flag
     and no value of one, a whole flag's by `FLAGS_WITH_VALUES` and a cluster's letter by letter by `CLUSTERS`, a module's name where Python is given one. No word where a flag gives it a
-    program's text or where it reads its input. Each word is read once, so reading costs no more than the words' length."""
+    program's text or where it reads its input. Each word is read once and each letter of a cluster once, so reading costs no more than the words' length."""
     takes_values, letters, at = FLAGS_WITH_VALUES.get(kind, ()), CLUSTERS.get(kind), 0
     while at < len(words):
         word = words[at]
@@ -298,14 +298,15 @@ def interpreter_reads(kind: str, words: list[str]) -> tuple[str, int]:
             break
         took = 2 if word in takes_values else 1
         if letters and not word.startswith("--"):
+            # The rest of the word is cut once, where a letter takes it: cut at each letter, a cluster cost the square of its length to read (round 34).
             for place, letter in enumerate(word[1:], start=1):
-                rest = word[place + 1 :]
                 if letter in letters["text"]:
                     return "", len(words)
                 if letter in letters["module"]:
+                    rest = word[place + 1 :]
                     return (rest, at + 1) if rest else (" ".join(words[at + 1 : at + 2]), at + 2)
                 if letter in letters["value"]:
-                    took = 1 if rest else 2
+                    took = 1 if place + 1 < len(word) else 2
                     break
                 if letter not in letters["plain"]:
                     break
@@ -1125,7 +1126,9 @@ def watch(root: Path, limits: Limits, once: bool, idle_seconds: float = 600.0, a
             return 0
         wait, notes = 2.0, {}
         try:
-            reading, mine = sample(root, limits, memory)
+            # Its root as the kernel spells it this round: renamed in case alone under it, or a directory above it, it is the same directory by another spelling, and what
+            # runs there is ours by that one (round 34).
+            reading, mine = sample(canonical(root), limits, memory)
             busy, read_at = bool(mine), time.monotonic()
             # It reads more often the closer the host is to a line, and as seldom as is safe when nothing of ours runs: this costs the shared host too.
             near = reading.used_percent >= limits.start_used_percent + 10 or disk_reasons(reading, limits)
@@ -1947,9 +1950,9 @@ def what_a_run_runs(words: list[str]) -> list[str]:
     """What `words`, a guard's `run`, are told to run, as `main` reads them, its `--` being optional; nothing of anything else, a message that names one among it."""
     at = 0
     if words and (os.path.basename(words[0]) in INTERPRETERS or os.path.basename(words[0]).startswith("python")):
-        at = 1
-        while at < len(words) and words[at].startswith("-"):
-            at += 2 if words[at] in PYTHON_FLAGS_WITH_VALUES else 1
+        # An interpreter's own flags, as the guard reads them of a process: a cluster's value and a whole flag's among them.
+        given, after = interpreter_reads("python", words[1:])
+        at = after if given else len(words)
     if words[at : at + 1] == [] or os.path.basename(words[at]) != GUARD_NAME or words[at + 1 : at + 2] != ["run"]:
         return []
     rest = words[at + 2 :]

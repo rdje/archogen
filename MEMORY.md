@@ -16,11 +16,10 @@
 - **Active tree:** `M4` → frontier `M4.1`, the accepted runtime plan, the model's amendments done (`M4.1.2`): `/1` for
   the hosted playground; `PROGRAM` → `PROGRAM.34`, the director's.
 - **The host is shared:** every heavy job goes through `scripts/host_guard.py`, one at a time (`docs/decisions/decision_host-guard.md`). A reader's brief says so.
-- **Next action:** answer `PROGRAM.127.34`, the guard's round 34, saved and not answered (`target/p12734/report.md`): two defects,
-  a cluster of flags read in the square of its length, and a root's spelling held by a folding of names. Then `M4.1.7.2.6`, format
-  `/2`'s round 6, saved too (`target/m4336/report.md`): three defects, each in a round-5 answer. One reader is out, its report to be
-  saved under `target/` and none there meaning ask again: `M4.12.1.8`, the application inputs' round 8 (`target/m4337/report.md`).
-  Then `M3.4.17.2` to `.5`, P3.
+- **Next action:** answer `M4.1.7.2.6`, format `/2`'s round 6, saved and not answered (`target/m4336/report.md`): three defects,
+  each in a round-5 answer, a hosted plan's lines that hold an item, the fifth fact that is no reader's, and a hosted wake. Two
+  readers are out, each report to be saved under `target/` and none there meaning ask again: `PROGRAM.127.35`, the guard's round 35
+  (`target/p12735/report.md`), and `M4.12.1.8`, the application inputs' round 8 (`target/m4337/report.md`). Then `M3.4.17.2` to `.5`, P3.
   `M4.5.2` and `M4.3.6` wait on `M4.1.7`, `M4.3.4` on `M2.21`. The runtime plan's design is accepted (`M4.1.1` done).
   `M3.2.7` and `M3.5.9`, full verification, wait for the
   features (doctrine 22).

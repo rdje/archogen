@@ -1048,6 +1048,27 @@ def case_a_watcher_ended_by_its_own_error_says_so() -> None:
     check("a watcher that cannot start says so", settle(again, 15) and log.exists() and "the watcher ended: ValueError('from the rig')" in log.read_text(errors="replace"))
 
 
+def case_a_root_renamed_in_case_is_still_watched() -> None:
+    """A root renamed in case alone under its watcher is the same directory by another spelling, and what runs there is still ours (round 34)."""
+    base = fresh("renamed")
+    scope = base / "Casey"
+    scope.mkdir()
+    watcher = looping_watcher(scope, {"one_process_gib": 0.05})
+    try:
+        check("a watcher reads for its root", until((scope / "state" / "sampled").exists))
+        renamed = base / "casey"
+        os.rename(scope, renamed)
+        if not scope.exists():
+            # A volume that keeps case apart: the old name is gone, and the root with it.
+            check("where case is kept apart a root renamed is gone, and its watcher with it", settle(watcher, 10))
+            return
+        big = holding(80, renamed)
+        check("a job in a root renamed in case alone under its watcher is still stopped", settle(big, 10), events(renamed))
+        check("and its watcher goes on", up(watcher))
+    finally:
+        subprocess.run([*PY, str(GUARD), "stop", "--root", str(base / "casey")], capture_output=True, timeout=30)
+
+
 def case_a_root_spelt_relatively_stays_that_root() -> None:
     repo = fresh("relative-root")
     (repo / ".git").mkdir()
@@ -1473,6 +1494,9 @@ def case_a_kill_is_read_through_what_hides_it() -> None:
         "taskpolicy -b pkill -x foo",
         "sandbox-exec -n no-network pkill -x foo",
         "python3 -W ignore scripts/host_guard.py run -- pkill -x foo",
+        "python3 -BW ignore scripts/host_guard.py run -- pkill -x foo",
+        "python3 --check-hash-based-pycs never scripts/host_guard.py run -- pkill -x foo",
+        "python3 -IBWignore scripts/host_guard.py run --wait 5 -- pkill -x foo",
         "xcrun -k kill -9 -1",
         "xcrun -f -r killall foo",
         "xcrun -k pkill -x foo",
@@ -1705,6 +1729,18 @@ def case_a_command_line_that_is_no_text() -> None:
     check("a command line of flags and their values costs its length to read", quick < 0.5, quick)
     check("and one of thousands of them no more than its length", quick < 0.5 and reading(4000) < 0.5)
 
+    # A cluster of flags costs its length too (round 34): the rest of the word was cut at each letter, so a cluster cost the square of its length to read, 900,000 letters five seconds
+    # a reading, for a guard's own telling and for what a Perl or a Ruby is given. A row again, and no such process.
+    def a_cluster(kind: str, letter: str) -> float:
+        words = (kind, "-" + letter * 400_000, "job.py")
+        row = g.Process(70012, me, " ".join(words), "/", f"/usr/bin/{kind}", 0, argv=words)
+        began = time.monotonic()
+        said = (row.script, g.protected(row), g.is_run_of(row, "/x"))
+        return time.monotonic() - began if said == ("job.py", False, False) else float("inf")
+
+    slowest = max(a_cluster("python3", "b"), a_cluster("perl", "a"), a_cluster("ruby", "a"))
+    check("a cluster of flags costs its length to read, whichever interpreter reads it", slowest < 1.0, slowest)
+
 
 def case_pressure() -> None:
     scope = fresh("pressure")
@@ -1869,6 +1905,14 @@ def case_a_stale_pid_names_nobody() -> None:
         stored.mkdir()
         asked = stored.parent / "cafe\u0301"
         check("a root asked for in another Unicode form is spelt as the volume spells it", not asked.exists() or str(g.canonical(asked)) == str(g.canonical(stored)), (str(g.canonical(asked)).encode(), str(g.canonical(stored)).encode()))
+        # Nor is a root told by any folding of names: a case this volume folds and this language's `lower` does not, and the same directory by another path, are that directory by
+        # what both open (round 34).
+        made = fresh("folds") / "STRASSE"
+        made.mkdir()
+        sharp = made.parent / "stra\u00dfe"
+        check("a root asked for in a case the volume folds and `lower` does not is spelt as the volume spells it", not sharp.exists() or str(g.canonical(sharp)) == str(g.canonical(made)), (str(g.canonical(sharp)).encode(), str(g.canonical(made)).encode()))
+        by_data = Path("/System/Volumes/Data" + str(g.canonical(made)))
+        check("and so is one asked for by the data volume's own path", not by_data.exists() or str(g.canonical(by_data)) == str(g.canonical(made)), (str(g.canonical(by_data)), str(g.canonical(made))))
         # An argument that is empty is one, the first among them, told from the padding the kernel puts after the executable's path; and nothing after the last is taken for one.
         for length in range(8):
             link = scope / ("s" + "x" * length)
@@ -2465,7 +2509,7 @@ PURE = (    case_a_commit_holds_what_make_and_the_limits_can_be_told, case_what_
     case_a_kill_is_read_through_what_hides_it, case_a_path_holding_a_space_is_one_path,
 case_each_line_judges_alone, case_growth_is_of_the_last_minutes, case_what_counts_as_heavy, case_the_reader_sees_what_the_shell_runs, case_where_a_root_is)
 THE_REST = (
-    case_a_job_under_run_outlasts_a_changed_guard, case_what_is_handed_on_is_a_watcher_s_own, case_a_watcher_whose_interpreter_is_gone_goes_on, case_a_watcher_ended_by_its_own_error_says_so, case_a_root_spelt_relatively_stays_that_root, case_make_looks_for_the_whole_guard,
+    case_a_job_under_run_outlasts_a_changed_guard, case_what_is_handed_on_is_a_watcher_s_own, case_a_watcher_whose_interpreter_is_gone_goes_on, case_a_watcher_ended_by_its_own_error_says_so, case_a_root_spelt_relatively_stays_that_root, case_a_root_renamed_in_case_is_still_watched, case_make_looks_for_the_whole_guard,
     case_only_tightened, case_check_refuses, case_a_figure_not_read_is_never_safe, case_one_process, case_all_processes, case_what_a_stopped_process_started,
     case_another_project_is_never_ours, case_a_terminal_vouches_for_nothing, case_a_root_is_exactly_itself, case_agents, case_what_holds_little_is_left_alone, case_a_job_is_stopped_whole,
     case_a_queued_make_is_no_build, case_at_a_disk_floor_what_writes_stops, case_names_and_zombies, case_a_command_line_that_is_no_text, case_pressure, case_not_ours, case_growing,
