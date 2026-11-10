@@ -210,8 +210,8 @@ fn reference(
     Ok(laid)
 }
 
-/// §5: "`L` is the less of the lowest allocation's base and the base of the lowest hole above `F`", "`owed` while the lowest allocation is, a
-/// hole's base then still naming a limit in `truncated-by`", and "`truncated-by` names each hole whose base is `L`". The limit, nothing where it
+/// §5: "`L` is the less of the lowest allocation's base and the base of the lowest hole above `F`", "`owed` while the lowest allocation is, the
+/// lowest hole above `F` then standing in `truncated-by` as what may yet be the limit", and "`truncated-by` names each hole whose base is `L`". The limit, nothing where it
 /// is owed, and the bases `truncated-by` names.
 fn limit(
     region: Region,
@@ -1467,7 +1467,7 @@ fn two_plans_of_one_code_have_one_preimage_and_code_moves_it() {
         plan.insert(5, "(application \"cc\")".to_owned());
         plan.insert(6, "(realization \"dd\")".to_owned());
         plan.insert(7, "(record port.riscv \"ee\")".to_owned());
-        plan.extend(["(declared leaves-interrupt-hardware-alone yes (clause \"…\") (basis \"it touches no device\"))", "(realization-figure (step 1) initialisation-stack (value 128) (unit byte))", "(realization-fact (source uart.rx) acknowledge-point entry)", "(allocation (stack boot) (base 2281701376) (guard 64) (bytes 1024) (align 16))", "(image (floor 2147483648) (limit 2281701312))", "(complete yes)"].map(str::to_owned));
+        plan.extend(["(declared leaves-interrupt-hardware-alone yes (clause \"…\") (basis \"it touches no device\"))", "(realization-figure (step 1) initialisation-stack (value 128) (unit byte))", "(realization-fact (source uart.rx) acknowledge-point entry)", "(allocation (stack boot) (base 2281700288) (guard 64) (bytes 1024) (align 16))", "(image (floor 2147483648) (limit 2281700288))", "(complete yes)"].map(str::to_owned));
         plan.join("\n") + "\n"
     };
     let one = preimage(&first(shared("app::beat", "00", "c1", 7)));
@@ -1496,4 +1496,297 @@ fn two_plans_of_one_code_have_one_preimage_and_code_moves_it() {
         named,
         "(initialisation-inputs (entry-point \"app::init\"))\n"
     );
+}
+
+// ---- round 5: an alarm's time base, a wake's first point, a hosted plan's lines
+
+/// Where a reader of an alarm's time is bound, as §3's `BASE` reads it off the plan's bindings.
+#[derive(Clone, Copy, PartialEq, Eq, Debug)]
+enum Reader {
+    /// At the alarm's own device.
+    AtTheDevice,
+    /// At an `epoch-extender` over the alarm's own device.
+    ExtendedOverIt,
+    /// On another device.
+    OnAnother,
+    /// At an `epoch-extender` over another device.
+    ExtendedOverAnother,
+}
+
+const READERS: [Reader; 4] = [
+    Reader::AtTheDevice,
+    Reader::ExtendedOverIt,
+    Reader::OnAnother,
+    Reader::ExtendedOverAnother,
+];
+
+#[derive(Clone, Copy, PartialEq, Eq, Debug)]
+enum Base {
+    Counter,
+    Epoch,
+}
+
+/// §3, `BASE`: a wake's is `counter`; any other alarm's is `epoch` where it has a reader of time and each is bound at an `epoch-extender` over the alarm's own
+/// device, and `counter` otherwise.
+fn base(wake: bool, readers: &[Reader]) -> Base {
+    if !wake
+        && !readers.is_empty()
+        && readers
+            .iter()
+            .all(|reader| *reader == Reader::ExtendedOverIt)
+    {
+        Base::Epoch
+    } else {
+        Base::Counter
+    }
+}
+
+/// Why: an alarm compares on its own device's counter, and a value written to that compare is unambiguous without `R`, `room` and `RA-H7`'s statement only where it
+/// was read as that counter's own extended time. A value read of the raw counter wraps with it, and one read of another clock, extended or not, says nothing of
+/// this counter's wraps.
+fn reads_this_counter_s_extended_time(reader: Reader) -> bool {
+    reader == Reader::ExtendedOverIt
+}
+
+/// §3's sentence as round 4 left it, read the other way round 5 found it could be: "`counter` where any is bound at the device itself, or there is none", and
+/// `epoch` of everything else.
+fn base_as_the_second_clause_read(readers: &[Reader]) -> Base {
+    if readers.is_empty() || readers.contains(&Reader::AtTheDevice) {
+        Base::Counter
+    } else {
+        Base::Epoch
+    }
+}
+
+/// Every set of up to three readers has one `BASE`, and it is `epoch` only where every value its compare is written with is that counter's own extended time
+/// (round 5, RP5-1). The sentence's other reading gave `epoch` on a raw counter: a reader on another device, or at an extender over another.
+#[test]
+fn an_alarm_s_base_is_the_counter_unless_each_reader_is_extended_over_its_own_device() {
+    let mut sets: Vec<Vec<Reader>> = vec![Vec::new()];
+    for a in READERS {
+        sets.push(vec![a]);
+        for b in READERS {
+            sets.push(vec![a, b]);
+            for c in READERS {
+                sets.push(vec![a, b, c]);
+            }
+        }
+    }
+    let mut the_other_reading_differs = Vec::new();
+    for readers in &sets {
+        let safe_as_epoch = !readers.is_empty()
+            && readers
+                .iter()
+                .all(|reader| reads_this_counter_s_extended_time(*reader));
+        assert_eq!(
+            base(false, readers) == Base::Epoch,
+            safe_as_epoch,
+            "{readers:?}"
+        );
+        assert_eq!(base(true, readers), Base::Counter, "a wake's, {readers:?}");
+        if base_as_the_second_clause_read(readers) != base(false, readers) {
+            assert_eq!(base(false, readers), Base::Counter, "{readers:?}");
+            the_other_reading_differs.push(readers.clone());
+        }
+    }
+    // Its reader's two descriptions: a time base on another device, and one at an extender over another.
+    assert!(the_other_reading_differs.contains(&vec![Reader::OnAnother]));
+    assert!(the_other_reading_differs.contains(&vec![Reader::ExtendedOverAnother]));
+    assert_eq!(
+        base(false, &[Reader::ExtendedOverIt, Reader::ExtendedOverIt]),
+        Base::Epoch
+    );
+    assert_eq!(
+        base(false, &[Reader::ExtendedOverIt, Reader::AtTheDevice]),
+        Base::Counter
+    );
+    // The record's sentence is this rule's: one test and an otherwise, which no set of readers falls between.
+    assert!(RECORD.contains(
+        "It is `epoch` where there is such a reader and each is bound at an `epoch-extender` over the alarm's own device, and `counter` otherwise: where any is bound at the device itself, on another device or at an extender over another, or there is none"
+    ));
+}
+
+/// The facts of the function `counter` that are no reader's of a time base though no requester consumes them: those `RA-H8` adds, which describe a compare.
+const DESCRIBES_A_COMPARE: [&str; 4] = [
+    "alarm-wiring",
+    "compare-step",
+    "compare-window",
+    "compare-magnitude",
+];
+
+/// §3 reads a reader of time as bound "for a fact of the function `counter` that is not consumed": in the shipped vocabulary the consumed facts of that function
+/// are the two a requester programs a compare by, so being bound for a deadline makes no reader; and the four `RA-H8` adds, which cannot be consumed, the record
+/// names, none being in the vocabulary before `M4.1.7.3` (round 5, RP5-1).
+#[test]
+fn what_programs_a_compare_is_consumed_and_what_describes_one_is_named() {
+    let root = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../..");
+    let kinds: Vec<(String, String)> = [
+        "docs/semantics/kinds/core.eadl",
+        "docs/semantics/kinds/os-rt.eadl",
+    ]
+    .iter()
+    .map(|relative| {
+        (
+            (*relative).to_string(),
+            std::fs::read_to_string(root.join(relative)).expect("a kind module"),
+        )
+    })
+    .collect();
+    let registry = shipped_registry(&mut SourceMap::new(), &kinds).expect("the shipped kinds read");
+    let vocabulary = Vocabulary::shipped(&mut SourceMap::new(), &registry)
+        .expect("the shipped vocabulary reads");
+    let of_the_counter = |fact: &&eadl_resolve::vocabulary::Fact| {
+        fact.function == Some(eadl_resolve::vocabulary::Function::Of("counter".to_owned()))
+    };
+    let consumed: BTreeSet<&str> = vocabulary
+        .facts()
+        .filter(of_the_counter)
+        .filter(|fact| fact.usage == eadl_resolve::vocabulary::Usage::Consumed)
+        .map(|fact| fact.name.as_str())
+        .collect();
+    assert_eq!(
+        consumed,
+        BTreeSet::from(["absolute-deadline", "relative-delay"])
+    );
+    for named in DESCRIBES_A_COMPARE {
+        // None is in the vocabulary before `M4.1.7.3`; one that has joined it is the counter's and is not consumed, which is why the record names it.
+        if let Some(fact) = vocabulary.fact(named) {
+            assert!(
+                of_the_counter(&fact) && fact.usage == eadl_resolve::vocabulary::Usage::Shared,
+                "`{named}`"
+            );
+        }
+        assert!(
+            RECORD.contains(&format!("`{named}`")),
+            "the record names `{named}`"
+        );
+    }
+    assert!(RECORD
+        .contains("and is none of those `RA-H8` has rule 14 read as no reader of a time base"));
+}
+
+/// §4, "A wake's first point": the last act arms a wake before it reads the counter for the epoch, for `P` past the wake's own read. Whether a set is admitted
+/// for it: `P` no less than the realization's `last-act-lead`, everything from a wake's read to the act's read, and the port's `epoch-lead`, from that read to the
+/// first enabling.
+fn a_wake_s_step_outlasts_the_last_act(step: u64, act_lead: u64, lead: u64) -> bool {
+    step >= act_lead + lead
+}
+
+/// Over every small tick, bound and phase: where the condition holds a wake's first point stands at or after the first enabling, so no wake arrives in
+/// initialisation; and where it does not, some phase has it due before (round 5, RP5-2).
+#[test]
+fn a_wake_s_first_point_stands_at_or_after_the_first_enabling_where_the_condition_holds() {
+    for wake_tick in 1..=3_u64 {
+        for tick in 1..=3_u64 {
+            for arms_bound in 0..=3_u64 {
+                for write_bound in 0..=2_u64 {
+                    for transition_bound in 0..=2_u64 {
+                        // What each record bounds: the realization's from a wake's read, up to its counter's tick old, to the act's read; the port's from that read on.
+                        let (act_lead, lead) = (
+                            wake_tick + arms_bound,
+                            tick + write_bound + transition_bound,
+                        );
+                        let mut least = None;
+                        for step in 0..=act_lead + lead + 2 {
+                            let mut early = false;
+                            for armed_at in 0..2 * wake_tick {
+                                for arms in 0..=arms_bound {
+                                    for write in 0..=write_bound {
+                                        for transition in 0..=transition_bound {
+                                            // The wake's read is the tick at or before the instant it is taken, and its first point `P` past that.
+                                            let point = armed_at - armed_at % wake_tick + step;
+                                            let enabling = armed_at + arms + write + transition;
+                                            early |= point < enabling;
+                                        }
+                                    }
+                                }
+                            }
+                            if a_wake_s_step_outlasts_the_last_act(step, act_lead, lead) {
+                                assert!(!early, "{wake_tick} {tick} {arms_bound} {write_bound} {transition_bound} {step}");
+                            }
+                            if !early && least.is_none() {
+                                least = Some(step);
+                            }
+                        }
+                        // And it asks little more than what can happen: the least step that is never early is short of the condition's by the port's own
+                        // tick, which the epoch's read needs and a wake's does not, and by one unit, a read being under a tick old.
+                        assert_eq!(
+                            act_lead + lead - least.expect("some step is never early"),
+                            tick + 1
+                        );
+                    }
+                }
+            }
+        }
+    }
+    // RP5-2's case: §4's lead of 2.40 µs, and a wake of `P` 2 µs armed before the read, in hundredths of a microsecond.
+    assert!(!a_wake_s_step_outlasts_the_last_act(200, 0, 240));
+    assert!(a_wake_s_step_outlasts_the_last_act(240 + 100, 100, 240));
+    // The record's sentence is this condition's, and the hand-off's.
+    assert!(RECORD.contains("the scheduling checker holds each wake's `P` at no less than `last-act-lead` plus the port's `epoch-lead`"));
+    assert!(RECORD.contains("it holds each wake's `P`, its `step`, at no less than the realization's `last-act-lead` plus the port's `epoch-lead`"));
+}
+
+/// The heads a hosted plan writes beyond `/1`'s, from the record's own table after `<!-- machine-read: hosted-lines -->`.
+fn the_hosted_lines() -> Vec<String> {
+    let after = RECORD
+        .split("<!-- machine-read: hosted-lines -->")
+        .nth(1)
+        .expect("the record marks what a hosted plan writes");
+    after
+        .lines()
+        .skip_while(|line| !line.starts_with('|'))
+        .take_while(|line| line.starts_with('|'))
+        .skip(2)
+        .flat_map(|row| {
+            let cell = row
+                .trim_matches('|')
+                .split('|')
+                .next()
+                .expect("a first cell")
+                .to_owned();
+            cell.split(',')
+                .map(|head| head.trim().trim_matches('`').to_owned())
+                .collect::<Vec<_>>()
+        })
+        .collect()
+}
+
+/// What a hosted plan has none of, §1: "none of §5's placement, allocations or image".
+const NOT_HOSTED: [&str; 3] = ["placement", "allocation", "image"];
+
+/// A hosted plan's code is generated too, so every line the identity keeps is one a hosted plan writes: as `/1` writes it, by the heads its goldens hold, or
+/// among those the record lists beyond `/1`'s, but for what a hosted plan has none of. `(emitter …)` was kept and in neither (round 5, RP5-3).
+#[test]
+fn every_line_the_identity_keeps_is_one_a_hosted_plan_writes() {
+    let mut as_one_writes: BTreeSet<String> = BTreeSet::new();
+    for plan in [
+        include_str!("goldens/epoch-extender.plan"),
+        include_str!("goldens/heartbeat.plan"),
+        include_str!("goldens/sporadic.plan"),
+    ] {
+        as_one_writes.extend(
+            plan.lines()
+                .filter(|line| line.starts_with('('))
+                .map(|line| head(line).to_owned()),
+        );
+    }
+    let hosted = the_hosted_lines();
+    for listed in &hosted {
+        assert!(
+            LINES.iter().any(|(known, _)| known == listed),
+            "the record lists `({listed} …)` of a hosted plan, which §3's forms do not write"
+        );
+        assert!(!NOT_HOSTED.contains(&listed.as_str()), "`{listed}`");
+    }
+    for (kept, does) in LINES {
+        if *does == Identity::LeftOut || NOT_HOSTED.contains(kept) {
+            continue;
+        }
+        assert!(
+            as_one_writes.contains(*kept) || hosted.iter().any(|listed| listed == kept),
+            "the identity keeps `({kept} …)`, and a hosted plan writes it neither as `/1` does nor by the record's list"
+        );
+    }
+    assert!(hosted.iter().any(|listed| listed == "emitter"));
 }
