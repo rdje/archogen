@@ -195,8 +195,11 @@ address below it is known.
 
 Stacks are laid from the top of a region down and the image from the bottom up, so a change in the image's size moves no
 allocation. A stack's size is what its owners state: a task's own bound, the most the runtime's code adds in a
-call, and the frame the port saves. What the generated code uses of a stack comes of that code, so a first plan generates it with those figures
-owed, and a second, from a file stating them, generates the same code: what an image holds of its plan leaves the figures out.
+call, what a fault adds on top of the deepest of those, since a failed check or a panic can arrive there, and the frame the port saves. What the generated code uses of a stack comes of that code, so a first plan generates it with those figures
+owed, and a second, from a file stating them, generates the same code: what an image holds of its plan leaves the figures out, and where each came from.
+
+Time on a machine is counted from a read: the last step of initialisation reads the counter and counts every release from that read plus the port's
+bound on everything from it to the first enabling of interrupts, so no release stands before interrupts are on.
 
 ## From a plan to a generated system
 
