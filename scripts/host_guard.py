@@ -36,6 +36,7 @@ import signal
 import subprocess
 import sys
 import time
+import unicodedata
 from collections import deque
 from dataclasses import asdict, dataclass, field, fields
 from pathlib import Path
@@ -124,7 +125,8 @@ def repository_root() -> Path:
 
 
 def canonical(root: Path) -> Path:
-    """A root as the volume spells it. This volume ignores case, and what the kernel says of a process's directory does not: spelt otherwise, nothing would be ours."""
+    """A root as the volume spells it. This volume ignores a name's case and its Unicode form, keeping those it was made with, and what the kernel says of a process's directory is that
+    spelling: spelt otherwise, nothing would be ours."""
     resolved = root.resolve()
     try:
         fd = os.open(str(resolved), os.O_RDONLY)
@@ -136,7 +138,8 @@ def canonical(root: Path) -> Path:
         return resolved
     finally:
         os.close(fd)
-    return Path(spelt) if spelt.lower() == str(resolved).lower() else resolved
+    folded = lambda name: unicodedata.normalize("NFD", name).lower()
+    return Path(spelt) if folded(spelt) == folded(str(resolved)) else resolved
 
 
 def state_path(root: Path) -> Path:
@@ -279,6 +282,37 @@ INTERPRETERS = {"python", "python3", "Python", "node", "ruby", "perl", "bash", "
 SHELLS = {"bash", "sh", "zsh", "fish", "dash", "ksh", "csh", "tcsh", "nu", "elvish"}
 
 
+def interpreter_reads(kind: str, words: list[str]) -> tuple[str, int]:
+    """The word an interpreter of this kind is given to run, among the words past its own name, and where the words after it begin: as it reads its own flags, the first word that is no flag
+    and no value of one, a whole flag's by `FLAGS_WITH_VALUES` and a cluster's letter by letter by `CLUSTERS`, a module's name where Python is given one. No word where a flag gives it a
+    program's text or where it reads its input. Each word is read once, so reading costs no more than the words' length."""
+    takes_values, letters, at = FLAGS_WITH_VALUES.get(kind, ()), CLUSTERS.get(kind), 0
+    while at < len(words):
+        word = words[at]
+        if word == "--":
+            at += 1
+            break
+        if word == "-" or (kind == "node" and word in NODE_TEXT_FLAGS):
+            return "", len(words)
+        if not word.startswith("-"):
+            break
+        took = 2 if word in takes_values else 1
+        if letters and not word.startswith("--"):
+            for place, letter in enumerate(word[1:], start=1):
+                rest = word[place + 1 :]
+                if letter in letters["text"]:
+                    return "", len(words)
+                if letter in letters["module"]:
+                    return (rest, at + 1) if rest else (" ".join(words[at + 1 : at + 2]), at + 2)
+                if letter in letters["value"]:
+                    took = 1 if rest else 2
+                    break
+                if letter not in letters["plain"]:
+                    break
+        at += took
+    return (words[at], at + 1) if at < len(words) else ("", len(words))
+
+
 @dataclass
 class Process:
     pid: int
@@ -298,8 +332,8 @@ class Process:
         if self.exe and self.command.startswith(self.exe):
             return os.path.basename(self.exe)
         if self.argv:
-            # A first argument that is empty names nothing, and `ps`'s line then shows the next word or a word of the environment: the file it runs is its name.
-            return os.path.basename(self.argv[0] or self.exe)
+            # A first argument that is empty or blank names nothing, and `ps`'s line then shows the next word, a word of the environment or blanks: the file it runs is its name.
+            return os.path.basename(self.argv[0] if self.argv[0].strip() else self.exe)
         return os.path.basename(self.command.split(" ", 1)[0]) if self.command else ""
 
     @property
@@ -333,6 +367,23 @@ class Process:
         return list(self.argv[1:]) if self.argv else self.words_read
 
     @property
+    def goes_by(self) -> str:
+        """The word it goes by: the kernel's first where it gives its words, empty where that is empty and never the next word `ps` shows; and of `ps`'s one line where the kernel gives
+        none, the path it runs whole where the line begins with it, its first word otherwise."""
+        if self.argv:
+            return self.argv[0]
+        if self.exe and self.command.startswith(self.exe):
+            return self.exe
+        return self.command.split(None, 1)[0] if self.command.strip() else ""
+
+    @property
+    def told(self) -> list[str]:
+        """Its words with the one it goes by first: the kernel's own where it gives them, and `ps`'s one line as `words_read` reads it where the kernel gives none."""
+        if self.argv:
+            return list(self.argv)
+        return [self.goes_by, *self.words_read] if self.command.strip() else []
+
+    @property
     def given(self) -> str:
         """The word an interpreter is given to run, as it reads its own flags: the first that is no flag and no value of one, a whole flag's by `FLAGS_WITH_VALUES` and a cluster's letter by
         letter by `CLUSTERS`, a module's name where Python is given one. Nothing where a flag gives it a program's text, where it reads its input, or where it is no interpreter. A shell's is
@@ -343,31 +394,7 @@ class Process:
         words = self.words
         if kind in SHELLS:
             return shell_told(words)[1] or ""
-        takes_values, letters, at = FLAGS_WITH_VALUES.get(kind, ()), CLUSTERS.get(kind), 0
-        while at < len(words):
-            word = words[at]
-            if word == "--":
-                at += 1
-                break
-            if word == "-" or (kind == "node" and word in NODE_TEXT_FLAGS):
-                return ""
-            if not word.startswith("-"):
-                break
-            took = 2 if word in takes_values else 1
-            if letters and not word.startswith("--"):
-                for place, letter in enumerate(word[1:], start=1):
-                    rest = word[place + 1 :]
-                    if letter in letters["text"]:
-                        return ""
-                    if letter in letters["module"]:
-                        return rest or " ".join(words[at + 1 : at + 2])
-                    if letter in letters["value"]:
-                        took = 1 if rest else 2
-                        break
-                    if letter not in letters["plain"]:
-                        break
-            at += took
-        return words[at] if at < len(words) else ""
+        return interpreter_reads(kind, words)[0]
 
     @property
     def script(self) -> str:
@@ -451,11 +478,12 @@ def processes() -> list[Process]:
             pid, ppid, uid, kilobytes = int(parts[0]), int(parts[1]), int(parts[2]), int(parts[4])
         except (IndexError, ValueError):
             continue  # No row of a process: an empty line, or one cut short.
-        if len(parts) < 6 or uid != me or parts[3].startswith("Z"):
+        if uid != me or parts[3].startswith("Z"):
             continue
         used = NATIVE.usage(pid)
         held, written = (kilobytes * 1024, 0) if used is None else used
-        table.append(Process(pid, ppid, parts[5], NATIVE.cwd(pid), NATIVE.exe(pid), held, written, argv=tuple(NATIVE.arguments(pid))))
+        # A command line that is all blanks is a process's all the same, `exec -a ' '` or a title set to blanks: its row has five fields, and it is counted and stopped as any other.
+        table.append(Process(pid, ppid, parts[5] if len(parts) > 5 else "", NATIVE.cwd(pid), NATIVE.exe(pid), held, written, argv=tuple(NATIVE.arguments(pid))))
     # A table that does not hold the one reading it is not the table: `ps` answering nothing, or cut short, must read as blind and never as calm.
     if not any(process.pid == os.getpid() for process in table):
         raise ValueError("`ps` does not list the process reading it")
@@ -467,11 +495,25 @@ def processes() -> list[Process]:
 AGENT = re.compile(r"claude|codex|kimi|gemini|aider|cursor|copilot|opencode|goose", re.I)
 INFRASTRUCTURE = {"login", "sshd", "mosh-server", "tmux", "screen", "zellij", "abduco", "dtach", "iterm2", "terminal", "code", "alacritty", "kitty", "ghostty", "wezterm-gui", "caffeinate"}
 APPLICATION = ("/Applications/", "/System/", "/usr/libexec/", "/usr/sbin/")
-# This interpreter and this file by their own paths, since a checkout's path may hold a space (the repository may be moved anywhere).
-# The guard's self-test is spared as the guard is, by its own name: a line stopping it would end the run that says what it could not run, and leave its rigs behind. As a `run`'s job it is a job, which `GUARD_PROCESS` alone tells.
-SELF_TEST_PROCESS = re.compile(r"^(?:\S*[Pp]ython\S*|" + re.escape(sys.executable) + r")\s+(?:-[WX]\s+\S+\s+|-\S+\s+)*(?:(?:\S*/)?selftest_host_guard\.py|" + re.escape(str(CODE.with_name("selftest_host_guard.py"))) + r")(?:\s|$)")
+# The guard's self-test is spared as the guard is, by its own name: a line stopping it would end the run that says what it could not run, and leave its rigs behind. As a `run`'s job it is a
+# job, which `guard_told` alone tells.
+SELF_TEST_NAME = "selftest_host_guard.py"
 GUARD_NAME = "host_guard.py"
-GUARD_PROCESS = re.compile(r"^(?:\S*[Pp]ython\S*|" + re.escape(sys.executable) + r")\s+(?:-[WX]\s+\S+\s+|-\S+\s+)*(?:(?:\S*/)?host_guard\.py|" + re.escape(str(CODE)) + r")(?:\s|$)")
+
+
+def guard_told(process: Process, name: str = GUARD_NAME) -> list[str] | None:
+    """What a guard was told, the words past its file's name, or None of a process that is none: a Python, by the word it goes by or by being this interpreter, given a file named as the
+    guard is. Its words are read once each, as the interpreter reads its own flags, and they are the kernel's own where it gives them: so no command line costs more than its length to read,
+    a path holding a space is one word, and a process whose first word is empty is no Python by its second. A pattern over `ps`'s line read `-W -a` two ways, as a flag with its value and as
+    two flags, so its time doubled with each such pair, and a command line of 252 bytes held every guard for days (round 33)."""
+    goes_by = process.goes_by
+    if not ("python" in goes_by or "Python" in goes_by or goes_by == sys.executable):
+        return None
+    words = process.told
+    given, after = interpreter_reads("python", words[1:])
+    return words[1 + after :] if os.path.basename(given) == name else None
+
+
 # Long flags of two dashes that read a value in the next word, past where `bash` takes any: another shell's, `zsh --emulate sh`.
 SHELL_FLAGS_WITH_VALUES = {"--init-file", "--rcfile", "--init-command", "--emulate"}
 # The long flags `bash` takes with one dash as with two, each run on both here, `-pretty-print` on the later alone and `-protected` and `-wordexp` on the system's: so `-posix` is no cluster
@@ -559,7 +601,8 @@ def is_terminal_shell(process: Process) -> bool:
 def protected(process: Process) -> bool:
     if process.name.lower() in INFRASTRUCTURE or is_agent(process) or is_terminal_shell(process):
         return True
-    return bool(GUARD_PROCESS.search(process.command) or SELF_TEST_PROCESS.search(process.command)) or process.command.startswith(APPLICATION) or process.exe.startswith(APPLICATION)
+    # By the word it goes by, the kernel's own where it gives one, and by the file it runs: never by the next word `ps` shows of a process whose first is empty.
+    return guard_told(process) is not None or guard_told(process, SELF_TEST_NAME) is not None or process.goes_by.startswith(APPLICATION) or process.exe.startswith(APPLICATION)
 
 
 def names_root(command: str, root: str) -> bool:
@@ -569,7 +612,15 @@ def names_root(command: str, root: str) -> bool:
 
 
 def is_run_of(process: Process, root: str) -> bool:
-    return bool(GUARD_PROCESS.search(process.command)) and re.search(r"host_guard\.py\s+run(?:\s|$)", process.command) is not None and names_root(process.command, root)
+    """Whether it is a guard's `run` of this root, by its own words: the kernel's where it gives them, a root being one word whatever it holds, and `ps`'s one line where it gives none. What
+    follows its `--` is its job's words, and a job may name any root."""
+    told = guard_told(process)
+    if told is None or told[:1] != ["run"]:
+        return False
+    if not process.argv:
+        return names_root(process.command, root)
+    own = told[1 : told.index("--")] if "--" in told else told[1:]
+    return any(flag == "--root" and named == root for flag, named in zip(own, own[1:]))
 
 
 def line_of(table: list[Process], pid: int) -> set[int]:
@@ -601,7 +652,7 @@ def only_waiting(pid: int, by_pid: dict[int, Process], children: dict[int, list[
         process = by_pid.get(todo.pop())
         if process is None:
             continue
-        if not (GUARD_PROCESS.search(process.command) or process.name in SHELLS or says_no_job(process) or process.name == "tail"):
+        if not (guard_told(process) is not None or process.name in SHELLS or says_no_job(process) or process.name == "tail"):
             return False
         # A `run` of this root that has started its job has a child that is none of these, which the walk then meets.
         todo.extend(children.get(process.pid, []))
@@ -1134,19 +1185,18 @@ def runs_the_file(root: Path) -> bool:
 
 
 def watches(arguments: list[str], root: Path | None = None) -> bool:
-    """Whether a process given these is a guard's watcher, of `root` where one is named: an interpreter given a file named as the guard is, first, and told to watch, a root it names by
-    its whole path being that one. By its arguments, as the kernel holds them, and not by its file, which an upgrade can remove under it, nor by its being an interpreter, which any job is."""
-    at = 1
-    while at < len(arguments) and arguments[at].startswith("-"):
-        at += 2 if arguments[at] in PYTHON_FLAGS_WITH_VALUES else 1
-    if not (at < len(arguments) and os.path.basename(arguments[at]) == GUARD_NAME and arguments[at + 1:at + 2] == ["watch"]):
+    """Whether a process given these is a guard's watcher, of `root` where one is named: an interpreter given a file named as the guard is, first, and told to watch, the root it names by
+    its whole path being that one. By its arguments, as the kernel holds them, and not by its file, which an upgrade can remove under it, nor by its being an interpreter, which any job is.
+    A watcher writes its root whole on its own command line before it does anything else (`main`), so one that names none, or one relatively, is the watcher of no root this can tell: a
+    stale note naming such a process names no one."""
+    given, after = interpreter_reads("python", arguments[1:])
+    if not (os.path.basename(given) == GUARD_NAME and arguments[1 + after : 2 + after] == ["watch"]):
         return False
-    told = arguments[at + 2:]
-    if root is None or "--root" not in told[:-1]:
+    if root is None:
         return True
-    named = told[told.index("--root") + 1]
-    # A root given relatively lay from where the watcher started, which nothing says now: it names no other root, and the lock and the note still say whose it is.
-    return not os.path.isabs(named) or canonical(Path(named)) == canonical(root)
+    told = arguments[2 + after :]
+    named = told[told.index("--root") + 1] if "--root" in told[:-1] else ""
+    return os.path.isabs(named) and canonical(Path(named)) == canonical(root)
 
 
 def watcher_pid(root: Path) -> int | None:
@@ -2040,7 +2090,7 @@ def heavy_running(root: Path) -> list[Process]:
     for process in table:
         if process.pid not in line and is_run_of(process, text):
             # The watcher it may have started is its child too, and no job; nor are the tools it reads the host with.
-            job = [by_pid[pid] for pid in children.get(process.pid, []) if pid in by_pid and not GUARD_PROCESS.search(by_pid[pid].command)]
+            job = [by_pid[pid] for pid in children.get(process.pid, []) if pid in by_pid and guard_told(by_pid[pid]) is None]
             if any(not says_no_job(child) for child in job):
                 running.append(process)
     return running
@@ -2347,12 +2397,16 @@ def main(argv: list[str]) -> int:
             say("host-guard: interrupted")
             return 130
     if verb == "watch":
-        # It goes to `/`, so what it takes itself up with names its root as resolved.
+        # It goes to `/`, so it names its root as resolved, on its own command line and before anything else, as a `run` does: what asks whose watcher a process is reads a whole
+        # path there, never one that lay from wherever it was started, and what it takes itself up with is the same words.
         rest = list(argv[1:])
         if "--root" in rest:
             del rest[rest.index("--root") : rest.index("--root") + 2]
+        written = ["watch", "--root", str(root), *rest]
+        if written != list(argv):
+            os.execv(sys.executable, [sys.executable, "-I", "-B", str(Path(__file__).resolve()), *written])
         try:
-            return watch(root, limits, once, again=["watch", "--root", str(root), *rest])
+            return watch(root, limits, once, again=written)
         except Exception as error:
             record(root, kind="unread", error=f"the watcher ended: {error!r}")
             raise

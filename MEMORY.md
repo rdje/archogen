@@ -18,8 +18,8 @@
 - **The host is shared:** every heavy job goes through `scripts/host_guard.py`, one at a time (`docs/decisions/decision_host-guard.md`). A reader's brief says so.
 - **Next action:** answer `M4.1.7.2.5`, format `/2`'s round 5, saved and not answered (`target/m4334/report.md`): three defects,
   each where its model has no row, `BASE` not total, a wake's first arm against the release alarm's §2, a hosted plan's emitter.
-  Two readers are out, each report to be saved under `target/` and none there meaning ask again: `PROGRAM.127.33`, the guard's
-  round 33 (`target/p12733/report.md`), and `M4.12.1.7`, the application inputs' round 7 (`target/m4335/report.md`). Then `M3.4.17`, P3.
+  Two readers are out, each report to be saved under `target/` and none there meaning ask again: `PROGRAM.127.34`, the guard's
+  round 34 (`target/p12734/report.md`), and `M4.12.1.7`, the application inputs' round 7 (`target/m4335/report.md`). Then `M3.4.17`, P3.
   `M4.5.2` and `M4.3.6` wait on `M4.1.7`, `M4.3.4` on `M2.21`. The runtime plan's design is accepted (`M4.1.1` done).
   `M3.2.7` and `M3.5.9`, full verification, wait for the
   features (doctrine 22).

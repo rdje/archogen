@@ -252,7 +252,7 @@ def jobs_of(pid: int) -> list[int]:
         # So is what `ps` cannot read for a moment, `(ps)`, or what has ended and is not yet reaped.
         if not shown.strip() or re.fullmatch(r"\(.*\)|.*<defunct>", shown.strip()) or os.path.basename(shown.split(" ", 1)[0].strip()) in g.READS_THE_HOST:
             continue
-        if not g.GUARD_PROCESS.search(shown.strip()):
+        if g.guard_told(g.Process(child, pid, shown.strip(), "", "", 0)) is None:
             found.append(child)
     return found
 
@@ -481,6 +481,15 @@ def case_a_terminal_vouches_for_nothing() -> None:
     nameless = g.Process(1, 1, "SHELL=/bin/zsh", "", "/bin/cat", 0, argv=("",))
     check("a process whose first argument is empty goes by the file it runs", nameless.name == "cat" and not g.is_terminal_shell(nameless) and not g.protected(nameless), nameless.name)
     check("and one named for an agent by a word of its environment is no agent", not g.is_agent(g.Process(1, 1, "CLAUDECODE=1", "", "/bin/cat", 0, argv=("",))))
+    blank = g.Process(1, 1, "", "", "/bin/cat", 0, argv=(" ",))
+    check("nor does one whose first argument is blank go by a blank", blank.name == "cat" and not g.protected(blank), blank.name)
+    # Nor is such a process what the next word `ps` shows says it is: a file under `/System/`, a Python given the guard's file, a guard's `run` (round 33).
+    for shown, held in (
+        ("/System/Library/CoreServices/SystemVersion.plist", ("", "/System/Library/CoreServices/SystemVersion.plist")),
+        (f"python3 {g.CODE} run --root /x", ("", "python3", str(g.CODE), "run", "--root", "/x")),
+    ):
+        unnamed = g.Process(1, 1, shown, "", "/bin/cat", 0, argv=held)
+        check(f"a process whose first argument is empty is not spared by its next word, `{shown.split()[0]}`", not g.protected(unnamed) and not g.is_run_of(unnamed, "/x"))
     check("where the kernel gives no arguments the one line is read, as before", g.Process(1, 1, "bash -norc", "", "", 0).words == ["-norc"] and g.Process(1, 1, "x", "", "", 0, argv=("bash", "a b", "")).words == ["a b", ""])
     # And a real one, read from this host's own table.
     home = fresh("spaced-terminal") / "Visual Studio Code.app"
@@ -1050,6 +1059,8 @@ def case_a_root_spelt_relatively_stays_that_root() -> None:
     sampled = repo / "sub" / "state" / "sampled"
     try:
         check("a watcher named a relative root reads for it", until(sampled.exists))
+        # It writes its root whole on its own command line before anything else, as a `run` does: so what asks whose watcher it is reads a whole path there (round 33).
+        check("and names that root whole, as the kernel holds its words", ["--root", str(g.canonical(repo / "sub"))] == g.NATIVE.arguments(watcher.pid)[5:7], g.NATIVE.arguments(watcher.pid))
         before = sampled.read_text()
         check("and goes on reading for it, from wherever it went", until(lambda: sampled.read_text() != before) and up(watcher))
         # Asked after from another directory, by its root's whole path: it is that root's watcher, and `stop` stops it.
@@ -1177,7 +1188,7 @@ def case_the_self_test_is_spared_and_a_job() -> None:
     # A checkout's path may hold a space, as the guard's own name allows: this file's path, whatever it holds.
     here = g.CODE.with_name("selftest_host_guard.py")
     check("nor its own path, whatever that holds", g.protected(g.Process(1, 0, f"python3 -I -B {here}", "", "", 0)))
-    check("nor is the guard's name its own", not g.GUARD_PROCESS.search(selftest.command))
+    check("nor is the guard's name its own", g.guard_told(selftest) is None)
 
 
 def case_a_stamp_is_of_a_whole_run_of_these_bytes() -> None:
@@ -1527,8 +1538,14 @@ def case_a_path_holding_a_space_is_one_path() -> None:
     check("a flag's value is not what it runs", named.script == "job.py" and not g.is_agent(named), named.script)
     for form in ("perl -W codex.pl", "ruby -W aider.rb"):
         check(f"`-W` is Python's alone: `{form}` runs its script", g.is_agent(g.Process(1, 1, form, "", "", 0)))
-    check("a guard after a flag's value is the guard", g.GUARD_PROCESS.search(f"python3 -W ignore {g.CODE} run"))
-    check("and the self-test", g.SELF_TEST_PROCESS.search("python3 -X dev scripts/selftest_host_guard.py"))
+    check("a guard after a flag's value is the guard", g.guard_told(g.Process(1, 1, f"python3 -W ignore {g.CODE} run", "", "", 0)) == ["run"])
+    check("and the self-test", g.guard_told(g.Process(1, 1, "python3 -X dev scripts/selftest_host_guard.py", "", "", 0), g.SELF_TEST_NAME) == [])
+    # A flag's value is its value and never the file: `-W` given the guard's name runs the word after it.
+    check("a flag's value named as the guard is, is no guard", g.guard_told(g.Process(1, 1, "", "", "", 0, argv=("python3", "-W", "host_guard.py", "job.py"))) is None)
+    check("nor a program's text that names it", g.guard_told(g.Process(1, 1, "", "", "", 0, argv=("python3", "-c", "host_guard.py", "host_guard.py"))) is None)
+    check("and a path holding a space is one word, the kernel's", g.guard_told(g.Process(1, 1, "", "", "", 0, argv=("/opt/my python/bin/python3", "-I", "-B", "/x/a copy/scripts/host_guard.py", "run", "--root", "/x/a copy"))) == ["run", "--root", "/x/a copy"])
+    spaced_run = g.Process(1, 1, "", "", "", 0, argv=("python3", "/x/a copy/scripts/host_guard.py", "run", "--root", "/x/a copy", "--", "ls", "--root", "/y"))
+    check("a `run` is of the root it says, a space in it or not, and of none its job says", g.is_run_of(spaced_run, "/x/a copy") and not g.is_run_of(spaced_run, "/x/a") and not g.is_run_of(spaced_run, "/y"))
     relative = g.Process(1, 1, "python3 claude work/build.py x", str(scope), "", 0)
     check("relative to where it stands too", relative.script == "build.py" and not g.is_agent(relative), relative.script)
     agent = g.Process(1, 1, "node /opt/bin/claude --flag", "", "", 0)
@@ -1654,6 +1671,7 @@ def case_a_command_line_that_is_no_text() -> None:
             f"{me} 1 {os.getuid()} S 2048 python3 selftest".encode() + b"\n",
             f"70001 {me} {os.getuid()} S 1024 bash -c sleep a note".encode() + "\u2028".encode() + f"70002 {me} {os.getuid()} S 1024 /bin/sleep 60".encode() + b"\n",
             f"70003 {me} {os.getuid()} S 1024 bash -c sleep a note".encode() + "\u2029".encode() + b"that goes on for some words more\n",
+            f"70004 {me} {os.getuid()} S 1024    ".encode() + b"\n",
             b"\n",
             b"cut short\n",
         ])
@@ -1667,8 +1685,25 @@ def case_a_command_line_that_is_no_text() -> None:
             table = {"raised": error}
     finally:
         g.subprocess.run = real
-    check("a line separator in an argument ends no row, and blinds no guard", sorted(table) == [me, 70001, 70003], table)
+    # Held as a set: this test's own pid may be above or below the rows it writes, and read in order the row held only where it was below.
+    check("a line separator in an argument ends no row, and blinds no guard", set(table) - {70004} == {me, 70001, 70003}, sorted(table, key=str))
+    # A command line that is all blanks is a process's: `ps` writes its row with five fields, and it is counted as any other (round 33).
+    check("a command line that is all blanks is a row all the same", 70004 in table and table[70004].command == "", table)
     check("and writes no row of its own, what follows it being that argument's", 70002 not in table and "70002" in table.get(70001, g.Process(0, 0, "", "", "", 0)).command, table)
+
+    # A command line costs its length to read, and no more (round 33). A pattern over `ps`'s line read `-W -a` two ways, as a flag with its value and as two flags, so its time doubled
+    # with each pair: 22 pairs took seconds and 40 would have held every guard for days. The rows are handed in here, and no such process is started.
+    def reading(pairs: int) -> float:
+        words = ("python3", "-I", *(["-W", "-a"] * pairs), "-c", "pass")
+        by_the_kernel = g.Process(70010, me, " ".join(words), "/", "/usr/bin/python3", 0, argv=words)
+        by_its_line = g.Process(70011, me, " ".join(words), "/", "", 0)
+        began = time.monotonic()
+        said = [g.protected(by_the_kernel), g.protected(by_its_line), g.is_run_of(by_the_kernel, "/x"), g.is_run_of(by_its_line, "/x")]
+        return time.monotonic() - began if not any(said) else float("inf")
+
+    quick = reading(22)
+    check("a command line of flags and their values costs its length to read", quick < 0.5, quick)
+    check("and one of thousands of them no more than its length", quick < 0.5 and reading(4000) < 0.5)
 
 
 def case_pressure() -> None:
@@ -1825,8 +1860,15 @@ def case_a_stale_pid_names_nobody() -> None:
         check("nor does one naming another root's watcher", g.watcher_pid(scope) is None and g.watcher_pid(elsewhere) == other.pid and up(other), (g.watcher_pid(scope), g.watcher_pid(elsewhere), other.pid))
         other.terminate()
         other.wait(timeout=5)
-        check("a root a watcher was given relatively names no other root", g.watches(["python3", "host_guard.py", "watch", "--root", "rel/sub"], scope) and g.watches(["python3", "host_guard.py", "watch", "--root", "."], scope))
-        check("a guard's watcher is one of the root it names, or of any where it names none", g.watches(["python3", "-I", "-B", "/x/host_guard.py", "watch", "--root", str(scope)], scope) and not g.watches(["python3", "host_guard.py", "watch", "--root", str(elsewhere)], scope) and g.watches(["python3", "host_guard.py", "watch"], scope) and not g.watches(["", "x", "host_guard.py", "watch"], scope))
+        # A watcher names its root whole, so one that names it relatively or not at all is the watcher of no root this can tell: a stale note naming such a process names no one.
+        check("a root a watcher names relatively, or not at all, is no root this can tell", not g.watches(["python3", "host_guard.py", "watch", "--root", "rel/sub"], scope) and not g.watches(["python3", "host_guard.py", "watch", "--root", "."], scope) and not g.watches(["python3", "host_guard.py", "watch"], scope) and g.watches(["python3", "host_guard.py", "watch"]))
+        check("a guard's watcher is one of the root it names whole", g.watches(["python3", "-I", "-B", "/x/host_guard.py", "watch", "--root", str(scope)], scope) and not g.watches(["python3", "host_guard.py", "watch", "--root", str(elsewhere)], scope) and not g.watches(["", "x", "host_guard.py", "watch"], scope))
+        check("and its flags are read as the interpreter reads them, a cluster's value among them", g.watches(["python3", "-IBW", "ignore", "/x/host_guard.py", "watch", "--root", str(scope)], scope) and not g.watches(["python3", "-W", "host_guard.py", "watch", "--root", str(scope)], scope))
+        # A root is spelt as the volume spells it, in its Unicode form as in its case: an `e` and U+0301 asked for where U+00E9 is stored is that directory, where the volume folds the two.
+        stored = fresh("spelling") / "caf\u00e9"
+        stored.mkdir()
+        asked = stored.parent / "cafe\u0301"
+        check("a root asked for in another Unicode form is spelt as the volume spells it", not asked.exists() or str(g.canonical(asked)) == str(g.canonical(stored)), (str(g.canonical(asked)).encode(), str(g.canonical(stored)).encode()))
         # An argument that is empty is one, the first among them, told from the padding the kernel puts after the executable's path; and nothing after the last is taken for one.
         for length in range(8):
             link = scope / ("s" + "x" * length)
