@@ -3,11 +3,19 @@
 //! found one wrong, the record's own worked example among them. So each procedure the record states is transcribed here, rule by rule and citing its
 //! section, optimised for nothing and on `std` alone; a bounded exhaustive checker holds what the record claims of each over every small input; and each
 //! probe of a round is a row of a corpus with the outcome the record gives it. `M4.1.7`'s lowering is to be held against this over the same universe.
+//! Where the record takes a rule from code that exists, the joint rules' reading of a memory map, the model is held to that code and not to a reading of it
+//! (round 4, RP4-5): `the_model_refuses_a_map_as_the_joint_rules_do`, the one test here that calls another crate.
 //!
 //! What is modelled: §1's code identity, by the record's own table of lines; §4's epoch and the reach it asks of one write; §5's floor, limit and
 //! cursor, and each stack's sum; §6's priorities. What is not: the text of a plan's lines, which the lowering's goldens will hold (`M4.1.7`).
 
-use std::collections::BTreeMap;
+use std::collections::{BTreeMap, BTreeSet};
+
+use eadl_front::{read, Form, SourceMap};
+use eadl_model::check::shipped_registry;
+use eadl_resolve::joint::{requesters, Finding, Joint, Requester, System};
+use eadl_resolve::offer::{self, Provider};
+use eadl_resolve::vocabulary::Vocabulary;
 
 const RECORD: &str = include_str!("../../../docs/decisions/decision_runtime-plan-format-2.md");
 
@@ -20,22 +28,27 @@ struct Region {
     end: u64,
 }
 
-/// What the record refuses of a region's memory, or of a unit in it.
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+/// What is refused of a region's memory, or of a unit in it.
+#[derive(Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord)]
 enum Refused {
-    /// §5: "Holes covering the region from its base to its end are `MemoryAllHoles`."
+    /// Model §8 rule 10: "placement memory reserved in every byte leaves nothing to place in", "a byte surely reserved being a sized hole's or the base of
+    /// one with no size".
     MemoryAllHoles,
-    /// §5: a hole with no size "that so leaves no byte free is `HoleUnsized`".
+    /// Rule 10: "Where a placement region's holes, those with a size at their size and those with none so taken, leave it no free byte and the bytes surely
+    /// reserved do not fill it".
     HoleUnsized,
+    /// Rule 10: a reserved range that "has no size and a base below placement memory, whether they overlap is `missing-fact`".
+    PlacementUnsized,
     /// §5: "if base < F: refuse, 'no room'", naming the unit by its place in the order.
     NoRoom(usize),
 }
 
-/// Each hole as the bytes it takes of the region, `[base, end)`: one of no size reaches the region's end (§5, "A hole with no size"; model §8 rule
-/// 10), and one that takes none of the region is none of its holes. The second of a pair says whether it had a size.
+/// Each hole as the bytes it takes of the region, `[base, end)`, and whether it had a size. A hole is a reserved range that surely overlaps the region, by a
+/// sized one's bytes or the base of one with no size, which is then "taken to reach that region's end" (model §8 rule 10; §5, "A hole with no size").
 fn holes_in(region: Region, holes: &[(u64, Option<u64>)]) -> Vec<(u64, u64, bool)> {
     holes
         .iter()
+        .filter(|&&(base, size)| base < region.end && base + size.unwrap_or(1) > region.base)
         .map(|&(base, size)| {
             (
                 base,
@@ -43,27 +56,62 @@ fn holes_in(region: Region, holes: &[(u64, Option<u64>)]) -> Vec<(u64, u64, bool
                 size.is_some(),
             )
         })
-        .filter(|&(base, end, _)| base < region.end && end > region.base && base < end)
+        .filter(|&(base, end, _)| base < end)
         .map(|(base, end, sized)| (base.max(region.base), end.min(region.end), sized))
         .collect()
 }
 
+/// Whether `ranges` cover the region whole.
+fn covers(region: Region, ranges: &[(u64, u64)]) -> bool {
+    let mut at = region.base;
+    while let Some(&(_, end)) = ranges.iter().find(|&&(base, end)| base <= at && at < end) {
+        at = end;
+    }
+    at >= region.end
+}
+
+/// What model §8 rule 10 refuses of a placement region's reserved ranges before anything is laid, each by the name `Joint::map` gives it (§5, "Which regions"),
+/// whatever order the ranges are written in: first the bytes surely reserved, which no size repairs, and only then each hole to the region's end.
+fn mapped(region: Region, raw: &[(u64, Option<u64>)]) -> BTreeSet<Refused> {
+    let mut said = BTreeSet::new();
+    if raw
+        .iter()
+        .any(|&(base, size)| size.is_none() && base < region.base)
+    {
+        said.insert(Refused::PlacementUnsized);
+    }
+    let surely: Vec<(u64, u64)> = raw
+        .iter()
+        .map(|&(base, size)| (base, base + size.unwrap_or(1)))
+        .collect();
+    let taken: Vec<(u64, u64)> = holes_in(region, raw)
+        .iter()
+        .map(|&(base, end, _)| (base, end))
+        .collect();
+    if covers(region, &surely) {
+        said.insert(Refused::MemoryAllHoles);
+    } else if covers(region, &taken) {
+        said.insert(Refused::HoleUnsized);
+    }
+    said
+}
+
 /// §5, "The image lies at the bottom": "`F` is the least address at or above the placement region's base that no hole covers: the base, moved
-/// past each hole that covers it, one after another". Refused where that leaves no byte.
-fn floor(region: Region, holes: &[(u64, u64, bool)]) -> Result<u64, Refused> {
-    let (mut floor, mut by_one_unsized) = (region.base, false);
-    while let Some(&(_, end, sized)) = holes
+/// past each hole that covers it, one after another", where rule 10 refuses nothing of the region; and what it refuses where it does.
+fn floor(region: Region, raw: &[(u64, Option<u64>)]) -> Result<u64, BTreeSet<Refused>> {
+    let said = mapped(region, raw);
+    if !said.is_empty() {
+        return Err(said);
+    }
+    let holes = holes_in(region, raw);
+    let mut floor = region.base;
+    while let Some(&(_, end, _)) = holes
         .iter()
         .find(|&&(base, end, _)| base <= floor && floor < end)
     {
         floor = end;
-        by_one_unsized |= !sized;
     }
-    match (floor >= region.end, by_one_unsized) {
-        (false, _) => Ok(floor),
-        (true, false) => Err(Refused::MemoryAllHoles),
-        (true, true) => Err(Refused::HoleUnsized),
-    }
+    Ok(floor)
 }
 
 /// A unit to lay: a stack or a table, its bytes, its guard and its alignment (§5, "The formula").
@@ -299,10 +347,10 @@ fn every_small_region_is_laid_as_the_reference_lays_it() {
                 sets.extend(each[place..].iter().map(|second| vec![*first, *second]));
             }
             for raw in &sets {
-                let holes = holes_in(region, raw);
-                let Ok(floor) = floor(region, &holes) else {
+                let Ok(floor) = floor(region, raw) else {
                     continue;
                 };
+                let holes = holes_in(region, raw);
                 for units in &orders {
                     let want = reference(region, &holes, units, floor);
                     for pick in picks {
@@ -337,7 +385,8 @@ fn the_reviews_probes_of_memory_come_out_as_the_record_says() {
         base: 0x8000_0000,
         end: 0x8000_0000 + 128 * MIB,
     };
-    let floor_of = |holes: &[(u64, Option<u64>)]| floor(ram, &holes_in(ram, holes));
+    let floor_of = |holes: &[(u64, Option<u64>)]| floor(ram, holes);
+    let refused = |kinds: &[Refused]| Err(kinds.iter().copied().collect::<BTreeSet<Refused>>());
     // RP2-1: two holes at the base, touching and overlapping. RP3-11: the second from `0x8000_8000`, of 64 KiB and of 96.
     assert_eq!(
         floor_of(&[(0x8000_0000, Some(64 * KIB)), (0x8001_0000, Some(64 * KIB))]),
@@ -354,11 +403,32 @@ fn the_reviews_probes_of_memory_come_out_as_the_record_says() {
     assert_eq!(floor_of(&[]), Ok(0x8000_0000));
     assert_eq!(
         floor_of(&[(0x8000_0000, Some(128 * MIB))]),
-        Err(Refused::MemoryAllHoles)
+        refused(&[Refused::MemoryAllHoles])
     );
     assert_eq!(
         floor_of(&[(0x8000_0000, Some(64 * KIB)), (0x8001_0000, None)]),
-        Err(Refused::HoleUnsized)
+        refused(&[Refused::HoleUnsized])
+    );
+    // RP4-5: a hole of no size at the region's one byte surely reserves it, which no size repairs; and what is refused moves with no order of the list.
+    let byte = Region {
+        base: 256,
+        end: 257,
+    };
+    assert_eq!(
+        floor(byte, &[(255, Some(1)), (256, None)]),
+        refused(&[Refused::MemoryAllHoles])
+    );
+    let three = [(255, None), (255, Some(1)), (255, Some(2))];
+    let mut back = three;
+    back.reverse();
+    assert_eq!(
+        floor(byte, &three),
+        refused(&[Refused::MemoryAllHoles, Refused::PlacementUnsized])
+    );
+    assert_eq!(floor(byte, &back), floor(byte, &three));
+    assert_eq!(
+        floor(byte, &[(255, None)]),
+        refused(&[Refused::PlacementUnsized])
     );
     // RP2-12: a hole 16 bytes above the floor leaves the image 16 bytes, however much lies free above it.
     let holes = holes_in(ram, &[(0x8000_0010, Some(16))]);
@@ -396,6 +466,143 @@ fn the_reviews_probes_of_memory_come_out_as_the_record_says() {
         lay(small, &[], &[stack], 0x1000, |met| met[0]),
         Err(Refused::NoRoom(0))
     );
+}
+
+/// A description of one system on one platform whose `ram` is the region, with a block holding each reserved range.
+fn a_map(region: Region, raw: &[(u64, Option<u64>)]) -> String {
+    let reserved: String = raw
+        .iter()
+        .enumerate()
+        .map(|(at, (base, size))| match size {
+            Some(size) => {
+                format!(" (region h{at} (base {base}) (size {size} byte) (reserved true))")
+            }
+            None => format!(" (region h{at} (base {base}) (reserved true))"),
+        })
+        .collect();
+    format!(
+        "(defblock fw (offers (core-count 1 tick){reserved}))\n(defplatform soc (offers (core-count 1 tick) (region ram (base {}) (size {} byte) (executable true))) (requires (uses fw)))\n(defsystem s (task t (period 10 ms) (deadline 10 ms) (deadline-from release) (priority 1)) (platform (uses soc)))\n",
+        region.base,
+        region.end - region.base
+    )
+}
+
+/// What `Joint::map` finds of that description's one system, by the names the model gives each (`crates/eadl-resolve/src/joint.rs`).
+fn the_joint_rules_say(text: &str, vocabulary: &Vocabulary) -> BTreeSet<Refused> {
+    let mut sources = SourceMap::new();
+    let id = sources.add("map.eadl", text).expect("small");
+    let (document, diagnostics) = read(&sources, id);
+    assert!(!diagnostics.has_errors(), "{text}");
+    let declarations: Vec<Form> = document.forms;
+    let hardware = |form: &Form| matches!(form.head(), Some("defblock" | "defplatform"));
+    let providers: Vec<Provider> = declarations
+        .iter()
+        .filter(|form| hardware(form))
+        .map(|form| {
+            offer::read(form, vocabulary).unwrap_or_else(|refusal| panic!("{refusal:?}: {text}"))
+        })
+        .collect();
+    let asking: Vec<Requester> = declarations
+        .iter()
+        .filter(|form| !hardware(form))
+        .flat_map(|form| {
+            requesters(form, vocabulary).unwrap_or_else(|refusal| panic!("{refusal:?}: {text}"))
+        })
+        .collect();
+    let declared = |name: &str| {
+        declarations
+            .iter()
+            .find(|form| form.items().get(1).and_then(Form::as_symbol) == Some(name))
+            .expect("declared")
+    };
+    let pairs: Vec<(Provider, &Form)> = providers
+        .iter()
+        .map(|provider| (provider.clone(), declared(&provider.name)))
+        .collect();
+    let joint = Joint::new(&pairs, &asking, vocabulary)
+        .unwrap_or_else(|findings| panic!("{} finding(s): {text}", findings.len()));
+    let system = System::read(declared("s"), &declarations);
+    let map = joint.map(&system);
+    map.refused
+        .iter()
+        .chain(&map.unknowns)
+        .map(|finding| match finding {
+            Finding::MemoryAllHoles { .. } => Refused::MemoryAllHoles,
+            Finding::HoleUnsized { .. } => Refused::HoleUnsized,
+            Finding::PlacementUnsized { .. } => Refused::PlacementUnsized,
+            other => panic!("{other:?}: {text}"),
+        })
+        .collect()
+}
+
+/// The record gives each refusal of a map "by the code the joint rules give it", so the model's are held to `Joint::map` itself and to no reading of rule 10: over
+/// every region of up to 4 bytes with up to two reserved ranges of each size and of none, based from one below it to its end, the two say the same, and where they
+/// say nothing the model has a floor.
+#[test]
+fn the_model_refuses_a_map_as_the_joint_rules_do() {
+    let root = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../..");
+    let kinds: Vec<(String, String)> = [
+        "docs/semantics/kinds/core.eadl",
+        "docs/semantics/kinds/os-rt.eadl",
+    ]
+    .iter()
+    .map(|relative| {
+        (
+            (*relative).to_string(),
+            std::fs::read_to_string(root.join(relative)).expect("a kind module"),
+        )
+    })
+    .collect();
+    let registry = shipped_registry(&mut SourceMap::new(), &kinds).expect("the shipped kinds read");
+    let vocabulary = Vocabulary::shipped(&mut SourceMap::new(), &registry)
+        .expect("the shipped vocabulary reads");
+    let (mut maps, mut by_what_is_said): (u64, BTreeMap<Vec<Refused>, u64>) = (0, BTreeMap::new());
+    for size in 1..=4 {
+        let region = Region {
+            base: 256,
+            end: 256 + size,
+        };
+        let mut each: Vec<(u64, Option<u64>)> = Vec::new();
+        for at in region.base - 1..=region.end {
+            each.extend(
+                [None, Some(1), Some(2), Some(3), Some(5)]
+                    .into_iter()
+                    .map(|size| (at, size)),
+            );
+        }
+        let mut sets: Vec<Vec<(u64, Option<u64>)>> = vec![Vec::new()];
+        for (place, first) in each.iter().enumerate() {
+            sets.push(vec![*first]);
+            sets.extend(each[place + 1..].iter().map(|second| vec![*first, *second]));
+        }
+        for raw in &sets {
+            let model = mapped(region, raw);
+            assert_eq!(
+                model,
+                the_joint_rules_say(&a_map(region, raw), &vocabulary),
+                "{region:?} {raw:?}"
+            );
+            assert_eq!(
+                floor(region, raw).is_ok(),
+                model.is_empty(),
+                "{region:?} {raw:?}"
+            );
+            let mut back = raw.clone();
+            back.reverse();
+            assert_eq!(
+                mapped(region, &back),
+                model,
+                "{region:?} {raw:?}: the order of the list moved it"
+            );
+            maps += 1;
+            *by_what_is_said
+                .entry(model.into_iter().collect())
+                .or_default() += 1;
+        }
+    }
+    assert_eq!(maps, 1_124);
+    // Each of the six outcomes is among them, so none is held by having no case.
+    assert_eq!(by_what_is_said.len(), 6, "{by_what_is_said:?}");
 }
 
 // ---- §5: the stacks
@@ -926,6 +1133,131 @@ fn the_first_compare_stands_within_one_write_where_the_condition_holds() {
     assert!(the_first_compare_is_within_reach(1_000, 1, 2_000));
 }
 
+/// §4, "The last act's order" (round 4, RP4-1): what the last act arms or writes for an alarm is generated code, which no port's record bounds. Done after
+/// the read it stands between the read and the enabling, past the lead; done before it, as §4 orders the act, the read comes after and nothing moves.
+#[test]
+fn what_the_last_act_arms_it_arms_before_its_read() {
+    // RP4-1's case, in hundredths of a microsecond: a lead of 0.10 + 0.30 + 2.00, a read taken at 100.09 µs, and one wake armed in 1.00 µs after the write.
+    let (tick, write, transition, arm) = (10, 30, 200, 100);
+    let lead = tick + write + transition;
+    assert_eq!(
+        (epoch(10_009, tick, lead), 10_009 + write + arm + transition),
+        (10_240, 10_339)
+    );
+    // In §4's order the arm is done when the read is taken, however long it took: the epoch is at or after the enabling at every phase.
+    for armed_for in 0..=3 * arm {
+        let read_at = 10_009 + armed_for;
+        assert!(
+            epoch(read_at, tick, lead) >= read_at + write + transition,
+            "{armed_for}"
+        );
+    }
+}
+
+/// §3, `RA-H7`: whether a task that reaches an alarm's node owes the application's statement of it. An alarm on the counter itself that is no wake, as the
+/// scheduling checker's model asks it: a wake is written by its own service alone, which no task signs for (round 4, RP4-3).
+fn asks_the_application(wake: bool, on_the_counter: bool) -> bool {
+    !wake && on_the_counter
+}
+
+#[test]
+fn a_wake_asks_no_statement_of_the_application() {
+    assert_eq!(
+        [(false, true), (false, false), (true, true), (true, false)]
+            .map(|(wake, counter)| asks_the_application(wake, counter)),
+        [true, false, false, false]
+    );
+    // The checker's model gates the application's statement by the same two, and a change there is a change here.
+    let checker = include_str!("../../rt-analysis/tests/alarm_model.rs");
+    assert!(checker.contains("let on_the_counter = !line.wake && line.counter_itself;"));
+}
+
+/// §3: what `(owed …)` gains of an alarm by the realization is each input `decision_release-alarm.md` §2 gives the realization to state, a source's among them
+/// (round 4, RP4-4): so a plan with an alarm cannot say `(complete yes)` with its acknowledge point unstated.
+#[test]
+fn what_an_alarm_owes_as_a_source_has_its_owed_fact() {
+    let owed = RECORD
+        .split("**`(owed …)`, as `/2` writes it.**")
+        .nth(1)
+        .expect("what `/2` owes");
+    let of_an_alarm = owed
+        .split("of an alarm by `realization`,")
+        .nth(1)
+        .expect("an alarm's");
+    let of_an_alarm = &of_an_alarm[..of_an_alarm.find(';').expect("its end")];
+    for fact in [
+        "floor",
+        "step",
+        "reach-ahead",
+        "lag",
+        "service-cost",
+        "acknowledge-point",
+        "deferred-work",
+        "no-application-code",
+        "one-request-per-arrival",
+    ] {
+        assert!(
+            of_an_alarm.contains(&format!("`{fact}`")),
+            "an alarm's `{fact}` is owed by no line: {of_an_alarm}"
+        );
+    }
+}
+
+/// §3, `R`: a rate in hertz, exact, a whole number or `N/D` in lowest terms, as `/1` writes a duration (round 4, RP4-7).
+fn rate(numerator: u64, denominator: u64) -> String {
+    let (mut a, mut b) = (numerator, denominator);
+    while b != 0 {
+        (a, b) = (b, a % b);
+    }
+    match denominator / a {
+        1 => (numerator / a).to_string(),
+        over => format!("{}/{over}", numerator / a),
+    }
+}
+
+/// §3, "Orders": `region` lines by base, then name, then provider, so two blocks' regions of one name at one base have an order (round 4, RP4-7).
+fn in_the_plan_s_order<'r>(
+    mut regions: Vec<(u64, &'r str, &'r str)>,
+) -> Vec<(u64, &'r str, &'r str)> {
+    regions.sort_unstable();
+    regions
+}
+
+#[test]
+fn a_rate_and_a_region_have_one_text_and_one_place() {
+    assert_eq!(
+        [
+            rate(10_000_000, 1),
+            rate(3, 2),
+            rate(6, 4),
+            rate(32_768, 1),
+            rate(1, 3)
+        ],
+        ["10000000", "3/2", "3/2", "32768", "1/3"]
+    );
+    let written = vec![
+        (4096, "hole", "fw.b"),
+        (4096, "hole", "fw.a"),
+        (0, "ram", "soc"),
+        (4096, "boot", "fw.b"),
+    ];
+    let mut back = written.clone();
+    back.reverse();
+    assert_eq!(
+        in_the_plan_s_order(written.clone()),
+        in_the_plan_s_order(back)
+    );
+    assert_eq!(
+        in_the_plan_s_order(written),
+        [
+            (0, "ram", "soc"),
+            (4096, "boot", "fw.b"),
+            (4096, "hole", "fw.a"),
+            (4096, "hole", "fw.b")
+        ]
+    );
+}
+
 // ---- §1: the code identity
 
 /// What the code identity does with a line of a plan, by the line's head (§1's table).
@@ -948,6 +1280,7 @@ const LINES: &[(&str, Identity)] = &[
     ("program", Identity::Kept),
     ("assignment", Identity::Kept),
     ("adapters", Identity::Kept),
+    ("emitter", Identity::Kept),
     ("catalog", Identity::Kept),
     ("application", Identity::LeftOut),
     ("realization", Identity::LeftOut),
@@ -1105,12 +1438,13 @@ fn the_record_s_table_of_lines_is_the_model_s_and_holds_every_form() {
 /// code moves it: an entry point, the application's sources, the catalog, a route's level.
 #[test]
 fn two_plans_of_one_code_have_one_preimage_and_code_moves_it() {
-    let shared = |entry: &str, digest: &str, catalog: &str, level: u64| {
+    let shared_by = |entry: &str, digest: &str, catalog: &str, level: u64, emitter: u64| {
         vec![
             "(format \"archogen-runtime-plan/2\")".to_owned(),
             "(profile rt-static-up-v1)".to_owned(),
             "(system heartbeat)".to_owned(),
             "(target riscv-virt-up \"aa\")".to_owned(),
+            format!("(emitter archogen-emit/{emitter})"),
             format!("(catalog \"{catalog}\" riscv-virt-up)"),
             format!("(code app \"../app\" \"sha256:{digest}\")"),
             "(task 0 beat (period 1/100 s))".to_owned(),
@@ -1118,6 +1452,9 @@ fn two_plans_of_one_code_have_one_preimage_and_code_moves_it() {
             format!("(task-inputs (task heartbeat beat) (entry-point \"{entry}\") (stack-bound (value 512) (unit byte)))"),
             "(initialisation-inputs none)".to_owned(),
         ]
+    };
+    let shared = |entry: &str, digest: &str, catalog: &str, level: u64| {
+        shared_by(entry, digest, catalog, level, 1)
     };
     let first = |lines: Vec<String>| {
         let mut plan = lines;
@@ -1149,6 +1486,8 @@ fn two_plans_of_one_code_have_one_preimage_and_code_moves_it() {
         shared("app::beat", "11", "c1", 7),
         shared("app::beat", "00", "c2", 7),
         shared("app::beat", "00", "c1", 6),
+        // RP4-2: an engine rebuilt with another emitter generates other code of the same plan, and its version is a line the identity keeps.
+        shared_by("app::beat", "00", "c1", 7, 2),
     ] {
         assert_ne!(preimage(&first(moved)), one);
     }
