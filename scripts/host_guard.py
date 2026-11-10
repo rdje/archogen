@@ -252,16 +252,24 @@ def start_reasons(reading: Reading, limits: Limits) -> list[str]:
 # ---- processes
 
 PYTHON_FLAGS_WITH_VALUES = ("-W", "-X")
-# The flags an interpreter reads a value after, in the next word, so that what follows one is no program: any other flag takes none, and the next word is what it runs.
-# Each was run on this host: `perl -M strict`, `ruby -W x` and `node --stack-size 900` read no such value, so they are not here.
+# Flags an interpreter reads a value after, in the next word, so that what follows one is no program: any other flag takes none, and the next word is what it runs.
+# Some of them, each run on this host: `perl -M strict`, `ruby -W x` and `node --stack-size 900` read no such value, so they are not here. A shell's are `SHELL_FLAGS_WITH_VALUES`, read by `shell_told`.
 FLAGS_WITH_VALUES = {
-    "python": PYTHON_FLAGS_WITH_VALUES,
-    "node": ("-r", "--require", "--import", "--loader", "--experimental-loader", "--title"),
-    "ruby": ("-I", "-r", "-C", "-E"),
+    "python": (*PYTHON_FLAGS_WITH_VALUES, "--check-hash-based-pycs"),
+    "node": (
+        "-r", "--require", "--import", "--loader", "--experimental-loader", "--title", "-C", "--conditions", "--env-file", "--env-file-if-exists", "--inspect-port", "--disable-warning",
+        "--unhandled-rejections", "--max-http-header-size", "--dns-result-order", "--redirect-warnings", "--diagnostic-dir", "--report-dir", "--trace-event-categories", "--secure-heap",
+    ),
+    "ruby": ("-I", "-r", "-C", "-E", "--encoding", "--external-encoding", "--internal-encoding", "--backtrace-limit", "--parser"),
     "perl": ("-I",),
-    "bash": ("--init-file", "--rcfile", "-O", "-o"),
-    "sh": ("-o",),
-    "zsh": ("-o",),
+}
+# What gives an interpreter a program's text, so that it runs no file: a cluster of one dash ending in that letter, the letters before it taking nothing, or a long flag whole.
+# An exact form, as each exception of the reader's is: any other spelling reads as a flag that takes nothing.
+TEXT_FLAGS = {
+    "python": re.compile(r"-[bBdEiIOPqsSuvx]*c"),
+    "node": re.compile(r"-e|-p|-pe|--eval|--print"),
+    "ruby": re.compile(r"-[acdlnpsSvwy]*e"),
+    "perl": re.compile(r"-(?:[acnpsStTuUvwWX]|l[0-7]*|0[0-7]*)*[eE]"),
 }
 INTERPRETERS = {"python", "python3", "Python", "node", "ruby", "perl", "bash", "sh", "zsh"}
 SHELLS = {"bash", "sh", "zsh", "fish", "dash", "ksh", "csh", "tcsh", "nu", "elvish"}
@@ -311,34 +319,32 @@ class Process:
         return words
 
     @property
-    def script(self) -> str:
-        """What an interpreter runs, by its file's name; nothing otherwise."""
-        if not (self.name in INTERPRETERS or self.name.startswith("python")):
+    def given(self) -> str:
+        """The word an interpreter is given to run, as it reads its own flags: the first that is no flag and no value of a flag `FLAGS_WITH_VALUES` holds, a module's name where Python is given one.
+        Nothing where a flag gives it a program's text, where it reads its input, or where it is no interpreter. A shell's is the script `shell_told` reads."""
+        kind = "python" if self.name.lower().startswith("python") else self.name
+        if kind != "python" and kind not in INTERPRETERS:
             return ""
         words = self.words_read
-        takes_values = PYTHON_FLAGS_WITH_VALUES if self.name.lower().startswith("python") else ()
-        for at, word in enumerate(words):
-            if not word.startswith("-") and not (at and words[at - 1] in takes_values):
-                return os.path.basename(word)
-        return ""
+        if kind in SHELLS:
+            return shell_told(words)[1] or ""
+        takes_values, text, at = FLAGS_WITH_VALUES.get(kind, ()), TEXT_FLAGS.get(kind), 0
+        while at < len(words):
+            word = words[at]
+            if word == "--":
+                at += 1
+                break
+            if word == "-" or (text and text.fullmatch(word)):
+                return ""
+            if not word.startswith("-"):
+                break
+            at += 2 if word in takes_values else 1
+        return words[at] if at < len(words) else ""
 
     @property
-    def programs_named(self) -> list[str]:
-        """The executable an interpreter runs when a flag taking a value hides it from `script`: a path with no extension, since a data file is not a program. The search ends
-        at the first word that is neither a flag nor the value of a flag `FLAGS_WITH_VALUES` holds, which is what it runs, or at a flag that takes a program's text, a `-m` or a cluster ending in `c` or `e` as `-lc` and `-e` do: what follows is that program's own arguments, a directory named after an agent among them."""
-        if not self.script:
-            return []
-        name = self.name.lower()
-        takes_values = FLAGS_WITH_VALUES.get("python" if name.startswith("python") else name, ())
-        words = self.words_read[:6]
-        for at, word in enumerate(words):
-            if word == "-m" or re.fullmatch(r"-[A-Za-z]*[ce]", word):
-                return []
-            if word.startswith("-") or (at and words[at - 1] in takes_values):
-                continue
-            base = os.path.basename(word)
-            return [base] if "/" in word and "." not in base else []
-        return []
+    def script(self) -> str:
+        """What an interpreter runs, by its file's name; nothing otherwise."""
+        return os.path.basename(self.given)
 
     @property
     def spawns(self) -> bool:
@@ -413,7 +419,7 @@ APPLICATION = ("/Applications/", "/System/", "/usr/libexec/", "/usr/sbin/")
 SELF_TEST_PROCESS = re.compile(r"^(?:\S*[Pp]ython\S*|" + re.escape(sys.executable) + r")\s+(?:-[WX]\s+\S+\s+|-\S+\s+)*(?:(?:\S*/)?selftest_host_guard\.py|" + re.escape(str(CODE.with_name("selftest_host_guard.py"))) + r")(?:\s|$)")
 GUARD_NAME = "host_guard.py"
 GUARD_PROCESS = re.compile(r"^(?:\S*[Pp]ython\S*|" + re.escape(sys.executable) + r")\s+(?:-[WX]\s+\S+\s+|-\S+\s+)*(?:(?:\S*/)?host_guard\.py|" + re.escape(str(CODE)) + r")(?:\s|$)")
-SHELL_FLAGS_WITH_VALUES = {"--init-file", "--rcfile", "-o", "+o", "-O", "+O", "--init-command"}
+SHELL_FLAGS_WITH_VALUES = {"--init-file", "--rcfile", "-o", "+o", "-O", "+O", "--init-command", "--emulate"}
 # What spawns more for as long as it lives, however little it holds.
 BUILDS = {"cargo", "rustc", "rustdoc", "clippy-driver", "make", "gmake"}
 # What shows a heavy job is under way. Not `make`, which may only be waiting its turn inside its own `run`.
@@ -458,7 +464,7 @@ def shell_only_parses(arguments: list[str]) -> bool:
 
 
 def is_agent(process: Process) -> bool:
-    return any(AGENT.search(word) for word in (process.name, os.path.basename(process.exe), process.script, *process.programs_named))
+    return any(AGENT.search(word) for word in (process.name, os.path.basename(process.exe), process.script))
 
 
 def is_terminal_shell(process: Process) -> bool:
@@ -627,8 +633,8 @@ def stop(pids: list[int], seconds: float = 1.0) -> None:
 # ---- the watcher
 
 
-def record(root: Path, **event) -> None:
-    """Write down what happened. Never raises: a watcher must not die of its own bookkeeping, `target/` removed by `cargo clean` or a full disk among the causes."""
+def record(root: Path, **event) -> bool:
+    """Write down what happened, and whether it was written. Never raises: a watcher must not die of its own bookkeeping, `target/` removed by `cargo clean` or a full disk among the causes."""
     event["at"] = time.strftime("%Y-%m-%dT%H:%M:%S")
     try:
         path = state_dir(root, for_a_stop=event.get("kind") == "stopped") / "events.log"
@@ -636,10 +642,52 @@ def record(root: Path, **event) -> None:
             os.replace(path, path.with_suffix(".log.1"))
         with open(path, "a", encoding="utf-8") as log:
             log.write(json.dumps(event) + "\n")
+        return True
     except Cleared:
         pass
     except Exception as error:
         say(f"host-guard: cannot record {event.get('kind')}: {error}")
+    return False
+
+
+def plain(value: object, most: int = 300) -> str | int | float | None:
+    """A value of the log as the guard writes one: a text, cut short, or a number. Anything else is nothing."""
+    if isinstance(value, str):
+        return value[:most]
+    return value if isinstance(value, (int, float)) and not isinstance(value, bool) else None
+
+
+def event_of(line: bytes) -> dict | None:
+    """A line of the log as the guard writes one, and no more of it than that: each field of its own kind or left out, a list's rows likewise, and nothing nested deeper, which is looked at and never said.
+    So what says a line cannot fail on one written by hand: three rounds found that one reader at a time, a wrong type, a surrogate, a nesting too deep to say."""
+    try:
+        event = json.loads(line)
+    except (ValueError, RecursionError):
+        return None
+    if not isinstance(event, dict) or not isinstance(event.get("kind"), str):
+        return None
+    reasons = event.get("reasons")
+    read: dict = {
+        "kind": event["kind"][:40],
+        "at": plain(event.get("at"), 40),
+        "error": plain(event.get("error")),
+        "reasons": [each[:300] for each in reasons[:16] if isinstance(each, str)] if isinstance(reasons, list) else plain(reasons),
+    }
+    for name, fields in (("stopped", ("pid", "name", "gib", "command")), ("largest", ("pid", "name", "gib"))):
+        rows = event.get(name)
+        if isinstance(rows, list):
+            read[name] = [{field: plain(row.get(field)) for field in fields} for row in rows[:64] if isinstance(row, dict)]
+    return read
+
+
+def events_of(text: bytes) -> list[dict]:
+    """The lines of a part of the log that read, in their order."""
+    return [event for event in map(event_of, text.splitlines()) if event is not None]
+
+
+def names_a_stop(event: dict) -> bool:
+    """Whether a line says what the watcher stopped: of that kind, and naming at least one job."""
+    return event["kind"] == "stopped" and bool(event.get("stopped"))
 
 
 def size_of(path: Path) -> int:
@@ -876,6 +924,8 @@ def code_stamp() -> tuple[int, int] | None:
 
 
 STARTED_FROM = "ARCHOGEN_HOST_GUARD_STARTED_FROM"
+# Set for the image a watcher takes itself up as, to whether it has been said: nothing asked for that image, so it makes no directory, and what could not be said it says where one stands.
+TAKEN_UP = "ARCHOGEN_HOST_GUARD_TAKEN_UP"
 
 
 def started_from() -> tuple[int, int] | None:
@@ -896,9 +946,11 @@ def watch(root: Path, limits: Limits, once: bool, idle_seconds: float = 600.0, a
     lock = hold_lock(root)
     if lock is None:
         return 0  # One is watching.
-    # What started it asked for it, so this once it makes its directory.
-    write_note(root, "watch.pid", str(os.getpid()))
+    # What started it asked for it, so this once it makes its directory: but nothing asked for one that took itself up.
+    taken_up = os.environ.pop(TAKEN_UP, "")
     global WATCHING
+    WATCHING = bool(taken_up)
+    write_note(root, "watch.pid", str(os.getpid()))
     WATCHING = True
     try:
         (state_path(root) / "peak.json").unlink(missing_ok=True)
@@ -936,6 +988,8 @@ def watch(root: Path, limits: Limits, once: bool, idle_seconds: float = 600.0, a
         if not names_it(root, image):
             notes.update({"watch.code": image, "watch.pid": str(os.getpid())})
         write_notes(root, notes)
+        if taken_up == "unsaid" and record(root, kind="taken-up", reasons=f"this watcher took up {CODE.name} as saved, where no directory stood to say so"):
+            taken_up = "said"
         # A guard changed under a watcher holds from then, whatever this round did, a line that raises among it. The lock closes with the old image and the new one takes it, so nothing goes unwatched between.
         # One that can be seen to be broken is not taken up, and said once.
         stamp = code_stamp()
@@ -944,7 +998,7 @@ def watch(root: Path, limits: Limits, once: bool, idle_seconds: float = 600.0, a
             if again is not None:
                 if file_is_whole():
                     os.environ[STARTED_FROM] = stamp_for_the_next(stamp)
-                    record(root, kind="taken-up", reasons=f"this watcher takes up {CODE.name} as saved")
+                    os.environ[TAKEN_UP] = "said" if record(root, kind="taken-up", reasons=f"this watcher takes up {CODE.name} as saved") else "unsaid"
                     os.execv(sys.executable, [sys.executable, "-I", "-B", str(CODE), *again])
                 record(root, kind="unread", error=f"{CODE.name} as saved does not compile or is cut short: this watcher goes on as it was")
         try:
@@ -1048,15 +1102,7 @@ def unseen(root: Path, session: str = "") -> list[dict]:
         lines.seek(start)
         text = lines.read()
     since = time.time() - TOLD_OF_LATELY_SECONDS
-    events = []
-    for line in text.splitlines():
-        try:
-            event = json.loads(line)
-        except (ValueError, RecursionError):
-            continue
-        if isinstance(event, dict) and event.get("kind") == "stopped" and isinstance(event.get("stopped"), list):
-            if not lately_only or when(event) >= since:
-                events.append(event)
+    events = [event for event in events_of(text) if names_a_stop(event) and (not lately_only or when(event) >= since)]
     write_note(root, seen.name, str(start + len(text)))
     return events
 
@@ -1070,14 +1116,13 @@ def when(event: dict) -> float:
 
 
 def said_of(event: dict) -> str:
-    named = event.get("stopped")
-    stopped = [s for s in (named if isinstance(named, list) else []) if isinstance(s, dict)]
-    names = ", ".join(f"{s.get('name')} (pid {s.get('pid')}, {s.get('gib')} GiB)" for s in stopped[:4])
+    """What a stop says, of a line `event_of` read: so of texts and numbers alone."""
+    stopped, reasons = event.get("stopped", []), event.get("reasons")
+    names = ", ".join(f"{s['name']} (pid {s['pid']}, {s['gib']} GiB)" for s in stopped[:4])
     more = len(stopped) - 4
-    largest, reasons = event.get("largest"), event.get("reasons")
-    holders = ", ".join(f"{h.get('name')} {h.get('gib')} GiB" for h in (largest if isinstance(largest, list) else [])[:3] if isinstance(h, dict))
+    holders = ", ".join(f"{h['name']} {h['gib']} GiB" for h in event.get("largest", [])[:3])
     return (
-        f"{event.get('at')}: stopped {names}{f' and {more} more' if more > 0 else ''}: {'; '.join(map(str, reasons if isinstance(reasons, list) else []))}"
+        f"{event['at']}: stopped {names}{f' and {more} more' if more > 0 else ''}: {'; '.join(reasons) if isinstance(reasons, list) else ''}"
         + (f". Holding the most on the host: {holders}" if holders else "")
     )
 
@@ -1992,16 +2037,8 @@ def run(root: Path, limits: Limits, command: list[str], wait_seconds: float = 0.
             text = lines.read(LOG_AT_MOST)
     except OSError:
         text = b""
-    for line in text.splitlines():
-        try:
-            event = json.loads(line)
-        except (ValueError, RecursionError):
-            continue
-        if isinstance(event, dict) and event.get("kind") == "stopped":
-            try:
-                say(f"host-guard: {said_of(event)}")
-            except (AttributeError, KeyError, TypeError, ValueError):
-                say("host-guard: a line of the log does not read")
+    for event in filter(names_a_stop, events_of(text)):
+        say(f"host-guard: {said_of(event)}")
     # As a shell says it: a job ended by a signal is 128 and the signal.
     return 128 - status if status < 0 else status
 
@@ -2100,25 +2137,15 @@ def status(root: Path, limits: Limits) -> int:
     try:
         with open(state / "events.log", "rb") as log:
             log.seek(max(0, size_of(state / "events.log") - LOG_AT_MOST))
-            lines = log.read().splitlines()
+            lines = log.read()
     except OSError:
-        lines = []
-    events = []
-    for line in lines:
-        try:
-            event = json.loads(line)
-        except (ValueError, RecursionError):
-            continue
-        if isinstance(event, dict):
-            events.append(event)
-    # What was stopped is what it is asked: the last few of those, however many other lines came after.
-    for event in [e for e in events if e.get("kind") == "stopped"][-3:]:
-        try:
-            print(said_of(event).encode("utf-8", "replace").decode("utf-8"))
-        except (AttributeError, KeyError, TypeError):
-            print("a line of the log does not read")
-    for event in [e for e in events if e.get("kind") != "stopped"][-2:]:
-        said = f"{event.get('at')}: {event.get('kind')}: {event.get('reasons', event.get('error'))}"
+        lines = b""
+    events = events_of(lines)
+    # What was stopped is what it is asked: the last few of those, however many other lines came after. A text of the log may hold what no terminal takes, which is said as it can be.
+    for event in list(filter(names_a_stop, events))[-3:]:
+        print(said_of(event).encode("utf-8", "replace").decode("utf-8"))
+    for event in [e for e in events if e["kind"] != "stopped"][-2:]:
+        said = f"{event['at']}: {event['kind']}: {event['reasons'] if event['reasons'] is not None else event['error']}"
         print(said.encode("utf-8", "replace").decode("utf-8"))
     reasons = start_reasons(reading, limits)
     try:
