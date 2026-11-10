@@ -16,7 +16,7 @@
 - **Active tree:** `M4` → frontier `M4.1`, the accepted runtime plan, the model's amendments done (`M4.1.2`): `/1` for
   the hosted playground; `PROGRAM` → `PROGRAM.34`, the director's.
 - **The host is shared:** every heavy job goes through `scripts/host_guard.py`, one at a time (`docs/decisions/decision_host-guard.md`). A reader's brief says so.
-- **Next action:** the artifact cleanup, overdue; then land what is prepared, `M4.md`'s last Log line saying what: `M4.2.3.3.27`
+- **Next action:** land what is prepared, `M4.md`'s last Log line saying what: `M4.2.3.3.27`
   (`target/m4324/mine/final.diff`, tested), numbered by landing order. Then a fresh reader each for `PROGRAM.127.28`, the guard's round 28,
   `M4.2.3.3.28`, `M4.12.1.3`, the application inputs' round 3, and `M4.1.7.2.2`, format `/2`'s round 2. Then `M3.4.16` and `M3.4.17`, P3.
   `M4.5.2` and `M4.3.6` wait on `M4.1.7`, `M4.3.4` on `M2.21`. The runtime plan's design is accepted (`M4.1.1` done).
@@ -25,7 +25,7 @@
   After the first batch, runner leaves `M3.5.3.2`, `M3.5.5.7.4`, `M3.5.1.4.5`, `M3.5.1.6.6`; `M3.4.7` waits on `M3.7`.
   `main` is protected: a push is a batch, `scripts/open_batch.sh` (`COMMIT.md` step 2), at the ruled cadence or to
   restore CI; the director merges, and the first merge is premise 3's named commit (`M2.7.6.6.5`). No other branches.
-  The next artifact cleanup is due after `2026-11-08T03:24` UTC (`PROGRAM.132` ran the twenty-fourth).
+  The next artifact cleanup is due after `2026-11-11T01:06` UTC (`PROGRAM.133` ran the twenty-fifth).
   **Mutation testing is stopped** until the functionality is locked
   (`decision_mutation-testing-after-completion.md`, `2026-10-21`): every pending `M3.6.9` leaf and `PROGRAM.78` are
   `blocked`; every decision advances the project first. `M3.6.9.6.3.2.2.15.2.1.8.2` stays owned, a suspected defect.
