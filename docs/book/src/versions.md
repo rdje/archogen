@@ -185,7 +185,7 @@ their versioned readers and permanent refusal controls enforce their local contr
 | Version | `archogen-application/1` |
 | Declared at | `const:crates/archogen-plan/src/application.rs:FORMAT` |
 | Changes when | a clause is added, removed, renamed or reinterpreted, or the words `CLAUSE_PARTS` quotes move. A reader that meets another identifier refuses the file rather than guess |
-| Pinned by | `crates/archogen-plan/tests/application.rs`: a whole file reads as it says, each malformed input is refused saying what is wrong, the quoted clause reads back from the composite-inputs record with what stands beside it and stands whole in the book, and every fact the three golden plans owe the application is held |
+| Pinned by | `crates/archogen-plan/tests/code_digest.rs`, which holds the `code` digest's recipe to the pinned compiler, and `crates/archogen-plan/tests/application.rs`: a whole file reads as it says, each malformed input is refused saying what is wrong, the quoted clause reads back from the composite-inputs record with what stands beside it and stands whole in the book, and every fact the three golden plans owe the application is held |
 | Keeps | a file labelled `archogen-application/1` means the same to every reader of `/1`, and declares the words it quotes |
 
 ## `adapter-catalog`

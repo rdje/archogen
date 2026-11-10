@@ -494,3 +494,62 @@ fn the_digest_is_of_its_lines_in_order_as_bytes() {
     );
     assert_eq!(Code::digest_of(&[a], &owned(&["A=one\ntwo"])), None);
 }
+
+/// What the digest cannot hold, measured so that it stays said (the record's "What is read and not accounted for"; round 7, AI7-4): a file an assembler directive
+/// reads, `.incbin` or `.include`, is in the object the compiler makes and in no account of what it read. The object moves with the file, and the account, and so
+/// the digest, does not.
+#[test]
+fn what_an_assembler_directive_reads_is_in_no_account() {
+    let place = scratch("asm").join("app");
+    write(&place, "src/main.rs", "core::arch::global_asm!(\".incbin \\\"src/blob.bin\\\"\");\ncore::arch::global_asm!(\".include \\\"src/tail.s\\\"\");\nfn main() {}\n");
+    fs::create_dir_all(place.join("../out")).expect("made");
+    let mut objects = Vec::new();
+    for (blob, tail) in [("A", ".byte 1\n"), ("B", ".byte 1\n"), ("B", ".byte 2\n")] {
+        write(&place, "src/blob.bin", blob);
+        write(&place, "src/tail.s", tail);
+        let text = the_account(
+            &place,
+            "../out/main.d",
+            &["--emit=dep-info,obj", "--out-dir", "../out"],
+            &[],
+        );
+        let account = Code::read_by_the_compiler(&text).expect("an account");
+        assert_eq!(
+            account.files,
+            ["src/main.rs"],
+            "an account now names what a directive reads: the record's limit has moved"
+        );
+        objects.push(fs::read(place.join("../out/main.o")).expect("its object"));
+    }
+    assert!(
+        objects[0] != objects[1],
+        "what `.incbin` reads is in the object"
+    );
+    assert!(objects[1] != objects[2], "and what `.include` reads");
+}
+
+/// An account has no end mark (round 7): one cut short at a line's end after its files reads as whole, its variables dropped, and never with a file of its own making;
+/// cut anywhere else it is none. So a build reads an account only of a compile that ran to its end (`AI-H3`).
+#[test]
+fn an_account_cut_short_reads_as_none_or_as_its_files_alone() {
+    let files = ["src/main.rs", "src/a b.rs", "gen/c.rs"];
+    let whole = written(&["out/main.d", "out/main"], &files, &["A=b", "C"]);
+    let read = Code::read_by_the_compiler(&whole).expect("an account");
+    let mut cut_and_read = Vec::new();
+    for end in 0..whole.len() {
+        if !whole.is_char_boundary(end) {
+            continue;
+        }
+        if let Some(cut) = Code::read_by_the_compiler(&whole[..end]) {
+            assert_eq!(
+                cut.files,
+                read.files,
+                "a cut account names other files: {:?}",
+                &whole[..end]
+            );
+            cut_and_read.push(cut.environment);
+        }
+    }
+    // After its files and before its variables; and after its first variable.
+    assert_eq!(cut_and_read, [Vec::new(), owned(&["A=b"])]);
+}

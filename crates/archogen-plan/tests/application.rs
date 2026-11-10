@@ -169,6 +169,8 @@ fn each_malformed_input_is_refused_saying_what_is_wrong() {
         (replaced("(initialisation (entry-point \"app::init\") ", "(initialisation "), "`entry-point`"),
         (replaced("(initialisation (entry-point \"app::init\") ", "(initialisation (entry-point \"other::init\") "), "a path the boot can call"),
         (replaced("(initialisation (entry-point \"app::init\") ", "(initialisation (entry-point \"app::fn\") "), "a path the boot can call"),
+        // The boot's refusal says which names it reads, as a job's does (round 7, AI7-5).
+        (replaced("(initialisation (entry-point \"app::init\") ", "(initialisation (entry-point \"app::caf\u{e9}\") "), "a path the boot can call in `app`, such as `app::init`, each name of ASCII letters, digits and `_`"),
         (replaced(INITIALISATION, "(initialisation (entry-point \"app::init\"))"), "`stack-bound`"),
         (replaced(" (node-calls (scope \"all of it\") (binary unbuilt) (evidence assumed) (basis \"it calls none\"))", ""), "`node-calls`"),
         (replaced(INITIALISATION, "(initialisation nothing)"), "`nothing` is no clause"),

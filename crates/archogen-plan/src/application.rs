@@ -225,7 +225,9 @@ pub struct Account {
 }
 
 impl Code {
-    /// A compile's dep-info, `rustc --emit=dep-info` and the `.d` file cargo keeps of each unit, read as the compiler writes it and as nothing else: a rule for each
+    /// A compile's dep-info, `rustc --emit=dep-info` and the `.d` file cargo keeps of each unit, read as the compiler writes it and as nothing else. It says what
+    /// that compile read and holds no bytes: a file cargo kept of an earlier compile says nothing of what stands there now, so a build reads the account of a compile
+    /// it has just run afresh, and takes each file's bytes as that compile read them (`AI-H3`). Its lines: a rule for each
     /// file it made, `MADE: NAME NAME …`, each followed by an empty line; a line `NAME:` for each file it read; and, where it read the environment, an empty line and a
     /// line `# env-dep:NAME=VALUE` for each variable. A space of a name is written after a backslash and nothing else of one is escaped, so a name holding a line feed
     /// breaks its lines: such an account is none, as is any text that is not wholly these lines, each rule ending in the names the lines give. Whatever a source names
@@ -1154,7 +1156,7 @@ pub fn read(text: &str) -> Result<Application, Refused> {
             if !is_a_path_in(&entry_point, &code.name) {
                 return Err(refused(
                     "initialisation",
-                    format!("`entry-point` is a path the boot can call in `{0}`, such as `{0}::init`, a name Rust keeps being none, and this says `{entry_point}`", code.name),
+                    format!("`entry-point` is a path the boot can call in `{0}`, such as `{0}::init`, each name of ASCII letters, digits and `_` and none a name Rust keeps, and this says `{entry_point}`", code.name),
                 ));
             }
             Some(Initialisation {
