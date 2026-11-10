@@ -94,6 +94,7 @@ what that file answers. Its format is `archogen-application/1`.
 (code (crate app) (place "../app") (digest "sha256:…"))
 (leaves-interrupt-hardware-alone yes (clause "…the words below, whole…") (basis "it touches no device"))
 (initialisation
+  (entry-point "app::init")
   (stack-bound (value 256) (unit byte) (scope "its deepest path") (binary unbuilt) (evidence assumed) (basis "chosen, to be measured")))
 (task beat
   (entry-point "app::beat")
@@ -117,9 +118,11 @@ what that file answers. Its format is `archogen-application/1`.
 - **Each bound and each list of counts says what it rests on**: its scope, the binary it is of, and one of `ROADMAP.md` §7.3's four categories,
   with where to check it, unless it is an assumption, and why it holds. So an empty list still says what backs it. A safety factor is checked, is kept and changes no category, so a
   padded observation is still an observation.
-- **It says which code.** `code` names the crate a job's `entry-point` is a path in, where it lies and a digest of its sources, so an entry point is no bare name.
+- **It says which code.** `code` names the crate a job's `entry-point` is a path in, where it lies and a digest of its sources, so an entry point is no bare name. The digest is of one line for each source file, its sha256 and its path, sorted, so `find`, `sort` and `shasum` give it.
+- **The application's initialisation is named too, or said to be none**: `(initialisation (entry-point …) (stack-bound …))`, the path the boot calls before interrupts are first enabled, or `(initialisation none)`.
+- **A `binary` names an image by its code identity**, what the image holds of its plan with every figure left out, and never by the image file's own digest, which a stack bound moves.
 - **`node-calls` says which of the plan's nodes a job calls**, and how often, each as the plan writes it, and `os-calls` the runtime's primitives. `deadlines-within-reach` names each alarm the task writes on a time base that is the counter itself, saying that each deadline it writes stands at or after its own release and within what that alarm reaches.
-- **A masked run says how it ends**, at an `unmask` or at the job's completion, since the two cost differently, and one that ends both ways is written once for each. It keeps its own evidence.
+- **A masked run says how it ends**, at an `unmask` or at the job's completion, since the two cost differently, and one that ends both ways is written once for each. It keeps its own evidence. Its job's `os-calls` names the `mask` that begins it, and the `unmask` that ends one ending so, or the file is refused.
 - **The one declaration about the whole application is quoted whole.** `leaves-interrupt-hardware-alone` is what every composite
   is gated on, and its name no longer says what it holds, so the file carries the words, and a file quoting others does not read.
   Those words count an overrun of code's own stack bound among what the code must not do, so the declaration holds only as far as
@@ -135,7 +138,7 @@ The words a file quotes are these, whole, the three parts joined by ` … `, "th
 
 
 A file is held against a plan, and each thing it leaves unmet is said: another system or target, a task the plan does not have or one with
-nothing said of it, a call into a node the task's lines do not name, and a fact the plan owes that this format does not hold of that subject.
+nothing said of it, a call into a node the task's lines do not name, a node called as a primitive, an alarm named that the plan holds no node of, and a fact the plan owes that this format does not hold of that subject.
 
 ⚠️ This reads the format and holds it against a plan, and no more. `archogen-runtime-plan/2` carries it (`M4.1.7`), and the scheduling checker judges its figures
 (`M2.21`), so today no figure in it reaches a verdict. The rules are `docs/decisions/decision_application-inputs.md`.

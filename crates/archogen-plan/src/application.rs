@@ -6,7 +6,7 @@
 //! This reads the format and holds it against a plan. What carries it into a run is `archogen-runtime-plan/2`'s (`M4.1.7`), and what
 //! judges its figures is the scheduling checker's (`M2.21`).
 
-use std::collections::BTreeSet;
+use std::collections::{BTreeMap, BTreeSet};
 
 use eadl_front::{read_record, Form, SourceMap};
 
@@ -93,10 +93,11 @@ pub struct Evidence {
     pub basis: String,
 }
 
-/// The image a bound was obtained on.
+/// The image a bound was obtained on, named by its code identity (`decision_runtime-plan-format-2.md` §1): what that image holds of its plan, the figures left out.
+/// So it is no digest of the image's file, which a bound's own value moves by where it lays a stack, and one identity names every image of that code.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum Binary {
-    /// `sha256:…`.
+    /// `sha256:…`, a code identity.
     Image(String),
     /// There was no image yet.
     Unbuilt,
@@ -207,8 +208,17 @@ pub struct Code {
     pub name: String,
     /// Where it lies, from the file that says so.
     pub place: String,
-    /// `sha256:…`, of its sources as `M4.13` reads them.
+    /// `sha256:…`, of its sources by the record's recipe: of one line for each file under `place`, its sha256 and its path.
     pub digest: String,
+}
+
+/// The application's own initialisation: the code it runs before the first enabling of interrupts.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct Initialisation {
+    /// The function the boot calls, a path in the crate `code` names.
+    pub entry_point: String,
+    /// Its code's stack bound, which the boot stack holds.
+    pub stack_bound: Bound,
 }
 
 /// One file of application inputs.
@@ -224,8 +234,8 @@ pub struct Application {
     pub leaves_interrupt_hardware_alone: bool,
     /// Why that holds.
     pub leaves_alone_basis: String,
-    /// The stack bound of the application's initialisation, which the boot stack holds and that declaration rests on too.
-    pub initialisation_stack_bound: Bound,
+    /// The application's initialisation, where it has any: `(initialisation none)` says it has none. That declaration rests on its stack bound too.
+    pub initialisation: Option<Initialisation>,
     /// Each task.
     pub tasks: Vec<Task>,
 }
@@ -291,12 +301,43 @@ fn string(of: &str, form: &Form) -> Result<String, Refused> {
     }
 }
 
+/// Where a crate lies: a text as any, but that a place may be dots alone, `.` and `..`.
+fn place(of: &str, form: &Form) -> Result<String, Refused> {
+    match form.items() {
+        [_, Form::Str { value, .. }]
+            if !value.is_empty() && value.chars().all(|c| matches!(c, '.' | '/')) =>
+        {
+            Ok(value.clone())
+        }
+        _ => string(of, form),
+    }
+}
+
+/// A name as a plan's one line can carry it: what a text may not hold, a name may not, and it says something too.
+fn plain_name(of: &str, name: &str) -> Result<String, Refused> {
+    if name
+        .chars()
+        .any(|c| c.is_control() || matches!(c, '"' | '\\' | '\u{2028}' | '\u{2029}'))
+        || !name.chars().any(char::is_alphanumeric)
+    {
+        return Err(refused(
+            of,
+            format!(
+                "the name `{}` holds a line break, a control character, a quote or a backslash, or says nothing, which a plan's one line cannot carry",
+                name.escape_default()
+            ),
+        ));
+    }
+    Ok(name.to_owned())
+}
+
 fn symbol(of: &str, form: &Form) -> Result<String, Refused> {
     match form.items() {
-        [_, name] => name
-            .as_symbol()
-            .map(str::to_owned)
-            .ok_or_else(|| refused(of, format!("`{}` wants one name", form.to_canonical()))),
+        [_, name] => plain_name(
+            of,
+            name.as_symbol()
+                .ok_or_else(|| refused(of, format!("`{}` wants one name", form.to_canonical())))?,
+        ),
         _ => Err(refused(
             of,
             format!("`{}` wants one name", form.to_canonical()),
@@ -388,6 +429,13 @@ fn category(
                 }),
             ))
         }
+        ("assumed" | "externally-supplied" | "analytically-established", _) => Err(refused(
+            of,
+            format!(
+                "`{}` says more than its category: what was observed and a safety factor are an `observed-maximum`'s",
+                form.to_canonical()
+            ),
+        )),
         _ => Err(refused(
             of,
             format!(
@@ -507,7 +555,7 @@ fn counted(
         } else {
             name.as_symbol().map(str::to_owned)
         };
-        let Some(name) = called else {
+        let Some(name) = called.filter(|name| plain_name(of, name).is_ok()) else {
             return Err(refused(
                 of,
                 format!(
@@ -565,6 +613,7 @@ fn masked_runs(of: &str, form: &Form) -> Result<MaskedRuns, Refused> {
         let Some(name) = name.as_symbol() else {
             return Err(refused(of, format!("`{}` has no name", run.to_canonical())));
         };
+        plain_name(of, name)?;
         let of = format!("{of} run {name}");
         let of = of.as_str();
         let plain: Vec<Form> = body
@@ -640,7 +689,12 @@ fn is_a_path_in(text: &str, code: &str) -> bool {
     names.len() > 1 && names[0] == code && names.iter().all(|name| is_a_name(name))
 }
 
-/// A task's own clauses, each run held against the job it is part of: what it calls the job calls, and its own code is the job's, so neither can pass the job's whole.
+/// The primitive a masked run begins with, and the one that ends a run ending so (the composite-inputs record's §1): a run's own calls, beside those it writes.
+const MASK: &str = "mask";
+const UNMASK: &str = "unmask";
+
+/// A task's own clauses, each run held against the job it is part of: what it calls the job calls, the `mask` that begins it and the `unmask` that ends one
+/// ending so among them, and its own code is the job's, so neither can pass the job's whole. Each list is looked up by a map, so this is in step with their lengths.
 fn runs_fit_their_job(
     of: &str,
     os_calls: &Calls,
@@ -648,26 +702,44 @@ fn runs_fit_their_job(
     runs: &MaskedRuns,
     execution: &Bound,
 ) -> Result<(), Refused> {
+    let most_of =
+        |whole: &'_ Calls| -> BTreeMap<String, u64> { whole.calls.iter().cloned().collect() };
+    let (primitives, nodes) = (most_of(os_calls), most_of(node_calls));
     for run in &runs.runs {
-        for (name, list, whole) in [
-            ("os-calls", &run.calls, os_calls),
-            ("node-calls", &run.node_calls, node_calls),
-        ] {
-            for (callee, count) in list {
-                let most = whole
-                    .calls
-                    .iter()
-                    .find(|(called, _)| called == callee)
-                    .map_or(0, |(_, most)| *most);
-                if *count > most {
-                    return Err(refused(
-                        of,
-                        format!(
-                            "the run `{}` calls `{callee}` {count} time(s), and its job's `{name}` says it makes {most}",
-                            run.name
-                        ),
-                    ));
-                }
+        let mut asked: BTreeMap<&str, (u128, &str)> = run
+            .calls
+            .iter()
+            .map(|(callee, count)| (callee.as_str(), (u128::from(*count), "")))
+            .collect();
+        let delimiters: &[(&str, &str)] = match run.ending {
+            Ending::Unmask => &[
+                (MASK, ", the `mask` that begins it among them"),
+                (UNMASK, ", the `unmask` that ends it among them"),
+            ],
+            Ending::Completion => &[(MASK, ", the `mask` that begins it among them")],
+        };
+        for (callee, which) in delimiters {
+            let entry = asked.entry(callee).or_insert((0, ""));
+            *entry = (entry.0 + 1, which);
+        }
+        let node_asks = run
+            .node_calls
+            .iter()
+            .map(|(callee, count)| (callee.as_str(), (u128::from(*count), "")));
+        for (name, callee, (count, which), whole) in asked
+            .iter()
+            .map(|(callee, asks)| ("os-calls", *callee, *asks, &primitives))
+            .chain(node_asks.map(|(callee, asks)| ("node-calls", callee, asks, &nodes)))
+        {
+            let most = whole.get(callee).copied().unwrap_or(0);
+            if count > u128::from(most) {
+                return Err(refused(
+                    of,
+                    format!(
+                        "the run `{}` calls `{callee}` {count} time(s){which}, and its job's `{name}` says it makes {most}",
+                        run.name
+                    ),
+                ));
             }
         }
         if nanoseconds(&run.bound) > nanoseconds(execution) {
@@ -704,6 +776,7 @@ fn task(form: &Form, code: &str) -> Result<Task, Refused> {
             format!("`{}` is no name", name.to_canonical()),
         ));
     };
+    plain_name("task", name)?;
     let of = format!("task {name}");
     let of = of.as_str();
     let found = clauses(
@@ -734,7 +807,7 @@ fn task(form: &Form, code: &str) -> Result<Task, Refused> {
     let mut deadlines_within_reach = Vec::new();
     let mut named = BTreeSet::new();
     for item in body_of("deadlines-within-reach")? {
-        let Some(alarm) = node_text(item) else {
+        let Some(alarm) = node_text(item).filter(|alarm| plain_name(of, alarm).is_ok()) else {
             return Err(refused(
                 of,
                 format!("`{}` names no alarm", item.to_canonical()),
@@ -823,17 +896,7 @@ pub fn read(text: &str) -> Result<Application, Refused> {
         .add(FORMAT, text)
         .map_err(|error| refused("the file", error.to_string()))?;
     let (document, diagnostics) = read_record(&sources, id);
-    if diagnostics.has_errors() {
-        let said = diagnostics
-            .items()
-            .first()
-            .map_or("", |first| first.message.as_str());
-        return Err(refused(
-            "the file",
-            format!("it does not read as forms: {said}"),
-        ));
-    }
-    // Every form, so that one a description may state and this format does not know is refused too. Which format comes first: a later one's clauses are that format's, and no fault of this reader's words.
+    // Which format comes first, before what the reader of forms said: a later one's clauses and its language's version are that format's, and no fault of this reader's words.
     if let Some(said) = document
         .forms
         .iter()
@@ -844,6 +907,16 @@ pub fn read(text: &str) -> Result<Application, Refused> {
         return Err(refused(
             "format",
             format!("this reads `{FORMAT}`, and it says `{said}`"),
+        ));
+    }
+    if diagnostics.has_errors() {
+        let said = diagnostics
+            .items()
+            .first()
+            .map_or("", |first| first.message.as_str());
+        return Err(refused(
+            "the file",
+            format!("it does not read as forms: {said}"),
         ));
     }
     let (tasks, rest): (Vec<Form>, Vec<Form>) = document
@@ -901,21 +974,6 @@ pub fn read(text: &str) -> Result<Application, Refused> {
             "its `clause` quotes what it declares, in the words the book's runtime plan chapter gives whole, and these are others",
         ));
     }
-    let initialisation = clause("the file", &found, "initialisation")?;
-    let initialisation = clauses(
-        "initialisation",
-        initialisation.items().get(1..).unwrap_or_default(),
-        &["stack-bound"],
-    )?;
-    let initialisation_stack_bound = bound(
-        "initialisation stack-bound",
-        clause("initialisation", &initialisation, "stack-bound")?
-            .items()
-            .get(1..)
-            .unwrap_or_default(),
-        SIZES,
-        &[],
-    )?;
     let code = clause("the file", &found, "code")?;
     let code_items = clauses(
         "code",
@@ -924,7 +982,7 @@ pub fn read(text: &str) -> Result<Application, Refused> {
     )?;
     let code = Code {
         name: symbol("code", clause("code", &code_items, "crate")?)?,
-        place: string("code", clause("code", &code_items, "place")?)?,
+        place: place("code", clause("code", &code_items, "place")?)?,
         digest: string("code", clause("code", &code_items, "digest")?)?,
     };
     if !is_a_name(&code.name) {
@@ -944,6 +1002,42 @@ pub fn read(text: &str) -> Result<Application, Refused> {
             format!("`digest` is `sha256:…`, and this says `{}`", code.digest),
         ));
     }
+    // The application's initialisation is named as a job is, or said to be none: a bound of code nothing can call bounds nothing a build runs.
+    let initialisation = clause("the file", &found, "initialisation")?;
+    let initialisation = match initialisation.items() {
+        [_, Form::Symbol { name, .. }] if name == "none" => None,
+        [_, body @ ..] => {
+            let found = clauses("initialisation", body, &["entry-point", "stack-bound"])?;
+            let entry_point = string(
+                "initialisation",
+                clause("initialisation", &found, "entry-point")?,
+            )?;
+            if !is_a_path_in(&entry_point, &code.name) {
+                return Err(refused(
+                    "initialisation",
+                    format!("`entry-point` is a path the boot can call in `{0}`, such as `{0}::init`, a name Rust keeps being none, and this says `{entry_point}`", code.name),
+                ));
+            }
+            Some(Initialisation {
+                entry_point,
+                stack_bound: bound(
+                    "initialisation stack-bound",
+                    clause("initialisation", &found, "stack-bound")?
+                        .items()
+                        .get(1..)
+                        .unwrap_or_default(),
+                    SIZES,
+                    &[],
+                )?,
+            })
+        }
+        [] => {
+            return Err(refused(
+                "initialisation",
+                "it says `none`, or an `entry-point` and a `stack-bound`",
+            ))
+        }
+    };
     let mut read_tasks: Vec<Task> = Vec::new();
     let mut names = BTreeSet::new();
     for form in &tasks {
@@ -962,33 +1056,38 @@ pub fn read(text: &str) -> Result<Application, Refused> {
             "leaves-interrupt-hardware-alone",
             clause("leaves-interrupt-hardware-alone", &grounds, "basis")?,
         )?,
-        initialisation_stack_bound,
+        initialisation,
         tasks: read_tasks,
     })
 }
 
 impl Application {
     /// What the declaration `leaves-interrupt-hardware-alone` rests on, which a yes or a no cannot carry: the clause counts an overrun of a code's own
-    /// stack bound among what application code must not do, in initialisation as in a job, so the fact holds only as far as each of those bounds does, each with its category. The first is the application's initialisation, and the rest each task by its name.
+    /// stack bound among what application code must not do, in initialisation as in a job, so the fact holds only as far as each of those bounds does, each with its category. The first is the application's initialisation, where it has one, and the rest each task by its name.
     #[must_use]
     pub fn leaves_alone_rests_on(&self) -> Vec<(&str, Category)> {
-        core::iter::once((
-            "the application's initialisation",
-            self.initialisation_stack_bound.evidence.category,
-        ))
-        .chain(
-            self.tasks
-                .iter()
-                .map(|task| (task.name.as_str(), task.stack_bound.evidence.category)),
-        )
-        .collect()
+        self.initialisation
+            .iter()
+            .map(|initialisation| {
+                (
+                    "the application's initialisation",
+                    initialisation.stack_bound.evidence.category,
+                )
+            })
+            .chain(
+                self.tasks
+                    .iter()
+                    .map(|task| (task.name.as_str(), task.stack_bound.evidence.category)),
+            )
+            .collect()
     }
 
     /// What these inputs leave unmet of `plan`, each in words: the system and the target, each task as the plan has it and no other, each call into a
     /// node its lines name, in its `node-calls` and in each masked run (`RTP-H5`), a node called as a primitive, an alarm named that the plan holds no node of, and each fact the plan owes `(by application)` this format does not hold of that subject.
-    /// A primitive's name is the catalog's: the composition leaves unresolved one no record costs.
+    /// A primitive's name is the catalog's: `primitives` are those the plan's catalog costs, `mask` and `unmask` being primitives whatever it holds, and what is written among
+    /// primitives under one of those names is that primitive, a node of the same name being called among `node-calls`. The composition leaves unresolved one no record costs.
     #[must_use]
-    pub fn unmet(&self, plan: &Contents) -> Vec<String> {
+    pub fn unmet(&self, plan: &Contents, primitives: &[&str]) -> Vec<String> {
         let mut unmet = Vec::new();
         if self.system != plan.system {
             unmet.push(format!(
@@ -1036,7 +1135,9 @@ impl Application {
                 .iter()
                 .flat_map(|run| run.calls.iter());
             for (name, _) in mine.os_calls.calls.iter().chain(as_primitives) {
-                if plan.nodes.iter().any(|(node, _)| node == name) {
+                let a_primitive =
+                    name == MASK || name == UNMASK || primitives.contains(&name.as_str());
+                if !a_primitive && plan.nodes.iter().any(|(node, _)| node == name) {
                     unmet.push(format!(
                         "the task `{}` calls `{name}` as a primitive, and it is a node of this plan: write it among `node-calls`, or a run's `node-call`",
                         task.name
@@ -1074,8 +1175,9 @@ impl Application {
     }
 }
 
-/// What this format holds of a task, by the plan's name for each (the plan's §2.10).
+/// What this format holds of a task, by the plan's name for each: the plan's §2.10, and `deadlines-within-reach`, which `/2` owes of a task writing an alarm it does not name (`RA-H7`).
 pub const HELD_OF_A_TASK: &[&str] = &[
+    "deadlines-within-reach",
     "entry-point",
     "execution-bound",
     "execution-category",

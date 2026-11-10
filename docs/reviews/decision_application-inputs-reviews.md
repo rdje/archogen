@@ -39,3 +39,19 @@ Said, and left as it stands: its reader could not read `M2.30`'s R1 and R7, whos
 | AI2-10 | wording | a backslash's message; another format told of a clause; a byte-order mark; U+2028 and a text of U+200B alone; a nested `mask` in an example; "reads the format and no more" | Each said as it is. The record `/2` was cited from now stands |
 
 Said, and left as it stands: `/2` is not built, so whether a node's text tells two alarms on one route apart is for its review, in `decision_runtime-plan-format-2.md`. That `/2` reader may ask. Its reader could not read `M2.30`'s R1 and R7 either. The format's text moved again without a new version, no file of it existing outside its tests.
+
+**Round 3** — `2026-11-10`, leaf `M4.12.1.3`: not acceptable, 9 findings, 5 defects, after 6 and 13, on `89dbb82c`, all this design's. Round 2's AI2-4, -5, -6, -8, -9 and -10 stand as answered, and AI2-1's and AI2-3's as far as they went. Of its 149 inputs, 96 were refused, each naming its clause, and beyond the findings each did as the record says. Its rig is `target/m4325/work/rig3`.
+
+| # | Kind | Finding | Answer |
+| --- | --- | --- | --- |
+| AI3-1 | defect | a run was not held to the two calls that make it one: a job whose `os-calls` named no `mask` read with a masked run, so `C_i` charged no `api.mask` | The `mask` that begins a run, and the `unmask` that ends one ending so, are counted among what it calls, each one more than it writes inside, and held against its job's `os-calls` |
+| AI3-2 | defect | the application's initialisation had to be bounded and could not be named, AI1-8's answer and AI2-3's never having met | `(initialisation (entry-point …) (stack-bound …))`, or `(initialisation none)`, and `AI-H3` has the boot call it |
+| AI3-3 | defect | which digest a `binary` holds was not said, and `/2` read it otherwise than these words | It is the code identity `/2` defines, and no digest of the image's file, which the bound itself moves. The lowering holds each against its plan's (`AI-H2`) |
+| AI3-4 | defect | holding a run to its job cost the product of two lists: 20.19 s at 80,000 callees | A map of the job's lists. The test reads that file |
+| AI3-5 | defect | `unmet` could not tell a node called as a primitive from a primitive a node is named like, so a system with a service named `mask` had no file that was met | `unmet` is given the primitives the plan's catalog costs, `mask` and `unmask` being primitives whatever it holds, and a name among them is the primitive it is written as |
+| AI3-6 | gap | `code`'s `digest` had no recipe, one sha256 cannot say which sources differ, and `(place ".")` was refused | The recipe is the record's, `AI-H3` says the digest it computed, and a place may be dots alone |
+| AI3-7 | gap | `/2` owes `deadlines-within-reach` of a task, and `unmet` said this format held no such thing | It is held |
+| AI3-8 | wording | the book's list of what is unmet stopped at round 1 | It holds the record's |
+| AI3-9 | wording | an assumption written with an observation was "none of §7.3's four categories"; another format's file with a later language version was told it did not read as forms; U+2028 and U+200B were read in a name | Each is refused saying what it is, the format first, and a name is held to what a text is |
+
+Said, and left as it stands: its reader could not read `M2.30`'s R1 and R7, `/2` is not built, and the composition was not run. The format's text moved again without a new version, no file of it existing outside its tests. `/2`'s record still writes the initialisation's inputs without an entry point, which its own round, open beside this one, takes up.

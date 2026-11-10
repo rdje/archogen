@@ -10,7 +10,7 @@ use archogen_plan::contents;
 const BOUND: &str = r#"(value 200) (unit us) (scope "one job") (binary unbuilt) (evidence analytically-established) (locator "docs/argument.md") (basis "by the loop's bound")"#;
 const LIST: &str = r#"(scope "one job") (binary unbuilt) (evidence analytically-established) (locator "docs/argument.md") (basis "by reading")"#;
 const CODE: &str = r#"(code (crate app) (place "app") (digest "sha256:0000000000000000000000000000000000000000000000000000000000000000"))"#;
-const INITIALISATION: &str = r#"(initialisation (stack-bound (value 256) (unit byte) (scope "its deepest path") (binary unbuilt) (evidence assumed) (basis "chosen, to be measured")))"#;
+const INITIALISATION: &str = r#"(initialisation (entry-point "app::init") (stack-bound (value 256) (unit byte) (scope "its deepest path") (binary unbuilt) (evidence assumed) (basis "chosen, to be measured")))"#;
 
 fn a_task(name: &str) -> String {
     format!(
@@ -61,7 +61,16 @@ fn a_whole_file_reads_as_it_says() {
     assert_eq!(application.system, "heartbeat");
     assert_eq!(application.target, "hosted-playground");
     assert!(application.leaves_interrupt_hardware_alone);
-    assert_eq!(application.initialisation_stack_bound.value, 256);
+    let initialisation = application.initialisation.as_ref().expect("it has one");
+    assert_eq!(initialisation.entry_point, "app::init");
+    assert_eq!(initialisation.stack_bound.value, 256);
+    let none =
+        read(&a_file("heartbeat", &["beat"]).replace(INITIALISATION, "(initialisation none)"))
+            .expect("it reads");
+    assert_eq!(
+        none.initialisation, None,
+        "an application may have none, and says so"
+    );
     assert_eq!(application.code.name, "app");
     assert_eq!(application.code.place, "app");
     assert_eq!(application.tasks.len(), 2);
@@ -131,7 +140,13 @@ fn each_malformed_input_is_refused_saying_what_is_wrong() {
         (replaced(CLAUSE_CUT, " "), "and these are others"),
         (replaced(" (basis \"it touches no device\")", ""), "`basis`"),
         (replaced(INITIALISATION, ""), "`initialisation`"),
-        (replaced(INITIALISATION, "(initialisation)"), "`stack-bound`"),
+        (replaced(INITIALISATION, "(initialisation)"), "`entry-point`"),
+        (replaced("(initialisation (entry-point \"app::init\") ", "(initialisation "), "`entry-point`"),
+        (replaced("(initialisation (entry-point \"app::init\") ", "(initialisation (entry-point \"other::init\") "), "a path the boot can call"),
+        (replaced("(initialisation (entry-point \"app::init\") ", "(initialisation (entry-point \"app::fn\") "), "a path the boot can call"),
+        (replaced(INITIALISATION, "(initialisation (entry-point \"app::init\"))"), "`stack-bound`"),
+        (replaced(INITIALISATION, "(initialisation nothing)"), "`nothing` is no clause"),
+        (replaced(INITIALISATION, "(initialisation none none)"), "is no clause"),
         (good.clone() + &a_task("t"), "written twice"),
         (replaced("(entry-point \"app::t\")", ""), "`entry-point`"),
         (replaced("(entry-point \"app::t\")", "(entry-point \"\")"), "says something"),
@@ -156,6 +171,8 @@ fn each_malformed_input_is_refused_saying_what_is_wrong() {
         (replaced("(binary unbuilt)", "(binary \"sha256:1\")"), "sha256"),
         (replaced(bound_evidence, "(evidence analytically-established) (basis \"by the loop's bound\")"), "`locator`"),
         (replaced(bound_evidence, "(evidence proven) (locator \"docs/argument.md\") (basis \"by the loop's bound\")"), "four categories"),
+        (replaced(bound_evidence, "(evidence assumed (observed 1) (safety-factor 1 1)) (basis \"b\")"), "says more than its category"),
+        (replaced(bound_evidence, "(evidence analytically-established (observed 1)) (locator \"docs/argument.md\") (basis \"b\")"), "says more than its category"),
         (replaced(bound_evidence, "(evidence analytically-established) (locator \"docs/argument.md\")"), "`basis`"),
         (replaced(bound_evidence, "(evidence observed-maximum (observed 100) (safety-factor 1 2)) (locator \"docs/argument.md\") (basis \"b\")"), "pads"),
         (replaced(bound_evidence, "(evidence observed-maximum (observed 100) (safety-factor 3 2)) (locator \"docs/argument.md\") (basis \"b\")"), "by that factor is 150"),
@@ -169,6 +186,11 @@ fn each_malformed_input_is_refused_saying_what_is_wrong() {
         (replaced("(call release 1)))", "(call spin 5)))"), "says it makes 0"),
         (replaced("(call release 1)))", "(call release 2)))"), "says it makes 1"),
         (replaced("(call release 1)))", "(node-call a.node 1)))"), "says it makes 0"),
+        // A run is held to the two calls that make it one: the `mask` that begins it and the `unmask` that ends one ending so are its job's calls too.
+        (replaced("(call mask 2) (call unmask 2) (call release 1))", "(call release 1))"), "the `mask` that begins it among them, and its job's `os-calls` says it makes 0"),
+        (replaced("(call mask 2) (call unmask 2) (call release 1))", "(call mask 1) (call release 1))"), "the `unmask` that ends it among them, and its job's `os-calls` says it makes 0"),
+        (replaced("(call release 1)))", "(call release 1) (call mask 2)))"), "calls `mask` 3 time(s), the `mask` that begins it among them, and its job's `os-calls` says it makes 2"),
+        (replaced("(call release 1)))", "(call release 1) (call unmask 2)))"), "calls `unmask` 3 time(s), the `unmask` that ends it among them"),
         (replaced("(run tail (ending unmask) (value 5) (unit us)", "(run tail (ending unmask) (value 5000) (unit us)"), "past its job's"),
         (replaced(&format!("(node-calls {LIST})\n"), ""), "`node-calls`"),
         (replaced(&format!("(os-calls {LIST} "), "(os-calls "), "`scope`"),
@@ -189,6 +211,15 @@ fn each_malformed_input_is_refused_saying_what_is_wrong() {
         (replaced("(deadlines-within-reach)", "(deadlines-within-reach a a)"), "written twice"),
         (replaced("(deadlines-within-reach)", "(deadlines-within-reach 1)"), "names no alarm"),
         (replaced("(deadlines-within-reach)", "(deadlines-within-reach (adapter))"), "names no alarm"),
+        // A name is held to what a text is: a plan's one line carries each.
+        (replaced("(task t\n", "(task t\u{2028}x\n"), "which a plan's one line cannot carry"),
+        (replaced("(task t\n", "(task \u{200b}\n"), "which a plan's one line cannot carry"),
+        (replaced("(run tail (ending unmask)", "(run ta\u{2028}il (ending unmask)"), "which a plan's one line cannot carry"),
+        (replaced("(call mask 2)", "(call ma\u{2028}sk 2)"), "calls no primitive"),
+        (replaced("(deadlines-within-reach)", "(deadlines-within-reach a\u{2028}b)"), "names no alarm"),
+        (replaced("(system s)", "(system s\u{2028}t)"), "which a plan's one line cannot carry"),
+        // Another format's file is told its format first, whatever its language's version says to the reader of forms.
+        (format!("(eadl-version eadl/2)\n{}", replaced(FORMAT, "archogen-application/2")), "this reads"),
     ] {
         let refused = read(&text).expect_err(said);
         assert!(refused.to_string().contains(said), "`{said}`: {refused}");
@@ -347,7 +378,11 @@ fn every_fact_a_plan_owes_the_application_is_held() {
         }
         let tasks: Vec<&str> = plan.tasks.iter().map(|task| task.name.as_str()).collect();
         let application = read(&a_file(&plan.system, &tasks)).expect("it reads");
-        assert_eq!(application.unmet(&plan), Vec::<String>::new(), "{name}");
+        assert_eq!(
+            application.unmet(&plan, &[]),
+            Vec::<String>::new(),
+            "{name}"
+        );
     }
 }
 
@@ -360,11 +395,11 @@ fn what_is_unmet_of_a_plan_is_said() {
         let application = read(text).expect("it reads");
         assert!(
             application
-                .unmet(of)
+                .unmet(of, &[])
                 .iter()
                 .any(|said| said.contains(words)),
             "{words}: {:?}",
-            application.unmet(of)
+            application.unmet(of, &[])
         );
     };
     let good = a_file(&plan.system, &tasks);
@@ -426,6 +461,33 @@ fn what_is_unmet_of_a_plan_is_said() {
         &plan,
         "names the alarm `nowhere.alarm`",
     );
+    // A primitive a node is named like is the primitive it is written as: `mask` and `unmask` whatever the catalog holds, and any other the plan's catalog costs. So a
+    // system with a service named `mask` has a file that is met, its node called among `node-calls`.
+    let mut named_alike = plan.clone();
+    let kind = named_alike.nodes[0].1;
+    named_alike.nodes.push(("mask".to_owned(), kind));
+    named_alike.nodes.push(("release".to_owned(), kind));
+    let application = read(&good).expect("it reads");
+    assert!(
+        application
+            .unmet(&named_alike, &["release"])
+            .iter()
+            .all(|said| !said.contains("as a primitive")),
+        "{:?}",
+        application.unmet(&named_alike, &["release"])
+    );
+    assert!(
+        application
+            .unmet(&named_alike, &[])
+            .iter()
+            .any(|said| said.contains("calls `release` as a primitive"))
+            && application
+                .unmet(&named_alike, &[])
+                .iter()
+                .all(|said| !said.contains("calls `mask` as a primitive")),
+        "a name no catalog costs is a node's where the plan has that node: {:?}",
+        application.unmet(&named_alike, &[])
+    );
     // A task's own `bind` line names an instance, whose text it calls by.
     let adapter = "(adapter epoch-extender timer.short)";
     let bound = good.replace(
@@ -441,7 +503,7 @@ fn what_is_unmet_of_a_plan_is_said() {
         });
     }
     let application = read(&bound).expect("it reads");
-    assert_eq!(application.unmet(&with), Vec::<String>::new());
+    assert_eq!(application.unmet(&with, &[]), Vec::<String>::new());
     // A fact a plan owes that this format does not hold is said, so a new one cannot pass unread, whichever subject it is of.
     let mut newer = plan.clone();
     newer.owed.push(contents::Owed {
@@ -457,6 +519,17 @@ fn what_is_unmet_of_a_plan_is_said() {
         by: "application".to_owned(),
     });
     said(&good, &of_a_node, "`stack-bound` of console.uart");
+    // What `/2` owes of a task writing an alarm it does not name is held, `RA-H7`'s.
+    let mut within_reach = plan.clone();
+    within_reach.owed.push(contents::Owed {
+        subject: format!("(task {} {})", plan.system, tasks[0]),
+        fact: "deadlines-within-reach".to_owned(),
+        by: "application".to_owned(),
+    });
+    assert_eq!(
+        read(&good).expect("it reads").unmet(&within_reach, &[]),
+        Vec::<String>::new()
+    );
 }
 
 /// What a file quotes is the composite-inputs record's own words, read from there with what stands on each side: a change to them, or a sentence added beside them, moves this, and a file declaring the old ones stops reading. The book and this format's record hold them whole, where a person is sent to read them.
@@ -513,6 +586,9 @@ fn the_fact_says_what_it_rests_on() {
             ("two", Category::Assumed)
         ]
     );
+    let none = read(&a_file("s", &["one"]).replace(INITIALISATION, "(initialisation none)"))
+        .expect("it reads");
+    assert_eq!(none.leaves_alone_rests_on(), [("one", Category::Assumed)]);
 }
 
 /// A file this size reads in a time a person would not notice, so a list's cost is in step with its length.
@@ -521,9 +597,13 @@ fn a_long_list_reads_in_step_with_its_length() {
     let many: String = (0..80_000)
         .map(|call| format!("(call p{call} 1) "))
         .collect();
-    let text = a_file("s", &["t"]).replace("(call mask 2)", &many);
+    let text = a_file("s", &["t"]).replace("(call mask 2)", &format!("(call mask 2) {many}"));
     let application = read(&text).expect("it reads");
-    assert_eq!(application.tasks[0].os_calls.calls.len(), 80_002);
+    assert_eq!(application.tasks[0].os_calls.calls.len(), 80_003);
+    // A run holding as many callees as its job is held to it through a map of the job's: a search of the job's list for each would be their product.
+    let text = text.replace("(call release 1)))", &format!("(call release 1) {many}))"));
+    let application = read(&text).expect("it reads");
+    assert_eq!(application.tasks[0].masked_runs.runs[0].calls.len(), 80_001);
     let names: String = (0..200_000).map(|name| format!("a{name} ")).collect();
     let text = a_file("s", &["t"]).replace(
         "(deadlines-within-reach)",
