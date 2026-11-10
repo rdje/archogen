@@ -1606,9 +1606,11 @@ fn an_alarm_s_base_is_the_counter_unless_each_reader_is_extended_over_its_own_de
     ));
 }
 
-/// The facts of the function `counter` that are no reader's of a time base though no requester consumes them: those `RA-H8` adds, which describe a compare.
-const DESCRIBES_A_COMPARE: [&str; 4] = [
+/// The facts of the function `counter` that are no reader's of a time base though no requester consumes them: those `RA-H8` adds, which describe a compare and
+/// what it is wired to, held to the release alarm's own record by `the_facts_that_are_no_reader_s_are_the_release_alarm_s_own_five`.
+const DESCRIBES_A_COMPARE: [&str; 5] = [
     "alarm-wiring",
+    "alarm-kind",
     "compare-step",
     "compare-window",
     "compare-magnitude",
@@ -1789,4 +1791,147 @@ fn every_line_the_identity_keeps_is_one_a_hosted_plan_writes() {
         );
     }
     assert!(hosted.iter().any(|listed| listed == "emitter"));
+}
+
+// ---- round 6: a hosted line's items, the facts that are no reader's, a hosted wake, and which way a step rounds
+
+/// `/1`'s golden plans, the corpus a hosted plan's lines are held against.
+const GOLDEN_PLANS: [&str; 3] = [
+    include_str!("goldens/epoch-extender.plan"),
+    include_str!("goldens/heartbeat.plan"),
+    include_str!("goldens/sporadic.plan"),
+];
+
+/// A line that holds a route's item is not as `/1` writes it: in `/2` an alarm's item is `(alarm NODE)` wherever it stands (§3). So each head the identity keeps
+/// under which `/1`'s goldens write an item stands in the record's table of what a hosted plan writes otherwise. The row before this compared heads alone and took
+/// `enabled`, `context` and `obligation` for `/1`'s, two texts and two code identities of one plan (round 6, RP6-1).
+#[test]
+fn every_kept_line_that_holds_an_item_is_one_a_hosted_plan_writes_otherwise() {
+    let hosted = the_hosted_lines();
+    let mut holding: BTreeSet<String> = BTreeSet::new();
+    for plan in GOLDEN_PLANS {
+        holding.extend(
+            plan.lines()
+                .filter(|line| line.contains("(timer-route "))
+                .map(|line| head(line).to_owned()),
+        );
+    }
+    for expected in ["route", "enabled", "context", "obligation"] {
+        assert!(
+            holding.contains(expected),
+            "`/1`'s goldens write an item under `({expected} …)`: {holding:?}"
+        );
+    }
+    for under in &holding {
+        let kept = LINES
+            .iter()
+            .any(|(known, does)| known == under && *does != Identity::LeftOut);
+        assert!(
+            !kept || hosted.contains(under),
+            "`({under} …)` holds a route's item, which `/2` writes otherwise, and the record's table of a hosted plan's lines lacks it"
+        );
+    }
+    // And a hosted route ends in no `(controller …)`: §1 and §6 say so in one sentence each.
+    assert!(RECORD.contains("a hosted route writes no `(controller …)`"));
+    assert!(RECORD.contains("On a target each route that reaches a controller writes `(controller LINE PRIORITY)` last on its line"));
+}
+
+const RELEASE_ALARM: &str = include_str!("../../../docs/decisions/decision_release-alarm.md");
+
+/// The names a text writes between backticks that are made as a fact's is.
+fn facts_named(text: &str) -> BTreeSet<String> {
+    text.split('`')
+        .skip(1)
+        .step_by(2)
+        .filter(|name| !name.is_empty() && name.chars().all(|c| c.is_ascii_lowercase() || c == '-'))
+        .map(str::to_owned)
+        .collect()
+}
+
+/// The facts `RA-H8` adds are read off the release alarm's own record, never listed here from memory: those its hand-off names before "join the vocabulary", and
+/// those the first cell of a row of its inputs' table names where the row says the fact is `RA-H8`'s. Round 5 listed four, and the record has five, an alarm's kind
+/// among them, so a service stating one read as a reader of time at the device itself (round 6, RP6-2).
+#[test]
+fn the_facts_that_are_no_reader_s_are_the_release_alarm_s_own_five() {
+    let hand_off = RELEASE_ALARM
+        .lines()
+        .find(|line| line.starts_with("| `RA-H8` |"))
+        .expect("the release alarm's hand-off");
+    let joining = hand_off
+        .split("join the vocabulary")
+        .next()
+        .expect("what joins")
+        .splitn(4, '|')
+        .nth(3)
+        .expect("its obligation");
+    let mut named = facts_named(joining);
+    for row in RELEASE_ALARM
+        .lines()
+        .filter(|line| line.starts_with("| `") && line.contains("(`RA-H8`)"))
+    {
+        named.extend(facts_named(row.split('|').nth(1).expect("a first cell")));
+    }
+    let model: BTreeSet<String> = DESCRIBES_A_COMPARE
+        .iter()
+        .map(|&name| name.to_owned())
+        .collect();
+    assert_eq!(named, model);
+    assert_eq!(model.len(), 5);
+    for name in &model {
+        assert!(
+            RECORD.contains(&format!("`{name}`")),
+            "the record names `{name}`"
+        );
+    }
+    assert!(RECORD.contains(
+        "`alarm-wiring`, `alarm-kind`, `compare-step`, `compare-window` and `compare-magnitude`"
+    ));
+}
+
+/// §4: on the hosted playground the simulator enables at time zero and a wake is armed there, so its first point is `P` past the enabling whatever `P` is, and
+/// nothing is held of it (round 6, RP6-3).
+#[test]
+fn a_hosted_wake_has_nothing_to_outlast() {
+    for step in 0..=8_u64 {
+        let (enabling, armed_at) = (0_u64, 0_u64);
+        assert!(armed_at + step >= enabling);
+        assert!(a_wake_s_step_outlasts_the_last_act(step, 0, 0));
+    }
+    assert!(RECORD.contains("A hosted plan owes neither figure and is held to nothing here"));
+    assert!(
+        RECORD.contains("a hosted set is asked none of it, the simulator enabling at time zero")
+    );
+}
+
+/// §4: in the hold of a wake's `P` the step rounds down and each lead up, to whatever unit the checker counts in: then the hold of what was rounded is the hold
+/// of what was stated. Rounded up, as the inputs' table rounds `P` where a sum is charged with it, a wake due before the enabling is admitted (round 6, RP6-4).
+#[test]
+fn a_wake_s_step_rounds_down_where_a_sum_lies_within_it() {
+    let down = |value: u64, unit: u64| value - value % unit;
+    let up = |value: u64, unit: u64| value.div_ceil(unit) * unit;
+    let mut rounded_up_admits_an_early_wake = false;
+    for unit in 1..=8_u64 {
+        for step in 0..=40_u64 {
+            for act_lead in 0..=12_u64 {
+                for lead in 0..=12_u64 {
+                    let stated = a_wake_s_step_outlasts_the_last_act(step, act_lead, lead);
+                    if a_wake_s_step_outlasts_the_last_act(
+                        down(step, unit),
+                        up(act_lead, unit),
+                        up(lead, unit),
+                    ) {
+                        assert!(stated, "{unit} {step} {act_lead} {lead}");
+                    }
+                    rounded_up_admits_an_early_wake |= !stated
+                        && a_wake_s_step_outlasts_the_last_act(
+                            up(step, unit),
+                            up(act_lead, unit),
+                            up(lead, unit),
+                        );
+                }
+            }
+        }
+    }
+    assert!(rounded_up_admits_an_early_wake);
+    assert!(RECORD.contains("`P` rounds down in that hold and each lead up"));
 }
