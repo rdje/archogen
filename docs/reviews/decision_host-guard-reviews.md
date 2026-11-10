@@ -638,3 +638,5 @@ Said, and left as it stands: its reader ended two children of its own rig by a k
 | G35-6 | gap, in the self-test | a row read a `run` the full host refused as a failure, its exit the same as the one it looks for, and never read what the `run` said | The row asks first whether the host refused it, as its neighbours do, and is then said as not run; and it shows what the `run` said |
 
 Said, and left as it stands: its reader saw two of another session's builds stopped for another project's load, RAM peaking at 88.8% and falling. It could not run `make focused`, a commit's compile, a full volume, chosen pressure levels, true idle and blind times, the census against the real watcher's stops, Codex, Kimi, VS Code, `onFailure` with a real crash, another user's process, a real process holding a long cluster or an older watcher.
+
+Continued in [`decision_host-guard-reviews.part-2.md`](decision_host-guard-reviews.part-2.md), from round 36, this file being at its ceiling (`PROGRAM.135`).

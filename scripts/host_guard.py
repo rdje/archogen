@@ -36,6 +36,7 @@ import signal
 import subprocess
 import sys
 import time
+import unicodedata
 from collections import deque
 from dataclasses import asdict, dataclass, field, fields
 from pathlib import Path
@@ -128,8 +129,9 @@ def canonical(root: Path) -> Path:
     what the kernel says of a process's directory is one spelling, and spelt otherwise nothing would be ours. So the spelling is the kernel's own of the directory this opens, held to be
     that directory by what both open and by no comparison of names, which no folding of this language's is the volume's (round 34: `ß` and `SS`)."""
     resolved = root.resolve()
+    # Opened as a directory and without waiting: a name that is a pipe would hold whoever opens it, and with it every guard that reads a row naming it (round 36).
     try:
-        fd = os.open(str(resolved), os.O_RDONLY)
+        fd = os.open(str(resolved), os.O_RDONLY | os.O_DIRECTORY | os.O_NONBLOCK)
     except OSError:
         return resolved
     try:
@@ -325,6 +327,13 @@ class Process:
     written: int = 0  # What it has written in its life.
     waiting: bool = False  # A `make` that has started nothing but a `run` still waiting its turn.
     argv: tuple = ()  # Its arguments as the kernel holds them, the first its own name, each whole whatever spaces it holds; none where the kernel gives none.
+    cwd_node: tuple = ()  # The device and inode the kernel gives beside its working directory's path; none where it gives none.
+
+    def stands_where_it_says(self) -> bool:
+        """Whether its working directory is the path the kernel gave, by the device and inode beside it. Asked only of a process that path would make ours, so a round stats a handful
+        and touches no other volume (round 36). A directory removed under it, or one under a directory the guard cannot search, is not: such a process is ours only by what started
+        it or by its executable."""
+        return not self.cwd_node or is_that_directory(self.cwd, *self.cwd_node)
 
     @property
     def name(self) -> str:
@@ -433,21 +442,20 @@ class Darwin:
             return None
         return int.from_bytes(buffer.raw[72:80], sys.byteorder), int.from_bytes(buffer.raw[152:160], sys.byteorder)
 
-    def cwd(self, pid: int) -> str:
-        """Its working directory, where the path the kernel gives is that directory: by the device and inode the kernel gives beside it, as measured on this host. A directory deeper
-        than the kernel spells is given by its tail, which can read as any path, a root's among them (round 35); a directory removed or replaced names nothing. Either is no directory."""
+    def cwd_read(self, pid: int) -> tuple[str, int, int]:
+        """Its working directory as the kernel gives it, with the device and inode the kernel gives beside it, as measured on this host; nothing of a process gone."""
         buffer = ctypes.create_string_buffer(2352)  # proc_vnodepathinfo
         if self.lib.proc_pidinfo(pid, 9, 0, buffer, 2352) <= 0:  # PROC_PIDVNODEPATHINFO
-            return ""
+            return "", 0, 0
         raw = buffer.raw
-        path = raw[152:152 + 1024].split(b"\0", 1)[0].decode("utf-8", "replace")
         # `vinfo_stat`: its device, 32 bits, first, and its inode, 64 bits, at eight.
-        device, inode = int.from_bytes(raw[0:4], sys.byteorder), int.from_bytes(raw[8:16], sys.byteorder)
-        try:
-            standing = os.stat(path)
-        except (OSError, ValueError):
-            return ""
-        return path if (standing.st_dev & 0xFFFFFFFF, standing.st_ino) == (device, inode) else ""
+        return raw[152:152 + 1024].split(b"\0", 1)[0].decode("utf-8", "replace"), int.from_bytes(raw[0:4], sys.byteorder), int.from_bytes(raw[8:16], sys.byteorder)
+
+    def cwd(self, pid: int) -> str:
+        """Its working directory, where the path the kernel gives is that directory. A directory deeper than the kernel spells is given by its tail, which can read as any path, a root's
+        among them (round 35); a directory removed or replaced names nothing. Either is no directory."""
+        path, device, inode = self.cwd_read(pid)
+        return path if path and is_that_directory(path, device, inode) else ""
 
     def exe(self, pid: int) -> str:
         buffer = ctypes.create_string_buffer(4096)
@@ -472,6 +480,15 @@ class Darwin:
         return [word.decode("utf-8", "replace") for word in words[:int.from_bytes(raw[:4], sys.byteorder)]]
 
 
+def is_that_directory(path: str, device: int, inode: int) -> bool:
+    """Whether `path` is the directory of this device and inode, by a `stat`, which opens nothing."""
+    try:
+        standing = os.stat(path)
+    except (OSError, ValueError):
+        return False
+    return (standing.st_dev & 0xFFFFFFFF, standing.st_ino) == (device, inode)
+
+
 NATIVE = Darwin() if sys.platform == "darwin" else None
 
 
@@ -494,7 +511,10 @@ def processes() -> list[Process]:
         used = NATIVE.usage(pid)
         held, written = (kilobytes * 1024, 0) if used is None else used
         # A command line that is all blanks is a process's all the same, `exec -a ' '` or a title set to blanks: its row has five fields, and it is counted and stopped as any other.
-        table.append(Process(pid, ppid, parts[5] if len(parts) > 5 else "", NATIVE.cwd(pid), NATIVE.exe(pid), held, written, argv=tuple(NATIVE.arguments(pid))))
+        cwd, device, inode = NATIVE.cwd_read(pid)
+        table.append(
+            Process(pid, ppid, parts[5] if len(parts) > 5 else "", cwd, NATIVE.exe(pid), held, written, argv=tuple(NATIVE.arguments(pid)), cwd_node=(device, inode) if cwd else ())
+        )
     # A table that does not hold the one reading it is not the table: `ps` answering nothing, or cut short, must read as blind and never as calm.
     if not any(process.pid == os.getpid() for process in table):
         raise ValueError("`ps` does not list the process reading it")
@@ -632,7 +652,12 @@ def is_run_of(process: Process, root: str) -> bool:
         return names_root(process.command, root)
     own = told[1 : told.index("--")] if "--" in told else told[1:]
     # By the directory: a root renamed in case alone after a `run` named it is the same root by another spelling, and its job is still ours (round 35).
-    return any(flag == "--root" and (named == root or (os.path.isabs(named) and str(canonical(Path(named))) == root)) for flag, named in zip(own, own[1:]))
+    # A `run` writes its root as resolved before its job starts, so another spelling of the same root is a rename in case or form since; only such a spelling is opened, and no
+    # other root's directory is touched by a round (round 36).
+    folded = lambda name: unicodedata.normalize("NFD", name).casefold()
+    return any(
+        flag == "--root" and (named == root or (os.path.isabs(named) and folded(named) == folded(root) and str(canonical(Path(named))) == root)) for flag, named in zip(own, own[1:])
+    )
 
 
 def line_of(table: list[Process], pid: int) -> set[int]:
@@ -681,7 +706,7 @@ def ours(table: list[Process], root: Path, me: int, spare_its_line: bool = True)
     children = children_of(table)
     under = lambda path: path == text or path.startswith(text + os.sep)
     spared = {process.pid for process in table if protected(process)}
-    found = {p.pid for p in table if p.pid not in spared and (under(p.cwd) or under(p.exe))}
+    found = {p.pid for p in table if p.pid not in spared and ((under(p.cwd) and p.stands_where_it_says()) or under(p.exe))}
     todo = list(found) + [p.pid for p in table if is_run_of(p, text)]
     while todo:
         for child in children.get(todo.pop(), []):
@@ -1384,10 +1409,14 @@ class Command:
 
 
 def runs_its_input(words: list[str]) -> bool:
-    """Whether these run a shell told neither a command nor a script, so that what it is fed is what it runs."""
+    """Whether these run a shell told neither a command nor a script, so that what it is fed is what it runs. A guard's `run` hands what it is fed to its job, so its job is what is
+    asked, a here-document fed through it being read as one fed to that shell (round 36)."""
     words = unwrapped(words)[0]
     if not words:
         return False
+    told = what_a_run_runs(words)
+    if told:
+        return runs_its_input(told)
     name, arguments = os.path.basename(words[0]), words[1:]
     if name in (".", "source"):
         return arguments[:1] == ["/dev/stdin"]
@@ -1974,22 +2003,26 @@ def what_a_run_runs(words: list[str]) -> list[str]:
 
 def read_through_runs(commands: list[Command], depth: int = 0) -> list[Command]:
     """These commands, a guard's `run` among them replaced by what its job runs as a shell would read it: in the run's pipeline where the job's first pipeline stands and in one of its own
-    for each other, fed where the run is, and with the substitutions of the run's own words before it. A `run` inside a job is read the same way, to a depth no command needs."""
+    for each other, fed where the run is. Each command keeps its own substitutions, where they begin carried to where they now stand: a job's command's are the job's where it has any
+    and otherwise the run's own words', and a command after a `run` keeps its own however many the job had. A `run` inside a job is read the same way, to a depth no command needs.
+    Carried as they stood, a `run` whose job read as nothing moved every later command's window past its own substitutions, and a job of several moved one onto the job's (round 36)."""
     if depth > 16:
         raise ValueError("a guard's `run` inside one sixteen times over is too deep to read")
     out: list[Command] = []
-    for command in commands:
+    # Where what stood at each index now begins.
+    start_of: list[int] = []
+    for index, command in enumerate(commands):
+        start_of.append(len(out))
         told = what_a_run_runs(command.words)
         if not told:
-            out.append(command)
+            out.append(Command(command.words, command.pipeline, command.fed, start_of[command.own_from]))
             continue
         job = read_through_runs(commands_of(shlex.join(told)), depth + 1)
-        if not job:
-            continue
-        first, others = job[0].pipeline, {}
-        for each in job:
+        base, first, others = len(out), (job[0].pipeline if job else None), {}
+        for k, each in enumerate(job):
             pipeline = command.pipeline if each.pipeline == first else others.setdefault(each.pipeline, -1 - len(out) - len(others) - 1_000_000 * (depth + 1))
-            out.append(Command(each.words, pipeline, each.fed or command.fed, command.own_from))
+            own_from = start_of[command.own_from] if each.own_from == k else base + each.own_from
+            out.append(Command(each.words, pipeline, each.fed or command.fed, own_from))
     return out
 
 
@@ -2400,8 +2433,8 @@ def main(argv: list[str]) -> int:
             overrides = json.loads(args.pop(0))
     root = canonical(root)
     # `/` is no repository: everything stands under it, so nothing would be told apart, and every process of this user standing there would be ours (round 35).
-    if root == Path("/"):
-        say("host-guard: refused: a root of `/` holds every process this user has, and is no repository: name the repository's own directory")
+    if root == Path("/") or os.path.ismount(root):
+        say(f"host-guard: refused: a root of `/` or of a volume's mount, as `{root}` is, holds every process standing on it, and is no repository: name the repository's own directory")
         return 2
     # A `run` says whose it is on its command line, which is how the watcher knows its job is ours, wherever it was started from.
     # A `run` is known by what follows its root, the root's own spelling and a flag, so it writes both, as named or not.

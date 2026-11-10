@@ -1076,6 +1076,21 @@ def case_what_no_root_can_be() -> None:
     """A directory the kernel spells only by its tail names no directory, whatever that tail reads as, and `/` is no root (round 35)."""
     said = subprocess.run([*PY, str(GUARD), "status", "--root", "/"], capture_output=True, text=True, errors="replace", timeout=30)
     check("a root of `/` is refused, every process of this user standing there", said.returncode == 2 and "a root of `/`" in said.stderr, (said.returncode, said.stderr[-200:]))
+    # Nor a volume's mount, on which every project of the volume stands (round 36).
+    mount = ROOT.resolve()
+    while not os.path.ismount(mount):
+        mount = mount.parent
+    said = subprocess.run([*PY, str(GUARD), "status", "--root", str(mount)], capture_output=True, text=True, errors="replace", timeout=30)
+    check("nor a volume's mount", mount == Path("/") or (said.returncode == 2 and "a volume's mount" in said.stderr), (str(mount), said.returncode, said.stderr[-200:]))
+    # A name that is a pipe holds no guard that opens it: as a root, or named by a row that reads as another root's `run` (round 36).
+    pipe = fresh("pipe") / "fifo"
+    os.mkfifo(pipe)
+    answers: list = []
+    threading.Thread(target=lambda: answers.append((g.canonical(pipe), g.is_run_of(g.Process(1, 1, "", "", "", 0, argv=("python3", str(GUARD), "run", "--root", str(pipe.resolve()), "--", "sleep", "1")), str(ROOT)))), daemon=True).start()
+    check("a pipe named as a root holds no guard", until(lambda: bool(answers), 3), answers)
+    if not answers:
+        # Release what waits on it, so the test ends.
+        open(pipe, "w").close()
     # Outside a scratch root: one long name, then the root's own path again, name by name, and more below it, so that what the kernel can spell of it is a path under the root.
     base = fresh("deep")
     scope, elsewhere = base / "root", base / "else"
@@ -1096,6 +1111,15 @@ def case_what_no_root_can_be() -> None:
         said = g.NATIVE.cwd(deep.pid)
         check("a directory deeper than the kernel spells is no directory", said == "", said[:80])
         check("so a process standing in it outside a root is not that root's", deep.pid not in {p.pid for p in g.ours(g.processes(), g.canonical(scope), os.getpid())})
+        # Only a process whose path would make it ours is asked whether it stands there: a round stats a handful, never every row (round 36).
+        asked, real = [], g.is_that_directory
+        g.is_that_directory = lambda *args: asked.append(args[0]) or real(*args)
+        try:
+            table = g.processes()
+            g.ours(table, g.canonical(scope), os.getpid())
+        finally:
+            g.is_that_directory = real
+        check("a round asks only of what its path would make ours", len(asked) <= 4 and len(table) > 20, (len(asked), len(table), asked[:4]))
         # And a directory the kernel spells is still that directory.
         near = spawn(["/bin/sleep", "30"], scope)
         check("a directory the kernel spells is the process's own", until(lambda: g.NATIVE.cwd(near.pid) == str(g.canonical(scope)), 5), g.NATIVE.cwd(near.pid))
@@ -1564,6 +1588,14 @@ def case_a_kill_is_read_through_what_hides_it() -> None:
         "pgrep -x foo | python3 scripts/host_guard.py run -- sh -c 'xargs kill'",
         "pgrep -x foo | python3 scripts/host_guard.py run -- bash -c 'while read p; do kill $p; done'",
         "pgrep -x foo | python3 scripts/host_guard.py run -- python3 scripts/host_guard.py run -- xargs kill",
+        # A `run` whose job reads as nothing moves no later command's own substitutions out of its window; and what is fed to a `run` is fed to its job (round 36).
+        "python3 scripts/host_guard.py run -- env; kill $(pgrep -x foo)",
+        "python3 scripts/host_guard.py run -- bash -n x.sh && kill $(pgrep -x foo)",
+        "python3 scripts/host_guard.py run -- command -v cargo; pkill -P $(pgrep -x foo)",
+        "python3 scripts/host_guard.py run -- env\nkill $(pgrep -x foo)",
+        "python3 scripts/host_guard.py run -- bash <<'E'\npkill -x foo\nE",
+        "python3 scripts/host_guard.py run -- sh <<< 'pkill -x foo'",
+        "python3 scripts/host_guard.py run -- env bash <<'E'\npkill -x foo\nE",
     ):
         check(f"`{text}` is refused", refused(text))
     for text in (
@@ -1584,6 +1616,10 @@ def case_a_kill_is_read_through_what_hides_it() -> None:
         "python3 scripts/host_guard.py run -- kill 12345",
         "pgrep -x foo | python3 scripts/host_guard.py run -- xargs echo",
         "python3 scripts/host_guard.py run -- sh -c 'kill -0 \"$1\"' x 123",
+        # A `kill` is judged by its own substitution alone, beside a `run` or inside one, whatever the job searched before it (round 36).
+        "python3 scripts/host_guard.py run -- sh -c 'true; pgrep -x foo >/dev/null'; kill $(cat job.pid)",
+        "python3 scripts/host_guard.py run -- sh -c 'pgrep -x a >/dev/null; kill $(cat job.pid)'",
+        "python3 scripts/host_guard.py run -- bash <<'E'\ncargo build\nE",
     ):
         check(f"`{text}` is not", not refused(text))
     check("`env -` hides nothing it wraps", g.commands_of("env - cargo build")[0].words == ["cargo", "build"])
