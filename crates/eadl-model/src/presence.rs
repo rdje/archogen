@@ -190,6 +190,9 @@ pub struct FactMap {
     /// The blocks and platforms that are none of the hardware of the system this map is read for, by [`collect_silent`](Self::collect_silent): what one offers or declares
     /// absent answers no need there, and it is still declared, compared with itself, and visible (model §8 rule 7, leaf `M3.4.16`).
     silent: BTreeSet<String>,
+    /// Each fact the capability vocabulary derives, with the facts its rule requires, by [`derive`](Self::derive): no declaration states one, and the search computes it
+    /// where one provider offers each of those (model §2 rule 2, leaf `M3.4.17.1`).
+    derived: BTreeMap<String, Vec<String>>,
 }
 
 /// The outcome of a presence check.
@@ -292,6 +295,12 @@ impl FactMap {
     /// That `name` is a declaration's, the declaration no longer read: a block a target replaced.
     pub fn declare_name(&mut self, name: &str) {
         self.declared.insert(name.to_string());
+    }
+
+    /// That the capability vocabulary derives `fact` of these facts, as a caller that has read it says: such a fact is described where one block or platform offers
+    /// each of them, the search deriving it there and judging it by value.
+    pub fn derive(&mut self, fact: &str, of: &[String]) {
+        self.derived.insert(fact.to_string(), of.to_vec());
     }
 
     /// [`collect`](Self::collect), for a declaration whose offers answer nothing where the machine is another's: a service or a policy, to which the search binds nothing. It asks, and is
@@ -564,6 +573,32 @@ impl FactMap {
                 ),
             )
         };
+        let quoted = |facts: &[String]| {
+            facts
+                .iter()
+                .map(|f| format!("`{f}`"))
+                .collect::<Vec<_>>()
+                .join(", ")
+        };
+        let derived_in_part = |fact: &str,
+                               of: &[String],
+                               declaration: &str,
+                               undescribed: &[String]| {
+            Diagnostic::error(
+                "missing-fact",
+                format!(
+                    "`{fact}` is required by this system and no declaration offers it; the vocabulary derives it of {}, at one block \
+                     or platform offering each, and `{declaration}` offers part of that and leaves {} undescribed",
+                    quoted(of),
+                    quoted(undescribed)
+                ),
+                Label::new(self.request_span(fact), "required through this request"),
+                format!(
+                    "describe {} at `{declaration}`: then the search derives `{fact}` there and judges it by value",
+                    quoted(undescribed)
+                ),
+            )
+        };
         let nowhere = |kinds: &[AdapterPath]| {
             kinds
                 .iter()
@@ -645,6 +680,33 @@ impl FactMap {
                     Presence::Offered => {}
                     Presence::Absent => unreachable!("absence was handled above"),
                     Presence::Undescribed => {
+                        // A fact the vocabulary derives is stated by no one: it is described where one block or platform offers each fact its rule requires, the
+                        // search deriving it there and judging it by value (leaf `M3.4.17.1`).
+                        let mut derivation = String::new();
+                        if let Some(of) = self.derived.get(fact) {
+                            match self.offering(of) {
+                                Offering::Whole => break 'judged,
+                                Offering::Partial {
+                                    declaration,
+                                    undescribed,
+                                } => {
+                                    missing.push(fact.clone());
+                                    diagnostics.push(derived_in_part(
+                                        fact,
+                                        of,
+                                        &declaration,
+                                        &undescribed,
+                                    ));
+                                    break 'judged;
+                                }
+                                Offering::Nowhere => {
+                                    derivation = format!(
+                                        "; the vocabulary derives it of {}, which no one block or platform of this description offers",
+                                        quoted(of)
+                                    );
+                                }
+                            }
+                        }
                         let adapters = match self.path(fact, &kinds) {
                             Path::Whole => break 'judged,
                             Path::Partial {
@@ -656,8 +718,8 @@ impl FactMap {
                                 diagnostics.push(partial(fact, &kind, &declaration, &undescribed));
                                 break 'judged;
                             }
-                            Path::Nowhere(kinds) => nowhere(&kinds),
-                            Path::NoKind => String::new(),
+                            Path::Nowhere(kinds) => nowhere(&kinds) + &derivation,
+                            Path::NoKind => derivation,
                         };
                         missing.push(fact.clone());
                         // What offers it and is none of the system's hardware is named: the fact is described, on a machine the system does not have.
@@ -771,6 +833,40 @@ impl FactMap {
         partial.unwrap_or_else(|| Path::Nowhere(adding.into_iter().cloned().collect()))
     }
 
+    /// Where one block or platform that answers here offers each of `facts`: wholly; in part, the first that offers some and declares none of the rest absent, with
+    /// what it leaves undescribed; or nowhere.
+    fn offering(&self, facts: &[String]) -> Offering {
+        let stated = |map: &BTreeMap<String, Vec<Declaration>>, declaration: &str, name: &str| {
+            map.get(name)
+                .is_some_and(|ds| ds.iter().any(|d| d.declared_by == declaration))
+        };
+        let mut partial = None;
+        for declaration in self
+            .composes
+            .keys()
+            .filter(|name| !self.silent.contains(*name))
+        {
+            let undescribed: Vec<String> = facts
+                .iter()
+                .filter(|f| !stated(&self.offered, declaration, f))
+                .cloned()
+                .collect();
+            if undescribed.is_empty() {
+                return Offering::Whole;
+            }
+            let none_absent = undescribed
+                .iter()
+                .all(|f| !stated(&self.absent, declaration, f));
+            if partial.is_none() && undescribed.len() < facts.len() && none_absent {
+                partial = Some(Offering::Partial {
+                    declaration: declaration.clone(),
+                    undescribed,
+                });
+            }
+        }
+        partial.unwrap_or(Offering::Nowhere)
+    }
+
     /// Every block and platform `name` composes, at any composition depth.
     fn composed_by(&self, name: &str) -> BTreeSet<String> {
         let mut seen = BTreeSet::new();
@@ -808,6 +904,19 @@ impl FactMap {
 enum Slot {
     Offered,
     Absent,
+}
+
+/// Where one block or platform offers each fact of a list, by [`FactMap::offering`].
+enum Offering {
+    /// One offers each.
+    Whole,
+    /// One offers some, and leaves these undescribed.
+    Partial {
+        declaration: String,
+        undescribed: Vec<String>,
+    },
+    /// None offers any of it beside an absence of the rest.
+    Nowhere,
 }
 
 /// What a block or a platform composes directly: every name a `uses` list of its holds, wherever the declaration

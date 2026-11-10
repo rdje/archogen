@@ -110,15 +110,24 @@ const KIND_MODULES: &[(&str, &str)] = &[
     ),
 ];
 
-/// Each fact the shipped capability vocabulary declares, by name: the check reads a fact outside it on each system's
-/// own hardware, the search binding nothing for one (model §2; leaf `M3.4.16`). None where the vocabulary does not
-/// read, which `resolve` reports as the tool's failure and a check then reads every description whole.
+/// What the shipped capability vocabulary says that the check reads. Each fact it declares, by name: the check reads a
+/// fact outside it on each system's own hardware, the search binding nothing for one (model §2; leaf `M3.4.16`). And
+/// each fact it derives, with the facts its rule requires: the check reads one as described where one block or
+/// platform offers each, as the search derives it (leaf `M3.4.17.1`). None where the vocabulary does not read, which
+/// `resolve` reports as the tool's failure and a check then reads every description whole.
 fn vocabulary_facts(
     kinds: &eadl_model::kind::Registry,
-) -> Option<std::collections::BTreeSet<String>> {
+) -> Option<eadl_model::check::VocabularyFacts> {
     let mut sources = eadl_front::SourceMap::new();
     let vocabulary = eadl_resolve::vocabulary::Vocabulary::shipped(&mut sources, kinds).ok()?;
-    Some(vocabulary.facts().map(|fact| fact.name.clone()).collect())
+    Some(eadl_model::check::VocabularyFacts {
+        declared: vocabulary.facts().map(|fact| fact.name.clone()).collect(),
+        derived: vocabulary
+            .facts()
+            .filter(|fact| !fact.derived_from.is_empty())
+            .map(|fact| (fact.name.clone(), fact.derived_from.clone()))
+            .collect(),
+    })
 }
 
 /// The shipped kind modules, owned so a [`SourceMap`] can take them.

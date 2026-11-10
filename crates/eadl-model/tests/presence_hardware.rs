@@ -10,9 +10,11 @@
 use std::path::{Path, PathBuf};
 
 use eadl_front::{SourceMap, Verdict};
-use std::collections::BTreeSet;
+use std::collections::BTreeMap;
 
-use eadl_model::check::{check, check_with_vocabulary, default_profile, shipped_registry};
+use eadl_model::check::{
+    check, check_with_vocabulary, default_profile, shipped_registry, VocabularyFacts,
+};
 
 fn repo_root() -> PathBuf {
     Path::new(env!("CARGO_MANIFEST_DIR"))
@@ -22,14 +24,19 @@ fn repo_root() -> PathBuf {
         .to_path_buf()
 }
 
-/// Each fact the capability vocabulary declares, by name, read as a caller of the check hands them down.
-fn vocabulary() -> BTreeSet<String> {
-    std::fs::read_to_string(repo_root().join("docs/semantics/vocabulary/vocabulary.eadl"))
-        .expect("the vocabulary")
-        .lines()
-        .filter_map(|line| line.strip_prefix("(deffact "))
-        .map(|rest| rest.trim().to_string())
-        .collect()
+/// Each fact the capability vocabulary declares, by name, read as a caller of the check hands them down. What it derives is `presence_derived.rs`'s to hold.
+fn vocabulary() -> VocabularyFacts {
+    let declared =
+        std::fs::read_to_string(repo_root().join("docs/semantics/vocabulary/vocabulary.eadl"))
+            .expect("the vocabulary")
+            .lines()
+            .filter_map(|line| line.strip_prefix("(deffact "))
+            .map(|rest| rest.trim().to_string())
+            .collect();
+    VocabularyFacts {
+        declared,
+        derived: BTreeMap::new(),
+    }
 }
 
 /// The verdict of the check on `text`, told the vocabulary or not, and each error it gives as `code: message`.
@@ -241,7 +248,7 @@ fn hardware_outside_a_system_s_asks_nothing_of_it() {
 fn a_check_told_no_vocabulary_reads_every_description_whole() {
     // This crate lies below the vocabulary's: a caller that names none gets the reading of before, and the commands name it.
     assert_eq!(judged(OUTSIDE, false).0, Verdict::Ok);
-    let facts = vocabulary();
+    let facts = vocabulary().declared;
     assert!(
         facts.len() > 30 && facts.contains("observable-output") && !facts.contains("sha-accel")
     );

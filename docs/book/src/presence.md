@@ -109,6 +109,15 @@ whose timer leaves its modulus undescribed ([Checking a description](checking.md
 reads names only, so a path that holds by name and fails by value is the search's to refuse
 (leaf `M3.2.4`).
 
+A second kind of fact no declaration states at all: one the vocabulary **derives**. How far a
+counter can be read without ambiguity, `unambiguous-horizon`, is computed from its modulus and its
+tick rate, and the search computes it at the device that offers both. So presence asks the same
+question of such a fact, by name: does one block or platform offer everything the rule needs? If
+one does, the fact is the search's to derive and bind. If one offers part, the answer is
+`missing-fact`, naming what is left to describe there. Before leaf `M3.4.17.1` a need written
+directly on such a fact was refused by `check` and bound by `resolve`, on one description; a test
+at the command now holds the two together (`crates/archogen-cli/tests/presence_derived.rs`).
+
 ### Contradictions are rejected, never resolved
 
 A contradiction is one declaration saying both of itself — F06's case, `docs/semantics/cases/invalid-contradictory-presence.eadl`:

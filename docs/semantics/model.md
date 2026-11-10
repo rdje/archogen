@@ -105,6 +105,16 @@ A platform declares what it **offers** and what it declares **absent**; a system
    `missing-fact`, its repair the facts to describe; otherwise rule 2 or 3 reads as above, its repair naming what an
    adapter would need. Presence reads names alone, so a path by name that fails by value, or one at a block or platform
    outside the system's hardware, is accepted here and refused by the search until `M3.4.7`.
+   **A fact the vocabulary derives is read as the search derives it** (leaf `M3.4.17.1`). No declaration states such a
+   fact: the search computes it at a provider offering each fact its rule requires, `unambiguous-horizon` of a
+   `counter-modulus` and a `tick-rate`, and binds there. So for a required fact the vocabulary derives and none offers,
+   rule 3 asks whether one block or platform of the description offers, by name, each of those facts: where one does,
+   the fact is the search's to derive, bind or refuse, and this rule refuses nothing; where one offers part of them and
+   leaves the rest undescribed there, declaring none of it absent, the fact is `missing-fact`, its repair the facts to
+   describe; otherwise rule 3 reads as above, its repair naming what the rule would need. It is read by name and of the
+   description whole, as any fact of the vocabulary is: a derivation that fails by value, or one at a block or platform
+   outside the system's hardware, is the search's to refuse. The check is told the vocabulary's rules by the caller
+   that reads it, and one told none reads as before.
    **A fact the vocabulary does not declare is read on each system's own hardware** (§8 rule 7; leaf `M3.4.16`). The
    search binds nothing for such a fact, so rules 2 and 3 alone judge it, and they read it as the search reads a
    system. What a block or a platform offers or declares absent answers the system's need only where it is of that

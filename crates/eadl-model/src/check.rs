@@ -34,7 +34,7 @@
 //! An author who has three problems gets three messages and one instruction about which to
 //! start with.
 
-use std::collections::BTreeSet;
+use std::collections::{BTreeMap, BTreeSet};
 
 use eadl_front::language_version::{declarations, is_identifier};
 use eadl_front::{
@@ -205,6 +205,16 @@ pub fn check(
     passes(forms, registry, active_profile, Vec::new(), None)
 }
 
+/// What the capability vocabulary says that the check reads, handed down by a caller that has read it: the vocabulary is the search's to read, and this crate lies
+/// below the one that does.
+#[derive(Debug, Clone, Default, PartialEq, Eq)]
+pub struct VocabularyFacts {
+    /// Each fact it declares, by name: one it does not declare is read on each system's own hardware (leaf `M3.4.16`).
+    pub declared: BTreeSet<String>,
+    /// Each fact it derives, with the facts its rule requires: one is described where one block or platform offers each of those (leaf `M3.4.17.1`).
+    pub derived: BTreeMap<String, Vec<String>>,
+}
+
 /// [`check`], told each fact the capability vocabulary declares: a fact it does not declare is then read on each
 /// system's own hardware (model §2; leaf `M3.4.16`). The vocabulary is the search's to read and this crate lies below
 /// the search's, so what calls both hands the names down, and [`check`] alone reads every description whole.
@@ -214,7 +224,7 @@ pub fn check_with_vocabulary(
     source: SourceId,
     registry: &Registry,
     active_profile: &Profile,
-    vocabulary: &BTreeSet<String>,
+    vocabulary: &VocabularyFacts,
 ) -> Outcome {
     let (document, read_diagnostics) = read(sources, source);
     let forms: Vec<Form> = document
@@ -259,7 +269,7 @@ pub fn check_program_with_vocabulary(
     program: &Program,
     registry: &Registry,
     active_profile: &Profile,
-    vocabulary: &BTreeSet<String>,
+    vocabulary: &VocabularyFacts,
 ) -> Outcome {
     let (forms, unresolved) = resolved_declarations(program);
     let mut findings = Vec::new();
@@ -385,7 +395,7 @@ fn passes(
     registry: &Registry,
     active_profile: &Profile,
     mut findings: Vec<Finding>,
-    vocabulary: Option<&BTreeSet<String>>,
+    vocabulary: Option<&VocabularyFacts>,
 ) -> Outcome {
     // ── boundary (F27) ───────────────────────────────────────────────────────────────────────
     let mut boundary_errors = Vec::new();
@@ -446,6 +456,11 @@ fn passes(
     for form in &forms {
         facts.collect(form);
     }
+    // A fact the vocabulary derives is stated by no declaration, and the search computes it: presence is told the rule's facts, and reads it as described where one
+    // block or platform offers each (leaf `M3.4.17.1`).
+    for (fact, of) in vocabulary.iter().flat_map(|told| &told.derived) {
+        facts.derive(fact, of);
+    }
     let presence = facts.check_excluding(&out_of_profile);
     let closure = Closure {
         inside: presence.pulled_in_by.clone(),
@@ -470,7 +485,7 @@ fn passes(
             !presence
                 .judged
                 .iter()
-                .any(|(fact, of_it)| of_it == diagnostic && !vocabulary.contains(fact))
+                .any(|(fact, of_it)| of_it == diagnostic && !vocabulary.declared.contains(fact))
         });
         for system in systems {
             let has = crate::presence::hardware(system, &forms);
@@ -488,7 +503,7 @@ fn passes(
                 }
             }
             for (fact, diagnostic) in on_its_hardware.check_excluding(&out_of_profile).judged {
-                if !vocabulary.contains(&fact) && !said.contains(&diagnostic) {
+                if !vocabulary.declared.contains(&fact) && !said.contains(&diagnostic) {
                     said.push(diagnostic);
                 }
             }
