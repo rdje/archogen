@@ -1062,11 +1062,45 @@ def case_a_root_renamed_in_case_is_still_watched() -> None:
             # A volume that keeps case apart: the old name is gone, and the root with it.
             check("where case is kept apart a root renamed is gone, and its watcher with it", settle(watcher, 10))
             return
+        # A `run` started before the rename names the old spelling: it is still this root's, by the directory it names (round 35).
+        before = g.Process(1, 1, "", "", "", 0, argv=("python3", str(GUARD), "run", "--root", str(scope), "--", "sleep", "1"))
+        check("a `run` that named its root before a rename in case is still that root's", g.is_run_of(before, str(g.canonical(renamed))))
         big = holding(80, renamed)
         check("a job in a root renamed in case alone under its watcher is still stopped", settle(big, 10), events(renamed))
         check("and its watcher goes on", up(watcher))
     finally:
         subprocess.run([*PY, str(GUARD), "stop", "--root", str(base / "casey")], capture_output=True, timeout=30)
+
+
+def case_what_no_root_can_be() -> None:
+    """A directory the kernel spells only by its tail names no directory, whatever that tail reads as, and `/` is no root (round 35)."""
+    said = subprocess.run([*PY, str(GUARD), "status", "--root", "/"], capture_output=True, text=True, errors="replace", timeout=30)
+    check("a root of `/` is refused, every process of this user standing there", said.returncode == 2 and "a root of `/`" in said.stderr, (said.returncode, said.stderr[-200:]))
+    # Outside a scratch root: one long name, then the root's own path again, name by name, and more below it, so that what the kernel can spell of it is a path under the root.
+    base = fresh("deep")
+    scope, elsewhere = base / "root", base / "else"
+    scope.mkdir()
+    elsewhere.mkdir()
+    parts = ["p" * 200, *str(scope).strip("/").split("/"), *["q" * 14] * 57, "job"]
+    here = os.getcwd()
+    os.chdir(elsewhere)
+    try:
+        for part in parts:
+            os.mkdir(part)
+            os.chdir(part)
+        deep = spawn(["/bin/sleep", "30"], Path("."))
+    finally:
+        os.chdir(here)
+    try:
+        check("it is running", until(lambda: up(deep), 5))
+        said = g.NATIVE.cwd(deep.pid)
+        check("a directory deeper than the kernel spells is no directory", said == "", said[:80])
+        check("so a process standing in it outside a root is not that root's", deep.pid not in {p.pid for p in g.ours(g.processes(), g.canonical(scope), os.getpid())})
+        # And a directory the kernel spells is still that directory.
+        near = spawn(["/bin/sleep", "30"], scope)
+        check("a directory the kernel spells is the process's own", until(lambda: g.NATIVE.cwd(near.pid) == str(g.canonical(scope)), 5), g.NATIVE.cwd(near.pid))
+    finally:
+        clean_up()
 
 
 def case_a_root_spelt_relatively_stays_that_root() -> None:
@@ -1522,6 +1556,14 @@ def case_a_kill_is_read_through_what_hides_it() -> None:
         "zsh -n +o noexec -c 'pkill y'",
         "bash -n +o noexec <<'E'\npkill y\nE",
         "bash -n -o posix +n -c 'pkill y'",
+        # A search outside a guard's `run` reaches a kill inside it, the run's job read as a shell reads it, through a wrapper or a shell's text (round 35).
+        "pgrep -x foo | python3 scripts/host_guard.py run --wait 5 -- xargs kill",
+        "python3 scripts/host_guard.py run -- nice kill $(pgrep -x foo)",
+        "python3 scripts/host_guard.py run -- env kill $(pgrep -x foo)",
+        "python3 scripts/host_guard.py run -- timeout 5 kill $(pgrep -x foo)",
+        "pgrep -x foo | python3 scripts/host_guard.py run -- sh -c 'xargs kill'",
+        "pgrep -x foo | python3 scripts/host_guard.py run -- bash -c 'while read p; do kill $p; done'",
+        "pgrep -x foo | python3 scripts/host_guard.py run -- python3 scripts/host_guard.py run -- xargs kill",
     ):
         check(f"`{text}` is refused", refused(text))
     for text in (
@@ -1539,6 +1581,9 @@ def case_a_kill_is_read_through_what_hides_it() -> None:
         "kill -s 0 123",
         "bash -n -c 'pkill y'",
         "bash -nc 'pkill y'",
+        "python3 scripts/host_guard.py run -- kill 12345",
+        "pgrep -x foo | python3 scripts/host_guard.py run -- xargs echo",
+        "python3 scripts/host_guard.py run -- sh -c 'kill -0 \"$1\"' x 123",
     ):
         check(f"`{text}` is not", not refused(text))
     check("`env -` hides nothing it wraps", g.commands_of("env - cargo build")[0].words == ["cargo", "build"])
@@ -2467,17 +2512,20 @@ def case_run() -> None:
         time.sleep(0.5)
         blind = subprocess.Popen([*PY, str(GUARD), "run", "--root", str(scope), "--limits", json.dumps({"watcher_stale_seconds": 1}), "--", "sleep", "40"], env=env, stdout=subprocess.DEVNULL, stderr=subprocess.PIPE, start_new_session=True)
         started.append(blind)
-        # A full host takes longer than any one sleep to start it: its job standing is what this waits for.
-        until(lambda: jobs_of(blind.pid), 20)
-        its_job = jobs_of(blind.pid)
-        flag.write_text("")
-        # The watcher this `run` started has the same `ps`, so it goes blind too.
-        try:
-            rc = blind.wait(timeout=25)
-        except subprocess.TimeoutExpired:
-            rc = None
-        check("a `run` no watcher can see for ends its job", rc == 75 and bool(its_job) and not any(pid_up(pid) for pid in its_job), (rc, its_job))
-        flag.unlink()
+        # A `run` the host refused started nothing, and exits as a blind one would: that is said as not run, as its neighbours say it, never as a failure (round 35).
+        if not run_refused(blind, "a `run` no watcher can see for ends its job"):
+            # A full host takes longer than any one sleep to start it: its job standing is what this waits for.
+            until(lambda: jobs_of(blind.pid), 20)
+            its_job = jobs_of(blind.pid)
+            flag.write_text("")
+            # The watcher this `run` started has the same `ps`, so it goes blind too.
+            try:
+                rc = blind.wait(timeout=25)
+            except subprocess.TimeoutExpired:
+                rc = None
+            told = blind.stderr.read().decode("utf-8", "replace")[-300:] if rc is not None else ""
+            check("a `run` no watcher can see for ends its job", rc == 75 and bool(its_job) and not any(pid_up(pid) for pid in its_job), (rc, its_job, told))
+            flag.unlink()
         guard("stop", root=scope)
         # A `run` started from anywhere, naming no root, says on its command line whose it is.
         repo, elsewhere = fresh("run-repo"), fresh("run-elsewhere")
@@ -2509,7 +2557,7 @@ PURE = (    case_a_commit_holds_what_make_and_the_limits_can_be_told, case_what_
     case_a_kill_is_read_through_what_hides_it, case_a_path_holding_a_space_is_one_path,
 case_each_line_judges_alone, case_growth_is_of_the_last_minutes, case_what_counts_as_heavy, case_the_reader_sees_what_the_shell_runs, case_where_a_root_is)
 THE_REST = (
-    case_a_job_under_run_outlasts_a_changed_guard, case_what_is_handed_on_is_a_watcher_s_own, case_a_watcher_whose_interpreter_is_gone_goes_on, case_a_watcher_ended_by_its_own_error_says_so, case_a_root_spelt_relatively_stays_that_root, case_a_root_renamed_in_case_is_still_watched, case_make_looks_for_the_whole_guard,
+    case_a_job_under_run_outlasts_a_changed_guard, case_what_is_handed_on_is_a_watcher_s_own, case_a_watcher_whose_interpreter_is_gone_goes_on, case_a_watcher_ended_by_its_own_error_says_so, case_a_root_spelt_relatively_stays_that_root, case_a_root_renamed_in_case_is_still_watched, case_what_no_root_can_be, case_make_looks_for_the_whole_guard,
     case_only_tightened, case_check_refuses, case_a_figure_not_read_is_never_safe, case_one_process, case_all_processes, case_what_a_stopped_process_started,
     case_another_project_is_never_ours, case_a_terminal_vouches_for_nothing, case_a_root_is_exactly_itself, case_agents, case_what_holds_little_is_left_alone, case_a_job_is_stopped_whole,
     case_a_queued_make_is_no_build, case_at_a_disk_floor_what_writes_stops, case_names_and_zombies, case_a_command_line_that_is_no_text, case_pressure, case_not_ours, case_growing,

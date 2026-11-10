@@ -434,10 +434,20 @@ class Darwin:
         return int.from_bytes(buffer.raw[72:80], sys.byteorder), int.from_bytes(buffer.raw[152:160], sys.byteorder)
 
     def cwd(self, pid: int) -> str:
+        """Its working directory, where the path the kernel gives is that directory: by the device and inode the kernel gives beside it, as measured on this host. A directory deeper
+        than the kernel spells is given by its tail, which can read as any path, a root's among them (round 35); a directory removed or replaced names nothing. Either is no directory."""
         buffer = ctypes.create_string_buffer(2352)  # proc_vnodepathinfo
         if self.lib.proc_pidinfo(pid, 9, 0, buffer, 2352) <= 0:  # PROC_PIDVNODEPATHINFO
             return ""
-        return buffer.raw[152:152 + 1024].split(b"\0", 1)[0].decode("utf-8", "replace")
+        raw = buffer.raw
+        path = raw[152:152 + 1024].split(b"\0", 1)[0].decode("utf-8", "replace")
+        # `vinfo_stat`: its device, 32 bits, first, and its inode, 64 bits, at eight.
+        device, inode = int.from_bytes(raw[0:4], sys.byteorder), int.from_bytes(raw[8:16], sys.byteorder)
+        try:
+            standing = os.stat(path)
+        except (OSError, ValueError):
+            return ""
+        return path if (standing.st_dev & 0xFFFFFFFF, standing.st_ino) == (device, inode) else ""
 
     def exe(self, pid: int) -> str:
         buffer = ctypes.create_string_buffer(4096)
@@ -621,7 +631,8 @@ def is_run_of(process: Process, root: str) -> bool:
     if not process.argv:
         return names_root(process.command, root)
     own = told[1 : told.index("--")] if "--" in told else told[1:]
-    return any(flag == "--root" and named == root for flag, named in zip(own, own[1:]))
+    # By the directory: a root renamed in case alone after a `run` named it is the same root by another spelling, and its job is still ours (round 35).
+    return any(flag == "--root" and (named == root or (os.path.isabs(named) and str(canonical(Path(named))) == root)) for flag, named in zip(own, own[1:]))
 
 
 def line_of(table: list[Process], pid: int) -> set[int]:
@@ -1961,6 +1972,27 @@ def what_a_run_runs(words: list[str]) -> list[str]:
     return rest[1:] if rest[:1] == ["--"] else rest
 
 
+def read_through_runs(commands: list[Command], depth: int = 0) -> list[Command]:
+    """These commands, a guard's `run` among them replaced by what its job runs as a shell would read it: in the run's pipeline where the job's first pipeline stands and in one of its own
+    for each other, fed where the run is, and with the substitutions of the run's own words before it. A `run` inside a job is read the same way, to a depth no command needs."""
+    if depth > 16:
+        raise ValueError("a guard's `run` inside one sixteen times over is too deep to read")
+    out: list[Command] = []
+    for command in commands:
+        told = what_a_run_runs(command.words)
+        if not told:
+            out.append(command)
+            continue
+        job = read_through_runs(commands_of(shlex.join(told)), depth + 1)
+        if not job:
+            continue
+        first, others = job[0].pipeline, {}
+        for each in job:
+            pipeline = command.pipeline if each.pipeline == first else others.setdefault(each.pipeline, -1 - len(out) - len(others) - 1_000_000 * (depth + 1))
+            out.append(Command(each.words, pipeline, each.fed or command.fed, command.own_from))
+    return out
+
+
 def is_number(word: str, value: int) -> bool:
     """Whether `word` is `value` as the widest of the tools reads a number, `pgrep`: `01`, `0x1`, `+1` and ` 1` are each 1. `kill` refuses some of them, which stops nothing."""
     text = word.strip()
@@ -1976,14 +2008,15 @@ def kills_by_name(commands: list[Command], root: Path) -> bool:
     """Whether these stop processes by a name rather than a pid, with nothing saying it means this repository's: `pkill` or `killall` naming no path here, or `kill` of what a search
     of the process table found. A search names this root if anything in its pipeline does. `-P` goes by a parent's pid, and `kill` of numbers by theirs, whatever else ran before."""
     text = str(root)
-    # What the guard's own `run` is told to run is that command, and a refusal sends an agent there. Read here as itself, a search among it, and alone for what it wraps.
-    read_through: list[Command] = []
-    for command in commands:
-        told = what_a_run_runs(command.words)
-        if told and kills_by_name(commands_of(shlex.join(told)), root):
-            return True
-        read_through.append(Command(told, command.pipeline, command.fed, command.own_from) if told else command)
-    commands = read_through
+    # What the guard's own `run` is told to run is that command, and a refusal sends an agent there. Read here alone, a search among it, and in the run's place among the rest: its job
+    # read as a shell would read it, what a wrapper or a shell's text runs in place of it, in the run's pipeline, fed as the run is, and after what came before the run. Put in unread,
+    # `pgrep -x rustc | … run -- xargs kill` passed, the `xargs` hiding the `kill` (round 35).
+    if any(what_a_run_runs(command.words) for command in commands):
+        for command in commands:
+            told = what_a_run_runs(command.words)
+            if told and kills_by_name(commands_of(shlex.join(told)), root):
+                return True
+        return kills_by_name(read_through_runs(commands), root)
 
     def names_this_root(word: str) -> bool:
         # Exactly it: `archogen-other` and `archogen copy` begin the same, and neither a name's own characters nor a space end a path.
@@ -2366,6 +2399,10 @@ def main(argv: list[str]) -> int:
         else:
             overrides = json.loads(args.pop(0))
     root = canonical(root)
+    # `/` is no repository: everything stands under it, so nothing would be told apart, and every process of this user standing there would be ours (round 35).
+    if root == Path("/"):
+        say("host-guard: refused: a root of `/` holds every process this user has, and is no repository: name the repository's own directory")
+        return 2
     # A `run` says whose it is on its command line, which is how the watcher knows its job is ours, wherever it was started from.
     # A `run` is known by what follows its root, the root's own spelling and a flag, so it writes both, as named or not.
     if verb == "run":
