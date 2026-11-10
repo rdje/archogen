@@ -16,10 +16,9 @@
 - **Active tree:** `M4` → frontier `M4.1`, the accepted runtime plan, the model's amendments done (`M4.1.2`): `/1` for
   the hosted playground; `PROGRAM` → `PROGRAM.34`, the director's.
 - **The host is shared:** every heavy job goes through `scripts/host_guard.py`, one at a time (`docs/decisions/decision_host-guard.md`). A reader's brief says so.
-- **Next action:** answer `M4.1.7.2.3`, format `/2`'s round 3 (`target/m4329/report.md`), by the executable-design method, its draft under
-  `target/m4329/land/` and `M4.md`'s Log of `2026-11-10` saying how. `PROGRAM.127.31`, the guard's round 31, has a reader out, its report
-  to be saved at `target/p12731/report.md`: none there means ask again. The hosted build's review is closed. A fresh reader then for
-  `M4.12.1.5`, the application inputs' round 5, on the commit that holds `/2`'s answer. Then `M3.4.16` and `M3.4.17`, P3.
+- **Next action:** answer each reader as it reports, three being out, each report saved under `target/` and none there meaning ask again:
+  `M4.1.7.2.4`, format `/2`'s round 4, with its model (`target/m4331/report.md`); `M4.12.1.5`, the application inputs' round 5
+  (`target/m4332/report.md`); `PROGRAM.127.31`, the guard's round 31 (`target/p12731/report.md`). Then `M3.4.16` and `M3.4.17`, P3.
   `M4.5.2` and `M4.3.6` wait on `M4.1.7`, `M4.3.4` on `M2.21`. The runtime plan's design is accepted (`M4.1.1` done).
   `M3.2.7` and `M3.5.9`, full verification, wait for the
   features (doctrine 22).

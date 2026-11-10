@@ -196,12 +196,17 @@ application's inputs. A size only a catalog record can state stays owed until on
 address below it is known.
 
 Stacks are laid from the top of a region down and the image from the bottom up, so a change in the image's size moves no
-allocation. A stack's size is what its owners state: a task's own bound, the most the runtime's code adds in a
+allocation. A stack's size is what its owners state, by one table of sums: what generated code holds beneath what it calls, a task's own bound, the most the runtime's code adds in a
 call, what a fault adds on top of the deepest of those, since a failed check or a panic can arrive there, and the frame the port saves. What the generated code uses of a stack comes of that code, so a first plan generates it with those figures
-owed, and a second, from a file stating them, generates the same code: what an image holds of its plan leaves the figures out, and where each came from.
+owed, and a second, from a file stating them, generates the same code: what an image holds of its plan leaves out the figures of that code and of the application's, and where each came from, by one table of the plan's lines.
 
 Time on a machine is counted from a read: the last step of initialisation reads the counter and counts every release from that read plus the port's
-bound on everything from it to the first enabling of interrupts, so no release stands before interrupts are on.
+bound on everything from it to the first enabling of interrupts, so no release stands before interrupts are on, and the checker holds that one
+write of the timer reaches the first of them that far out.
+
+The record's formulas are not left to reading. A model beside it, `crates/archogen-plan/tests/format2_model.rs`, runs each one: where the image may lie and
+where each stack is laid, against a reference that tries every address in turn, over every small region; each stack's sum, read from the record's own table,
+against what can stand on that stack at once; and the read that time is counted from, at every phase of the counter's tick.
 
 ## From a plan to a generated system
 
