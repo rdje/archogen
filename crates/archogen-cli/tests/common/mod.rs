@@ -16,6 +16,42 @@ use archogen_outcome::record::Producer;
 use archogen_plan_check::judgement::{judge, profile, Inputs};
 use eadl_front::DirectoryModules;
 
+/// Every name under `dir`, at any depth, with what it is: a directory, a link and where it leads, a file and its bytes, or something else, a pipe among it, which is
+/// never read. A row that says a run made nothing compares this before and after, so it holds that of the whole tree it was given, a stage beside what it names and an
+/// empty directory among it, and not of the one or two names its writer thought of (the hosted build's review, R28-2).
+#[allow(dead_code)]
+pub fn everything_under(dir: &Path) -> std::collections::BTreeMap<String, Vec<u8>> {
+    fn walk(root: &Path, dir: &Path, into: &mut std::collections::BTreeMap<String, Vec<u8>>) {
+        for entry in std::fs::read_dir(dir).expect("a directory") {
+            let path = entry.expect("an entry").path();
+            let name = path
+                .strip_prefix(root)
+                .expect("inside")
+                .display()
+                .to_string();
+            let kind = std::fs::symlink_metadata(&path)
+                .expect("what it is")
+                .file_type();
+            if kind.is_symlink() {
+                let leads = std::fs::read_link(&path).expect("a link");
+                into.insert(name, format!("link {}", leads.display()).into_bytes());
+            } else if kind.is_dir() {
+                into.insert(name, b"directory".to_vec());
+                walk(root, &path, into);
+            } else if kind.is_file() {
+                let mut bytes = b"file ".to_vec();
+                bytes.extend(std::fs::read(&path).expect("a file"));
+                into.insert(name, bytes);
+            } else {
+                into.insert(name, b"something else".to_vec());
+            }
+        }
+    }
+    let mut found = std::collections::BTreeMap::new();
+    walk(dir, dir, &mut found);
+    found
+}
+
 /// The rows of the table in `chapter` after `<!-- machine-read: name -->`, each row its cells, code spans unwrapped, its header
 /// and its rule left out. Only the test binaries that hold a table to its chapter call it.
 #[allow(dead_code)]

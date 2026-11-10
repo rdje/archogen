@@ -569,6 +569,39 @@ fn a_task_the_plan_cannot_say_what_releases_writes_nothing() {
     );
 }
 
+/// What holds that a run made nothing sees each thing a run could make: an empty directory at any depth, a file's other bytes, and a link.
+#[test]
+#[cfg(unix)]
+fn what_holds_that_nothing_was_made_sees_each_thing_made() {
+    let root = scratch("everything-under");
+    fs::create_dir_all(root.join("a/b")).expect("directories");
+    fs::write(root.join("a/f"), "x").expect("written");
+    let before = common::everything_under(&root);
+    assert_eq!(
+        common::everything_under(&root),
+        before,
+        "one tree, read twice"
+    );
+    fs::create_dir(root.join("a/b/empty")).expect("a directory");
+    let with_a_directory = common::everything_under(&root);
+    assert_ne!(
+        with_a_directory, before,
+        "an empty directory is something made"
+    );
+    fs::write(root.join("a/f"), "y").expect("written");
+    let with_other_bytes = common::everything_under(&root);
+    assert_ne!(
+        with_other_bytes, with_a_directory,
+        "a file's bytes are held"
+    );
+    std::os::unix::fs::symlink("f", root.join("a/l")).expect("a link");
+    assert_ne!(
+        common::everything_under(&root),
+        with_other_bytes,
+        "a link is something made"
+    );
+}
+
 #[test]
 fn a_build_with_no_checker_to_run_generates_nothing() {
     // What every surface but the executable holds, so a library or a server can never build.
@@ -2124,8 +2157,9 @@ fn out_routes() -> Vec<(&'static str, Route)> {
             outcome
         }),
         ("back-through", |root| {
+            let before = common::everything_under(root);
             let outcome = build_at(&root.join("missing/../x"));
-            assert!(!root.join("missing").exists() && !root.join("x").exists());
+            assert_eq!(common::everything_under(root), before, "something was made");
             outcome
         }),
         ("a-file", |root| {
@@ -2295,8 +2329,9 @@ fn out_routes() -> Vec<(&'static str, Route)> {
             let mut outcome = None;
             for shape in shapes {
                 fs::write(&file, &shape).expect("written");
+                let before = common::everything_under(root);
                 let run = said(build(&file.display().to_string(), &dir));
-                assert!(!dir.exists());
+                assert_eq!(common::everything_under(root), before, "something was made");
                 let (_, words) = run.as_ref().expect("it ran");
                 assert_eq!(
                     words.matches("error[").count(),
@@ -2324,8 +2359,9 @@ fn out_routes() -> Vec<(&'static str, Route)> {
             text.push_str(&format!("(defsystem m (task t (period 100 ms) (deadline 100 ms) (deadline-from release) (priority 1) (uses svc0) (on-overrun fault)) (requires {uses}) (platform (uses soc)))\n"));
             fs::write(&file, text).expect("written");
             let dir = root.join("x");
+            let before = common::everything_under(root);
             let outcome = said(build(&file.display().to_string(), &dir));
-            assert!(!dir.exists());
+            assert_eq!(common::everything_under(root), before, "something was made");
             let (_, words) = outcome.as_ref().expect("it ran");
             assert_eq!(words.matches("error[").count(), 3, "{words}");
             outcome
@@ -2495,11 +2531,12 @@ fn out_routes() -> Vec<(&'static str, Route)> {
                 .expect("mkfifo runs");
             assert!(made.success());
             let (writer, text) = (pipe.clone(), fs::read(example(HEARTBEAT)).expect("read"));
+            let before = common::everything_under(root);
             let feeding = std::thread::spawn(move || fs::write(writer, text));
             let dir = root.join("x");
             let outcome = said(build(&pipe.display().to_string(), &dir));
             feeding.join().expect("the writer").expect("written");
-            assert!(!dir.exists() && !beside(&dir, ".building").exists());
+            assert_eq!(common::everything_under(root), before, "something was made");
             outcome
         }),
         ("reads-differently", |root| {
@@ -2508,6 +2545,7 @@ fn out_routes() -> Vec<(&'static str, Route)> {
                 return None;
             }
             fs::copy(example(HEARTBEAT), root.join("s.eadl")).expect("copied");
+            let before = common::everything_under(root);
             let output = Command::new("sh")
                 .arg("-c")
                 .arg("\"$0\" build /dev/stdin --out x < s.eadl")
@@ -2515,7 +2553,7 @@ fn out_routes() -> Vec<(&'static str, Route)> {
                 .current_dir(root)
                 .output()
                 .expect("the shell runs");
-            assert!(!root.join("x").exists() && !root.join("x.building").exists());
+            assert_eq!(common::everything_under(root), before, "something was made");
             assert_eq!(
                 output.status.code(),
                 Some(Status::Usage.code()),
@@ -2541,6 +2579,7 @@ fn out_routes() -> Vec<(&'static str, Route)> {
                 .expect("mkfifo runs");
             assert!(made.success());
             let writer = module.clone();
+            let before = common::everything_under(root);
             let feeding = std::thread::spawn(move || fs::write(writer, text));
             let dir = root.join("x");
             let outcome = said(build(
@@ -2548,18 +2587,19 @@ fn out_routes() -> Vec<(&'static str, Route)> {
                 &dir,
             ));
             feeding.join().expect("the writer").expect("written");
-            assert!(!dir.exists() && !beside(&dir, ".building").exists());
+            assert_eq!(common::everything_under(root), before, "something was made");
             outcome
         }),
         ("no-checker", |root| {
             // The real executable, and no install beside it.
             let dir = root.join("x");
+            let before = common::everything_under(root);
             let output = Command::new(env!("CARGO_BIN_EXE_archogen"))
                 .args(["build", &example(HEARTBEAT), "--out"])
                 .arg(&dir)
                 .output()
                 .expect("the executable runs");
-            assert!(!dir.exists() && !beside(&dir, ".building").exists());
+            assert_eq!(common::everything_under(root), before, "something was made");
             assert_eq!(
                 output.status.code(),
                 Some(Status::ToolFailure.code()),

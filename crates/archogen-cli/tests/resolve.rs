@@ -397,19 +397,22 @@ fn plan_routes() -> Vec<(&'static str, Route)> {
             outcome
         }),
         ("a-trailing-dot", |root| {
+            let before = common::everything_under(root);
             let outcome = resolve_at(&format!("{}/.", root.join("q").display()), &[]);
-            assert!(!root.join("q").exists());
+            assert_eq!(common::everything_under(root), before, "something was made");
             outcome
         }),
         ("a-trailing-separator", |root| {
+            let before = common::everything_under(root);
             let outcome = resolve_at(&format!("{}/", root.join("q").display()), &[]);
-            assert!(!root.join("q").exists());
+            assert_eq!(common::everything_under(root), before, "something was made");
             outcome
         }),
         ("back-through", |root| {
             std::fs::create_dir(root.join("d")).expect("a directory");
+            let before = common::everything_under(root);
             let outcome = resolve_at(&root.join("missing/../d").display().to_string(), &[]);
-            assert!(!root.join("missing").exists());
+            assert_eq!(common::everything_under(root), before, "something was made");
             outcome
         }),
         ("a-directory", |root| {
@@ -593,6 +596,7 @@ fn plan_routes() -> Vec<(&'static str, Route)> {
                 return None;
             }
             std::fs::copy(heartbeat(), root.join("s.eadl")).expect("copied");
+            let before = common::everything_under(root);
             let output = std::process::Command::new("sh")
                 .arg("-c")
                 .arg("\"$0\" resolve /dev/stdin --out p < s.eadl")
@@ -600,7 +604,7 @@ fn plan_routes() -> Vec<(&'static str, Route)> {
                 .current_dir(root)
                 .output()
                 .expect("the shell runs");
-            assert!(!root.join("p").exists() && !root.join("p.part").exists());
+            assert_eq!(common::everything_under(root), before, "something was made");
             assert_eq!(
                 output.status.code(),
                 Some(Status::Usage.code()),
@@ -626,6 +630,7 @@ fn plan_routes() -> Vec<(&'static str, Route)> {
                 .expect("mkfifo runs");
             assert!(made.success());
             let writer = module.clone();
+            let before = common::everything_under(root);
             let feeding = std::thread::spawn(move || std::fs::write(writer, text));
             let outcome = resolve_of(
                 &root.join("app.main.eadl").display().to_string(),
@@ -634,7 +639,7 @@ fn plan_routes() -> Vec<(&'static str, Route)> {
                 Answer::Record(Status::Ok),
             );
             feeding.join().expect("the writer").expect("written");
-            assert!(!root.join("p").exists() && !root.join("p.part").exists());
+            assert_eq!(common::everything_under(root), before, "something was made");
             outcome
         }),
         ("reads-once", |root| {
@@ -1159,13 +1164,14 @@ fn plan_routes() -> Vec<(&'static str, Route)> {
             let file = root.join("junk.eadl");
             std::fs::write(&file, "x\n".repeat(5000)).expect("written");
             let plan = root.join("p");
+            let before = common::everything_under(root);
             let outcome = resolve_of(
                 &file.display().to_string(),
                 &plan.display().to_string(),
                 &[],
                 Answer::Record(Status::Ok),
             );
-            assert!(!plan.exists() && !root.join("p.part").exists());
+            assert_eq!(common::everything_under(root), before, "something was made");
             outcome
         }),
         ("many-unmet", |root| {
@@ -1182,13 +1188,14 @@ fn plan_routes() -> Vec<(&'static str, Route)> {
             text.push_str(&format!("(defsystem m (task t (period 100 ms) (deadline 100 ms) (deadline-from release) (priority 1) (uses svc0) (on-overrun fault)) (requires {uses}) (platform (uses soc)))\n"));
             std::fs::write(&file, text).expect("written");
             let plan = root.join("p");
+            let before = common::everything_under(root);
             let outcome = resolve_of(
                 &file.display().to_string(),
                 &plan.display().to_string(),
                 &[],
                 Answer::Record(Status::Ok),
             );
-            assert!(!plan.exists() && !root.join("p.part").exists());
+            assert_eq!(common::everything_under(root), before, "something was made");
             outcome
         }),
         ("came-on-a-refusal", |root| {

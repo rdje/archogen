@@ -801,7 +801,7 @@ fn second_timed(tasks: &[Task<'_>], sources: &[Source<'_>], horizon: u64) -> (En
     }
 }
 
-/// A job a source's job held off has done all its work, and what is left of it takes no time: it finishes before its own next release, whichever job held it off.
+/// A job a source's job held off has done all its work, and what is left of it takes no time: it finishes before its own next release, where nothing pending goes first.
 #[test]
 fn a_job_held_off_with_nothing_left_finishes_before_its_own_release() {
     let sources = [Source {
@@ -928,6 +928,31 @@ fn a_write_among_what_a_job_has_left_replaces_what_stood_for_that_instant() {
     let tasks = [timer("high", 1, 100, &high), timer("low", 2, 100, &low)];
     let (_, lines) = trace_at_one_tick_a_second::<2>(&tasks, &sources, 20);
     assert_eq!(arrivals(&lines), ["12 s pending alarm a"], "{lines:#?}");
+    // Where something pending goes first, it does not: behind a job that ended masked with a source pending, the compare standing for that instant arrives before the
+    // held-off job's write. With no source pending behind the mask, that write replaces it.
+    let high = [
+        Step::Program { alarm: 0, ahead: 3 },
+        Step::Mask,
+        Step::Run(3),
+    ];
+    let low = [Step::Program { alarm: 0, ahead: 9 }];
+    let tasks = [timer("high", 1, 100, &high), timer("low", 2, 100, &low)];
+    let behind = [
+        alarm("a"),
+        Source {
+            name: "s",
+            separation: Some(2),
+            alarm: false,
+        },
+    ];
+    let (_, lines) = trace_at_one_tick_a_second::<2>(&tasks, &behind, 20);
+    assert_eq!(
+        arrivals(&lines),
+        ["3 s pending alarm a", "12 s pending alarm a"],
+        "{lines:#?}"
+    );
+    let (_, lines) = trace_at_one_tick_a_second::<2>(&tasks, &sources, 20);
+    assert_eq!(arrivals(&lines), ["12 s pending alarm a"], "{lines:#?}");
 }
 
 fn trace_at_one_tick_a_second<const N: usize>(
@@ -1020,6 +1045,43 @@ fn what_is_taken_before_a_job_s_completion_can_overrun_it() {
             .unwrap_or_else(|| panic!("no `{said}` in {lines:#?}"))
     };
     assert!(at("3 s complete job") < at("3 s release job nominal 3 s"));
+    assert!(
+        !lines.iter().any(|line| line.contains("fault")),
+        "{lines:#?}"
+    );
+}
+
+/// The third way something goes before a completion: the job before ended masked with a source pending behind its mask. Its completion lets that in, which is taken
+/// before the completion of a job it held off with nothing left, so that job has overrun its own release at that instant. With nothing pending it finishes first.
+#[test]
+fn what_a_masked_job_s_completion_lets_in_goes_before_the_job_it_held_off() {
+    let source = [Source {
+        name: "s",
+        separation: Some(2),
+        alarm: false,
+    }];
+    let masked_to_its_end = [Step::Mask, Step::Run(3)];
+    let tasks = [timer("M", 1, 10, &masked_to_its_end), timer("L", 2, 3, &[])];
+    let place = |lines: &[String], said: &str| {
+        lines
+            .iter()
+            .position(|line| line == said)
+            .unwrap_or_else(|| panic!("no `{said}` in {lines:#?}"))
+    };
+    let (_, lines) = second_timed(&tasks, &source, 4);
+    assert!(
+        place(&lines, "3 s complete M") < place(&lines, "3 s entry source s")
+            && place(&lines, "3 s entry source s")
+                < place(&lines, "3 s fault overrun L fault nominal 3 s"),
+        "{lines:#?}"
+    );
+    assert!(!lines.contains(&"3 s complete L".to_owned()), "{lines:#?}");
+    let (_, lines) = second_timed(&tasks, &[], 4);
+    assert!(
+        place(&lines, "3 s complete M") < place(&lines, "3 s complete L")
+            && place(&lines, "3 s complete L") < place(&lines, "3 s release L nominal 3 s"),
+        "{lines:#?}"
+    );
     assert!(
         !lines.iter().any(|line| line.contains("fault")),
         "{lines:#?}"

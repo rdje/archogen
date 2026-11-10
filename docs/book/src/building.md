@@ -134,6 +134,8 @@ approximated, and so is a run of more than
 never end. A plan that is not what its inputs lower to is `tool-failure`: `crates/archogen-emit` accepts a plan only by lowering it
 again from the same inputs and comparing bytes.
 
+A run within that limit of `2^20` can still take hours where a system holds thousands of tasks, each step reading every task. A generated program whose output closes stops as any Rust program does, with exit 101.
+
 ```console
 $ archogen build examples/s0-heartbeat/system-unsupported.eadl --out build/x
 archogen: missing-fact: the plan cannot say what releases task `chime`, `unreached`: write the task's own `(needs interrupt-source)`, so the search binds it a source at least as far apart — nothing was generated from examples/s0-heartbeat/system-unsupported.eadl
@@ -287,8 +289,6 @@ The observations [the S0 path](s0.md) froze before any generator existed still h
 generates each system from a clean directory, compiles it, runs it, reads the releases out of its trace and compares them with
 the frozen file. One moved, with its reason in its own header. The task S0 could only call unsupported, a minimum separation with
 nothing to release it, is refused now for what it is: a missing fact of the description.
-
-A run within that limit can still take hours where a system holds thousands of tasks, each step reading every task. A generated program's output closing stops it as it does any Rust program.
 
 ## What this does not establish
 
