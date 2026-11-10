@@ -252,24 +252,26 @@ def start_reasons(reading: Reading, limits: Limits) -> list[str]:
 # ---- processes
 
 PYTHON_FLAGS_WITH_VALUES = ("-W", "-X")
-# Flags an interpreter reads a value after, in the next word, so that what follows one is no program: any other flag takes none, and the next word is what it runs.
-# Some of them, each run on this host: `perl -M strict`, `ruby -W x` and `node --stack-size 900` read no such value, so they are not here. A shell's are `SHELL_FLAGS_WITH_VALUES`, read by `shell_told`.
+# Whole flags an interpreter reads a value after, in the next word, so that what follows one is no program: any other whole flag takes none, and the next word is what it runs.
+# Some of them, each run on this host: `node --stack-size 900` read no such value, so it is not here, and `node --title` leaves no command line to read, the process showing as its title.
 FLAGS_WITH_VALUES = {
-    "python": (*PYTHON_FLAGS_WITH_VALUES, "--check-hash-based-pycs"),
+    "python": ("--check-hash-based-pycs",),
     "node": (
-        "-r", "--require", "--import", "--loader", "--experimental-loader", "--title", "-C", "--conditions", "--env-file", "--env-file-if-exists", "--inspect-port", "--disable-warning",
+        "-r", "--require", "--import", "--loader", "--experimental-loader", "-C", "--conditions", "--env-file", "--env-file-if-exists", "--inspect-port", "--disable-warning",
         "--unhandled-rejections", "--max-http-header-size", "--dns-result-order", "--redirect-warnings", "--diagnostic-dir", "--report-dir", "--trace-event-categories", "--secure-heap",
     ),
-    "ruby": ("-I", "-r", "-C", "-E", "--encoding", "--external-encoding", "--internal-encoding", "--backtrace-limit", "--parser"),
-    "perl": ("-I",),
+    "ruby": ("--encoding", "--external-encoding", "--internal-encoding", "--backtrace-limit", "--parser"),
 }
-# What gives an interpreter a program's text, so that it runs no file: a cluster of one dash ending in that letter, the letters before it taking nothing, or a long flag whole.
-# An exact form, as each exception of the reader's is: any other spelling reads as a flag that takes nothing.
-TEXT_FLAGS = {
-    "python": re.compile(r"-[bBdEiIOPqsSuvx]*c"),
-    "node": re.compile(r"-e|-p|-pe|--eval|--print"),
-    "ruby": re.compile(r"-[acdlnpsSvwy]*e"),
-    "perl": re.compile(r"-(?:[acnpsStTuUvwWX]|l[0-7]*|0[0-7]*)*[eE]"),
+# Whole flags that give `node` a program's text, so that it runs no file. It reads no cluster.
+NODE_TEXT_FLAGS = ("-e", "-p", "-pe", "--eval", "--print")
+# How an interpreter reads a cluster of one dash, letter by letter, as each was run on this host. `plain` takes nothing, a digit after one being its own; `value` takes the rest
+# of the cluster where there is any and the next word where there is none; `text` takes a program's text so, and the interpreter then runs no file; `module` takes a module's
+# name so, which is what it runs. Any other letter ends the reading of its cluster: it takes the rest of the cluster or nothing and never the next word, as `perl -M strict` and
+# `ruby -W x` read none, and one this does not hold is read the same.
+CLUSTERS = {
+    "python": {"plain": "bBdEhiIOPqRsSuvVx?", "value": "WX", "text": "c", "module": "m"},
+    "perl": {"plain": "acnpsStTuUvwWXl0123456789", "value": "I", "text": "eE", "module": ""},
+    "ruby": {"plain": "acdhlnpsSvwy0123456789", "value": "CEIr", "text": "e", "module": ""},
 }
 INTERPRETERS = {"python", "python3", "Python", "node", "ruby", "perl", "bash", "sh", "zsh"}
 SHELLS = {"bash", "sh", "zsh", "fish", "dash", "ksh", "csh", "tcsh", "nu", "elvish"}
@@ -320,25 +322,39 @@ class Process:
 
     @property
     def given(self) -> str:
-        """The word an interpreter is given to run, as it reads its own flags: the first that is no flag and no value of a flag `FLAGS_WITH_VALUES` holds, a module's name where Python is given one.
-        Nothing where a flag gives it a program's text, where it reads its input, or where it is no interpreter. A shell's is the script `shell_told` reads."""
+        """The word an interpreter is given to run, as it reads its own flags: the first that is no flag and no value of one, a whole flag's by `FLAGS_WITH_VALUES` and a cluster's letter by
+        letter by `CLUSTERS`, a module's name where Python is given one. Nothing where a flag gives it a program's text, where it reads its input, or where it is no interpreter. A shell's is
+        the script `shell_told` reads."""
         kind = "python" if self.name.lower().startswith("python") else self.name
         if kind != "python" and kind not in INTERPRETERS:
             return ""
         words = self.words_read
         if kind in SHELLS:
             return shell_told(words)[1] or ""
-        takes_values, text, at = FLAGS_WITH_VALUES.get(kind, ()), TEXT_FLAGS.get(kind), 0
+        takes_values, letters, at = FLAGS_WITH_VALUES.get(kind, ()), CLUSTERS.get(kind), 0
         while at < len(words):
             word = words[at]
             if word == "--":
                 at += 1
                 break
-            if word == "-" or (text and text.fullmatch(word)):
+            if word == "-" or (kind == "node" and word in NODE_TEXT_FLAGS):
                 return ""
             if not word.startswith("-"):
                 break
-            at += 2 if word in takes_values else 1
+            took = 2 if word in takes_values else 1
+            if letters and not word.startswith("--"):
+                for place, letter in enumerate(word[1:], start=1):
+                    rest = word[place + 1 :]
+                    if letter in letters["text"]:
+                        return ""
+                    if letter in letters["module"]:
+                        return rest or " ".join(words[at + 1 : at + 2])
+                    if letter in letters["value"]:
+                        took = 1 if rest else 2
+                        break
+                    if letter not in letters["plain"]:
+                        break
+            at += took
         return words[at] if at < len(words) else ""
 
     @property
@@ -419,7 +435,9 @@ APPLICATION = ("/Applications/", "/System/", "/usr/libexec/", "/usr/sbin/")
 SELF_TEST_PROCESS = re.compile(r"^(?:\S*[Pp]ython\S*|" + re.escape(sys.executable) + r")\s+(?:-[WX]\s+\S+\s+|-\S+\s+)*(?:(?:\S*/)?selftest_host_guard\.py|" + re.escape(str(CODE.with_name("selftest_host_guard.py"))) + r")(?:\s|$)")
 GUARD_NAME = "host_guard.py"
 GUARD_PROCESS = re.compile(r"^(?:\S*[Pp]ython\S*|" + re.escape(sys.executable) + r")\s+(?:-[WX]\s+\S+\s+|-\S+\s+)*(?:(?:\S*/)?host_guard\.py|" + re.escape(str(CODE)) + r")(?:\s|$)")
-SHELL_FLAGS_WITH_VALUES = {"--init-file", "--rcfile", "-o", "+o", "-O", "+O", "--init-command", "--emulate"}
+SHELL_FLAGS_WITH_VALUES = {"--init-file", "--rcfile", "-o", "+o", "-O", "+O", "--init-command", "--emulate", "-init-file", "-rcfile"}
+# The long flags `bash` takes with one dash as with two, each run on both here, `-pretty-print` on the later alone: so `-posix` is no cluster holding an `s`, nor `-norc` one holding a `c`.
+BASH_LONG_FLAGS = {"debugger", "dump-po-strings", "dump-strings", "help", "init-file", "login", "noediting", "noprofile", "norc", "posix", "pretty-print", "rcfile", "restricted", "verbose", "version"}
 # What spawns more for as long as it lives, however little it holds.
 BUILDS = {"cargo", "rustc", "rustdoc", "clippy-driver", "make", "gmake"}
 # What shows a heavy job is under way. Not `make`, which may only be waiting its turn inside its own `run`.
@@ -440,7 +458,7 @@ def shell_told(arguments: list[str]) -> tuple[str | None, str | None]:
             break
         if not word.startswith(("-", "+")):
             break
-        long = word.startswith("--")
+        long = word.startswith("--") or (word[0] == "-" and word[1:] in BASH_LONG_FLAGS)
         told_a_command = told_a_command or (not long and word[0] == "-" and "c" in word)
         on_its_input = on_its_input or (not long and word[0] == "-" and "s" in word)
         at += 2 if word in SHELL_FLAGS_WITH_VALUES or (not long and word[-1] in "oO") else 1
@@ -651,10 +669,12 @@ def record(root: Path, **event) -> bool:
 
 
 def plain(value: object, most: int = 300) -> str | int | float | None:
-    """A value of the log as the guard writes one: a text, cut short, or a number. Anything else is nothing."""
+    """A value of the log as the guard writes one: a text, cut short, or a number a machine's word holds, so none of thousands of digits, an infinity or what is no number. Anything else is nothing."""
     if isinstance(value, str):
         return value[:most]
-    return value if isinstance(value, (int, float)) and not isinstance(value, bool) else None
+    if isinstance(value, bool) or not isinstance(value, (int, float)):
+        return None
+    return value if -(2**63) < value < 2**63 else None
 
 
 def event_of(line: bytes) -> dict | None:
@@ -960,6 +980,10 @@ def watch(root: Path, limits: Limits, once: bool, idle_seconds: float = 600.0, a
     os.chdir("/")
     memory = Memory()
     unread_said, last_seen, busy, read_at, running = 0.0, time.monotonic(), False, time.monotonic(), started_from()
+    # What it must say and could not, no directory standing: said once one does, in its order, the last few of them.
+    unsaid: list[dict] = []
+    if taken_up == "unsaid":
+        unsaid.append({"kind": "taken-up", "reasons": f"this watcher took up {CODE.name} as saved, where no directory stood to say so"})
     # What it runs, for `status`: a watcher running an older file looks like any other.
     image = stamp_for_the_next(running)
     write_note(root, "watch.code", image)
@@ -988,8 +1012,8 @@ def watch(root: Path, limits: Limits, once: bool, idle_seconds: float = 600.0, a
         if not names_it(root, image):
             notes.update({"watch.code": image, "watch.pid": str(os.getpid())})
         write_notes(root, notes)
-        if taken_up == "unsaid" and record(root, kind="taken-up", reasons=f"this watcher took up {CODE.name} as saved, where no directory stood to say so"):
-            taken_up = "said"
+        while unsaid and record(root, **unsaid[0]):
+            unsaid.pop(0)
         # A guard changed under a watcher holds from then, whatever this round did, a line that raises among it. The lock closes with the old image and the new one takes it, so nothing goes unwatched between.
         # One that can be seen to be broken is not taken up, and said once.
         stamp = code_stamp()
@@ -1000,7 +1024,10 @@ def watch(root: Path, limits: Limits, once: bool, idle_seconds: float = 600.0, a
                     os.environ[STARTED_FROM] = stamp_for_the_next(stamp)
                     os.environ[TAKEN_UP] = "said" if record(root, kind="taken-up", reasons=f"this watcher takes up {CODE.name} as saved") else "unsaid"
                     os.execv(sys.executable, [sys.executable, "-I", "-B", str(CODE), *again])
-                record(root, kind="unread", error=f"{CODE.name} as saved does not compile or is cut short: this watcher goes on as it was")
+                refused = f"{CODE.name} as saved does not compile or is cut short: this watcher goes on as it was"
+                if not record(root, kind="unread", error=refused):
+                    unsaid.append({"kind": "unread", "error": refused + ", where no directory stood to say so"})
+                    del unsaid[:-4]
         try:
             fresh = time.time() - (state_path(root) / "heartbeat").stat().st_mtime < idle_seconds
         except OSError:
@@ -1023,7 +1050,8 @@ def runs_the_file(root: Path) -> bool:
 
 
 def watcher_pid(root: Path) -> int | None:
-    """The watcher of `root`, if one runs: the lock on the root is held, and the pid its file names is an interpreter. No `ps`, so that a slow one cannot make a live watcher look gone."""
+    """The watcher of `root`, if one runs: the lock on the root is held, and the pid its file names is an interpreter, or a live process the kernel names no file of, as it does of one
+    whose interpreter an upgrade removed. No `ps`, so that a slow one cannot make a live watcher look gone."""
     try:
         pid = int((state_path(root) / "watch.pid").read_text())
     except (OSError, ValueError):
@@ -1032,7 +1060,14 @@ def watcher_pid(root: Path) -> int | None:
     if lock is not None:
         os.close(lock)
         return None
-    return pid if "ython" in NATIVE.exe(pid) else None
+    exe = NATIVE.exe(pid)
+    if "ython" in exe:
+        return pid
+    try:
+        os.kill(pid, 0)
+    except (OSError, OverflowError):
+        return None
+    return pid if not exe else None
 
 
 def watcher_asked_for(root: Path, seconds: float = 6.0) -> int | None:

@@ -467,6 +467,11 @@ def case_a_terminal_vouches_for_nothing() -> None:
     check("macOS's `screen`, which is `SCREEN`, is a terminal", g.protected(g.Process(1, 1, "/usr/bin/SCREEN -dmS x", "", "/usr/bin/SCREEN", 0)))
     check("a shell told a command is a job", not g.is_terminal_shell(g.Process(1, 1, "bash -lc 'x'", "", "", 0)))
     check("a shell running a script is a job", not g.is_terminal_shell(g.Process(1, 1, "bash /x/script.sh", "", "", 0)))
+    # A long flag `bash` takes with one dash is that flag, and no cluster of its letters: an `s` in one tells it nothing of its input, nor a `c` of a command.
+    for job in ("bash -posix job.sh", "bash -norc job.sh", "bash -restricted -verbose job.sh", "bash -rcfile /x/rc job.sh", "bash -init-file /x/rc job.sh", "sh -posix job.sh", "bash -posix -c x"):
+        check(f"a long flag with one dash leaves a job a job: {job}", not g.is_terminal_shell(g.Process(1, 1, job, "", "", 0)))
+    for terminal in ("bash -norc", "bash -posix", "bash -noprofile -norc", "bash -rcfile /x/rc", "bash -login", "bash -verbose"):
+        check(f"and a terminal a terminal: {terminal}", g.is_terminal_shell(g.Process(1, 1, terminal, "", "", 0)))
     check("`-tcsh` is a login shell", g.protected(g.Process(1, 1, "-tcsh", "", "", 0)))
 
 
@@ -520,7 +525,8 @@ def case_agents() -> None:
     check("nor a login shell", up(terminal))
     alive = [pid for pid in its_children if pid_up(pid)]
     check("a build it started here is stopped, and one it started elsewhere is not", len(its_children) == 2 and len(alive) == 1, (its_children, alive))
-    check("a program behind an interpreter's flag is found", g.is_agent(g.Process(1, 1, "python3 -X utf8 /x/bin/kimi", "", "", 0)) and g.is_agent(g.Process(1, 1, "node --max-old-space-size=8192 /x/bin/codex", "", "", 0)) and g.is_agent(g.Process(1, 1, "node --title x /x/bin/gemini", "", "", 0)))
+    check("a program behind an interpreter's flag is found", g.is_agent(g.Process(1, 1, "python3 -X utf8 /x/bin/kimi", "", "", 0)) and g.is_agent(g.Process(1, 1, "node --max-old-space-size=8192 /x/bin/codex", "", "", 0)))
+    check("a process that set its own title shows as that title, and is read by it", g.is_agent(g.Process(1, 1, "codex   ", "", "", 0)) and not g.is_agent(g.Process(1, 1, "t   ", "", "", 0)))
     check("behind a flag's file too", g.is_agent(g.Process(1, 1, "node --require ./preload.js /x/bin/claude", "", "", 0)))
     for job in ("python3 rig.py --out target/review/codex", "python3 -m pytest target/codex", "python3 -c pass target/codex", "python3 /x/rig --out target/codex", "bash -lc cd /x/codex && cargo build", "bash -ec cat /x/claude; make", "bash go /x/codex", "python3 prog /x/claude", "perl -e 1 /x/codex", "python3 -u tool.py /x/codex", "python3 -I -B rig.py /tmp/kimi_data", "bash -x run.sh /x/codex", "bash --norc run.sh /x/gemini", "node --no-warnings /x/lib/go.js /x/codex", "ruby -W tool /x/codex", "perl -w tool /x/claude", "node --stack-size=900 go /x/kimi"):
         check(f"a directory named after one, among a program's own arguments, makes no agent: {job}", not g.is_agent(g.Process(1, 1, job, "", "", 0)))
@@ -528,16 +534,21 @@ def case_agents() -> None:
     # What an interpreter is given to run is read once, as it reads its own flags: a flag's value is never it, whatever the interpreter, and a program's text holds no name.
     for job in (
         "ruby -I /x/lib/codex tool.rb", "perl -I /x/claude tool.pl", "perl -I lib/claude tool.pl", "node -r /x/gemini app.js", "node --require /x/hooks/claude app.js", "node --loader /x/opencode app.js",
-        "node --title codex app.js", "node --import /x/copilot app.js", "node -C codex app.js", "node --env-file /x/kimi/env app.js", "ruby -r cursor tool.rb", "ruby -C /x/goose tool.rb",
+        "node --import /x/copilot app.js", "node -C codex app.js", "node --env-file /x/kimi/env app.js", "ruby -r cursor tool.rb", "ruby -C /x/goose tool.rb",
         "ruby --encoding codex tool.rb", "bash --rcfile /x/kimi run.sh", "bash -O /x/kimi run.sh", "bash +o codex run.sh", "zsh -o /x/gemini run.sh", "zsh --emulate codex run.sh",
         "python3 --check-hash-based-pycs codex tool.py", "python3 -I -B -c cursor = 1; import time", "python3 -Bc claude = 1", "perl -lne codex if 1", "perl -E claude", "ruby -ne codex", "node -pe codex", "node --eval claude",
         "python3 - codex", "python3",
+        # A flag in a cluster is read as its interpreter reads a cluster, letter by letter: one that takes a value takes the rest of the cluster or the next word.
+        "perl -wI lib/claude tool.pl", "perl -wI/x/claude tool.pl", "ruby -wI lib/claude job.rb", "ruby -wr cursor tool.rb", "ruby -wC /x/goose tool.rb", "python3 -BW codex tool.py",
+        "python3 -BX codex tool.py", "python3 -BWcodex tool.py", "perl -lnwe codex", "perl -0777ne claude", "ruby -lane codex", "python3 -Bccodex", "bash -norc job.sh /x/codex", "bash -rcfile /x/kimi job.sh",
     ):
         check(f"a flag's value or a program's text named after one makes no agent: {job}", not g.is_agent(g.Process(1, 1, job, "", "", 0)), g.Process(1, 1, job, "", "", 0).script)
     for job in (
         "node --require ./preload.js /x/lib/codex.js", "node --require ./preload.js codex.js", "node --import tsx /x/src/gemini.ts", "node -r ts-node/register /x/src/opencode.ts", "ruby -I lib /x/bin/aider.rb",
         "ruby -I lib aider.rb", "perl -I lib /x/goose.pl", "perl -I lib codex.pl", "bash --rcfile /x/rc /x/kimi.sh", "bash -o pipefail /x/codex.sh", "bash -e /x/bin/claude", "sh -o errexit /x/claude.sh",
         "zsh -o errexit claude.zsh", "python3 -m aider --model x", "python3 -- codex.py", "perl -c codex.pl", "ruby -w -- aider.rb", "node --env-file env /x/bin/gemini",
+        "perl -wI lib codex.pl", "ruby -wr json codex.rb", "ruby -wI lib /x/bin/aider.rb", "python3 -BW ignore codex.py", "python3 -BX dev /x/kimi.py", "python3 -mcodex", "python3 -Bm aider x",
+        "perl -Mstrict codex.pl", "perl -i.bak -w codex.pl", "ruby -W2 aider.rb", "ruby -Ku codex.rb", "bash -norc codex.sh", "bash -posix /x/bin/claude", "bash -rcfile /x/rc /x/kimi.sh",
     ):
         check(f"an agent behind a flag and its value is one: {job}", g.is_agent(g.Process(1, 1, job, "", "", 0)), g.Process(1, 1, job, "", "", 0).script)
     check("a job that merely takes such a file is a job", not g.protected(g.Process(1, 1, "python3 hold.py data/gemini.json", "", "", 0)) and up(data_file))
@@ -878,6 +889,13 @@ def case_a_taking_up_after_a_clean_is_said_where_a_directory_stands() -> None:
     check("to the first that asks, it runs the file and reads the host", "watcher: running, and reading the host" in first and "an older" not in first, first)
     log = repo / "target" / "host-guard" / "state" / "events.log"
     check("and it says it took the file up, now that a directory stands", until(lambda: log.exists() and "taken-up" in log.read_text(), 10))
+    # A save it refuses is said the same way: held while no directory stands, and said once one does.
+    whole = copy.read_text()
+    until(lambda: shutil.rmtree(repo / "target", ignore_errors=True) or not (repo / "target").exists(), 5)
+    copy.write_text(whole + "\ndef broken(:\n")
+    check("a broken save after a clean makes no directory either", not until(lambda: (repo / "target").exists(), 5) and up(watcher))
+    guard("status", root=repo)
+    check("and is said once a directory stands", until(lambda: log.exists() and "does not compile or is cut short" in log.read_text(errors="replace"), 10))
     watcher.terminate()
     watcher.wait(timeout=5)
 
@@ -1650,6 +1668,30 @@ def case_a_stale_pid_names_nobody() -> None:
     time.sleep(0.2)
     check("`stop` does not signal a process that is no watcher", done.returncode == 0 and up(innocent), done)
     check("`status` does not call it one", "watcher: not running" in guard("status", root=scope).stdout)
+    # A live watcher whose interpreter's file an upgrade removed: the kernel then names no file of it, and it is still the watcher, where a process that is gone is none.
+    scope = fresh("stale-file-gone")
+    watcher = looping_watcher(scope, {})
+    until(lambda: (scope / "state" / "sampled").exists())
+    native = g.NATIVE
+
+    class NoFile:
+        def __getattr__(self, name):
+            return getattr(native, name)
+
+        def exe(self, pid: int) -> str:
+            return "" if pid == watcher.pid else native.exe(pid)
+
+    g.NATIVE = NoFile()
+    try:
+        check("a watcher the kernel names no file of is the watcher", g.watcher_pid(scope) == watcher.pid, g.watcher_pid(scope))
+        watcher.terminate()
+        watcher.wait(timeout=5)
+        held = g.hold_lock(scope)
+        check("and one that is gone is none, its note still standing and the root's lock held", held is not None and (scope / "state" / "watch.pid").exists() and g.watcher_pid(scope) is None, g.watcher_pid(scope))
+        if held is not None:
+            os.close(held)
+    finally:
+        g.NATIVE = native
 
 
 def case_the_watcher_stays_while_a_job_runs() -> None:
@@ -1725,7 +1767,7 @@ def case_what_counts_as_heavy() -> None:
         "cargo xtask --help", "cargo xtask verify --help", "make -Cvendor all", "make -f x.mk all", "env -S'cargo build'", "env -vS 'cargo build'", 'x="$(cat <<EOF\nbody\nEOF )" && cargo build', "case q in q) ls;;#it's\nesac; cargo build", "x=(#it's\n b); cargo build",
         "a[0]=x cargo build", "echo ${x:-'}'} ; cargo build", "env -S 'cargo build'", "coproc name { cargo build; }", "{fd}>log cargo build", "[[ a == a ]]>log; cargo build", "if [[ '#c' =~ ^([[:space:]]*)#(.*)$ ]]; then cargo build; fi",
         "bash <<< 'cargo build'", "trap 'cargo build' EXIT", "echo $(( $(cargo build) + 1 ))", 'x="$(if true; then case y in y) cargo build;; esac; fi)"', "x=( $(cargo build) )", "[[ -n $(cargo metadata --format-version 1 >x; cargo build) ]]",
-        "gmake -Onone all", "gmake -Otarget all",
+        "gmake -Onone all", "gmake -Otarget all", "bash -posix -c 'cargo build'", "bash -rcfile x -c 'cargo build'", "bash -norc scripts/build_book.sh",
     ):
         check(f"heavy: {heavy}", heavy_text(heavy))
     for light in (
@@ -1920,7 +1962,7 @@ def case_killing_by_name() -> None:
             "(pkill -x rustc)", "$(pkill -x rustc)", "bash -c 'pkill -x rustc'", "sh -c 'pgrep -x rustc | xargs kill'", "# don't\npkill -x rustc\n# don't", "env pkill rustc", "sudo killall cargo",
             "ps -ax | awk '/rustc/{print $1}' | while read p; do kill $p; done", "for p in $(ps -ax | grep rustc | awk '{print $1}'); do kill $p; done",
             'arch="$(case "$(uname -m)" in arm64) echo a;; *) echo b;; esac)"; pkill -x rustc', 'x="$(case y in y) echo a;; esac )"\npkill -x rustc', "(( y = 1 << 3 ))\npkill -x rustc", "((x<<=1)); killall cargo", "echo $[1<<2]; pkill rustc",
-            "bash -euo pipefail -c 'pkill -x rustc'", "bash -eo pipefail -c 'pkill -x rustc'", "bash -c -- 'pkill -x rustc'", "trap 'pkill -x rustc' EXIT", "bash <<'EOF'\npkill -x rustc\nEOF", "bash <<< 'pkill -x rustc'", "case y in y) pkill -x rustc;; esac",
+            "bash -euo pipefail -c 'pkill -x rustc'", "bash -eo pipefail -c 'pkill -x rustc'", "bash -rcfile x -c 'pkill -x rustc'", "bash -posix -c 'pkill -x rustc'", "bash -norc -init-file x -c 'killall cargo'", "bash -c -- 'pkill -x rustc'", "trap 'pkill -x rustc' EXIT", "bash <<'EOF'\npkill -x rustc\nEOF", "bash <<< 'pkill -x rustc'", "case y in y) pkill -x rustc;; esac",
             "[[ $line =~ ^([[:space:]]*)#(.*)$ ]] && pkill -x rustc", "bash -s -- x <<'E'\npkill -x rustc\nE", "bash -s x <<< 'killall cargo'", 'x="$(cat <<EOF\nbody\nEOF)"\npkill -x rustc', f"pkill -f {scope}-other/x", f"ps -ax | grep {scope}-other/x | xargs kill",
             'kill "$(pgrep -x rustc)"', 'ps -ax | grep x; kill "$PID"', "for ((i=0;i<1;i++)) do pkill -x rustc; done", "if true; then for ((i=0;i<1;i++)) do pkill -x rustc; done; fi", "time for ((i=0;i<1;i++)) do pkill -x rustc; done", "pkill -v -P 123", "pkill -vP 123", "pkill -P 5,1 -x rustc", "kill -9 -1", "kill -- -1", "pkill -PIPE rustc", "pkill -FPE rustc", "ps -upeter | awk '{print $1}' | xargs kill", 'pkill -P "$(pgrep -x make)"', 'P=$(pgrep -x make); pkill -P "$P"', "pgrep -x make > p; pkill -F p", "pkill -F <(pgrep -x rustc)", "ps -ax -opid -ocommand | grep rustc | awk '{print $1}' | xargs kill", "pkill -P 1 -x rustc", "pgrep -P 1 -x rustc | xargs kill -9", f"pkill -v -f {scope}", f"pgrep -vf {scope} | xargs kill", "kill -- -$(pgrep -x rustc)", "kill -TERM -$(pgrep -f myjob)", "PGID=$(pgrep -f myjob); kill -- -$PGID", "kill -s TERM $(pgrep -x rustc)",
             f"ps -ax | grep rustc | grep -v {scope} | awk '{{print $1}}' | xargs kill", f"pgrep -x rustc | tee {scope}/pids | xargs kill", f"pkill -f '{scope} copy'",
@@ -2069,6 +2111,7 @@ def case_a_damaged_log() -> None:
         deep_line.write_bytes(deep + b"\n")
         done = guard("run", "--", "bash", "-c", f"cat '{deep_line}' >> '{state / 'events.log'}'; exit 7", root=scope)
         check("nor a `run`, which starts its job and keeps its status", done.returncode == 7, (done.stdout + done.stderr)[-300:])
+        check("a number no machine's word holds is no number of the guard's", g.plain(10**4000) is None and g.plain(float("inf")) is None and g.plain(float("nan")) is None and g.plain(True) is None and g.plain(5) == 5 and g.plain(1.5) == 1.5)
         check("what a line holds beyond what the guard writes is not said", g.event_of(b'{"kind": "stopped", "at": ["x"], "stopped": [{"pid": true, "name": {"a": 1}, "gib": "1"}, 5], "more": 1}') == {"kind": "stopped", "at": None, "error": None, "reasons": None, "stopped": [{"pid": None, "name": None, "gib": "1", "command": None}]})
         line = json.dumps({"kind": "stopped", "stopped": 5})
         done = guard("run", "--", "bash", "-c", f"printf '%s\\n' '{line}' >> '{state / 'events.log'}'; exit 7", root=scope)
