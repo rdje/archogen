@@ -241,13 +241,51 @@ fn each_malformed_input_is_refused_saying_what_is_wrong() {
         (replaced("(deadlines-within-reach)", "(deadlines-within-reach (adapter))"), "names no alarm"),
         // A `mask` is held to a run, as a run is to its `mask`: a job that calls one states the run it begins.
         (replaced("(run tail (ending unmask) (value 5) (unit us) (scope \"the tail's update\") (binary unbuilt) (evidence analytically-established) (locator \"docs/argument.md\") (basis \"four loads\") (call release 1))", ""), "it states no masked run"),
-        (replaced("(run tail (ending unmask)", "(run tail (ending completion)"), "no masked run of its ends by one"),
         // Another format's file is told its format first, whatever its language's version says to the reader of forms.
         (format!("(eadl-version eadl/2)\n{}", replaced(FORMAT, "archogen-application/2")), "this reads"),
     ] {
         let refused = read(&text).expect_err(said);
         assert!(refused.to_string().contains(said), "`{said}`: {refused}");
     }
+}
+
+/// A mask inside a mask is closed by an `unmask` while its run ends at the job's completion, so an `unmask` is held to no run's ending: the truthful file of
+/// `mask; mask; unmask; return` reads, as does one whose every run ends at completion while its job calls `unmask` (round 5, AI5-1).
+#[test]
+fn an_unmask_is_held_to_no_run_s_ending() {
+    let nested =
+        a_file("s", &["t"]).replace("(run tail (ending unmask)", "(run tail (ending completion)");
+    assert_ne!(nested, a_file("s", &["t"]));
+    let application =
+        read(&nested).expect("a job that calls `unmask` and ends its run at completion reads");
+    assert!(application.tasks[0]
+        .os_calls
+        .calls
+        .iter()
+        .any(|(callee, count)| callee == "unmask" && *count > 0));
+    assert!(application.tasks[0]
+        .masked_runs
+        .runs
+        .iter()
+        .all(|run| run.ending == Ending::Completion));
+    // A `mask` is still held to a run: a job that calls one states the run it begins.
+    let no_run = a_file("s", &["t"]);
+    let from = no_run.find("(run tail").expect("its run");
+    let mut depth = 0_i32;
+    let to = from
+        + no_run[from..]
+            .char_indices()
+            .find_map(|(at, c)| {
+                depth += i32::from(c == '(') - i32::from(c == ')');
+                (depth == 0).then_some(at + 1)
+            })
+            .expect("it closes");
+    let refused =
+        read(&format!("{}{}", &no_run[..from], &no_run[to..])).expect_err("a `mask` with no run");
+    assert!(
+        refused.to_string().contains("it states no masked run"),
+        "{refused}"
+    );
 }
 
 /// A safety factor is held to its arithmetic, changes no category, and what it padded is kept for what reads it.
@@ -569,6 +607,17 @@ fn what_is_unmet_of_a_plan_is_said() {
     });
     assert_eq!(
         read(&good).expect("it reads").unmet(&within_reach, &[]),
+        Vec::<String>::new()
+    );
+    // What `/2` owes of the system where no file is given, its `initialisation`, is held: a file names one or says `none` (round 5, AI5-5).
+    let mut of_the_system = plan.clone();
+    of_the_system.owed.push(contents::Owed {
+        subject: plan.system.clone(),
+        fact: "initialisation".to_owned(),
+        by: "application".to_owned(),
+    });
+    assert_eq!(
+        read(&good).expect("it reads").unmet(&of_the_system, &[]),
         Vec::<String>::new()
     );
 }

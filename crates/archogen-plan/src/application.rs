@@ -93,11 +93,12 @@ pub struct Evidence {
     pub basis: String,
 }
 
-/// The image a bound was obtained on, named by its code identity (`decision_runtime-plan-format-2.md` §1): what that image holds of its plan, the figures left out.
-/// So it is no digest of the image's file, which a bound's own value moves by where it lays a stack, and one identity names every image of that code.
+/// The image a bound was obtained on, named by its image identity (`decision_runtime-plan-format-2.md` §1), which a build computes: of its plan's code identity and of what builds it,
+/// the toolchain, its flags and features, the target and the linker's input but for the allocations. So it is no digest of the image's file, which a bound's own value moves by where
+/// it lays an allocation, and one identity names each image that differs only in where its stacks and tables lie.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum Binary {
-    /// `sha256:…`, a code identity.
+    /// `sha256:…`, an image identity.
     Image(String),
     /// There was no image yet.
     Unbuilt,
@@ -208,7 +209,8 @@ pub struct Code {
     pub name: String,
     /// Where it lies, from the file that says so.
     pub place: String,
-    /// `sha256:…`, of its sources by the record's recipe: of one line for each file under `place`, its sha256 and its path.
+    /// `sha256:…`, of its sources by the record's recipe: of one line for each, its sha256 and its path, the manifest, the lock and the build script at `place` and what lies under
+    /// `place/src`, this file itself never among them.
     pub digest: String,
 }
 
@@ -758,7 +760,8 @@ fn runs_fit_their_job(
         }
     }
     // And a `mask` is held to a run, as a run is to its `mask`: a run is a stretch from a `mask` call (the composite-inputs record's §1), so a job that calls one states
-    // the runs it begins, and one that calls `unmask` a run that ends by one. A count may over-state, and none states a call that begins nothing.
+    // the runs it begins. An `unmask` is held to no run's ending: a mask inside a mask is closed by one while its run ends at the job's completion (the fault contract's
+    // terms), so `mask; mask; unmask; return` is one run ending at completion, and a count of them that over-states only over-charges.
     let most = |name: &str| primitives.get(name).copied().unwrap_or(0);
     if most(MASK) > 0 && runs.runs.is_empty() {
         return Err(refused(
@@ -766,15 +769,6 @@ fn runs_fit_their_job(
             format!(
                 "its `os-calls` says a job calls `mask` {} time(s), and it states no masked run: each `mask` begins one",
                 most(MASK)
-            ),
-        ));
-    }
-    if most(UNMASK) > 0 && !runs.runs.iter().any(|run| run.ending == Ending::Unmask) {
-        return Err(refused(
-            of,
-            format!(
-                "its `os-calls` says a job calls `unmask` {} time(s), and no masked run of its ends by one",
-                most(UNMASK)
             ),
         ));
     }
@@ -1224,7 +1218,7 @@ impl Application {
                 continue;
             }
             let held = if owed.subject == plan.system {
-                owed.fact == "leaves-interrupt-hardware-alone"
+                HELD_OF_THE_SYSTEM.contains(&owed.fact.as_str())
             } else if identities.contains(owed.subject.as_str()) {
                 HELD_OF_A_TASK.contains(&owed.fact.as_str())
             } else {
@@ -1240,6 +1234,9 @@ impl Application {
         unmet
     }
 }
+
+/// What this format holds of the system, by the plan's name for each: its one declaration, and its `initialisation`, which `/2` owes of a system where no file is given.
+pub const HELD_OF_THE_SYSTEM: &[&str] = &["leaves-interrupt-hardware-alone", "initialisation"];
 
 /// What this format holds of a task, by the plan's name for each: the plan's §2.10, and `deadlines-within-reach`, which `/2` owes of a task writing an alarm it does not name (`RA-H7`).
 pub const HELD_OF_A_TASK: &[&str] = &[
