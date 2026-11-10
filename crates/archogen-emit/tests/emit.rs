@@ -464,6 +464,28 @@ fn an_arrival_counts_with_what_it_releases() {
         "{}",
         refusal.message
     );
+    // The count is true past what 64 bits hold, with seven more tasks on the source, and the repair names what a description of no periods has.
+    let more: String = (2..9)
+        .map(|task| format!("  (task t{task} (min-separation 1 ms) (deadline 1 ms) (deadline-from release) (priority {}) (uses evt))\n", task + 2))
+        .collect();
+    let refusal = build_of(&shared("2305843009213693951 ms").replace(
+        "  (requires (uses evt))",
+        &format!("{more}  (requires (uses evt))"),
+    ))
+    .emitted()
+    .expect_err("refused");
+    assert!(
+        refusal
+            .message
+            .contains("is 23058430092136939511 releases and arrivals"),
+        "{}",
+        refusal.message
+    );
+    assert!(
+        refusal.message.contains("periods and separations"),
+        "{}",
+        refusal.message
+    );
 }
 
 #[test]

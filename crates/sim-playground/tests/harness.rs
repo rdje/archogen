@@ -801,7 +801,7 @@ fn second_timed(tasks: &[Task<'_>], sources: &[Source<'_>], horizon: u64) -> (En
     }
 }
 
-/// A job a source's job held off has done all its work, and what is left of it takes no time: it finishes before its own next release, however it came to be held off.
+/// A job a source's job held off has done all its work, and what is left of it takes no time: it finishes before its own next release, whichever job held it off.
 #[test]
 fn a_job_held_off_with_nothing_left_finishes_before_its_own_release() {
     let sources = [Source {
@@ -860,7 +860,7 @@ fn a_job_held_off_with_nothing_left_finishes_before_its_own_release() {
     );
 }
 
-/// A last step writing a value already reached is a request at its write, whose service comes before the job's completion: so a job ending so at its own release has overrun it, the one way a job with nothing left does.
+/// A last step writing a value already reached is a request at its write, whose service comes before the job's completion: so a job ending so at its own release has overrun it, one way a job with nothing left does.
 #[test]
 fn a_job_ending_by_writing_a_value_already_reached_serves_it_first() {
     let sources = [alarm("a")];
@@ -971,5 +971,57 @@ fn a_run_of_many_tasks_fits_the_stack_it_says_it_takes() {
             Ended::Horizon | Ended::Halted
         ),
         "it ended as a run ends"
+    );
+}
+
+/// What is taken before a job's completion: an interrupt pending with nothing masking it as the job ends, by an unmask or by a value already reached written at any step, overruns a job ending at its own release; and a job ending masked completes first.
+#[test]
+fn what_is_taken_before_a_job_s_completion_can_overrun_it() {
+    let source = [Source {
+        name: "src",
+        separation: Some(2),
+        alarm: false,
+    }];
+    let unmasks = [Step::Mask, Step::Run(3), Step::Unmask];
+    let tasks = [timer("job", 1, 3, &unmasks)];
+    let (_, lines) = second_timed(&tasks, &source, 4);
+    assert!(
+        lines.contains(&"3 s fault overrun job fault nominal 3 s".to_owned()),
+        "{lines:#?}"
+    );
+    assert!(
+        !lines.contains(&"3 s complete job".to_owned()),
+        "{lines:#?}"
+    );
+    let sources = [alarm("a")];
+    let not_last = [
+        Step::Run(3),
+        Step::Program { alarm: 0, ahead: 0 },
+        Step::Mask,
+        Step::Unmask,
+    ];
+    let tasks = [timer("job", 1, 3, &not_last)];
+    let (_, lines) = second_timed(&tasks, &sources, 4);
+    assert!(
+        lines.contains(&"3 s fault overrun job fault nominal 3 s".to_owned()),
+        "{lines:#?}"
+    );
+    let masked = [
+        Step::Mask,
+        Step::Run(3),
+        Step::Program { alarm: 0, ahead: 0 },
+    ];
+    let tasks = [timer("job", 1, 3, &masked)];
+    let (_, lines) = second_timed(&tasks, &sources, 4);
+    let at = |said: &str| {
+        lines
+            .iter()
+            .position(|line| line == said)
+            .unwrap_or_else(|| panic!("no `{said}` in {lines:#?}"))
+    };
+    assert!(at("3 s complete job") < at("3 s release job nominal 3 s"));
+    assert!(
+        !lines.iter().any(|line| line.contains("fault")),
+        "{lines:#?}"
     );
 }

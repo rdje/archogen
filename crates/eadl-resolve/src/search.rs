@@ -988,7 +988,7 @@ fn walk(
                         system.name
                     ),
                     Label::new(system.span, "the system searched"),
-                    "raise the search's budget, or narrow the choices: fewer providers meeting each requirement",
+                    "narrow the choices: fewer providers meeting each requirement, or a requirement that tells them apart",
                 ),
             }, steps);
         }

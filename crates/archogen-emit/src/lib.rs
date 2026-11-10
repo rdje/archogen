@@ -295,7 +295,7 @@ fn horizon_of(contents: &Contents, ticks: &Ticks) -> Result<u64, Refusal> {
                 "unsupported-profile",
                 format!(
                     "one hyperperiod of this plan, with {what}, does not fit this build's integer ticks: choose periods \
-                     with a smaller common multiple"
+                     and separations with a smaller common multiple"
                 ),
             )
         })?;
@@ -303,15 +303,15 @@ fn horizon_of(contents: &Contents, ticks: &Ticks) -> Result<u64, Refusal> {
     let releases = each
         .iter()
         .filter(|(_, value, _)| *value > 0)
-        .fold(0_u64, |total, (_, value, cost)| {
-            total.saturating_add((horizon / value).saturating_mul(*cost))
+        .fold(0_u128, |total, (_, value, cost)| {
+            total + u128::from(horizon / value) * u128::from(*cost)
         });
-    if releases > MOST_RELEASES {
+    if releases > u128::from(MOST_RELEASES) {
         return Err(refuse(
             "unsupported-profile",
             format!(
                 "one hyperperiod of this plan is {releases} releases and arrivals over {horizon} ticks, more than the \
-                 {MOST_RELEASES} a run of the hosted playground takes: choose periods with a smaller common multiple"
+                 {MOST_RELEASES} a run of the hosted playground takes: choose periods and separations with a smaller common multiple, or fewer tasks on a source"
             ),
         ));
     }

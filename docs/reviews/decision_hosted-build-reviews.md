@@ -517,3 +517,17 @@ Said, and left as it stands: its reader could not run a full disk, other filesys
 | R26-7 | route | the description lying inside the build it replaces, and `--out` spelled `b/`, `b/.`, `b//` or `./b`, had no row | Each has a row, held by a real run |
 
 Said, and left as it stands: its reader could not run a full disk, other filesystems, Linux, another user, a sticky directory, wasm, a checker past 512 MiB, or `explain` over thousands of requesters and providers to its end, which the guard stopped at 85% under others' load.
+
+**Round 27** — `2026-11-07`, leaf `M4.2.3.3.27`, answered `2026-11-10`: not acceptable, 7 findings, 1 defect, after 2, 4, 5, 6, 4, 2, 3 and 1, on `5ad26e81`, reached only by a hand-written body, and its reader says the precedent of R26-6 would call it wording. It is counted as a defect: the sentence moved no behaviour it did not state, but it was false both ways about a task leaving the schedule. Everything a plain description reaches was clean, and round 26's answers held, each traced count equal to the rule.
+
+| # | Kind | Finding | Answer |
+| --- | --- | --- | --- |
+| R27-1 | defect, low, R26-5's answer incomplete | "unless its last step writes a value already reached" was false both ways: a job ending in an unmask with a source pending is overrun with no write, one ending masked after a write completes first, and a write that is not the last step overruns too | The record and the book say what the order does, an interrupt pending with nothing masking it as a job ends, and `what_is_taken_before_a_job_s_completion_can_overrun_it` holds each shape |
+| R27-2 | route, older | what a run within the limit costs grows with its tasks, and no sentence said so: 3,000 tasks took 498.6 s in the dev profile, and 30,000 about 106 minutes by arithmetic | The record and the book say so. No verdict moves |
+| R27-3 | gap, older | "raise the search's budget" named a lever no user of the command line has | The repair names what a description can do |
+| R27-4 | route, older | a generated program whose output pipe closes panics and exits 101 | The record and the book say so |
+| R27-5 | wording, older | the refusal named periods to a description holding none | "periods and separations", or fewer tasks on a source, and so in its sibling, a hyperperiod past the build's ticks |
+| R27-6 | wording, R26-1's multiplier | the count saturated past `2^64`, against "the refusal says the true count" | It is counted in 128 bits. A row |
+| R27-7 | wording, older | two stale comments, on what a byte budget bounds and on what `MOST_STEPS_AT_ONE_INSTANT` is | Each says what is true |
+
+Said, and left as it stands: its reader could not run a full disk, other filesystems, Linux, another user, a sticky directory, wasm, a checker past 512 MiB, `explain` over thousands to its end, thousands of distinct sources, which bindings collapse or the search spends its budget on at eight, or the whole run at 30,000 tasks. Read and not run: at exactly `2^20` tasks on one period the count passes and the steps at one instant would be one more, stopping at `NoProgress`, far past any ceiling tried.

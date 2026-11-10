@@ -131,9 +131,10 @@ pub fn is_a_plan(text: &str) -> bool {
 /// counted together (leaf `API.4.2`).
 ///
 /// ⭐ **Why one number is enough.** The language bounds the shapes that multiply work — list nesting (`M1.38`),
-/// module instances and import chains (`M1.39`) — and what is left is linear in the input. Measured `2026-09-30`
-/// on a debug build: 1 MB of description checked in 0.36 s holding 82 MB, and 5 MB in 1.95 s holding 383 MB. So a
-/// byte budget bounds a request's time and memory. The largest description the repository holds is 5 KB.
+/// module instances and import chains (`M1.39`) — and what is left is linear in the input for what `check` does, what
+/// compares pairs growing with the pairs (`docs/book/src/engine-api.md`). Measured `2026-09-30` on a debug build: 1 MB
+/// of description checked in 0.36 s holding 82 MB, and 5 MB in 1.95 s holding 383 MB. So a byte budget bounds what a
+/// request reads, and the ceiling what it holds; neither bounds its time. The largest description the repository holds is 5 KB.
 pub const DEFAULT_BYTES: usize = 1024 * 1024;
 
 /// What an instance lets one request cost. The **instance** sets it, never the consumer: its purpose is to protect

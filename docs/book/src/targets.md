@@ -56,7 +56,7 @@ one trace, and two runs can be compared byte for byte:
 ```
 
 Time is exact: `1/100 s` is 10 ms, with no rounding anywhere. In order: a job with nothing left that takes time finishes first, so
-one that ends exactly as its next release falls due has not overrun, unless its last step writes a value already reached, whose service comes first; then an interrupt that has arrived is taken as soon as the
+one that ends exactly as its next release falls due has not overrun, unless an interrupt is pending with nothing masking it as it ends, whose service comes first; then an interrupt that has arrived is taken as soon as the
 hardware is unmasked, the routes in the plan's order and then the release timer, none nesting another; then the scheduler
 decides; then the running job goes on. While a job holds interrupts masked, an arrival stays pending, and its service runs at
 the unmask, before the job's next instruction, even if that is its last. A job's body is data, a list of *run this long*, *mask*, *unmask*, *read* or *write a device*, *program an alarm*. Until an application's own inputs exist, a

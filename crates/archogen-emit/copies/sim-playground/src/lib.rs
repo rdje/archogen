@@ -365,7 +365,7 @@ pub trait Observer {
     fn observe(&mut self, event: Stamped<'_>);
 }
 
-/// How many steps a run takes at one instant before it stops: what bounds a hyperperiod's releases (`decision_hosted-build.md` §3).
+/// How many steps a run takes at one instant before it stops, which no count of a plan's can say (`decision_hosted-build.md` §3).
 pub const MOST_STEPS_AT_ONE_INSTANT: u64 = 1 << 20;
 
 /// How many alarm arrivals a run takes, past which it stops. A plan's count bounds a timer's releases and a source's arrivals, and none says what a job programs, so a job an alarm releases can program that alarm a tick ahead until a far horizon.
@@ -542,7 +542,7 @@ impl<'s, 'o, const N: usize> Run<'s, 'o, N> {
     }
 
     /// The running job finished, if it has nothing left that takes time, so that its completion comes before what arrives at
-    /// this instant (`ROADMAP.md` §13.4), and then the next that has nothing left, however it came to be held off. It stops at an
+    /// this instant (`ROADMAP.md` §13.4), and then the next that has nothing left, where nothing pending goes first. It stops at an
     /// unmask that lets a pending interrupt in, which is taken before the job's next instruction, its completion among them. How
     /// the run ended, where it did.
     fn finish_what_is_due(&mut self) -> Option<Ended> {

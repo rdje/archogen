@@ -288,6 +288,8 @@ generates each system from a clean directory, compiles it, runs it, reads the re
 the frozen file. One moved, with its reason in its own header. The task S0 could only call unsupported, a minimum separation with
 nothing to release it, is refused now for what it is: a missing fact of the description.
 
+A run within that limit can still take hours where a system holds thousands of tasks, each step reading every task. A generated program's output closing stops it as it does any Rust program.
+
 ## What this does not establish
 
 A generated system runs its releases and nothing else. No job holds application code until `M4.13` reads `M4.12`'s inputs into a build, so a trace says
