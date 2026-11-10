@@ -472,6 +472,21 @@ def case_a_terminal_vouches_for_nothing() -> None:
         check(f"a long flag with one dash leaves a job a job: {job}", not g.is_terminal_shell(g.Process(1, 1, job, "", "", 0)))
     for terminal in ("bash -norc", "bash -posix", "bash -noprofile -norc", "bash -rcfile /x/rc", "bash -login", "bash -verbose", "bash -eou pipefail", "bash -oe pipefail", "bash -oo pipefail errexit", "bash +s", "bash -debug", "bash -protected"):
         check(f"and a terminal a terminal: {terminal}", g.is_terminal_shell(g.Process(1, 1, terminal, "", "", 0)))
+    # A flag's value may hold a space, a terminal's `--init-file` under `Visual Studio Code.app`: the kernel's own arguments keep it one word, where `ps`'s one line reads a script after it.
+    spaced = ("bash", "--init-file", "/Applications/Visual Studio Code.app/Contents/Resources/app/out/vs/workbench/contrib/terminal/common/scripts/shellIntegration-bash.sh")
+    as_the_kernel_holds_it = g.Process(1, 1, " ".join(spaced), "", "", 0, argv=spaced)
+    check("a terminal whose flag's value holds a space is a terminal, and spared", g.is_terminal_shell(as_the_kernel_holds_it) and g.protected(as_the_kernel_holds_it), as_the_kernel_holds_it.words)
+    check("and a shell given a script after such a value is a job", not g.is_terminal_shell(g.Process(1, 1, " ".join((*spaced, "job.sh")), "", "", 0, argv=(*spaced, "job.sh"))))
+    check("where the kernel gives no arguments the one line is read, as before", g.Process(1, 1, "bash -norc", "", "", 0).words == ["-norc"] and g.Process(1, 1, "x", "", "", 0, argv=("bash", "a b", "")).words == ["a b", ""])
+    # And a real one, read from this host's own table.
+    home = fresh("spaced-terminal") / "Visual Studio Code.app"
+    home.mkdir()
+    (home / "rc.sh").write_text("")
+    shell = spawn(["/bin/bash", "--init-file", str(home / "rc.sh")], home, stdin=subprocess.PIPE)
+    until(lambda: g.NATIVE.arguments(shell.pid)[1:2] == ["--init-file"], 5)
+    seen = [each for each in g.processes() if each.pid == shell.pid]
+    check("a real shell started so is read with its value one word, and is a terminal", len(seen) == 1 and seen[0].argv[1:] == ("--init-file", str(home / "rc.sh")) and g.is_terminal_shell(seen[0]) and g.protected(seen[0]), seen)
+    shell.terminate()
     check("`-tcsh` is a login shell", g.protected(g.Process(1, 1, "-tcsh", "", "", 0)))
 
 
@@ -911,6 +926,46 @@ def case_a_taking_up_after_a_clean_is_said_where_a_directory_stands() -> None:
         return log.read_text(errors="replace") if log.exists() else ""
 
     check("the refusal and the taking up are both said once a directory stands, the refusal first", until(lambda: "cut short" in said() and "took up" in said(), 10) and said().index("cut short") < said().index("took up"), said())
+    watcher.terminate()
+    watcher.wait(timeout=5)
+
+
+def case_what_is_handed_on_is_a_watcher_s_own() -> None:
+    """What a watcher hands the image it becomes is read as that and no more, and no asker hands it to a new one."""
+    check("what is handed on is the two kinds a watcher holds, each with its one text", g.handed_on('[{"kind": "unread", "error": "e", "x": 1}, {"kind": "stopped"}, 5, {"kind": "taken-up", "reasons": "r"}]') == [{"kind": "unread", "error": "e"}, {"kind": "taken-up", "reasons": "r"}])
+    check("the last four of it", [each["error"] for each in g.handed_on(json.dumps([{"kind": "unread", "error": str(n)} for n in range(6)]))] == ["2", "3", "4", "5"])
+    check("and anything else is nothing, a kind that is no text among it", all(g.handed_on(told) == [] for told in ("", "said", "5", "{}", '[{"kind": []}]', '[{"kind": {"a": 1}}]', "[[]]", '[{"kind": "unread", "error": 5}]')))
+    for number, told in enumerate(('[{"kind": []}]', '[{"kind": "taken-up", "reasons": "an asker says"}]')):
+        scope = fresh(f"handed-by-an-asker-{number}")
+        done = guard("ensure", root=scope, env=dict(os.environ, **{g.TAKEN_UP: told}))
+        check(f"a watcher an asker starts with `{told}` in its environment runs", done.returncode == 0 and until(lambda: g.watcher_pid(scope) is not None and (g.state_path(scope) / "sampled").exists(), 10), done)
+        log = g.state_path(scope) / "events.log"
+        check("and says nothing that environment held", not log.exists() or ("an asker says" not in log.read_text(errors="replace") and "the watcher ended" not in log.read_text(errors="replace")), log.read_text(errors="replace") if log.exists() else "")
+        guard("stop", root=scope)
+        check("and stops when asked", until(lambda: g.watcher_pid(scope) is None, 10))
+
+
+def case_a_watcher_whose_interpreter_is_gone_goes_on() -> None:
+    """A save cannot be taken up where what would run it is gone: the watcher goes on as it was and says so, and nothing is said of a taking up that did not happen."""
+    repo = fresh("no-interpreter")
+    (repo / ".git").mkdir()
+    (repo / "scripts").mkdir()
+    copy = repo / "scripts" / "host_guard.py"
+    good = GUARD.read_text()
+    gone = good.replace("os.execv(sys.executable, [sys.executable,", "os.execv('/nowhere/python3', ['/nowhere/python3',", 1)
+    check("the fixture is this guard, told to become an image by an interpreter that is no file", gone != good)
+    copy.write_text(gone)
+    watcher = spawn([*PY, str(copy), "watch", "--root", str(repo)], repo)
+    until(lambda: (repo / "target" / "host-guard" / "state" / "sampled").exists())
+    head = "from __future__ import annotations\n"
+    copy.write_text(gone.replace(head, head + "# saved again\n", 1))
+    log = repo / "target" / "host-guard" / "state" / "events.log"
+
+    def said() -> str:
+        return log.read_text(errors="replace") if log.exists() else ""
+
+    check("a watcher whose interpreter is gone goes on at a save, and says so", until(lambda: "cannot be taken up" in said(), 15) and up(watcher), said())
+    check("and nothing is said of a taking up that did not happen", "took up" not in said() and "takes up" not in said(), said())
     watcher.terminate()
     watcher.wait(timeout=5)
 
@@ -1721,6 +1776,31 @@ def case_a_stale_pid_names_nobody() -> None:
         (scope / "state" / "watch.pid").write_text(str(gone.pid))
         check("nor is a zombie, which answers a signal", g.watcher_pid(scope) is None, g.watcher_pid(scope))
         gone.wait(timeout=5)
+        # A stale note naming a job of an interpreter names no watcher, though whatever asks holds the lock for its instant; nor does one naming a guard's watcher of another root.
+        g.NATIVE = native
+        sleeper = spawn([*PY, "-c", "import time; time.sleep(30)"], fresh("stale-an-interpreter"))
+        until(lambda: native.arguments(sleeper.pid)[-1:] == ["import time; time.sleep(30)"], 5)
+        (scope / "state" / "watch.pid").write_text(str(sleeper.pid))
+        check("a stale note naming a job of an interpreter names no watcher, the lock held", held is not None and g.watcher_pid(scope) is None and up(sleeper), g.watcher_pid(scope))
+        sleeper.terminate()
+        elsewhere = fresh("stale-another-root")
+        other = looping_watcher(elsewhere, {})
+        until(lambda: (elsewhere / "state" / "sampled").exists())
+        (scope / "state" / "watch.pid").write_text(str(other.pid))
+        check("nor does one naming another root's watcher", g.watcher_pid(scope) is None and g.watcher_pid(elsewhere) == other.pid and up(other), (g.watcher_pid(scope), g.watcher_pid(elsewhere), other.pid))
+        other.terminate()
+        other.wait(timeout=5)
+        check("a guard's watcher is one of the root it names, or of any where it names none", g.watches(["python3", "-I", "-B", "/x/host_guard.py", "watch", "--root", str(scope)], scope) and not g.watches(["python3", "host_guard.py", "watch", "--root", str(elsewhere)], scope) and g.watches(["python3", "host_guard.py", "watch"], scope) and not g.watches(["", "x", "host_guard.py", "watch"], scope))
+        # An argument that is empty is one, the first among them, told from the padding the kernel puts after the executable's path; and nothing after the last is taken for one.
+        for length in range(8):
+            link = scope / ("s" + "x" * length)
+            os.symlink("/bin/sleep", link)
+            for first in ("", "named"):
+                nameless = subprocess.Popen([first, "30"], executable=str(link))
+                read = native.arguments(nameless.pid)
+                nameless.kill()
+                nameless.wait()
+                check(f"a process given {[first, '30']} by a path of {len(str(link))} bytes is read as given", read == [first, "30"], read)
         # A note may hold any number, and one below 2 is no one process: this one's group, a group, every process of this user, the host's first. None is the watcher, none is asked after, since asking
         # is a signal, and none is ever stopped. Nothing is sent here whatever the guard does: what would be is taken down and refused.
         sent, kill = [], os.kill
@@ -1822,7 +1902,7 @@ def case_what_counts_as_heavy() -> None:
         "a[0]=x cargo build", "echo ${x:-'}'} ; cargo build", "env -S 'cargo build'", "coproc name { cargo build; }", "{fd}>log cargo build", "[[ a == a ]]>log; cargo build", "if [[ '#c' =~ ^([[:space:]]*)#(.*)$ ]]; then cargo build; fi",
         "bash <<< 'cargo build'", "trap 'cargo build' EXIT", "echo $(( $(cargo build) + 1 ))", 'x="$(if true; then case y in y) cargo build;; esac; fi)"', "x=( $(cargo build) )", "[[ -n $(cargo metadata --format-version 1 >x; cargo build) ]]",
         "gmake -Onone all", "gmake -Otarget all", "bash -posix -c 'cargo build'", "bash -rcfile x -c 'cargo build'", "bash -norc scripts/build_book.sh",
-        "bash -eou pipefail -c 'cargo build'", "bash -oe pipefail -c 'cargo build'", "bash +c 'cargo build'", "nu -n -c 'cargo build'", "fish -n -c 'cargo build'", "bash -protected scripts/build_book.sh",
+        "bash -eou pipefail -c 'cargo build'", "bash -oe pipefail -c 'cargo build'", "bash +c 'cargo build'", "nu -n -c 'cargo build'", "fish -n -c 'cargo build'", "bash -protected scripts/build_book.sh", "csh -c -n -c 'cargo build'", "tcsh -cc -n 'cargo build'", "bash -wordexp -c 'echo hi' '$(cargo build)'",
     ):
         check(f"heavy: {heavy}", heavy_text(heavy))
     for light in (
@@ -1990,12 +2070,13 @@ def the_reader_against(bash: str) -> None:
         ("-eou pipefail -c x", ("x", None)), ("-eou pipefail", (None, None)), ("-oe pipefail script", (None, "script")), ("-oo pipefail errexit script", (None, "script")), ("-Oe extglob script", (None, "script")),
         ("-oc pipefail x", ("x", None)), ("+c x", ("x", None)), ("+s script", (None, None)), ("+o pipefail script", (None, "script")),
         # Its long flags with one dash come before its first cluster: after one, `-posix` is the cluster it looks like, its `o` taking the next word and its `s` keeping the shell on its input.
-        ("-protected script", (None, "script")), ("-debug script", (None, "script")), ("-wordexp x", ("x", None)), ("--wordexp x", ("x", None)), ("-e -posix script", (None, None)), ("-posix -e script", (None, "script")),
+        ("-protected script", (None, "script")), ("-debug script", (None, "script")), ("-wordexp x", ("x", None)), ("--wordexp x", ("x", None)), ("-wordexp -c x y", ("x\ny", None)), ("-wordexp", ("", None)), ("-e -posix script", (None, None)), ("-posix -e script", (None, "script")),
     ):
         check(f"a shell given `{arguments}` is told {told_it}", g.shell_told(arguments.split()) == told_it, g.shell_told(arguments.split()))
     check("`-s` keeps a shell on its input, its words being only its arguments", g.shell_told(["-s", "--", "x"]) == (None, None) and g.shell_told(["-s", "x"]) == (None, None))
     check("`-n` runs nothing it reads", g.shell_only_parses("bash", ["-n"]) and g.shell_only_parses("zsh", ["-en"]) and not g.shell_only_parses("bash", ["-e", "x"]) and not g.shell_only_parses("bash", ["--norc"]))
-    check("of a shell whose `-n` was run here, and of no other: `nu -n` is told no config file", all(g.shell_only_parses(shell, ["-n"]) for shell in g.PARSES_ONLY) and not any(g.shell_only_parses(shell, ["-n"]) for shell in g.SHELLS - g.PARSES_ONLY) and {"nu", "fish", "elvish"} <= g.SHELLS - g.PARSES_ONLY)
+    check("of a shell whose `-n` was run here, and of no other: `nu -n` is told no config file", all(g.shell_only_parses(shell, ["-n"]) for shell in g.PARSES_ONLY) and not any(g.shell_only_parses(shell, ["-n"]) for shell in g.SHELLS - g.PARSES_ONLY) and {"nu", "fish", "elvish", "csh", "tcsh"} <= g.SHELLS - g.PARSES_ONLY)
+    check("`csh` and `tcsh` give `-c` the next word, a `-n` among them, so theirs is no such telling", not g.shell_only_parses("csh", ["-c", "-n", "-c", "x"]) and not g.shell_only_parses("tcsh", ["-cc", "-n", "x"]) and not g.shell_only_parses("csh", ["-n"]))
     for quiet, asks in (("make --version", False), ("make --help", False), ("gmake -v", False), ("make -n focused", False), ("make help", False), ("make focused", True), ("cargo build --help", False), ("cargo build", True)):
         check(f"a build only if it builds: {quiet}", g.Process(1, 0, quiet, "", "", 0).spawns == asks)
     check("a root whose name a space goes on is another", not g.names_root("python3 host_guard.py run --root /x/a copy -- ls", "/x/a") and g.names_root("python3 host_guard.py run --root /x/a -- ls", "/x/a") and g.names_root("python3 host_guard.py status --root /x/a", "/x/a"))
@@ -2023,7 +2104,7 @@ def case_killing_by_name() -> None:
             "(pkill -x rustc)", "$(pkill -x rustc)", "bash -c 'pkill -x rustc'", "sh -c 'pgrep -x rustc | xargs kill'", "# don't\npkill -x rustc\n# don't", "env pkill rustc", "sudo killall cargo",
             "ps -ax | awk '/rustc/{print $1}' | while read p; do kill $p; done", "for p in $(ps -ax | grep rustc | awk '{print $1}'); do kill $p; done",
             'arch="$(case "$(uname -m)" in arm64) echo a;; *) echo b;; esac)"; pkill -x rustc', 'x="$(case y in y) echo a;; esac )"\npkill -x rustc', "(( y = 1 << 3 ))\npkill -x rustc", "((x<<=1)); killall cargo", "echo $[1<<2]; pkill rustc",
-            "bash -euo pipefail -c 'pkill -x rustc'", "bash -eo pipefail -c 'pkill -x rustc'", "bash -rcfile x -c 'pkill -x rustc'", "bash -posix -c 'pkill -x rustc'", "bash -norc -init-file x -c 'killall cargo'", "bash -eou pipefail -c 'pkill -x rustc'", "bash -oe pipefail -c 'pkill -x rustc'", "bash +c 'killall cargo'", "bash -wordexp '$(pkill -x rustc)'", "nu -n -c 'pkill -x rustc'", "bash -c -- 'pkill -x rustc'", "trap 'pkill -x rustc' EXIT", "bash <<'EOF'\npkill -x rustc\nEOF", "bash <<< 'pkill -x rustc'", "case y in y) pkill -x rustc;; esac",
+            "bash -euo pipefail -c 'pkill -x rustc'", "bash -eo pipefail -c 'pkill -x rustc'", "bash -rcfile x -c 'pkill -x rustc'", "bash -posix -c 'pkill -x rustc'", "bash -norc -init-file x -c 'killall cargo'", "bash -eou pipefail -c 'pkill -x rustc'", "bash -oe pipefail -c 'pkill -x rustc'", "bash +c 'killall cargo'", "bash -wordexp '$(pkill -x rustc)'", "nu -n -c 'pkill -x rustc'", "csh -c -n -c 'pkill -x rustc'", "tcsh -cc -n 'pkill -x rustc'", "/bin/bash -wordexp -c 'echo hi' '$(pkill -x rustc)'", "bash -c -- 'pkill -x rustc'", "trap 'pkill -x rustc' EXIT", "bash <<'EOF'\npkill -x rustc\nEOF", "bash <<< 'pkill -x rustc'", "case y in y) pkill -x rustc;; esac",
             "[[ $line =~ ^([[:space:]]*)#(.*)$ ]] && pkill -x rustc", "bash -s -- x <<'E'\npkill -x rustc\nE", "bash -s x <<< 'killall cargo'", 'x="$(cat <<EOF\nbody\nEOF)"\npkill -x rustc', f"pkill -f {scope}-other/x", f"ps -ax | grep {scope}-other/x | xargs kill",
             'kill "$(pgrep -x rustc)"', 'ps -ax | grep x; kill "$PID"', "for ((i=0;i<1;i++)) do pkill -x rustc; done", "if true; then for ((i=0;i<1;i++)) do pkill -x rustc; done; fi", "time for ((i=0;i<1;i++)) do pkill -x rustc; done", "pkill -v -P 123", "pkill -vP 123", "pkill -P 5,1 -x rustc", "kill -9 -1", "kill -- -1", "pkill -PIPE rustc", "pkill -FPE rustc", "ps -upeter | awk '{print $1}' | xargs kill", 'pkill -P "$(pgrep -x make)"', 'P=$(pgrep -x make); pkill -P "$P"', "pgrep -x make > p; pkill -F p", "pkill -F <(pgrep -x rustc)", "ps -ax -opid -ocommand | grep rustc | awk '{print $1}' | xargs kill", "pkill -P 1 -x rustc", "pgrep -P 1 -x rustc | xargs kill -9", f"pkill -v -f {scope}", f"pgrep -vf {scope} | xargs kill", "kill -- -$(pgrep -x rustc)", "kill -TERM -$(pgrep -f myjob)", "PGID=$(pgrep -f myjob); kill -- -$PGID", "kill -s TERM $(pgrep -x rustc)",
             f"ps -ax | grep rustc | grep -v {scope} | awk '{{print $1}}' | xargs kill", f"pgrep -x rustc | tee {scope}/pids | xargs kill", f"pkill -f '{scope} copy'",
@@ -2306,7 +2387,7 @@ PURE = (    case_a_commit_holds_what_make_and_the_limits_can_be_told, case_what_
     case_a_kill_is_read_through_what_hides_it, case_a_path_holding_a_space_is_one_path,
 case_each_line_judges_alone, case_growth_is_of_the_last_minutes, case_what_counts_as_heavy, case_the_reader_sees_what_the_shell_runs, case_where_a_root_is)
 THE_REST = (
-    case_a_job_under_run_outlasts_a_changed_guard, case_a_watcher_ended_by_its_own_error_says_so, case_a_root_spelt_relatively_stays_that_root, case_make_looks_for_the_whole_guard,
+    case_a_job_under_run_outlasts_a_changed_guard, case_what_is_handed_on_is_a_watcher_s_own, case_a_watcher_whose_interpreter_is_gone_goes_on, case_a_watcher_ended_by_its_own_error_says_so, case_a_root_spelt_relatively_stays_that_root, case_make_looks_for_the_whole_guard,
     case_only_tightened, case_check_refuses, case_a_figure_not_read_is_never_safe, case_one_process, case_all_processes, case_what_a_stopped_process_started,
     case_another_project_is_never_ours, case_a_terminal_vouches_for_nothing, case_a_root_is_exactly_itself, case_agents, case_what_holds_little_is_left_alone, case_a_job_is_stopped_whole,
     case_a_queued_make_is_no_build, case_at_a_disk_floor_what_writes_stops, case_names_and_zombies, case_a_command_line_that_is_no_text, case_pressure, case_not_ours, case_growing,

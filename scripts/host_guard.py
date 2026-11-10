@@ -289,6 +289,7 @@ class Process:
     bytes: int
     written: int = 0  # What it has written in its life.
     waiting: bool = False  # A `make` that has started nothing but a `run` still waiting its turn.
+    argv: tuple = ()  # Its arguments as the kernel holds them, the first its own name, each whole whatever spaces it holds; none where the kernel gives none.
 
     @property
     def name(self) -> str:
@@ -296,6 +297,8 @@ class Process:
         # A process that renamed itself, `exec -a`, does not begin with it, and goes by the name it chose.
         if self.exe and self.command.startswith(self.exe):
             return os.path.basename(self.exe)
+        if self.argv and self.argv[0]:
+            return os.path.basename(self.argv[0])
         return os.path.basename(self.command.split(" ", 1)[0]) if self.command else ""
 
     @property
@@ -323,6 +326,12 @@ class Process:
         return words
 
     @property
+    def words(self) -> list[str]:
+        """Its arguments, word by word: the kernel's own where it gives them, so that a flag's value holding a space is one word, a terminal's `--init-file` under `Visual Studio
+        Code.app` among them; and `ps`'s one line as `words_read` reads it where the kernel gives none."""
+        return list(self.argv[1:]) if self.argv else self.words_read
+
+    @property
     def given(self) -> str:
         """The word an interpreter is given to run, as it reads its own flags: the first that is no flag and no value of one, a whole flag's by `FLAGS_WITH_VALUES` and a cluster's letter by
         letter by `CLUSTERS`, a module's name where Python is given one. Nothing where a flag gives it a program's text, where it reads its input, or where it is no interpreter. A shell's is
@@ -330,7 +339,7 @@ class Process:
         kind = "python" if self.name.lower().startswith("python") else self.name
         if kind != "python" and kind not in INTERPRETERS:
             return ""
-        words = self.words_read
+        words = self.words
         if kind in SHELLS:
             return shell_told(words)[1] or ""
         takes_values, letters, at = FLAGS_WITH_VALUES.get(kind, ()), CLUSTERS.get(kind), 0
@@ -369,7 +378,7 @@ class Process:
         """Whether it is a build, which spawns more for as long as it lives, however little it holds. What only asks, or cleans, is none, nor a `make` waiting its turn."""
         if self.name not in BUILDS or self.waiting:
             return False
-        arguments = self.arguments.split()
+        arguments = self.words
         return not make_only_asks(arguments) if self.name in MAKES else is_heavy([self.name, *arguments])
 
     @property
@@ -384,6 +393,9 @@ class Darwin:
     def __init__(self) -> None:
         self.lib = ctypes.CDLL("libproc.dylib", use_errno=True)
         self.libc = ctypes.CDLL(None, use_errno=True)
+        # One buffer for every reading of a process's arguments, the most the kernel holds of one.
+        self.most = os.sysconf("SC_ARG_MAX")
+        self.held = ctypes.create_string_buffer(self.most)
 
     def usage(self, pid: int) -> tuple[int, int] | None:
         """Its footprint and what it has written, from `rusage_info_v2`."""
@@ -407,12 +419,17 @@ class Darwin:
     def arguments(self, pid: int) -> list[str]:
         """Its arguments as the kernel holds them, `KERN_PROCARGS2`, which outlast its executable's file: a count, that file's path, then each argument. None of a process that is gone, of a zombie,
         of another user's, or of a number that names no one process."""
-        most = os.sysconf("SC_ARG_MAX")
-        names, size, buffer = (ctypes.c_int * 3)(1, 49, pid), ctypes.c_size_t(most), ctypes.create_string_buffer(most)
-        if pid < 1 or self.libc.sysctl(names, 3, buffer, ctypes.byref(size), None, 0) != 0 or size.value < 5:
+        names, size = (ctypes.c_int * 3)(1, 49, pid), ctypes.c_size_t(self.most)
+        if pid < 1 or self.libc.sysctl(names, 3, self.held, ctypes.byref(size), None, 0) != 0 or size.value < 5:
             return []
-        raw = buffer.raw[:size.value]
-        words = raw[4:].partition(b"\0")[2].lstrip(b"\0").split(b"\0")
+        raw = ctypes.string_at(self.held, size.value)
+        ends = raw.find(b"\0", 4)
+        if ends < 0:
+            return []
+        # The path with its end is padded to a multiple of eight bytes, as measured on this host over twenty lengths of path: so an argument that is empty, the first among them, is
+        # told from the padding, and nothing after the last is taken for one.
+        starts = ends + 1 + -(ends + 1 - 4) % 8
+        words = raw[starts:].split(b"\0")
         return [word.decode("utf-8", "replace") for word in words[:int.from_bytes(raw[:4], sys.byteorder)]]
 
 
@@ -432,7 +449,7 @@ def processes() -> list[Process]:
         pid = int(parts[0])
         used = NATIVE.usage(pid)
         held, written = (int(parts[4]) * 1024, 0) if used is None else used
-        table.append(Process(pid, int(parts[1]), parts[5], NATIVE.cwd(pid), NATIVE.exe(pid), held, written))
+        table.append(Process(pid, int(parts[1]), parts[5], NATIVE.cwd(pid), NATIVE.exe(pid), held, written, argv=tuple(NATIVE.arguments(pid))))
     # A table that does not hold the one reading it is not the table: `ps` answering nothing, or cut short, must read as blind and never as calm.
     if not any(process.pid == os.getpid() for process in table):
         raise ValueError("`ps` does not list the process reading it")
@@ -457,8 +474,9 @@ BASH_LONG_FLAGS = {
     "debug", "debugger", "dump-po-strings", "dump-strings", "help", "init-file", "login", "noediting", "noprofile", "norc", "posix", "pretty-print", "protected", "rcfile", "restricted", "verbose",
     "version", "wordexp",
 }
-# The shells whose `-n` reads what it is given and runs none of it, each run on this host. Another's was not run here or is another flag, `nu -n` being told no config file, so what one holds is read as run.
-PARSES_ONLY = {"bash", "sh", "zsh", "dash", "ksh", "csh", "tcsh"}
+# The shells whose `-n` reads what it is given and runs none of it wherever it stands among the plain flags, each run on this host. Another's was not run here or is another flag, `nu -n`
+# being told no config file, or does not hold wherever it stands: `csh` and `tcsh` give `-c` the next word, a `-n` among them, and run what follows. What one of those holds is read as run.
+PARSES_ONLY = {"bash", "sh", "zsh", "dash", "ksh"}
 # What spawns more for as long as it lives, however little it holds.
 BUILDS = {"cargo", "rustc", "rustdoc", "clippy-driver", "make", "gmake"}
 # What shows a heavy job is under way. Not `make`, which may only be waiting its turn inside its own `run`.
@@ -471,15 +489,16 @@ READS_THE_HOST = {"ps", "sysctl", "vm_stat"}
 def shell_told(arguments: list[str]) -> tuple[str | None, str | None]:
     """The command a shell given these is told to run, with `-c`, and the script it is given; neither if it runs its input. As `bash` reads them, in its two passes. Its long flags come first, with one
     dash or two. Then its clusters, of either sign: a `c` or an `s` holds wherever it stands in one, and each `o` or `O` takes a word after its cluster, `-eou pipefail` one and `-oo a b` two. So `-c`
-    holds wherever it stands, and the first word that is no option is what it was told. `-wordexp` reads the words after it as a shell's text, so it is read as telling a command."""
+    holds wherever it stands, and the first word that is no option is what it was told. `-wordexp` expands each word it is given as a shell's text, the one after a `-c` text among them, so
+    every word past its options is read as told."""
 
     def long_flag(word: str) -> str | None:
         name = word[2:] if word.startswith("--") else word[1:]
         return name if word.startswith("-") and name in BASH_LONG_FLAGS else None
 
-    told_a_command, on_its_input, at = False, False, 0
+    told_a_command, on_its_input, expands, at = False, False, False, 0
     while at < len(arguments) and long_flag(arguments[at]):
-        told_a_command = told_a_command or long_flag(arguments[at]) == "wordexp"
+        expands = expands or long_flag(arguments[at]) == "wordexp"
         at += 2 if long_flag(arguments[at]) in ("init-file", "rcfile") else 1
     while at < len(arguments):
         word = arguments[at]
@@ -495,6 +514,8 @@ def shell_told(arguments: list[str]) -> tuple[str | None, str | None]:
         told_a_command = told_a_command or "c" in word
         on_its_input = on_its_input or "s" in word
         at += 1 + sum(letter in "oO" for letter in word[1:])
+    if expands:
+        return "\n".join(arguments[at:]), None
     if at >= len(arguments):
         return ("", None) if told_a_command else (None, None)
     if told_a_command:
@@ -526,7 +547,7 @@ def is_terminal_shell(process: Process) -> bool:
         return name[1:] in SHELLS
     if name not in SHELLS:
         return False
-    return shell_told(process.arguments.split()) == (None, None)
+    return shell_told(process.words) == (None, None)
 
 
 def protected(process: Process) -> bool:
@@ -1007,7 +1028,8 @@ def handed_on(told: str) -> list[dict]:
     said_by = {"taken-up": "reasons", "unread": "error"}
     kept = []
     for event in events if isinstance(events, list) else []:
-        key = said_by.get(event.get("kind")) if isinstance(event, dict) else None
+        kind = event.get("kind") if isinstance(event, dict) else None
+        key = said_by.get(kind) if isinstance(kind, str) else None
         if key and isinstance(event.get(key), str):
             kept.append({"kind": event["kind"], key: event[key]})
     return kept[-4:]
@@ -1069,13 +1091,18 @@ def watch(root: Path, limits: Limits, once: bool, idle_seconds: float = 600.0, a
         if stamp not in (None, running):
             running = stamp
             if again is not None:
-                if file_is_whole():
-                    os.environ[STARTED_FROM] = stamp_for_the_next(stamp)
-                    if not record(root, kind="taken-up", reasons=f"this watcher takes up {CODE.name} as saved"):
-                        unsaid.append({"kind": "taken-up", "reasons": f"this watcher took up {CODE.name} as saved, where no directory stood to say so"})
-                    os.environ[TAKEN_UP] = json.dumps(unsaid[-4:])
-                    os.execv(sys.executable, [sys.executable, "-I", "-B", str(CODE), *again])
                 refused = f"{CODE.name} as saved does not compile or is cut short: this watcher goes on as it was"
+                if file_is_whole():
+                    # The image it becomes says that it took the file up, with what this one held unsaid before it: nothing is said of a taking up that did not happen.
+                    os.environ[STARTED_FROM] = stamp_for_the_next(stamp)
+                    os.environ[TAKEN_UP] = json.dumps([*unsaid, {"kind": "taken-up", "reasons": f"this watcher took up {CODE.name} as saved"}][-4:])
+                    try:
+                        os.execv(sys.executable, [sys.executable, "-I", "-B", str(CODE), *again])
+                    except OSError as error:
+                        # What would run it is gone, an interpreter an upgrade removed: this watcher goes on as it was, and says that.
+                        os.environ.pop(STARTED_FROM, None)
+                        os.environ.pop(TAKEN_UP, None)
+                        refused = f"{CODE.name} as saved cannot be taken up, {sys.executable} being no program to run ({error.strerror}): this watcher goes on as it was"
                 if not record(root, kind="unread", error=refused):
                     unsaid.append({"kind": "unread", "error": refused + ", where no directory stood to say so"})
                     del unsaid[:-4]
@@ -1100,18 +1127,24 @@ def runs_the_file(root: Path) -> bool:
         return False
 
 
-def watches(arguments: list[str]) -> bool:
-    """Whether a process given these is a guard's watcher: an interpreter given a file named as the guard is, first, and told to watch. By its arguments and not its file, which an upgrade can remove under it."""
+def watches(arguments: list[str], root: Path | None = None) -> bool:
+    """Whether a process given these is a guard's watcher, of `root` where one is named: an interpreter given a file named as the guard is, first, and told to watch, a root it names being
+    that one. By its arguments, as the kernel holds them, and not by its file, which an upgrade can remove under it, nor by its being an interpreter, which any job is."""
     at = 1
     while at < len(arguments) and arguments[at].startswith("-"):
         at += 2 if arguments[at] in PYTHON_FLAGS_WITH_VALUES else 1
-    return at < len(arguments) and os.path.basename(arguments[at]) == GUARD_NAME and arguments[at + 1:at + 2] == ["watch"]
+    if not (at < len(arguments) and os.path.basename(arguments[at]) == GUARD_NAME and arguments[at + 1:at + 2] == ["watch"]):
+        return False
+    told = arguments[at + 2:]
+    if root is None or "--root" not in told[:-1]:
+        return True
+    return canonical(Path(told[told.index("--root") + 1])) == canonical(root)
 
 
 def watcher_pid(root: Path) -> int | None:
-    """The watcher of `root`, if one runs: the lock on the root is held, and the pid its file names is one process, never a group or every process, that is an interpreter, or one the kernel names no
-    file of whose arguments are still a guard's watching, as of one whose interpreter an upgrade removed. No `ps`, so that a slow one cannot make a live watcher look gone, and no signal, which a
-    number that is no process's would carry elsewhere."""
+    """The watcher of `root`, if one runs: the lock on the root is held, and the pid its file names is one process, never a group or every process, whose arguments, as the kernel holds them, are a
+    guard's watching of this root. So a note that is stale names no one while an asker holds the lock for its instant, another job of an interpreter among those it could name, and a watcher
+    whose interpreter an upgrade removed is still one. No `ps`, so that a slow one cannot make a live watcher look gone, and no signal, which a number that is no process's would carry elsewhere."""
     try:
         pid = int((state_path(root) / "watch.pid").read_text())
     except (OSError, ValueError):
@@ -1123,10 +1156,7 @@ def watcher_pid(root: Path) -> int | None:
     if lock is not None:
         os.close(lock)
         return None
-    exe = NATIVE.exe(pid)
-    if "ython" in exe:
-        return pid
-    return pid if not exe and watches(NATIVE.arguments(pid)) else None
+    return pid if watches(NATIVE.arguments(pid), root) else None
 
 
 def watcher_asked_for(root: Path, seconds: float = 6.0) -> int | None:
@@ -1167,6 +1197,8 @@ def ensure(root: Path) -> None:
     # It outlives what started it, so a narrow `PATH` of that one's must not leave it blind to everyone. What is first on the path stays first.
     env = dict(os.environ, PATH=os.pathsep.join([os.environ.get("PATH", ""), "/usr/bin", "/bin", "/usr/sbin", "/sbin"]))
     env[STARTED_FROM] = stamp_for_the_next(code_stamp())
+    # What a watcher hands the image it becomes is no asker's to hand a new one.
+    env.pop(TAKEN_UP, None)
     subprocess.Popen(
         [sys.executable, "-I", "-B", str(Path(__file__).resolve()), "watch", "--root", str(root)],
         stdin=subprocess.DEVNULL, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, start_new_session=True, cwd="/", env=env,
