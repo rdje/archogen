@@ -32,7 +32,8 @@
 #     space-separated title in double quotes, single quotes or non-nesting parentheses. Paths are read literally,
 #     without Markdown/entity/percent decoding. Unsupported first bracketed syntax, including reference/shortcut
 #     links, refuses before a secondary link can substitute; a cell with no unescaped opening bracket names no file;
-#   - in a listed review's history, its ROUNDS — each line opening `**Round <n>**` — and each round's FINDINGS TABLE:
+#   - in a listed review's history, and in each of its PARTS, `<stem>.part-2.md` on, read after the history in order (`PROGRAM.135`), its ROUNDS — each line
+#     opening `**Round <n>**` — and each round's FINDINGS TABLE:
 #     the first table after its line and before the next round's, which must be headed exactly
 #     `| # | Kind | Finding | Answer |`, its next line a separator row of dashes, and its finding rows to the first line
 #     that is no table row; each finding row an id and a kind, and none a row of dashes — `—` as its id marking a
@@ -250,6 +251,15 @@ for hist, rec in pairs:
     h, r = read(hist), read(rec)
     if h is None or r is None:
         bad.append("%s: listed with %s, and %s is missing" % (hist, rec, hist if h is None else rec)); continue
+    # A history continues in parts, `<stem>.part-<n>.md` from 2 on, each read after the one before it: an open review outlives its file's ceiling with nothing of it
+    # edited (`PROGRAM.135`). A part after a missing one is unread, and its rounds then have summary rows and no line, which is refused below.
+    n = 2
+    while True:
+        part = read("%s.part-%d.md" % (hist[: -len(".md")], n))
+        if part is None:
+            break
+        h += "\n" + part
+        n += 1
     heads = rounds(h, hist)
     rows, seen = summary(r, rec)
     if not heads:
@@ -718,6 +728,31 @@ SH
   git -C "$work" add docs/reviews/INDEX.md docs/decisions/b1.md
   PATH="$bin:$PATH" REVIEW_COUNTS_REAL_GIT="$real_git" REVIEW_COUNTS_FAULT_PATH='docs/decisions/b[1].md' \
     arm "an absent literal path is not confused with a different glob-matching entry (R32 D1)" 0 "3 round(s) judged"
+  # PROGRAM.135: a history continued in a part is read whole, the part after the file; a part after a missing one is unread, and refused by its rounds.
+  split_a() { # $1 = the part's number
+    python3 - "$work/docs/reviews/a-reviews.md" "$1" <<'PY'
+from pathlib import Path
+import sys
+p = Path(sys.argv[1]); t = p.read_text()
+at = t.index("**Round 2**")
+p.write_text(t[:at] + "Continued in a part.\n")
+Path(str(p)[: -len(".md")] + ".part-%s.md" % sys.argv[2]).write_text("# A, continued\n\n" + t[at:])
+PY
+    git -C "$work" add -A
+  }
+  world "$GOOD_A" "$GOOD_B"
+  split_a 2
+  arm "a history continued in a part is read whole, its rounds counted across both (PROGRAM.135)" 0 "3 round(s) judged"
+  rm -f "$work/docs/reviews/a-reviews.part-2.md"
+  world "$GOOD_A" "$GOOD_B"
+  split_a 3
+  arm "a part after a missing one is unread, and its rounds' summary rows refused (PROGRAM.135)" 1 "round 2's summary row names a round"
+  rm -f "$work/docs/reviews/a-reviews.part-3.md"
+  world "$GOOD_A" "$GOOD_B"
+  split_a 2
+  printf '\n**Round 3**, a round with no table.\n' >> "$work/docs/reviews/a-reviews.part-2.md"
+  git -C "$work" add -A
+  arm "a part's round is held as any round is (PROGRAM.135)" 1 "round 3 has no well-formed findings table"
   rm -rf "${work:?}"
   echo "review-counts self-test: $ok pass / $((arms - ok)) fail ($arms arms)"
   [ "$ok" -eq "$arms" ]

@@ -9,6 +9,10 @@ No bootstrap read includes this directory.
   record's `## Review`.
 - **A new design under review:** a file named as its design record with `-reviews` added, and its row below; once
   its first round is answered, its line under *Counted by `REVIEW-COUNTS`* if its record keeps a table of its rounds.
+- **A history past its ceiling,** a file of `README-ROUTES`' 1 200 lines or 131 072 bytes, continues in a part:
+  `<file>.part-2.md` beside it, then `.part-3.md`, each new round appended to the last and nothing before it edited,
+  the file before it ending in a line that names it. `REVIEW-COUNTS` reads the history and its parts in order, as one
+  (`PROGRAM.135`); the row and the counted line name the first file alone.
 - **When the review closes,** the file is frozen: its last round is the one that found no defect. It may then move
   to `docs/review-history/`, byte for byte, behind a stub (`bash scripts/check_review_history.sh --seal <FILE>`).
 

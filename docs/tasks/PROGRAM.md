@@ -1303,6 +1303,18 @@ mdBook that is the director's window into the project.
   Verification: the seal's own proof, the gate.
   Commit: `ARCHOGEN-PROGRAM-1265 (leaf PROGRAM.134)`
 
+- ID: `PROGRAM.135`
+  Status: `done` — `2026-11-10`, an open review history past its file's ceiling, `README-ROUTES` refusing the guard's round 36.
+  Goal: let an open review history outgrow one file with nothing of it edited and its counts still judged whole, raising no ceiling.
+  Acceptance:
+    - [x] ROOT CAUSE — WHY: a review history only grows while its review is open, and the archive takes a history only once it closes (`REVIEW-HISTORY`), so an open review of many rounds had nowhere to go: the guard's, at 36 rounds, reached 133,177 bytes. WHERE: `bash scripts/check_doctrines.sh` on the guard's round 36, staged → `README-ROUTES: docs/reviews/: 133177 bytes in its largest file, over its ceiling of 131072`; and `git grep -n 'h, r = read(hist), read(rec)' 58b35022 -- scripts/check_review_counts.sh` → the check reading one file per history.
+    - [x] FIX — `scripts/check_review_counts.sh`: a history is read with its parts, `<stem>.part-2.md` on, each after the one before it; three arms. `docs/reviews/INDEX.md` says how a history continues, and `LIVE_DOCUMENT_SIZE_CONTAINMENT.md`'s row for the folder.
+    - [x] ADDRESSED — `bash scripts/check_review_counts.sh --self-test` → `review-counts self-test: 159 pass / 0 fail (159 arms)`, 156 before; its three new arms on the committed check's reading → `157 pass / 2 fail`, the two that need a part read.
+    - [x] NO REGRESSION — `bash scripts/check_review_counts.sh` → `review-counts: OK`, exit 0, on this tree; `make focused` → `tier focused: passed — 3 passed, 0 failed`, on the staged tree.
+    - [x] LOCKSTEP — the check, the index, the containment table, the tree and the Commit Log. No ceiling moves.
+  Verification: the check's own self-test, the gate.
+  Commit: `ARCHOGEN-PROGRAM-1269 (leaf PROGRAM.135)`
+
 ## Roadmap coverage map
 
 Every roadmap unit has exactly one owning tree. This table is the answer to "where does
@@ -1465,6 +1477,7 @@ leaf's outcome is its row in the Commit Log below, and a sealed leaf's full reco
 | `PROGRAM.127.6` | `ARCHOGEN-PROGRAM-1164 (leaf PROGRAM.127.6)` | **paused at the director's word**, at a clean tree, before round 6 began: the resume pointer and the leaf say to wait |
 | `PROGRAM.127.6` | `ARCHOGEN-PROGRAM-1165 (leaf PROGRAM.127.6)` | **the host guard's review, round 6 answered**: a volume has fallen only by more than a shared volume costs anyway; what a job takes with it said; the shell reader given a case's branches, arithmetic, arrays and `[[ ]]`, held to each `bash` here; each agent told for itself |
 | `PROGRAM.127.7` | `ARCHOGEN-PROGRAM-1168 (leaf PROGRAM.127.7)` | **the host guard's review, round 7 answered**: `make` that only asks is no build; the reader's rare misses read, each held to both `bash`es; a `kill` by a pid passes by any spelling; the root named exactly; what is told says what it leaves out |
+| `PROGRAM.135` | `ARCHOGEN-PROGRAM-1269 (leaf PROGRAM.135)` | **an open review history continues in parts**, `<file>.part-2.md` on, read by `REVIEW-COUNTS` as one, so a review of many rounds outgrows its file's ceiling with nothing edited and no ceiling raised. |
 | `PROGRAM.127.35` | `ARCHOGEN-PROGRAM-1266 (leaf PROGRAM.127.35)` | **the host guard's review, round 35**: a guard's `run`'s job is read in the run's place, so a search outside it reaches a `kill` inside it behind a wrapper; a `run` is a root's by the directory it names; a working directory the kernel cannot spell is none; `/` is no root. |
 | `PROGRAM.134` | `ARCHOGEN-PROGRAM-1265 (leaf PROGRAM.134)` | **the M4 tree sealed again**, 16 closed subtrees and 28 leaves, the review rounds' among them, so the live task trees stand under their ceiling. |
 | `PROGRAM.127.34` | `ARCHOGEN-PROGRAM-1263 (leaf PROGRAM.127.34)` | **the host guard's review, round 34**: a cluster of flags costs its length to read; a root is the directory the kernel names, by what both spellings open, and a watcher spells it at each round; the hook reads a `run` by the guard's own reader of an interpreter's flags. |
@@ -1606,3 +1619,4 @@ leaf's outcome is its row in the Commit Log below, and a sealed leaf's full reco
 - `2026-11-10`: `PROGRAM.127.34` done: the guard's round 34, four findings answered, two defects, both in round 33's own answers; `PROGRAM.127.35` filed for round 35.
 - `2026-11-10`: `PROGRAM.134` done: the M4 tree sealed again, 16 closed subtrees, so the live task trees stand under their ceiling.
 - `2026-11-10`: `PROGRAM.127.35` done: the guard's round 35, six findings answered, one defect, in the hook's reading of a guard's `run`; `PROGRAM.127.36` filed for round 36.
+- `2026-11-10`: `PROGRAM.135` done: an open review history continues in parts, read as one by `REVIEW-COUNTS`.
