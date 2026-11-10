@@ -490,13 +490,16 @@ fn passes(
         for system in systems {
             let has = crate::presence::hardware(system, &forms);
             let mut on_its_hardware = FactMap::new();
+            // Presence alone judges what this map is read for, so it reads what the search would: an offer's value, `false` offering nothing, and offers
+            // of blocks and platforms alone, the search binding nothing to a service, a policy or a system (leaf `M3.4.17.2`).
+            on_its_hardware.read_values();
             for form in &forms {
                 let name = form.items().get(1).and_then(Form::as_symbol);
                 if form.head() == Some("defsystem") && !std::ptr::eq(system, form) {
                     on_its_hardware.declare(form);
-                } else if matches!(form.head(), Some("defblock" | "defplatform"))
-                    && !name.is_some_and(|name| has.contains(name))
-                {
+                } else if !matches!(form.head(), Some("defblock" | "defplatform")) {
+                    on_its_hardware.collect_unanswering(form);
+                } else if !name.is_some_and(|name| has.contains(name)) {
                     on_its_hardware.collect_silent(form);
                 } else {
                     on_its_hardware.collect(form);

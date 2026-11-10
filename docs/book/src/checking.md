@@ -174,7 +174,8 @@ A fact of a description's own, one the capability vocabulary does not declare, a
 A system's hardware is what its `platform` clause, its own `uses` and `needs` or its tasks' name, and what those blocks
 and platforms name in turn. A block the description declares beside it, which no part of that hardware names, is some
 other machine's: what it offers answers nothing the system needs, and the refusal says so, naming the block. So a
-description of two systems is read once for each, on its own hardware. A fact the vocabulary does declare is the
+description of two systems is read once for each, on its own hardware. A service, a policy or a system that offers
+such a fact answers nothing either, since no device is bound to it; and a block that offers it `false` has none of it. A fact the vocabulary does declare is the
 search's to bind, and it refuses a provider outside the hardware itself (`docs/semantics/model.md` §2).
 
 `uc3`, `examples/alternative-timer`, was this section's example until `2026-10-27`. Its platform offers only a

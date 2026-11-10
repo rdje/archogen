@@ -19,7 +19,7 @@
 - **Next action:** answer `M4.12.1.8`, the application inputs' round 8, saved and not answered (`target/m4337/report.md`): two
   defects in round 7's answer, a registry crate no build under the gate's allowlist can fetch, and a written tree nothing asks for.
   Two readers are out, each report to be saved under `target/` and none there meaning ask again: `PROGRAM.127.36`, the guard's
-  round 36 (`target/p12736/report.md`), and `M4.1.7.2.7`, format `/2`'s round 7 (`target/m4338/report.md`). Meanwhile `M3.4.17.2` to `.5`, P3.
+  round 36 (`target/p12736/report.md`), and `M4.1.7.2.7`, format `/2`'s round 7 (`target/m4338/report.md`). Meanwhile `M3.4.17.3` to `.5`, P3.
   `M4.5.2` and `M4.3.6` wait on `M4.1.7`, `M4.3.4` on `M2.21`. The runtime plan's design is accepted (`M4.1.1` done).
   `M3.2.7` and `M3.5.9`, full verification, wait for the
   features (doctrine 22).

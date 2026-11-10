@@ -187,12 +187,17 @@ pub struct FactMap {
     composes: BTreeMap<String, Vec<String>>,
     /// What a declaration read for its name alone, or its asking alone, says beside that: it answers nothing, and stays visible (model §2 rule 4).
     mentioned: BTreeSet<String>,
-    /// The blocks and platforms that are none of the hardware of the system this map is read for, by [`collect_silent`](Self::collect_silent): what one offers or declares
-    /// absent answers no need there, and it is still declared, compared with itself, and visible (model §8 rule 7, leaf `M3.4.16`).
+    /// The declarations that answer nothing in this map: the blocks and platforms that are none of the hardware of the system it is read for, by
+    /// [`collect_silent`](Self::collect_silent), and what is no block or platform, by [`collect_unanswering`](Self::collect_unanswering). What one offers or declares
+    /// absent answers no need there, and it is still declared, compared with itself, and visible (model §8 rule 7, leaves `M3.4.16` and `M3.4.17.2`).
     silent: BTreeSet<String>,
     /// Each fact the capability vocabulary derives, with the facts its rule requires, by [`derive`](Self::derive): no declaration states one, and the search computes it
     /// where one provider offers each of those (model §2 rule 2, leaf `M3.4.17.1`).
     derived: BTreeMap<String, Vec<String>>,
+    /// Whether an offer's value is read, by [`read_values`](Self::read_values): an offer of `false` then offers nothing, and is kept apart to be named.
+    reads_values: bool,
+    /// Each offer of `false`, where values are read: what says a fact is `false` there has none of it (leaf `M3.4.17.2`).
+    offered_false: BTreeMap<String, Vec<Declaration>>,
 }
 
 /// The outcome of a presence check.
@@ -297,6 +302,21 @@ impl FactMap {
         self.declared.insert(name.to_string());
     }
 
+    /// That an offer's value is read from here on: `(name false)` offers nothing. For a map of facts the search binds nothing for, which presence alone judges
+    /// (leaf `M3.4.17.2`); a fact the search binds it judges by value itself.
+    pub fn read_values(&mut self) {
+        self.reads_values = true;
+    }
+
+    /// [`collect`](Self::collect), for a declaration that is no block and no platform, where presence alone judges: a service, a policy, a system. It asks, and it is
+    /// what it is; what it offers or declares absent answers no need, the search binding nothing to one, and stays visible (leaf `M3.4.17.2`).
+    pub fn collect_unanswering(&mut self, form: &Form) {
+        self.collect(form);
+        if let Some(name) = form.items().get(1).and_then(Form::as_symbol) {
+            self.silent.insert(name.to_string());
+        }
+    }
+
     /// That the capability vocabulary derives `fact` of these facts, as a caller that has read it says: such a fact is described where one block or platform offers
     /// each of them, the search deriving it there and judging it by value.
     pub fn derive(&mut self, fact: &str, of: &[String]) {
@@ -338,12 +358,15 @@ impl FactMap {
     }
 
     fn record(&mut self, slot: &mut Slot, clause: &Form, owner: &str) {
-        for (name, span) in names_in(clause) {
+        for (name, span, says_false) in stated_in(clause) {
             let entry = Declaration {
                 declared_by: owner.to_string(),
                 span,
             };
             match slot {
+                Slot::Offered if says_false && self.reads_values => {
+                    self.offered_false.entry(name).or_default().push(entry);
+                }
                 Slot::Offered => self.offered.entry(name).or_default().push(entry),
                 Slot::Absent => self.absent.entry(name).or_default().push(entry),
             }
@@ -463,6 +486,7 @@ impl FactMap {
         all.extend(self.declared.iter().cloned());
         all.extend(self.offered.keys().cloned());
         all.extend(self.absent.keys().cloned());
+        all.extend(self.offered_false.keys().cloned());
         for (owner, edges) in &self.needs {
             all.insert(owner.clone());
             all.extend(edges.iter().map(|(name, _)| name.clone()));
@@ -680,6 +704,28 @@ impl FactMap {
                     Presence::Offered => {}
                     Presence::Absent => unreachable!("absence was handled above"),
                     Presence::Undescribed => {
+                        // An offer of `false` says its block has none, and answers no need (leaf `M3.4.17.2`).
+                        if let Some(declaration) = self.answering(&self.offered_false, fact).next()
+                        {
+                            missing.push(fact.clone());
+                            diagnostics.push(
+                                Diagnostic::error(
+                                    "missing-fact",
+                                    format!(
+                                        "`{fact}` is required by this system and `{}` offers it `false`, which says it has none",
+                                        declaration.declared_by
+                                    ),
+                                    Label::new(self.request_span(fact), "required through this request"),
+                                    format!(
+                                        "an offer of `false` answers no need: offer `{fact}` where a block or platform of the system has it, or \
+                                         declare it `absent` at `{}`, which is a definite answer",
+                                        declaration.declared_by
+                                    ),
+                                )
+                                .with_secondary(Label::new(declaration.span, "offered `false` here")),
+                            );
+                            break 'judged;
+                        }
                         // A fact the vocabulary derives is stated by no one: it is described where one block or platform offers each fact its rule requires, the
                         // search deriving it there and judging it by value (leaf `M3.4.17.1`).
                         let mut derivation = String::new();
@@ -1000,6 +1046,24 @@ pub fn hardware(system: &Form, declarations: &[Form]) -> BTreeSet<String> {
 /// `docs/semantics/reference.md` §6 rule 10 resolves exactly these positions in an elaborated module tree.
 /// One list, so the pass that reads a name and the rule that resolves it cannot disagree about where names are.
 pub const NAME_CLAUSES: &[&str] = &["uses", "needs", "refines"];
+
+/// As [`names_in`], with whether an item says `false` of its name, `(name false)`.
+fn stated_in(clause: &Form) -> Vec<(String, Span, bool)> {
+    clause
+        .items()
+        .iter()
+        .skip(1)
+        .filter_map(|item| match item {
+            Form::Symbol { name, span } => Some((name.clone(), *span, false)),
+            Form::List { .. } => item.head().map(|head| {
+                let says_false =
+                    matches!(item.items(), [_, Form::Symbol { name, .. }] if name == "false");
+                (head.to_string(), item.span(), says_false)
+            }),
+            _ => None,
+        })
+        .collect()
+}
 
 fn names_in(clause: &Form) -> Vec<(String, Span)> {
     clause

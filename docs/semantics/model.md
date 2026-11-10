@@ -123,7 +123,9 @@ A platform declares what it **offers** and what it declares **absent**; a system
    declares absent is undescribed there, not infeasible; and it gives an adapter no path. A description of several
    systems is read system by system, what two are both refused said once, and one of no system is read whole. The
    block is still a declaration: rule 1 judges what it says of itself, and what it offers stays visible outside the
-   closure (rule 4). Before this nothing refused a plan for a machine without the device. A fact the vocabulary does
+   closure (rule 4). Before this nothing refused a plan for a machine without the device. Nor does what is no block or
+   platform answer such a need, a service, a policy or a system, the search binding nothing to one; and an offer of
+   `false` says its declaration has none, so it answers none, the refusal naming it (leaf `M3.4.17.2`). A fact the vocabulary does
    declare is read as above, the description whole, and a provider outside the hardware is the search's conflict.
    `eadl_model::presence::hardware` is this reading of a system, held equal to the search's on every system
    `crates/eadl-resolve/tests/system_reading.rs` reads. The vocabulary is the search's to read, so the commands hand
