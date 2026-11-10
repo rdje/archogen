@@ -181,6 +181,9 @@ fn each_malformed_input_is_refused_saying_what_is_wrong() {
         (replaced("(entry-point \"app::t\")", "(entry-point \"app::\")"), "a path a job can call"),
         (replaced("(entry-point \"app::t\")", "(entry-point \"return\")"), "a path a job can call"),
         (replaced("(entry-point \"app::t\")", "(entry-point \"app::loop\")"), "a path a job can call"),
+        // Rust calls each of these, and the record writes neither: the refusal says which names it reads.
+        (replaced("(entry-point \"app::t\")", "(entry-point \"app::b\u{e9}at\")"), "each name of ASCII letters, digits and `_`"),
+        (replaced("(entry-point \"app::t\")", "(entry-point \"app::r#loop\")"), "each name of ASCII letters, digits and `_`"),
         (replaced("(entry-point \"app::t\")", "(entry-point \"other::t\")"), "a path a job can call"),
         (replaced("(scope \"one job\")", "(scope \"\u{200b}\")"), "says something"),
         (replaced("(scope \"one job\")", "(scope \"one\u{2028}job\")"), "line break"),
@@ -224,6 +227,11 @@ fn each_malformed_input_is_refused_saying_what_is_wrong() {
         (replaced(&format!("(os-calls {LIST} "), "(os-calls "), "`scope`"),
         (replaced(&format!("(os-calls {LIST} "), "(os-calls (scope \"one job\") (evidence assumed) (basis \"b\") "), "`binary`"),
         (replaced(&format!("(os-calls {LIST} "), "(os-calls (scope \"one job\") (binary unbuilt) (evidence observed-maximum (observed 3) (safety-factor 2 1)) (locator \"l\") (basis \"b\") "), "a list says"),
+        // An observation is of an image: none stands beside `(binary unbuilt)`, of a bound, a list or a run.
+        (replaced(bound_evidence, "(evidence observed-maximum (observed 100) (safety-factor 2 1)) (locator \"docs/argument.md\") (basis \"b\")"), "an observed maximum is of an image"),
+        (replaced(&format!("(os-calls {LIST} "), "(os-calls (scope \"one job\") (binary unbuilt) (evidence observed-maximum) (locator \"l\") (basis \"b\") "), "an observed maximum is of an image"),
+        (replaced(&format!("(masked-runs {LIST}"), "(masked-runs (scope \"one job\") (binary unbuilt) (evidence observed-maximum) (locator \"l\") (basis \"b\")"), "an observed maximum is of an image"),
+        (replaced("(binary unbuilt) (evidence analytically-established) (locator \"docs/argument.md\") (basis \"four loads\")", "(binary unbuilt) (evidence observed-maximum (observed 5) (safety-factor 1 1)) (locator \"l\") (basis \"four loads\")"), "an observed maximum is of an image"),
         (replaced(&format!("(masked-runs {LIST}"), "(masked-runs"), "`scope`"),
         (replaced("(run tail (ending unmask) (value 5)", "(run tail (value 5)"), "one `ending`"),
         (replaced("(run tail (ending unmask)", "(run tail (ending late)"), "`unmask` or `completion`"),
@@ -250,12 +258,24 @@ fn each_malformed_input_is_refused_saying_what_is_wrong() {
 }
 
 /// A mask inside a mask is closed by an `unmask` while its run ends at the job's completion, so an `unmask` is held to no run's ending: the truthful file of
-/// `mask; mask; unmask; return` reads, as does one whose every run ends at completion while its job calls `unmask` (round 5, AI5-1).
+/// `mask; mask; unmask; return` reads, two masks and one unmask in one run that holds the inner pair and ends at completion (round 5, AI5-1; round 6, AI6-5, which found
+/// this test's job to be another than its words said).
 #[test]
 fn an_unmask_is_held_to_no_run_s_ending() {
-    let nested =
-        a_file("s", &["t"]).replace("(run tail (ending unmask)", "(run tail (ending completion)");
-    assert_ne!(nested, a_file("s", &["t"]));
+    let nested = a_file("s", &["t"])
+        .replace(
+            "(call mask 2) (call unmask 2) (call release 1))",
+            "(call mask 2) (call unmask 1) (call release 1))",
+        )
+        .replace("(run tail (ending unmask)", "(run tail (ending completion)")
+        .replace(
+            "(basis \"four loads\") (call release 1)))",
+            "(basis \"four loads\") (call mask 1) (call unmask 1) (call release 1)))",
+        );
+    // The job's one `unmask` is the run's own, and of its two `mask`s one begins the run and the run writes the other.
+    assert_eq!(nested.matches("(call unmask 1)").count(), 2, "{nested}");
+    assert_eq!(nested.matches("(call mask 1)").count(), 1, "{nested}");
+    assert!(nested.contains("(run tail (ending completion)"), "{nested}");
     let application =
         read(&nested).expect("a job that calls `unmask` and ends its run at completion reads");
     assert!(application.tasks[0]
@@ -268,6 +288,25 @@ fn an_unmask_is_held_to_no_run_s_ending() {
         .runs
         .iter()
         .all(|run| run.ending == Ending::Completion));
+    let run = &application.tasks[0].masked_runs.runs[0];
+    for (callee, count) in [("mask", 1), ("unmask", 1), ("release", 1)] {
+        assert!(
+            run.calls
+                .iter()
+                .any(|(called, times)| called == callee && *times == count),
+            "the run's `{callee}`"
+        );
+    }
+    // One `unmask` more in the run than its job makes is refused: the count is still held, where the ending is not.
+    let over = nested.replace(
+        "(call mask 1) (call unmask 1) (call release 1)))",
+        "(call mask 1) (call unmask 2) (call release 1)))",
+    );
+    let refused = read(&over).expect_err("a run's `unmask` its job lacks");
+    assert!(
+        refused.to_string().contains("calls `unmask` 2 time(s)"),
+        "{refused}"
+    );
     // A `mask` is still held to a run: a job that calls one states the run it begins.
     let no_run = a_file("s", &["t"]);
     let from = no_run.find("(run tail").expect("its run");
@@ -291,11 +330,30 @@ fn an_unmask_is_held_to_no_run_s_ending() {
 /// A safety factor is held to its arithmetic, changes no category, and what it padded is kept for what reads it.
 #[test]
 fn a_safety_factor_is_arithmetic_and_changes_no_category() {
-    let text = a_file("s", &["t"]).replace(
+    let unbuilt = a_file("s", &["t"]).replace(
         "(evidence analytically-established) (locator \"docs/argument.md\") (basis \"by the loop's bound\")",
         "(evidence observed-maximum (observed 100) (safety-factor 2 1)) (locator \"docs/argument.md\") (basis \"seen\")",
     );
+    // An observation is of an image, so one beside `(binary unbuilt)` is refused (round 6, AI6-3), and reads once it names the image.
+    let refused = read(&unbuilt).expect_err("an observation of no image");
+    assert!(
+        refused
+            .to_string()
+            .contains("an observed maximum is of an image"),
+        "{refused}"
+    );
+    let text = unbuilt.replace(
+        "(binary unbuilt) (evidence observed-maximum",
+        "(binary \"sha256:1111111111111111111111111111111111111111111111111111111111111111\") (evidence observed-maximum",
+    );
+    assert_ne!(text, unbuilt);
     let application = read(&text).expect("it reads");
+    assert_eq!(
+        application.tasks[0].execution_bound.binary,
+        Binary::Image(
+            "sha256:1111111111111111111111111111111111111111111111111111111111111111".to_owned()
+        )
+    );
     let evidence = &application.tasks[0].execution_bound.evidence;
     assert_eq!(evidence.category, Category::ObservedMaximum);
     assert_eq!(
@@ -312,7 +370,13 @@ fn a_safety_factor_is_arithmetic_and_changes_no_category() {
 #[test]
 fn a_run_keeps_its_own_record_and_an_empty_list_still_says_what_backs_it() {
     let run = |name: &str, ending: &str, value: u64, evidence: &str| {
-        format!("(run {name} (ending {ending}) (value {value}) (unit us) (scope \"s\") (binary unbuilt) {evidence} (locator \"l\") (basis \"b\"))")
+        // What was observed says the image it was observed on.
+        let binary = if evidence.contains("observed-maximum") {
+            "\"sha256:1111111111111111111111111111111111111111111111111111111111111111\""
+        } else {
+            "unbuilt"
+        };
+        format!("(run {name} (ending {ending}) (value {value}) (unit us) (scope \"s\") (binary {binary}) {evidence} (locator \"l\") (basis \"b\"))")
     };
     let runs = [
         run(

@@ -8,6 +8,7 @@
 
 use std::collections::{BTreeMap, BTreeSet};
 
+use archogen_digest::Digest;
 use eadl_front::{read_record, Form, SourceMap};
 
 use crate::contents::Contents;
@@ -202,16 +203,107 @@ pub struct Task {
     pub deadlines_within_reach: Vec<String>,
 }
 
-/// What holds the code a job runs (`ROADMAP.md` §1.1: "a declared, versioned source"): a crate, where it lies from this file, and a digest of what it holds there.
+/// What holds the code a job runs (`ROADMAP.md` §1.1: "a declared, versioned source"): a crate, where it lies from this file, and a digest of what the compiler read of it.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Code {
     /// Its name, the first of each entry point's names.
     pub name: String,
     /// Where it lies, from the file that says so.
     pub place: String,
-    /// `sha256:…`, of its sources by the record's recipe: of one line for each, its sha256 and its path, the manifest, the lock and the build script at `place` and what lies under
-    /// `place/src`, this file itself never among them.
+    /// `sha256:…`, of its sources by the record's recipe: of one line for each file the compiler read in compiling it at `place`, by the compiler's own account, and
+    /// for its manifest and its lock, each a sha256 and the name the file was read by, and of one for each variable of the environment it read ([`Code::digest_of`]).
     pub digest: String,
+}
+
+/// What one compile read, by the compiler's own account of it ([`Code::read_by_the_compiler`]).
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct Account {
+    /// Each file it read, by the name it read it by and in the account's order: a path from where the compiler ran, or one from the root.
+    pub files: Vec<String>,
+    /// Each variable of the environment it read, as the account writes it: `NAME=VALUE`, and `NAME` alone of one that was not set.
+    pub environment: Vec<String>,
+}
+
+impl Code {
+    /// A compile's dep-info, `rustc --emit=dep-info` and the `.d` file cargo keeps of each unit, read as the compiler writes it and as nothing else: a rule for each
+    /// file it made, `MADE: NAME NAME …`, each followed by an empty line; a line `NAME:` for each file it read; and, where it read the environment, an empty line and a
+    /// line `# env-dep:NAME=VALUE` for each variable. A space of a name is written after a backslash and nothing else of one is escaped, so a name holding a line feed
+    /// breaks its lines: such an account is none, as is any text that is not wholly these lines, each rule ending in the names the lines give. Whatever a source names
+    /// is among the files, one `include!`, `#[path]` or `include_bytes!` reads beside `src` as one under it, and nothing the compiler did not read (round 6, AI6-1 and
+    /// AI6-2). `crates/archogen-plan/tests/code_digest.rs` holds this shape to the pinned compiler's own output.
+    #[must_use]
+    pub fn read_by_the_compiler(dep_info: &str) -> Option<Account> {
+        // A space the compiler wrote of a name stands after a backslash; one it wrote between two names, or after a rule's colon, does not.
+        fn bare_space(line: &str) -> bool {
+            let bytes = line.as_bytes();
+            (0..bytes.len()).any(|at| bytes[at] == b' ' && (at == 0 || bytes[at - 1] != b'\\'))
+        }
+        let mut lines = dep_info.strip_suffix('\n')?.split('\n').peekable();
+        let mut rules = Vec::new();
+        while let Some(rule) = lines.next_if(|line| bare_space(line)) {
+            rules.push(rule);
+            if !lines.next()?.is_empty() {
+                return None;
+            }
+        }
+        let (mut files, mut written) = (Vec::new(), Vec::new());
+        while let Some(line) = lines.next_if(|line| !line.is_empty()) {
+            let named = line.strip_suffix(':')?;
+            if named.is_empty() || bare_space(named) {
+                return None;
+            }
+            written.push(named);
+            files.push(named.replace("\\ ", " "));
+        }
+        let read = format!(": {}", written.join(" "));
+        if rules.is_empty() || files.is_empty() || !rules.iter().all(|rule| rule.ends_with(&read)) {
+            return None;
+        }
+        let mut environment = Vec::new();
+        if lines.next().is_some() {
+            for line in lines {
+                environment.push(line.strip_prefix("# env-dep:")?.to_owned());
+            }
+            if environment.is_empty() {
+                return None;
+            }
+        }
+        Some(Account { files, environment })
+    }
+
+    /// The digest of these sources and of this environment by the record's recipe. One line for each source, its sha256 in lower-case hex, two spaces, the name it was
+    /// read by and a line feed, each name once; one line for each variable, `# env-dep:`, the account's own words of it and a line feed; the lines in order as bytes;
+    /// `sha256:` and the sha256 of those lines. None where no such lines can be written: a name or a variable holding a line feed, an empty name, one name of two contents.
+    #[must_use]
+    pub fn digest_of(sources: &[(String, Vec<u8>)], environment: &[String]) -> Option<String> {
+        let mut sums: BTreeMap<&str, String> = BTreeMap::new();
+        for (named, bytes) in sources {
+            let sum = Digest::of(bytes).hex();
+            if named.is_empty()
+                || named.contains('\n')
+                || sums
+                    .get(named.as_str())
+                    .is_some_and(|before| *before != sum)
+            {
+                return None;
+            }
+            sums.insert(named, sum);
+        }
+        if environment.iter().any(|variable| variable.contains('\n')) {
+            return None;
+        }
+        let lines: BTreeSet<String> = sums
+            .iter()
+            .map(|(named, sum)| format!("{sum}  {named}\n"))
+            .chain(
+                environment
+                    .iter()
+                    .map(|variable| format!("# env-dep:{variable}\n")),
+            )
+            .collect();
+        let text: String = lines.into_iter().collect();
+        Some(format!("sha256:{}", Digest::of(text.as_bytes()).hex()))
+    }
 }
 
 /// The application's own initialisation: the code it runs before the first enabling of interrupts.
@@ -510,13 +602,28 @@ fn bound(of: &str, items: &[Form], units: &[&str], extra: &[&str]) -> Result<Bou
             format!("a unit here is one of {units:?}, and this says `{unit}`"),
         ));
     }
+    let scope = string(of, clause(of, &found, "scope")?)?;
+    let binary = binary(of, clause(of, &found, "binary")?)?;
+    let evidence = evidence(of, &found, Some(value))?;
     Ok(Bound {
         value,
         unit,
-        scope: string(of, clause(of, &found, "scope")?)?,
-        binary: binary(of, clause(of, &found, "binary")?)?,
-        evidence: evidence(of, &found, Some(value))?,
+        scope,
+        binary: observed_on(of, binary, &evidence)?,
+        evidence,
     })
+}
+
+/// An observation is of an image: an observed maximum beside `(binary unbuilt)` names no image it was seen on, and a bound a build refused as stale would stand again by
+/// saying `unbuilt` (round 6, AI6-3).
+fn observed_on(of: &str, binary: Binary, evidence: &Evidence) -> Result<Binary, Refused> {
+    if binary == Binary::Unbuilt && evidence.category == Category::ObservedMaximum {
+        return Err(refused(
+            of,
+            "an observed maximum is of an image, and this says `(binary unbuilt)`: name the image it was observed on".to_owned(),
+        ));
+    }
+    Ok(binary)
 }
 
 /// What a node is written as here: its name, or an instance's text as the plan writes it, `(adapter KIND OVER)` or `(adapter KIND OVER REQUESTER)`, a task requester `(task SYSTEM NAME)`.
@@ -594,10 +701,13 @@ fn calls(of: &str, form: &Form, head: &str, nodes: bool) -> Result<Calls, Refuse
         .cloned()
         .partition(|item| item.head() == Some(head));
     let found = clauses(of, &rest, LIST_RECORD)?;
+    let scope = string(of, clause(of, &found, "scope")?)?;
+    let binary = binary(of, clause(of, &found, "binary")?)?;
+    let evidence = evidence(of, &found, None)?;
     Ok(Calls {
-        scope: string(of, clause(of, &found, "scope")?)?,
-        binary: binary(of, clause(of, &found, "binary")?)?,
-        evidence: evidence(of, &found, None)?,
+        scope,
+        binary: observed_on(of, binary, &evidence)?,
+        evidence,
         calls: counted(of, &counts, head, nodes)?,
     })
 }
@@ -662,10 +772,13 @@ fn masked_runs(of: &str, form: &Form) -> Result<MaskedRuns, Refused> {
             node_calls: counted(of, &those("node-call"), "node-call", true)?,
         });
     }
+    let scope = string(of, clause(of, &found, "scope")?)?;
+    let binary = binary(of, clause(of, &found, "binary")?)?;
+    let evidence = evidence(of, &found, None)?;
     Ok(MaskedRuns {
-        scope: string(of, clause(of, &found, "scope")?)?,
-        binary: binary(of, clause(of, &found, "binary")?)?,
-        evidence: evidence(of, &found, None)?,
+        scope,
+        binary: observed_on(of, binary, &evidence)?,
+        evidence,
         runs: out,
     })
 }
@@ -767,7 +880,7 @@ fn runs_fit_their_job(
         return Err(refused(
             of,
             format!(
-                "its `os-calls` says a job calls `mask` {} time(s), and it states no masked run: each `mask` begins one",
+                "its `os-calls` says a job calls `mask` {} time(s), and it states no masked run: a `mask` with none standing begins one",
                 most(MASK)
             ),
         ));
@@ -841,7 +954,7 @@ fn task(form: &Form, code: &str) -> Result<Task, Refused> {
     if !is_a_path_in(&entry_point, code) {
         return Err(refused(
             of,
-            format!("`entry-point` is a path a job can call in `{code}`, such as `{code}::beat`, a name Rust keeps being none, and this says `{entry_point}`"),
+            format!("`entry-point` is a path a job can call in `{code}`, such as `{code}::beat`, each name of ASCII letters, digits and `_` and none a name Rust keeps, and this says `{entry_point}`"),
         ));
     }
     let execution_bound = bound(
