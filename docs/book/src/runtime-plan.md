@@ -95,7 +95,9 @@ what that file answers. Its format is `archogen-application/1`.
 (leaves-interrupt-hardware-alone yes (clause "…the words below, whole…") (basis "it touches no device"))
 (initialisation
   (entry-point "app::init")
-  (stack-bound (value 256) (unit byte) (scope "its deepest path") (binary unbuilt) (evidence assumed) (basis "chosen, to be measured")))
+  (stack-bound (value 256) (unit byte) (scope "its deepest path") (binary unbuilt) (evidence assumed) (basis "chosen, to be measured"))
+  (node-calls (scope "all of it") (binary unbuilt) (evidence analytically-established) (locator "docs/argument.md") (basis "by reading")
+    (call console.write 1)))
 (task beat
   (entry-point "app::beat")
   (execution-bound (value 200) (unit us) (scope "one job") (binary unbuilt)
@@ -118,11 +120,11 @@ what that file answers. Its format is `archogen-application/1`.
 - **Each bound and each list of counts says what it rests on**: its scope, the binary it is of, and one of `ROADMAP.md` §7.3's four categories,
   with where to check it, unless it is an assumption, and why it holds. So an empty list still says what backs it. A safety factor is checked, is kept and changes no category, so a
   padded observation is still an observation.
-- **It says which code.** `code` names the crate a job's `entry-point` is a path in, where it lies and a digest of its sources, so an entry point is no bare name. The digest is of one line for each source file, its sha256 and its path, sorted, so `find`, `sort` and `shasum` give it.
-- **The application's initialisation is named too, or said to be none**: `(initialisation (entry-point …) (stack-bound …))`, the path the boot calls before interrupts are first enabled, or `(initialisation none)`.
-- **A `binary` names an image by its code identity**, what the image holds of its plan with every figure left out, and never by the image file's own digest, which a stack bound moves.
+- **It says which code.** `code` names the crate a job's `entry-point` is a path in, where it lies and a digest of its sources, so an entry point is no bare name. The digest is of one line for each of the crate's sources, its manifest and what lies under its `src`, each line a sha256 and a path, sorted, so `find`, `sort` and `shasum` give it, and no other file beside them moves it.
+- **The application's initialisation is named too, or said to be none**: `(initialisation (entry-point …) (stack-bound …) (node-calls …))`, the path the boot calls before interrupts are first enabled, its own stack bound and each node it calls a function of, or `(initialisation none)`.
+- **A `binary` names an image by its image identity**, which a build computes of the plan's code and of what builds it, the toolchain, its flags, the target and the linker's input but for where the stacks lie. A change of any of those makes a bound stale, and it is never the image file's own digest, which a stack bound moves.
 - **`node-calls` says which of the plan's nodes a job calls**, and how often, each as the plan writes it, and `os-calls` the runtime's primitives. `deadlines-within-reach` names each alarm the task writes on a time base that is the counter itself, saying that each deadline it writes stands at or after its own release and within what that alarm reaches.
-- **A masked run says how it ends**, at an `unmask` or at the job's completion, since the two cost differently, and one that ends both ways is written once for each. It keeps its own evidence. Its job's `os-calls` names the `mask` that begins it, and the `unmask` that ends one ending so, or the file is refused.
+- **A masked run says how it ends**, at an `unmask` or at the job's completion, since the two cost differently, and one that ends both ways is written once for each. It keeps its own evidence. Its job's `os-calls` names the `mask` that begins it, and the `unmask` that ends one ending so, or the file is refused, as is a job that names a `mask` and states no run.
 - **The one declaration about the whole application is quoted whole.** `leaves-interrupt-hardware-alone` is what every composite
   is gated on, and its name no longer says what it holds, so the file carries the words, and a file quoting others does not read.
   Those words count an overrun of code's own stack bound among what the code must not do, so the declaration holds only as far as

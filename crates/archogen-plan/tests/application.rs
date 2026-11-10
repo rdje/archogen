@@ -10,7 +10,7 @@ use archogen_plan::contents;
 const BOUND: &str = r#"(value 200) (unit us) (scope "one job") (binary unbuilt) (evidence analytically-established) (locator "docs/argument.md") (basis "by the loop's bound")"#;
 const LIST: &str = r#"(scope "one job") (binary unbuilt) (evidence analytically-established) (locator "docs/argument.md") (basis "by reading")"#;
 const CODE: &str = r#"(code (crate app) (place "app") (digest "sha256:0000000000000000000000000000000000000000000000000000000000000000"))"#;
-const INITIALISATION: &str = r#"(initialisation (entry-point "app::init") (stack-bound (value 256) (unit byte) (scope "its deepest path") (binary unbuilt) (evidence assumed) (basis "chosen, to be measured")))"#;
+const INITIALISATION: &str = r#"(initialisation (entry-point "app::init") (stack-bound (value 256) (unit byte) (scope "its deepest path") (binary unbuilt) (evidence assumed) (basis "chosen, to be measured")) (node-calls (scope "all of it") (binary unbuilt) (evidence assumed) (basis "it calls none")))"#;
 
 fn a_task(name: &str) -> String {
     format!(
@@ -71,6 +71,24 @@ fn a_whole_file_reads_as_it_says() {
         none.initialisation, None,
         "an application may have none, and says so"
     );
+    assert!(initialisation.node_calls.calls.is_empty());
+    // A name is the language's symbol, as a description's is, so what a plan can name a file can: `_`, dashes, a backslash, a line separator.
+    for name in ["_", "--", "be\\at", "ta\u{2028}il", "\u{200b}"] {
+        let named = read(
+            &a_file("heartbeat", &["beat"]).replace("(task beat\n", &format!("(task {name}\n")),
+        )
+        .unwrap_or_else(|refused| panic!("{name:?}: {refused}"));
+        assert_eq!(named.tasks[0].name, name);
+    }
+    // And a place is a path from the file, the file's own directory and the one above among them.
+    for place in [".", "..", "../..", "../app", "./app", "a/b.c/d"] {
+        let placed = read(
+            &a_file("heartbeat", &["beat"])
+                .replace("(place \"app\")", &format!("(place \"{place}\")")),
+        )
+        .unwrap_or_else(|refused| panic!("{place}: {refused}"));
+        assert_eq!(placed.code.place, place);
+    }
     assert_eq!(application.code.name, "app");
     assert_eq!(application.code.place, "app");
     assert_eq!(application.tasks.len(), 2);
@@ -117,7 +135,7 @@ fn each_malformed_input_is_refused_saying_what_is_wrong() {
     };
     let bound_evidence = "(evidence analytically-established) (locator \"docs/argument.md\") (basis \"by the loop's bound\")";
     for (text, said) in [
-        ("(junk".to_owned(), "does not read as forms: "),
+        ("(junk".to_owned(), "the reader of forms refuses it: "),
         (" ".repeat(MOST_BYTES + 1), "past the"),
         (format!("(eadl-version eadl/1)\n{good}"), "no clause is called `eadl-version`"),
         (format!("\u{feff}{good}"), "byte-order mark"),
@@ -125,6 +143,13 @@ fn each_malformed_input_is_refused_saying_what_is_wrong() {
         (replaced("(crate app)", "(crate 1)"), "wants one name"),
         (replaced("(crate app)", "(crate fn)"), "no name a Rust path can hold"),
         (replaced("(place \"app\") ", ""), "`place`"),
+        // A place is a path from the file: never one from the root, an empty name in it, or a name of dots but `.` and `..`.
+        (replaced("(place \"app\")", "(place \"/\")"), "`place` is a path from this file"),
+        (replaced("(place \"app\")", "(place \"/abs/app\")"), "`place` is a path from this file"),
+        (replaced("(place \"app\")", "(place \"...\")"), "`place` is a path from this file"),
+        (replaced("(place \"app\")", "(place \"a//b\")"), "`place` is a path from this file"),
+        (replaced("(place \"app\")", "(place \"app/\")"), "`place` is a path from this file"),
+        (replaced("(place \"app\")", "(place \"\")"), "`place` is a path from this file"),
         (replaced("sha256:0000000000000000000000000000000000000000000000000000000000000000", "sha256:1"), "`digest`"),
         (replaced(FORMAT, "archogen-application/2").replace("(system s)", "(system s) (newly-added x)"), "this reads"),
         (replaced(FORMAT, "archogen-application/2"), "this reads"),
@@ -145,6 +170,7 @@ fn each_malformed_input_is_refused_saying_what_is_wrong() {
         (replaced("(initialisation (entry-point \"app::init\") ", "(initialisation (entry-point \"other::init\") "), "a path the boot can call"),
         (replaced("(initialisation (entry-point \"app::init\") ", "(initialisation (entry-point \"app::fn\") "), "a path the boot can call"),
         (replaced(INITIALISATION, "(initialisation (entry-point \"app::init\"))"), "`stack-bound`"),
+        (replaced(" (node-calls (scope \"all of it\") (binary unbuilt) (evidence assumed) (basis \"it calls none\"))", ""), "`node-calls`"),
         (replaced(INITIALISATION, "(initialisation nothing)"), "`nothing` is no clause"),
         (replaced(INITIALISATION, "(initialisation none none)"), "is no clause"),
         (good.clone() + &a_task("t"), "written twice"),
@@ -169,6 +195,8 @@ fn each_malformed_input_is_refused_saying_what_is_wrong() {
         (replaced("(scope \"one job\") ", ""), "`scope`"),
         (replaced(&format!("(binary unbuilt) {bound_evidence}"), bound_evidence), "`binary`"),
         (replaced("(binary unbuilt)", "(binary \"sha256:1\")"), "sha256"),
+        (replaced("(binary unbuilt)", "(binary \"sha256:AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA\")"), "in lower case"),
+        (replaced("sha256:0000000000000000000000000000000000000000000000000000000000000000", "sha256:00000000000000000000000000000000000000000000000000000000000000AA"), "in lower case"),
         (replaced(bound_evidence, "(evidence analytically-established) (basis \"by the loop's bound\")"), "`locator`"),
         (replaced(bound_evidence, "(evidence proven) (locator \"docs/argument.md\") (basis \"by the loop's bound\")"), "four categories"),
         (replaced(bound_evidence, "(evidence assumed (observed 1) (safety-factor 1 1)) (basis \"b\")"), "says more than its category"),
@@ -201,7 +229,7 @@ fn each_malformed_input_is_refused_saying_what_is_wrong() {
         (replaced("(run tail (ending unmask)", "(run tail (ending late)"), "`unmask` or `completion`"),
         (replaced("(run tail (ending unmask) (value 5)", "(run tail (ending unmask) (ending completion) (value 5)"), "one `ending`"),
         (replaced("(run tail (ending unmask) (value 5)", "(run tail (ending unmask) (value 5) (scope \"again\")"), "written twice"),
-        (replaced("(unit byte) (scope \"its deepest path\") (binary unbuilt) (evidence assumed) (basis \"chosen, to be measured\")))", "(unit us) (scope \"its deepest path\") (binary unbuilt) (evidence assumed) (basis \"chosen, to be measured\")))"), "a unit here"),
+        (replaced("(value 256) (unit byte)", "(value 256) (unit us)"), "a unit here"),
         (replaced("(unit byte)", "(unit bytes)"), "a unit here"),
         (replaced("(suspends no) ", ""), "`suspends`"),
         (replaced("(suspends no)", "(suspends sometimes)"), "`yes` or `no`"),
@@ -211,13 +239,9 @@ fn each_malformed_input_is_refused_saying_what_is_wrong() {
         (replaced("(deadlines-within-reach)", "(deadlines-within-reach a a)"), "written twice"),
         (replaced("(deadlines-within-reach)", "(deadlines-within-reach 1)"), "names no alarm"),
         (replaced("(deadlines-within-reach)", "(deadlines-within-reach (adapter))"), "names no alarm"),
-        // A name is held to what a text is: a plan's one line carries each.
-        (replaced("(task t\n", "(task t\u{2028}x\n"), "which a plan's one line cannot carry"),
-        (replaced("(task t\n", "(task \u{200b}\n"), "which a plan's one line cannot carry"),
-        (replaced("(run tail (ending unmask)", "(run ta\u{2028}il (ending unmask)"), "which a plan's one line cannot carry"),
-        (replaced("(call mask 2)", "(call ma\u{2028}sk 2)"), "calls no primitive"),
-        (replaced("(deadlines-within-reach)", "(deadlines-within-reach a\u{2028}b)"), "names no alarm"),
-        (replaced("(system s)", "(system s\u{2028}t)"), "which a plan's one line cannot carry"),
+        // A `mask` is held to a run, as a run is to its `mask`: a job that calls one states the run it begins.
+        (replaced("(run tail (ending unmask) (value 5) (unit us) (scope \"the tail's update\") (binary unbuilt) (evidence analytically-established) (locator \"docs/argument.md\") (basis \"four loads\") (call release 1))", ""), "it states no masked run"),
+        (replaced("(run tail (ending unmask)", "(run tail (ending completion)"), "no masked run of its ends by one"),
         // Another format's file is told its format first, whatever its language's version says to the reader of forms.
         (format!("(eadl-version eadl/2)\n{}", replaced(FORMAT, "archogen-application/2")), "this reads"),
     ] {
@@ -286,11 +310,13 @@ fn a_run_keeps_its_own_record_and_an_empty_list_still_says_what_backs_it() {
         Category::AnalyticallyEstablished
     );
     assert_eq!(list.runs[1].bound.value, 30);
+    // A job with no masked run calls no `mask`: one that named it would state a call that begins nothing.
     let empty = format!(
         "{}(masked-runs {LIST})\n  {}",
         &original[..start],
         &original[end..]
-    );
+    )
+    .replace("(call mask 2) (call unmask 2) ", "");
     let application = read(&empty).expect("it reads");
     let list = &application.tasks[0].masked_runs;
     assert!(list.runs.is_empty());
@@ -461,6 +487,21 @@ fn what_is_unmet_of_a_plan_is_said() {
         &plan,
         "names the alarm `nowhere.alarm`",
     );
+    // What the application's initialisation calls is a node of the plan's, or it is said.
+    said(
+        &good.replace(
+            "(basis \"it calls none\"))",
+            "(basis \"it calls none\") (call nowhere.node 1))",
+        ),
+        &plan,
+        "the application's initialisation calls `nowhere.node`",
+    );
+    let calls_one = read(&good.replace(
+        "(basis \"it calls none\"))",
+        &format!("(basis \"it sets it up\") (call {} 1))", plan.nodes[0].0),
+    ))
+    .expect("it reads");
+    assert_eq!(calls_one.unmet(&plan, &[]), Vec::<String>::new());
     // A primitive a node is named like is the primitive it is written as: `mask` and `unmask` whatever the catalog holds, and any other the plan's catalog costs. So a
     // system with a service named `mask` has a file that is met, its node called among `node-calls`.
     let mut named_alike = plan.clone();

@@ -219,6 +219,8 @@ pub struct Initialisation {
     pub entry_point: String,
     /// Its code's stack bound, which the boot stack holds.
     pub stack_bound: Bound,
+    /// Each node it calls a function of, before the first enabling of interrupts, and the most it does: what the boot stack holds above its own bound.
+    pub node_calls: Calls,
 }
 
 /// One file of application inputs.
@@ -301,43 +303,44 @@ fn string(of: &str, form: &Form) -> Result<String, Refused> {
     }
 }
 
-/// Where a crate lies: a text as any, but that a place may be dots alone, `.` and `..`.
+/// Where a crate lies from the file that says so: a path of names joined by `/`, `.` and `..` among them, never one from the root, and no name of dots but those two.
 fn place(of: &str, form: &Form) -> Result<String, Refused> {
-    match form.items() {
-        [_, Form::Str { value, .. }]
-            if !value.is_empty() && value.chars().all(|c| matches!(c, '.' | '/')) =>
-        {
-            Ok(value.clone())
-        }
-        _ => string(of, form),
-    }
-}
-
-/// A name as a plan's one line can carry it: what a text may not hold, a name may not, and it says something too.
-fn plain_name(of: &str, name: &str) -> Result<String, Refused> {
-    if name
-        .chars()
-        .any(|c| c.is_control() || matches!(c, '"' | '\\' | '\u{2028}' | '\u{2029}'))
-        || !name.chars().any(char::is_alphanumeric)
+    let [_, Form::Str { value, .. }] = form.items() else {
+        return Err(refused(
+            of,
+            format!(
+                "`{}` wants one text that says something",
+                form.to_canonical()
+            ),
+        ));
+    };
+    let a_name = |name: &str| {
+        !name.is_empty() && (name == "." || name == ".." || !name.chars().all(|c| c == '.'))
+    };
+    if value.starts_with('/')
+        || value
+            .chars()
+            .any(|c| c.is_control() || matches!(c, '"' | '\\' | '\u{2028}' | '\u{2029}'))
+        || !value.split('/').all(a_name)
     {
         return Err(refused(
             of,
             format!(
-                "the name `{}` holds a line break, a control character, a quote or a backslash, or says nothing, which a plan's one line cannot carry",
-                name.escape_default()
+                "`place` is a path from this file, its names joined by `/`, `.` and `..` among them, and this says `{}`",
+                value.escape_default()
             ),
         ));
     }
-    Ok(name.to_owned())
+    Ok(value.clone())
 }
 
+/// One name: a symbol of the language, as a description's is, so that what a plan can name a file can.
 fn symbol(of: &str, form: &Form) -> Result<String, Refused> {
     match form.items() {
-        [_, name] => plain_name(
-            of,
-            name.as_symbol()
-                .ok_or_else(|| refused(of, format!("`{}` wants one name", form.to_canonical())))?,
-        ),
+        [_, name] => name
+            .as_symbol()
+            .map(str::to_owned)
+            .ok_or_else(|| refused(of, format!("`{}` wants one name", form.to_canonical()))),
         _ => Err(refused(
             of,
             format!("`{}` wants one name", form.to_canonical()),
@@ -483,7 +486,10 @@ fn binary(of: &str, form: &Form) -> Result<Binary, Refused> {
         }
         _ => Err(refused(
             of,
-            format!("`{}` is `\"sha256:…\"` or `unbuilt`", form.to_canonical()),
+            format!(
+                "`{}` is `unbuilt`, or `\"sha256:` and 64 hex digits in lower case",
+                form.to_canonical()
+            ),
         )),
     }
 }
@@ -555,7 +561,7 @@ fn counted(
         } else {
             name.as_symbol().map(str::to_owned)
         };
-        let Some(name) = called.filter(|name| plain_name(of, name).is_ok()) else {
+        let Some(name) = called else {
             return Err(refused(
                 of,
                 format!(
@@ -613,7 +619,6 @@ fn masked_runs(of: &str, form: &Form) -> Result<MaskedRuns, Refused> {
         let Some(name) = name.as_symbol() else {
             return Err(refused(of, format!("`{}` has no name", run.to_canonical())));
         };
-        plain_name(of, name)?;
         let of = format!("{of} run {name}");
         let of = of.as_str();
         let plain: Vec<Form> = body
@@ -752,6 +757,27 @@ fn runs_fit_their_job(
             ));
         }
     }
+    // And a `mask` is held to a run, as a run is to its `mask`: a run is a stretch from a `mask` call (the composite-inputs record's §1), so a job that calls one states
+    // the runs it begins, and one that calls `unmask` a run that ends by one. A count may over-state, and none states a call that begins nothing.
+    let most = |name: &str| primitives.get(name).copied().unwrap_or(0);
+    if most(MASK) > 0 && runs.runs.is_empty() {
+        return Err(refused(
+            of,
+            format!(
+                "its `os-calls` says a job calls `mask` {} time(s), and it states no masked run: each `mask` begins one",
+                most(MASK)
+            ),
+        ));
+    }
+    if most(UNMASK) > 0 && !runs.runs.iter().any(|run| run.ending == Ending::Unmask) {
+        return Err(refused(
+            of,
+            format!(
+                "its `os-calls` says a job calls `unmask` {} time(s), and no masked run of its ends by one",
+                most(UNMASK)
+            ),
+        ));
+    }
     Ok(())
 }
 
@@ -776,7 +802,6 @@ fn task(form: &Form, code: &str) -> Result<Task, Refused> {
             format!("`{}` is no name", name.to_canonical()),
         ));
     };
-    plain_name("task", name)?;
     let of = format!("task {name}");
     let of = of.as_str();
     let found = clauses(
@@ -807,7 +832,7 @@ fn task(form: &Form, code: &str) -> Result<Task, Refused> {
     let mut deadlines_within_reach = Vec::new();
     let mut named = BTreeSet::new();
     for item in body_of("deadlines-within-reach")? {
-        let Some(alarm) = node_text(item).filter(|alarm| plain_name(of, alarm).is_ok()) else {
+        let Some(alarm) = node_text(item) else {
             return Err(refused(
                 of,
                 format!("`{}` names no alarm", item.to_canonical()),
@@ -916,7 +941,7 @@ pub fn read(text: &str) -> Result<Application, Refused> {
             .map_or("", |first| first.message.as_str());
         return Err(refused(
             "the file",
-            format!("it does not read as forms: {said}"),
+            format!("the reader of forms refuses it: {said}"),
         ));
     }
     let (tasks, rest): (Vec<Form>, Vec<Form>) = document
@@ -999,7 +1024,10 @@ pub fn read(text: &str) -> Result<Application, Refused> {
     }) {
         return Err(refused(
             "code",
-            format!("`digest` is `sha256:…`, and this says `{}`", code.digest),
+            format!(
+                "`digest` is `sha256:` and 64 hex digits in lower case, and this says `{}`",
+                code.digest
+            ),
         ));
     }
     // The application's initialisation is named as a job is, or said to be none: a bound of code nothing can call bounds nothing a build runs.
@@ -1007,7 +1035,11 @@ pub fn read(text: &str) -> Result<Application, Refused> {
     let initialisation = match initialisation.items() {
         [_, Form::Symbol { name, .. }] if name == "none" => None,
         [_, body @ ..] => {
-            let found = clauses("initialisation", body, &["entry-point", "stack-bound"])?;
+            let found = clauses(
+                "initialisation",
+                body,
+                &["entry-point", "stack-bound", "node-calls"],
+            )?;
             let entry_point = string(
                 "initialisation",
                 clause("initialisation", &found, "entry-point")?,
@@ -1028,6 +1060,12 @@ pub fn read(text: &str) -> Result<Application, Refused> {
                         .unwrap_or_default(),
                     SIZES,
                     &[],
+                )?,
+                node_calls: calls(
+                    "initialisation node-calls",
+                    clause("initialisation", &found, "node-calls")?,
+                    "call",
+                    true,
                 )?,
             })
         }
@@ -1086,8 +1124,28 @@ impl Application {
     /// node its lines name, in its `node-calls` and in each masked run (`RTP-H5`), a node called as a primitive, an alarm named that the plan holds no node of, and each fact the plan owes `(by application)` this format does not hold of that subject.
     /// A primitive's name is the catalog's: `primitives` are those the plan's catalog costs, `mask` and `unmask` being primitives whatever it holds, and what is written among
     /// primitives under one of those names is that primitive, a node of the same name being called among `node-calls`. The composition leaves unresolved one no record costs.
+    /// What the application's initialisation calls is held too: each a node of the plan's.
     #[must_use]
     pub fn unmet(&self, plan: &Contents, primitives: &[&str]) -> Vec<String> {
+        // Each list of the plan's is looked up by a set or a map, so this is in step with the file's lengths and the plan's, and never their product.
+        let planned: BTreeSet<&str> = plan.tasks.iter().map(|task| task.name.as_str()).collect();
+        let identities: BTreeSet<&str> = plan
+            .tasks
+            .iter()
+            .map(|task| task.identity.as_str())
+            .collect();
+        let said: BTreeMap<&str, &Task> = self
+            .tasks
+            .iter()
+            .map(|task| (task.name.as_str(), task))
+            .collect();
+        let nodes: BTreeSet<&str> = plan.nodes.iter().map(|(node, _)| node.as_str()).collect();
+        let bound: BTreeSet<(&str, &str)> = plan
+            .binds
+            .iter()
+            .map(|bind| (bind.requester.as_str(), bind.provider.as_str()))
+            .collect();
+        let costed: BTreeSet<&str> = primitives.iter().copied().chain([MASK, UNMASK]).collect();
         let mut unmet = Vec::new();
         if self.system != plan.system {
             unmet.push(format!(
@@ -1101,27 +1159,37 @@ impl Application {
                 self.target
             ));
         }
+        for node in self
+            .initialisation
+            .iter()
+            .flat_map(|initialisation| initialisation.node_calls.calls.iter())
+            .map(|(node, _)| node)
+        {
+            if !nodes.contains(node.as_str()) {
+                unmet.push(format!(
+                    "the application's initialisation calls `{node}`, and this plan holds no such node"
+                ));
+            }
+        }
         for task in &self.tasks {
-            if !plan.tasks.iter().any(|known| known.name == task.name) {
+            if !planned.contains(task.name.as_str()) {
                 unmet.push(format!("the plan has no task `{}`", task.name));
             }
         }
         for task in &plan.tasks {
-            let Some(mine) = self.tasks.iter().find(|known| known.name == task.name) else {
+            let Some(mine) = said.get(task.name.as_str()) else {
                 unmet.push(format!("nothing is said of the task `{}`", task.name));
                 continue;
             };
+            let uses: BTreeSet<&str> = task.uses.iter().map(String::as_str).collect();
             let in_runs = mine
                 .masked_runs
                 .runs
                 .iter()
                 .flat_map(|run| run.node_calls.iter());
             for (node, _) in mine.node_calls.calls.iter().chain(in_runs) {
-                let named = task.uses.iter().any(|used| used == node)
-                    || plan
-                        .binds
-                        .iter()
-                        .any(|bind| bind.requester == task.identity && bind.provider == *node);
+                let named = uses.contains(node.as_str())
+                    || bound.contains(&(task.identity.as_str(), node.as_str()));
                 if !named {
                     unmet.push(format!(
                         "the task `{}` calls `{node}`, which neither its task line nor its own `bind` lines name",
@@ -1135,9 +1203,7 @@ impl Application {
                 .iter()
                 .flat_map(|run| run.calls.iter());
             for (name, _) in mine.os_calls.calls.iter().chain(as_primitives) {
-                let a_primitive =
-                    name == MASK || name == UNMASK || primitives.contains(&name.as_str());
-                if !a_primitive && plan.nodes.iter().any(|(node, _)| node == name) {
+                if !costed.contains(name.as_str()) && nodes.contains(name.as_str()) {
                     unmet.push(format!(
                         "the task `{}` calls `{name}` as a primitive, and it is a node of this plan: write it among `node-calls`, or a run's `node-call`",
                         task.name
@@ -1145,7 +1211,7 @@ impl Application {
                 }
             }
             for alarm in &mine.deadlines_within_reach {
-                if !plan.nodes.iter().any(|(node, _)| node == alarm) {
+                if !nodes.contains(alarm.as_str()) {
                     unmet.push(format!(
                         "the task `{}` names the alarm `{alarm}`, and this plan holds no such node",
                         task.name
@@ -1159,7 +1225,7 @@ impl Application {
             }
             let held = if owed.subject == plan.system {
                 owed.fact == "leaves-interrupt-hardware-alone"
-            } else if plan.tasks.iter().any(|task| task.identity == owed.subject) {
+            } else if identities.contains(owed.subject.as_str()) {
                 HELD_OF_A_TASK.contains(&owed.fact.as_str())
             } else {
                 false
