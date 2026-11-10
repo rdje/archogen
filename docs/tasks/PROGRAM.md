@@ -1279,6 +1279,18 @@ mdBook that is the director's window into the project.
   Verification: the census, the removal report.
   Commit: `ARCHOGEN-PROGRAM-1242 (leaf PROGRAM.133)`
 
+- ID: `PROGRAM.134`
+  Status: `done` — `2026-11-10`, the live task trees over their ceiling again, `README-ROUTES` refusing the guard's round 35.
+  Goal: bring `docs/tasks/` under its ceiling by the project's own sealing, nothing summarised and nothing lost.
+  Acceptance:
+    - [x] ROOT CAUSE — WHY: the review rounds' closed leaves in `docs/tasks/M4.md`, format `/2`'s six and the application inputs' seven among them, had grown it to 155,320 bytes since `PROGRAM.131` sealed it. WHERE: `bash scripts/check_doctrines.sh` on the guard's round 35, staged → `README-ROUTES: docs/tasks/: 819894 bytes in total, over its ceiling of 819200`.
+    - [x] FIX — `bash scripts/check_task_history.sh --seal M4`, on the committed tree, that leaf set aside: 16 closed subtrees, 28 leaves, into `docs/task-history/M4/`, 27 log rows into `rows-0004.md`, each with its row in the index and a stub in the tree.
+    - [x] ADDRESSED — `task-history: OK (553 sealed file(s), each against its row and its sealing commit`, exit 0, "the reconstruction is byte for byte"; `docs/tasks/M4.md` 82,662 bytes, `docs/tasks/` 743,666 in all; `bash scripts/check_readme_routes.sh` → `readme-routes: OK (25 destination(s) governed)`, exit 0.
+    - [x] NO REGRESSION — `bash scripts/check_handoff_ledger.sh` → `handoff-ledger: OK`, exit 0, each hand-off's leaf still open; `make focused` → `tier focused: passed — 3 passed, 0 failed`, on the staged tree.
+    - [x] LOCKSTEP — the tree, the index and the Commit Log.
+  Verification: the seal's own proof, the gate.
+  Commit: `ARCHOGEN-PROGRAM-1265 (leaf PROGRAM.134)`
+
 ## Roadmap coverage map
 
 Every roadmap unit has exactly one owning tree. This table is the answer to "where does
@@ -1441,6 +1453,7 @@ leaf's outcome is its row in the Commit Log below, and a sealed leaf's full reco
 | `PROGRAM.127.6` | `ARCHOGEN-PROGRAM-1164 (leaf PROGRAM.127.6)` | **paused at the director's word**, at a clean tree, before round 6 began: the resume pointer and the leaf say to wait |
 | `PROGRAM.127.6` | `ARCHOGEN-PROGRAM-1165 (leaf PROGRAM.127.6)` | **the host guard's review, round 6 answered**: a volume has fallen only by more than a shared volume costs anyway; what a job takes with it said; the shell reader given a case's branches, arithmetic, arrays and `[[ ]]`, held to each `bash` here; each agent told for itself |
 | `PROGRAM.127.7` | `ARCHOGEN-PROGRAM-1168 (leaf PROGRAM.127.7)` | **the host guard's review, round 7 answered**: `make` that only asks is no build; the reader's rare misses read, each held to both `bash`es; a `kill` by a pid passes by any spelling; the root named exactly; what is told says what it leaves out |
+| `PROGRAM.134` | `ARCHOGEN-PROGRAM-1265 (leaf PROGRAM.134)` | **the M4 tree sealed again**, 16 closed subtrees and 28 leaves, the review rounds' among them, so the live task trees stand under their ceiling. |
 | `PROGRAM.127.34` | `ARCHOGEN-PROGRAM-1263 (leaf PROGRAM.127.34)` | **the host guard's review, round 34**: a cluster of flags costs its length to read; a root is the directory the kernel names, by what both spellings open, and a watcher spells it at each round; the hook reads a `run` by the guard's own reader of an interpreter's flags. |
 | `PROGRAM.127.33` | `ARCHOGEN-PROGRAM-1259 (leaf PROGRAM.127.33)` | **the host guard's review, round 33**: a guard is known by its words, each read once, and by no pattern, so a command line costs its length to read; a row of blanks is a row; an empty first word is never read past; a watcher writes its root whole; a root's Unicode form is the volume's. |
 | `PROGRAM.127.32` | `ARCHOGEN-PROGRAM-1257 (leaf PROGRAM.127.32)` | **the host guard's review, round 32**: a row of the process table ends at a line feed and nowhere else, so no argument blinds a guard; a watcher given its root relatively is known from any directory; a nameless process goes by its file. |
@@ -1578,3 +1591,4 @@ leaf's outcome is its row in the Commit Log below, and a sealed leaf's full reco
 - `2026-11-10`: `PROGRAM.127.32` done: the guard's round 32, three findings answered, two defects, one met in ordinary work; `PROGRAM.127.33` filed for round 33.
 - `2026-11-10`: `PROGRAM.127.33` done: the guard's round 33, five findings answered, one defect, written to and failing open; `PROGRAM.127.34` filed for round 34.
 - `2026-11-10`: `PROGRAM.127.34` done: the guard's round 34, four findings answered, two defects, both in round 33's own answers; `PROGRAM.127.35` filed for round 35.
+- `2026-11-10`: `PROGRAM.134` done: the M4 tree sealed again, 16 closed subtrees, so the live task trees stand under their ceiling.
