@@ -186,6 +186,9 @@ fn each_malformed_input_is_refused_saying_what_is_wrong() {
         // Rust calls each of these, and the record writes neither: the refusal says which names it reads.
         (replaced("(entry-point \"app::t\")", "(entry-point \"app::b\u{e9}at\")"), "each name of ASCII letters, digits and `_`"),
         (replaced("(entry-point \"app::t\")", "(entry-point \"app::r#loop\")"), "each name of ASCII letters, digits and `_`"),
+        // Nor a name Rust has none of: one beginning with a digit, and `_` alone, the refusal saying so (round 8, AI8-7).
+        (replaced("(entry-point \"app::t\")", "(entry-point \"app::1t\")"), "beginning with no digit, not `_` alone"),
+        (replaced("(entry-point \"app::t\")", "(entry-point \"app::_\")"), "beginning with no digit, not `_` alone"),
         (replaced("(entry-point \"app::t\")", "(entry-point \"other::t\")"), "a path a job can call"),
         (replaced("(scope \"one job\")", "(scope \"\u{200b}\")"), "says something"),
         (replaced("(scope \"one job\")", "(scope \"one\u{2028}job\")"), "line break"),

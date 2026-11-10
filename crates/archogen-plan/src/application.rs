@@ -956,7 +956,7 @@ fn task(form: &Form, code: &str) -> Result<Task, Refused> {
     if !is_a_path_in(&entry_point, code) {
         return Err(refused(
             of,
-            format!("`entry-point` is a path a job can call in `{code}`, such as `{code}::beat`, each name of ASCII letters, digits and `_` and none a name Rust keeps, and this says `{entry_point}`"),
+            format!("`entry-point` is a path a job can call in `{code}`, such as `{code}::beat`, each name of ASCII letters, digits and `_`, beginning with no digit, not `_` alone and none a name Rust keeps, and this says `{entry_point}`"),
         ));
     }
     let execution_bound = bound(
@@ -1156,7 +1156,7 @@ pub fn read(text: &str) -> Result<Application, Refused> {
             if !is_a_path_in(&entry_point, &code.name) {
                 return Err(refused(
                     "initialisation",
-                    format!("`entry-point` is a path the boot can call in `{0}`, such as `{0}::init`, each name of ASCII letters, digits and `_` and none a name Rust keeps, and this says `{entry_point}`", code.name),
+                    format!("`entry-point` is a path the boot can call in `{0}`, such as `{0}::init`, each name of ASCII letters, digits and `_`, beginning with no digit, not `_` alone and none a name Rust keeps, and this says `{entry_point}`", code.name),
                 ));
             }
             Some(Initialisation {
