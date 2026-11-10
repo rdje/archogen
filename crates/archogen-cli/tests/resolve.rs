@@ -350,13 +350,10 @@ fn modes_bind(root: &Path) -> bool {
 const AN_EARLIER_PLAN: &str = "(format \"archogen-assignment/2\")\n(profile rt-static-up-v1)\n(system earlier)\n\
      (program \"0000000000000000000000000000000000000000000000000000000000000000\")\n(adapters adapters/1)\n";
 
-/// What stands where the tests run, to hold that a name refused makes nothing.
+/// What stands where the tests run, at any depth, to hold that a name refused makes nothing: a stage for `.` would be a name here.
 #[cfg(unix)]
-fn names_here() -> std::collections::BTreeSet<std::ffi::OsString> {
-    std::fs::read_dir(".")
-        .expect("a directory")
-        .map(|entry| entry.expect("an entry").file_name())
-        .collect()
+fn all_here() -> std::collections::BTreeMap<String, Vec<u8>> {
+    common::everything_under(Path::new("."))
 }
 
 /// An earlier plan at `plan`.
@@ -385,15 +382,15 @@ type Route = fn(&Path) -> Option<(Status, String)>;
 fn plan_routes() -> Vec<(&'static str, Route)> {
     vec![
         ("no-name", |_| {
-            let before = names_here();
+            let before = all_here();
             let outcome = resolve_at(".", &[]);
-            assert_eq!(names_here(), before, "something was made");
+            assert_eq!(all_here(), before, "something was made");
             outcome
         }),
         ("empty-name", |_| {
-            let before = names_here();
+            let before = all_here();
             let outcome = resolve_at("", &[]);
-            assert_eq!(names_here(), before, "something was made");
+            assert_eq!(all_here(), before, "something was made");
             outcome
         }),
         ("a-trailing-dot", |root| {
@@ -1294,8 +1291,9 @@ fn plan_routes() -> Vec<(&'static str, Route)> {
         }),
         ("no-room-name", |root| {
             let long = root.join("a/b").join("x".repeat(252));
+            let before = common::everything_under(root);
             let outcome = resolve_at(&long.display().to_string(), &[]);
-            assert!(!root.join("a").exists());
+            assert_eq!(common::everything_under(root), before, "something was made");
             outcome
         }),
         ("no-room-check", |root| {
@@ -1493,19 +1491,25 @@ fn plan_routes() -> Vec<(&'static str, Route)> {
             std::fs::copy(heartbeat(), real.join("h.eadl")).expect("copied");
             std::os::unix::fs::symlink(&real, root.join("link")).expect("a link");
             let description = root.join("link/h.eadl").display().to_string();
+            let before = common::everything_under(root);
             let outcome = resolve_of(
                 &description,
                 &root.join("p").display().to_string(),
                 &[],
                 Answer::Record(Status::Ok),
             );
-            assert!(!root.join("p").exists());
-            let mut left: Vec<String> = std::fs::read_dir(root)
-                .expect("the directory")
-                .map(|entry| entry.expect("an entry").file_name().display().to_string())
-                .collect();
-            left.sort();
-            assert_eq!(left, ["a\nb", "link"], "nothing made");
+            assert_eq!(common::everything_under(root), before, "something was made");
+            // Unchecked, nothing is handed to a checker, so the same path is no refusal and the plan is written (R29-4).
+            let unchecked = root.join("u");
+            let (status, words) = resolve_of(
+                &description,
+                &unchecked.display().to_string(),
+                &["--unchecked"],
+                Answer::Record(Status::Ok),
+            )
+            .expect("the route runs");
+            assert_eq!(status, Status::Ok, "{words}");
+            assert!(unchecked.is_file());
             outcome
         }),
         ("no-checker", |root| {

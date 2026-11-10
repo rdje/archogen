@@ -223,7 +223,7 @@ again just before it is used, and in that instant what stands there is what is u
 | `record-unsound` | the checker's record does not hold together with what it did | `tool-failure` | `does not hold together` | what stood at `PLAN`; the plan and the record in `PLAN.part`, for the report |
 | `no-record` | the checker runs and writes no record | `tool-failure` | `wrote no record` | what stood at `PLAN` and its record; nothing this run wrote |
 | `at-the-ceiling` | the checker reaches its memory ceiling, and writes no record | `analysis-inconclusive` | `memory ceiling` | what stood at `PLAN` and its record; nothing this run wrote |
-| `line-break-in-the-whole-path` | a link or where the run stands brings a line break no argument holds, into what the checker would be handed | `usage` | `holds a line break` | nothing made |
+| `line-break-in-the-whole-path` | a link or where the run stands brings a line break no argument holds, into what the checker would be handed: with `--unchecked` none is handed anything, and the plan is written | `usage` | `holds a line break` | nothing made |
 | `no-checker` | no install beside the command, so no checker can be run | `tool-failure` | `has no install manifest` | what stood at `PLAN`; nothing this run wrote |
 | `closed-meanwhile` | the checker accepts, and `PLAN.check` can no longer take a record | `tool-failure` | `cannot put the checker's record` | what stood at `PLAN` and its record; nothing this run wrote |
 | `a-flag-as-its-value` | `--out --unchecked`, the parser taking the next word as `--out`'s value | `ok` | `resolved system` | a plan named `--unchecked` |

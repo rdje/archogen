@@ -3,7 +3,7 @@
 - **Type:** `decision`
 - **Date:** `2026-11-04`
 - **Status:** `active` — written by leaf `M4.2.1`; built ahead of its review as its executable form
-  (`decision_executable-design-reviews.md`); under review, `## Review`
+  (`decision_executable-design-reviews.md`); reviewed, `## Review`, closed on round 29, which found no defect
 - **External sources:** none: this record decides how the engine's own parts fit together
 - **Owner / source:** leaves `M4.2` and `M4.3` (`docs/tasks/M4.md`), carrying `RTP-H1`, `RTP-H2`, `RTP-H3` and `RTP-H9` of
   [[decision_runtime-plan]]; `ROADMAP.md` §6.3 and §10.1 steps 6 to 8.
@@ -78,7 +78,8 @@ it hands each event to an observer, and the generated `main` prints them.
 5. the running job's body advances, until the next arrival or its own next step.
 
 A mask step masks the hardware before raising the depth, an unmask lowers the depth before unmasking it, so no service ever
-runs with the depth raised (`releases-never-latched`). Initialisation runs first, in the plan's steps, interrupts masked,
+runs with the depth raised (`releases-never-latched`). Masks nest: only the unmask that lowers the depth to nothing unmasks the hardware, so one inside another lets
+nothing in, and a job that ends with one still standing ends masked, its completion letting in what is pending, the third way above. Initialisation runs first, in the plan's steps, interrupts masked,
 and interrupts are enabled at time zero.
 
 **A body is data**: a list of steps, *run for N ticks*, *mask*, *unmask*, *read* or *write* a device, *program* an alarm. `/1` writes every job's as empty, so a job starts
@@ -239,6 +240,7 @@ capability unsupported. Then the S0 crate was deleted (`M4.2.4`), and the retire
 | 26 | 7 | 1 (R26-1), beside 2 routes, 2 gaps and 2 of wording | `2026-11-07`, not acceptable, 1 after 3, older than `M4.3.5`: the limit on a run counted a source's arrivals and not what each released, so three tasks on a source ran twice its count. It counts each now. Round 25's answers held, at up to 30,000 tasks, but for its forged names and one fixture. None touches a verdict on a plan. |
 | 27 | 7 | 1 (R27-1), beside 2 routes, 1 gap and 3 of wording | `2026-11-07`, not acceptable, 1 after 1, answered `2026-11-10`, reached only by a hand-written body: a sentence on what overruns a job at its own release was false both ways, and now says what the order does. Everything a plain description reaches was clean, and round 26's answers held. |
 | 28 | 3 | 1 (R28-1), beside 1 gap and 1 of wording | `2026-11-10`, not acceptable, 1 after 1 and 1, of R27-1's kind and reached only by a hand-written body that masks: the order named two ways an interrupt goes before a completion, and there is a third, the completion of a job that ended masked. It names each now, and a test holds the third. Everything a plain description reaches was clean over about 535 runs, and round 27's other answers held. |
+| 29 | 4 | 0, beside 1 gap, 1 of wording and 2 routes | `2026-11-10`, **acceptable: the review closes** — no fourth way in the order of one instant over 1,500,000 random bodies read by a tracker of its reader's own, 126 of the two tables' 130 rows run on the installed programs with the whole tree compared and none disagreeing, and round 28's three answers right. What it found is said or held: six rows hold their whole tree, masks nest in words, and two spellings have their rows. |
 
 The rounds, each finding and its answer, are in
 [`docs/reviews/decision_hosted-build-reviews.md`](../reviews/decision_hosted-build-reviews.md).

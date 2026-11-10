@@ -172,7 +172,7 @@ the rule: what it says is run, and a route it does not name is promised nothing 
 <!-- machine-read: out-routes -->
 | Route | What stands there, or what happens | Status | It says | What is left |
 | --- | --- | --- | --- | --- |
-| `no-name` | `--out ..` | `usage` | `names no directory of its own` | nothing made |
+| `no-name` | `--out ..`, and `.`, `./`, `/` or an empty name alike | `usage` | `names no directory of its own` | nothing made |
 | `back-through` | `--out missing/../x`, which reads as absent until `missing` is made | `usage` | `goes back through a name` | nothing made |
 | `a-file` | a file at `--out` | `usage` | `is no directory` | the file |
 | `a-link` | a link at `--out` | `usage` | `is no directory` | the link, and what it points at |
@@ -231,6 +231,9 @@ the rule: what it says is run, and a route it does not name is promised nothing 
 | `closed-meanwhile` | while it runs, the directory at `--out` is closed further | `ok` | `generated` | the package, at the mode it was closed to |
 | `record-unsound` | the checker's record does not hold together with what it did | `tool-failure` | `does not hold together` | the stage, with the assignment and the record for the report |
 | `disagreed` | the checker refuses the search's plan | `tool-failure` | `refuses the plan the search wrote` | the stage, with the assignment and the record for the report |
+
+One route has no row, since no fixture reaches it at will: the command itself at its memory ceiling once its stage stands. It ends as any run past
+its ceiling does, the stage stays, and the next run naming it says so ([the command line](cli.md)).
 
 No sync call is made, so none of this claims anything across a power loss. ⚠️ Nor does it hold against another program working in the same
 directory at the same instant: the standard library has no rename that refuses to replace and no directory-relative open, so each path is

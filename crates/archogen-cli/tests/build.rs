@@ -2142,18 +2142,41 @@ type Route = fn(&Path) -> Option<Said>;
 fn out_routes() -> Vec<(&'static str, Route)> {
     vec![
         ("no-name", |_| {
-            let names = || -> BTreeSet<_> {
+            // What stands where the tests run is held whole, a stage for `..` being a name here, and what stands beside it by name.
+            let beside_here = || -> BTreeSet<_> {
                 fs::read_dir("..")
                     .expect("a directory")
                     .map(|entry| entry.expect("an entry").file_name())
                     .collect()
             };
-            let before = names();
-            let outcome = said(invoke(
-                &["build", &example(HEARTBEAT), "--out", ".."],
-                &Checker,
-            ));
-            assert_eq!(names(), before, "something was made");
+            let (here, beside_it) = (common::everything_under(Path::new(".")), beside_here());
+            let named = |name: &str| {
+                said(invoke(
+                    &["build", &example(HEARTBEAT), "--out", name],
+                    &Checker,
+                ))
+            };
+            let outcome = named("..");
+            // Each other spelling of no name is refused alike (R29-4).
+            for name in [".", "./", "/", ""] {
+                let (status, words) = named(name).expect("it runs");
+                assert_eq!(
+                    Some(status),
+                    outcome.as_ref().map(|(status, _)| *status),
+                    "`{name}`: {words}"
+                );
+                assert!(
+                    words.contains("names no directory of its own"),
+                    "`{name}`: {words}"
+                );
+            }
+            assert_eq!(
+                common::everything_under(Path::new(".")),
+                here,
+                "something was made here"
+            );
+            assert_eq!(beside_here(), beside_it, "something was made beside it");
+            assert!(!Path::new("/.building").exists());
             outcome
         }),
         ("back-through", |root| {
@@ -2388,18 +2411,14 @@ fn out_routes() -> Vec<(&'static str, Route)> {
             std::os::unix::fs::symlink(&real, root.join("link")).expect("a link");
             let description = root.join("link/h.eadl").display().to_string();
             let dir = root.join("x");
+            let before = common::everything_under(root);
             let outcome = said(invoke(
                 &["build", &description, "--out", &dir.display().to_string()],
                 &Checker,
             ));
             assert!(!dir.exists());
             assert!(!beside(&dir, ".building").exists());
-            let mut left: Vec<String> = fs::read_dir(root)
-                .expect("the directory")
-                .map(|entry| entry.expect("an entry").file_name().display().to_string())
-                .collect();
-            left.sort();
-            assert_eq!(left, ["a\nb", "link"], "nothing made");
+            assert_eq!(common::everything_under(root), before, "something was made");
             outcome
         }),
         ("no-room-path", |root| {

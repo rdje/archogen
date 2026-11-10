@@ -59,7 +59,8 @@ Time is exact: `1/100 s` is 10 ms, with no rounding anywhere. In order: a job wi
 one that ends exactly as its next release falls due has not overrun, unless an interrupt is pending with nothing masking it as it ends, whose service comes first; then an interrupt that has arrived is taken as soon as the
 hardware is unmasked, the routes in the plan's order and then the release timer, none nesting another; then the scheduler
 decides; then the running job goes on. While a job holds interrupts masked, an arrival stays pending, and its service runs at
-the unmask, before the job's next instruction, even if that is its last. A job's body is data, a list of *run this long*, *mask*, *unmask*, *read* or *write a device*, *program an alarm*. Until an application's own inputs exist, a
+the unmask, before the job's next instruction, even if that is its last. Masks nest, so that unmask is the one that ends the outermost: one inside another lets nothing in,
+and a job that ends with one still standing ends masked, its completion letting in what is pending. A job's body is data, a list of *run this long*, *mask*, *unmask*, *read* or *write a device*, *program an alarm*. Until an application's own inputs exist, a
 generated system's bodies are empty, so its jobs start and complete at one instant, and only the releases are informative;
 the simulator's own tests run longer bodies, so preemption, masking and overrun are held today. A job an alarm releases could program
 that alarm for now, and time would never move, so a run takes at most `sim_playground::MOST_STEPS_AT_ONE_INSTANT` steps at one instant, and past that it stops, says so and exits 1, and so too past `sim_playground::MOST_ALARM_ARRIVALS` arrivals of its alarms.

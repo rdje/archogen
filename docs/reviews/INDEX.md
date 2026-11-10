@@ -19,7 +19,7 @@ No bootstrap read includes this directory.
 | [`decision_host-guard-reviews.md`](decision_host-guard-reviews.md) | [`decision_host-guard.md`](../decisions/decision_host-guard.md) | 30 | open |
 | [`decision_release-alarm-reviews.md`](decision_release-alarm-reviews.md) | [`decision_release-alarm.md`](../decisions/decision_release-alarm.md) | 16 | closed: round 16 found no defect (`M4.1.6.16`) |
 | [`decision_device-correspondence-reviews.md`](decision_device-correspondence-reviews.md) | [`decision_device-correspondence.md`](../decisions/decision_device-correspondence.md) | 9 | closed: round 9 found no defect (`M4.4.1.9`) |
-| [`decision_hosted-build-reviews.md`](decision_hosted-build-reviews.md) | [`decision_hosted-build.md`](../decisions/decision_hosted-build.md) | 28 | open |
+| [`decision_hosted-build-reviews.md`](decision_hosted-build-reviews.md) | [`decision_hosted-build.md`](../decisions/decision_hosted-build.md) | 29 | closed: round 29 found no defect (`M4.2.3.3.29`) |
 | [`decision_catalog-records-reviews.md`](decision_catalog-records-reviews.md) | [`decision_catalog-records.md`](../specs/catalog/decision_catalog-records.md) | 16 | closed: the record met its closure rule on round 16 (`M2.7.1`) |
 | [`decision_decisions-folder-ceiling-reviews.md`](decision_decisions-folder-ceiling-reviews.md) | [`decision_decisions-folder-ceiling.md`](../decisions/decision_decisions-folder-ceiling.md) | 1 | closed: answered before the raise landed (`PROGRAM.38`) |
 | [`decision-history-reviews.md`](decision-history-reviews.md) | `DECISION-HISTORY`: the header of `scripts/check_decision_history.sh`, and [`decision_decisions-folder-ceiling.md`](../decisions/decision_decisions-folder-ceiling.md)'s sealing bullet | 1 | closed: answered with the gate's hardening (`PROGRAM.41.1`) |
@@ -51,5 +51,4 @@ that closes it. Each line names the history, then the record, both from this fol
 
 - `decision_runtime-plan-format-2-reviews.md` with `../decisions/decision_runtime-plan-format-2.md`
 - `decision_application-inputs-reviews.md` with `../decisions/decision_application-inputs.md`
-- `decision_hosted-build-reviews.md` with `../decisions/decision_hosted-build.md`
 - `decision_host-guard-reviews.md` with `../decisions/decision_host-guard.md`
