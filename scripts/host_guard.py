@@ -144,10 +144,23 @@ def state_path(root: Path) -> Path:
     return root / "target" / "host-guard" / "state" if (root / ".git").exists() else root / "state"
 
 
-def state_dir(root: Path) -> Path:
+class Cleared(Exception):
+    """A watcher's directory is gone, and a watcher does not make it again."""
+
+
+# Set in a watcher. Its state is written in a directory only what asks makes: a watcher making its own would stand in the way of whatever is removing it, as `git worktree remove` is, and a removal is told from `cargo clean` by nothing it could read.
+WATCHING = False
+
+
+def state_dir(root: Path, for_a_stop: bool = False) -> Path:
+    """Where a root's state is kept, made where it is not: but by a watcher, which writes only where one stands, a stop apart, since what it stopped must be told."""
     if not root.is_dir():
         raise FileNotFoundError(f"{root} is gone")
     state = state_path(root)
+    if WATCHING and not for_a_stop:
+        if not state.is_dir():
+            raise Cleared(str(state))
+        return state
     state.mkdir(parents=True, exist_ok=True)
     return state
 
@@ -239,6 +252,17 @@ def start_reasons(reading: Reading, limits: Limits) -> list[str]:
 # ---- processes
 
 PYTHON_FLAGS_WITH_VALUES = ("-W", "-X")
+# The flags an interpreter reads a value after, in the next word, so that what follows one is no program: any other flag takes none, and the next word is what it runs.
+# Each was run on this host: `perl -M strict`, `ruby -W x` and `node --stack-size 900` read no such value, so they are not here.
+FLAGS_WITH_VALUES = {
+    "python": PYTHON_FLAGS_WITH_VALUES,
+    "node": ("-r", "--require", "--import", "--loader", "--experimental-loader", "--title"),
+    "ruby": ("-I", "-r", "-C", "-E"),
+    "perl": ("-I",),
+    "bash": ("--init-file", "--rcfile", "-O", "-o"),
+    "sh": ("-o",),
+    "zsh": ("-o",),
+}
 INTERPRETERS = {"python", "python3", "Python", "node", "ruby", "perl", "bash", "sh", "zsh"}
 SHELLS = {"bash", "sh", "zsh", "fish", "dash", "ksh", "csh", "tcsh", "nu", "elvish"}
 
@@ -301,22 +325,18 @@ class Process:
     @property
     def programs_named(self) -> list[str]:
         """The executable an interpreter runs when a flag taking a value hides it from `script`: a path with no extension, since a data file is not a program. The search ends
-        at the first word that is neither a flag nor a flag's value, which is what it runs, or at a flag that takes a program's text, a `-m` or a cluster ending in `c` or `e` as `-lc` and `-e` do: what follows is that program's own arguments, a directory named after an agent among them."""
+        at the first word that is neither a flag nor the value of a flag `FLAGS_WITH_VALUES` holds, which is what it runs, or at a flag that takes a program's text, a `-m` or a cluster ending in `c` or `e` as `-lc` and `-e` do: what follows is that program's own arguments, a directory named after an agent among them."""
         if not self.script:
             return []
+        name = self.name.lower()
+        takes_values = FLAGS_WITH_VALUES.get("python" if name.startswith("python") else name, ())
         words = self.words_read[:6]
         for at, word in enumerate(words):
             if word == "-m" or re.fullmatch(r"-[A-Za-z]*[ce]", word):
                 return []
-            if word.startswith("-"):
-                continue
-            before = words[at - 1] if at else ""
-            if before in PYTHON_FLAGS_WITH_VALUES and self.name.lower().startswith("python"):
+            if word.startswith("-") or (at and words[at - 1] in takes_values):
                 continue
             base = os.path.basename(word)
-            # A word after a flag may be that flag's value: one with no path, or a file after a long flag.
-            if before.startswith("-") and "=" not in before and ("/" not in word or (before.startswith("--") and "." in base)):
-                continue
             return [base] if "/" in word and "." not in base else []
         return []
 
@@ -611,11 +631,13 @@ def record(root: Path, **event) -> None:
     """Write down what happened. Never raises: a watcher must not die of its own bookkeeping, `target/` removed by `cargo clean` or a full disk among the causes."""
     event["at"] = time.strftime("%Y-%m-%dT%H:%M:%S")
     try:
-        path = state_dir(root) / "events.log"
+        path = state_dir(root, for_a_stop=event.get("kind") == "stopped") / "events.log"
         if size_of(path) > LOG_AT_MOST:
             os.replace(path, path.with_suffix(".log.1"))
         with open(path, "a", encoding="utf-8") as log:
             log.write(json.dumps(event) + "\n")
+    except Cleared:
+        pass
     except Exception as error:
         say(f"host-guard: cannot record {event.get('kind')}: {error}")
 
@@ -734,6 +756,8 @@ def note_peak(root: Path, reading: Reading, ours_bytes: int) -> None:
             peak = dict.fromkeys(now, 0.0)
         if any(now[name] > peak[name] for name in now):
             path.write_text(json.dumps({name: max(now[name], peak[name]) for name in now}))
+    except Cleared:
+        pass
     except Exception as error:
         say(f"host-guard: cannot note the peak: {error}")
 
@@ -818,11 +842,29 @@ def file_is_whole() -> bool:
     return source.endswith(b"\n    sys.exit(main(sys.argv[1:]))\n")
 
 
-def write_note(root: Path, name: str, text: str) -> None:
+def write_notes(root: Path, notes: dict[str, str]) -> None:
+    """Each in turn, by one look at the directory: in a watcher all of them or none, so a name written last is never found without the rest."""
     try:
-        (state_dir(root) / name).write_text(text)
+        state = state_dir(root)
+        for name, text in notes.items():
+            (state / name).write_text(text)
+    except Cleared:
+        pass
     except Exception as error:
-        say(f"host-guard: cannot write {name}: {error}")
+        say(f"host-guard: cannot write {' or '.join(notes)}: {error}")
+
+
+def write_note(root: Path, name: str, text: str) -> None:
+    write_notes(root, {name: text})
+
+
+def names_it(root: Path, image: str) -> bool:
+    """Whether the notes of `root` name this watcher and what it runs. Notes gone, half gone or naming another are not its own, and it writes them again."""
+    state = state_path(root)
+    try:
+        return (state / "watch.pid").read_text() == str(os.getpid()) and (state / "watch.code").read_text() == image
+    except (OSError, ValueError):
+        return False
 
 
 def code_stamp() -> tuple[int, int] | None:
@@ -854,7 +896,10 @@ def watch(root: Path, limits: Limits, once: bool, idle_seconds: float = 600.0, a
     lock = hold_lock(root)
     if lock is None:
         return 0  # One is watching.
+    # What started it asked for it, so this once it makes its directory.
     write_note(root, "watch.pid", str(os.getpid()))
+    global WATCHING
+    WATCHING = True
     try:
         (state_path(root) / "peak.json").unlink(missing_ok=True)
     except OSError:
@@ -867,23 +912,30 @@ def watch(root: Path, limits: Limits, once: bool, idle_seconds: float = 600.0, a
     image = stamp_for_the_next(running)
     write_note(root, "watch.code", image)
     while True:
-        wait = 2.0
-        # What names it outlasts what clears them, `cargo clean` among it, whatever its round goes on to do.
-        if not (state_path(root) / "watch.pid").exists():
-            write_note(root, "watch.pid", str(os.getpid()))
-            write_note(root, "watch.code", image)
+        # A root that is gone, a removed worktree, is watched by nobody: nothing of it can run, and its state must not bring it back. One remade at that name is another, which holds its own lock
+        # and its own notes, so this is looked at before a round reads or writes anything there.
+        try:
+            if os.stat(root).st_ino != held_inode:
+                return 0
+        except OSError:
+            return 0
+        wait, notes = 2.0, {}
         try:
             reading, mine = sample(root, limits, memory)
             busy, read_at = bool(mine), time.monotonic()
             # It reads more often the closer the host is to a line, and as seldom as is safe when nothing of ours runs: this costs the shared host too.
             near = reading.used_percent >= limits.start_used_percent + 10 or disk_reasons(reading, limits)
             wait = 0.5 if near else 1.0 if busy or reading.used_percent >= limits.start_used_percent else 2.0
-            write_note(root, "sampled", str(time.time()))
+            notes["sampled"] = str(time.time())
         except Exception as error:  # Whatever it is, the watcher goes on trying, and `sampled` going stale says it is blind. What it last saw may still run, so it stays for that, but no longer than it would stay idle.
             busy = busy and time.monotonic() - read_at <= idle_seconds
             if time.monotonic() - unread_said > 60:
                 unread_said = time.monotonic()
                 record(root, kind="unread", error=str(error))
+        # What names it outlasts what clears them, `cargo clean` among it, and what writes over them, whatever its round did. Its pid comes last, with what says it has read, so that whoever finds it named finds the rest.
+        if not names_it(root, image):
+            notes.update({"watch.code": image, "watch.pid": str(os.getpid())})
+        write_notes(root, notes)
         # A guard changed under a watcher holds from then, whatever this round did, a line that raises among it. The lock closes with the old image and the new one takes it, so nothing goes unwatched between.
         # One that can be seen to be broken is not taken up, and said once.
         stamp = code_stamp()
@@ -895,12 +947,6 @@ def watch(root: Path, limits: Limits, once: bool, idle_seconds: float = 600.0, a
                     record(root, kind="taken-up", reasons=f"this watcher takes up {CODE.name} as saved")
                     os.execv(sys.executable, [sys.executable, "-I", "-B", str(CODE), *again])
                 record(root, kind="unread", error=f"{CODE.name} as saved does not compile or is cut short: this watcher goes on as it was")
-        # A root that is gone, a removed worktree, is watched by nobody: nothing of it can run, and its state must not bring it back. One remade at that name is another, which holds its own lock.
-        try:
-            if os.stat(root).st_ino != held_inode:
-                return 0
-        except OSError:
-            return 0
         try:
             fresh = time.time() - (state_path(root) / "heartbeat").stat().st_mtime < idle_seconds
         except OSError:
@@ -933,6 +979,27 @@ def watcher_pid(root: Path) -> int | None:
         os.close(lock)
         return None
     return pid if "ython" in NATIVE.exe(pid) else None
+
+
+def watcher_asked_for(root: Path, seconds: float = 6.0) -> int | None:
+    """The watcher of `root`, for what asks after it by its pid, `status` and `stop`. The asking makes the directory `cargo clean` took, and a watcher that holds the root's lock is given three of its slowest rounds to name itself there."""
+    try:
+        state_dir(root)
+    except OSError:
+        return None
+    deadline = time.monotonic() + seconds
+    while True:
+        pid = watcher_pid(root)
+        if pid or time.monotonic() >= deadline:
+            return pid
+        try:
+            lock = hold_lock(root)
+        except OSError:
+            return None
+        if lock is not None:
+            os.close(lock)
+            return None
+        time.sleep(0.1)
 
 
 def healthy(root: Path, limits: Limits) -> bool:
@@ -1003,7 +1070,8 @@ def when(event: dict) -> float:
 
 
 def said_of(event: dict) -> str:
-    stopped = [s for s in event.get("stopped", []) if isinstance(s, dict)]
+    named = event.get("stopped")
+    stopped = [s for s in (named if isinstance(named, list) else []) if isinstance(s, dict)]
     names = ", ".join(f"{s.get('name')} (pid {s.get('pid')}, {s.get('gib')} GiB)" for s in stopped[:4])
     more = len(stopped) - 4
     largest, reasons = event.get("largest"), event.get("reasons")
@@ -1563,7 +1631,7 @@ MAKE_GUARDED = {"focused", "integration", "tiers", "gate", "check", "clippy", "t
 MAKE_FLAGS_WITH_VALUES = {"-I", "-l", "-o", "-W", "--include-dir", "--load-average", "--old-file", "--what-if"}
 # Asked of `make`, these run no recipe. The letters are read as a cluster reads them, up to one that takes the rest as its value.
 MAKE_ASKS = {"--dry-run", "--just-print", "--recon", "--question", "--version", "--help"}
-MAKE_ASKS_IN_A_CLUSTER = re.compile(r"-[abdeikLmprRsStwBO]*[nqvh]")
+MAKE_ASKS_IN_A_CLUSTER = re.compile(r"-[abdeikLmprRsStwB]*[nqvh]")
 # What a cargo alias runs: `--help` after one goes to a program it first compiles.
 CARGO_ALIASES = {"xtask"}
 
@@ -1930,7 +1998,10 @@ def run(root: Path, limits: Limits, command: list[str], wait_seconds: float = 0.
         except (ValueError, RecursionError):
             continue
         if isinstance(event, dict) and event.get("kind") == "stopped":
-            say(f"host-guard: {said_of(event)}")
+            try:
+                say(f"host-guard: {said_of(event)}")
+            except (AttributeError, KeyError, TypeError, ValueError):
+                say("host-guard: a line of the log does not read")
     # As a shell says it: a job ended by a signal is 128 and the signal.
     return 128 - status if status < 0 else status
 
@@ -2003,7 +2074,8 @@ def hook(root: Path, limits: Limits) -> int:
 
 
 def status(root: Path, limits: Limits) -> int:
-    state = state_path(root)
+    # What asks makes the directory, and a watcher names itself in it again within its round.
+    state, watcher = state_path(root), watcher_asked_for(root)
     try:
         reading = read_host(root)
     except Exception as error:
@@ -2018,8 +2090,8 @@ def status(root: Path, limits: Limits) -> int:
         print("largest of this user's on the host: " + ", ".join(f"{h['name']} (pid {h['pid']}) {h['gib']} GiB" for h in largest_on_host(table, 3)))
     except Exception as error:
         print(f"the process table cannot be read: {error}")
-    print(("watcher: running, and reading the host" if healthy(root, limits) else "watcher: running, and BLIND: it has not read the host lately") if watcher_pid(root) else "watcher: not running")
-    if watcher_pid(root) and not runs_the_file(root):
+    print(("watcher: running, and reading the host" if healthy(root, limits) else "watcher: running, and BLIND: it has not read the host lately") if watcher else "watcher: not running")
+    if watcher and not runs_the_file(root):
         print(f"watcher: it runs an older {CODE.name} than the one saved, and has not taken it up. If this stays, `stop` it, and the next command starts one from the file")
     try:
         print(f"peak since its start: {(state / 'peak.json').read_text(errors='replace')}")
@@ -2042,11 +2114,12 @@ def status(root: Path, limits: Limits) -> int:
     # What was stopped is what it is asked: the last few of those, however many other lines came after.
     for event in [e for e in events if e.get("kind") == "stopped"][-3:]:
         try:
-            print(said_of(event))
+            print(said_of(event).encode("utf-8", "replace").decode("utf-8"))
         except (AttributeError, KeyError, TypeError):
             print("a line of the log does not read")
     for event in [e for e in events if e.get("kind") != "stopped"][-2:]:
-        print(f"{event.get('at')}: {event.get('kind')}: {event.get('reasons', event.get('error'))}")
+        said = f"{event.get('at')}: {event.get('kind')}: {event.get('reasons', event.get('error'))}"
+        print(said.encode("utf-8", "replace").decode("utf-8"))
     reasons = start_reasons(reading, limits)
     try:
         reasons.extend(one_at_a_time(root))
@@ -2130,7 +2203,7 @@ def main(argv: list[str]) -> int:
     if verb == "status":
         return status(root, limits)
     if verb == "stop":
-        pid = watcher_pid(root)
+        pid = watcher_asked_for(root)
         if pid:
             os.kill(pid, signal.SIGTERM)
         return 0

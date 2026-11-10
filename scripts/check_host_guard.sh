@@ -242,7 +242,7 @@ staged_local = text_of(".claude/settings.local.json") if in_its_repository else 
 try:
     if turns_every_hook_off(staged_local):
         breaches.append(".claude/settings.local.json turns every hook off")
-except (ValueError, AttributeError):
+except (ValueError, AttributeError, RecursionError):
     breaches.append(".claude/settings.local.json does not read, so what it turns off cannot be said")
 try:
     standing_local = (root / ".claude" / "settings.local.json").read_bytes().decode("utf-8", errors="replace")
@@ -250,7 +250,7 @@ except OSError:
     standing_local = ""
 try:
     standing_off = turns_every_hook_off(standing_local)
-except (ValueError, AttributeError):
+except (ValueError, AttributeError, RecursionError):
     standing_off = "disableAllHooks" in standing_local
 if standing_off:
     breaches.append(".claude/settings.local.json turns every hook off, as it stands")

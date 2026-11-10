@@ -8,7 +8,9 @@ With case names as arguments, only those run."""
 from __future__ import annotations
 
 import ast
+import contextlib
 import hashlib
+import io
 import json
 import os
 import re
@@ -518,9 +520,9 @@ def case_agents() -> None:
     check("nor a login shell", up(terminal))
     alive = [pid for pid in its_children if pid_up(pid)]
     check("a build it started here is stopped, and one it started elsewhere is not", len(its_children) == 2 and len(alive) == 1, (its_children, alive))
-    check("a program behind an interpreter's flag is found", g.is_agent(g.Process(1, 1, "python3 -X utf8 /x/bin/kimi", "", "", 0)) and g.is_agent(g.Process(1, 1, "node --max-old-space-size 8192 /x/bin/codex", "", "", 0)))
+    check("a program behind an interpreter's flag is found", g.is_agent(g.Process(1, 1, "python3 -X utf8 /x/bin/kimi", "", "", 0)) and g.is_agent(g.Process(1, 1, "node --max-old-space-size=8192 /x/bin/codex", "", "", 0)) and g.is_agent(g.Process(1, 1, "node --title x /x/bin/gemini", "", "", 0)))
     check("behind a flag's file too", g.is_agent(g.Process(1, 1, "node --require ./preload.js /x/bin/claude", "", "", 0)))
-    for job in ("python3 rig.py --out target/review/codex", "python3 -m pytest target/codex", "python3 -c pass target/codex", "python3 /x/rig --out target/codex", "bash -lc cd /x/codex && cargo build", "bash -ec cat /x/claude; make", "bash go /x/codex", "python3 prog /x/claude", "perl -e 1 /x/codex"):
+    for job in ("python3 rig.py --out target/review/codex", "python3 -m pytest target/codex", "python3 -c pass target/codex", "python3 /x/rig --out target/codex", "bash -lc cd /x/codex && cargo build", "bash -ec cat /x/claude; make", "bash go /x/codex", "python3 prog /x/claude", "perl -e 1 /x/codex", "python3 -u tool.py /x/codex", "python3 -I -B rig.py /tmp/kimi_data", "bash -x run.sh /x/codex", "bash --norc run.sh /x/gemini", "node --no-warnings /x/lib/go.js /x/codex", "ruby -W tool /x/codex", "perl -w tool /x/claude", "node --stack-size=900 go /x/kimi"):
         check(f"a directory named after one, among a program's own arguments, makes no agent: {job}", not g.is_agent(g.Process(1, 1, job, "", "", 0)))
     check("a data file named after one is no agent", not g.is_agent(g.Process(1, 1, "python3 hold.py data/gemini.json", "", "", 0)) and not g.is_agent(g.Process(1, 1, "python3 hold.py x/CLAUDE.md", "", "", 0)))
     check("a job that merely takes such a file is a job", not g.protected(g.Process(1, 1, "python3 hold.py data/gemini.json", "", "", 0)) and up(data_file))
@@ -1064,8 +1066,44 @@ def case_a_stamp_is_of_a_whole_run_of_these_bytes() -> None:
     check("a whole run of these bytes leaves it", leave_the_stamp([], before, repo, scripts) == "" and stamp.read_text() == before)
 
 
+def case_a_removal_of_a_root_goes_through_its_watcher() -> None:
+    """A watcher makes no directory of its own, a stop's apart, so nothing it makes stands in the way of removing its root, and then it ends."""
+    scope = fresh("watching")
+    said = io.StringIO()
+    g.WATCHING = True
+    try:
+        with contextlib.redirect_stderr(said):
+            g.write_note(scope, "sampled", "1")
+            g.record(scope, kind="unread", error="x")
+            g.note_peak(scope, g.Reading(50.0, 1, 50, 0.0, 1000.0, 200.0), 0)
+        check("a watcher's notes make no directory, and say nothing of it", not (scope / "state").exists() and said.getvalue() == "", said.getvalue())
+        g.record(scope, kind="stopped", reasons=["why"], stopped=[])
+        check("but a stop is written where none stands, since it must be told", '"kind": "stopped"' in (scope / "state" / "events.log").read_text())
+    finally:
+        g.WATCHING = False
+    repo = fresh("removed")
+    (repo / ".git").mkdir()
+    (repo / "scripts").mkdir()
+    copy = repo / "scripts" / "host_guard.py"
+    shutil.copy(GUARD, copy)
+    subprocess.run([*PY, str(copy), "ensure", "--root", str(repo)], capture_output=True, timeout=30)
+    state = repo / "target" / "host-guard" / "state"
+    check("the watcher is up", until(lambda: (state / "sampled").exists()))
+    watcher = int((state / "watch.pid").read_text())
+    # As a removal goes: what holds the watcher's notes first, the rest of its root a while after. A round writing just as its directory goes can put that to a second try, the stated limit, so it is tried until gone.
+    until(lambda: shutil.rmtree(repo / "target", ignore_errors=True) or not (repo / "target").exists(), 5)
+    check("over rounds of its own a watcher makes no directory", not until(lambda: (repo / "target").exists(), 5) and pid_up(watcher))
+    try:
+        shutil.rmtree(repo)
+        removed = ""
+    except OSError as error:
+        removed = str(error)
+    check("so its root is removed", not removed and not repo.exists(), removed)
+    check("and its watcher ends", until(lambda: not pid_up(watcher), 10))
+
+
 def case_a_clean_leaves_a_watcher_named() -> None:
-    """`cargo clean` takes what names a watcher, whatever its round is doing, and it says so again, as what it runs."""
+    """`cargo clean` takes what names a watcher, whatever its round is doing, and what next asks has it say so again, as what it runs."""
     repo = fresh("cleaned")
     (repo / ".git").mkdir()
     (repo / "scripts").mkdir()
@@ -1075,13 +1113,24 @@ def case_a_clean_leaves_a_watcher_named() -> None:
     subprocess.run([*PY, str(copy), "ensure", "--root", str(repo)], capture_output=True, timeout=30)
     state = repo / "target" / "host-guard" / "state"
     check("the watcher is up", until(lambda: (state / "sampled").exists()))
+    watcher = int((state / "watch.pid").read_text())
     shutil.rmtree(repo / "target", ignore_errors=True)
-    check("named again after a clean", until(lambda: "watcher: running" in says()), says())
-    check("and it runs the file, as it did", until(lambda: "an older" not in says()), says())
+    first = says()
+    check("named again after a clean, to the first that asks, and as reading the host", "watcher: running, and reading the host" in first, first)
+    check("and it runs the file, as it did", "an older" not in first, first)
+    # What a watcher left by a root since remade at this name wrote in its last round, and a clean that a round's write crossed.
+    its_code = (state / "watch.code").read_text()
+    (state / "watch.pid").write_text("1")
+    (state / "watch.code").unlink()
+    again = lambda: (state / "watch.pid").read_text() == str(watcher) and (state / "watch.code").read_text() == its_code
+    check("notes that name another, or are half gone, it writes again within its round", until(again, 10), sorted(each.name for each in state.iterdir()))
+    shutil.rmtree(repo / "target", ignore_errors=True)
+    subprocess.run([*PY, str(copy), "stop", "--root", str(repo)], capture_output=True, timeout=30)
+    check("and a `stop` after a clean stops it, the first time", until(lambda: not pid_up(watcher), 10))
+    state.mkdir(parents=True, exist_ok=True)
     (state / "watch.code").write_bytes(b"\xff\xfe")
     done = subprocess.run([*PY, str(copy), "status", "--root", str(repo)], capture_output=True, text=True, errors="replace", timeout=30)
-    check("a note that is no text is no traceback", done.returncode == 0 and "an older" in done.stdout, done.stdout + done.stderr)
-    subprocess.run([*PY, str(copy), "stop", "--root", str(repo)], capture_output=True, timeout=30)
+    check("a note that is no text is no traceback", done.returncode == 0 and not g.runs_the_file(repo), done.stdout + done.stderr)
     # One whose round raises is named too, and can be stopped.
     repo = fresh("cleaned-blind")
     (repo / ".git").mkdir()
@@ -1097,7 +1146,8 @@ def case_a_clean_leaves_a_watcher_named() -> None:
     check("it starts", until(lambda: (state / "watch.pid").exists()))
     pid = int((state / "watch.pid").read_text())
     shutil.rmtree(repo / "target", ignore_errors=True)
-    check("and is named again though it reads nothing", until(lambda: (state / "watch.pid").exists() and "watcher: running" in says()), says())
+    first = says()
+    check("and is named again though it reads nothing, to the first that asks", "watcher: running, and BLIND" in first and (state / "watch.pid").exists(), first)
     subprocess.run([*PY, str(copy), "stop", "--root", str(repo)], capture_output=True, timeout=30)
     def gone() -> bool:
         try:
@@ -1216,6 +1266,9 @@ def case_a_commit_holds_what_make_and_the_limits_can_be_told() -> None:
     local.write_text('{ "disableAllHooks": true, ')
     done = holds()
     check("unless it names what turns them off", done.returncode == 1 and "settings.local.json" in done.stdout, done.stdout + done.stderr)
+    local.write_text("[" * 200000)
+    done = holds()
+    check("a half-saved file too deep to read refuses nothing either", done.returncode == 0, done.stdout + done.stderr)
     local.write_bytes(b'{"x": "\xff", "disableAllHooks": true}')
     done = holds()
     check("and bytes that are no text hide nothing", done.returncode == 1 and "settings.local.json" in done.stdout, done.stdout + done.stderr)
@@ -1634,6 +1687,7 @@ def case_what_counts_as_heavy() -> None:
         "cargo xtask --help", "cargo xtask verify --help", "make -Cvendor all", "make -f x.mk all", "env -S'cargo build'", "env -vS 'cargo build'", 'x="$(cat <<EOF\nbody\nEOF )" && cargo build', "case q in q) ls;;#it's\nesac; cargo build", "x=(#it's\n b); cargo build",
         "a[0]=x cargo build", "echo ${x:-'}'} ; cargo build", "env -S 'cargo build'", "coproc name { cargo build; }", "{fd}>log cargo build", "[[ a == a ]]>log; cargo build", "if [[ '#c' =~ ^([[:space:]]*)#(.*)$ ]]; then cargo build; fi",
         "bash <<< 'cargo build'", "trap 'cargo build' EXIT", "echo $(( $(cargo build) + 1 ))", 'x="$(if true; then case y in y) cargo build;; esac; fi)"', "x=( $(cargo build) )", "[[ -n $(cargo metadata --format-version 1 >x; cargo build) ]]",
+        "gmake -Onone all", "gmake -Otarget all",
     ):
         check(f"heavy: {heavy}", heavy_text(heavy))
     for light in (
@@ -1942,7 +1996,7 @@ def case_a_damaged_log() -> None:
         state = scope / "state"
         state.mkdir()
         good = json.dumps({"kind": "stopped", "at": "now", "reasons": ["why"], "stopped": [{"pid": 1, "name": "told", "gib": 1.0, "command": "x"}]})
-        (state / "events.log").write_bytes(b"not json\n\xff\xfe\n[1]\n" + b"[" * 200000 + b"\n" + good.encode() + b'\n{"kind": "stopped"}\n')
+        (state / "events.log").write_bytes(b"not json\n\xff\xfe\n[1]\n" + b"[" * 200000 + b"\n" + b'{"kind": "stopped", "stopped": 5}\n{"kind": "stopped", "stopped": null}\n{"kind": "other", "at": "\\ud800"}\n' + good.encode() + b'\n{"kind": "stopped"}\n')
         done = hook_says("touch x", scope)
         check("bad lines do not cost the good one", done.returncode == 0 and "stopped told" in told(done), done)
         check("and are read past", told(hook_says("touch x", scope)) == "")
@@ -1964,6 +2018,9 @@ def case_a_damaged_log() -> None:
         check("`status` names a stop whatever lines came after", "stopped told" in said, said)
         (state / "peak.json").write_bytes(b"\xff\xfe")
         check("`status` reads past a binary peak file", guard("status", root=scope).returncode == 0)
+        line = json.dumps({"kind": "stopped", "stopped": 5})
+        done = guard("run", "--", "bash", "-c", f"printf '%s\\n' '{line}' >> '{state / 'events.log'}'; exit 7", root=scope)
+        check("a `run` whose job ends beside a line of the wrong type keeps that job's status", done.returncode == 7, done.stdout + done.stderr)
     finally:
         guard("stop", root=scope)
     scope = fresh("state-a-file")
@@ -2097,7 +2154,7 @@ THE_REST = (
     case_only_tightened, case_check_refuses, case_a_figure_not_read_is_never_safe, case_one_process, case_all_processes, case_what_a_stopped_process_started,
     case_another_project_is_never_ours, case_a_terminal_vouches_for_nothing, case_a_root_is_exactly_itself, case_agents, case_what_holds_little_is_left_alone, case_a_job_is_stopped_whole,
     case_a_queued_make_is_no_build, case_at_a_disk_floor_what_writes_stops, case_names_and_zombies, case_a_command_line_that_is_no_text, case_pressure, case_not_ours, case_growing,
-    case_a_small_writer_is_counted, case_the_watcher_outlives_its_own_trouble, case_a_commit_finds_a_name_bound_nowhere, case_a_commit_holds_what_is_staged, case_a_stamp_is_of_a_whole_run_of_these_bytes, case_the_self_test_is_spared_and_a_job, case_a_job_named_like_the_guard_is_a_job, case_a_clean_leaves_a_watcher_named, case_a_guard_changed_holds_from_then, case_a_root_remade_is_another, case_a_root_that_is_gone_stays_gone, case_a_stale_pid_names_nobody, case_the_watcher_stays_while_a_job_runs,
+    case_a_small_writer_is_counted, case_the_watcher_outlives_its_own_trouble, case_a_commit_finds_a_name_bound_nowhere, case_a_commit_holds_what_is_staged, case_a_stamp_is_of_a_whole_run_of_these_bytes, case_the_self_test_is_spared_and_a_job, case_a_job_named_like_the_guard_is_a_job, case_a_clean_leaves_a_watcher_named, case_a_removal_of_a_root_goes_through_its_watcher, case_a_guard_changed_holds_from_then, case_a_root_remade_is_another, case_a_root_that_is_gone_stays_gone, case_a_stale_pid_names_nobody, case_the_watcher_stays_while_a_job_runs,
     case_what_is_not_the_table_is_blindness, case_a_blind_watcher_is_said, case_the_hook_passes_nothing_it_cannot_read, case_killing_by_name, case_hook, case_a_damaged_log, case_run,
 )
 
