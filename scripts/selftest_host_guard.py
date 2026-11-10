@@ -477,6 +477,10 @@ def case_a_terminal_vouches_for_nothing() -> None:
     as_the_kernel_holds_it = g.Process(1, 1, " ".join(spaced), "", "", 0, argv=spaced)
     check("a terminal whose flag's value holds a space is a terminal, and spared", g.is_terminal_shell(as_the_kernel_holds_it) and g.protected(as_the_kernel_holds_it), as_the_kernel_holds_it.words)
     check("and a shell given a script after such a value is a job", not g.is_terminal_shell(g.Process(1, 1, " ".join((*spaced, "job.sh")), "", "", 0, argv=(*spaced, "job.sh"))))
+    # A first argument that is empty names nothing: the file a process runs is its name, never the next word `ps` shows, a word of its environment among them.
+    nameless = g.Process(1, 1, "SHELL=/bin/zsh", "", "/bin/cat", 0, argv=("",))
+    check("a process whose first argument is empty goes by the file it runs", nameless.name == "cat" and not g.is_terminal_shell(nameless) and not g.protected(nameless), nameless.name)
+    check("and one named for an agent by a word of its environment is no agent", not g.is_agent(g.Process(1, 1, "CLAUDECODE=1", "", "/bin/cat", 0, argv=("",))))
     check("where the kernel gives no arguments the one line is read, as before", g.Process(1, 1, "bash -norc", "", "", 0).words == ["-norc"] and g.Process(1, 1, "x", "", "", 0, argv=("bash", "a b", "")).words == ["a b", ""])
     # And a real one, read from this host's own table.
     home = fresh("spaced-terminal") / "Visual Studio Code.app"
@@ -1048,6 +1052,11 @@ def case_a_root_spelt_relatively_stays_that_root() -> None:
         check("a watcher named a relative root reads for it", until(sampled.exists))
         before = sampled.read_text()
         check("and goes on reading for it, from wherever it went", until(lambda: sampled.read_text() != before) and up(watcher))
+        # Asked after from another directory, by its root's whole path: it is that root's watcher, and `stop` stops it.
+        said = subprocess.run([*PY, str(copy), "status", "--root", str(repo / "sub")], capture_output=True, text=True, errors="replace", timeout=30, cwd="/").stdout
+        check("a watcher given its root relatively is known from another directory", "watcher: running" in said, said)
+        subprocess.run([*PY, str(copy), "stop", "--root", str(repo / "sub")], capture_output=True, timeout=30, cwd="/")
+        check("and `stop` from there stops it", until(lambda: not up(watcher), 10))
     finally:
         subprocess.run([*PY, str(copy), "stop", "--root", str(repo / "sub")], capture_output=True, timeout=30)
 
@@ -1634,6 +1643,32 @@ def case_a_command_line_that_is_no_text() -> None:
     check("a command line that is no text does not blind the watcher", settle(big), events(scope))
     check("and is not an error", not any(event["kind"] == "unread" for event in events(scope)), events(scope))
     check("and that process is left alone", up(strange))
+    # A row of `ps` ends at a line feed and nowhere else: U+2028 or U+2029 in an argument, which `ps` prints as it is, ends no row. What `ps` said is put in here, with no such
+    # process started: one would blind every guard on the host that reads as the guard before this did.
+    me, real = os.getpid(), g.subprocess.run
+
+    def as_ps_wrote(command, **how):
+        if command[:1] != ["ps"]:
+            return real(command, **how)
+        rows = b"".join([
+            f"{me} 1 {os.getuid()} S 2048 python3 selftest".encode() + b"\n",
+            f"70001 {me} {os.getuid()} S 1024 bash -c sleep a note".encode() + "\u2028".encode() + f"70002 {me} {os.getuid()} S 1024 /bin/sleep 60".encode() + b"\n",
+            f"70003 {me} {os.getuid()} S 1024 bash -c sleep a note".encode() + "\u2029".encode() + b"that goes on for some words more\n",
+            b"\n",
+            b"cut short\n",
+        ])
+        return subprocess.CompletedProcess(command, 0, rows.decode("utf-8", "replace") if how.get("text") else rows, b"")
+
+    g.subprocess.run = as_ps_wrote
+    try:
+        try:
+            table = {each.pid: each for each in g.processes()}
+        except ValueError as error:
+            table = {"raised": error}
+    finally:
+        g.subprocess.run = real
+    check("a line separator in an argument ends no row, and blinds no guard", sorted(table) == [me, 70001, 70003], table)
+    check("and writes no row of its own, what follows it being that argument's", 70002 not in table and "70002" in table.get(70001, g.Process(0, 0, "", "", "", 0)).command, table)
 
 
 def case_pressure() -> None:
@@ -1790,6 +1825,7 @@ def case_a_stale_pid_names_nobody() -> None:
         check("nor does one naming another root's watcher", g.watcher_pid(scope) is None and g.watcher_pid(elsewhere) == other.pid and up(other), (g.watcher_pid(scope), g.watcher_pid(elsewhere), other.pid))
         other.terminate()
         other.wait(timeout=5)
+        check("a root a watcher was given relatively names no other root", g.watches(["python3", "host_guard.py", "watch", "--root", "rel/sub"], scope) and g.watches(["python3", "host_guard.py", "watch", "--root", "."], scope))
         check("a guard's watcher is one of the root it names, or of any where it names none", g.watches(["python3", "-I", "-B", "/x/host_guard.py", "watch", "--root", str(scope)], scope) and not g.watches(["python3", "host_guard.py", "watch", "--root", str(elsewhere)], scope) and g.watches(["python3", "host_guard.py", "watch"], scope) and not g.watches(["", "x", "host_guard.py", "watch"], scope))
         # An argument that is empty is one, the first among them, told from the padding the kernel puts after the executable's path; and nothing after the last is taken for one.
         for length in range(8):

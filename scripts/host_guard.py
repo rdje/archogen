@@ -297,8 +297,9 @@ class Process:
         # A process that renamed itself, `exec -a`, does not begin with it, and goes by the name it chose.
         if self.exe and self.command.startswith(self.exe):
             return os.path.basename(self.exe)
-        if self.argv and self.argv[0]:
-            return os.path.basename(self.argv[0])
+        if self.argv:
+            # A first argument that is empty names nothing, and `ps`'s line then shows the next word or a word of the environment: the file it runs is its name.
+            return os.path.basename(self.argv[0] or self.exe)
         return os.path.basename(self.command.split(" ", 1)[0]) if self.command else ""
 
     @property
@@ -440,16 +441,21 @@ def processes() -> list[Process]:
     """This user's processes, nobody else's. A zombie holds nothing and cannot be stopped again, so it is not among them."""
     me = os.getuid()
     # A command line is bytes, and any process may hold ones that are no text. One such process must not blind the watcher.
-    listed = subprocess.run(["ps", "-axww", "-o", "pid=,ppid=,uid=,stat=,rss=,command="], capture_output=True, text=True, errors="replace", timeout=30, check=True)
+    listed = subprocess.run(["ps", "-axww", "-o", "pid=,ppid=,uid=,stat=,rss=,command="], capture_output=True, timeout=30, check=True)
     table = []
-    for line in listed.stdout.splitlines():
-        parts = line.split(None, 5)
-        if len(parts) < 6 or int(parts[2]) != me or parts[3].startswith("Z"):
+    # `ps` writes one process to a line, a line feed inside an argument as `\012`: so a row ends at a line feed and nowhere else. Read as text, a row would also end at U+2028, at U+2029
+    # and at whatever else a text's lines end at, the rest of that argument would read as a row of its own, and one such process anywhere on the host would blind every guard.
+    for row in listed.stdout.split(b"\n"):
+        parts = row.decode("utf-8", "replace").split(None, 5)
+        try:
+            pid, ppid, uid, kilobytes = int(parts[0]), int(parts[1]), int(parts[2]), int(parts[4])
+        except (IndexError, ValueError):
+            continue  # No row of a process: an empty line, or one cut short.
+        if len(parts) < 6 or uid != me or parts[3].startswith("Z"):
             continue
-        pid = int(parts[0])
         used = NATIVE.usage(pid)
-        held, written = (int(parts[4]) * 1024, 0) if used is None else used
-        table.append(Process(pid, int(parts[1]), parts[5], NATIVE.cwd(pid), NATIVE.exe(pid), held, written, argv=tuple(NATIVE.arguments(pid))))
+        held, written = (kilobytes * 1024, 0) if used is None else used
+        table.append(Process(pid, ppid, parts[5], NATIVE.cwd(pid), NATIVE.exe(pid), held, written, argv=tuple(NATIVE.arguments(pid))))
     # A table that does not hold the one reading it is not the table: `ps` answering nothing, or cut short, must read as blind and never as calm.
     if not any(process.pid == os.getpid() for process in table):
         raise ValueError("`ps` does not list the process reading it")
@@ -1128,8 +1134,8 @@ def runs_the_file(root: Path) -> bool:
 
 
 def watches(arguments: list[str], root: Path | None = None) -> bool:
-    """Whether a process given these is a guard's watcher, of `root` where one is named: an interpreter given a file named as the guard is, first, and told to watch, a root it names being
-    that one. By its arguments, as the kernel holds them, and not by its file, which an upgrade can remove under it, nor by its being an interpreter, which any job is."""
+    """Whether a process given these is a guard's watcher, of `root` where one is named: an interpreter given a file named as the guard is, first, and told to watch, a root it names by
+    its whole path being that one. By its arguments, as the kernel holds them, and not by its file, which an upgrade can remove under it, nor by its being an interpreter, which any job is."""
     at = 1
     while at < len(arguments) and arguments[at].startswith("-"):
         at += 2 if arguments[at] in PYTHON_FLAGS_WITH_VALUES else 1
@@ -1138,7 +1144,9 @@ def watches(arguments: list[str], root: Path | None = None) -> bool:
     told = arguments[at + 2:]
     if root is None or "--root" not in told[:-1]:
         return True
-    return canonical(Path(told[told.index("--root") + 1])) == canonical(root)
+    named = told[told.index("--root") + 1]
+    # A root given relatively lay from where the watcher started, which nothing says now: it names no other root, and the lock and the note still say whose it is.
+    return not os.path.isabs(named) or canonical(Path(named)) == canonical(root)
 
 
 def watcher_pid(root: Path) -> int | None:
