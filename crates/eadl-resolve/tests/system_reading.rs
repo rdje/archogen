@@ -15,6 +15,10 @@
 //! `requesters::hardware`, which a context that had read the generator's wrote: it is held to check (5)'s on every
 //! system as well (leaf `M3.5.5.7.3`), so the checker reads one hardware for every check.
 //!
+//! ⭐ **And presence's.** `archogen check` reads each system on its own hardware, by `eadl_model::presence::hardware`
+//! (leaf `M3.4.16`), which lies below the search's crate and cannot call it: it is held to the generator's on every
+//! system here, tracked and generated, so a block presence lets answer is one the search could bind.
+//!
 //! ⭐ **And every shape the tracked systems do not hold.** The tracked systems are written to be read, so few name a
 //! service from a block, a declaration from inside `offers` or a task's `needs`: a second leg generates systems — a
 //! seeded sequence, the same on every run — whose declarations name each other at every position the language gives
@@ -158,6 +162,15 @@ fn compare(shown: &str, program: &Program, wrong: &mut Vec<String>) -> usize {
             wrong.push(format!(
                 "{shown}: `{name}`'s hardware — checks (2) and (3)'s {shared:?}, check (5)'s {:?}",
                 checker.hardware
+            ));
+        }
+        // Presence reads a system on its own hardware too, `eadl_model::presence::hardware` (leaf `M3.4.16`): a reading of
+        // rule 7 below the search's crate, held to the generator's on every system here.
+        let presence = eadl_model::presence::hardware(decl, declarations);
+        if presence != generator.hardware {
+            wrong.push(format!(
+                "{shown}: `{name}`'s hardware — presence's {presence:?}, the generator's {:?}",
+                generator.hardware
             ));
         }
         if generator.reached != checker.reached {

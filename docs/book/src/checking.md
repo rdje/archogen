@@ -170,6 +170,13 @@ archogen: missing-fact: 1 diagnostic(s) in docs/semantics/cases/missing-relevant
 That is F04, a relevant capability left undescribed: the service needs the counter's wrap behaviour, and no block
 says whether it has one, so no decision resting on it can be made.
 
+A fact of a description's own, one the capability vocabulary does not declare, answers only where the machine has it.
+A system's hardware is what its `platform` clause, its own `uses` and `needs` or its tasks' name, and what those blocks
+and platforms name in turn. A block the description declares beside it, which no part of that hardware names, is some
+other machine's: what it offers answers nothing the system needs, and the refusal says so, naming the block. So a
+description of two systems is read once for each, on its own hardware. A fact the vocabulary does declare is the
+search's to bind, and it refuses a provider outside the hardware itself (`docs/semantics/model.md` §2).
+
 `uc3`, `examples/alternative-timer`, was this section's example until `2026-10-27`. Its platform offers only a
 relative delay timer, and its workload requires absolute deadlines. The engine's adapter that programs one through the
 other needs the timer's modulus, which the description did not state, so the refusal named that one fact (leaf

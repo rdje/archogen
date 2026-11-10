@@ -110,6 +110,17 @@ const KIND_MODULES: &[(&str, &str)] = &[
     ),
 ];
 
+/// Each fact the shipped capability vocabulary declares, by name: the check reads a fact outside it on each system's
+/// own hardware, the search binding nothing for one (model §2; leaf `M3.4.16`). None where the vocabulary does not
+/// read, which `resolve` reports as the tool's failure and a check then reads every description whole.
+fn vocabulary_facts(
+    kinds: &eadl_model::kind::Registry,
+) -> Option<std::collections::BTreeSet<String>> {
+    let mut sources = eadl_front::SourceMap::new();
+    let vocabulary = eadl_resolve::vocabulary::Vocabulary::shipped(&mut sources, kinds).ok()?;
+    Some(vocabulary.facts().map(|fact| fact.name.clone()).collect())
+}
+
 /// The shipped kind modules, owned so a [`SourceMap`] can take them.
 #[must_use]
 pub fn kind_modules() -> Vec<(String, String)> {
@@ -424,7 +435,16 @@ fn judge(request: &Request<'_>, elaborated: &mut Option<Program>) -> Response {
         if let Some(kind) = kind_module(&sources, id) {
             return refuse_kind_module(request.name, &kind, sources);
         }
-        let outcome = eadl_model::check::check(&sources, id, &registry, active);
+        let outcome = match vocabulary_facts(&registry) {
+            Some(vocabulary) => eadl_model::check::check_with_vocabulary(
+                &sources,
+                id,
+                &registry,
+                active,
+                &vocabulary,
+            ),
+            None => eadl_model::check::check(&sources, id, &registry, active),
+        };
         return Response::judged(outcome, None, active, id, sources);
     }
 
@@ -482,7 +502,15 @@ fn judge(request: &Request<'_>, elaborated: &mut Option<Program>) -> Response {
             format!("{name} = {} {}", instance.module, instance.version)
         })
         .collect();
-    let outcome = check_program(&program, &registry, active);
+    let outcome = match vocabulary_facts(&registry) {
+        Some(vocabulary) => eadl_model::check::check_program_with_vocabulary(
+            &program,
+            &registry,
+            active,
+            &vocabulary,
+        ),
+        None => check_program(&program, &registry, active),
+    };
     *elaborated = Some(program);
     Response::judged(outcome, Some(instances), active, id, sources)
 }

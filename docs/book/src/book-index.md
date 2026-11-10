@@ -632,10 +632,10 @@ a change that leaves it stale, so it is never edited by hand.
   system](building.md), [The S0 early generation path](s0.md), [What is versioned, and what changing it
   costs](versions.md), [Annex C: Trust proof records](annex-trust-proofs.md)
 - **provider** — [definition](glossary.md), [Introduction](introduction.md), [The boundary: functionality versus
-  implementation](boundary.md), [Presence, absence, and relevance](presence.md), [Matching an offer to a
-  requirement](matching.md), [Checking a plan](plan-check.md), [Building a system](building.md), [The S0 early
-  generation path](s0.md), [The archogen command line](cli.md), [The engine API](engine-api.md), [What is versioned, and
-  what changing it costs](versions.md)
+  implementation](boundary.md), [Presence, absence, and relevance](presence.md), [Checking a description](checking.md),
+  [Matching an offer to a requirement](matching.md), [Checking a plan](plan-check.md), [Building a system](building.md),
+  [The S0 early generation path](s0.md), [The archogen command line](cli.md), [The engine API](engine-api.md), [What is
+  versioned, and what changing it costs](versions.md)
 - Publication guard for renderer control bytes — [Annex C: Trust proof
   records](annex-trust-proofs.md#publication-guard-for-renderer-control-bytes)
 

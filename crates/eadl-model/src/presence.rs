@@ -187,6 +187,9 @@ pub struct FactMap {
     composes: BTreeMap<String, Vec<String>>,
     /// What a declaration read for its name alone, or its asking alone, says beside that: it answers nothing, and stays visible (model §2 rule 4).
     mentioned: BTreeSet<String>,
+    /// The blocks and platforms that are none of the hardware of the system this map is read for, by [`collect_silent`](Self::collect_silent): what one offers or declares
+    /// absent answers no need there, and it is still declared, compared with itself, and visible (model §8 rule 7, leaf `M3.4.16`).
+    silent: BTreeSet<String>,
 }
 
 /// The outcome of a presence check.
@@ -203,6 +206,8 @@ pub struct PresenceReport {
     pub missing: Vec<String>,
     /// Each fact of the closure and what pulled it in, from [`FactMap::closure_origins`].
     pub pulled_in_by: Vec<(String, Option<String>)>,
+    /// Each refusal of a required fact, rules 2 and 3's, with the fact it is of: those of `diagnostics` that are no contradiction.
+    pub judged: Vec<(String, Diagnostic)>,
     /// Everything wrong, in the order found.
     pub diagnostics: Vec<Diagnostic>,
 }
@@ -336,12 +341,50 @@ impl FactMap {
         }
     }
 
-    /// What the description says about one fact.
+    /// [`collect`](Self::collect), for a block or a platform that is none of the hardware of the system this map is read for (model §8 rule 7; leaf `M3.4.16`): what it offers or
+    /// declares absent answers no need there, and what it names or needs asks nothing. It is still a declaration: its own contradiction is one, and all it says stays visible.
+    pub fn collect_silent(&mut self, form: &Form) {
+        let (needs, requested) = (
+            std::mem::take(&mut self.needs),
+            std::mem::take(&mut self.requested),
+        );
+        self.collect(form);
+        let asked: Vec<String> = self
+            .needs
+            .iter()
+            .flat_map(|(owner, edges)| {
+                std::iter::once(owner).chain(edges.iter().map(|(name, _)| name))
+            })
+            .chain(self.requested.iter().map(|(name, _)| name))
+            .cloned()
+            .collect();
+        self.mentioned.extend(asked);
+        self.needs = needs;
+        self.requested = requested;
+        if let Some(name) = form.items().get(1).and_then(Form::as_symbol) {
+            self.silent.insert(name.to_string());
+        }
+    }
+
+    /// Each statement of `fact` among `stated`, the offers or the absences, that a declaration answering here makes.
+    fn answering<'m>(
+        &'m self,
+        stated: &'m BTreeMap<String, Vec<Declaration>>,
+        fact: &str,
+    ) -> impl Iterator<Item = &'m Declaration> {
+        stated
+            .get(fact)
+            .into_iter()
+            .flatten()
+            .filter(|declaration| !self.silent.contains(&declaration.declared_by))
+    }
+
+    /// What the description says about one fact, by the declarations that answer here.
     #[must_use]
     pub fn presence(&self, fact: &str) -> Presence {
-        if self.offered.contains_key(fact) {
+        if self.answering(&self.offered, fact).next().is_some() {
             Presence::Offered
-        } else if self.absent.contains_key(fact) {
+        } else if self.answering(&self.absent, fact).next().is_some() {
             Presence::Absent
         } else {
             Presence::Undescribed
@@ -541,35 +584,40 @@ impl FactMap {
 
         // ── F04 / F05: relevance decides whether an unknown fact matters ─────────────────────
         let mut missing = Vec::new();
+        let mut judged = Vec::new();
         for fact in &closure {
-            if out_of_profile.contains(fact) {
-                continue;
-            }
-            // An explicit absence is checked FIRST, before anything can satisfy the name: a
-            // block that declares a capability absent does not stop being absent because it is
-            // also declared.
-            if self.presence(fact) == Presence::Absent {
-                let declaration = &self.absent[fact][0];
-                let adapters = match self.path(fact, &kinds) {
-                    // An adapter's offer satisfies past a declared absence (`SR-H9`): the search's to judge.
-                    Path::Whole => continue,
-                    Path::Partial {
-                        kind,
-                        declaration: at,
-                        undescribed,
-                    } => {
-                        diagnostics.push(partial(fact, &kind, &at, &undescribed).with_secondary(
-                            Label::new(
-                                declaration.span,
-                                format!("declared absent by `{}`", declaration.declared_by),
-                            ),
-                        ));
-                        continue;
-                    }
-                    Path::Nowhere(kinds) => nowhere(&kinds),
-                    Path::NoKind => String::new(),
-                };
-                diagnostics.push(
+            let said = diagnostics.len();
+            'judged: {
+                if out_of_profile.contains(fact) {
+                    break 'judged;
+                }
+                // An explicit absence is checked FIRST, before anything can satisfy the name: a
+                // block that declares a capability absent does not stop being absent because it is
+                // also declared.
+                if self.presence(fact) == Presence::Absent {
+                    let Some(declaration) = self.answering(&self.absent, fact).next() else {
+                        break 'judged;
+                    };
+                    let adapters = match self.path(fact, &kinds) {
+                        // An adapter's offer satisfies past a declared absence (`SR-H9`): the search's to judge.
+                        Path::Whole => break 'judged,
+                        Path::Partial {
+                            kind,
+                            declaration: at,
+                            undescribed,
+                        } => {
+                            diagnostics.push(
+                                partial(fact, &kind, &at, &undescribed).with_secondary(Label::new(
+                                    declaration.span,
+                                    format!("declared absent by `{}`", declaration.declared_by),
+                                )),
+                            );
+                            break 'judged;
+                        }
+                        Path::Nowhere(kinds) => nowhere(&kinds),
+                        Path::NoKind => String::new(),
+                    };
+                    diagnostics.push(
                     Diagnostic::error(
                         "infeasible-configuration",
                         format!("`{fact}` is required by this system but declared absent"),
@@ -584,46 +632,78 @@ impl FactMap {
                         format!("declared absent by `{}`", declaration.declared_by),
                     )),
                 );
-                continue;
-            }
+                    break 'judged;
+                }
 
-            // A name that has outgoing `needs` edges is a service, satisfied by its parts
-            // rather than by being offered itself. A name this description DECLARES is
-            // satisfied by its declaration — its own obligations are checked there.
-            if self.needs.contains_key(fact) || self.declared.contains(fact) {
-                continue;
-            }
-            match self.presence(fact) {
-                Presence::Offered => {}
-                Presence::Absent => unreachable!("absence was handled above"),
-                Presence::Undescribed => {
-                    let adapters = match self.path(fact, &kinds) {
-                        Path::Whole => continue,
-                        Path::Partial {
-                            kind,
-                            declaration,
-                            undescribed,
-                        } => {
-                            missing.push(fact.clone());
-                            diagnostics.push(partial(fact, &kind, &declaration, &undescribed));
-                            continue;
+                // A name that has outgoing `needs` edges is a service, satisfied by its parts
+                // rather than by being offered itself. A name this description DECLARES is
+                // satisfied by its declaration — its own obligations are checked there.
+                if self.needs.contains_key(fact) || self.declared.contains(fact) {
+                    break 'judged;
+                }
+                match self.presence(fact) {
+                    Presence::Offered => {}
+                    Presence::Absent => unreachable!("absence was handled above"),
+                    Presence::Undescribed => {
+                        let adapters = match self.path(fact, &kinds) {
+                            Path::Whole => break 'judged,
+                            Path::Partial {
+                                kind,
+                                declaration,
+                                undescribed,
+                            } => {
+                                missing.push(fact.clone());
+                                diagnostics.push(partial(fact, &kind, &declaration, &undescribed));
+                                break 'judged;
+                            }
+                            Path::Nowhere(kinds) => nowhere(&kinds),
+                            Path::NoKind => String::new(),
+                        };
+                        missing.push(fact.clone());
+                        // What offers it and is none of the system's hardware is named: the fact is described, on a machine the system does not have.
+                        let elsewhere: Vec<String> = self
+                            .offered
+                            .get(fact)
+                            .into_iter()
+                            .flatten()
+                            .map(|declaration| format!("`{}`", declaration.declared_by))
+                            .collect();
+                        if !elsewhere.is_empty() {
+                            let names = elsewhere.join(", ");
+                            diagnostics.push(Diagnostic::error(
+                            "missing-fact",
+                            format!(
+                                "`{fact}` is required by this system and nothing of its hardware describes it: {names} \
+                                 offers it, and is none of the blocks and platforms the system has"
+                            ),
+                            Label::new(self.request_span(fact), "required through this request"),
+                            format!(
+                                "a system's hardware is what its `platform` clause, its own `uses` and `needs` or its \
+                                 tasks' name, and what those name in turn: name {names} there, a platform's \
+                                 `(requires (uses …))` among it, or declare `{fact}` on a block or platform the system \
+                                 has{adapters}"
+                            ),
+                        ));
+                            break 'judged;
                         }
-                        Path::Nowhere(kinds) => nowhere(&kinds),
-                        Path::NoKind => String::new(),
-                    };
-                    missing.push(fact.clone());
-                    diagnostics.push(Diagnostic::error(
-                        "missing-fact",
-                        format!("`{fact}` is required by this system and nothing describes it"),
-                        Label::new(self.request_span(fact), "required through this request"),
-                        format!(
+                        diagnostics.push(Diagnostic::error(
+                            "missing-fact",
+                            format!("`{fact}` is required by this system and nothing describes it"),
+                            Label::new(self.request_span(fact), "required through this request"),
+                            format!(
                             "declare `{fact}` as offered or absent on the platform — it is inside \
                              the dependency closure of what this system requests, so no decision \
                              that depends on it can be made{adapters}"
                         ),
-                    ));
+                        ));
+                    }
                 }
             }
+            judged.extend(
+                diagnostics[said..]
+                    .iter()
+                    .map(|diagnostic| (fact.clone(), diagnostic.clone())),
+            );
         }
 
         let outside_closure: Vec<String> = self
@@ -637,6 +717,7 @@ impl FactMap {
             outside_closure,
             missing,
             pulled_in_by: self.closure_origins(),
+            judged,
             diagnostics,
         }
     }
@@ -656,7 +737,11 @@ impl FactMap {
         };
         let mut partial = None;
         for kind in &adding {
-            for declaration in self.composes.keys() {
+            for declaration in self
+                .composes
+                .keys()
+                .filter(|name| !self.silent.contains(*name))
+            {
                 let offered: Vec<&String> = kind
                     .beneath
                     .iter()
@@ -751,6 +836,50 @@ pub fn composition(form: &Form) -> Vec<String> {
         }
     }
     out
+}
+
+/// A system's hardware (model §8 rule 7): the blocks and platforms its `platform` clause, its own `uses` and `needs` or its
+/// tasks' name, and every block or platform those name in turn through `uses` or `needs`, a clause of their own or inside
+/// `requires`, at any depth. A declaration of another kind ends the path, and `refines` is no edge. The search reads the
+/// same of a system, and `crates/eadl-resolve/tests/system_reading.rs` holds the two equal over every tracked description and
+/// every generated shape.
+#[must_use]
+pub fn hardware(system: &Form, declarations: &[Form]) -> BTreeSet<String> {
+    fn named(form: &Form, out: &mut Vec<String>) {
+        match form.head() {
+            Some("offers" | "absent" | "refines") => {}
+            Some("uses" | "needs") => out.extend(
+                form.items()
+                    .iter()
+                    .skip(1)
+                    .filter_map(Form::as_symbol)
+                    .map(str::to_string),
+            ),
+            _ => {
+                for item in form.items().iter().skip(1) {
+                    if matches!(item, Form::List { .. }) {
+                        named(item, out);
+                    }
+                }
+            }
+        }
+    }
+    let declared: BTreeMap<&str, &Form> = declarations
+        .iter()
+        .filter(|form| matches!(form.head(), Some("defblock" | "defplatform")))
+        .filter_map(|form| Some((form.items().get(1)?.as_symbol()?, form)))
+        .collect();
+    let mut found = BTreeSet::new();
+    let mut next = Vec::new();
+    named(system, &mut next);
+    while let Some(name) = next.pop() {
+        if let Some(form) = declared.get(name.as_str()) {
+            if found.insert(name) {
+                named(form, &mut next);
+            }
+        }
+    }
+    found
 }
 
 /// The names a clause mentions: a bare symbol argument, or the head of a nested form.

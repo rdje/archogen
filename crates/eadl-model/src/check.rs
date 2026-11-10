@@ -202,7 +202,41 @@ pub fn check(
             closure: Closure::default(),
         };
     }
-    passes(forms, registry, active_profile, Vec::new())
+    passes(forms, registry, active_profile, Vec::new(), None)
+}
+
+/// [`check`], told each fact the capability vocabulary declares: a fact it does not declare is then read on each
+/// system's own hardware (model §2; leaf `M3.4.16`). The vocabulary is the search's to read and this crate lies below
+/// the search's, so what calls both hands the names down, and [`check`] alone reads every description whole.
+#[must_use]
+pub fn check_with_vocabulary(
+    sources: &SourceMap,
+    source: SourceId,
+    registry: &Registry,
+    active_profile: &Profile,
+    vocabulary: &BTreeSet<String>,
+) -> Outcome {
+    let (document, read_diagnostics) = read(sources, source);
+    let forms: Vec<Form> = document
+        .forms
+        .into_iter()
+        .filter(|form| !is_identifier(form))
+        .collect();
+    if read_diagnostics.has_errors() {
+        return Outcome {
+            verdict: Verdict::InvalidDescription,
+            diagnostics: read_diagnostics.items().to_vec(),
+            declarations: forms,
+            closure: Closure::default(),
+        };
+    }
+    passes(
+        forms,
+        registry,
+        active_profile,
+        Vec::new(),
+        Some(vocabulary),
+    )
 }
 
 /// Check an elaborated module tree, by `docs/semantics/reference.md` §6 rules 9 and 10.
@@ -216,7 +250,21 @@ pub fn check_program(program: &Program, registry: &Registry, active_profile: &Pr
     let (forms, unresolved) = resolved_declarations(program);
     let mut findings = Vec::new();
     push(&mut findings, Verdict::InvalidDescription, unresolved);
-    passes(forms, registry, active_profile, findings)
+    passes(forms, registry, active_profile, findings, None)
+}
+
+/// [`check_program`], told each fact the capability vocabulary declares, as [`check_with_vocabulary`] is.
+#[must_use]
+pub fn check_program_with_vocabulary(
+    program: &Program,
+    registry: &Registry,
+    active_profile: &Profile,
+    vocabulary: &BTreeSet<String>,
+) -> Outcome {
+    let (forms, unresolved) = resolved_declarations(program);
+    let mut findings = Vec::new();
+    push(&mut findings, Verdict::InvalidDescription, unresolved);
+    passes(forms, registry, active_profile, findings, Some(vocabulary))
 }
 
 /// A module tree's declarations as one description, by `docs/semantics/reference.md` §6 rules 9 and 10: each renamed
@@ -337,6 +385,7 @@ fn passes(
     registry: &Registry,
     active_profile: &Profile,
     mut findings: Vec<Finding>,
+    vocabulary: Option<&BTreeSet<String>>,
 ) -> Outcome {
     // ── boundary (F27) ───────────────────────────────────────────────────────────────────────
     let mut boundary_errors = Vec::new();
@@ -402,7 +451,50 @@ fn passes(
         inside: presence.pulled_in_by.clone(),
         outside: presence.outside_closure.clone(),
     };
-    for diagnostic in presence.diagnostics {
+    // A fact the vocabulary does not declare is judged by presence alone, the search binding nothing for it, so it is
+    // read as the search reads a system: on that system's own hardware (model §8 rule 7; leaf `M3.4.16`). A block or a
+    // platform outside it neither asks nor answers there, and another system asks in its own reading. What the
+    // description read whole says of such a fact gives way to that; a fact of the vocabulary is the search's to bind
+    // or refuse, and is read as before. A description of no system is read whole, as every one is where the caller
+    // names no vocabulary.
+    let systems: Vec<&Form> = forms
+        .iter()
+        .filter(|form| form.head() == Some("defsystem"))
+        .collect();
+    // One reading is held at a time: a map names its declaration beside each fact, so two of a deep module tree's would
+    // hold twice what one request may (`crates/archogen-api/tests/cost.rs`).
+    drop(facts);
+    let mut said: Vec<Diagnostic> = presence.diagnostics;
+    if let Some(vocabulary) = vocabulary.filter(|_| !systems.is_empty()) {
+        said.retain(|diagnostic| {
+            !presence
+                .judged
+                .iter()
+                .any(|(fact, of_it)| of_it == diagnostic && !vocabulary.contains(fact))
+        });
+        for system in systems {
+            let has = crate::presence::hardware(system, &forms);
+            let mut on_its_hardware = FactMap::new();
+            for form in &forms {
+                let name = form.items().get(1).and_then(Form::as_symbol);
+                if form.head() == Some("defsystem") && !std::ptr::eq(system, form) {
+                    on_its_hardware.declare(form);
+                } else if matches!(form.head(), Some("defblock" | "defplatform"))
+                    && !name.is_some_and(|name| has.contains(name))
+                {
+                    on_its_hardware.collect_silent(form);
+                } else {
+                    on_its_hardware.collect(form);
+                }
+            }
+            for (fact, diagnostic) in on_its_hardware.check_excluding(&out_of_profile).judged {
+                if !vocabulary.contains(&fact) && !said.contains(&diagnostic) {
+                    said.push(diagnostic);
+                }
+            }
+        }
+    }
+    for diagnostic in said {
         push(
             &mut findings,
             Verdict::of_code(diagnostic.code),

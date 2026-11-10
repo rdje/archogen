@@ -105,6 +105,19 @@ A platform declares what it **offers** and what it declares **absent**; a system
    `missing-fact`, its repair the facts to describe; otherwise rule 2 or 3 reads as above, its repair naming what an
    adapter would need. Presence reads names alone, so a path by name that fails by value, or one at a block or platform
    outside the system's hardware, is accepted here and refused by the search until `M3.4.7`.
+   **A fact the vocabulary does not declare is read on each system's own hardware** (§8 rule 7; leaf `M3.4.16`). The
+   search binds nothing for such a fact, so rules 2 and 3 alone judge it, and they read it as the search reads a
+   system. What a block or a platform offers or declares absent answers the system's need only where it is of that
+   system's hardware, and what it names or needs asks nothing of a system that does not have it. So a fact only a
+   block outside offers is `missing-fact`, the refusal naming the block and what a system's hardware is; one only it
+   declares absent is undescribed there, not infeasible; and it gives an adapter no path. A description of several
+   systems is read system by system, what two are both refused said once, and one of no system is read whole. The
+   block is still a declaration: rule 1 judges what it says of itself, and what it offers stays visible outside the
+   closure (rule 4). Before this nothing refused a plan for a machine without the device. A fact the vocabulary does
+   declare is read as above, the description whole, and a provider outside the hardware is the search's conflict.
+   `eadl_model::presence::hardware` is this reading of a system, held equal to the search's on every system
+   `crates/eadl-resolve/tests/system_reading.rs` reads. The vocabulary is the search's to read, so the commands hand
+   its facts' names to the check (`check_with_vocabulary`), and a check told none reads every description whole.
 4. **What lies outside the closure fails nothing, and stays visible** (§5.3). An undescribed fact that nothing
    the description requests depends on is not an error. It is reported as metadata: `archogen check` prints,
    after its verdict, the closure with what pulled each fact in and then every fact outside it
