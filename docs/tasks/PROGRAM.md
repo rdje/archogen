@@ -1340,8 +1340,16 @@ mdBook that is the director's window into the project.
   Commit: `ARCHOGEN-PROGRAM-1272 (leaf PROGRAM.136)`
 
 - ID: `PROGRAM.137`
-  Status: `pending` — filed `2026-11-13` at session start: fsmgen's `LIVE_DOCUMENT_SIZE_CONTAINMENT.md` changed its neutral body at `58d5edef7` (`2026-11-04`, "remove all book content size limits"), after the `0fa794310` adopted here; the adoption note admits a later revision only by an owned review.
+  Status: `done` — `2026-11-13`; filed at session start: fsmgen's `LIVE_DOCUMENT_SIZE_CONTAINMENT.md` changed its neutral body at `58d5edef7` (`2026-11-04`, "remove all book content size limits"), after the `0fa794310` adopted here; the adoption note admits a later revision only by an owned review.
   Goal: review that revision against this repository's own rules and adopt it verbatim, the note's and the ledger's provenance moved with it, or record why not.
+  Acceptance:
+    - [x] ROOT CAUSE — WHY: the source moved and the copy did not; WHERE, `git -C <fsmgen> log 0fa794310..HEAD -- LIVE_DOCUMENT_SIZE_CONTAINMENT.md` → `58d5edef7` and `c83948125`, the second reviewed by `PROGRAM.57` as fsmgen's local part alone; the body here hashed `af130de4…7aa2`, the source's `f5fbff05…1e4b`. The other three sources are unchanged: fsmgen's README policy body `77a1e934…` and adoption guide `8f77fa39…` as adopted, and pgen's claim-verification policy 285 lines, 18 166 bytes, last changed `178251cce`, before its adoption.
+    - [x] FIX — `python3 -I -B target/p137/adopt.py .`: the body replaced by the source's lines 191–549 at `58d5edef7`, read by `git show` and nothing written there; the adoption note and the ledger's `fsmgen` entry name the revision, the span and the digest. The revision adds fsmgen's user-facing book exception, which agrees with this repository's own ruling of `2026-10-18` that the book's growth is unbounded (the inventory's `docs/book/src/` row, `README_POLICY.md`'s `docs/book/` row): no limit here moves.
+    - [x] ADDRESSED — `diff` of the body against `git show 58d5edef7:LIVE_DOCUMENT_SIZE_CONTAINMENT.md` lines 191–549 → identical; its sha256 `f5fbff0506537e23ca602e0006588ff1e76bfe4b4c056628d527ef8752261e4b`, 359 lines, 21 415 bytes.
+    - [x] NO REGRESSION — `bash scripts/check_doctrines.sh` on the staged tree → exit 0. No code changed.
+    - [x] LOCKSTEP — the doctrine's copy and note, the ledger, the tree and the Commit Log.
+  Verification: the diff against the source, the gate.
+  Commit: `ARCHOGEN-PROGRAM-1273 (leaf PROGRAM.137)`
 
 ## Roadmap coverage map
 
@@ -1543,6 +1551,7 @@ leaf's outcome is its row in the Commit Log below, and a sealed leaf's full reco
 | `PROGRAM.129` | `ARCHOGEN-PROGRAM-1169 (leaf PROGRAM.129)` | **the director's word on RAM**: observe the trend, and say something only when it is over 90% and still rising; the guard's lines stand as they are |
 | `PROGRAM.128` | `ARCHOGEN-PROGRAM-1162 (leaf PROGRAM.128)` | **a chip's document starts at `chipdoc`'s `AGENTS.md`**, the director's word: the record, its index row, the ledger and `TOOLBOX.md`; `REQ-007` fulfilled, the corpus on this volume, and a document never copied into this public repository, each corrected |
 | `PROGRAM.136` | `ARCHOGEN-PROGRAM-1272 (leaf PROGRAM.136)` | **the twenty-sixth artifact cleanup**: only the idle incremental cache, 3.2 GB |
+| `PROGRAM.137` | `ARCHOGEN-PROGRAM-1273 (leaf PROGRAM.137)` | **fsmgen's containment doctrine at `58d5edef7` adopted**: the body verbatim, its book exception agreeing with the ruling of `2026-10-18`; no limit here moves |
 
 ## Changelog
 
@@ -1652,3 +1661,4 @@ leaf's outcome is its row in the Commit Log below, and a sealed leaf's full reco
 - `2026-11-10`: `PROGRAM.135` done: an open review history continues in parts, read as one by `REVIEW-COUNTS`.
 - `2026-11-10`: `PROGRAM.127.36` done: the guard's round 36, five findings answered, two defects, in round 35's reading of a `run`; `PROGRAM.127.37` filed for round 37.
 - `2026-11-13`: `PROGRAM.136` done: the twenty-sixth artifact cleanup, the idle incremental cache alone; `PROGRAM.137` filed, fsmgen's containment revision `58d5edef7` to review.
+- `2026-11-13`: `PROGRAM.137` done: fsmgen's containment revision `58d5edef7` adopted verbatim; the other three policy sources unchanged.
