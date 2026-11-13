@@ -227,8 +227,9 @@ pub struct Account {
 impl Code {
     /// A compile's dep-info, `rustc --emit=dep-info` and the `.d` file cargo keeps of each unit, read as the compiler writes it and as nothing else. It says what
     /// that compile read and holds no bytes: a file cargo kept of an earlier compile says nothing of what stands there now, so a build reads the account of a compile
-    /// it has just run afresh, and takes each file's bytes as that compile read them (`AI-H3`). Its lines: a rule for each
-    /// file it made, `MADE: NAME NAME …`, each followed by an empty line; a line `NAME:` for each file it read; and, where it read the environment, an empty line and a
+    /// it has just run afresh, and hashes each file it names once that compile has ended, refusing one changed since it began: no build in place can take the bytes
+    /// the compile read (`AI-H3`; AI8-2). Its lines: a rule for each file it made, `MADE: NAME NAME …`, each followed by an empty line; a line `NAME:` for each
+    /// file it read; and, where it read the environment, an empty line and a
     /// line `# env-dep:NAME=VALUE` for each variable. A space of a name is written after a backslash and nothing else of one is escaped, so a name holding a line feed
     /// breaks its lines: such an account is none, as is any text that is not wholly these lines, each rule ending in the names the lines give. Whatever a source names
     /// is among the files, one `include!`, `#[path]` or `include_bytes!` reads beside `src` as one under it, and nothing the compiler did not read (round 6, AI6-1 and
@@ -528,13 +529,24 @@ fn category(
                 }),
             ))
         }
-        ("assumed" | "externally-supplied" | "analytically-established", _) => Err(refused(
-            of,
-            format!(
-                "`{}` says more than its category: what was observed and a safety factor are an `observed-maximum`'s",
-                form.to_canonical()
-            ),
-        )),
+        ("assumed" | "externally-supplied" | "analytically-established", rest) => {
+            // What was observed and a safety factor are an observation's; anything else after the word is no clause of this form at all (round 9, AI9-6).
+            let observation = rest
+                .iter()
+                .all(|item| matches!(item.head(), Some("observed" | "safety-factor")));
+            let why = if observation {
+                "what was observed and a safety factor are an `observed-maximum`'s".to_string()
+            } else {
+                format!("which is written alone, `(evidence {word})`")
+            };
+            Err(refused(
+                of,
+                format!(
+                    "`{}` says more than its category: {why}",
+                    form.to_canonical()
+                ),
+            ))
+        }
         _ => Err(refused(
             of,
             format!(

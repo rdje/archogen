@@ -209,6 +209,9 @@ fn each_malformed_input_is_refused_saying_what_is_wrong() {
         (replaced(bound_evidence, "(evidence proven) (locator \"docs/argument.md\") (basis \"by the loop's bound\")"), "four categories"),
         (replaced(bound_evidence, "(evidence assumed (observed 1) (safety-factor 1 1)) (basis \"b\")"), "says more than its category"),
         (replaced(bound_evidence, "(evidence analytically-established (observed 1)) (locator \"docs/argument.md\") (basis \"b\")"), "says more than its category"),
+        // A locator or a word after a category that stands alone is no observation, and the refusal says what was written (round 9, AI9-6).
+        (replaced(bound_evidence, "(evidence analytically-established (locator \"docs/argument.md\")) (basis \"b\")"), "which is written alone, `(evidence analytically-established)`"),
+        (replaced(bound_evidence, "(evidence assumed maybe) (basis \"b\")"), "which is written alone, `(evidence assumed)`"),
         (replaced(bound_evidence, "(evidence analytically-established) (locator \"docs/argument.md\")"), "`basis`"),
         (replaced(bound_evidence, "(evidence observed-maximum (observed 100) (safety-factor 1 2)) (locator \"docs/argument.md\") (basis \"b\")"), "pads"),
         (replaced(bound_evidence, "(evidence observed-maximum (observed 100) (safety-factor 3 2)) (locator \"docs/argument.md\") (basis \"b\")"), "by that factor is 150"),
