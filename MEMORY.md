@@ -25,7 +25,7 @@
   After the first batch, runner leaves `M3.5.3.2`, `M3.5.5.7.4`, `M3.5.1.4.5`, `M3.5.1.6.6`; `M3.4.7` waits on `M3.7`.
   `main` is protected: a push is a batch, `scripts/open_batch.sh` (`COMMIT.md` step 2), at the ruled cadence or to
   restore CI; the director merges, and the first merge is premise 3's named commit (`M2.7.6.6.5`). No other branches.
-  The next artifact cleanup is due after `2026-11-11T01:06` UTC (`PROGRAM.133` ran the twenty-fifth).
+  The next artifact cleanup is due after `2026-11-14T21:32` UTC (`PROGRAM.136` ran the twenty-sixth).
   **Mutation testing is stopped** until the functionality is locked
   (`decision_mutation-testing-after-completion.md`, `2026-10-21`): every pending `M3.6.9` leaf and `PROGRAM.78` are
   `blocked`; every decision advances the project first. `M3.6.9.6.3.2.2.15.2.1.8.2` stays owned, a suspected defect.
