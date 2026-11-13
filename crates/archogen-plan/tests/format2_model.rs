@@ -1297,6 +1297,7 @@ const LINES: &[(&str, Identity)] = &[
     ("epoch", Identity::Kept),
     ("timer", Identity::Kept),
     ("alarm", Identity::Kept),
+    ("clock", Identity::Kept),
     ("route", Identity::Kept),
     ("enabled", Identity::Kept),
     ("interrupt-model", Identity::Kept),
@@ -1934,4 +1935,181 @@ fn a_wake_s_step_rounds_down_where_a_sum_lies_within_it() {
     }
     assert!(rounded_up_admits_an_early_wake);
     assert!(RECORD.contains("`P` rounds down in that hold and each lead up"));
+}
+
+// ---- round 7: the last act's first read, a hosted plan's owed lines, each alarm's route
+
+/// What the last act arms or writes before its read for the epoch: a wake, `P` past its own read, or a placeholder, written at the farthest one write reaches on
+/// its device, `write`, past its own read (§4).
+#[derive(Clone, Copy)]
+struct Written {
+    read_at: u64,
+    distance: u64,
+}
+
+/// §4: `last-act-lead` is the realization's bound on everything from the first read any arm or placeholder of the last act takes, up to a tick of that counter old,
+/// to the act's read for the epoch; `epoch-lead` the port's from that read to the first enabling. Whether a set is admitted: each distance no less than the two.
+fn the_last_act_is_held(written: &[Written], act_lead: u64, lead: u64) -> bool {
+    written.iter().all(|each| each.distance >= act_lead + lead)
+}
+
+/// When what was written comes due: its distance past the counter's value read at `read_at`, which is up to a tick old.
+fn comes_due(each: &Written, tick: u64) -> u64 {
+    each.read_at - each.read_at % tick + each.distance
+}
+
+/// RP7-1's small universe, each as `[tick, write, transition, first, second, act]`: the counter's tick, the port's write and transition, the last act's first
+/// and second reads, and its read for the epoch after both.
+fn small_last_acts() -> Vec<[u64; 6]> {
+    let mut all = Vec::new();
+    for tick in 1..=2_u64 {
+        for write in 0..=1_u64 {
+            for transition in 0..=2_u64 {
+                for first in 0..=3_u64 {
+                    for second in first..=first + 3 {
+                        for act in second..=second + 2 {
+                            all.push([tick, write, transition, first, second, act]);
+                        }
+                    }
+                }
+            }
+        }
+    }
+    all
+}
+
+/// Over every small tick, phase and order of a wake and a placeholder: where the hold is met no point either writes comes due before the first enabling. Round 6
+/// had `last-act-lead` run from a wake's read alone, so a placeholder read before the wake came due early in 864 of its reader's small cases (round 7, RP7-1).
+#[test]
+fn every_arm_and_placeholder_of_the_last_act_is_held_from_its_first_read() {
+    let mut from_the_wake_alone_admits_an_early_one = false;
+    for [tick, write, transition, first, second, act] in small_last_acts() {
+        let lead = tick + write + transition;
+        // The realization's bound, from the first read, a tick of its counter old, to the act's read.
+        let act_lead = act - first + tick;
+        let enabling = act + write + transition;
+        for distance in 0..=act_lead + lead + 2 {
+            let at = |read_at| Written { read_at, distance };
+            // A placeholder and a wake, in each order: round 6's lead ran from the wake's read.
+            for (placeholder, wake) in [(first, second), (second, first)] {
+                let written = [at(placeholder), at(wake)];
+                let early = written.iter().any(|each| comes_due(each, tick) < enabling);
+                if the_last_act_is_held(&written, act_lead, lead) {
+                    assert!(
+                        !early,
+                        "{tick} {write} {transition} {first} {second} {act} {distance}"
+                    );
+                }
+                let round_6 = act - wake + tick;
+                from_the_wake_alone_admits_an_early_one |=
+                    early && the_last_act_is_held(&written, round_6, lead);
+            }
+        }
+    }
+    assert!(from_the_wake_alone_admits_an_early_one);
+    // RP7-1's case, in ticks: a placeholder read at 0, a wake at 5, the act's read at 6; a tick of 1, a write of 1, a transition of 2.
+    let [placeholder_read, wake_read, act, tick, write, transition] = [0, 5, 6, 1, 1, 2];
+    let lead = tick + write + transition;
+    let placeholder = Written {
+        read_at: placeholder_read,
+        distance: 6,
+    };
+    assert!(
+        the_last_act_is_held(&[placeholder], act - wake_read + tick, lead),
+        "round 6's lead admits it"
+    );
+    assert!(
+        comes_due(&placeholder, tick) < act + write + transition,
+        "and it comes due before the enabling"
+    );
+    assert!(
+        !the_last_act_is_held(&[placeholder], act - placeholder_read + tick, lead),
+        "this one does not"
+    );
+    assert!(RECORD.contains(
+        "its bound on everything from the first read any arm or placeholder of the last act takes"
+    ));
+    assert!(RECORD.contains("each alarm that is no wake has its `write` held at no less than `last-act-lead` plus the port's `epoch-lead`"));
+}
+
+/// §1: a hosted plan's owed lines are §3's, a route's item as `/2` writes it, less what only §5 or the two leads read; and the row of the table that says so is
+/// read here, since round 6's said "as `/1` writes each", which owes an alarm `arrival-bound` and none of what a source owes (round 7, RP7-2).
+#[test]
+fn a_hosted_plan_owes_what_section_3_owes() {
+    let after = RECORD
+        .split("<!-- machine-read: hosted-lines -->")
+        .nth(1)
+        .expect("the table");
+    let owed = after
+        .lines()
+        .take_while(|line| line.starts_with('|') || line.is_empty())
+        .find(|line| {
+            line.starts_with("| `")
+                && line
+                    .split('|')
+                    .nth(1)
+                    .is_some_and(|cell| cell.contains("`owed`"))
+        })
+        .expect("the table's owed row");
+    assert!(owed.contains("§3's"), "{owed}");
+    assert!(!owed.contains("as `/1` writes each"), "{owed}");
+    for what in ["`epoch-lead`", "`last-act-lead`", "§5"] {
+        assert!(owed.contains(what), "{owed} lacks {what}");
+    }
+}
+
+/// §3: `/1` writes one route for a device, its requesters and costs merged; `/2` writes one for each alarm on it, with the requesters `/1` names that reach the
+/// alarm's node and the costs `/1` writes of that node. A route's requester names the node it reaches, and a cost its node, as `/1` writes `(costs ((NODE KIND) …))`.
+fn split_by_alarm<'a>(
+    requesters: &[(&'a str, &'a str)],
+    costs: &[(&'a str, &'a str)],
+    alarms: &[&'a str],
+) -> Vec<(&'a str, Vec<&'a str>, Vec<&'a str>)> {
+    alarms
+        .iter()
+        .map(|&node| {
+            let mine = |list: &[(&'a str, &'a str)]| {
+                list.iter()
+                    .filter(|(at, _)| *at == node)
+                    .map(|(_, what)| *what)
+                    .collect::<Vec<_>>()
+            };
+            (node, mine(requesters), mine(costs))
+        })
+        .collect()
+}
+
+/// Each alarm's route carries its own requesters and costs, and together they are `/1`'s, none twice: two builders write one route for each (round 7, RP7-3).
+#[test]
+fn each_alarm_s_route_carries_its_own_requesters_and_costs() {
+    // RP7-3's case: an epoch extender over D used by `time.monotonic`, and `s` bound at D directly.
+    let extender = "(adapter epoch-extender D)";
+    let requesters = [(extender, "time.monotonic"), ("s", "s")];
+    let costs = [(extender, "wake")];
+    let routes = split_by_alarm(&requesters, &costs, &[extender, "s"]);
+    assert_eq!(
+        routes,
+        [
+            (extender, vec!["time.monotonic"], vec!["wake"]),
+            ("s", vec!["s"], vec![])
+        ]
+    );
+    let all: usize = routes
+        .iter()
+        .map(|(_, requesters, costs)| requesters.len() + costs.len())
+        .sum();
+    assert_eq!(all, requesters.len() + costs.len());
+    assert!(
+        RECORD.contains("`/1`'s one route of a device stands as one route for each alarm on it")
+    );
+}
+
+/// §3, `BASE`: the readers of an alarm's time are the requesters the alarm's own requester reaches, itself not among them, as model §8 rule 14 counts "every other
+/// requester": the requester of a deadline binds what its alarm asks of its device at that device, so counting it made every set that can reach a verdict read on the
+/// counter (round 7, RP7-6).
+#[test]
+fn an_alarm_s_own_requester_is_no_reader_of_its_time() {
+    assert!(RECORD.contains("each requester the requester bound for its deadline reaches through `needs` and `uses`, itself not among them, as rule 14 counts every other requester"));
+    // An extended reader alone, the deadline's requester binding what it asks at the device: the alarm's own time base.
+    assert_eq!(base(false, &[Reader::ExtendedOverIt]), Base::Epoch);
 }
