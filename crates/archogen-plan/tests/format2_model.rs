@@ -2026,10 +2026,8 @@ fn every_arm_and_placeholder_of_the_last_act_is_held_from_its_first_read() {
         !the_last_act_is_held(&[placeholder], act - placeholder_read + tick, lead),
         "this one does not"
     );
-    assert!(RECORD.contains(
-        "its bound on everything from the first read any arm or placeholder of the last act takes"
-    ));
-    assert!(RECORD.contains("each alarm that is no wake has its `write` held at no less than `last-act-lead` plus the port's `epoch-lead`"));
+    assert!(RECORD.contains(SPAN));
+    assert!(RECORD.contains("each alarm that is no wake has that reach less one of its line's `step`, its placeholder's distance, held at no less than `last-act-lead` plus the port's `epoch-lead`"));
 }
 
 /// §1: a hosted plan's owed lines are §3's, a route's item as `/2` writes it, less what only §5 or the two leads read; and the row of the table that says so is
@@ -2112,4 +2110,239 @@ fn an_alarm_s_own_requester_is_no_reader_of_its_time() {
     assert!(RECORD.contains("each requester the requester bound for its deadline reaches through `needs` and `uses`, itself not among them, as rule 14 counts every other requester"));
     // An extended reader alone, the deadline's requester binding what it asks at the device: the alarm's own time base.
     assert_eq!(base(false, &[Reader::ExtendedOverIt]), Base::Epoch);
+}
+
+// ---- round 8: each read's own counter, a placeholder on its step, a device of two alarms, a clock's order
+
+/// §4: `last-act-lead` is the greatest, over each read any arm or placeholder of the last act takes, of the time from a tick of that read's own counter
+/// before it to the act's read for the epoch. Each read is `(read_at, tick)`, its counter's tick.
+fn last_act_lead(reads: &[(u64, u64)], act: u64) -> u64 {
+    reads
+        .iter()
+        .map(|&(read_at, tick)| act - read_at + tick)
+        .max()
+        .unwrap_or(0)
+}
+
+/// §4's words for the span, which `RPF-H3` carries word for word.
+const SPAN: &str = "the greatest, over each read any arm or placeholder of the last act takes, of the time from a tick of that read's own counter before it to the act's read for the epoch";
+
+/// Two reads of the last act on counters of their own ticks, each as `[release, write, transition, first, first_tick, second, second_tick, act]`: the
+/// release timer's tick, the port's write and transition, the two reads and their counters' ticks, and the act's read after both.
+fn two_counters() -> Vec<[u64; 8]> {
+    let mut all = Vec::new();
+    for release in 1..=2_u64 {
+        for write in 0..=1_u64 {
+            for transition in 0..=2_u64 {
+                for first in 0..=10_u64 {
+                    for second in first..=10 {
+                        for [first_tick, second_tick] in
+                            [[1, 3], [1, 10], [3, 10], [10, 1], [10, 3], [3, 3]]
+                        {
+                            for act in second..=second + 2 {
+                                all.push([
+                                    release,
+                                    write,
+                                    transition,
+                                    first,
+                                    first_tick,
+                                    second,
+                                    second_tick,
+                                    act,
+                                ]);
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+    all
+}
+
+/// Over two reads on counters of different ticks: where every distance is no less than the span plus `epoch-lead`, nothing either writes comes due before
+/// the first enabling. Round 7's span ran from the first read, a tick of its own counter old, and a later read of a coarser counter returned an older value
+/// (round 8, RP8-1); and `RPF-H3` carried it with no tick at all (RP8-2).
+#[test]
+fn the_last_act_s_span_runs_from_each_read_less_its_own_counter_s_tick() {
+    let mut from_the_first_read_admits_an_early_one = false;
+    for [release, write, transition, first, first_tick, second, second_tick, act] in two_counters()
+    {
+        let lead = release + write + transition;
+        let enabling = act + write + transition;
+        let reads = [(first, first_tick), (second, second_tick)];
+        let span = last_act_lead(&reads, act);
+        let round_7 = act - first + first_tick;
+        for distance in 0..=span.max(round_7) + lead + 1 {
+            let early = reads
+                .iter()
+                .any(|&(read_at, tick)| comes_due(&Written { read_at, distance }, tick) < enabling);
+            if distance >= span + lead {
+                assert!(
+                    !early,
+                    "{reads:?} {act} {release} {write} {transition} {distance}"
+                );
+            }
+            from_the_first_read_admits_an_early_one |= early && distance >= round_7 + lead;
+        }
+    }
+    assert!(from_the_first_read_admits_an_early_one);
+    // RP8-1's case: a read at 3 of tick 1, one at 9 of tick 10 returning 0, the act's read at 9; a release tick, a write and a transition of 1 each.
+    let (lead, enabling) = (1 + 1 + 1, 9 + 1 + 1);
+    let wake = Written {
+        read_at: 9,
+        distance: 10,
+    };
+    assert!(
+        wake.distance >= (9 - 3 + 1) + lead && comes_due(&wake, 10) < enabling,
+        "round 7's span admits it"
+    );
+    assert!(
+        wake.distance < last_act_lead(&[(3, 1), (9, 10)], 9) + lead,
+        "this one does not"
+    );
+    // RP8-2's case: `RPF-H3`'s words as round 7 carried them, with no tick: a wake of tick 4 read at 3, the act's read at 4.
+    let (lead, enabling) = (1 + 1 + 1, 4 + 1 + 1);
+    let wake = Written {
+        read_at: 3,
+        distance: 4,
+    };
+    assert!(
+        wake.distance >= (4 - 3) + lead && comes_due(&wake, 4) < enabling,
+        "those words admit it"
+    );
+    assert!(
+        wake.distance < last_act_lead(&[(3, 4)], 4) + lead,
+        "section 4's do not"
+    );
+    assert!(RECORD.contains(SPAN));
+    let rpf_h3 = RECORD
+        .lines()
+        .find(|line| line.starts_with("| `RPF-H3` |"))
+        .expect("RPF-H3");
+    assert!(
+        rpf_h3.contains(SPAN),
+        "RPF-H3 carries section 4's span word for word"
+    );
+}
+
+/// §4: a placeholder is written at the farthest point on its compare's step that one write reaches, the greatest value on that step at or below what it read
+/// plus its reach.
+fn placeholder_point(value: u64, reach: u64, step: u64) -> u64 {
+    (value + reach) / step * step
+}
+
+/// A placeholder of the last act, each as `[tick, step, write, transition, read_at, act]`, its step a whole number of ticks.
+fn placeholders() -> Vec<[u64; 6]> {
+    let mut all = Vec::new();
+    for tick in 1..=2_u64 {
+        for steps in [1_u64, 2, 4, 8] {
+            for write in 0..=1_u64 {
+                for transition in 0..=2_u64 {
+                    for read_at in 0..=8_u64 {
+                        for act in read_at..=read_at + 4 {
+                            all.push([tick, tick * steps, write, transition, read_at, act]);
+                        }
+                    }
+                }
+            }
+        }
+    }
+    all
+}
+
+/// The point a placeholder is written at can fall up to a step less a tick short of the reach, so what is held is that reach less one step: where it is no
+/// less than the span plus `epoch-lead`, no placeholder comes due before the first enabling. Round 7 held the whole reach (round 8, RP8-3).
+#[test]
+fn a_placeholder_is_held_at_its_reach_less_one_step() {
+    let mut the_whole_reach_admits_an_early_one = false;
+    for [tick, step, write, transition, read_at, act] in placeholders() {
+        let lead = tick + write + transition;
+        let enabling = act + write + transition;
+        let span = last_act_lead(&[(read_at, tick)], act);
+        let value = read_at - read_at % tick;
+        for reach in step..=span + lead + 2 * step {
+            let early = placeholder_point(value, reach, step) < enabling;
+            if reach - step >= span + lead {
+                assert!(
+                    !early,
+                    "{tick} {step} {write} {transition} {read_at} {act} {reach}"
+                );
+            }
+            the_whole_reach_admits_an_early_one |= early && reach >= span + lead;
+        }
+    }
+    assert!(the_whole_reach_admits_an_early_one);
+    // RP8-3's case: tick 1, step 4, read at 3, the act's at 7, a write and a transition of 1: a reach of 8 met round 7's hold, and the point is 8, before 9.
+    assert_eq!(placeholder_point(3, 8, 4), 8);
+    assert!(8 >= last_act_lead(&[(3, 1)], 7) + 3 && 8 - 4 < last_act_lead(&[(3, 1)], 7) + 3);
+    // And `write` is the release alarm's sum alone, never a placeholder's distance (RP8-4).
+    assert!(!RECORD.contains("its `write` (`RA-H2`)"));
+    let rpf_h4 = RECORD
+        .lines()
+        .find(|line| line.starts_with("| `RPF-H4` |"))
+        .expect("RPF-H4");
+    assert!(!rpf_h4.contains("to a `write` no less than"), "{rpf_h4}");
+    assert!(
+        rpf_h4.contains("its placeholder's distance in place of `P`"),
+        "{rpf_h4}"
+    );
+}
+
+/// §3 on a device of two alarms: each line `/1` writes of its one route is written once for each alarm. A route carries the requesters that reach its
+/// alarm's node, so one reaching both stands on both, and the costs `/1` writes of that node, each on one route; an instance's context names the alarm of
+/// the node it is; and an obligation is one for each alarm, as `RA-H1` asks (round 8, RP8-6).
+#[test]
+fn a_device_of_two_alarms_writes_each_line_once_for_each() {
+    // RP8-6's case: `b` bound to a deadline-over-delay adapter over D, and `time.monotonic` to an epoch extender over D, using `b`.
+    let extender = "(adapter epoch-extender D)";
+    let delay = "(adapter deadline-over-delay D)";
+    let alarms = [extender, delay];
+    let reaches = [
+        (extender, "time.monotonic"),
+        (delay, "b"),
+        (delay, "time.monotonic"),
+    ];
+    let costs = [(extender, "wake")];
+    let routes = split_by_alarm(&reaches, &costs, &alarms);
+    assert_eq!(
+        routes,
+        [
+            (extender, vec!["time.monotonic"], vec!["wake"]),
+            (delay, vec!["b", "time.monotonic"], vec![])
+        ]
+    );
+    let costs_written: usize = routes.iter().map(|(_, _, costs)| costs.len()).sum();
+    assert_eq!(costs_written, costs.len(), "each cost on one route");
+    // An instance's `(interrupt (alarm NODE))` is its own alarm, and no instance names another's.
+    let interrupt = |instance: &str| alarms.into_iter().find(|node| *node == instance);
+    assert_eq!(interrupt(extender), Some(extender));
+    assert_eq!(interrupt(delay), Some(delay));
+    assert_eq!(interrupt("time.monotonic"), None);
+    // An `(obligation route (alarm NODE) …)` for each route, and so one for each alarm, where `/1` writes one for the device.
+    let obliged: Vec<&str> = routes.iter().map(|(node, _, _)| *node).collect();
+    assert_eq!(obliged, alarms, "one for each alarm");
+    for words in [
+        "a requester on the route of each node it reaches",
+        "the alarm of the instance it is of",
+        "an `(obligation route …)` line once for each alarm",
+    ] {
+        assert!(RECORD.contains(words), "{words}");
+    }
+}
+
+/// §3: `clock` lines have an order and owe what they say `unstated`, so two clock lines have one text and an unstated modulus is never complete
+/// (round 8, RP8-5).
+#[test]
+fn clock_lines_have_an_order_and_owe_what_they_leave_unstated() {
+    let orders = RECORD
+        .lines()
+        .find(|line| line.starts_with("**Orders.**"))
+        .expect("the orders");
+    assert!(
+        orders.contains("`clock` lines by `PROVIDER`'s text"),
+        "{orders}"
+    );
+    assert!(RECORD.contains("An owed line's subject gains `(alarm NODE)`, `(clock PROVIDER)`,"));
+    assert!(RECORD.contains("of a simulated alarm or a clock by `description`, `tick-rate` and `counter-modulus`, where its line says `unstated`"));
 }

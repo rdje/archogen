@@ -206,7 +206,8 @@ write of the timer reaches the first of them that far out. What initialisation a
 generated code's own lies between the read and the enabling. A wake armed there must not come due before interrupts are on, so its period
 outlasts what the generated code states of that step and the port's bound together, which the checker holds; on the hosted playground the
 simulator turns interrupts on at time zero, where its wakes are armed, so nothing is held there. Every other alarm's compare is given a far-off
-placeholder in that step, at the farthest one write reaches, and the checker holds that it too lies past the enabling. And an alarm's deadlines are read as its
+placeholder in that step, at the farthest point on its compare's step that one write reaches, and the checker holds that it too lies past the
+enabling, counting each read from a tick of its own counter before it and the placeholder a whole step short of its reach. And an alarm's deadlines are read as its
 own counter's time, which wraps, unless every reader of its time is bound at an extender over that same device.
 
 The record's formulas are not left to reading. A model beside it, `crates/archogen-plan/tests/format2_model.rs`, runs each one: where the image may lie and
