@@ -498,6 +498,17 @@ fn category(
                     "a list's counts are each their own observation, so a list says `observed-maximum` alone",
                 ));
             };
+            // A `locator` or a `basis` is the bound's own clause, beside `evidence`: written inside it, it is said so, not called unknown (round 10, AI10-6).
+            if let Some(head) = rest
+                .iter()
+                .filter_map(Form::head)
+                .find(|head| matches!(*head, "locator" | "basis"))
+            {
+                return Err(refused(
+                    of,
+                    format!("`{head}` is a clause beside `evidence`, not inside it"),
+                ));
+            }
             let found = clauses(of, rest, &["observed", "safety-factor"])?;
             let observed = the_natural(of, clause(of, &found, "observed")?)?;
             let factor = clause(of, &found, "safety-factor")?;

@@ -212,6 +212,8 @@ fn each_malformed_input_is_refused_saying_what_is_wrong() {
         // A locator or a word after a category that stands alone is no observation, and the refusal says what was written (round 9, AI9-6).
         (replaced(bound_evidence, "(evidence analytically-established (locator \"docs/argument.md\")) (basis \"b\")"), "which is written alone, `(evidence analytically-established)`"),
         (replaced(bound_evidence, "(evidence assumed maybe) (basis \"b\")"), "which is written alone, `(evidence assumed)`"),
+        // A locator written inside an observation is the bound's own clause, and the refusal says so (round 10, AI10-6).
+        (replaced(&format!("(binary unbuilt) {bound_evidence}"), "(binary \"sha256:1111111111111111111111111111111111111111111111111111111111111111\") (evidence observed-maximum (locator \"docs/argument.md\")) (basis \"b\")"), "`locator` is a clause beside `evidence`"),
         (replaced(bound_evidence, "(evidence analytically-established) (locator \"docs/argument.md\")"), "`basis`"),
         (replaced(bound_evidence, "(evidence observed-maximum (observed 100) (safety-factor 1 2)) (locator \"docs/argument.md\") (basis \"b\")"), "pads"),
         (replaced(bound_evidence, "(evidence observed-maximum (observed 100) (safety-factor 3 2)) (locator \"docs/argument.md\") (basis \"b\")"), "by that factor is 150"),
