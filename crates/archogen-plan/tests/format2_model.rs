@@ -2125,7 +2125,7 @@ fn last_act_lead(reads: &[(u64, u64)], act: u64) -> u64 {
 }
 
 /// §4's words for the span, which `RPF-H3` carries word for word.
-const SPAN: &str = "the greatest, over each read any arm or placeholder of the last act takes, of the time from a tick of that read's own counter before it to the act's read for the epoch";
+const SPAN: &str = "the greatest, over each read any arm or placeholder of the last act takes and each delay it writes, of the time from a tick of that read's or write's own counter before it to the act's read for the epoch";
 
 /// Two reads of the last act on counters of their own ticks, each as `[release, write, transition, first, first_tick, second, second_tick, act]`: the
 /// release timer's tick, the port's write and transition, the two reads and their counters' ticks, and the act's read after both.
@@ -2324,7 +2324,7 @@ fn a_device_of_two_alarms_writes_each_line_once_for_each() {
     assert_eq!(obliged, alarms, "one for each alarm");
     for words in [
         "a requester on the route of each node it reaches",
-        "the alarm of the instance it is of",
+        "for each alarm whose reach holds its instance",
         "an `(obligation route …)` line once for each alarm",
     ] {
         assert!(RECORD.contains(words), "{words}");
@@ -2345,4 +2345,155 @@ fn clock_lines_have_an_order_and_owe_what_they_leave_unstated() {
     );
     assert!(RECORD.contains("An owed line's subject gains `(alarm NODE)`, `(clock PROVIDER)`,"));
     assert!(RECORD.contains("of a simulated alarm or a clock by `description`, `tick-rate` and `counter-modulus`, where its line says `unstated`"));
+}
+
+// ---- round 9: a delay's write in the span, each alarm's reach in a context, a whole-number compare's reach
+
+/// A delay of the last act and a wake's read, each as `[tick, step, port_write, transition, written_at, read_at, act]`: the counter's tick, the delay's step, the
+/// port's write and transition, when the delay is written and when the wake reads, and the act's read after both.
+fn delays_and_reads() -> Vec<[u64; 7]> {
+    let mut all = Vec::new();
+    for tick in 1..=2_u64 {
+        for step in [tick, 2 * tick] {
+            for port_write in 0..=1_u64 {
+                for transition in 0..=2_u64 {
+                    for written_at in 0..=6_u64 {
+                        for read_at in 0..=6_u64 {
+                            for act in written_at.max(read_at)..=written_at.max(read_at) + 2 {
+                                all.push([
+                                    tick, step, port_write, transition, written_at, read_at, act,
+                                ]);
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+    all
+}
+
+/// §4: a delay counts from its write and takes no read, so its write is in the span as a read is, from a tick of its counter before it. Round 8's span ran over
+/// reads alone, and a placeholder on a delay written early came due before the first enabling (round 9, RP9-1).
+#[test]
+fn a_delay_s_placeholder_is_held_from_its_write() {
+    let mut over_reads_alone_admits_an_early_one = false;
+    for [tick, step, port_write, transition, written_at, read_at, act] in delays_and_reads() {
+        let lead = tick + port_write + transition;
+        let enabling = act + port_write + transition;
+        // Both the write and the read are on the delay's counter here; each is held from a tick of it before it.
+        let span = last_act_lead(&[(written_at, tick), (read_at, tick)], act);
+        let round_8 = last_act_lead(&[(read_at, tick)], act);
+        for reach in step..=span.max(round_8) + lead + 2 * step {
+            // The delay counts the farthest whole number of steps one write reaches, from the tick its write lands in.
+            let due = written_at - written_at % tick + placeholder_point(0, reach, step);
+            let early = due < enabling;
+            if reach - step >= span + lead {
+                assert!(
+                    !early,
+                    "{tick} {step} {port_write} {transition} {written_at} {read_at} {act} {reach}"
+                );
+            }
+            over_reads_alone_admits_an_early_one |= early && reach - step >= round_8 + lead;
+        }
+    }
+    assert!(over_reads_alone_admits_an_early_one);
+    // RP9-1's case, in tenths of a microsecond: the delay written at 0, a wake of tick 10 reading at 50, the act's read at 60, `epoch-lead` 1 + 3 + 20.
+    let (lead, enabling) = (1 + 3 + 20, 60 + 3 + 20);
+    let (reach, step) = (60, 10);
+    assert!(
+        reach - step >= last_act_lead(&[(50, 10)], 60) + lead
+            && placeholder_point(0, reach, step) < enabling
+    );
+    assert!(reach - step < last_act_lead(&[(0, 10), (50, 10)], 60) + lead);
+    assert!(RECORD.contains(SPAN));
+}
+
+/// §3: the alarms an instance's context line names, each alarm's reach being `/1` §2.6 applied to that alarm alone: the instance bound by the binding that
+/// takes its channel, and every node one of these reaches.
+fn contexts<'a>(reaches: &[(&'a str, &[&'a str])]) -> BTreeMap<&'a str, Vec<&'a str>> {
+    let mut named: BTreeMap<&str, Vec<&str>> = BTreeMap::new();
+    for &(alarm, reach) in reaches {
+        for &instance in reach {
+            named.entry(instance).or_default().push(alarm);
+        }
+    }
+    named
+}
+
+/// An instance one alarm's code reaches names that alarm too, the device among them, and one no alarm's reaches names none: round 8 had each instance name its own
+/// alarm alone, false where an expiry's delivery reaches the wake's instance (round 9, RP9-2).
+#[test]
+fn a_context_names_each_alarm_whose_reach_holds_it() {
+    // RP9-2's case: the shipped deadline over a delay, `time.monotonic` asking far enough to read through an epoch extender over the same timer. A wake runs its
+    // own code alone; the expiry delivers to `time.deadline`, which needs `time.monotonic`.
+    let wake = "(adapter epoch-extender timer.delay)";
+    let expiry = "(adapter deadline-over-delay timer.delay)";
+    let named = contexts(&[
+        (wake, &[wake, "timer.delay"]),
+        (
+            expiry,
+            &[
+                expiry,
+                "time.deadline",
+                "time.monotonic",
+                wake,
+                "timer.delay",
+            ],
+        ),
+    ]);
+    assert_eq!(
+        named[wake],
+        [wake, expiry],
+        "the extender's line holds the expiry's alarm too"
+    );
+    assert_eq!(
+        named["timer.delay"],
+        [wake, expiry],
+        "the device holds both"
+    );
+    assert_eq!(named["time.monotonic"], [expiry]);
+    assert_eq!(named["time.deadline"], [expiry]);
+    assert!(!named.contains_key("an.unreached.node"));
+    assert!(RECORD.contains("for each alarm whose reach holds its instance"));
+}
+
+/// §4: what one write reaches, as `decision_release-alarm.md` §2's `write` row and the checker's model say, in ticks: the less of the line's `reach` and what
+/// the compare's reading leaves of its modulus, its window less one tick, or, reading whole numbers, the operating horizon less one tick.
+fn one_write_reaches(reach: u128, modulus: u128, leaves_by: u128) -> u128 {
+    reach.min(modulus - leaves_by - 1)
+}
+
+/// A compare that reads whole numbers reaches no farther than the operating horizon leaves of its modulus, which round 8's placeholder left out, holding the
+/// line's `reach` alone (round 9, RP9-3).
+#[test]
+fn a_whole_number_compare_s_placeholder_is_held_within_its_horizon() {
+    // RP9-3's case: 1 GHz, a modulus 2,000 ticks past the operating horizon's count, `reach` 1 ms, a step of one tick, leads of 3 µs, all in nanoseconds.
+    let horizon = 3_155_760_000_u128 * 1_000_000_000;
+    let (reach, modulus, step, leads) = (1_000_000_u128, horizon + 2_000, 1_u128, 3_000_u128);
+    let reached = one_write_reaches(reach, modulus, horizon);
+    assert_eq!(
+        reached, 1_999,
+        "what the checker's `what_one_write_reaches` gives"
+    );
+    assert!(reach - step >= leads, "round 8's reading admits it");
+    assert!(reached - step < leads, "this one does not");
+    // A windowed compare's limit is its window's, as before.
+    assert_eq!(one_write_reaches(reach, 256, 16), 239);
+    for words in [
+        "the less of its line's `reach` and what its compare's reading leaves of its modulus",
+        "`what_one_write_reaches`",
+    ] {
+        assert!(RECORD.contains(words), "{words}");
+    }
+    let rpf_h4 = RECORD
+        .lines()
+        .find(|line| line.starts_with("| `RPF-H4` |"))
+        .expect("RPF-H4");
+    assert!(
+        rpf_h4.contains(
+            "the less of its line's `reach` and what its compare's reading leaves of its modulus"
+        ),
+        "{rpf_h4}"
+    );
 }

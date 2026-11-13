@@ -17,10 +17,11 @@
   the hosted playground; `PROGRAM` → `PROGRAM.34`, the director's.
 - **The host is shared:** every heavy job goes through `scripts/host_guard.py`, one at a time (`docs/decisions/decision_host-guard.md`). A reader's brief says so.
 - **Next action:** answer `M4.12.1.10`, the application inputs' round 10 (`target/m4341/report.md`): three defects in the
-  build's window over the compile; and `M4.1.7.2.9`, format `/2`'s round 9 (`target/m4342/report.md`): three defects, a
-  delay's placeholder, context lines on a device of two alarms, a compare of whole numbers. Launch `PROGRAM.127.38`, the
-  guard's round 38, its brief from `target/p12737/brief.txt` as `target/p12736/land/brief37.py` made its own, into
-  `target/p12738/`. Then `M3.4.17.3`.
+  build's window over the compile, the fourth round there: answer by method, the build compiling a copy it wrote of what the
+  compiler names inside `place`, as the catalog's gate builds from blobs, not by a wider window. Launch `M4.1.7.2.10`, format
+  `/2`'s round 10, its brief from `target/m4342/brief.txt` as `target/m4340/land/brief9.py` made its own, into `target/m4343/`.
+  One reader is out: `PROGRAM.127.38`, the guard's round 38 (`target/p12738/report.md`, none there meaning ask again).
+  Then `M3.4.17.3`.
   `M4.5.2` and `M4.3.6` wait on `M4.1.7`, `M4.3.4` on `M2.21`. The runtime plan's design is accepted (`M4.1.1` done).
   `M3.2.7` and `M3.5.9`, full verification, wait for the
   features (doctrine 22).
