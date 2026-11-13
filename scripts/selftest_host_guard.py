@@ -1082,12 +1082,27 @@ def case_what_no_root_can_be() -> None:
         mount = mount.parent
     said = subprocess.run([*PY, str(GUARD), "status", "--root", str(mount)], capture_output=True, text=True, errors="replace", timeout=30)
     check("nor a volume's mount", mount == Path("/") or (said.returncode == 2 and "a volume's mount" in said.stderr), (str(mount), said.returncode, said.stderr[-200:]))
+    # A mount every Mac has, so the row tests a mount wherever the checkout stands: on an internal disk the walk above reaches `/` alone (round 37).
+    said = subprocess.run([*PY, str(GUARD), "status", "--root", "/dev"], capture_output=True, text=True, errors="replace", timeout=30)
+    check("`/dev`, a mount wherever the checkout stands, is refused", said.returncode == 2 and "a volume's mount" in said.stderr, (said.returncode, said.stderr[-200:]))
     # A name that is a pipe holds no guard that opens it: as a root, or named by a row that reads as another root's `run` (round 36).
     pipe = fresh("pipe") / "fifo"
     os.mkfifo(pipe)
     answers: list = []
     threading.Thread(target=lambda: answers.append((g.canonical(pipe), g.is_run_of(g.Process(1, 1, "", "", "", 0, argv=("python3", str(GUARD), "run", "--root", str(pipe.resolve()), "--", "sleep", "1")), str(ROOT)))), daemon=True).start()
     check("a pipe named as a root holds no guard", until(lambda: bool(answers), 3), answers)
+
+    # Nor does the root's lock wait on one: it opens the root as `canonical` does, and a pipe is no directory (round 37).
+    def lock_of_a_pipe() -> None:
+        try:
+            g.hold_lock(pipe)
+            locked.append("taken")
+        except OSError:
+            locked.append("refused")
+
+    locked: list = []
+    threading.Thread(target=lock_of_a_pipe, daemon=True).start()
+    check("the root's lock refuses a pipe at once", until(lambda: bool(locked), 3) and locked == ["refused"], locked)
     if not answers:
         # Release what waits on it, so the test ends.
         open(pipe, "w").close()
@@ -1596,6 +1611,26 @@ def case_a_kill_is_read_through_what_hides_it() -> None:
         "python3 scripts/host_guard.py run -- bash <<'E'\npkill -x foo\nE",
         "python3 scripts/host_guard.py run -- sh <<< 'pkill -x foo'",
         "python3 scripts/host_guard.py run -- env bash <<'E'\npkill -x foo\nE",
+        # Text read again holds a placeholder where a substitution stood, which stands for that substitution and is no command; what feeds a shell's text feeds what it
+        # runs; two runs' further pipelines are two; a here-string is judged by its whole command, and one fed to a group as a shell's; and a here-document's
+        # substitutions feed the command before them (round 37).
+        'bash -c "kill $(pgrep -x rustc)"',
+        "eval kill $(pgrep -x rustc)",
+        'trap "kill $(pgrep -x rustc)" EXIT',
+        'bash <<< "kill $(pgrep -x rustc)"',
+        'bash -c "pkill -P $(pgrep -x rustc)"',
+        'python3 scripts/host_guard.py run -- bash -c "kill $(pgrep -x rustc)"',
+        'sh -c "true; kill `pgrep -x rustc`"',
+        'python3 scripts/host_guard.py run -- sh -c "true; kill $(pgrep -x rustc)"',
+        "pgrep -x cargo | xargs -I{} sh -c 'kill $(pgrep -P {})'",
+        "python3 scripts/host_guard.py run -- sh -c 'true; true; true; echo /x/root'; python3 scripts/host_guard.py run -- sh -c 'true; pgrep -x foo > pids'; xargs kill < pids",
+        "<<< 'pkill -x foo' bash",
+        "2>/dev/null <<< 'pkill -x foo' bash",
+        "(bash) <<'E'\npkill -x foo\nE",
+        "{ bash; } <<'E'\npkill -x foo\nE",
+        "(bash) <<< 'pkill -x foo'",
+        "xargs kill <<E\n$(pgrep -x rustc)\nE",
+        "python3 scripts/host_guard.py run -- xargs kill <<E\n$(pgrep -x rustc)\nE",
     ):
         check(f"`{text}` is refused", refused(text))
     for text in (
@@ -1620,6 +1655,16 @@ def case_a_kill_is_read_through_what_hides_it() -> None:
         "python3 scripts/host_guard.py run -- sh -c 'true; pgrep -x foo >/dev/null'; kill $(cat job.pid)",
         "python3 scripts/host_guard.py run -- sh -c 'pgrep -x a >/dev/null; kill $(cat job.pid)'",
         "python3 scripts/host_guard.py run -- bash <<'E'\ncargo build\nE",
+        # What a placeholder stands for is that substitution alone, and a here-document's substitutions are what they search (round 37).
+        'bash -c "kill $(cat job.pid)"',
+        'pgrep -x foo >/dev/null; bash -c "kill $(cat job.pid)"',
+        'bash -c "echo $(date)"',
+        "cat <<E\n$(date)\nE",
+        "<<< 'echo hi' cat",
+        "(cat) <<'E'\necho hi\nE",
+        "pgrep -x foo | xargs -I{} sh -c 'echo {}'",
+        "python3 scripts/host_guard.py run -- sh -c 'true; true'; kill $(cat job.pid)",
+        "xargs kill <<E\n123\nE",
     ):
         check(f"`{text}` is not", not refused(text))
     check("`env -` hides nothing it wraps", g.commands_of("env - cargo build")[0].words == ["cargo", "build"])

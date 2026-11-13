@@ -1041,7 +1041,8 @@ def sample(root: Path, limits: Limits, memory: Memory) -> tuple[Reading, list[Pr
 
 def hold_lock(root: Path) -> int | None:
     """One watcher per root, by a lock on the root itself: unlike a file under `target/`, `cargo clean` cannot take it away and leave two."""
-    fd = os.open(str(root), os.O_RDONLY)
+    # As a directory and without waiting: a root that is a pipe held a watcher started by hand at its open (round 37). One that is no directory raises.
+    fd = os.open(str(root), os.O_RDONLY | os.O_DIRECTORY | os.O_NONBLOCK)
     try:
         fcntl.flock(fd, fcntl.LOCK_EX | fcntl.LOCK_NB)
     except OSError:
@@ -1130,7 +1131,11 @@ def handed_on(told: str) -> list[dict]:
 
 
 def watch(root: Path, limits: Limits, once: bool, idle_seconds: float = 600.0, again: list[str] | None = None) -> int:
-    lock = hold_lock(root)
+    try:
+        lock = hold_lock(root)
+    except OSError as error:
+        say(f"host-guard: cannot watch `{root}`: {error}")
+        return 2
     if lock is None:
         return 0  # One is watching.
     # What started it asked for it, so this once it makes its directory: but nothing asked for one that took itself up.
@@ -1249,7 +1254,10 @@ def watcher_pid(root: Path) -> int | None:
     # A number below 2 names no one process: nothing is this one's group, a negative one a group or every process of this user, and 1 the host's first. None is a watcher, whatever a note says.
     if pid < 2:
         return None
-    lock = hold_lock(root)
+    try:
+        lock = hold_lock(root)
+    except OSError:
+        return None
     if lock is not None:
         os.close(lock)
         return None
@@ -1361,6 +1369,18 @@ A_SUBSTITUTION_ALONE = re.compile(r"-?(?:\$\(…\)|`…`|\s)+")
 A_PLAIN_TARGET = re.compile(r"-?(?:\d+|\$[!$])|%\S*")
 BEFORE_A_COMMAND = {"if", "then", "elif", "else", "while", "until", "do", "!", "{", "coproc"}
 NOT_A_COMMAND = {"for", "select", "case", "esac", "fi", "done", "}", "[[", "]]"}
+# What the reader leaves in a word where it read a substitution. Text read again holds it where the shell would hold what that substitution printed, so taken there as text it is
+# no command of its own but stands for what was read outside that text: read as `$(` and a command named `…`, it made itself a `kill`'s only substitution and hid the search it stood
+# for (round 37). The reader's own substitutions leave the same mark, so a command is told by what it took as text, never by what its words hold.
+PLACEHOLDERS = ("$(…)", "`…`", "<(…)", ">(…)")
+# The words that end a compound command: what a redirection after one feeds is the whole group or loop, and a shell may stand in it.
+GROUP_ENDS = {"}", "done", "fi", "esac"}
+
+
+def feeds_a_group(words: list[str]) -> bool:
+    """Whether a redirection on these words feeds a group, a subshell or a loop rather than one command, `(bash) <<E` or `{ bash; } <<< …`: what it feeds is then read as a shell
+    would run it, since one may stand inside (round 37)."""
+    return all(word in GROUP_ENDS for word in words)
 
 
 def a_loop_header(words: list[str]) -> bool:
@@ -1402,6 +1422,7 @@ class Command:
     pipeline: int
     fed: bool = False
     own_from: int = 0
+    outer: bool = False  # Its words took a placeholder as text: substitutions read outside its text, where that text was a word, are its own too (round 37).
 
     @property
     def name(self) -> str:
@@ -1488,10 +1509,21 @@ class ShellReader:
     """Enough of the shell's own grammar to say what it would run, instead of a pattern over its text: three rounds of review found that a pattern reads a word in a message as a
     command, misses one in `$(…)`, and pairs a comment's apostrophe with a quote. `selftest_host_guard.py` holds this to the shell itself, running each form against stubs."""
 
-    def __init__(self, text: str, found: list[Command], pipelines: itertools.count) -> None:
+    def __init__(self, text: str, found: list[Command], pipelines: itertools.count, outer_from: int | None = None, fed: bool = False) -> None:
         self.text, self.at, self.found, self.pipelines = text, 0, found, pipelines
         self.here_docs: list[tuple[str, bool, bool, list[str]]] = []  # Each body starts at the next newline, at whatever level the reading then stands.
+        # Each here-string waits for its command's words to be whole: a redirection may come before them, `<<< 'pkill x' bash` (round 37).
+        self.here_strings: list[tuple[str, int, list[str]]] = []
         self.substitutions = 0  # How many `$(…)` the reading stands in.
+        # Text read again was read first as a word: its placeholders stand for the substitutions found from `outer_from` on. And what feeds it, as `xargs` feeds what it runs, feeds
+        # each command it holds: `xargs -I{} sh -c 'kill $(pgrep -P {})'` lost that mark (round 37).
+        self.outer_from, self.fed = outer_from, fed
+        self.emitted: dict[int, Command] = {}  # The command each list of words became, for a here-document read after it.
+        self.marks = 0  # How many placeholders it has taken as text, each standing for what was read outside it.
+
+    def reread(self, text: str, outer_from: int, fed: bool = False) -> None:
+        """Text a shell would run that was read already as a word: a `bash -c` script, what `eval` or `trap` runs, a here-string fed to a shell."""
+        ShellReader(text, self.found, self.pipelines, outer_from, fed or self.fed).commands()
 
     def commands(self, closing: str | None = None) -> bool:
         """Up to the end of the text, or to the `)` that closes this level, or to the end of a case's branch: an `esac` then says so by returning true."""
@@ -1499,13 +1531,21 @@ class ShellReader:
         words: list[str] = []
         depth, pipeline = 0, next(self.pipelines)
         continued, started = False, len(self.found)  # After a `|`, a newline does not end the pipeline. What it found from `started` on stands in this command's words.
+        marked = self.marks  # And whether it took a placeholder as text among them.
 
         def finish() -> None:
-            nonlocal words, started
+            nonlocal words, started, marked
+            # A here-string on these words, now whole, fed to a shell or to a group one may stand in, is what that shell runs.
+            waiting, self.here_strings = self.here_strings, []
+            for said, before, attached in waiting:
+                if attached is not words:
+                    self.here_strings.append((said, before, attached))
+                elif runs_its_input(words) or feeds_a_group(words):
+                    self.reread(said, before)
             if words:
-                self.emit(words, pipeline, started)
+                self.emit(words, pipeline, started, self.marks > marked)
             words = []
-            started = len(self.found)
+            started, marked = len(self.found), self.marks
 
         while self.at < len(text):
             c, two = text[self.at], text[self.at : self.at + 2]
@@ -1544,6 +1584,10 @@ class ShellReader:
                 depth += 1
                 self.at += 1
                 pipeline = next(self.pipelines)
+            elif text.startswith(f"{two}…)", self.at) and two in ("<(", ">("):
+                self.at += 4
+                self.marks += 1
+                words.append(f"{two}…)")
             elif two in ("<(", ">("):
                 self.at += 2
                 self.substitutions += 1
@@ -1554,12 +1598,13 @@ class ShellReader:
                 self.at = redirection.end()
                 while text[self.at : self.at + 1] in (" ", "\t"):
                     self.at += 1
+                before = len(self.found)
                 target, quoted = self.word()
                 operator = redirection.group().lstrip("0123456789")
                 if operator in ("<<", "<<-"):
                     self.here_docs.append((target, operator == "<<-", quoted, words))
-                elif operator == "<<<" and runs_its_input(words):
-                    ShellReader(target, self.found, self.pipelines).commands()
+                elif operator == "<<<":
+                    self.here_strings.append((target, before, words))
             elif closing == "case" and depth == 0 and two in (";;", ";&"):
                 finish()
                 self.at += 2
@@ -1766,6 +1811,10 @@ class ShellReader:
             self.read_expansions(text[self.at + 3 : end - 2])
             parts.append(text[self.at : end])
             self.at = end
+        elif text.startswith("$(…)", self.at):
+            parts.append("$(…)")
+            self.at += 4
+            self.marks += 1
         elif two == "$(":
             self.at += 2
             self.substitutions += 1
@@ -1836,7 +1885,10 @@ class ShellReader:
                 inner.append(text[at])
                 at += 1
         self.at = at + 1
-        ShellReader("".join(inner), self.found, self.pipelines).commands()
+        if "".join(inner) == "…":
+            self.marks += 1
+        else:
+            ShellReader("".join(inner), self.found, self.pipelines, fed=self.fed).commands()
         parts.append("`…`")
 
     def read_here_docs(self) -> None:
@@ -1858,29 +1910,42 @@ class ShellReader:
                 if plain == delimiter:
                     break
                 lines.append(line)
-            if runs_its_input(fed):
-                ShellReader("\n".join(lines), self.found, self.pipelines).commands()
+            if runs_its_input(fed) or feeds_a_group(fed):
+                ShellReader("\n".join(lines), self.found, self.pipelines, fed=self.fed).commands()
             elif not quoted:
+                start = len(self.found)
                 self.read_expansions("\n".join(lines))
+                # What its substitutions found is what the body gives the command, which was read before them: so it is read again after them, and a `kill` it feeds sees what
+                # they searched, `xargs kill <<E` of `$(pgrep x)` (round 37).
+                command = self.emitted.get(id(fed))
+                if command is not None and len(self.found) > start:
+                    self.found.append(Command(command.words, command.pipeline, command.fed, command.own_from))
 
-    def emit(self, words: list[str], pipeline: int, started: int) -> None:
+    def emit(self, words: list[str], pipeline: int, started: int, outer: bool = False) -> None:
         if words[0] in NOT_A_COMMAND:
             return
+        key = id(words)
         words, fed = unwrapped(words)
+        fed = fed or self.fed
         if not words or words[0] in NOT_A_COMMAND:
             return
         name = os.path.basename(words[0])
         if name in SHELLS and shell_only_parses(name, words[1:]):
             return
+        # A placeholder taken as text stands for what was found where that text was a word: those substitutions are this command's own too. At the top, a guard's `run`'s job,
+        # they are the run's words', which `read_through_runs` gives it.
+        own_from = min(started, self.outer_from) if outer and self.outer_from is not None else started
         script = shell_told(words[1:])[0] if name in SHELLS else None
         if script is not None:
-            ShellReader(script, self.found, self.pipelines).commands()
+            self.reread(script, own_from, fed)
         elif name == "eval":
-            ShellReader(" ".join(words[1:]), self.found, self.pipelines).commands()
+            self.reread(" ".join(words[1:]), own_from, fed)
         elif name == "trap":
-            ShellReader(plain_word(words[1:]) or "", self.found, self.pipelines).commands()
+            self.reread(plain_word(words[1:]) or "", own_from, fed)
         else:
-            self.found.append(Command(words, pipeline, fed, started))
+            command = Command(words, pipeline, fed, own_from, outer)
+            self.found.append(command)
+            self.emitted[key] = command
 
 
 def commands_of(text: str) -> list[Command]:
@@ -2001,13 +2066,16 @@ def what_a_run_runs(words: list[str]) -> list[str]:
     return rest[1:] if rest[:1] == ["--"] else rest
 
 
-def read_through_runs(commands: list[Command], depth: int = 0) -> list[Command]:
+def read_through_runs(commands: list[Command], depth: int = 0, fresh: itertools.count | None = None) -> list[Command]:
     """These commands, a guard's `run` among them replaced by what its job runs as a shell would read it: in the run's pipeline where the job's first pipeline stands and in one of its own
     for each other, fed where the run is. Each command keeps its own substitutions, where they begin carried to where they now stand: a job's command's are the job's where it has any
     and otherwise the run's own words', and a command after a `run` keeps its own however many the job had. A `run` inside a job is read the same way, to a depth no command needs.
-    Carried as they stood, a `run` whose job read as nothing moved every later command's window past its own substitutions, and a job of several moved one onto the job's (round 36)."""
+    Carried as they stood, a `run` whose job read as nothing moved every later command's window past its own substitutions, and a job of several moved one onto the job's (round 36).
+    A job's command that took a placeholder as text stands for the run's words' substitutions, the job's text being those words. Each further pipeline of a job is one no other on the line has,
+    from one count for the whole reading: worked out of where it stood, two `run`s could give two pipelines one id, a search in one read as beside a word naming the root (round 37)."""
     if depth > 16:
         raise ValueError("a guard's `run` inside one sixteen times over is too deep to read")
+    fresh = itertools.count(-1, -1) if fresh is None else fresh
     out: list[Command] = []
     # Where what stood at each index now begins.
     start_of: list[int] = []
@@ -2015,13 +2083,15 @@ def read_through_runs(commands: list[Command], depth: int = 0) -> list[Command]:
         start_of.append(len(out))
         told = what_a_run_runs(command.words)
         if not told:
-            out.append(Command(command.words, command.pipeline, command.fed, start_of[command.own_from]))
+            out.append(Command(command.words, command.pipeline, command.fed, start_of[command.own_from], command.outer))
             continue
-        job = read_through_runs(commands_of(shlex.join(told)), depth + 1)
+        job = read_through_runs(commands_of(shlex.join(told)), depth + 1, fresh)
         base, first, others = len(out), (job[0].pipeline if job else None), {}
         for k, each in enumerate(job):
-            pipeline = command.pipeline if each.pipeline == first else others.setdefault(each.pipeline, -1 - len(out) - len(others) - 1_000_000 * (depth + 1))
-            own_from = start_of[command.own_from] if each.own_from == k else base + each.own_from
+            if each.pipeline != first and each.pipeline not in others:
+                others[each.pipeline] = next(fresh)
+            pipeline = command.pipeline if each.pipeline == first else others[each.pipeline]
+            own_from = start_of[command.own_from] if each.own_from == k or each.outer else base + each.own_from
             out.append(Command(each.words, pipeline, each.fed or command.fed, own_from))
     return out
 
