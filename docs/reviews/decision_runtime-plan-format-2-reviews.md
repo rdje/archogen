@@ -435,3 +435,13 @@ Said, and left as it stands: no `/2` lowering, port record, realization reader o
 | RP35-6 | wording | "generates no code" and "links no image" had no verdict and no place, and the stage row read "refus" alone | The build refuses a plan whose code reads an owed line, `missing-fact`, before it compiles; linking no image of a first plan is no refusal; the stage row reads a withheld output as a refusal |
 
 Said, and left as it stands: no `/2` lowering, emitter, controller record, realization reader or `M2.21.2` checker exists.
+
+**Round 36** — `2026-11-15`, leaf `M4.1.7.2.36`: not acceptable, 3 findings, 1 defect, after 3, on `d53eabcf`. Round 35's answers held otherwise: `format2_model` `73 passed`, `alarm_model` `25 passed`, each alone; `(epoch none (lead FIGURE))` exactly where `RPF-H4` holds a lead, derived apart from the model; the rounding read by no generated code; nothing else the code reads can be owed, enumerated; `E` read once; ranks independent of the realization; the worked stacks, guard, floors, epoch and `PRIORITY`; the cursor and limit; the book's nineteen sentences; the kept questions; the digests. Each premise was read in the records and the code before it was answered.
+
+| # | Kind | Finding | Answer |
+| --- | --- | --- | --- |
+| RP36-1 | defect, in rounds 34's and 35's answers | §7 listed a target's own refusals at lowering and claimed `check`'s code for them, but left out what the profile asks of a machine (`DC-H4`), which `check` judges: a target of two cores silent on a count gave `missing-fact` at lowering where `check` gives `unsupported-profile` (`more_cores_than_one_are_multicore_by_a_count`, run by the reader) | A target's own refusals at lowering are `check`'s judgement of its file alone, as `DC-H3` runs it, with the code `check` gives: more than one core among the profile's, and whatever else that judgement refuses standing as `check` places it; §1 says so of the profile's refusal, which the stage row now places and no longer exempts |
+| RP36-2 | wording | the build's refusal of a plan whose code reads an owed line stood in no order against `/1`'s of a task released by `(unknown CAUSE)` (`RTP-H1`), and against the crate's own | `/1`'s first, then the owed line, each `missing-fact`, before anything of the crate; that `AI-H3` and `AI-H4` state no code for the crate's refusals, older and the application record's, is kept for `M4.13` |
+| RP36-3 | wording, older | §4 said this record adds one hold to the checker, where `RPF-H4` hands four | Four, each named as `RPF-H4` hands it; `the_holds_this_record_adds_are_those_rpf_h4_hands_the_checker` |
+
+Said, and left as it stands: no `/2` lowering, `--target` for `check`, port or controller record, or `non-maskable-interrupts` fact exists.

@@ -1576,12 +1576,17 @@ fn every_fact_the_realization_owes_is_handed_to_its_format() {
 /// from that file, after its code identity, and before placing, whose figures come from it. Before, §7 did not place it, and an input meeting it and no
 /// room had two outcomes (round 23, RP23-3). Where one place names more than one code, they stand as `check`'s precedence ranks them, read from
 /// `eadl_front::Verdict` itself, so one input gives the code `check` gives it: before, the two files' codes and the target's three stood in word order, no
-/// placement memory after a silent count (round 35, RP35-4).
+/// placement memory after a silent count (round 35, RP35-4). A target's own refusals at lowering are `check`'s judgement of its file alone, by `DC-H3`,
+/// so whatever `check` refuses of it stands there with `check`'s code: before, the profile's refusal of a machine of two cores had no place at lowering, and
+/// a silent count beside it gave `missing-fact` where `check` gives `unsupported-profile`; and the build's two refusals of a plan stood in no order (round 36,
+/// RP36-1, RP36-2).
 #[test]
 fn section_7_places_every_refusal_in_one_order() {
-    const ORDER: [&str; 17] = [
+    const ORDER: [&str; 22] = [
         "a target's own refusals",
+        "`check`'s judgement of the target's file alone as `DC-H3` runs it",
         "the file not reading",
+        "more than one core",
         "a count of non-maskable interrupts or firmware traps above zero",
         "no placement memory",
         "either count silent",
@@ -1595,7 +1600,10 @@ fn section_7_places_every_refusal_in_one_order() {
         "a realization of another code identity",
         "a route whose `external` the realization's file states `no`",
         "no room while placing",
-        "The build refuses a plan whose generated code reads an owed line",
+        "The build refuses a plan before anything of the application's crate",
+        "a task released by `(unknown CAUSE)`",
+        "a plan whose generated code reads an owed line",
+        "the crate's own refusals, `AI-H3`'s and `AI-H4`'s, follow",
         "A bound or a list of counts whose `binary` names another image",
     ];
     // The places that name more than one code, each with its codes in the order the record writes them.
@@ -1692,6 +1700,30 @@ fn section_7_places_every_refusal_in_one_order() {
         first(&["either count silent", "no placement memory"]),
         Some("no placement memory")
     );
+    // The reader's cases of round 36: a target of two cores silent on non-maskable interrupts is the profile's `unsupported-profile`, as `check` gives it;
+    // and a plan whose lead is owed holding a task released by `(unknown CAUSE)` is `/1`'s refusal of the task, the build's first (RP36-1, RP36-2).
+    assert_eq!(
+        first(&["more than one core", "either count silent"]),
+        Some("more than one core")
+    );
+    assert_eq!(
+        first(&[
+            "a plan whose generated code reads an owed line",
+            "a task released by `(unknown CAUSE)`"
+        ]),
+        Some("a task released by `(unknown CAUSE)`")
+    );
+    assert!(sentence.contains(
+        "whatever else that judgement refuses of the file standing as `check` places it"
+    ));
+    let correspondence = include_str!("../../../docs/decisions/decision_device-correspondence.md");
+    assert!(correspondence.contains("runs `archogen check`'s judgement on the target's file alone"));
+    assert!(correspondence
+        .contains("what the profile asks of a machine, one active core among it, is judged of any target named"));
+    let playground = include_str!("../../../docs/decisions/decision_runtime-plan.md");
+    assert!(playground.contains(
+        "a plan holding a task released by `(unknown CAUSE)` refused naming the task and its cause (`missing-fact`"
+    ));
     // A source's `external` is the realization's again, so its `no` is read where an alarm's is (round 30, RP30-1).
     assert!(!RECORD.contains("a source whose `external` its controller's record states `no`"));
     assert!(RECORD.contains("refuses the system `unsupported-profile`, naming its source"));
@@ -2446,20 +2478,53 @@ fn the_epoch_s_line_carries_a_lead_wherever_the_checker_holds_one() {
     assert!(!RECORD.contains("no lead is owed but where the plan has an alarm"));
 }
 
+/// §4: the holds this record adds to the checker's sums are each one `RPF-H4` hands `M2.21.2`, the first compare's, each wake's, each placeholder's and the
+/// refusal of a window or a step past `2^64 − 1` ticks, and the sentence that counts them names each. Before, it said it added one, the first compare's,
+/// where `RPF-H4` and §4 itself add four (round 36, RP36-3).
+#[test]
+fn the_holds_this_record_adds_are_those_rpf_h4_hands_the_checker() {
+    // Each hold, as §4's sentence names it and as `RPF-H4` writes it.
+    const ADDED: [(&str, &str); 4] = [
+        ("the first compare's above", "plus the release timer's `ρ` within what one write reaches on that timer's device"),
+        ("each wake's `P`", "it holds each wake's `P`, its `step`, at no less than the realization's `last-act-lead` plus the port's `epoch-lead`"),
+        ("each placeholder's distance", "it holds each alarm that is no wake the same way, its placeholder's distance in place of `P`"),
+        ("a window or a step past `2^64 − 1` ticks refused `unsupported-profile`", "it refuses a window or a step past `2^64 − 1` ticks"),
+    ];
+    let h4 = RECORD
+        .lines()
+        .find(|line| line.starts_with("| `RPF-H4` | `M2.21.2` |"))
+        .expect("the checker's hand-off");
+    let flat = RECORD.split_whitespace().collect::<Vec<_>>().join(" ");
+    let at = flat
+        .find("The checker's sums** are `RA-H2`'s")
+        .expect("§4's sums");
+    let sentence = &flat[at..at + flat[at..].find("(RP36-3)").expect("its end")];
+    assert!(
+        sentence.contains("this record adds four holds"),
+        "{sentence}"
+    );
+    for (named, handed) in ADDED {
+        assert!(sentence.contains(named), "§4 names {named}");
+        assert!(h4.contains(handed), "`RPF-H4`: {handed}");
+    }
+    assert!(!RECORD.contains("and this record adds one, the first compare's above"));
+}
+
 /// Every refusal the record states has its stage: the search's and the checker's at `check` and `resolve`, the checker's of a plan, `M4.4`'s or the
 /// build's, or the lowering's at a place §7's order names, so no refusal is two outcomes of one input. Before, §5 gave a map finding the joint rules' own
 /// code and §7 added "`missing-fact` from the joint rules" beside `/1`'s kept `tool-failure` for the same finding (round 33, RP33-2; RP7-4 and RP23-3's
 /// class).
 #[test]
 fn every_refusal_the_record_states_has_its_stage() {
-    const STAGES: [(&str, &str); 31] = [
+    const STAGES: [(&str, &str); 32] = [
+        ("a machine the profile refuses as the profile says", "lowering: a target's own refusals"),
         (
             "and the build generates no code of a plan whose epoch line writes `(epoch after-read (lead owed))`",
             "the build",
         ),
         ("the build generates no code of such a plan and refuses it `missing-fact`", "the build"),
         ("which is no refusal, the figures being what such a build makes", "none"),
-        ("The build refuses a plan whose generated code reads an owed line before it compiles anything", "the build"),
+        ("The build refuses a plan before anything of the application's crate", "the build"),
         ("a system with placement memory staying refused as `/1` refuses it", "lowering: `/1`'s list in its order"),
         ("a lowering given one of another code refuses it `invalid-description`", "lowering: a realization of another code identity"),
         ("a file of the one is refused by a lowering of the other", "lowering: a realization of another code identity"),
@@ -2488,10 +2553,9 @@ fn every_refusal_the_record_states_has_its_stage() {
         ("is refused by a lowering of another's", "lowering: a realization of another code identity"),
         ("it refuses a window or a step past `2^64 − 1` ticks", "the checker"),
     ];
-    const EXEMPT: [&str; 6] = [
+    const EXEMPT: [&str; 5] = [
         "if base < F: refuse",
         "which may refuse what holds",
-        "a machine the profile refuses as the profile says",
         "and the refusal says so",
         "so a second fact refused the target it was for",
         "is written owed and refused by nothing",
