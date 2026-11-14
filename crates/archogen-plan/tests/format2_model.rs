@@ -1301,6 +1301,119 @@ fn what_an_alarm_owes_as_a_source_has_its_owed_fact() {
     }
 }
 
+/// §3: a source's route on a target owes `external` by the realization, as an alarm does: `/1` §2.5 gives it the simulator, which holds on the playground
+/// alone, and the composition gates every `J` on it (`compose.rs`, `external.<source>`). `(realization-fact …)` carries it, and a node a job calls its two
+/// facts below; before, its sentence named §2.10's facts alone, so a file stating them had no line to land on (round 22, RP22-1).
+#[test]
+fn a_source_s_route_on_a_target_owes_its_external_and_a_line_carries_it() {
+    let owed = RECORD
+        .split("**`(owed …)`, as `/2` writes it.**")
+        .nth(1)
+        .expect("what `/2` owes");
+    let of_a_route = owed
+        .split("of a source's `(route ITEM)` on a target by `realization`,")
+        .nth(1)
+        .expect("a source's route's");
+    let of_a_route = &of_a_route[..of_a_route.find(';').expect("its end")];
+    assert!(of_a_route.contains("`external`"), "{of_a_route}");
+    let playground = include_str!("../../../docs/decisions/decision_runtime-plan.md");
+    assert!(playground.contains("its `external`, is the simulator's (`RTP-H9`)"));
+    let carried = RECORD
+        .split("`(realization-fact …)` writes")
+        .nth(1)
+        .expect("the realization fact's sentence");
+    let carried = &carried[..carried.find(": `VALUE`").expect("its list")];
+    for fact in ["external", "primitives-out-of-line", "masking-balanced"] {
+        assert!(
+            carried.contains(&format!("`{fact}`")),
+            "`{fact}` has no line: {carried}"
+        );
+    }
+}
+
+/// §3: a node a job calls owes, beside `/1`'s `call-cost` and `masked-runs`, what the release alarm's §4 says it holds of a primitive besides, each phrase
+/// mapped to its fact: so a fact that sentence gains fails here. Before, no line owed either, and the composition gates every composite on the first
+/// (`compose.rs`, `primitives-out-of-line`; round 22, RP22-2).
+#[test]
+fn a_node_a_job_calls_owes_a_primitive_s_other_facts() {
+    const OF_A_PRIMITIVE: [(&str, &str); 2] = [
+        ("`primitives-out-of-line`", "primitives-out-of-line"),
+        (
+            "that a call returns with the masking balanced",
+            "masking-balanced",
+        ),
+    ];
+    let alarm = include_str!("../../../docs/decisions/decision_release-alarm.md");
+    let said = alarm
+        .split("It holds a primitive's other facts too, ")
+        .nth(1)
+        .expect("the release alarm's §4 sentence");
+    let said = &said[..said
+        .find(", each owed by the realization")
+        .expect("its end")];
+    let phrases: Vec<&str> = OF_A_PRIMITIVE.iter().map(|(phrase, _)| *phrase).collect();
+    assert_eq!(said, phrases.join(" and "), "the facts §4 names");
+    let owed = RECORD
+        .split("**`(owed …)`, as `/2` writes it.**")
+        .nth(1)
+        .expect("what `/2` owes");
+    let of_a_node = owed
+        .split("of a node whose context line holds `job` by `realization`,")
+        .nth(1)
+        .expect("a called node's");
+    let of_a_node = &of_a_node[..of_a_node.find(';').expect("its end")];
+    for (_, fact) in OF_A_PRIMITIVE {
+        assert!(
+            of_a_node.contains(&format!("`{fact}`")),
+            "a called node's `{fact}` is owed by no line: {of_a_node}"
+        );
+    }
+}
+
+/// §6: which routes reach the controller is each one's `external`: a source that does not is outside the composition, so a route whose file states `no`
+/// refuses the system and one owed counts as reaching it. Every route of a plan then reaches the controller, and [`priority`]'s `rank − 1` routes ahead is
+/// exact (round 22, RP22-1).
+fn reaching(external: &[Option<bool>]) -> Result<u64, usize> {
+    match external.iter().position(|stated| *stated == Some(false)) {
+        Some(at) => Err(at),
+        None => Ok(u64::try_from(external.len()).expect("few")),
+    }
+}
+
+/// Over every route list of up to 4 routes, each `external` yes, no or owed: a `no` refuses, naming the first; otherwise every route counts, so the routes
+/// ahead of rank `r` number `r − 1`.
+#[test]
+fn every_route_of_a_plan_reaches_the_controller() {
+    let states = [Some(true), Some(false), None];
+    for count in 0..=4u32 {
+        for choice in 0..3usize.pow(count) {
+            let external: Vec<Option<bool>> = (0..count)
+                .map(|at| states[choice / 3usize.pow(at) % 3])
+                .collect();
+            match reaching(&external) {
+                Err(at) => assert_eq!(external[at], Some(false), "{external:?}"),
+                Ok(routes) => {
+                    assert!(
+                        external.iter().all(|stated| *stated != Some(false)),
+                        "{external:?}"
+                    );
+                    assert_eq!(routes, u64::from(count));
+                    for rank in 1..=routes {
+                        let ahead = u64::try_from(
+                            external[..usize::try_from(rank - 1).expect("few")].len(),
+                        )
+                        .expect("few");
+                        assert_eq!(priority(8, routes, rank), (routes <= 8).then(|| 8 - ahead));
+                    }
+                }
+            }
+        }
+    }
+    assert!(RECORD.contains(
+        "a route whose `external` the file states `no` refuses the system `unsupported-profile`"
+    ));
+}
+
 /// §3, `R`: a rate in hertz, exact, a whole number or `N/D` in lowest terms, as `/1` writes a duration (round 4, RP4-7).
 fn rate(numerator: u64, denominator: u64) -> String {
     let (mut a, mut b) = (numerator, denominator);
