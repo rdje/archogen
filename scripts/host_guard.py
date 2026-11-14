@@ -1747,8 +1747,11 @@ class ShellReader:
         return None
 
     def read_expansions(self, inside: str) -> None:
-        """Arithmetic runs nothing but what a substitution in it would."""
-        ShellReader(inside, self.found, self.pipelines).expansions([], None)
+        """Arithmetic runs nothing but what a substitution in it would. A placeholder it holds is counted for the command whose word holds it, and what it runs
+        stands where the text read again was a word, as the word's own reading does (round 39)."""
+        reader = ShellReader(inside, self.found, self.pipelines, self.outer_from, self.fed)
+        reader.expansions([], None)
+        self.marks += reader.marks
 
     def word(self) -> tuple[str, bool]:
         """One word, as the command would get it, and whether any of it was quoted."""
@@ -1852,7 +1855,9 @@ class ShellReader:
                 elif c == "'" and not in_quotes:
                     end = text.find("'", self.at + 1)
                     end = len(text) if end < 0 else end
-                    parts.append(text[self.at + 1 : end])
+                    said = text[self.at + 1 : end]
+                    parts.append(said)
+                    self.marks += sum(said.count(mark) for mark in PLACEHOLDERS)
                     self.at = end + 1
                 else:
                     parts.append(c)
@@ -1892,8 +1897,11 @@ class ShellReader:
         if "".join(inner) == "…":
             self.marks += 1
         else:
-            # Inside text read again, what a backquote runs stands where that text was a word too (round 38).
-            ShellReader("".join(inner), self.found, self.pipelines, self.outer_from, self.fed).commands()
+            # Inside text read again, what a backquote runs stands where that text was a word too (round 38), and a placeholder it holds is the word's own,
+            # `kill \`echo $(…)\`` (round 39).
+            reader = ShellReader("".join(inner), self.found, self.pipelines, self.outer_from, self.fed)
+            reader.commands()
+            self.marks += reader.marks
         parts.append("`…`")
 
     def read_here_docs(self) -> None:
@@ -1916,7 +1924,14 @@ class ShellReader:
                     break
                 lines.append(line)
             if runs_its_input(fed) or feeds_a_group(fed):
-                ShellReader("\n".join(lines), self.found, self.pipelines, self.outer_from, self.fed).commands()
+                body, start = "\n".join(lines), len(self.found)
+                if not quoted:
+                    # Unquoted, the body is expanded before the shell reads it: its substitutions run first and leave what they print where they stood, and the
+                    # backslashes the expansion takes are gone. Read as written, `bash <<E` of `kill '$(pgrep x)'` passed (round 39).
+                    expanding = ShellReader(body, self.found, self.pipelines, self.outer_from, self.fed)
+                    body = expanding.as_fed()
+                    self.marks += expanding.marks
+                ShellReader(body, self.found, self.pipelines, start if self.outer_from is None else min(start, self.outer_from), self.fed).commands()
             elif not quoted:
                 start = len(self.found)
                 self.read_expansions("\n".join(lines))
@@ -1925,6 +1940,25 @@ class ShellReader:
                 command = self.emitted.get(id(fed))
                 if command is not None and len(self.found) > start:
                     self.found.append(Command(command.words, command.pipeline, command.fed, command.own_from))
+
+    def as_fed(self) -> str:
+        """An unquoted here-document's body as its command gets it: `\\$`, `\\``, `\\\\` and a backslash before a line feed lose their backslash, and each
+        substitution runs, read here, leaving its placeholder (round 39)."""
+        text, parts = self.text, []
+        while self.at < len(text):
+            c = text[self.at]
+            if c == "\\" and text[self.at + 1 : self.at + 2] in ("$", "`", "\\", "\n"):
+                following = text[self.at + 1]
+                parts.append("" if following == "\n" else following)
+                self.at += 2
+            elif c == "$":
+                self.dollar(parts, in_quotes=True)
+            elif c == "`":
+                self.backticks(parts)
+            else:
+                parts.append(c)
+                self.at += 1
+        return "".join(parts)
 
     def emit(self, words: list[str], pipeline: int, started: int, outer: bool = False) -> None:
         if words[0] in NOT_A_COMMAND:
@@ -2517,6 +2551,11 @@ def main(argv: list[str]) -> int:
     # What stands and is no directory is no repository: every verb says so alike, where `check` said clear and `run` said it was gone (round 38).
     if root.exists() and not root.is_dir():
         say(f"host-guard: refused: `{root}` is no directory, and a root is a repository's directory")
+        return 2
+    # Nor is a root that is gone, which every verb says alike, where they said five things and `ensure` raised; but the hook, which lets a light command through,
+    # there being nothing of ours there to keep (round 39).
+    if not root.exists() and verb != "hook":
+        say(f"host-guard: refused: `{root}` is gone, and a root is a repository's directory")
         return 2
     # A `run` says whose it is on its command line, which is how the watcher knows its job is ours, wherever it was started from.
     # A `run` is known by what follows its root, the root's own spelling and a flag, so it writes both, as named or not.

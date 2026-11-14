@@ -1267,7 +1267,19 @@ mdBook that is the director's window into the project.
   Commit: `ARCHOGEN-PROGRAM-1280 (leaf PROGRAM.127.38)`
 
 - ID: `PROGRAM.127.39`
-  Status: `pending` — round 39, a fresh reader over round 38's answer. It closes on a round that finds no defect, and a form written to go round the guard, or a reader with no line for a form, is a stated limit, not a defect.
+  Status: `done` — `2026-11-14`: round 39, a fresh reader over round 38's answer: 3 findings, 2 defects, after 4, with a gap. Both defects fail open in the reader of a kill, one in round 38's own answer, the other older and met in an ordinary spelling, `bash <<E` of `kill '$(pgrep x)'`. The findings and each answer are in `docs/reviews/decision_host-guard-reviews.part-2.md`; its report is `target/p12739/report.md`.
+
+  **Acceptance checklist (`DOCTRINE_ENFORCEMENT.md`):**
+  - [x] **REPRODUCE / ISSUE** — its reader's own runs on `01822044`, the real hook fed JSON for a scratch root (`target/p12739/report.md`): ``bash -c "kill \`echo $(pgrep -x rustc)\`"`` and five more forms of text read again, and `bash <<E` of `kill '$(pgrep -x rustc)'` and two more, each → exit 0. Here, the new rows on `a1068afe`'s guard, the same file: `python3 -I -B target/p12739/land/red/scripts/selftest_host_guard.py case_a_kill_is_read_through_what_hides_it case_what_no_root_can_be` → `142 passed, 15 failed, 0 not run`; the reader's forms, `python3 -I -B target/p12739/land/probe.py scripts/host_guard.py` on that guard → `wrong 10 of 16`.
+  - [x] **ROOT CAUSE (WHY + WHERE)** — `git grep -n 'ShellReader(inside, self.found, self.pipelines).expansions(\[\], None)' a1068afe -- scripts/host_guard.py` → line 1751: a reader built for an expansion, its count dropped and no start given, as the backquote's beside it; `git grep -n 'if runs_its_input(fed) or feeds_a_group(fed):' a1068afe -- scripts/host_guard.py` → line 1918: a here-document fed to a shell read as written, quoted or not; `git grep -n 'if root.exists() and not root.is_dir():' a1068afe -- scripts/host_guard.py` → line 2518: a root that stands judged, and none for one that is gone.
+  - [x] **FIX** — `scripts/host_guard.py`: `read_expansions` and `backticks` handing back what their readers counted and giving them the reread's start; `dollar`'s `${…}` counting its single quotes; `read_here_docs` and `ShellReader.as_fed` expanding an unquoted here-document before its shell reads it; `main` refusing a gone root for every verb but the hook. `scripts/selftest_host_guard.py`: rows for each. The record's sentences.
+  - [x] **ADDRESSED (verified)** — `python3 -I -B scripts/selftest_host_guard.py` → `1283 passed, 0 failed, 0 not run`, exit 0, on the final bytes, this round's rows among them, 1265 before, round 36's gone-root row now asking the refusal every verb gives; `python3 -I -B target/p12739/land/probe.py scripts/host_guard.py` → `wrong 0 of 16`, and rounds 37's and 38's forms → `wrong 0 of 29`, `wrong 0 of 15`.
+  - [x] **NO REGRESSION** — `bash scripts/check_host_guard.sh` → `host-guard: OK`, exit 0; `bash scripts/run_self_tests.sh --self-test` → `run-self-tests self-test: 18 pass / 0 fail (18 arms)`; `make focused` → `tier focused: passed — 3 passed, 0 failed`, on the staged tree.
+  - [x] **LOCKSTEP** — the record, the review history and its index, these leaves and the Commit Log; `MEMORY.md`'s next action. The book's section says nothing this round moves.
+  Commit: `ARCHOGEN-PROGRAM-1283 (leaf PROGRAM.127.39)`
+
+- ID: `PROGRAM.127.40`
+  Status: `pending` — round 40, a fresh reader over round 39's answer. It closes on a round that finds no defect, and a form written to go round the guard, or a reader with no line for a form, is a stated limit, not a defect.
 
 - ID: `PROGRAM.128`
   Status: `done` — `2026-11-05`: by the director's word, "If you ever need new CPU, DSP, MCU, BOARD, ISA or in general digital chip PDF just look here", naming `chipdoc`'s `AGENTS.md`. The record, its index row, the book's ledger and a `TOOLBOX.md` row now start any chip document's need there. Reading it corrected three things of ours: the record and the ledger still said `REQ-007` was `requested`, fulfilled `2026-09-30`; the ledger said the corpus was off this volume; and the record said what is adopted is copied here, where most of the corpus may not be republished and this repository is public, so a fact and its citation are copied and never a document. A documents-only leaf.
@@ -1591,6 +1603,7 @@ leaf's outcome is its row in the Commit Log below, and a sealed leaf's full reco
 | `PROGRAM.127.37` | `ARCHOGEN-PROGRAM-1276 (leaf PROGRAM.127.37)` | **the host guard's review, round 37**: a placeholder read again stands for its substitution, and what feeds a shell's text feeds its commands; a run's further pipelines drawn from one count; the lock opened as a directory without waiting; here-strings and groups' redirections read; the mount sentence made true |
 | `PROGRAM.138` | `ARCHOGEN-PROGRAM-1279 (leaf PROGRAM.138)` | **the twenty-seventh artifact cleanup, the director's**: 164.9 GB of nested cargo build output and test scratch, `target/` 180.0 GB to 16.5 GB, every piece of evidence kept |
 | `PROGRAM.127.38` | `ARCHOGEN-PROGRAM-1280 (leaf PROGRAM.127.38)` | **the host guard's review, round 38**: a placeholder counted wherever text is taken as it stands; a nested run's job standing for the outer run's words; a group fed a here-document a stated limit; a volume of `/`'s group and a root that is no directory refused by every verb |
+| `PROGRAM.127.39` | `ARCHOGEN-PROGRAM-1283 (leaf PROGRAM.127.39)` | **the host guard's review, round 39**: each reader a word builds hands back its count and stands where the text was a word; an unquoted here-document expanded before its shell reads it; a gone root said alike by every verb but the hook |
 
 ## Changelog
 
@@ -1704,3 +1717,4 @@ leaf's outcome is its row in the Commit Log below, and a sealed leaf's full reco
 - `2026-11-13`: `PROGRAM.127.37` done: the guard's round 37, seven findings answered, four defects, two failing open in the reader; `PROGRAM.127.38` filed for round 38.
 - `2026-11-14`: `PROGRAM.138` done: the twenty-seventh artifact cleanup, asked by the director: `target/` from 180.0 GB to 16.5 GB, build output and test scratch alone.
 - `2026-11-14`: `PROGRAM.127.38` done: the guard's round 38, seven findings answered, four defects, three failing open in round 37's reading; `PROGRAM.127.39` filed for round 39.
+- `2026-11-14`: `PROGRAM.127.39` done: the guard's round 39, three findings answered, two defects failing open in the reader of a kill; `PROGRAM.127.40` filed for round 40.

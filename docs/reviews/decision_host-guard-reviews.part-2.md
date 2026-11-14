@@ -39,3 +39,13 @@ Said, and left as it stands: its reader's oracle ran `sh`'s own `kill` once, on 
 | G38-7 | gap, mild | `check` said clear of a root that is a file, where `run` said it was gone | A root that stands and is no directory is refused by every verb alike. A row |
 
 Said, and left as it stands: its reader's first self-test run wrote `scripts/__pycache__/` by a probe run without `-B`, which it removed before the second; and its oracle ran `/bin/sh`'s own `kill` once, on pid 999999, above macOS's limit, which reached no process.
+
+**Round 39** — `2026-11-14`, leaf `PROGRAM.127.39`: not acceptable, 3 findings, 2 defects, after 4, on `01822044`. Round 38's answers held where it looked: the self-test `1265 passed`; the oracle's 263 and 269 forms; a cluster and a row of `-W` pairs read at once; a row ending at a line feed alone; `/System/Volumes/Data` and a link to it refused, and a file, a link to a file and `/dev/null` refused as no directory; eight ordinary commands that print a quoted placeholder passing; at depth 3, 27,324 forms over ten layers, leaving out the two classes below, none failing open. Its rigs are `target/p12739/work/rig/`.
+
+| # | Kind | Finding | Answer |
+| --- | --- | --- | --- |
+| G39-1 | defect, fails open, round 38's own answer | a placeholder in a backquote, an arithmetic expansion, a here-document's body or `${…}` of text read again was not counted for the command whose word holds it, each built a reader of its own whose count was dropped and which had no start, so ``bash -c "kill \`echo $(pgrep -x rustc)\`"`` and five more forms passed | Each reader a word builds hands back what it counted and stands where the text read again was a word, a backquote's and an arithmetic expansion's and a here-document body's; `${…}`'s single quotes count. Rows for each |
+| G39-2 | defect, fails open, older, met in an ordinary spelling | an unquoted here-document fed to a shell was read as written, its backslashes as quoting and its single quotes as guarding substitutions the outer expansion runs, `bash <<E` of `kill '$(pgrep -x rustc)'` passing | It is read as that shell gets it: expanded first, its substitutions run and its backslashes taken, the shell reading a placeholder where each stood. Rows, and three forms that only print or kill by a file's pid still passing |
+| G39-3 | gap, mild, fails closed | a root removed under its watcher was said five ways by five verbs, `ensure` raising | Every verb but the hook refuses it alike, the hook letting a light command through. A row |
+
+Said, and left as it stands: its reader's oracle sent no signal, a `kill` handed 4242 being shown and never sent; its one signal was its own `stop` of its scratch watcher.

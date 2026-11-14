@@ -1094,6 +1094,11 @@ def case_what_no_root_can_be() -> None:
     for verb in (["check"], ["status"], ["run", "--", "true"]):
         said = subprocess.run([*PY, str(GUARD), verb[0], "--root", str(plain), *verb[1:]], capture_output=True, text=True, errors="replace", timeout=30)
         check(f"`{verb[0]}` refuses a root that is no directory", said.returncode == 2 and "is no directory" in said.stderr, (said.returncode, said.stderr[-200:]))
+    # A root that is gone is said alike by every verb but the hook, where five said five things and `ensure` raised (round 39).
+    gone = fresh("gone") / "root"
+    for verb in (["check"], ["status"], ["ensure"], ["stop"], ["run", "--", "true"]):
+        said = subprocess.run([*PY, str(GUARD), verb[0], "--root", str(gone), *verb[1:]], capture_output=True, text=True, errors="replace", timeout=30)
+        check(f"`{verb[0]}` refuses a root that is gone", said.returncode == 2 and "is gone" in said.stderr and "Traceback" not in said.stderr, (said.returncode, said.stderr[-200:]))
     # A name that is a pipe holds no guard that opens it: as a root, or named by a row that reads as another root's `run` (round 36).
     pipe = fresh("pipe") / "fifo"
     os.mkfifo(pipe)
@@ -1651,6 +1656,18 @@ def case_a_kill_is_read_through_what_hides_it() -> None:
         "trap \"kill '$(pgrep -x rustc)'\" EXIT",
         "bash -c \"python3 scripts/host_guard.py run -- kill '$(pgrep -x rustc)'\"",
         'python3 scripts/host_guard.py run -- python3 scripts/host_guard.py run -- bash -c "true; kill $(pgrep -x rustc)"',
+        # A placeholder is counted for the command whose word holds it through a backquote, an arithmetic expansion, a here-document's body and `${…}`;
+        # and an unquoted here-document fed to a shell is read as that shell gets it, expanded first (round 39).
+        'bash -c "kill \\`echo $(pgrep -x rustc)\\`"',
+        "sh -c 'kill `echo '\"$(pgrep -x rustc)\"'`'",
+        'bash -c "kill \\$(cat <<E\n$(pgrep -x rustc)\nE\n)"',
+        'bash -c "kill \\$(echo \\$(( $(pgrep -x rustc) )))"',
+        "bash -c \"kill \\$(echo \\${x:-'$(pgrep -x rustc)'})\"",
+        "bash -c \"cat <<E\n\\$(kill '$(pgrep -x rustc)')\nE\"",
+        "bash <<E\nkill '$(pgrep -x rustc)'\nE",
+        "bash <<E\nkill \\$(pgrep -x rustc)\nE",
+        "bash <<E\nkill \\`pgrep -x rustc\\`\nE",
+        "python3 scripts/host_guard.py run -- bash <<E\nkill '$(pgrep -x rustc)'\nE",
     ):
         check(f"`{text}` is refused", refused(text))
     for text in (
@@ -1688,6 +1705,10 @@ def case_a_kill_is_read_through_what_hides_it() -> None:
         # A placeholder between single quotes is still that substitution alone (round 38).
         "bash -c \"kill '$(cat job.pid)'\"",
         "bash -c \"echo '$(date)'\"",
+        # An unquoted here-document fed to a shell that only prints, or kills by a file's pid (round 39).
+        "bash <<E\necho '$(date)'\nE",
+        "bash <<E\nkill $(cat job.pid)\nE",
+        'bash -c "kill \\`cat job.pid\\`"',
     ):
         check(f"`{text}` is not", not refused(text))
     check("`env -` hides nothing it wraps", g.commands_of("env - cargo build")[0].words == ["cargo", "build"])
@@ -1769,7 +1790,8 @@ def case_a_root_that_is_gone_stays_gone() -> None:
     time.sleep(0.5)
     check("and does not bring it back", not scope.exists())
     report = subprocess.run([*PY, str(GUARD), "run", "--root", str(scope), "--", "true"], capture_output=True, text=True, timeout=30)
-    check("and a `run` there says so and runs nothing", report.returncode == 75 and "gone" in report.stderr, report.stderr)
+    # A root that is gone is refused as every verb refuses it, not put off as a full host's turn is (round 39).
+    check("and a `run` there says so and runs nothing", report.returncode == 2 and "is gone" in report.stderr, report.stderr)
 
 
 def case_growth_is_of_the_last_minutes() -> None:
