@@ -98,9 +98,12 @@ A platform declares what it **offers** and what it declares **absent**; a system
    verdict (leaf `M3.4.17.5`: "refused by the search" was said of both).
 3. **A required fact that nothing describes is missing.** It lies inside the dependency closure of what
    the system requests, by `uses` or `needs` wherever it writes them, its tasks and its clause among it, so no decision that depends on it can be made: `missing-fact`.
-   A block's or a platform's `uses` composes and requests nothing: a part enters the closure as it may be bound, offering a fact inside it or one the
-   vocabulary's rule derives such a fact of, and its own needs enter with it. Which part the search binds is the search's, so each that may be is read, and
-   a precondition of one it does not bind is refused all the same (leaf `M3.4.17.3`).
+   A block's or a platform's `uses` composes and requests nothing: a part enters the closure as it may be bound, offering a fact inside it, one the
+   vocabulary's rule derives such a fact of, or one an engine's adapter kind adding such a fact requires beneath, an instance over the part binding it, or
+   named by `needs` by what is inside, and its own needs enter with it. Which part the search binds is the search's, so each that may be is read, and
+   a precondition of one it does not bind is refused all the same (leaf `M3.4.17.3`; the adapter's path, leaf `M3.4.17.6`). The search counts the same
+   parts and binds no other part's needs (§8 rule 5), and the reading on each system's own hardware below is told the vocabulary's rules and the
+   adapters as the whole reading is.
    **Rules 2 and 3 and the engine's adapters** (`SR-H9`; leaf `M3.2.4`, `docs/specs/adapters/decision_engine-adapters.md`
    §7). For a required fact one of the engine's adapter kinds **adds** — offers, not passed through from itself, and
    not named in what it requires beneath — both rules ask whether one block or platform of the description offers,
@@ -137,7 +140,7 @@ A platform declares what it **offers** and what it declares **absent**; a system
    its facts' names to the check (`check_with_vocabulary`), and a check told none reads every description whole.
 4. **What lies outside the closure fails nothing, and stays visible** (§5.3). An undescribed fact that nothing
    the description requests depends on is not an error, a composed part's that offers nothing inside the closure among it, `ROADMAP.md` §5.3's unused device
-   (rule 3), though the search still binds such a part's needs on facts the vocabulary declares, used or not, until `M3.4.17.6`. It is reported as metadata: `archogen check` prints,
+   (rule 3), the search binding such a part's needs no more than presence reads them (§8 rule 5; leaf `M3.4.17.6`). It is reported as metadata: `archogen check` prints,
    after its verdict, the closure with what pulled each fact in and then every fact outside it
    (`Closure` in `crates/eadl-model/src/check.rs`). Those lines are not diagnostics, so the reference's §4
    rule 1 holds (leaf `M1.30`).
@@ -305,8 +308,9 @@ configuration checker judges a plan's bindings again by those that refuse an ass
 written from this section alone (`crates/archogen-plan-check/src/joint.rs`, `M3.5.5`).
 
 1. **Requesters.** A requester is a task, for what the task itself writes; a service; or any other declaration, for
-   what it writes at its own level outside its tasks. Two tasks of one system are two requesters, though §7 reads them
-   as one side. A platform's or a block's `uses` is composition, never a binding.
+   what it writes at its own level outside its tasks, a block or a platform only as it may be bound (rule 5). Two tasks
+   of one system are two requesters, though §7 reads them as one side. A platform's or a block's `uses` is
+   composition, never a binding.
 2. **Consumed facts.** A vocabulary entry marked `use consumed` — `relative-delay` and `absolute-deadline` in `/1` —
    is a function a requester programs. A binding takes a channel when its requirement is on a consumed fact and is met
    by the value `true`: `(needs f)`, `(f true)` or the group whose head it is. `(f false)` takes none, and a shared
@@ -355,8 +359,11 @@ written from this section alone (`crates/archogen-plan-check/src/joint.rs`, `M3.
    or not, composed or not; one past the exact arithmetic, a decimal too precise to hold exactly (§1 rule 5) among them,
    which no one can say is whole (`M4.1.20`), `unsupported-profile`. A provider nothing is bound to owns
    nothing: an unused device costs nothing (`ROADMAP.md` §5.3) but the bytes it occupies in memory, which rule 10
-   charges. Its needs on facts the vocabulary declares are bound all the same, as any requester's, until `M3.4.17.6`; presence reads its other needs only as
-   it may be bound (§2 rule 3).
+   charges. Its needs are bound only as it may be bound, as presence reads them (§2 rule 3): a block or a platform is a requester where the system names
+   it — in its `platform` clause, its own `uses` and `needs` or its tasks' — or a requester it serves that is no part names it, or it offers a fact a
+   requester counted requires, one the vocabulary's rule derives such a fact of, or one an adapter kind the search may bind requires beneath where that
+   kind adds such a fact, or a part counted names it by `needs`, to a fixed point (`eadl_resolve::joint::counted_parts`). One composed and offering
+   nothing asked binds nothing and fails nothing, and what it names is still the language's to judge (leaf `M3.4.17.6`).
 6. **One assignment, then the search.** A conflict refuses the assignment it is found in, and an unknown blocks it. When
    no assignment holds, the description takes the highest code, by precedence, of one assignment's findings: the first
    blocked by unknowns alone, `missing-fact`, or, where every assignment has a conflict, the first's conflicts,

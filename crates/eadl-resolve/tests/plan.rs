@@ -1021,15 +1021,17 @@ fn a_block_s_own_requirements_are_bound_and_rebuilt() {
 fn a_block_bound_for_requirements_of_its_own_is_a_node_of_rule_12_s_graph() {
     // Leaf `M4.1.15`: a block the system serves that is bound for requirements of its own is a requester whose code an
     // interrupt can run — here its deadline instance's expiry — so it is a node, a provider's, with the edge from the
-    // instance bound for it, though nothing binds to the block itself.
+    // instance bound for it. It offers what the system asks, so it may be bound and its needs are the search's (leaf
+    // `M3.4.17.6`: offering nothing asked, an unused device's needs bind nothing).
     let text = "(eadl-version eadl/1)
 (defblock timer.d
   (offers (relative-delay true) (counter-modulus 65536) (tick-rate 10 MHz) (observation-coherent true)
     (channels 2 tick) (reachable-at-privilege machine)))
-(defblock dma.x (offers (reachable-at-privilege machine)) (requires (needs absolute-deadline)))
+(defblock dma.x (offers debug-port (reachable-at-privilege machine)) (requires (needs absolute-deadline)))
 (defplatform soc (offers (core-count 1 tick) (reachable-at-privilege machine)) (requires (uses timer.d dma.x)))
 (defsystem be
   (task a (period 10 ms) (deadline 10 ms) (deadline-from release) (priority 1))
+  (requires (needs debug-port))
   (platform (uses soc)))
 ";
     let (record, accepted, rebuilt) = resolved_and_judged(text);

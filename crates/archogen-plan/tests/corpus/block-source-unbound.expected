@@ -6,6 +6,7 @@
 (assignment "…")
 (adapters adapters/1)
 (task 0 (task bn a) (rank 1) (period 1/100 s) (deadline 1/100 s) (deadline-from release) (jitter 0 s) (overrun fault) (released-by timer) (uses))
+(bind bn debug-port nic)
 (bind nic interrupt-source dev.e)
 (timer simulator (releases (task bn a)))
 (route 1 (source dev.e) (separation 1/50 s) (level machine) (deliverable yes) (requesters nic) (costs))

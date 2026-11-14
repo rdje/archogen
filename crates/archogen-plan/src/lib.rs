@@ -643,9 +643,11 @@ fn lowered(
         })
     };
     // Each pair by the namer's text, then the system's, compared byte by byte, never by the message's words (§1).
+    // A block or a platform whose needs bind nothing among them: what it names is the language's to judge (leaf `M3.4.17.6`).
     let mut naming_systems: Vec<(&str, &str)> = rebuilt
         .requesters
         .iter()
+        .chain(&rebuilt.uncounted)
         .filter(|r| rebuilt.system.serves(&r.name))
         .flat_map(|r| {
             r.uses
@@ -682,6 +684,7 @@ fn lowered(
     let mut composing_other: Vec<(&str, &str)> = rebuilt
         .requesters
         .iter()
+        .chain(&rebuilt.uncounted)
         .filter(|r| {
             rebuilt.system.serves(&r.name) && declared(&r.name).is_some_and(is_hardware_decl)
         })

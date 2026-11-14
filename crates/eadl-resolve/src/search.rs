@@ -387,6 +387,16 @@ fn run(
     if !diagnostics.is_empty() {
         return stopped(refused(diagnostics));
     }
+    // A part's needs are the search's to bind as the part may be bound, as presence reads them (model §2 rule 3, §8 rule 5; leaf `M3.4.17.6`).
+    let counted = crate::joint::counted_parts(
+        system,
+        &read,
+        &providers,
+        &all,
+        vocabulary,
+        &policy.adapters,
+    );
+    crate::joint::retain_counted(&mut all, &providers, &counted);
     let joint = match Joint::new(&providers, &all, vocabulary) {
         Ok(joint) => joint,
         Err(findings) => {

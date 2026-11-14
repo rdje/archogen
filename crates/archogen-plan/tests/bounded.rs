@@ -2267,8 +2267,9 @@ fn arithmetic_case(
 /// lowered. A system is named by `uses`, or every one by `needs`, at each set of five sites — `sys`'s task, `sys`'s own
 /// level and a service `sys`'s task uses naming `other`, and `other`'s task and a service only `other`'s task uses
 /// naming `sys`; the service `alarm`, taking a channel, used by `sys`'s task alone or by both systems' tasks; `other`
-/// on `sys`'s platform or on its own, which composes a block requiring a timer's channel; each system's own level using
-/// nothing or a service. So §1's naming-system refusal reads the requesters the lowered system serves and no other —
+/// on `sys`'s platform or on its own, which composes a block requiring a timer's channel and offering the transfer
+/// engine `other`'s task then asks, so the block may be bound and its requirement is one (model §2 rule 3, §8 rule 5;
+/// leaf `M3.4.17.6`); each system's own level using nothing or a service. So §1's naming-system refusal reads the requesters the lowered system serves and no other —
 /// a system reached served for its own level alone — the generator's closure is held to the configuration checker on
 /// each, and a service two systems use, and hardware another system serves, are read system by system.
 fn two_systems() -> Vec<Case> {
@@ -2395,6 +2396,7 @@ fn two_systems_case(
     let mut platforms = vec![platform("host.p", &["timer.d", "uart.c"])];
     if own_platform {
         blocks.push(timer_block("timer.q", 2, false));
+        // Asked by `other`'s task below, so `dma.q`'s own requirement binds where `other` is lowered (leaf `M3.4.17.6`).
         blocks.push(Block {
             name: "dma.q".to_string(),
             offers: names(&["(transfer-engine true)", "(reachable-at-privilege machine)"]),
@@ -2416,6 +2418,9 @@ fn two_systems_case(
         own: sys_level,
         platform: "host.p".to_string(),
     };
+    if own_platform {
+        o.needs.push("transfer-engine".to_string());
+    }
     let other = System {
         name: "other".to_string(),
         tasks: vec![Task {
@@ -3896,7 +3901,8 @@ const DEADLINE_STATES: [Option<BoundState>; 4] = [
 
 /// **The obliged bounds of every requester an instance serves** (§1, §2.4; round 16, R16-R1: the reading took "an
 /// obliged bound's requester among services, tasks and hardware, never the own level"): the system's own level, the
-/// service `dl` and the policy `pol` its task `t` uses, its platform `soc` and the block `blk` it composes, each
+/// service `dl` and the policy `pol` its task `t` uses, its platform `soc` and the block `blk` it composes and names by
+/// `needs`, so `blk` may be bound and what it writes is a requirement (model §2 rule 3, §8 rule 5; leaf `M3.4.17.6`), each
 /// writing one choice of [`DEADLINE_STATES`], each met by an exclusive `deadline-over-delay` instance over the one timer.
 /// So §1 names each bound past the arithmetic by its instance's text, the system's own level's among them, ahead of
 /// that level's expiry, which a bound within the arithmetic leaves the refusal of its receiver (§1); and a plan writes
@@ -3930,6 +3936,7 @@ fn obliged_bounds_of_every_requester() -> Vec<Case> {
             ..Block::default()
         };
         platform.side.uses = names(&["timer.d", "blk"]);
+        platform.side.needs.push("blk".to_string());
         cases.push(Case {
             label: format!("own:{own:?} dl:{dl:?} pol:{pol:?} soc:{soc:?} blk:{blk:?}"),
             description: Description {
@@ -5364,7 +5371,8 @@ const EXACT_WRITINGS: [(&str, &[Dur], &[Dur]); 11] = [
 ];
 
 /// The requesters of the `exactly` universe, each served by an exclusive `deadline-over-delay` instance: the system's
-/// own level, the service `dl` and the policy `pol` its task uses, its platform `soc` and the block `blk` it composes.
+/// own level, the service `dl` and the policy `pol` its task uses, its platform `soc` and the block `blk` it composes and
+/// names by `needs`, so `blk` may be bound and what it writes is a requirement (leaf `M3.4.17.6`).
 const EXACT_REQUESTERS: [&str; 5] = ["sys", "dl", "pol", "soc", "blk"];
 
 /// **An obliged fact's bound written `exactly`** (§2.4, §1; round 23, R23-R7): one requester of [`EXACT_REQUESTERS`]
@@ -5400,6 +5408,7 @@ fn exactly_bounds() -> Vec<Case> {
                 ..Block::default()
             };
             platform.side.uses = names(&["timer.d", "blk"]);
+            platform.side.needs.push("blk".to_string());
             cases.push(Case {
                 label: format!("{requester} writes {writing}"),
                 description: Description {
@@ -12347,7 +12356,10 @@ fn requiring_hardware_its_nodes_contexts_and_multiplexing() {
     // read from what `dma.x` and `soc` require and who binds to them, as the label writes it: requiring hardware bound to
     // by its binder or by nothing (neither binds the other's offer); an alarm, an expiry or a handler of the source
     // where either requires one; an edge to whichever requires anything; `soc` bound to a block it composes for an
-    // alarm, the source or an output, `timer.d` and `uart.c` texts above `soc`'s, `dev.s`'s below.
+    // alarm, the source or an output, `timer.d` and `uart.c` texts above `soc`'s, `dev.s`'s below. What a part requires
+    // is a requirement only as the part may be bound (model §2 rule 3, §8 rule 5; leaf `M3.4.17.6`): `soc`, the system's
+    // platform, always; `dma.x`, composed and offering `transfer-engine`, only where something binds to it, so bound to
+    // by nothing it requires nothing.
     let part = |c: &Case, who: &str| -> (String, String) {
         let at = c.label.find(&format!("{who}:")).expect("a part") + who.len() + 1;
         let rest = &c.label[at..];
@@ -12361,11 +12373,19 @@ fn requiring_hardware_its_nodes_contexts_and_multiplexing() {
         (requires, binder)
     };
     let lowered = |c: &Case| c.label.contains("alarm composed by Nothing");
-    let requires = |c: &Case, what: &str| ["dma.x", "soc"].iter().any(|w| part(c, w).0 == what);
+    let required = |c: &Case, who: &str| -> String {
+        let (requires, binder) = part(c, who);
+        if who == "soc" || binder != "Nothing" {
+            requires
+        } else {
+            "Nothing".to_string()
+        }
+    };
+    let requires = |c: &Case, what: &str| ["dma.x", "soc"].iter().any(|w| required(c, w) == what);
     let requiring = |c: &Case, bound: bool| {
         ["dma.x", "soc"].iter().any(|w| {
-            let (requires, binder) = part(c, w);
-            requires != "Nothing" && (binder != "Nothing") == bound
+            let binder = part(c, w).1;
+            required(c, w) != "Nothing" && (binder != "Nothing") == bound
         })
     };
     hold(
@@ -12379,7 +12399,7 @@ fn requiring_hardware_its_nodes_contexts_and_multiplexing() {
             counted(
                 "hardware: a block bound for requirements of its own",
                 &cases,
-                |c| lowered(c) && part(c, "dma.x").0 != "Nothing",
+                |c| lowered(c) && required(c, "dma.x") != "Nothing",
             ),
             counted(
                 "hardware: a platform bound for requirements of its own",
@@ -12415,7 +12435,8 @@ fn requiring_hardware_its_nodes_contexts_and_multiplexing() {
                 "initialisation: an edge to a block or a platform bound for its own requirements",
                 &cases,
                 |c| {
-                    lowered(c) && (part(c, "dma.x").0 != "Nothing" || part(c, "soc").0 != "Nothing")
+                    lowered(c)
+                        && (required(c, "dma.x") != "Nothing" || part(c, "soc").0 != "Nothing")
                 },
             ),
             counted(
@@ -12764,8 +12785,9 @@ fn a_second_system_named_or_not() {
             counted("hardware: an alarm it programs itself", &cases, |c| {
                 lowered(c) && !lowering_sys(c) && own_platform(c)
             }),
+            // `other`'s task reaching `timer.q`'s channel through `dma.q`, which it is bound to (leaf `M3.4.17.6`).
             counted("multiplex: a channel with one user", &cases, |c| {
-                lowered(c) && (lowering_sys(c) || shared(c))
+                lowered(c) && (lowering_sys(c) || shared(c) || own_platform(c))
             }),
             counted("multiplex: its own route no user", &cases, |c| {
                 lowered(c)
@@ -13468,8 +13490,12 @@ fn a_provider_bound_to_the_node_taking_its_channel() {
     // itself or through an instance; `dma.x` by `xfer` or the timer; `soc` by `cpu` or the timer — or by nothing; a
     // component where the timer is bound to what takes its channel, an instance among it where that one takes a
     // deadline; `soc` bound to the timer it composes for an alarm, the timer bound to `soc` for `core-count`, one
-    // component where both are, else two steps the binding orders unlike their texts, `timer.d` above `soc`.
-    let timer = |c: &Case, fact: &str| c.description.blocks[0].side.needs.iter().any(|n| n == fact);
+    // component where both are, else two steps the binding orders unlike their texts, `timer.d` above `soc`. What a
+    // part requires is a requirement only as the part may be bound (model §2 rule 3, §8 rule 5; leaf `M3.4.17.6`):
+    // `soc`, the system's platform, always; `dma.x` where `xfer` or a timer counted asks its `transfer-engine`; the timer
+    // where a `dma.x` counted or `soc` takes its channel; to a fixed point.
+    let timer_written =
+        |c: &Case, fact: &str| c.description.blocks[0].side.needs.iter().any(|n| n == fact);
     fn takes(c: &Case, who: usize) -> Option<&str> {
         let side = if who == 0 {
             &c.description.blocks[1].side
@@ -13478,7 +13504,7 @@ fn a_provider_bound_to_the_node_taking_its_channel() {
         };
         side.needs.first().map(String::as_str)
     }
-    fn dma(c: &Case) -> Option<&str> {
+    fn dma_written(c: &Case) -> Option<&str> {
         takes(c, 0)
     }
     fn soc(c: &Case) -> Option<&str> {
@@ -13490,12 +13516,31 @@ fn a_provider_bound_to_the_node_taking_its_channel() {
             .iter()
             .any(|t| t.side.uses.iter().any(|u| u == service))
     };
+    // `[timer.d, dma.x, soc]`, each counted as a requester or not.
+    let may_be_bound = |c: &Case| -> [bool; 3] {
+        let mut on = [false, false, true];
+        loop {
+            let timer = !on[0] && (soc(c).is_some() || (on[1] && dma_written(c).is_some()));
+            let dma_x =
+                !on[1] && (used(c, "xfer") || (on[0] && timer_written(c, "transfer-engine")));
+            if !timer && !dma_x {
+                break on;
+            }
+            on[0] |= timer;
+            on[1] |= dma_x;
+        }
+    };
+    let timer = |c: &Case, fact: &str| may_be_bound(c)[0] && timer_written(c, fact);
+    let timer_requires =
+        |c: &Case| may_be_bound(c)[0] && !c.description.blocks[0].side.needs.is_empty();
+    // What `dma.x` takes, where it is counted, read off the case it is asked of.
+    fn read_off<F: Fn(&Case) -> Option<&str>>(f: F) -> F {
+        f
+    }
+    let dma = read_off(|c| dma_written(c).filter(|_| may_be_bound(c)[1]));
     type Bound<'a> = dyn Fn(&Case) -> Option<bool> + 'a;
     let requiring_bound: [&Bound<'_>; 3] = [
-        &|c| {
-            (!c.description.blocks[0].side.needs.is_empty())
-                .then(|| dma(c).is_some() || soc(c).is_some())
-        },
+        &|c| timer_requires(c).then(|| dma(c).is_some() || soc(c).is_some()),
         &|c| dma(c).map(|_| used(c, "xfer") || timer(c, "transfer-engine")),
         &|c| soc(c).map(|_| used(c, "cpu") || timer(c, "core-count")),
     ];
@@ -13512,7 +13557,7 @@ fn a_provider_bound_to_the_node_taking_its_channel() {
             counted(
                 "hardware: a block bound for requirements of its own",
                 &cases,
-                |c| !c.description.blocks[0].side.needs.is_empty() || dma(c).is_some(),
+                |c| timer_requires(c) || dma(c).is_some(),
             ),
             counted(
                 "hardware: a platform bound for requirements of its own",
@@ -13577,11 +13622,7 @@ fn a_provider_bound_to_the_node_taking_its_channel() {
             counted(
                 "initialisation: an edge to a block or a platform bound for its own requirements",
                 &cases,
-                |c| {
-                    !c.description.blocks[0].side.needs.is_empty()
-                        || dma(c).is_some()
-                        || soc(c).is_some()
-                },
+                |c| timer_requires(c) || dma(c).is_some() || soc(c).is_some(),
             ),
             counted(
                 "owed: a service or a policy in a job, its call cost and masked runs",
@@ -14317,7 +14358,9 @@ fn a_binding_keeps_its_edge_across_composition() {
 
 /// What the composition universe's construction gives one system: the names of `P`, `B` and `C`, in that order; who
 /// requires whose offer, `edges[provider][requester]`, the provider's binding's edge before its requester (model §8
-/// rule 12); and whether `P` composes `C` through `B`.
+/// rule 12), a requester counted only as it may be bound — `P`, the system's platform, always, and a block where a
+/// requester counted requires its offer, to a fixed point, so what a block nothing asks requires binds nothing (model
+/// §2 rule 3, §8 rule 5; leaf `M3.4.17.6`); and whether `P` composes `C` through `B`.
 struct Composition {
     names: [String; 3],
     edges: [[bool; 3]; 3],
@@ -14329,12 +14372,30 @@ impl Composition {
         let d = &case.description;
         let declarations = [&d.platforms[0], &d.blocks[0], &d.blocks[1]];
         let offers = ["core-count", "transfer-engine", "debug-port"];
-        let mut edges = [[false; 3]; 3];
+        let mut written = [[false; 3]; 3];
         for (requester, declaration) in declarations.iter().enumerate() {
             for (provider, offer) in offers.iter().enumerate() {
                 if declaration.side.needs.iter().any(|n| n == offer) {
-                    edges[provider][requester] = true;
+                    written[provider][requester] = true;
                 }
+            }
+        }
+        let mut counted = [true, false, false];
+        loop {
+            let more: Vec<usize> = (0..3)
+                .filter(|p| !counted[*p] && (0..3).any(|r| counted[r] && written[*p][r]))
+                .collect();
+            if more.is_empty() {
+                break;
+            }
+            for p in more {
+                counted[p] = true;
+            }
+        }
+        let mut edges = [[false; 3]; 3];
+        for provider in 0..3 {
+            for requester in 0..3 {
+                edges[provider][requester] = written[provider][requester] && counted[requester];
             }
         }
         Self {
@@ -14754,9 +14815,17 @@ impl NamedModel {
         self.binds("service", hardware) || self.binds("policy", hardware)
     }
 
+    /// Whether `hardware` is bound for requirements of its own: `m.soc`, the system's platform, where it requires; `m.blk`
+    /// where it requires, is composed, and may be bound — bound to by the service, or named by a served namer — since,
+    /// offering nothing else asked, it is otherwise no requester (model §2 rule 3, §8 rule 5; leaf `M3.4.17.6`).
     fn requiring(&self, hardware: &str) -> bool {
         match hardware {
-            "m.blk" => self.blk_requires && self.composed,
+            "m.blk" => {
+                self.blk_requires
+                    && self.composed
+                    && (self.provider("m.blk")
+                        || self.named_edges().iter().any(|e| e.hardware == "m.blk"))
+            }
             _ => self.soc_requires,
         }
     }
@@ -16185,7 +16254,9 @@ fn which_task_names_a_block_and_what_leaves_its_trigger_unknown() {
     // `dev`'s route names `hnd` alone. A sporadic task reaching it is released as `dev`'s separation decides against
     // its own, 20 ms for `t` and 40 ms for `u`, and one reaching none is `(unknown unreached)`. What a task names is a
     // node, a member of its `(uses …)` bound to it or not: `blk` bound for nothing, a provider of `t` where `t` binds
-    // it; `soc` bound for nothing; `dev` a provider of `hnd` alone; `hnd` bound for its own requirement.
+    // it; `soc` bound for nothing; `hnd` bound for its own requirement. `hnd`, composed and offering nothing asked, is a
+    // requester only where a task names it, as the part may be bound (model §2 rule 3, §8 rule 5; leaf `M3.4.17.6`): so
+    // `dev`, which a task names only where none names `hnd`, is a provider of none, bound for nothing.
     let word = |c: &Case, key: &str| -> String {
         c.label
             .split(' ')
@@ -16240,12 +16311,12 @@ fn which_task_names_a_block_and_what_leaves_its_trigger_unknown() {
                 &cases,
                 |c| binds(c) && named(c) == "blk" && names_it(c, "t"),
             ),
-            exactly("node: a block", 960),
+            counted("node: a block", &cases, |c| binds(c) || (naming(c) && block(c))),
             counted("node: a platform", &cases, |c| {
                 naming(c) && named(c) == "soc"
             }),
             counted("named: a block a task names, bound for nothing, a node", &cases, |c| {
-                naming(c) && named(c) == "blk" && !binds(c)
+                naming(c) && ((named(c) == "blk" && !binds(c)) || named(c) == "dev")
             }),
             counted("named: a platform a task names, bound for nothing, a node", &cases, |c| {
                 naming(c) && named(c) == "soc"
@@ -16253,7 +16324,7 @@ fn which_task_names_a_block_and_what_leaves_its_trigger_unknown() {
             counted(
                 "named: hardware named and bound for nothing, a provider only of requesters that do not name it",
                 &cases,
-                |c| naming(c) && (named(c) == "dev" || (binds(c) && named(c) == "blk" && namer(c) == "u")),
+                |c| naming(c) && binds(c) && named(c) == "blk" && namer(c) == "u",
             ),
             counted("trigger: `(unknown unreached)`, no source reaching it", &cases, |c| {
                 sporadic(c) && !(reaches(c, "t") && reaches(c, "u"))

@@ -452,15 +452,25 @@ fn passes(
     }
 
     // ── presence and relevance ───────────────────────────────────────────────────────────────
+    // A fact the vocabulary derives is stated by no declaration, and the search computes it: presence is told the rule's facts, and reads it as described where one
+    // block or platform offers each (leaf `M3.4.17.1`). A fact an engine's adapter adds is realized over a block or a platform offering what its `beneath`
+    // names: such a part may be bound for it, so its own needs are followed, as the search counts them. Each reading below is told both (leaf `M3.4.17.6`).
+    let paths = crate::presence::adapter_paths();
+    let tell = |map: &mut FactMap| {
+        for (fact, of) in vocabulary.iter().flat_map(|told| &told.derived) {
+            map.derive(fact, of);
+        }
+        for path in &paths {
+            for fact in &path.adds {
+                map.realize(fact, &path.beneath);
+            }
+        }
+    };
     let mut facts = FactMap::new();
     for form in &forms {
         facts.collect(form);
     }
-    // A fact the vocabulary derives is stated by no declaration, and the search computes it: presence is told the rule's facts, and reads it as described where one
-    // block or platform offers each (leaf `M3.4.17.1`).
-    for (fact, of) in vocabulary.iter().flat_map(|told| &told.derived) {
-        facts.derive(fact, of);
-    }
+    tell(&mut facts);
     let presence = facts.check_excluding(&out_of_profile);
     let closure = Closure {
         inside: presence.pulled_in_by.clone(),
@@ -493,6 +503,7 @@ fn passes(
             // Presence alone judges what this map is read for, so it reads what the search would: an offer's value, `false` offering nothing, and offers
             // of blocks and platforms alone, the search binding nothing to a service, a policy or a system (leaf `M3.4.17.2`).
             on_its_hardware.read_values();
+            tell(&mut on_its_hardware);
             for form in &forms {
                 let name = form.items().get(1).and_then(Form::as_symbol);
                 if form.head() == Some("defsystem") && !std::ptr::eq(system, form) {

@@ -374,16 +374,20 @@ fn one_device_may_be_two_and_two_one() {
 
 #[test]
 fn what_one_plan_alone_binds_is_said_as_that() {
-    // A device of the description with a requirement of its own, which the target's hardware does not ask, and another bound only for it.
+    // A device of the description with a requirement of its own, which the target's hardware does not ask, and another bound only for it. The first is
+    // bound for what the system asks, as a part's needs count only as the part may be bound; `idle.gate`, offering nothing asked, brings the same need
+    // and binds nothing, so it is unreached and its need is no requirement of either plan (model §2 rule 3, §8 rule 5; leaf `M3.4.17.6`).
     let own_requirement = "
 (defblock timer.block (offers (tick-rate 10 MHz) (reachable-at-privilege machine)))
-(defblock gate.block (offers (reachable-at-privilege machine)) (requires (needs tick-rate)))
+(defblock gate.block (offers (counter-width 32 bit) (reachable-at-privilege machine)) (requires (needs tick-rate)))
+(defblock idle.gate (offers (reachable-at-privilege machine)) (requires (needs tick-rate)))
 (defblock console.uart (offers (observable-output true) (reachable-at-privilege machine)))
 (defplatform soc.here
   (offers (core-count 1 tick) (reachable-at-privilege machine))
-  (requires (uses timer.block gate.block console.uart)))
+  (requires (uses timer.block gate.block idle.gate console.uart)))
 (defservice console.write (requires (needs observable-output)))
-(defsystem s (requires (uses console.write)) (platform (uses soc.here)))
+(defservice width.read (requires (needs counter-width)))
+(defsystem s (requires (uses console.write width.read)) (platform (uses soc.here)))
 ";
     let (_, _, found) = both(own_requirement, &target_of(A_WHOLE_TARGET));
     assert_eq!(found.only_described.len(), 1, "{found:?}");
@@ -396,7 +400,12 @@ fn what_one_plan_alone_binds_is_said_as_that() {
         "{found:?}"
     );
     assert!(!found.unreached.contains("timer.block"), "{found:?}");
-    assert!(found.unreached.contains("gate.block"), "{found:?}");
+    assert_eq!(
+        map(&found).get("gate.block"),
+        Some(&vec!["target.timer"]),
+        "{found:?}"
+    );
+    assert!(found.unreached.contains("idle.gate"), "{found:?}");
     // And a target's device with a requirement of its own.
     let their_requirement = "
 (defblock t.timer (offers (tick-rate 10 MHz) (reachable-at-privilege machine)))

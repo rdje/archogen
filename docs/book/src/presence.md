@@ -86,10 +86,11 @@ A platform's or a block's `uses` composes, and requests nothing. A part enters t
 inside it, and brings its own needs with it; `timer.counter` above is inside because `time.monotonic` needs the `counter-width`
 it offers, and the report says so. A part that offers nothing inside is listed outside and fails nothing: `ROADMAP.md` §5.3's
 "adding an unused device is not automatically an invalid refinement". Which part the search binds is the search's, so each
-that may be bound is read, and a precondition of one it does not bind is refused all the same. ⚠️ The search still binds a part's
-needs on facts the vocabulary declares, used or not, so `resolve` refuses an unused device's undescribed need that `check` now
-passes, which `M3.4.17.6` narrows (leaf `M3.4.17.3`; before it, every `uses` was a request, and an unused device's need was
-`missing-fact`).
+that may be bound is read, and a precondition of one it does not bind is refused all the same. A part may be bound in two
+further ways: an engine's adapter may program it, where it offers what the adapter needs beneath for a fact inside, and a part
+inside may name it by `needs`. The search counts exactly these parts as requesters and binds no other part's needs, so `check`
+and `resolve` agree on an unused device (leaf `M3.4.17.6`; before `M3.4.17.3`, every `uses` was a request, and an unused
+device's need was `missing-fact`).
 
 The fixtures F04 and F05 are deliberately run against the *same* description. A checker that
 blocks on every unknown passes F04 and fails F05; one that blocks on nothing passes F05 and

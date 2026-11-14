@@ -158,6 +158,85 @@ fn a_service_s_offers_are_read_and_refused_alike() {
     );
 }
 
+/// Model §2 rule 3 and §8 rule 5: a part's needs are the search's to bind as the part may be bound, as presence reads them. `dma.x` is composed by the
+/// platform and offers nothing the system asks, so its need on a vocabulary fact nothing offers binds nothing and fails nothing; a part the system may bind
+/// for what it asks, `console.uart`, brings the same need, and is refused. Before, the search took every block and platform for a requester, and refused the
+/// first, where `check` passed it (leaf `M3.4.17.6`, from `M3.4.17.3`).
+#[test]
+fn a_part_s_needs_are_bound_as_the_part_may_be() {
+    let platform = "(defplatform soc (offers (core-count 1 tick) (reachable-at-privilege machine)) (requires (uses console.uart)))";
+    assert_eq!(CONSOLE.matches(platform).count(), 1);
+    let unused = CONSOLE.replace(
+        platform,
+        "(defblock dma.x (offers (reachable-at-privilege machine)) (requires (needs debug-port)))\n(defplatform soc (offers (core-count 1 tick) (reachable-at-privilege machine)) (requires (uses console.uart dma.x)))",
+    );
+    let resolution = resolved(run(&unused, "s", &Policy::default(), Limits::DEFAULT));
+    assert_eq!(
+        bound(&resolution),
+        ["console.write observable-output console.uart"]
+    );
+    let uart = "(defblock console.uart (offers (observable-output true) (reachable-at-privilege machine)))";
+    assert_eq!(unused.matches(uart).count(), 1);
+    let bound_part = unused.replace(
+        uart,
+        "(defblock console.uart (offers (observable-output true) (reachable-at-privilege machine)) (requires (needs debug-port)))",
+    );
+    let (verdict, _, said) = refusal(run(&bound_part, "s", &Policy::default(), Limits::DEFAULT));
+    assert_eq!(verdict, Verdict::MissingFact, "{said:?}");
+    assert!(
+        said.iter().any(|message| message.contains("debug-port")),
+        "{said:?}"
+    );
+}
+
+/// A part the search may bind other than for a fact it offers is counted too: one a part counted names by `needs`, an edge presence follows where a
+/// `uses` composes, and one an adapter the search may bind would program, its instance binding it. Each brings its need, refused; the timer unasked, with
+/// no adapter it would serve, fails nothing. Before, either part's need bound nothing while the part did — the timer as the instance's provider — found
+/// by the bounded universes of `crates/archogen-plan/tests/bounded.rs` (leaf `M3.4.17.6`).
+#[test]
+fn a_part_named_by_a_need_or_programmed_by_an_adapter_brings_its_need() {
+    let platform = "(defplatform soc (offers (core-count 1 tick) (reachable-at-privilege machine)) (requires (uses console.uart)))";
+    let uart = "(defblock console.uart (offers (observable-output true) (reachable-at-privilege machine)))";
+    let named = CONSOLE
+        .replace(
+            platform,
+            "(defblock dma.x (offers (reachable-at-privilege machine)) (requires (needs debug-port)))\n(defplatform soc (offers (core-count 1 tick) (reachable-at-privilege machine)) (requires (uses console.uart dma.x)))",
+        )
+        .replace(
+            uart,
+            "(defblock console.uart (offers (observable-output true) (reachable-at-privilege machine)) (requires (needs dma.x)))",
+        );
+    assert_ne!(named, CONSOLE);
+    let (verdict, _, said) = refusal(run(&named, "s", &Policy::default(), Limits::DEFAULT));
+    assert_eq!(verdict, Verdict::MissingFact, "{said:?}");
+    assert!(
+        said.iter().any(|message| message.contains("debug-port")),
+        "{said:?}"
+    );
+    let unasked = CONSOLE.replace(
+        platform,
+        "(defblock timer.d (offers (relative-delay true) (counter-modulus 65536) (tick-rate 10 MHz) (observation-coherent true) (channels 2 tick) (reachable-at-privilege machine)) (requires (needs debug-port)))\n(defplatform soc (offers (core-count 1 tick) (reachable-at-privilege machine)) (requires (uses console.uart timer.d)))",
+    );
+    assert_ne!(unasked, CONSOLE);
+    resolved(run(&unasked, "s", &shipped(), Limits::DEFAULT));
+    let asked = unasked
+        .replace(
+            "(defsystem s",
+            "(defservice alarm (requires (needs absolute-deadline)))\n(defsystem s",
+        )
+        .replace(
+            "(uses console.write))\n  (requires",
+            "(uses console.write alarm))\n  (requires",
+        );
+    assert_ne!(asked, unasked);
+    let (verdict, _, said) = refusal(run(&asked, "s", &shipped(), Limits::DEFAULT));
+    assert_eq!(verdict, Verdict::MissingFact, "{said:?}");
+    assert!(
+        said.iter().any(|message| message.contains("debug-port")),
+        "{said:?}"
+    );
+}
+
 /// Two services each programming an absolute deadline, and two comparators of one channel each.
 const TWO_COMPARATORS: &str = "(eadl-version eadl/1)
 (defblock timer.a (offers (absolute-deadline true) (channels 1 tick) (reachable-at-privilege machine)))

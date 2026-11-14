@@ -367,8 +367,11 @@ pub fn read(text: &str) -> Result<Record, Unread> {
 pub struct Rebuilt<'v> {
     /// The system, read at the profile's caller level, placed where the record places it.
     pub system: System,
-    /// Every requester the description writes.
+    /// Every requester the description writes, but a block or a platform whose needs bind nothing (leaf `M3.4.17.6`).
     pub requesters: Vec<Requester>,
+    /// The blocks and platforms the description writes whose needs bind nothing, by [`joint::counted_parts`]: none the system names, and none offering what
+    /// a requester counted asks. What one names is still the language's to judge (leaf `M3.4.17.6`).
+    pub uncounted: Vec<Requester>,
     /// Each adapter instance the record names, rebuilt from the catalog, in the record's order.
     pub instances: Vec<AdapterInstance>,
     /// The joint rules over the description, with the record's instances, for the system.
@@ -466,6 +469,9 @@ pub fn rebuild<'v>(
                 .map_err(|_| Unread(format!("`{}`'s requirements do not read", name_of(d))))?,
         );
     }
+    // A part's needs as the search reads them, counted as the part may be bound (leaf `M3.4.17.6`).
+    let counted = joint::counted_parts(decl, &system, &providers, &requesters, vocabulary, catalog);
+    let uncounted = joint::retain_counted(&mut requesters, &providers, &counted);
     let joint = Joint::new(&providers, &requesters, vocabulary)
         .map_err(|_| Unread("the joint rules do not read the description".to_string()))?;
     let map = joint.map(&system);
@@ -695,6 +701,7 @@ pub fn rebuild<'v>(
     Ok(Rebuilt {
         system,
         requesters,
+        uncounted,
         instances,
         joint,
         map,

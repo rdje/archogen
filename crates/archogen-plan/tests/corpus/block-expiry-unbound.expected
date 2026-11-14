@@ -6,6 +6,7 @@
 (assignment "…")
 (adapters adapters/1)
 (task 0 (task be a) (rank 1) (period 1/100 s) (deadline 1/100 s) (deadline-from release) (jitter 0 s) (overrun fault) (released-by timer) (uses))
+(bind be debug-port dma.x)
 (bind dma.x absolute-deadline (adapter deadline-over-delay timer.d dma.x))
 (bind (adapter deadline-over-delay timer.d dma.x) counter-modulus timer.d)
 (bind (adapter deadline-over-delay timer.d dma.x) observation-coherent timer.d)

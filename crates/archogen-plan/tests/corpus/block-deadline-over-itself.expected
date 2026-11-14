@@ -6,6 +6,7 @@
 (assignment "…")
 (adapters adapters/1)
 (task 0 (task bd p) (rank 1) (period 1/100 s) (deadline 1/100 s) (deadline-from release) (jitter 0 s) (overrun fault) (released-by timer) (uses log))
+(bind bd observation-coherent timer.d)
 (bind log observable-output console.uart)
 (bind timer.d absolute-deadline (adapter deadline-over-delay timer.d timer.d))
 (bind (adapter deadline-over-delay timer.d timer.d) counter-modulus timer.d)

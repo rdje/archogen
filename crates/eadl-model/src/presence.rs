@@ -197,6 +197,9 @@ pub struct FactMap {
     /// Each fact the capability vocabulary derives, with the facts its rule requires, by [`derive`](Self::derive): no declaration states one, and the search computes it
     /// where one provider offers each of those (model §2 rule 2, leaf `M3.4.17.1`).
     derived: BTreeMap<String, Vec<String>>,
+    /// Each fact an engine's adapter adds, with the facts its `beneath` names, by [`realize`](Self::realize): a part offering one may be bound for the
+    /// fact, an instance over it binding it (leaf `M3.4.17.6`).
+    adapted: BTreeMap<String, Vec<String>>,
     /// Whether an offer's value is read, by [`read_values`](Self::read_values): an offer of `false` then offers nothing, and is kept apart to be named.
     reads_values: bool,
     /// Each offer of `false`, where values are read: what says a fact is `false` there has none of it (leaf `M3.4.17.2`).
@@ -331,6 +334,17 @@ impl FactMap {
         self.derived.insert(fact.to_string(), of.to_vec());
     }
 
+    /// That an engine's adapter adds `fact` over a block or a platform offering what `beneath` names, as a caller that has read the catalog says: such a
+    /// part may be bound for `fact`, an instance over it binding it, so its own needs are followed as the search counts them (leaf `M3.4.17.6`).
+    pub fn realize(&mut self, fact: &str, beneath: &[String]) {
+        let known = self.adapted.entry(fact.to_string()).or_default();
+        for name in beneath {
+            if !known.contains(name) {
+                known.push(name.clone());
+            }
+        }
+    }
+
     /// [`collect`](Self::collect), for a declaration whose offers answer nothing where the machine is another's: a service or a policy, to which the search binds nothing. It asks, and is
     /// what it is (`docs/decisions/decision_device-correspondence.md`).
     pub fn collect_asking(&mut self, form: &Form) {
@@ -463,12 +477,24 @@ impl FactMap {
             .flatten()
             .map(|(fact, _)| (fact.clone(), false))
             .collect();
-        let rule = self
-            .derived
-            .get(name)
-            .into_iter()
-            .flatten()
-            .map(String::as_str);
+        // The facts `name` rests on: each its vocabulary rule requires, and each an adapter adding it needs beneath, to a fixed point (leaf `M3.4.17.6`).
+        let mut rule: Vec<&str> = Vec::new();
+        let mut todo = vec![name];
+        while let Some(fact) = todo.pop() {
+            let under = self
+                .derived
+                .get(fact)
+                .into_iter()
+                .chain(self.adapted.get(fact))
+                .flatten()
+                .map(String::as_str);
+            for input in under {
+                if input != name && !rule.contains(&input) {
+                    rule.push(input);
+                    todo.push(input);
+                }
+            }
+        }
         for fact in std::iter::once(name).chain(rule) {
             for offer in self.offered.get(fact).into_iter().flatten() {
                 let part = &offer.declared_by;

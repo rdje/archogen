@@ -44,7 +44,7 @@ use std::rc::Rc;
 use eadl_front::{Diagnostic, Form, Label, Span, MOST_ERRORS};
 use eadl_model::{Dimension, Quantity};
 
-use crate::adapter::Instance;
+use crate::adapter::{Catalog, Instance};
 use crate::offer::{Provider, State};
 use crate::relation::{judge, Verdict};
 use crate::requirement::side_name_lists;
@@ -1144,6 +1144,139 @@ fn function_of<'v>(vocabulary: &'v Vocabulary, fact: &str) -> Option<&'v Functio
 #[must_use]
 pub fn is_level(requirement: &Requirement) -> bool {
     requirement.fact() == REACHABLE_AT_PRIVILEGE
+}
+
+/// The blocks and platforms system `system` counts as requesters (model §2 rule 3, §8 rule 5; leaf `M3.4.17.6`): each one `decl`, the system, names in
+/// a `uses` or a `needs` it writes, its `platform` clause's and its tasks' among them, or a requester it serves that is no part names so; then each part
+/// that offers a fact a requester counted requires, a fact the vocabulary's rule derives such a fact of, or a fact the `beneath` of a kind of `catalog`
+/// adding such a fact names, an instance over it being its binding too, and each a part counted names by `needs`, an edge presence follows where a
+/// `uses` composes, to a fixed point. Which part the search binds is its
+/// own choice, so each that may be bound is counted, and a precondition of one it does not bind is refused all the same. A part named only by another's
+/// composition and offering nothing asked is not among them: its needs bind nothing, an unused device failing nothing (`ROADMAP.md` §5.3). The search and
+/// a record read back both read it.
+#[must_use]
+pub fn counted_parts(
+    decl: &Form,
+    system: &System,
+    providers: &[(Provider, &Form)],
+    requesters: &[Requester],
+    vocabulary: &Vocabulary,
+    catalog: &Catalog,
+) -> BTreeSet<String> {
+    fn named_by(form: &Form, out: &mut BTreeSet<String>) {
+        match form.head() {
+            Some("offers" | "absent" | "refines") => {}
+            Some("uses" | "needs") => out.extend(
+                form.items()
+                    .iter()
+                    .skip(1)
+                    .filter_map(Form::as_symbol)
+                    .map(str::to_owned),
+            ),
+            _ => {
+                for item in form.items().iter().skip(1) {
+                    if matches!(item, Form::List { .. }) {
+                        named_by(item, out);
+                    }
+                }
+            }
+        }
+    }
+    let parts: BTreeSet<&str> = providers
+        .iter()
+        .map(|(provider, _)| provider.name.as_str())
+        .collect();
+    let mut named = BTreeSet::new();
+    named_by(decl, &mut named);
+    for requester in requesters
+        .iter()
+        .filter(|r| !parts.contains(r.name.as_str()) && system.serves(&r.name))
+    {
+        named.extend(requester.uses.iter().chain(&requester.needs).cloned());
+    }
+    let mut counted: BTreeSet<String> = named
+        .into_iter()
+        .filter(|name| parts.contains(name.as_str()))
+        .collect();
+    loop {
+        let mut wanted: BTreeSet<String> = requesters
+            .iter()
+            .filter(|r| {
+                if parts.contains(r.name.as_str()) {
+                    counted.contains(&r.name)
+                } else {
+                    system.serves(&r.name)
+                }
+            })
+            .flat_map(|r| r.requirements.iter())
+            .filter(|requirement| !is_level(requirement))
+            .map(|requirement| requirement.fact().to_owned())
+            .collect();
+        let mut inputs: Vec<String> = wanted.iter().cloned().collect();
+        while let Some(fact) = inputs.pop() {
+            let derived = vocabulary
+                .fact(&fact)
+                .into_iter()
+                .flat_map(|told| told.derived_from.iter());
+            let beneath = catalog
+                .kinds
+                .iter()
+                .filter(|kind| kind.adds().contains(&fact.as_str()))
+                .flat_map(|kind| kind.beneath_names.iter());
+            let found: Vec<String> = derived.chain(beneath).cloned().collect();
+            for input in found {
+                if wanted.insert(input.clone()) {
+                    inputs.push(input);
+                }
+            }
+        }
+        let more: Vec<String> = providers
+            .iter()
+            .filter(|(provider, _)| {
+                !counted.contains(&provider.name)
+                    && wanted.iter().any(|fact| {
+                        matches!(
+                            provider.state(fact),
+                            Some(State::Valued(_) | State::Unvalued | State::Overflow)
+                        )
+                    })
+            })
+            .map(|(provider, _)| provider.name.clone())
+            .chain(
+                requesters
+                    .iter()
+                    .filter(|r| parts.contains(r.name.as_str()) && counted.contains(&r.name))
+                    .flat_map(|r| r.needs.iter())
+                    .filter(|name| parts.contains(name.as_str()) && !counted.contains(*name))
+                    .cloned(),
+            )
+            .collect();
+        if more.is_empty() {
+            break;
+        }
+        counted.extend(more);
+    }
+    counted
+}
+
+/// `requesters` without the parts [`counted_parts`] leaves out, which it returns: what such a part writes binds nothing, but the language's rules on what it
+/// names hold of it all the same.
+pub fn retain_counted(
+    requesters: &mut Vec<Requester>,
+    providers: &[(Provider, &Form)],
+    counted: &BTreeSet<String>,
+) -> Vec<Requester> {
+    let parts: BTreeSet<&str> = providers
+        .iter()
+        .map(|(provider, _)| provider.name.as_str())
+        .collect();
+    let (kept, left): (Vec<Requester>, Vec<Requester>) = std::mem::take(requesters)
+        .into_iter()
+        .partition(|requester| {
+            !parts.contains(requester.name.as_str()) || counted.contains(&requester.name)
+        });
+    *requesters = kept;
+    left
 }
 
 /// Whether `requirement` is one of rule 13's qualifiers: a requirement on an `each` fact, `reachable-at-privilege` apart,

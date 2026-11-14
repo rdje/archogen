@@ -6,6 +6,7 @@
 (assignment "…")
 (adapters adapters/1)
 (task 0 (task bu a) (rank 1) (period 1/100 s) (deadline 1/100 s) (deadline-from release) (jitter 0 s) (overrun fault) (released-by timer) (uses))
+(bind bu debug-port dma.x)
 (bind dma.x relative-delay timer.d)
 (timer simulator (releases (task bu a)))
 (route 1 (timer-route timer.d) (separation programmed) (level machine) (deliverable yes) (requesters dma.x) (costs))

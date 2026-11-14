@@ -353,6 +353,48 @@ fn a_device_that_may_be_bound_brings_its_need() {
     }
 }
 
+/// A device an engine's adapter may be bound over enters the closure, its need with it: `timer.d` offers what
+/// `deadline-over-delay` needs beneath, and `alarm` asks the absolute deadline that adapter adds. Nothing asking it, the
+/// timer offers nothing inside, and its need fails nothing. Before, presence followed a vocabulary's rule and not an
+/// adapter's, and passed the timer the search binds as the instance's provider (leaf `M3.4.17.6`).
+#[test]
+fn a_device_an_adapter_may_be_bound_over_brings_its_need() {
+    let timer = "(defblock timer.d (offers (relative-delay true) (counter-modulus 65536) (tick-rate 10 MHz) \
+                 (observation-coherent true) (channels 2 tick) (reachable-at-privilege machine)) (requires (needs dma-engine)))";
+    let unasked = UNUSED
+        .replace(
+            "(requires (uses console.uart dma.x)))",
+            "(requires (uses console.uart timer.d)))",
+        )
+        .replace("(defservice out", &format!("{timer}\n(defservice out"));
+    let asked = unasked
+        .replace(
+            "(defsystem s",
+            "(defservice alarm (requires (needs absolute-deadline)))\n(defsystem s",
+        )
+        .replace("(requires (uses out))", "(requires (uses out alarm))");
+    assert_ne!(asked, unasked);
+    for told in [true, false] {
+        let (verdict, said) = judged(&unasked, told);
+        assert_eq!(
+            verdict,
+            Verdict::Ok,
+            "told the vocabulary: {told}: {said:?}"
+        );
+        let (verdict, said) = judged(&asked, told);
+        assert_eq!(
+            verdict,
+            Verdict::MissingFact,
+            "told the vocabulary: {told}: {said:?}"
+        );
+        assert!(
+            said.iter()
+                .any(|d| d.starts_with("missing-fact: `dma-engine`")),
+            "told the vocabulary: {told}: {said:?}"
+        );
+    }
+}
+
 /// What the system names itself is requested as before: its platform's own need, and a block it uses.
 #[test]
 fn what_the_system_names_brings_its_need_as_before() {
