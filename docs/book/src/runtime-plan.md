@@ -193,9 +193,9 @@ the design of `/2`, `docs/decisions/decision_runtime-plan-format-2.md`, not yet 
 its description; which device releases tasks and which each alarm takes, with each count written as the device states it, so that the
 checker alone converts it; where each stack lies; and what the interrupt controller is told. It also carries the
 application's inputs. A size only a catalog record can state stays owed until one does, and every allocation after it is owed too, since no
-address below it is known. The controller is told a line and a priority for each source, in the order the plan ranks them; a source whose
-interrupt bypasses it is outside what the checker composes, so a system holding one is refused, and each source's wiring is owed until the
-port says it.
+address below it is known. The controller is told a line and a priority for each source and each alarm wired through it, in the order the plan ranks them;
+one whose interrupt bypasses it is outside what the checker composes, so a system holding one is refused, and whether each reaches it is owed
+until the realization, the generated code's own statement, says.
 
 Stacks are laid from the top of a region down and the image from the bottom up, so a change in the image's size moves no
 allocation. A stack's size is what its owners state, by one table of sums: what generated code holds beneath what it calls, a task's own bound, the most the runtime's code adds in a

@@ -1310,12 +1310,14 @@ fn a_source_s_route_on_a_target_owes_its_external_and_a_line_carries_it() {
         .split("**`(owed …)`, as `/2` writes it.**")
         .nth(1)
         .expect("what `/2` owes");
+    // Its subject is the source's, `(source NAME)`, as `/1` writes the source's other facts (round 23, RP23-5).
     let of_a_route = owed
-        .split("of a source's `(route ITEM)` on a target by `realization`,")
+        .split("of a source on a target by `realization`,")
         .nth(1)
-        .expect("a source's route's");
+        .expect("a source's");
     let of_a_route = &of_a_route[..of_a_route.find(';').expect("its end")];
     assert!(of_a_route.contains("`external`"), "{of_a_route}");
+    assert!(of_a_route.contains("`(source NAME)`"), "{of_a_route}");
     let playground = include_str!("../../../docs/decisions/decision_runtime-plan.md");
     assert!(playground.contains("its `external`, is the simulator's (`RTP-H9`)"));
     let carried = RECORD
@@ -1323,12 +1325,120 @@ fn a_source_s_route_on_a_target_owes_its_external_and_a_line_carries_it() {
         .nth(1)
         .expect("the realization fact's sentence");
     let carried = &carried[..carried.find(": `VALUE`").expect("its list")];
-    for fact in ["external", "primitives-out-of-line", "masking-balanced"] {
+    for fact in [
+        "external",
+        "primitives-out-of-line",
+        "masking-balanced",
+        "holds-under-preemption",
+    ] {
         assert!(
             carried.contains(&format!("`{fact}`")),
             "`{fact}` has no line: {carried}"
         );
     }
+}
+
+/// §3 and the ledger: each fact `(realization-fact …)` says this record adds to what the realization owes is handed to the leaf that defines its file,
+/// `RPF-H5`, and that leaf quotes it. Before, `RPF-H3` handed over what `/1` owes alone, so no leaf had to write the facts rounds 21 and 22 added, and every
+/// target plan with a source, an alarm or a node a job calls stayed `(complete no)` (round 23, RP23-1).
+#[test]
+fn each_fact_this_record_adds_to_the_realization_is_handed_to_its_format() {
+    let carried = RECORD
+        .split("`(realization-fact …)` writes")
+        .nth(1)
+        .expect("the realization fact's sentence");
+    let carried = &carried[..carried.find(": `VALUE`").expect("its list")];
+    let added = carried
+        .split("or this record adds, ")
+        .nth(1)
+        .expect("what this record adds");
+    let facts: Vec<&str> = added.split('`').skip(1).step_by(2).collect();
+    assert_eq!(
+        facts,
+        [
+            "external",
+            "primitives-out-of-line",
+            "masking-balanced",
+            "holds-under-preemption"
+        ]
+    );
+    let row = RECORD
+        .lines()
+        .find(|line| line.starts_with("| `RPF-H5` | `M4.2` |"))
+        .expect("the hand-off of what this record adds");
+    for fact in &facts {
+        assert!(
+            row.contains(&format!("`{fact}`")),
+            "`{fact}` handed to no leaf: {row}"
+        );
+    }
+    let tasks = include_str!("../../../docs/tasks/M4.md");
+    assert!(tasks.contains("- [RPF-H5] "), "`M4.2` quotes it");
+}
+
+/// §3: the realization's own costs, a called node's `call-cost` and `masked-runs` and an alarm's or a source's `service-cost`, owe the variant's
+/// condition 8, as a catalog cost's `holds-under-preemption` is for a record's: generated code is in no record, and its generator states the same. Before,
+/// no line asked it, and a complete plan left the checker to default a condition its condition 9 says is never defaulted (round 23, RP23-2).
+#[test]
+fn the_realization_s_own_costs_owe_condition_8() {
+    let variant = include_str!("../../../docs/specs/analysis/decision_runtime-analysis-variant.md");
+    assert!(variant.contains("Condition 8 is each catalog cost's `holds-under-preemption`"));
+    let owed = RECORD
+        .split("**`(owed …)`, as `/2` writes it.**")
+        .nth(1)
+        .expect("what `/2` owes");
+    let of_the_costs = owed
+        .split("of each node whose context line holds `job`, each alarm and each source by `realization`,")
+        .nth(1)
+        .expect("the realization's costs'");
+    let of_the_costs = &of_the_costs[..of_the_costs.find(';').expect("its end")];
+    for word in [
+        "`holds-under-preemption`",
+        "`call-cost`",
+        "`masked-runs`",
+        "`service-cost`",
+    ] {
+        assert!(of_the_costs.contains(word), "{word}: {of_the_costs}");
+    }
+}
+
+/// §7: one order over every refusal a plan on a target makes, §6's among them: a route whose `external` the realization's file states `no` is read only
+/// from that file, after its code identity, and before placing, whose figures come from it. Before, §7 did not place it, and an input meeting it and no
+/// room had two outcomes (round 23, RP23-3).
+#[test]
+fn section_7_places_every_refusal_in_one_order() {
+    const ORDER: [&str; 7] = [
+        "a target's own refusals",
+        "`missing-fact` from the joint rules",
+        "an application's unmet",
+        "too few levels while lowering the plan's code",
+        "a realization of another code identity",
+        "a route whose `external` the realization's file states `no`",
+        "no room while placing",
+    ];
+    let order = "A plan on a target adds those above, in this record's order";
+    let line = RECORD
+        .lines()
+        .find(|line| line.contains(order))
+        .expect("§7's order");
+    // The order's own sentence: the bullet names an application's unmet before it, as a refusal `/1` cannot make.
+    let sentence = &line[line.find(order).expect("its start")..];
+    let at: Vec<usize> = ORDER
+        .iter()
+        .map(|item| {
+            sentence
+                .find(item)
+                .unwrap_or_else(|| panic!("`{item}` has no place: {sentence}"))
+        })
+        .collect();
+    assert!(at.windows(2).all(|pair| pair[0] < pair[1]), "{at:?}");
+    // The reader's case: a route stated not to reach the controller, and no room for the boot stack, refuses as §6 does, naming the source.
+    let first = |holding: [bool; 7]| holding.iter().position(|holds| *holds).map(|at| ORDER[at]);
+    assert_eq!(
+        first([false, false, false, false, false, true, true]),
+        Some("a route whose `external` the realization's file states `no`")
+    );
+    assert!(RECORD.contains("refuses the system `unsupported-profile`, naming its source"));
 }
 
 /// §3: a node a job calls owes, beside `/1`'s `call-cost` and `masked-runs`, what the release alarm's §4 says it holds of a primitive besides, each phrase
