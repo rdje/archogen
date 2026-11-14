@@ -208,7 +208,7 @@ owed, and a second, from a file stating them, generates the same code: what an i
 
 Time on a machine is counted from a read: the last step of initialisation reads the counter and counts every release from that read plus the port's
 bound on everything from it to the first enabling of interrupts, so no release stands before interrupts are on, and the checker holds that one
-write of the timer reaches the first of them that far out. What initialisation arms for an alarm it arms before that read, so that nothing of the
+write of the timer reaches that far, the port's lead and the timer's rounding added. What initialisation arms for an alarm it arms before that read, so that nothing of the
 generated code's own lies between the read and the enabling but the two calls into the port's code, which the port's bound counts, a limit the
 record states. A wake armed there must not come due before interrupts are on, so its period
 outlasts what the generated code states of that step and the port's bound together, which the checker holds; on the hosted playground the

@@ -397,3 +397,15 @@ Said, and left as it stands: no `/2` lowering, controller record or `archogen-re
 | RP32-6 | wording | a hosted wake with no stated values had no `(horizon …)` | `none`, the values owed as its line says |
 
 Said, and left as it stands: no `/2` lowering, controller record or `archogen-realization/1` exists.
+
+**Round 33** — `2026-11-14`, leaf `M4.1.7.2.33`: not acceptable, 5 findings, 2 defects, after 3, on `44fa6e47`. Round 32's answers held: `format2_model` `70 passed`, `alarm_model` `25 passed`, each alone; every `RPF` row quoted word for word; every owed fact's hand-off covering each kind of subject it is owed of; the book's eighteen sentences, each bound clause the right one; the worked guard, stacks and epoch; `PRIORITY`; the inputs table; round 32's three choices; the rules with no row worked by hand; the kept questions. Each premise was read in the records and the code before it was answered.
+
+| # | Kind | Finding | Answer |
+| --- | --- | --- | --- |
+| RP33-1 | defect, older | the last act adds `E` to its read, and `E` stood on no line, the digest leaving timing models out: a lead restated moved no code identity, so two codes, or a code and a stale lead, stood under one | `(epoch after-read (lead FIGURE))`, the lead on the epoch's kept line as the rounding is on the timer's; `every_figure_the_generated_code_reads_stands_on_a_kept_line` |
+| RP33-2 | defect, older | §7's refusals for a target stood unordered against `/1`'s kept list, and §5's joint-rule codes against `/1`'s `tool-failure` for the same finding at lowering: one input, two outcomes | One order at lowering: a target's own refusals, then `/1`'s list, the assignment's `(target …)` with its program digest and a joint-rule finding as `/1`'s `tool-failure` in that bullet's place, §5's codes being the search's and the checker's; `every_refusal_the_record_states_has_its_stage` gives each refusal sentence of the record its stage |
+| RP33-3 | wording | the book's "one write reaches the first of them" left out the lead and the rounding | Said |
+| RP33-4 | wording | the book's row held each sentence's opening alone | It holds each sentence whole |
+| RP33-5 | wording | "states no `tick-rate` or modulus value" read as neither | Either without a value |
+
+Said, and left as it stands: no `/2` lowering, port record or `archogen-realization/1` exists.

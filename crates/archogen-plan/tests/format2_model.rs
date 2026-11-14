@@ -1577,9 +1577,11 @@ fn every_fact_the_realization_owes_is_handed_to_its_format() {
 /// room had two outcomes (round 23, RP23-3).
 #[test]
 fn section_7_places_every_refusal_in_one_order() {
-    const ORDER: [&str; 7] = [
+    const ORDER: [&str; 9] = [
         "a target's own refusals",
-        "`missing-fact` from the joint rules",
+        "`/1`'s list in its order",
+        "the assignment's `(target …)` other than the file's",
+        "a finding of the generator's joint rules over the target's hardware",
         "an application's unmet",
         "too few levels while lowering the plan's code",
         "a realization of another code identity",
@@ -1603,10 +1605,16 @@ fn section_7_places_every_refusal_in_one_order() {
         .collect();
     assert!(at.windows(2).all(|pair| pair[0] < pair[1]), "{at:?}");
     // The reader's case: a route stated not to reach the controller, and no room for the boot stack, refuses as §6 does, naming the source.
-    let first = |holding: [bool; 7]| holding.iter().position(|holds| *holds).map(|at| ORDER[at]);
+    let first = |holding: [bool; 9]| holding.iter().position(|holds| *holds).map(|at| ORDER[at]);
     assert_eq!(
-        first([false, false, false, false, false, true, true]),
+        first([false, false, false, false, false, false, false, true, true]),
         Some("a route whose `external` the realization's file states `no`")
+    );
+    // The reader's case of round 33: a result record saying `ok` over a target the joint rules find lacking is `/1`'s `tool-failure` in its place, before
+    // any of `/2`'s own (RP33-2).
+    assert_eq!(
+        first([false, false, false, true, false, false, false, false, true]),
+        Some("a finding of the generator's joint rules over the target's hardware")
     );
     // A source's `external` is the realization's again, so its `no` is read where an alarm's is (round 30, RP30-1).
     assert!(!RECORD.contains("a source whose `external` its controller's record states `no`"));
@@ -1908,7 +1916,7 @@ fn what_moves_the_code_identity_is_said_as_it_is() {
         assert!(!RECORD.contains(false_said), "{false_said}");
     }
     assert!(RECORD.contains(
-        "the one catalog figure the code identity holds is the timer's `compare-rounding`"
+        "the catalog figures the code identity holds are those the generated code reads, each on a kept line: the timer's `compare-rounding` and the epoch's `epoch-lead`"
     ));
     assert!(RECORD.contains("`eager-switching` among them"));
     let record = include_str!("../../archogen-catalog/src/record.rs");
@@ -2129,31 +2137,31 @@ fn every_quote_of_the_model_is_the_model_s_text() {
     assert!(quotes.len() >= 2, "{quotes:?}");
 }
 
-/// The book's `/2` section, every sentence of it, in order: each that states a rule is bound to the record's clause it restates, both read, and each
-/// other is held descriptive, so a sentence added, changed or dropped fails here, and so does a clause the record moves. Before, rounds 23, 27, 28, 31
-/// and 32 each found a sentence of the section the record had moved past, the last two stating as absolute what the record limits (round 32, RP32-2,
-/// RP32-3).
+/// The book's `/2` section, every sentence of it, in order and whole: each that states a rule is bound to the record's clause it restates, both read,
+/// and each other is held descriptive, so a sentence added, changed anywhere or dropped fails here, and so does a clause the record moves. Before, rounds
+/// 23, 27, 28, 31 and 32 each found a sentence of the section the record had moved past (round 32, RP32-2, RP32-3); and the row held each sentence's
+/// opening alone, so an ending could move unread (round 33, RP33-4).
 #[test]
 fn every_sentence_of_the_book_s_section_is_bound_to_the_record() {
     const SENTENCES: [(&str, Option<&str>); 18] = [
-        ("Everything above describes", None),
-        ("A real machine needs more", None),
-        ("It also carries the application's inputs", None),
-        ("A size only a catalog record can state", Some("Until a record states one, it is owed `(by catalog)`")),
-        ("The controller is told a line and a priority", Some("which the realization states with its generated service, a source's as an alarm's")),
-        ("The generated code around each job's start", Some("the dispatch beneath each service inside the timer service's `C_rel` and each service's `C_s`")),
-        ("On a machine, each cost that statement gives", Some("the last act's `last-act-lead` runs before interrupts are first enabled")),
-        ("Stacks are laid from the top of a region down", Some("laid from the top of the region down, by a cursor that only descends")),
-        ("A stack's size is what its owners state", Some("What runs on a stack runs in turn")),
-        ("What the generated code uses of a stack comes of that code", Some("**Two plans, one code.**")),
-        ("Time on a machine is counted from a read", Some("**The epoch** (R3-8, `RA-H8`)")),
-        ("What initialisation arms for an alarm", Some("The instructions of those two calls are the generated code's own and lie in that span")),
-        ("A wake armed there must not come due", Some("the scheduling checker holds each wake's `P`")),
-        ("Every other alarm's compare is given a far-off placeholder", Some("the generated code writes a placeholder for each alarm that is no wake")),
-        ("And an alarm's deadlines are read as its", Some("`BASE` is `counter`, the time base being the counter itself, or `epoch`")),
-        ("The record's formulas are not left to reading", None),
-        ("A model beside it", None),
-        ("Where a rule is already code", None),
+        ("Everything above describes `archogen-runtime-plan/1`, a system on the hosted playground.", None),
+        ("A real machine needs more, and the design of `/2`, `docs/decisions/decision_runtime-plan-format-2.md`, not yet built (`M4.1.7`), says what: which machine it is, by the digest of its description; which device releases tasks and which each alarm takes, with each count written as the device states it, so that the checker alone converts it; where each stack lies; and what the interrupt controller is told.", None),
+        ("It also carries the application's inputs.", None),
+        ("A size only a catalog record can state stays owed until one does, and every allocation after it is owed too, since no address below it is known.", Some("Until a record states one, it is owed `(by catalog)`")),
+        ("The controller is told a line and a priority for each source and each alarm wired through it, in the order the plan ranks them; one whose interrupt bypasses it is outside what the checker composes, so a system holding one is refused, and whether each reaches it is owed until the realization, the generated code's own statement, says, for a source as for an alarm.", Some("which the realization states with its generated service, a source's as an alarm's")),
+        ("The generated code around each job's start and each interrupt's dispatch is timed inside the catalog's figures for the switch and the completion, and inside each interrupt service's own cost, the catalog's for the timer service and the generated code's own for a generated one, each measured on the image that holds it.", Some("the dispatch beneath each service inside the timer service's `C_rel` and each service's `C_s`")),
+        ("On a machine, each cost that statement gives, and an alarm's lag, says too that it holds under any preemption, as a catalog record's does, and the checker reads it so, never assuming it; the last act's lead needs no such word, as it runs before interrupts are first enabled.", Some("the last act's `last-act-lead` runs before interrupts are first enabled")),
+        ("Stacks are laid from the top of a region down and the image from the bottom up, so a change in the image's size moves no allocation.", Some("laid from the top of the region down, by a cursor that only descends")),
+        ("A stack's size is what its owners state, by one table of sums: what generated code holds beneath what it calls, a task's own bound, the most the runtime's code adds in a call, what a fault adds on top of the deepest of those, since a failed check or a panic can arrive there, and the frame the port saves.", Some("What runs on a stack runs in turn")),
+        ("What the generated code uses of a stack comes of that code, so a first plan generates it with those figures owed, and a second, from a file stating them, generates the same code: what an image holds of its plan leaves out the figures of that code and of the application's, and where each came from, by one table of the plan's lines, and keeps the version of what generated it, on the hosted playground as on a machine.", Some("**Two plans, one code.**")),
+        ("Time on a machine is counted from a read: the last step of initialisation reads the counter and counts every release from that read plus the port's bound on everything from it to the first enabling of interrupts, so no release stands before interrupts are on, and the checker holds that one write of the timer reaches that far, the port's lead and the timer's rounding added.", Some("One write reaches the first compare")),
+        ("What initialisation arms for an alarm it arms before that read, so that nothing of the generated code's own lies between the read and the enabling but the two calls into the port's code, which the port's bound counts, a limit the record states.", Some("The instructions of those two calls are the generated code's own and lie in that span")),
+        ("A wake armed there must not come due before interrupts are on, so its period outlasts what the generated code states of that step and the port's bound together, which the checker holds; on the hosted playground the simulator turns interrupts on at time zero, where its wakes are armed, so nothing is held there.", Some("the scheduling checker holds each wake's `P`")),
+        ("Every other alarm's compare is given a far-off placeholder in that step, at the farthest point on its compare's step that one write reaches, and the checker holds that it too lies past the enabling, counting each read, and each delay's write, from a tick of its own counter before it and the placeholder a whole step short of what one write reaches.", Some("the generated code writes a placeholder for each alarm that is no wake")),
+        ("And an alarm's deadlines are read as its own counter's time, which wraps, where it has no reader or one not bound at an extender over that same device, and as the epoch's where each reader of its time is.", Some("`BASE` is `counter`, the time base being the counter itself, or `epoch`")),
+        ("The record's formulas are not left to reading.", None),
+        ("A model beside it, `crates/archogen-plan/tests/format2_model.rs`, runs each one: where the image may lie and where each stack is laid, against a reference that tries every address in turn, over every small region; each stack's sum, read from the record's own table, against what can stand on that stack at once; and the read that time is counted from, at every phase of the counter's tick.", None),
+        ("Where a rule is already code, what the joint rules refuse of a memory map, the model is held to that code and not to a reading of it.", None),
     ];
     let book = include_str!("../../../docs/book/src/runtime-plan.md");
     let section = book
@@ -2173,17 +2181,116 @@ fn every_sentence_of_the_book_s_section_is_bound_to_the_record() {
     sentences.push(&flat[start..]);
     assert_eq!(sentences.len(), SENTENCES.len(), "{sentences:#?}");
     let flat_record = RECORD.split_whitespace().collect::<Vec<_>>().join(" ");
-    for (sentence, (opening, clause)) in sentences.iter().zip(SENTENCES) {
-        assert!(
-            sentence.starts_with(opening),
-            "`{opening}` is not where the book has: {sentence}"
-        );
+    for (sentence, (whole, clause)) in sentences.iter().zip(SENTENCES) {
+        assert_eq!(*sentence, whole, "the book's sentence moved");
         if let Some(clause) = clause {
             assert!(
                 flat_record.contains(clause),
                 "the record's clause: {clause}"
             );
         }
+    }
+}
+
+/// §1, §3 and §4: every catalog figure the generated code reads stands on a kept line, so a figure restated moves the code with it: the timer's
+/// `compare-rounding`, by which its compares round, and the epoch's `epoch-lead`, which the last act adds to its read. Before, `E` stood on no line and the
+/// digest left timing models out, so two codes, or a code and a stale lead, stood under one identity (round 33, RP33-1).
+#[test]
+fn every_figure_the_generated_code_reads_stands_on_a_kept_line() {
+    const READ: [(&str, &str, &str); 2] = [
+        ("compare-rounding", "timer", "(rounding FIGURE)"),
+        ("epoch-lead", "epoch", "(lead FIGURE)"),
+    ];
+    let kept = the_record_s_table();
+    for (figure, line, slot) in READ {
+        assert!(
+            kept.contains(&(line.to_owned(), Identity::Kept)),
+            "`{line}` is kept"
+        );
+        let form = RECORD
+            .lines()
+            .find(|text| text.starts_with(&format!("({line} ")) && text.contains(slot))
+            .unwrap_or_else(|| panic!("`{line}`'s form holds `{slot}`"));
+        assert!(form.contains(slot), "{form}");
+        assert!(RECORD.contains(&format!("`{figure}`")), "`{figure}`");
+    }
+    assert!(RECORD
+        .contains("It is `compare-rounding` on the timer's line and `epoch-lead` on the epoch's"));
+    assert!(RECORD.contains("the generated code adding the `E` its line writes"));
+}
+
+/// Every refusal the record states has its stage: the search's and the checker's at `check` and `resolve`, the checker's of a plan, `M4.4`'s or the
+/// build's, or the lowering's at a place §7's order names, so no refusal is two outcomes of one input. Before, §5 gave a map finding the joint rules' own
+/// code and §7 added "`missing-fact` from the joint rules" beside `/1`'s kept `tool-failure` for the same finding (round 33, RP33-2; RP7-4 and RP23-3's
+/// class).
+#[test]
+fn every_refusal_the_record_states_has_its_stage() {
+    const STAGES: [(&str, &str); 27] = [
+        ("a system with placement memory staying refused as `/1` refuses it", "lowering: `/1`'s list in its order"),
+        ("a lowering given one of another code refuses it `invalid-description`", "lowering: a realization of another code identity"),
+        ("a file of the one is refused by a lowering of the other", "lowering: a realization of another code identity"),
+        ("each other thing `unmet` reports refused `invalid-description`", "lowering: an application's unmet"),
+        ("being the lowering's to judge on a target and no refusal there", "none"),
+        ("a target with no placement memory is refused `infeasible-configuration`", "lowering: a target's own refusals"),
+        ("A target that does not state a fact a system needs is refused `missing-fact` by what asks", "check and resolve"),
+        ("a target stating either above zero is refused `unsupported-profile`", "lowering: a target's own refusals"),
+        ("one silent on either is refused `missing-fact`", "lowering: a target's own refusals"),
+        ("This refuses too a target whose non-maskable interrupts are all unresumable", "lowering: a target's own refusals"),
+        ("the target is refused `missing-fact` by the profile's admission", "lowering: a target's own refusals"),
+        ("a device stating none has its system refused `missing-fact` before any plan", "check and resolve"),
+        ("past `2^64 − 1` ticks refused `unsupported-profile`", "the checker"),
+        ("A device whose compare could be disarmed and whose reach is shorter than those is refused", "the checker"),
+        ("at a reach of 2 ms a lead of 3 ms is refused", "the checker"),
+        ("its findings refuse at `check` and `resolve`", "lowering: a finding of the generator's joint rules over the target's hardware"),
+        ("the system is then refused for no room", "lowering: no room while placing"),
+        ("which `M4.4` refuses naming the hole", "M4.4"),
+        ("the model's refusals are held to that code itself", "none"),
+        ("`Joint::map` refuses more", "check and resolve"),
+        ("a route whose `external` the file states `no` refuses the system `unsupported-profile`", "lowering: a route whose `external` the realization's file states `no`"),
+        ("Where the routes outnumber the levels the system is refused `unsupported-profile`", "lowering: too few levels while lowering the plan's code"),
+        ("**A refusal `/1` makes that `/2` does not:**", "none"),
+        ("A bound or a list of counts whose `binary` names another image is refused after all of these, by the build", "the build"),
+        ("is refused naming the size it would need where a hole truncates it", "M4.4"),
+        ("is refused by a lowering of another's", "lowering: a realization of another code identity"),
+        ("it refuses a window or a step past `2^64 − 1` ticks", "the checker"),
+    ];
+    const EXEMPT: [&str; 6] = [
+        "if base < F: refuse",
+        "which may refuse what holds",
+        "a machine the profile refuses as the profile says",
+        "and the refusal says so",
+        "so a second fact refused the target it was for",
+        "is written owed and refused by nothing",
+    ];
+    let rules = &RECORD[..RECORD.find("\n## Review\n").expect("the review")];
+    let flat = rules.split_whitespace().collect::<Vec<_>>().join(" ");
+    let order = "A plan on a target adds those above, in this record's order";
+    let sentence = &flat[flat.find(order).expect("§7's order")..];
+    for (said, stage) in STAGES {
+        assert!(flat.contains(said), "the record says: {said}");
+        if let Some(place) = stage.strip_prefix("lowering: ") {
+            assert!(
+                sentence.contains(place),
+                "`{place}` has its place in §7's order"
+            );
+        }
+    }
+    let mut start = 0;
+    let mut pieces = Vec::new();
+    for (at, _) in flat.match_indices(". ") {
+        pieces.push(&flat[start..=at]);
+        start = at + 2;
+    }
+    pieces.push(&flat[start..]);
+    for piece in pieces
+        .iter()
+        .filter(|piece| piece.contains("refus") && !piece.contains(order))
+    {
+        assert!(
+            STAGES.iter().any(|(said, _)| piece.contains(said))
+                || EXEMPT.iter().any(|said| piece.contains(said)),
+            "a refusal with no stage: {piece}"
+        );
     }
 }
 
