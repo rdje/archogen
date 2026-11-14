@@ -1789,7 +1789,10 @@ fn every_fact_the_catalog_owes_is_handed_to_its_records() {
             "table-size",
             "each table a generated system holds as a base and a size",
         ),
-        ("controller-line", "each source's line"),
+        (
+            "controller-line",
+            "the line of each source and of each alarm wired through it",
+        ),
         ("epoch-lead", "the port's `epoch-lead`"),
         ("controller-levels", "a controller's levels"),
     ];
@@ -1851,6 +1854,16 @@ fn every_fact_the_catalog_owes_is_handed_to_its_records() {
     }
     let tasks = include_str!("../../../docs/tasks/M4.md");
     assert!(tasks.contains("- [RPF-H1] "), "`M4.10` quotes it");
+    // Who a fact is of, too: a route's `controller-line` is owed of each route that reaches the controller, an alarm's as a source's, one for each channel
+    // of its device, so the hand-off names each (round 32, RP32-1).
+    assert!(
+        RECORD.contains("its alarms take them in order"),
+        "an alarm takes a line"
+    );
+    assert!(
+        h1.contains("the line of each source and of each alarm wired through it, one for each channel of an alarm's device"),
+        "{h1}"
+    );
     // A fact of a service's group comes from the group's supplier, which no catalog record is for a generated service, so the catalog owes none of them
     // (round 30, RP30-1): read from `archogen_catalog::selection`'s own table.
     let selection = include_str!("../../archogen-catalog/src/selection.rs");
@@ -2069,7 +2082,7 @@ fn the_book_s_section_names_each_owner_as_the_record_does() {
             "the `service-cost` the realization states of an alarm or a source spans its trap from entry to exit",
         ),
         (
-            "On a machine, each cost and time that statement\ngives says too that it holds under any preemption",
+            "and an alarm's lag, says too that it holds under any preemption",
             "each source on a target by `realization`, `holds-under-preemption`",
         ),
     ];
@@ -2114,6 +2127,64 @@ fn every_quote_of_the_model_is_the_model_s_text() {
         );
     }
     assert!(quotes.len() >= 2, "{quotes:?}");
+}
+
+/// The book's `/2` section, every sentence of it, in order: each that states a rule is bound to the record's clause it restates, both read, and each
+/// other is held descriptive, so a sentence added, changed or dropped fails here, and so does a clause the record moves. Before, rounds 23, 27, 28, 31
+/// and 32 each found a sentence of the section the record had moved past, the last two stating as absolute what the record limits (round 32, RP32-2,
+/// RP32-3).
+#[test]
+fn every_sentence_of_the_book_s_section_is_bound_to_the_record() {
+    const SENTENCES: [(&str, Option<&str>); 18] = [
+        ("Everything above describes", None),
+        ("A real machine needs more", None),
+        ("It also carries the application's inputs", None),
+        ("A size only a catalog record can state", Some("Until a record states one, it is owed `(by catalog)`")),
+        ("The controller is told a line and a priority", Some("which the realization states with its generated service, a source's as an alarm's")),
+        ("The generated code around each job's start", Some("the dispatch beneath each service inside the timer service's `C_rel` and each service's `C_s`")),
+        ("On a machine, each cost that statement gives", Some("the last act's `last-act-lead` runs before interrupts are first enabled")),
+        ("Stacks are laid from the top of a region down", Some("laid from the top of the region down, by a cursor that only descends")),
+        ("A stack's size is what its owners state", Some("What runs on a stack runs in turn")),
+        ("What the generated code uses of a stack comes of that code", Some("**Two plans, one code.**")),
+        ("Time on a machine is counted from a read", Some("**The epoch** (R3-8, `RA-H8`)")),
+        ("What initialisation arms for an alarm", Some("The instructions of those two calls are the generated code's own and lie in that span")),
+        ("A wake armed there must not come due", Some("the scheduling checker holds each wake's `P`")),
+        ("Every other alarm's compare is given a far-off placeholder", Some("the generated code writes a placeholder for each alarm that is no wake")),
+        ("And an alarm's deadlines are read as its", Some("`BASE` is `counter`, the time base being the counter itself, or `epoch`")),
+        ("The record's formulas are not left to reading", None),
+        ("A model beside it", None),
+        ("Where a rule is already code", None),
+    ];
+    let book = include_str!("../../../docs/book/src/runtime-plan.md");
+    let section = book
+        .split("## On a real machine: format `/2`")
+        .nth(1)
+        .expect("the book's `/2` section");
+    let section = &section[..section.find("\n## ").unwrap_or(section.len())];
+    let flat = section.split_whitespace().collect::<Vec<_>>().join(" ");
+    let mut sentences = Vec::new();
+    let mut start = 0;
+    for (at, _) in flat.match_indices(". ") {
+        if flat[at + 2..].starts_with(|c: char| c.is_ascii_uppercase()) {
+            sentences.push(&flat[start..=at]);
+            start = at + 2;
+        }
+    }
+    sentences.push(&flat[start..]);
+    assert_eq!(sentences.len(), SENTENCES.len(), "{sentences:#?}");
+    let flat_record = RECORD.split_whitespace().collect::<Vec<_>>().join(" ");
+    for (sentence, (opening, clause)) in sentences.iter().zip(SENTENCES) {
+        assert!(
+            sentence.starts_with(opening),
+            "`{opening}` is not where the book has: {sentence}"
+        );
+        if let Some(clause) = clause {
+            assert!(
+                flat_record.contains(clause),
+                "the record's clause: {clause}"
+            );
+        }
+    }
 }
 
 /// §3, `R`: a rate in hertz, exact, a whole number or `N/D` in lowest terms, as `/1` writes a duration (round 4, RP4-7).

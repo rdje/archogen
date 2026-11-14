@@ -384,3 +384,16 @@ Said, and left as it stands: no `/2` lowering, controller record or `archogen-re
 | RP31-4 | wording, older | §2 quoted model §8 rule 8's "line and context", the model reading "contexts" | Quoted as it reads; `every_quote_of_the_model_is_the_model_s_text` reads each quote of the model in the record |
 
 Said, and left as it stands: no `/2` lowering, controller record or `archogen-realization/1` exists.
+
+**Round 32** — `2026-11-14`, leaf `M4.1.7.2.32`: not acceptable, 6 findings, 3 defects, after 1, on `0310d1ba`. Round 31's answers held otherwise: `format2_model` `69 passed`, `alarm_model` `25 passed`, each alone; every quote the record takes from another record or the spec, against its source; every code name it cites; the worked guard, stacks and epoch; heartbeat on `riscv-virt-up` by hand; the inputs table and the ranks; the code identity and `BASE` against `joint.rs`; the placement choice; the kept questions. Its rig is `target/m4375/work/rp32-line/`. The reader graded RP32-2 and RP32-3 wording and named RP31-1's standard, which holds them defects; they are held defects, as RP31-1 was.
+
+| # | Kind | Finding | Answer |
+| --- | --- | --- | --- |
+| RP32-1 | defect, RP28-1's class | an alarm's line at the controller, owed by the catalog of `(alarm NODE)`, was in no hand-off: `RPF-H1` named each source's line, and the catalog's row read the fact's name, not who it is of | `RPF-H1` names the line of each source and of each alarm wired through it, one for each channel of an alarm's device; the catalog's row reads that an alarm takes a line and that the hand-off names it |
+| RP32-2 | defect, by RP31-1's standard | the book had nothing of the generated code's own between the read and the enabling, where the record states the two calls lie there, a limit | The book states the two calls, the port's bound counting them |
+| RP32-3 | defect, by RP31-1's standard | the book had each cost and time state that it holds under any preemption, where the record names the costs and an alarm's lag and exempts the last act's lead | The book says so; `every_sentence_of_the_book_s_section_is_bound_to_the_record` binds each of the section's eighteen sentences, in order, to the record's clause or holds it descriptive |
+| RP32-4 | wording | the controller's levels owed with no route to need them | Owed where a route reaches the controller |
+| RP32-5 | wording | §7 named three of `/1`'s refusals as staying | Every other, in `/1`'s order |
+| RP32-6 | wording | a hosted wake with no stated values had no `(horizon …)` | `none`, the values owed as its line says |
+
+Said, and left as it stands: no `/2` lowering, controller record or `archogen-realization/1` exists.

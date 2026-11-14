@@ -197,8 +197,9 @@ address below it is known. The controller is told a line and a priority for each
 one whose interrupt bypasses it is outside what the checker composes, so a system holding one is refused, and whether each reaches it is owed
 until the realization, the generated code's own statement, says, for a source as for an alarm. The generated code around each job's start and each interrupt's
 dispatch is timed inside the catalog's figures for the switch and the completion, and inside each interrupt service's own cost, the catalog's for the
-timer service and the generated code's own for a generated one, each measured on the image that holds it. On a machine, each cost and time that statement
-gives says too that it holds under any preemption, as a catalog record's does, and the checker reads it so, never assuming it.
+timer service and the generated code's own for a generated one, each measured on the image that holds it. On a machine, each cost that statement gives,
+and an alarm's lag, says too that it holds under any preemption, as a catalog record's does, and the checker reads it so, never assuming it;
+the last act's lead needs no such word, as it runs before interrupts are first enabled.
 
 Stacks are laid from the top of a region down and the image from the bottom up, so a change in the image's size moves no
 allocation. A stack's size is what its owners state, by one table of sums: what generated code holds beneath what it calls, a task's own bound, the most the runtime's code adds in a
@@ -208,7 +209,8 @@ owed, and a second, from a file stating them, generates the same code: what an i
 Time on a machine is counted from a read: the last step of initialisation reads the counter and counts every release from that read plus the port's
 bound on everything from it to the first enabling of interrupts, so no release stands before interrupts are on, and the checker holds that one
 write of the timer reaches the first of them that far out. What initialisation arms for an alarm it arms before that read, so that nothing of the
-generated code's own lies between the read and the enabling. A wake armed there must not come due before interrupts are on, so its period
+generated code's own lies between the read and the enabling but the two calls into the port's code, which the port's bound counts, a limit the
+record states. A wake armed there must not come due before interrupts are on, so its period
 outlasts what the generated code states of that step and the port's bound together, which the checker holds; on the hosted playground the
 simulator turns interrupts on at time zero, where its wakes are armed, so nothing is held there. Every other alarm's compare is given a far-off
 placeholder in that step, at the farthest point on its compare's step that one write reaches, and the checker holds that it too lies past the
