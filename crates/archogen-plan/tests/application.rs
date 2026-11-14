@@ -219,6 +219,10 @@ fn each_malformed_input_is_refused_saying_what_is_wrong() {
         // A crate the toolchain links of its own is no application's crate (round 12, AI12-5).
         (replaced("(crate app)", "(crate std)"), "a crate the toolchain links of its own"),
         (replaced("(crate app)", "(crate core)"), "a crate the toolchain links of its own"),
+        // A run's own clause written inside its observation is one beside it, `call`, `node-call` and `ending` as its bound's (round 13, AI13-4).
+        (replaced("(binary unbuilt) (evidence analytically-established) (locator \"docs/argument.md\") (basis \"four loads\")", "(binary \"sha256:1111111111111111111111111111111111111111111111111111111111111111\") (evidence observed-maximum (call release 1)) (locator \"docs/argument.md\") (basis \"four loads\")"), "`call` is a clause beside `evidence`"),
+        (replaced("(binary unbuilt) (evidence analytically-established) (locator \"docs/argument.md\") (basis \"four loads\")", "(binary \"sha256:1111111111111111111111111111111111111111111111111111111111111111\") (evidence observed-maximum (node-call uart 1)) (locator \"docs/argument.md\") (basis \"four loads\")"), "`node-call` is a clause beside `evidence`"),
+        (replaced("(binary unbuilt) (evidence analytically-established) (locator \"docs/argument.md\") (basis \"four loads\")", "(binary \"sha256:1111111111111111111111111111111111111111111111111111111111111111\") (evidence observed-maximum (ending unmask)) (locator \"docs/argument.md\") (basis \"four loads\")"), "`ending` is a clause beside `evidence`"),
         // And inside a list's, where no observation was written either (round 11, AI11-7).
         (replaced("(binary unbuilt) (evidence analytically-established) (locator \"docs/argument.md\") (basis \"by reading\")", "(binary \"sha256:1111111111111111111111111111111111111111111111111111111111111111\") (evidence observed-maximum (locator \"docs/argument.md\")) (basis \"by reading\")"), "`locator` is a clause beside `evidence`"),
         (replaced(bound_evidence, "(evidence analytically-established) (locator \"docs/argument.md\")"), "`basis`"),

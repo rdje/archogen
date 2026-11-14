@@ -206,7 +206,7 @@ pub struct Task {
 /// What holds the code a job runs (`ROADMAP.md` §1.1: "a declared, versioned source"): a crate, where it lies from this file, and a digest of what the compiler read of it.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Code {
-    /// Its name, the first of each entry point's names.
+    /// Its name, the first of each entry point's names: the package's library's at `place`, which a build compiles alone (round 13, AI13-1).
     pub name: String,
     /// Where it lies, from the file that says so.
     pub place: String,
@@ -482,6 +482,7 @@ fn category(
     of: &str,
     form: &Form,
     value: Option<u64>,
+    beside: &[&str],
 ) -> Result<(Category, Option<Observation>), Refused> {
     let items = form.items();
     let word = items.get(1).and_then(Form::as_symbol).unwrap_or_default();
@@ -491,13 +492,13 @@ fn category(
         ("externally-supplied", []) => Ok((Category::ExternallySupplied, None)),
         ("analytically-established", []) => Ok((Category::AnalyticallyEstablished, None)),
         ("observed-maximum", rest) => {
-            // A `locator` or a `basis` is the bound's own clause, beside `evidence`: written inside it, it is said so, not called unknown (round 10, AI10-6), a list's as a bound's (round 11, AI11-7).
-            if let Some(head) = rest.iter().filter_map(Form::head).find(|head| {
-                matches!(
-                    *head,
-                    "locator" | "basis" | "scope" | "binary" | "value" | "unit"
-                )
-            }) {
+            // A clause of the record the evidence stands in is beside `evidence`: written inside it, it is said so, not called unknown (round 10, AI10-6), a list's as a bound's
+            // (round 11, AI11-7), and a run's `call`, `node-call` and `ending` as its bound's (round 13, AI13-4).
+            if let Some(head) = rest
+                .iter()
+                .filter_map(Form::head)
+                .find(|head| beside.contains(head))
+            {
                 return Err(refused(
                     of,
                     format!("`{head}` is a clause beside `evidence`, not inside it"),
@@ -569,8 +570,13 @@ fn category(
     }
 }
 
-fn evidence(of: &str, found: &[(&str, &Form)], value: Option<u64>) -> Result<Evidence, Refused> {
-    let (category, observation) = category(of, clause(of, found, "evidence")?, value)?;
+fn evidence(
+    of: &str,
+    found: &[(&str, &Form)],
+    value: Option<u64>,
+    beside: &[&str],
+) -> Result<Evidence, Refused> {
+    let (category, observation) = category(of, clause(of, found, "evidence")?, value, beside)?;
     let basis = string(of, clause(of, found, "basis")?)?;
     let locator = match clause(of, found, "locator") {
         Ok(form) => Some(string(of, form)?),
@@ -614,6 +620,16 @@ fn binary(of: &str, form: &Form) -> Result<Binary, Refused> {
     }
 }
 
+/// The clauses a record holds beside its `evidence`, each said so when written inside it.
+fn beside_evidence<'n>(record: &[&'n str]) -> Vec<&'n str> {
+    record
+        .iter()
+        .copied()
+        .filter(|name| *name != "evidence")
+        .collect()
+}
+
+/// A bound of `units`. `extra` names the clauses its record holds beside these and reads apart, a run's `call`, `node-call` and `ending`.
 fn bound(of: &str, items: &[Form], units: &[&str], extra: &[&str]) -> Result<Bound, Refused> {
     let mut known = vec![
         "value", "unit", "scope", "binary", "evidence", "locator", "basis",
@@ -630,7 +646,7 @@ fn bound(of: &str, items: &[Form], units: &[&str], extra: &[&str]) -> Result<Bou
     }
     let scope = string(of, clause(of, &found, "scope")?)?;
     let binary = binary(of, clause(of, &found, "binary")?)?;
-    let evidence = evidence(of, &found, Some(value))?;
+    let evidence = evidence(of, &found, Some(value), &beside_evidence(&known))?;
     Ok(Bound {
         value,
         unit,
@@ -729,7 +745,7 @@ fn calls(of: &str, form: &Form, head: &str, nodes: bool) -> Result<Calls, Refuse
     let found = clauses(of, &rest, LIST_RECORD)?;
     let scope = string(of, clause(of, &found, "scope")?)?;
     let binary = binary(of, clause(of, &found, "binary")?)?;
-    let evidence = evidence(of, &found, None)?;
+    let evidence = evidence(of, &found, None, &beside_evidence(LIST_RECORD))?;
     Ok(Calls {
         scope,
         binary: observed_on(of, binary, &evidence)?,
@@ -793,14 +809,14 @@ fn masked_runs(of: &str, form: &Form) -> Result<MaskedRuns, Refused> {
         out.push(MaskedRun {
             name: name.to_owned(),
             ending,
-            bound: bound(of, &plain, TIMES, &[])?,
+            bound: bound(of, &plain, TIMES, &["call", "node-call", "ending"])?,
             calls: counted(of, &those("call"), "call", false)?,
             node_calls: counted(of, &those("node-call"), "node-call", true)?,
         });
     }
     let scope = string(of, clause(of, &found, "scope")?)?;
     let binary = binary(of, clause(of, &found, "binary")?)?;
-    let evidence = evidence(of, &found, None)?;
+    let evidence = evidence(of, &found, None, &beside_evidence(LIST_RECORD))?;
     Ok(MaskedRuns {
         scope,
         binary: observed_on(of, binary, &evidence)?,
