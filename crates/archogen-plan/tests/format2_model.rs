@@ -1301,20 +1301,22 @@ fn what_an_alarm_owes_as_a_source_has_its_owed_fact() {
     }
 }
 
-/// §3: a source's route on a target owes `external` by the realization, as an alarm does: `/1` §2.5 gives it the simulator, which holds on the playground
-/// alone, and the composition gates every `J` on it (`compose.rs`, `external.<source>`). `(realization-fact …)` carries it, and a node a job calls its two
-/// facts below; before, its sentence named §2.10's facts alone, so a file stating them had no line to land on (round 22, RP22-1).
+/// §3: a source on a target owes `external`, which the composition gates every `J` on (`compose.rs`, `external.<source>`), by its controller's catalog
+/// record, as model §8 rule 8 has the controller's line and context; `/1` §2.5 gives it the simulator on the playground alone (round 22, RP22-1; round 27,
+/// RP27-1, which took it from the realization). `(realization-fact …)` carries an alarm's, and a called node's two facts below.
 #[test]
-fn a_source_s_route_on_a_target_owes_its_external_and_a_line_carries_it() {
+fn a_source_s_external_on_a_target_is_its_controller_record_s() {
     let owed = RECORD
         .split("**`(owed …)`, as `/2` writes it.**")
         .nth(1)
         .expect("what `/2` owes");
     // Its subject is the source's, `(source NAME)`, as `/1` writes the source's other facts (round 23, RP23-5).
     let of_a_route = owed
-        .split("of a source on a target by `realization`,")
+        .split("of a source on a target by `catalog`,")
         .nth(1)
         .expect("a source's");
+    let model = include_str!("../../../docs/semantics/model.md");
+    assert!(model.contains("line and context, and the latency are the catalog's"));
     let of_a_route = &of_a_route[..of_a_route.find(';').expect("its end")];
     assert!(of_a_route.contains("`external`"), "{of_a_route}");
     assert!(of_a_route.contains("`(source NAME)`"), "{of_a_route}");
@@ -1566,11 +1568,12 @@ fn every_fact_the_realization_owes_is_handed_to_its_format() {
 /// room had two outcomes (round 23, RP23-3).
 #[test]
 fn section_7_places_every_refusal_in_one_order() {
-    const ORDER: [&str; 7] = [
+    const ORDER: [&str; 8] = [
         "a target's own refusals",
         "`missing-fact` from the joint rules",
         "an application's unmet",
         "too few levels while lowering the plan's code",
+        "a source whose `external` its controller's record states `no`",
         "a realization of another code identity",
         "a route whose `external` the realization's file states `no`",
         "no room while placing",
@@ -1592,10 +1595,15 @@ fn section_7_places_every_refusal_in_one_order() {
         .collect();
     assert!(at.windows(2).all(|pair| pair[0] < pair[1]), "{at:?}");
     // The reader's case: a route stated not to reach the controller, and no room for the boot stack, refuses as §6 does, naming the source.
-    let first = |holding: [bool; 7]| holding.iter().position(|holds| *holds).map(|at| ORDER[at]);
+    let first = |holding: [bool; 8]| holding.iter().position(|holds| *holds).map(|at| ORDER[at]);
     assert_eq!(
-        first([false, false, false, false, false, true, true]),
+        first([false, false, false, false, false, false, true, true]),
         Some("a route whose `external` the realization's file states `no`")
+    );
+    // A source's, read with the catalog, before any realization (round 27, RP27-1).
+    assert_eq!(
+        first([false, false, false, false, true, false, true, true]),
+        Some("a source whose `external` its controller's record states `no`")
     );
     assert!(RECORD.contains("refuses the system `unsupported-profile`, naming its source"));
 }
@@ -1681,6 +1689,69 @@ fn every_route_of_a_plan_reaches_the_controller() {
     assert!(RECORD.contains(
         "a route whose `external` the file states `no` refuses the system `unsupported-profile`"
     ));
+}
+
+/// The ledger: on a target the checker reads each part of a source's service group where it is stated, its code facts from the realization, the generated
+/// service in a record's place as an alarm's (`RA-H5`), and its `external.<source>` from the controller's record (model §8 rule 8). Before, the records gave
+/// the whole group to a catalog record, `compose.rs` knew no realization as its supplier, and `RA-H5` re-anchored an alarm's alone, so a complete plan with
+/// a source was one the checker could not read (round 27, RP27-1).
+#[test]
+fn a_source_s_service_group_is_read_where_it_is_stated() {
+    let row = RECORD
+        .lines()
+        .find(|line| line.starts_with("| `RPF-H8` | `M2.21.2` |"))
+        .expect("the hand-off to the checker's leaf");
+    for said in [
+        "`C_s`",
+        "`external.<source>`",
+        "`RA-H5`",
+        "model §8 rule 8",
+        "never defaulted",
+    ] {
+        assert!(row.contains(said), "{said}: {row}");
+    }
+    let tasks = include_str!("../../../docs/tasks/M2.md");
+    assert!(tasks.contains("- [RPF-H8] "), "`M2.21.2` quotes it");
+    let h5 = RECORD
+        .lines()
+        .find(|line| line.starts_with("| `RPF-H5` | `M4.2` |"))
+        .expect("the realization's format");
+    assert!(
+        !h5.contains("a source's `external`"),
+        "the controller's record states it: {h5}"
+    );
+}
+
+/// §1: the code identity's catalog digest is of each record's code hash, its lines but its `timing-model`, and no other facet's bound reads a timing
+/// model: so no cost, its value or the image its evidence names, moves the code identity, and an image-specific cost can name the image it was measured on.
+/// Before, the digest held every cost's `binary`, which names an image by an identity that holds the digest, a fixed point no image reaches, so no
+/// production claim on a board could stand (round 27, RP27-2).
+#[test]
+fn the_catalog_digest_holds_no_cost() {
+    assert!(RECORD.contains("its code hash, the sha256 of the lines `archogen_catalog::hash`'s `Catalog::hashes` hashes for that record but its `timing-model` line"));
+    let hash = include_str!("../../archogen-catalog/src/hash.rs");
+    assert!(
+        hash.contains("format!(\"timing-model {}\", bound(FacetKind::TimingModel)),"),
+        "a line of its own"
+    );
+    let arms = hash
+        .split("match facet {\n            FacetKind::Contract => {")
+        .nth(1)
+        .expect("the facets' bounds");
+    let arms = &arms[..arms
+        .find("            FacetKind::TimingModel => {")
+        .expect("the timing model's arm")];
+    assert!(
+        !arms.contains("TimingModel"),
+        "a contract's, implementation's or behaviour model's bound reads no timing model"
+    );
+    let row = RECORD
+        .lines()
+        .find(|line| line.starts_with("| `RPF-H9` | `M4.10` |"))
+        .expect("the hand-off to the catalog's leaf");
+    assert!(row.contains("`timing-model`"), "{row}");
+    let tasks = include_str!("../../../docs/tasks/M4.md");
+    assert!(tasks.contains("- [RPF-H9] "), "`M4.10` quotes it");
 }
 
 /// §3, `R`: a rate in hertz, exact, a whole number or `N/D` in lowest terms, as `/1` writes a duration (round 4, RP4-7).
