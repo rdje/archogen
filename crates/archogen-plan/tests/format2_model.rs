@@ -1436,7 +1436,8 @@ fn the_record_s_table_of_lines_is_the_model_s_and_holds_every_form() {
 }
 
 /// Two plans of one system, a first with every generated figure owed and a second with a realization's file, have one preimage; and what is
-/// code moves it: an entry point, the application's sources, the catalog, a route's level.
+/// code moves it: an entry point, the application's sources, the catalog, a route's level. The lines the identity leaves out stand here for their heads alone, each
+/// a placeholder of its form and none a whole plan's, which no lowering writes yet: a line left out moves no identity whatever it holds (round 16, RP16-3).
 #[test]
 fn two_plans_of_one_code_have_one_preimage_and_code_moves_it() {
     let shared_by = |entry: &str, digest: &str, catalog: &str, level: u64, emitter: u64| {
@@ -2985,4 +2986,34 @@ fn an_origin_names_what_sizes_and_places_its_unit() {
         ]
     );
     assert!(RECORD.contains("and the guard and each alignment the catalog states of it, which size and place it though no sum reads them"));
+}
+
+/// §5: an allocation's `origin` names each list its sums take their largest over too, a task's `node-calls` and `os-calls` and the initialisation's `node-calls`,
+/// each by its own category: which figures the largest is taken over rests on them, as the composite-inputs record's §6 reads them, "parts of that order, though
+/// they add nothing" (round 16, RP16-1).
+#[test]
+fn an_origin_names_the_lists_its_largest_is_taken_over() {
+    // RP16-1's case: a stack bound and its figures established, the node calls assumed.
+    let (items, weakest) = origin_items(&[
+        (
+            "application",
+            "(task s t) stack-bound",
+            "analytically-established",
+            512,
+        ),
+        ("application", "(task s t) node-calls", "assumed", 1),
+        (
+            "realization",
+            "console.write node-stack",
+            "analytically-established",
+            380,
+        ),
+        ("record", "port.riscv guard", "externally-supplied", 64),
+    ]);
+    assert_eq!(
+        weakest, "assumed",
+        "the stack rests on the list as on its figures"
+    );
+    assert_eq!(items[0], "(application (task s t) node-calls assumed)");
+    assert!(RECORD.contains("and each list its sums take their largest over, a task's `node-calls` and `os-calls` and the initialisation's `node-calls`, by its own category"));
 }

@@ -218,3 +218,13 @@ Said, and left as it stands: no `/2` lowering exists, so lines are worked by han
 | RP15-4 | wording | with no application's file a task's `needs` was left open, as the boot's was | It holds the task's `stack-bound`, `os-calls` and `node-calls` and each other figure of its own not yet stated, no node's or primitive's figure named |
 
 Said, and left as it stands: no `/2` lowering exists, so lines are worked by hand; `archogen-realization/1`'s value forms are `RPF-H3`'s, not yet defined.
+
+**Round 16** — `2026-11-14`, leaf `M4.1.7.2.16`: not acceptable, 3 findings, 1 defect, after 2, on `93bb1988`. Everything else held: `format2_model` `48 passed`, `alarm_model` `25 passed`; §5's functions over 128,444,628 layouts, units of no size among them, the formula the reference's under both hole picks and every laid layout holding §5's claims; round 15's guard and alignment alike in every place that writes them, items by owner then text, regions by base, name and provider; heartbeat on `riscv-virt-up` worked by hand; each stack's sum against the fault contract and the completion path; every kept question and hand-off answered or carried. Its rigs are `target/m4355/work/`.
+
+| # | Kind | Finding | Answer |
+| --- | --- | --- | --- |
+| RP16-1 | defect, narrow, rounds 14's and 15's rule, no row | an allocation's `origin` left out the lists its sums take their largest over, a task's `node-calls` and `os-calls` and the initialisation's `node-calls`, each with its own category, so an allocation could read stronger than what it rests on, where the composite-inputs record's §6 holds lists parts of that order | An `origin` names each such list by its own category; `OF`'s facts take them. A row of the reader's case |
+| RP16-2 | wording, round 15's answer | with no application's file a task's `needs` named its lists, which no `(owed …)` line could name | A task's `os-calls` and `node-calls` are owed by `application` where no file is given |
+| RP16-3 | wording, round 15's answer, the model's | the identity row's left-out lines were not written whole as the record writes them | They stand for their heads alone, said in the row's comment: a line left out moves no identity whatever it holds |
+
+Said, and left as it stands: no `/2` lowering exists, so lines are worked by hand; `archogen-realization/1`'s value forms are `RPF-H3`'s, not yet defined.
