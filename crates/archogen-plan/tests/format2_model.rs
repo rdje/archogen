@@ -2599,7 +2599,7 @@ fn no_timer_is_enabled_under_timer_none() {
 }
 
 /// §3: one `(obligation placement (region PROVIDER NAME))` for each `Obligation::Placement` `Joint::map` reports, each executable region that is not reserved,
-/// in the region lines' order. Each region is `(base, name, provider, executable, reserved)`.
+/// by their text, as `/1`'s (round 13, RP13-2). Each region is `(base, name, provider, executable, reserved)`.
 fn placement_obligations(regions: Vec<(u64, &str, &str, bool, bool)>) -> Vec<String> {
     let mut lines: Vec<String> = regions
         .into_iter()
@@ -2893,4 +2893,65 @@ fn each_alarm_owes_what_the_checker_asks_of_it() {
     assert!(RECORD.contains(
         "`step` of a wake, `reach-ahead` of an expiry whose time base is the counter itself"
     ));
+}
+
+/// §5: what an allocation's `(origin …)` lists. Every figure its sum reads, each name's figures all and not its largest alone, since the stack rests on each: one
+/// assumed smaller than another stated may be the largest. And an item written once however many figures write it, two of one record's facts being one text
+/// (round 14, RP14-1).
+fn origin_items(figures: &[(&str, &str, &str, u64)]) -> (Vec<String>, &'static str) {
+    const WEAKEST_FIRST: [&str; 4] = [
+        "assumed",
+        "observed-maximum",
+        "externally-supplied",
+        "analytically-established",
+    ];
+    let mut items: Vec<String> = figures
+        .iter()
+        .map(|(owner, of, category, _)| format!("({owner} {of} {category})"))
+        .collect();
+    items.sort();
+    items.dedup();
+    let weakest = WEAKEST_FIRST
+        .into_iter()
+        .find(|category| figures.iter().any(|figure| figure.2 == *category))
+        .expect("a figure");
+    (items, weakest)
+}
+
+#[test]
+fn an_origin_lists_every_figure_its_sum_reads_once() {
+    // RP14-1's case: `console.write` 380 observed, `timer.read` 200 assumed, `mask` and `unmask` 96 each from one API record.
+    let (items, weakest) = origin_items(&[
+        (
+            "realization",
+            "(node console) node-stack",
+            "observed-maximum",
+            380,
+        ),
+        ("realization", "(node timer) node-stack", "assumed", 200),
+        (
+            "record",
+            "api.riscv primitive-stack",
+            "externally-supplied",
+            96,
+        ),
+        (
+            "record",
+            "api.riscv primitive-stack",
+            "externally-supplied",
+            96,
+        ),
+    ]);
+    assert_eq!(weakest, "assumed", "the smaller figure is entered too");
+    assert_eq!(
+        items,
+        [
+            "(realization (node console) node-stack observed-maximum)",
+            "(realization (node timer) node-stack assumed)",
+            "(record api.riscv primitive-stack externally-supplied)"
+        ],
+        "one record's two figures are one item"
+    );
+    assert!(RECORD.contains("each name's figures all and not its largest alone"));
+    assert!(RECORD.contains("an item is written once however many figures write it"));
 }

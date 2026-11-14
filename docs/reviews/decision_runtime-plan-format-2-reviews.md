@@ -196,3 +196,14 @@ Said, and left as it stands: no `/2` lowering exists, so lines are worked by han
 | RP13-6 | wording | `COUNTER` said `compare-magnitude` for `(compare-magnitude true)`; two model comments ran `last-act-lead` to the act's read alone; the identity row's image wrote no `truncated-by` | Each said rightly; `(truncated-by)` is written where no hole is. The owed allocation in that row carries no `origin` by the grammar's owed form |
 
 Said, and left as it stands: no `/2` lowering exists, so lines are worked by hand; what QEMU's hart raises of non-maskable interrupts was not checked, which RP13-1 now leaves to `M4.1.7.3`.
+
+**Round 14** — `2026-11-14`, leaf `M4.1.7.2.14`: not acceptable, 4 findings, 1 defect, after 4, on `1660cce4`. Every round-13 answer held: `format2_model` `46 passed`, `alarm_model` `25 passed`; both privileged-specification quotes verbatim and their files' sha256 the ledger's and chipdoc's own; no other count resting on nothing; the catalog digest's one preimage, ids by bytes and `Digest`'s display; placement obligations by text deterministic; each alarm's owed facts the checker's gating; heartbeat on `riscv-virt-up` worked by hand, every kept line's order fixed; the memory and each stack's sum by hand; every kept question and hand-off answered or owned. Its rigs are `target/m4351/work/`.
+
+| # | Kind | Finding | Answer |
+| --- | --- | --- | --- |
+| RP14-1 | defect, narrow, since round 2, no row | `(origin …)` "names each figure entered", read as every figure a sum reads or as the largest each name stands for alone, whose weakest categories differ; and one record's two facts are one text, written once or twice | Every figure the sum reads, each name's figures all, a stack resting on each; an item written once however many figures write it, as a `NEED` is. A row of the reader's case |
+| RP14-2 | gap | a target the tool does not ship has no agreement, so its `catalog-target` naming a shipped one's reads that one's records, measured on another machine | Said: on the word of its own file, as every unchecked fact of such a target rests |
+| RP14-3 | wording | the boot's `NEED` with no application's file read as that item alone or beside the other figures not yet stated | Its `needs` holds that item and each other figure of its own not yet stated |
+| RP14-4 | wording | the model's comment on `placement_obligations` kept round 11's order | It says the text's order |
+
+Said, and left as it stands: no `/2` lowering exists, so lines are worked by hand; what QEMU's hart raises of non-maskable interrupts stays `M4.1.7.3`'s.
