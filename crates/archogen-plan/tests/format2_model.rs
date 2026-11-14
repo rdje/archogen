@@ -211,7 +211,7 @@ fn reference(
 }
 
 /// §5: "`L` is the less of the lowest allocation's base and the base of the lowest hole above `F`", "`owed` while the lowest allocation is, the
-/// lowest hole above `F` then standing in `truncated-by` as what may yet be the limit", and "`truncated-by` names each hole whose base is `L`". The limit, nothing where it
+/// lowest hole above `F` then standing in `truncated-by` as the most the limit can be", and "`truncated-by` names each hole whose base is `L`". The limit, nothing where it
 /// is owed, and the bases `truncated-by` names.
 fn limit(
     region: Region,
@@ -796,6 +796,22 @@ fn a_check_s_route_into_the_fault_path_is_held_too() {
     // The idle context is measured from the transition's call, so a transition that leaves its frame beneath it is in its figure (RP18-2).
     assert!(RECORD
         .contains("from the transition's call, so what the transition leaves beneath it is in it"));
+}
+
+/// §5: each fault figure is bounded to the runtime's end, a fault taken on the way among it, its frame and the trap path's entry, as the fault contract's rule 7
+/// ends one at once: so a second trap on a fault's route is in the figure, and no sum adds a second `trap-frame`. None held it before (round 19, RP19-1).
+#[test]
+fn a_fault_taken_on_the_way_is_in_the_fault_figures() {
+    for figure in ["fault-path-stack", "fault-check-stack"] {
+        let row = RECORD
+            .lines()
+            .find(|line| line.starts_with(&format!("| `{figure}` |")))
+            .unwrap_or_else(|| panic!("a row of `{figure}`"));
+        assert!(
+            row.contains("to the runtime's end, a fault taken on the way, its frame and the trap path's entry, among it"),
+            "{row}"
+        );
+    }
 }
 
 /// Every set of small figures for a stack: each figure of one value in turn, and each of several as none, one or two.
