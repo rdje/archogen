@@ -209,3 +209,15 @@ Said, and left as it stands: `M4.13` is unbuilt, so cargo stood in for the build
 | AI14-6 | wording, round 13's insertion | the "So" concluding the copy followed the generated code's remap | The conclusion stands after the copy, the generated code's remap after it |
 
 Said, and left as it stands: `M4.13` is unbuilt, so cargo stood in for the build; nothing was measured on Linux or ELF, where AI14-2 may not show; a library of `["lib", "cdylib"]` reports a kind beside `lib`, and is of another crate type for this record.
+
+**Round 15** — `2026-11-14`, leaf `M4.12.1.15`: not acceptable, 5 findings, 2 defects, after 2, on `e314b3a1`. Round 14's answers held where they were measured: `application` 13 passed and `code_digest` 7, each alone; 16 manifest cases, a target declared with a `path` building at the copy and one by name alone refused, as the record says, and a `[patch]` already refused by the lock; the copy built alone one at two places, `-C metadata` and the symbol both; 40 inputs of its own, 28 refused each truly but AI15-4's; every application field of `TaskParts` and `Run` fillable; `AI-H1` to `AI-H5` word for word. Its rigs are `target/m4352/work/`.
+
+| # | Kind | Finding | Answer |
+| --- | --- | --- | --- |
+| AI15-1 | defect, the answers to AI13-3 and AI14-4 | a copy linked from outside the linking compile's workspace root has its absolute path hashed into `-C metadata`, which every symbol carries, and `--extern` names the target directory, so the objects moved with where the build stood though every directory was remapped; one root over the generated code and the copy gave one identity at two places | The image is linked by one workspace whose root holds the generated code's crate as its member and the copy beside it, excluded and a path dependency at a fixed name below the root, the root remapped; the root's compile of the copy is refused where its account names other files than the copy's own; `--extern` among the flags naming the build's own directories. In the record, `/2` §1 and `AI-H5` word for word |
+| AI15-2 | defect, fails safe, round 14's class | `default-run` naming a binary compiles at `place` and is refused by cargo at the copy, outside round 14's words | It is refused, saying so, in the record and `AI-H4` |
+| AI15-3 | wording, round 14's answer | the book's `binary` bullet, `AI-H3` and the reader's comment on `Binary` held "its flags" unqualified | Each holds them as `AI-H5` does |
+| AI15-4 | wording, round 14's answer | an `evidence` nested in a list's observation was said to stand beside a bound | A list's refusal comes first: its counts are each their own observation. A row |
+| AI15-5 | wording, older | a text says something, a letter or a digit in it, and `(place "..")` read | A place alone may hold none, `..` naming the directory above |
+
+Said, and left as it stands: `M4.13` is unbuilt, so cargo stood in for the build, and AI15-1's route was measured on a stand-in for the generated code; nothing was measured on Linux or ELF.

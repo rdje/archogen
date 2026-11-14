@@ -16,9 +16,10 @@
 - **Active tree:** `M4` → frontier `M4.1`, the accepted runtime plan, the model's amendments done (`M4.1.2`): `/1` for
   the hosted playground; `PROGRAM` → `PROGRAM.34`, the director's.
 - **The host is shared:** every heavy job goes through `scripts/host_guard.py`, one at a time (`docs/decisions/decision_host-guard.md`). A reader's brief says so.
-- **Next action:** readers out: `M4.12.1.15` (`target/m4352/report.md`), `PROGRAM.127.43` (`target/p12743/report.md`)
-  and `M4.1.7.2.15` (`target/m4353/report.md`); none there meaning ask again. Answer each as it lands. Meanwhile
-  `M3.4.17.3`: a device's preconditions enter the closure as it is bound.
+- **Next action:** readers out: `PROGRAM.127.43` (`target/p12743/report.md`), `M4.1.7.2.15` (`target/m4353/report.md`)
+  and `M4.12.1.16` (`target/m4354/report.md`); none there meaning ask again. Answer each as it lands. Meanwhile
+  `M3.4.17.3`: a device's preconditions enter the closure as it is bound, not by every `uses` (DC5-4), in
+  `crates/eadl-model/src/check.rs`'s reading of a block's `uses`.
   `M4.5.2` and `M4.3.6` wait on `M4.1.7`, `M4.3.4` on `M2.21`. The runtime plan's design is accepted (`M4.1.1` done).
   `M3.2.7` and `M3.5.9`, full verification, wait for the
   features (doctrine 22).

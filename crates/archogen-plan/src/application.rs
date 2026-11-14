@@ -95,7 +95,7 @@ pub struct Evidence {
 }
 
 /// The image a bound was obtained on, named by its image identity (`decision_runtime-plan-format-2.md` §1), which a build computes: of its plan's code identity and of what builds it,
-/// the toolchain, its flags and features, the target and the linker's input but for the allocations. So it is no digest of the image's file, which a bound's own value moves by where
+/// the toolchain, its flags and features as `AI-H5` holds them, the target and the linker's input but for the allocations. So it is no digest of the image's file, which a bound's own value moves by where
 /// it lays an allocation, and one identity names each image that differs only in where its stacks and tables lie.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum Binary {
@@ -504,6 +504,14 @@ fn category(
                     format!("`{head}` is a clause beside `evidence`, not inside it"),
                 ));
             }
+            // A list's counts are each what was seen, and no one observation is any of them: said first, a list holding no observation to say more of (round 15,
+            // AI15-4).
+            let Some(value) = value else {
+                return Err(refused(
+                    of,
+                    "a list's counts are each their own observation, so a list says `observed-maximum` alone",
+                ));
+            };
             // And `evidence` inside itself is no clause unknown: told so, it was "no clause is called `evidence`" (round 14, AI14-5).
             if rest
                 .iter()
@@ -515,13 +523,6 @@ fn category(
                     "an observation holds no `evidence` of its own: the one it stands in says what backs the bound",
                 ));
             }
-            // A list's counts are each what was seen, and no one observation is any of them.
-            let Some(value) = value else {
-                return Err(refused(
-                    of,
-                    "a list's counts are each their own observation, so a list says `observed-maximum` alone",
-                ));
-            };
             let found = clauses(of, rest, &["observed", "safety-factor"])?;
             let observed = the_natural(of, clause(of, &found, "observed")?)?;
             let factor = clause(of, &found, "safety-factor")?;
