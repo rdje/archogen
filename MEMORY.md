@@ -16,24 +16,11 @@
 - **Active tree:** `M4` → frontier `M4.1`, the accepted runtime plan, the model's amendments done (`M4.1.2`): `/1` for
   the hosted playground; `PROGRAM` → `PROGRAM.34`, the director's.
 - **The host is shared:** every heavy job goes through `scripts/host_guard.py`, one at a time (`docs/decisions/decision_host-guard.md`). A reader's brief says so.
-- **Next action:** readers out: `PROGRAM.127.43` (`target/p12743/report.md`), `M4.1.7.2.15` (`target/m4353/report.md`)
-  and `M4.12.1.16` (`target/m4354/report.md`); none there meaning ask again. Answer each as it lands. Meanwhile
-  `M3.4.17.3`: a device's preconditions enter the closure as it is bound, not by every `uses` (DC5-4), in
-  `crates/eadl-model/src/check.rs`'s reading of a block's `uses`.
-  `M4.5.2` and `M4.3.6` wait on `M4.1.7`, `M4.3.4` on `M2.21`. The runtime plan's design is accepted (`M4.1.1` done).
-  `M3.2.7` and `M3.5.9`, full verification, wait for the
-  features (doctrine 22).
-  After the first batch, runner leaves `M3.5.3.2`, `M3.5.5.7.4`, `M3.5.1.4.5`, `M3.5.1.6.6`; `M3.4.7` waits on `M3.7`.
-  `main` is protected: a push is a batch, `scripts/open_batch.sh` (`COMMIT.md` step 2), at the ruled cadence or to
-  restore CI; the director merges, and the first merge is premise 3's named commit (`M2.7.6.6.5`). No other branches.
-  The next artifact cleanup is due after `2026-11-15T00:00` UTC (`PROGRAM.138` ran the twenty-seventh).
-  **Mutation testing is stopped** until the functionality is locked
-  (`decision_mutation-testing-after-completion.md`, `2026-10-21`): every pending `M3.6.9` leaf and `PROGRAM.78` are
-  `blocked`; every decision advances the project first. `M3.6.9.6.3.2.2.15.2.1.8.2` stays owned, a suspected defect.
-  Disposable project-owned Git fixtures under ignored `target/` are approved;
-  maintained external repositories and submodules stay read-only.
-  The handoff command is `bash scripts/handoff_census.sh`; failed OS reads refuse.
-  `M3.6.3.2.1.1` owns runner-baseline compatibility after key encoding; an authorized cadence run is needed.
+- **Next action:** answer `M4.1.7.2.15`, format `/2`'s round 15 (`target/m4353/report.md`): the guard's and alignment's
+  category written by one sentence and left out by round 14's `origin`; the row's items by text where the record orders by
+  owner; the model's example lines; a task's `needs` with no file. Readers out: `M4.12.1.16` (`target/m4354/report.md`).
+  Launch `PROGRAM.127.44` into `target/p12744/`, its brief from `target/p12743/brief.txt`. Then `M3.4.17.3`: a device's
+  preconditions enter the closure as it is bound, not by every `uses` (DC5-4), in `crates/eadl-model/src/check.rs`.
 - **⏳ Blockers (the director's):** `PROGRAM.34` — a yes to restore nine nested vendored checkouts; `M1.29.4` — §7 of
   `decision_findings-for-director-review.md`; `M5` — no board procured; `M2.7.4.5` — the catalog records; `M2.7.6.4` — the director's review round;
   `TEMPLATE-REFS` — postponed. **The 17 template files archogen has not changed are never edited** (findings §10,

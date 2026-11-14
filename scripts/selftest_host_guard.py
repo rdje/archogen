@@ -2275,6 +2275,8 @@ THE_SHELL_RUNS_THESE = (
     "cat <<\"E\\\\F\"\nE\\F\npkill -x rustc", "cat <<\"E\\$F\"\nE$F\npkill -x rustc", "cat <<$'\\x45'\nE\npkill -x rustc", "$'\\x70kill' -x rustc", "$'\\160kill' -x rustc",
     # What round 42's reader found: bash 5 gathering a `$((` that is no arithmetic, a NUL ending `$'…'`, and `$\⏎'a'`.
     "x=$((echo a)# ); pkill -x rustc\n)", "x=$((:); cat <<E\nfoo)\npkill -x rustc\nE\n)", "$'pkill\\0' -x rustc", "pkill$'\\0' -x rustc", "echo $\\\n'a'; pkill -x rustc",
+    # What round 43's reader found: a quote inside a double-quoted `${…}`, a quote to both bashes.
+    "echo \"${y:-'}\"' }\" ; pkill -x rustc ; echo '}'",
 )
 # Those the shell may not reach: what it runs must still be what is read, and what is read may be more.
 THE_SHELL_MAY_NOT_REACH = ("ls || cargo build", "false && cargo build", "if false; then cargo build; else make focused; fi", "while false; do cargo build; done", "case x in y) cargo build;; esac", "case x in cargo) make focused;; esac", "f() { cargo build; }", "xargs cargo build </dev/null",
@@ -2289,7 +2291,12 @@ THE_SHELL_MAY_NOT_REACH = ("ls || cargo build", "false && cargo build", "if fals
     # substitution's pending here-documents its own (round 42).
     "x=$(echo a;# ) ; cargo build\n)", "x=$(echo a|# ) ; cargo build\n)", "x=$(echo \"$(echo \"(\")\"; cat <<E\nfoo)\ncargo build\nE\n)", "x=$(echo \"${y:-\"(\"}\"; cat <<E\nfoo)\ncargo build\nE\n)",
     "cat <<E`echo x`\nx\\\nE`echo x`\ncargo build\nE`echo x`", "cat <<\\E$(echo $'\\u0045')\nE$(echo E)\ncargo build\n", "x=$((:); cat <<E # )\ncargo build\nE\n)",
-    "x=$(cat <<E echo \"$(#)\"\ncargo build\nfoo)\n#\n\"\nx\nE\n)")
+    "x=$(cat <<E echo \"$(#)\"\ncargo build\nfoo)\n#\n\"\nx\nE\n)",
+    # Bash 5.3 runs `${ …; }` and ends a here-document in a substitution at a line beginning with its delimiter and holding a `)`; bash 3.2 nests no `${…}` in a
+    # substitution, takes `$(` in `${…}` that never closes as text, takes no comment at a `$(` inside a double-quoted string, and a `\c` ending `$'…'` is a
+    # backslash to it (round 43).
+    "echo ${ cargo build; }", "x=\"$(cat <<'EOF'\nEOF cargo build; echo )\n\"", "echo \"$(echo ${y:-)}\"; cargo build; \"} )\"", "echo \"${y:-$(}\"\ncargo build", "x=\"$(# )\"; cargo build",
+    "cat <<$'E\\c'\nE\\\ncargo build\nE\\c")
 # A bare `)` of a case inside a substitution: bash 3.2 takes it for the substitution's end, as its own bug, so it runs less than bash 4 and later do, which the reader reads. Reading more is the safe side.
 ONLY_LATER_BASH_RUNS_THESE = (
     'x="$(case y in y) cargo build;; esac)"; make focused', 'x="$(case y in y) cargo build;; esac )"; make focused', 'x="$(if true; then case y in y) cargo build;; esac; fi)"', 'x=$(case y in y) cargo build; esac); ls',
@@ -2390,7 +2397,7 @@ def the_reader_against(bash: str) -> None:
     check(f"and what {bash} may not reach is read all the same", not disagree, disagree[:3])
     check("each of those is read to hold what it may run", all("cargo" in read(form)[0] or "make" in read(form)[0] for form in may_not_reach), may_not_reach)
     # `$'…'` as this bash translates it: `\\u` and `\\U` from bash 4.2, and `\\c?` DEL there, 0x1f on 3.2 (round 41).
-    escapes = ("\\x45", "\\105", "\\0105", "\\u0045", "\\U00000045", "\\cA", "\\c?", "\\e", "\\q", "\\x4G", "\\xZ", "a\\'b", "a\\?b", "\\n\\t", "pk\\0ill", "\\c\\\\")
+    escapes = ("\\x45", "\\105", "\\0105", "\\u0045", "\\U00000045", "\\cA", "\\c?", "\\e", "\\q", "\\x4G", "\\xZ", "a\\'b", "a\\?b", "\\n\\t", "pk\\0ill", "\\c\\\\", "E\\c")
     differ = []
     for each in escapes:
         printed = subprocess.run([bash, "-c", f"printf %s $'{each}'"], cwd=work, env=environment, capture_output=True, timeout=20).stdout
@@ -2419,7 +2426,7 @@ def the_reader_against(bash: str) -> None:
             missed.append((form, sorted(shown), sorted(names)))
     check(f"over 240 generated here-documents nothing {bash} ran goes unread", not missed, missed[:4])
     check("a quote left open is read to its end, with nothing raised", [each.words for each in g.commands_of("ls 'a b")] == [["ls", "a b"]])
-    check("a substitution left open too", [each.name for each in g.commands_of("echo $(cargo build")] == ["cargo", "echo"])
+    check("a substitution left open too", [each.name for each in g.readings_of("echo $(cargo build")[0]] == ["cargo", "echo"])
     # Read once for each bash, a here-document being where they part: one command, found by each (round 41).
     check("and much of what is not there costs little", len({tuple(each.words) for each in g.commands_of("cat <<A\n" * 2000)}) == 1)
     # Each level of shells fed here-documents within each other was read once for each bash, and twelve took twenty seconds (round 42).
@@ -2430,9 +2437,14 @@ def the_reader_against(bash: str) -> None:
     g.readings_of(nested)
     check("twelve shells fed here-documents within each other are read in little time", time.monotonic() - began < 2, time.monotonic() - began)
     check("each bash's reading is a list of its own, where the two may differ", len(g.readings_of("cat <<A\nA")) == 2 and len(g.readings_of("ls")) == 1)
+    # Each nested run's job was read for each bash again, so each level doubled the work: thirteen took ten seconds (round 43).
+    runs = "python3 scripts/host_guard.py run -- " * 13 + "echo '<<'"
+    began = time.monotonic()
+    any(g.kills_by_name(reading, Path("/nowhere"), which) for which, reading in zip((0, 1), g.readings_of(runs)))
+    check("thirteen guard runs nested in one another are read in little time", time.monotonic() - began < 2, time.monotonic() - began)
     check("a case left open reads to its end", [each.name for each in g.commands_of("case x in a) cargo build")] == ["cargo"])
-    check("a condition left open too", [each.name for each in g.commands_of("[[ $(cargo build)")] == ["cargo"])
-    check("an array left open too", [each.name for each in g.commands_of("x=($(cargo build)")] == ["cargo"])
+    check("a condition left open too", [each.name for each in g.readings_of("[[ $(cargo build)")[0]] == ["cargo"])
+    check("an array left open too", [each.name for each in g.readings_of("x=($(cargo build)")[0]] == ["cargo"])
     check("and arithmetic, read as a subshell as the shell would", [each.name for each in g.commands_of("((cargo build")] == ["cargo"])
     for arguments, told_it in (
         ("-euo pipefail -c x", ("x", None)), ("-eo pipefail -c x", ("x", None)), ("-c -e x", ("x", None)), ("-c -- x", ("x", None)), ("-lc x", ("x", None)), ("--rcfile f -c x", ("x", None)), ("-e script", (None, "script")),
@@ -2496,6 +2508,8 @@ def case_killing_by_name() -> None:
             "(( pkill > 1 ))", "pkill() { :; }; echo", "cat <<'EOF'\npkill -x rustc\nEOF",
             # A search after a kill is none before it in either bash's reading, each judged alone (round 42).
             'kill "$PID"; sleep 1; pgrep -fl my-server || echo "<< gone"', 'kill -TERM $PID && sleep 2 && ps -ax | grep -c my-server; echo $((1<<3))',
+            # And inside a shell's text, read once as the reading it stands in (round 43).
+            "bash -c 'cat <<E\nE\nkill \"$PID\"; pgrep -fl x'",
             f"ps -ax |\n grep {scope}/x |\n awk '{{print $1}}' |\n xargs kill", 'ps -fp "$PID" && kill "$PID"', "pkill -F job.pid", "pgrep -F job.pid | xargs kill", 'ps -ax | head; kill "$(cat job.pid)"', "if true; then pkill() { :; }; fi",
             'PID=$(pgrep -n -f "make focused"); while kill -0 "$PID" 2>/dev/null; do sleep 5; done', f"pkill -f '{scope}.*rustc'", "bash -n -c 'pkill -x rustc'", "sh -n <<'E'\npkill -x rustc\nE", "ps -ax | head; kill -s TERM 123", "ps -ax | head; kill -TERM 123", "ps -ax | head; kill -- -123", 'kill -- -"$(cat job.pgid)"',
         ):

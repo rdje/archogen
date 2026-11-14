@@ -85,3 +85,18 @@ Found in answering, by the reader's fuzzer on its other seeds: bash 3.2 gathers 
 | G42-9 | defect, fails open on 5.3, written to | a here-document begun outside a substitution was read at a line feed inside it, where bash 5 reads it outside, and a `pkill` inside `"$(#…)"` passed | A substitution keeps its own pending here-documents: one begun outside it is read outside it, and one begun inside and not yet read is read after it. A row |
 
 Found in answering: the self-test's oracle split a stub's line where a word held a line feed, so an argument to `kill` read as a call of its own; each call now ends at a record separator. Said, and left as it stands: past three levels of shells' texts each inside the one before, a text is read as the reading before read its own; bash 5 writes bytes past every code point that name nothing, and one character stands for them.
+
+**Round 43** — `2026-11-14`, leaf `PROGRAM.127.43`: not acceptable, 8 findings, 7 defects, after 7, on `4a021d95`. Round 42's answers held where it looked: `1309 passed`; pending here-documents around substitutions, 563 generated forms that ran a stub and none missed but finding 2's; bash 5's `$((` read as more than the shell runs; the corpus of 370 texts, none refused or raised; RAM, pressure and swap by hand; the lines table and the pace; rows of 40,000 `-W` pairs and a 900,000-letter cluster in their length's time; a census of 522 rows, none of another project's. Its rigs are `target/p12743/work/`.
+
+| # | Kind | Finding | Answer |
+| --- | --- | --- | --- |
+| G43-1 | defect, fails open, bash 5.3 | `${ cmd; }` and `${| cmd; }` run commands in bash 5.3, read as a parameter's expansion | Bash 5's reading reads them as commands to the `}` that ends them. Rows |
+| G43-2 | defect, fails open, bash 5.3 | inside a substitution 5.3 ends a here-document at a line beginning with its delimiter and holding a `)` anywhere after it, the rest of the line commands, the harness's own commit idiom among the forms | Bash 5's reading ends it so, and reads the rest of the line. A row |
+| G43-3 | defect, fails open, bash 3.2 | 3.2 nests no `${…}` in a substitution it gathers, and a text holding no `<<`, `$'` or `#` was read as bash 5 alone; and 3.2 takes a `$(` inside `${…}` that never closes as text | A text holding any substitution is read twice; 3.2's reading takes such a `$(` as text. Rows |
+| G43-4 | defect, fails open on 3.2, round 42's answer | 3.2 takes no comment at the start of a `$(` inside a double-quoted string, and one after a blank in one nested there | So the gathering takes them. A row |
+| G43-5 | defect, fails open, both bashes, older | a `'` inside a double-quoted `${…}` is a quote to both, read as a character | It is a quote there. A row |
+| G43-6 | defect, mild, fails closed | text read again, a shell's or a run's, appended both bashes' readings to one list, `bash -c 'cat <<E⏎E⏎kill "$PID"; pgrep -fl x'` refused | What a text holds is read once, as the reading it stands in, its markers being the text's; a run's job is read as the bash `which` names, the kill judged in that reading. A row the hook passes |
+| G43-7 | gap, cost, written to | each nested run's job was read for each bash at depth 0, so each level doubled the work, thirteen ten seconds | Read once, as above. A row of thirteen nested runs under two seconds |
+| G43-8 | defect, mild, fails open on 3.2, written to | a `\c` ending a `$'…'` is a lone backslash to 3.2 | So for 3.2. `printf` held to it |
+
+Said, and left as it stands: where a reading and a bash part on a form the shell refuses, the reading reads more, the safe side; eight of round 43's 73 forms are so, and its fuzzers' 1,800 forms and 3,139 `$'…'` texts missed none.
