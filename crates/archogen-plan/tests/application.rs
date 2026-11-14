@@ -214,6 +214,11 @@ fn each_malformed_input_is_refused_saying_what_is_wrong() {
         (replaced(bound_evidence, "(evidence assumed maybe) (basis \"b\")"), "which is written alone, `(evidence assumed)`"),
         // A locator written inside an observation is the bound's own clause, and the refusal says so (round 10, AI10-6).
         (replaced(&format!("(binary unbuilt) {bound_evidence}"), "(binary \"sha256:1111111111111111111111111111111111111111111111111111111111111111\") (evidence observed-maximum (locator \"docs/argument.md\")) (basis \"b\")"), "`locator` is a clause beside `evidence`"),
+        // A bound's own clause written inside an observation is said to be one, `scope` as `locator` (round 12, AI12-7).
+        (replaced(&format!("(binary unbuilt) {bound_evidence}"), "(binary \"sha256:1111111111111111111111111111111111111111111111111111111111111111\") (evidence observed-maximum (scope \"one job\")) (locator \"docs/argument.md\") (basis \"b\")"), "`scope` is a clause beside `evidence`"),
+        // A crate the toolchain links of its own is no application's crate (round 12, AI12-5).
+        (replaced("(crate app)", "(crate std)"), "a crate the toolchain links of its own"),
+        (replaced("(crate app)", "(crate core)"), "a crate the toolchain links of its own"),
         // And inside a list's, where no observation was written either (round 11, AI11-7).
         (replaced("(binary unbuilt) (evidence analytically-established) (locator \"docs/argument.md\") (basis \"by reading\")", "(binary \"sha256:1111111111111111111111111111111111111111111111111111111111111111\") (evidence observed-maximum (locator \"docs/argument.md\")) (basis \"by reading\")"), "`locator` is a clause beside `evidence`"),
         (replaced(bound_evidence, "(evidence analytically-established) (locator \"docs/argument.md\")"), "`basis`"),

@@ -210,7 +210,7 @@ pub struct Code {
     pub name: String,
     /// Where it lies, from the file that says so.
     pub place: String,
-    /// `sha256:…`, of its sources by the record's recipe: of one line for each file the compiler read in compiling it at `place`, by the compiler's own account, and
+    /// `sha256:…`, of its sources by the record's recipe: of one line for each file the compiler read in compiling the build's copy of it, the same as at `place` or refused, by its own account, and
     /// for its manifest and its lock, each a sha256 and the name the file was read by, and of one for each variable of the environment it read ([`Code::digest_of`]).
     pub digest: String,
 }
@@ -492,11 +492,12 @@ fn category(
         ("analytically-established", []) => Ok((Category::AnalyticallyEstablished, None)),
         ("observed-maximum", rest) => {
             // A `locator` or a `basis` is the bound's own clause, beside `evidence`: written inside it, it is said so, not called unknown (round 10, AI10-6), a list's as a bound's (round 11, AI11-7).
-            if let Some(head) = rest
-                .iter()
-                .filter_map(Form::head)
-                .find(|head| matches!(*head, "locator" | "basis"))
-            {
+            if let Some(head) = rest.iter().filter_map(Form::head).find(|head| {
+                matches!(
+                    *head,
+                    "locator" | "basis" | "scope" | "binary" | "value" | "unit"
+                )
+            }) {
                 return Err(refused(
                     of,
                     format!("`{head}` is a clause beside `evidence`, not inside it"),
@@ -816,6 +817,10 @@ const KEPT_WORDS: &[&str] = &[
     "ref", "return", "self", "static", "struct", "super", "trait", "true", "try", "type", "typeof",
     "unsafe", "unsized", "use", "virtual", "where", "while", "yield",
 ];
+
+/// The crates the toolchain links of its own under their names: a path in one calls the sysroot's code, which no account holds, and rustc links no
+/// other crate so named (round 12, AI12-5).
+const SYSROOT_CRATES: &[&str] = &["std", "core", "alloc", "proc_macro", "test"];
 
 /// Whether `text` is a name a Rust path can hold.
 fn is_a_name(text: &str) -> bool {
@@ -1146,6 +1151,15 @@ pub fn read(text: &str) -> Result<Application, Refused> {
         return Err(refused(
             "code",
             format!("`{}` is no name a Rust path can hold", code.name),
+        ));
+    }
+    if SYSROOT_CRATES.contains(&code.name.as_str()) {
+        return Err(refused(
+            "code",
+            format!(
+                "`{}` is a crate the toolchain links of its own, and a path in it calls that crate's code, not the application's",
+                code.name
+            ),
         ));
     }
     if !code.digest.strip_prefix("sha256:").is_some_and(|hex| {
