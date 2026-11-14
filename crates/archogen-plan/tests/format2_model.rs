@@ -1246,9 +1246,31 @@ fn a_wake_asks_no_statement_of_the_application() {
 }
 
 /// §3: what `(owed …)` gains of an alarm by the realization is each input `decision_release-alarm.md` §2 gives the realization to state, a source's among them
-/// (round 4, RP4-4): so a plan with an alarm cannot say `(complete yes)` with its acknowledge point unstated.
+/// (round 4, RP4-4): so a plan with an alarm cannot say `(complete yes)` with its acknowledge point unstated. The source's inputs are read from that record's
+/// table, each phrase mapped to its fact, so an input the table gains fails here: written from memory, the list left out `external`, whether its interrupt
+/// reaches the controller, on which every `J` rests (round 21, RP21-1).
 #[test]
 fn what_an_alarm_owes_as_a_source_has_its_owed_fact() {
+    const AS_A_SOURCE: [(&str, &str); 6] = [
+        ("`C_s`", "service-cost"),
+        ("the acknowledge point", "acknowledge-point"),
+        ("deferred work", "deferred-work"),
+        ("`no-application-code`", "no-application-code"),
+        ("`one-request-per-arrival`", "one-request-per-arrival"),
+        ("whether it reaches the controller", "external"),
+    ];
+    let alarm = include_str!("../../../docs/decisions/decision_release-alarm.md");
+    let row = alarm
+        .lines()
+        .find(|line| line.starts_with("| `C_s`, the acknowledge point"))
+        .expect("the release alarm's row of what a source owes");
+    let first = row.split(" | ").next().expect("its first cell");
+    let phrases: Vec<&str> = AS_A_SOURCE.iter().map(|(phrase, _)| *phrase).collect();
+    assert_eq!(
+        first.trim_start_matches("| "),
+        phrases.join(", "),
+        "the table's inputs as a source"
+    );
     let owed = RECORD
         .split("**`(owed …)`, as `/2` writes it.**")
         .nth(1)
@@ -1268,7 +1290,10 @@ fn what_an_alarm_owes_as_a_source_has_its_owed_fact() {
         "deferred-work",
         "no-application-code",
         "one-request-per-arrival",
-    ] {
+    ]
+    .into_iter()
+    .chain(AS_A_SOURCE.iter().map(|(_, fact)| *fact))
+    {
         assert!(
             of_an_alarm.contains(&format!("`{fact}`")),
             "an alarm's `{fact}` is owed by no line: {of_an_alarm}"

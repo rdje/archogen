@@ -270,3 +270,13 @@ Said, and left as it stands: no `/2` lowering, port record figures or `archogen-
 | RP20-2 | wording | "and all it calls" in `node-stack`, `primitive-stack`, `service-stack` and `initialisation-stack` was not cut where the fault's route begins, so read literally it held the generated handler and the fault path, which the sum adds again | Each figure's "all it calls" stops at the generated fault handler, core's panic frames before it the caller's figure's |
 
 Said, and left as it stands: no `/2` lowering, port record figures or `archogen-realization/1` exist, so the figures are chosen; whether a real port keeps a trap's route on the stack it was taken on is the port's, and the sum holds it on whichever stack it stands.
+
+**Round 21** — `2026-11-14`, leaf `M4.1.7.2.21`: not acceptable, 3 findings, 1 defect, after 1, on `6b6f4727`. Round 20's answers held: `format2_model` `51 passed`, `alarm_model` `25 passed`, each alone; the fault's use worked by hand against the fault contract's Terms, rule 7 and the port record, every case under `D + H + max(path, check) + TF`, nothing under-counted; the worked sums, the floors and the guard; the alarm and timer lines; `RPF-H1` to `RPF-H4`; every kept question; no plan taken for another's. Its logs are `target/m4364/work/`.
+
+| # | Kind | Finding | Answer |
+| --- | --- | --- | --- |
+| RP21-1 | defect, in the owed list since RP4-4's answer | the release alarm's §2 gives the realization six inputs of an alarm as a source, and `/2` owed five: `external`, whether its interrupt reaches the controller, on which the composition gates every `J`, was owed by no line, so a plan could say `(complete yes)` the checker could not read; the row held a list written from memory | `external` owed of an alarm by the realization; the row reads the release alarm's table, each phrase mapped to its fact, so an input the table gains fails it |
+| RP21-2 | wording, RP20-2's answer half done | "all it calls" stopped at the generated handler, where a check's call into the other entry passes no handler, and core's panic frames "the caller's" named no figure where generated code panics itself | Cut where either route begins; core's panic frames the figure of the code that panics, `call-frame`'s for generated code |
+| RP21-3 | wording | "So its use is the larger route" still read as round 18's rule before the handler's use is added | "The larger route, the handler's use added to it as below" |
+
+Said, and left as it stands: no `/2` lowering, port figures or `archogen-realization/1` exist, so RP21-1 is shown from the records and `compose.rs`; what decides §6's routes reaching a controller is each route's `external`, the realization's, now owed.
