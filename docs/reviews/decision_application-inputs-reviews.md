@@ -221,3 +221,15 @@ Said, and left as it stands: `M4.13` is unbuilt, so cargo stood in for the build
 | AI15-5 | wording, older | a text says something, a letter or a digit in it, and `(place "..")` read | A place alone may hold none, `..` naming the directory above |
 
 Said, and left as it stands: `M4.13` is unbuilt, so cargo stood in for the build, and AI15-1's route was measured on a stand-in for the generated code; nothing was measured on Linux or ELF.
+
+**Round 16** — `2026-11-14`, leaf `M4.12.1.16`: not acceptable, 5 findings, 2 defects, after 2, on `277c3f63`. Round 15's answers held where they were measured: `application` 13 passed and `code_digest` 7, each alone; with every crate below the root, `-C metadata` one for all three units and every object one at two places, the arguments naming the place exactly the four flags and the remaps, the copy its own workspace in every layout; 27 manifest variants, only round 14's and 15's kinds failing at the copy; 91 inputs of its own, 71 refused each truly; six quoted sentences verbatim. Its rigs are `target/m4354/work/r16/`.
+
+| # | Kind | Finding | Answer |
+| --- | --- | --- | --- |
+| AI16-1 | defect, round 15's answer | the root's layout placed the generated crate and the copy below it, and said nothing of the catalog's crates, whose absolute path outside the root moves `-C metadata` and every object | The root holds each catalog crate the image links as a member too, as today's emitter writes them; in the record and `AI-H5` |
+| AI16-2 | defect, round 15's answer | the root's compile of the copy, the one whose objects the image links, was held to less than the digest's: no environment said, and "other files" compared by names the root's account writes otherwise; a variable unset in the copy's compile and set in the root's passed | The root's compiles run under the gate's environment, and its compile of the copy gives an account held to the copy's own, each file by its name below the copy's fixed directory and each variable with its value; in the record, `AI-H3` and `AI-H5` |
+| AI16-3 | gap, round 15's answer | nothing said how the root's remap reaches the compiles of its dependencies, `cargo rustc --` reaching the final one alone | By `cargo --config build.rustflags` on the root's command line, the one route the gate's rules leave; the Cargo Book's sentence quoted |
+| AI16-4 | wording, older words made stale | the copy's own compile was still said to be remapped for the image identity, which now links the root's compile; and the profile was said of the digest's compiles alone | The copy's own compile is the digest's and needs no remap, in the record and `AI-H4`; the image's compile takes the root's profile, the Cargo Book's sentence quoted |
+| AI16-5 | wording, round 15's answer | `default-run` naming a target with its `path` reads at the copy, beyond the reason given | `default-run` is refused whatever it names, the library's compile needing none of it |
+
+Said, and left as it stands: `M4.13` is unbuilt, so cargo stood in for the build and a small crate for the generated code and the catalog's; nothing was measured on Linux or ELF.
