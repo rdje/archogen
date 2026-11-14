@@ -373,3 +373,14 @@ Said, and left as it stands: no `/2` lowering, controller record or `archogen-re
 | RP30-3 | wording | which nodes owe a `node-stack` was unsaid | Each node a task's or the initialisation's `node-calls` names |
 
 Said, and left as it stands: no `/2` lowering, controller record or `archogen-realization/1` exists. Learned again: a premise is read in the code that would act on it, not only in the sentence that states it.
+
+**Round 31** — `2026-11-14`, leaf `M4.1.7.2.31`: not acceptable, 4 findings, 1 defect, after 1, on `0e71ddae`. Round 30's answers held otherwise: `format2_model` `67 passed`, `alarm_model` `25 passed`, each alone; every hand-off quoted word for word; a source's `external` the realization's in every rule, as `selection.rs` reads it; every fact owed read where `/2` says it is stated, by the application's, the catalog's and the realization's readers; the hosted owings; which nodes owe a `node-stack`; the worked epoch, stacks and guard; the model faithful to §5; the kept questions; the rules with no row worked by hand. The reader graded RP31-1 a defect and named the precedent, RP28-3, that would grade it wording; it is held a defect, being false of who owes a fact in the section under review.
+
+| # | Kind | Finding | Answer |
+| --- | --- | --- | --- |
+| RP31-1 | defect, in round 30's answer | the book's `/2` section gave a source's `external` its controller's catalog record, which round 30 had withdrawn in the record, the model and the matching chapter but not there, and no row read the section | The section says the realization's, for a source as for an alarm; `the_book_s_section_names_each_owner_as_the_record_does` binds each owner the section names to the record's clause, both read |
+| RP31-2 | wording | "the simulator's on the playground as a source's is" could be read of all five facts an alarm owes as a source | Of its `external` alone, on a target |
+| RP31-3 | wording | the book's time base read `epoch` for an alarm with no reader | `counter` with no reader or one not at an extender, `epoch` where each is |
+| RP31-4 | wording, older | §2 quoted model §8 rule 8's "line and context", the model reading "contexts" | Quoted as it reads; `every_quote_of_the_model_is_the_model_s_text` reads each quote of the model in the record |
+
+Said, and left as it stands: no `/2` lowering, controller record or `archogen-realization/1` exists.

@@ -2050,6 +2050,72 @@ fn no_hardware_fact_is_owed_by_the_realization_but_as_its_table_has_it() {
     }
 }
 
+/// The book's `/2` section: each owner it names for a fact is the one the record's clause names, each pair read on both sides, so a change of owner in the
+/// record fails here until the book moves with it; and it names no owner the record has withdrawn. Before, round 30 moved a source's `external` back to
+/// the realization and the section still gave it the controller's catalog record, which no reader reads it from (round 31, RP31-1).
+#[test]
+fn the_book_s_section_names_each_owner_as_the_record_does() {
+    const OWNERS: [(&str, &str); 4] = [
+        (
+            "whether each reaches it is owed\nuntil the realization, the generated code's own statement, says, for a source as for an alarm",
+            "which the realization states with its generated service, a source's as an alarm's",
+        ),
+        (
+            "A size only a catalog record can state stays owed until one does",
+            "Until a record states one, it is owed `(by catalog)`",
+        ),
+        (
+            "the catalog's for the\ntimer service and the generated code's own for a generated one",
+            "the `service-cost` the realization states of an alarm or a source spans its trap from entry to exit",
+        ),
+        (
+            "On a machine, each cost and time that statement\ngives says too that it holds under any preemption",
+            "each source on a target by `realization`, `holds-under-preemption`",
+        ),
+    ];
+    let book = include_str!("../../../docs/book/src/runtime-plan.md");
+    let section = book
+        .split("## On a real machine: format `/2`")
+        .nth(1)
+        .expect("the book's `/2` section");
+    let section = &section[..section.find("\n## ").unwrap_or(section.len())];
+    for (said, clause) in OWNERS {
+        assert!(section.contains(said), "the book says: {said}");
+        assert!(RECORD.contains(clause), "the record's clause: {clause}");
+    }
+    assert!(
+        !section.contains("controller's catalog record says, for a source"),
+        "an owner the record withdrew"
+    );
+}
+
+/// The record's quotes of the model are the model's text: each phrase quoted after "model §N rule M" is found in `docs/semantics/model.md`, its spaces
+/// and line breaks read as one. Before, §2 quoted rule 8 as "its line and context", where round 30 had made the model read "contexts" (round 31, RP31-4).
+#[test]
+fn every_quote_of_the_model_is_the_model_s_text() {
+    let flat = |text: &str| text.split_whitespace().collect::<Vec<_>>().join(" ");
+    let model = flat(include_str!("../../../docs/semantics/model.md"));
+    let mut quotes = Vec::new();
+    for (at, _) in RECORD.match_indices("model §") {
+        let after = &RECORD[at..];
+        let Some(open) = after.find('"') else {
+            continue;
+        };
+        let named = &after[..open];
+        if open > 40 || named.contains('.') || named.contains(')') {
+            continue;
+        }
+        let quoted = &after[open + 1..];
+        let quote = &quoted[..quoted.find('"').expect("it closes")];
+        quotes.push(quote);
+        assert!(
+            model.contains(&flat(quote)),
+            "{named}\"{quote}\" is no text of the model"
+        );
+    }
+    assert!(quotes.len() >= 2, "{quotes:?}");
+}
+
 /// §3, `R`: a rate in hertz, exact, a whole number or `N/D` in lowest terms, as `/1` writes a duration (round 4, RP4-7).
 fn rate(numerator: u64, denominator: u64) -> String {
     let (mut a, mut b) = (numerator, denominator);
