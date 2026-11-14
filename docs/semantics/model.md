@@ -170,6 +170,11 @@ violated: `refinement-violated`.
    checked, and the repair is to supply it. Until `M1.26.3` (`2026-09-30`) it was refused as
    `infeasible-configuration`, §2 rule 2's code, which then named more than one rule. An undeclared name is not an
    infeasibility. The change moved one exit code, `13` to `11`.
+5. **No machine stands on a loop.** A block or a platform of a system's hardware that refines what leads back to it, through what they
+   compose and refine, is `invalid-description`: a more abstract saying of one thing cannot be made of that thing, and a refinement
+   brings no blocks (`docs/decisions/decision_device-correspondence.md`). It is refused on each system's own hardware as on a target's,
+   by one detector (`eadl_model::refinement::loops_refused`; leaf `M3.4.17.4`: before, only a target's was asked, and `check` passed a
+   loop the search bound). A loop no system's hardware holds is no machine of any system's, and is refused nowhere.
 
 ## 4. A profile admits a workload, or says what it would take
 

@@ -539,6 +539,24 @@ fn passes(
         Verdict::InfeasibleConfiguration,
         found.violated,
     );
+    // Hardware a system has that refines what leads back to it, through what they compose and refine, is refused on the description's own hardware as on a
+    // target: no machine stands on a loop (`decision_device-correspondence.md`). Asked of a target's alone, `check` passed it and the search bound it (leaf
+    // `M3.4.17.4`, from `M4.4.1.8`'s reader).
+    let named: BTreeMap<&str, &Form> = forms
+        .iter()
+        .filter_map(|form| Some((form.items().get(1)?.as_symbol()?, form)))
+        .collect();
+    let mut looped: Vec<Diagnostic> = Vec::new();
+    for system in forms.iter().filter(|form| form.head() == Some("defsystem")) {
+        for diagnostic in
+            crate::refinement::loops_refused(&crate::presence::hardware(system, &forms), &named)
+        {
+            if !looped.contains(&diagnostic) {
+                looped.push(diagnostic);
+            }
+        }
+    }
+    push(&mut findings, Verdict::InvalidDescription, looped);
 
     let verdict = findings
         .iter()

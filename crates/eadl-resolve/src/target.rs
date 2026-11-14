@@ -13,7 +13,7 @@ use std::collections::{BTreeMap, BTreeSet};
 use eadl_front::{Diagnostic, Form, Label, Span};
 use eadl_model::check::{default_profile, out_of_profile};
 use eadl_model::presence::{composition, FactMap, PresenceReport};
-use eadl_model::refinement::Facets;
+use eadl_model::refinement::{loops_refused, Facets};
 
 use crate::joint::System;
 use crate::requirement::side_name_lists;
@@ -373,72 +373,6 @@ fn what_the_machine_is<'s>(named: &[&'s str], declared: &BTreeMap<&str, &Form>) 
                     && holds(other, name, declared)
                     && (other < name || !holds(name, other, declared))
             })
-        })
-        .collect()
-}
-
-/// Each piece of hardware a system has, through what it composes and refines, that refines what leads back to it: a more abstract saying of one thing cannot be made of that thing, and no machine stands on a
-/// loop. With what it refines, and where.
-fn refining_in_a_loop(
-    hardware: &BTreeSet<String>,
-    declared: &BTreeMap<&str, &Form>,
-) -> Vec<(String, String, Span)> {
-    let next = |at: &str| -> Vec<String> {
-        let Some(form) = declared.get(at).filter(|form| is_hardware(form)) else {
-            return Vec::new();
-        };
-        composition(form)
-            .into_iter()
-            .chain(Facets::of(form).0.refines.map(|(up, _)| up))
-            .collect()
-    };
-    let leads_to = |from: &str, to: &str| {
-        let mut seen: BTreeSet<String> = BTreeSet::from([from.to_owned()]);
-        let mut todo = vec![from.to_owned()];
-        while let Some(at) = todo.pop() {
-            for name in next(&at) {
-                if name == to {
-                    return true;
-                }
-                if seen.insert(name.clone()) {
-                    todo.push(name);
-                }
-            }
-        }
-        false
-    };
-    let mut seen: BTreeSet<String> = hardware.clone();
-    let mut todo: Vec<String> = hardware.iter().cloned().collect();
-    let mut found = Vec::new();
-    while let Some(at) = todo.pop() {
-        if let Some(form) = declared.get(at.as_str()).filter(|form| is_hardware(form)) {
-            if let Some((up, span)) = Facets::of(form).0.refines {
-                if up == at || leads_to(&up, &at) {
-                    found.push((at.clone(), up, span));
-                }
-            }
-        }
-        for name in next(&at) {
-            if seen.insert(name.clone()) {
-                todo.push(name);
-            }
-        }
-    }
-    found.sort_by(|a, b| (&a.0, &a.1).cmp(&(&b.0, &b.1)));
-    found
-}
-
-/// What [`refining_in_a_loop`] finds, refused, of a description's hardware and of a target's.
-fn loops_refused(hardware: &BTreeSet<String>, declared: &BTreeMap<&str, &Form>) -> Vec<Diagnostic> {
-    refining_in_a_loop(hardware, declared)
-        .into_iter()
-        .map(|(name, up, span)| {
-            Diagnostic::error(
-                "invalid-description",
-                format!("`{name}` refines `{up}`, which leads back to it through what they compose and refine, so no machine stands on them"),
-                Label::new(span, "refines it here"),
-                "a refinement says the same thing again: compose the device, or refine what it is made of, and not both",
-            )
         })
         .collect()
 }

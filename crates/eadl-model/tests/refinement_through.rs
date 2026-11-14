@@ -146,3 +146,54 @@ fn a_platform_s_absence_covers_what_it_composes() {
     );
     assert_eq!(verdict, "invalid-description", "{rendered}");
 }
+
+/// The device-correspondence record's table: hardware the system has that refines what leads back to it, through what they compose and refine, is
+/// `invalid-description`, no machine standing on a loop, on the description's own hardware as on a target. Before, `check` passed it and the search bound it,
+/// where the same hardware as a target's was refused (leaf `M3.4.17.4`, from `M4.4.1.8`'s reader, `target/m4282/work/shapes4.txt` L1).
+#[test]
+fn hardware_refining_what_leads_back_to_it_is_refused_on_the_description() {
+    let (verdict, rendered) = checked(
+        "(eadl-version eadl/1)
+(defplatform a (refines b) (offers (core-count 1 tick) (reachable-at-privilege machine)))
+(defplatform b (refines a) (absent tick-rate) (offers (core-count 1 tick) (reachable-at-privilege machine)))
+(defsystem s (platform (uses a)))
+",
+    );
+    assert_eq!(verdict, "invalid-description", "{rendered}");
+    assert!(
+        rendered.contains(
+            "`a` refines `b`, which leads back to it through what they compose and refine"
+        ),
+        "{rendered}"
+    );
+    // Through what a part composes too: `p` composes `c1`, which refines `c2`, which composes `c1`.
+    let (verdict, rendered) = checked(
+        "(eadl-version eadl/1)
+(defblock c2 (offers (reachable-at-privilege machine)) (requires (uses c1)))
+(defblock c1 (refines c2) (offers (reachable-at-privilege machine)))
+(defplatform p (offers (core-count 1 tick) (reachable-at-privilege machine)) (requires (uses c1)))
+(defsystem s (platform (uses p)))
+",
+    );
+    assert_eq!(verdict, "invalid-description", "{rendered}");
+    assert!(
+        rendered.contains(
+            "`c1` refines `c2`, which leads back to it through what they compose and refine"
+        ),
+        "{rendered}"
+    );
+    // A loop no system's hardware holds is no machine of any system's: it is refused nowhere here, and a plain chain stands.
+    let (verdict, rendered) = checked(
+        "(eadl-version eadl/1)
+(defplatform x (refines y) (offers (core-count 1 tick) (reachable-at-privilege machine)))
+(defplatform y (refines x) (offers (core-count 1 tick) (reachable-at-privilege machine)))
+(defplatform base (offers (core-count 1 tick) (reachable-at-privilege machine)))
+(defplatform rev (refines base) (offers (core-count 1 tick) (reachable-at-privilege machine)))
+(defsystem s (platform (uses rev)))
+",
+    );
+    assert!(
+        !rendered.contains("leads back to it"),
+        "{verdict}: {rendered}"
+    );
+}
