@@ -2708,8 +2708,8 @@ def read_as(text: str, which: int, doubled: int = BOTH_TO_DEPTH) -> list[Command
 def job_bashes(job: str, which: int, first: bool) -> tuple[tuple[bool, ...], int]:
     """Each bash a run's job is read as, and how deep its reading doubles: at the first run, and at each run inside a job read once, as each bash its own markers
     say, quote removal making them where the command's did not, and what it holds read twice where those say, as `readings_of` reads a text (rounds 45 to 47);
-    inside a job read twice, as the bash `which` names, once, so that the work doubles once on any path (round 43). Read once past the first run, a run inside a
-    run hid what G46-2 found (round 47)."""
+    inside a job read twice, as the bash `which` names, once (round 43). Read once past the first run, a run inside a run hid what G46-2 found (round 47). A run
+    in a shell's text read twice is found in each reading, so the work grows with the nesting, its cost near linear in the text's length (rounds 48 and 49)."""
     if not first:
         return (bool(which),), BOTH_TO_DEPTH
     bashes = each_bash(job, bool(which))

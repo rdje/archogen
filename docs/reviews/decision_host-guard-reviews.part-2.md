@@ -165,3 +165,15 @@ Said, and left as it stands: G47-3 and G47-4, forms written to; bash 4.0 to 5.2 
 | G48-5 | gap, wording, written to | a `[` inside backquotes in `$[…]`, which both bashes skip, the reader counts, so the scan ends late, where the stated limit said only early | Stated in the record with it |
 
 Said, and left as it stands: G48-4 and G48-5, forms written to; bash 4.0 to 5.2 are on no host here.
+
+**Round 49** — `2026-11-14`, leaf `PROGRAM.127.49`: **acceptable, no defect, so the review closes**; 2 findings of wording, after 3, on `cd6dd2db`.
+Round 48's answers held where it looked, and nothing stopped what is not ours, nothing ours was missed in ordinary work, nothing failed open where the record says it holds: 42 kill sentences as written; 56 wrapper spellings, each that passes a stated limit; 20 search-then-kill forms across runs refused but the stated hand-off through a file; 38 grammar forms through both bashes, the only misses a program's output, stated; 16 ordinary commands passing; round 48's fail-closed form refused and its ordinary shapes passing; `refused_for_the_host` and `run_refused` as the record says; `run_self_tests.sh`'s exit 20, `QUARANTINES` empty, `check_host_guard.sh`, the settings and `onFailure: "block"` on this host's version; the self-test `1318 passed`; RAM by hand, the lines, the constants and the pace; a census of 513 rows, 5 ours; and the 3 GiB line stopping its own cost rig in the wild. Its rigs are `target/p12749/work/`.
+
+| # | Kind | Finding | Answer |
+| --- | --- | --- | --- |
+| G49-1 | wording, a gap written to | the record listed arithmetic's late ends form by form, and the code does more: `$[…]` counts every bracket and follows nothing, `$((…))`'s scan follows quotes and nothing else, so a bracket or parenthesis in backquotes, a comment, a here-document or a nested substitution passes a `pkill` after it | The rule stated instead of the forms |
+| G49-2 | wording | `job_bashes`' docstring still said \"so that the work doubles once on any path\", which round 48 found false | It says what round 48 measured |
+
+This round's own verification found one more: the self-test's run on a loaded host failed one check, a `run` refused because `ps` could not read the host, which round 48's narrowing of `HOST_LINES` read as a failure; it is the host's state, and `HOST_LINES` now takes it so, the self-test then `1318 passed, 0 failed, 0 not run`.
+
+Said, and left as it stands: arithmetic's scans, forms written to; bash 4.0 to 5.2 are on no host here.

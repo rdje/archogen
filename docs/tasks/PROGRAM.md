@@ -753,7 +753,7 @@ mdBook that is the director's window into the project.
   Status: `done` — sealed in [`PROGRAM/PROGRAM.126.md`](../task-history/PROGRAM/PROGRAM.126.md); commit `ARCHOGEN-PROGRAM-1143`
 
 - ID: `PROGRAM.127`
-  Status: `done` — `2026-11-05`: by the director's instruction, "that's critical". The machine is shared and holds 24 GB, RAM use above 88% is the danger zone and above 90% it may crash, and nothing here watched it. A watcher now stops this repository's processes before those lines and never another project's; everything `make` builds and every agent's shell command goes through it. Its review is `PROGRAM.127.1`.
+  Status: `done` — `2026-11-05`: by the director's instruction, "that's critical". The machine is shared and holds 24 GB, RAM use above 88% is the danger zone and above 90% it may crash, and nothing here watched it. A watcher now stops this repository's processes before those lines and never another project's; everything `make` builds and every agent's shell command goes through it. Its review, from `PROGRAM.127.1`, closed on round 49, which found no defect (`PROGRAM.127.49`).
 
   **Acceptance checklist (`DOCTRINE_ENFORCEMENT.md`):**
   - [x] **REPRODUCE / ISSUE** — `2026-11-05`, the director: "You are eating all the RAM, the host is going to crash!!"; `sysctl -n vm.swapusage` → `total = 63488.00M  used = 62501.50M`, with a reader and `make focused` running at once; and `git grep -nIiE 'memory_pressure|swapusage|CARGO_BUILD_JOBS' cb7ee681 -- scripts Makefile TOOLBOX.md` → no match, exit 1: nothing read the host.
@@ -945,7 +945,16 @@ mdBook that is the director's window into the project.
   Commit: `ARCHOGEN-PROGRAM-1316 (leaf PROGRAM.127.48)`
 
 - ID: `PROGRAM.127.49`
-  Status: `pending` — round 49, a fresh reader over round 48's answer. It closes on a round that finds no defect, and a form written to go round the guard, or a reader with no line for a form, is a stated limit, not a defect.
+  Status: `done` — `2026-11-14`: round 49, a fresh reader over round 48's answer: 2 findings of wording, **no defect, so the review closes**, after 3, 2, 4, 6, 5, 7, 7, 2, 2, 2, 4, 4, 2, 1, 1, 2 and 3. The findings and each answer are in `docs/reviews/decision_host-guard-reviews.part-2.md`; its report is `target/p12749/report.md`.
+
+  **Acceptance checklist (`DOCTRINE_ENFORCEMENT.md`):**
+  - [x] **REPRODUCE / ISSUE** — this round found no defect: its reader's `target/p12749/work/oracle.py` on `forms_arith*.txt`, each `MISS` a form written to, an unbalanced bracket hidden in arithmetic, beside refused controls; `git grep -n -F 'so that the work doubles once on any path (round 43)' cd6dd2db -- scripts/host_guard.py` → `2711`, the docstring round 48 left.
+  - [x] **ROOT CAUSE (WHY + WHERE)** — `git grep -n -F "is found by a scan that does not follow every quote" cd6dd2db -- docs/decisions/decision_host-guard.md` → `116`, a limit stated form by form where the code's rule is short. No defect: each is words.
+  - [x] **FIX** — the record's sentence on arithmetic's end, its status; `scripts/host_guard.py`: `job_bashes`' docstring. And from this round's own self-test run on a loaded host, which failed `a `run` no watcher can see for ends its job` with "not started: the host cannot be read" (`ps` exit 1): `scripts/selftest_host_guard.py`'s `HOST_LINES` taking a host that cannot be read as the host's, as round 48's narrowing had not.
+  - [x] **ADDRESSED (verified)** — `python3 -I -B scripts/host_guard.py run --wait 1800 -- python3 -I -B scripts/selftest_host_guard.py` → `host-guard self-test: 1318 passed, 0 failed, 0 not run`, run exit 0, on the final bytes, the docstring its one change (`target/p12749/land/selftest-full.log`); `bash scripts/check_host_guard.sh` → `host-guard: OK`, exit 0.
+  - [x] **NO REGRESSION** — `bash scripts/run_self_tests.sh --self-test` → `run-self-tests self-test: 18 pass / 0 fail (18 arms)`; the code's one change a docstring, so the earlier rounds' rigs stand as round 48 ran them; `make focused` → `tier focused: passed — 3 passed, 0 failed, 0 unavailable, 0 not built, 0 quarantined`, on the staged tree.
+  - [x] **LOCKSTEP** — the record, the review history and its index, these leaves and the Commit Log; `MEMORY.md`'s next action. The book's section says nothing this round moves.
+  Commit: `ARCHOGEN-PROGRAM-1320 (leaf PROGRAM.127.49)`
 
 - ID: `PROGRAM.128`
   Status: `done` — sealed in [`PROGRAM/PROGRAM.128.md`](../task-history/PROGRAM/PROGRAM.128.md); commit `ARCHOGEN-PROGRAM-1162`
@@ -1180,6 +1189,7 @@ leaf's outcome is its row in the Commit Log below, and a sealed leaf's full reco
 | `PROGRAM.127.47` | `ARCHOGEN-PROGRAM-1312 (leaf PROGRAM.127.47)` | **the host guard's review, round 47**: each run inside a job read once read as the first run's is; the self-test marking the host on its own line alone; two gaps on forms written to stated. |
 | `PROGRAM.127.48` | `ARCHOGEN-PROGRAM-1316 (leaf PROGRAM.127.48)` | **the host guard's review, round 48**: the self-test reading the host's line in `run`'s "not started" line alone and an exit 75 as the host's only on a host lately unclear; two sentences said as they are; two gaps stated. |
 | `PROGRAM.143` | `ARCHOGEN-PROGRAM-1318 (leaf PROGRAM.143)` | **the M3 tree sealed again**: `M3.4.17.3` and `M3.4.17.4`, so `docs/tasks/M3.md` is under its line ceiling |
+| `PROGRAM.127.49` | `ARCHOGEN-PROGRAM-1320 (leaf PROGRAM.127.49)` | **the host guard's review, round 49**: no defect, so the review closes; arithmetic's end said as a rule; `job_bashes`' docstring. |
 
 ## Changelog
 
@@ -1306,3 +1316,4 @@ leaf's outcome is its row in the Commit Log below, and a sealed leaf's full reco
 - `2026-11-14`: `PROGRAM.127.47` done: the guard's round 47, four findings answered, two defects; `PROGRAM.127.48` filed for round 48.
 - `2026-11-14`: `PROGRAM.127.48` done: the guard's round 48, five findings answered, three defects, none in ordinary work; `PROGRAM.127.49` filed for round 49.
 - `2026-11-14`: `PROGRAM.143` done: two closed leaves of `M3` sealed, the tree under its line ceiling for `M3.4.17.5`.
+- `2026-11-14`: `PROGRAM.127.49` done: the guard's round 49 found no defect, so its review closes.

@@ -97,8 +97,9 @@ ROOM_SECONDS = 900.0
 UNCLEAR_LATELY_SECONDS = 30.0
 last_unclear = float("-inf")
 TAKEN_AWAY = "the host filled meanwhile"
-# What `run` says of the host's own lines when it starts nothing, as `start_reasons` words them: RAM, pressure and swap.
-HOST_LINES = ("% a heavy job starts under", "memory pressure at level", "GiB, over ")
+# What `run` says of the host's own lines when it starts nothing, as `start_reasons` words them: RAM, pressure and swap; and that it cannot read the host at all,
+# `ps` failing under load, which is the host's state as much: read as a failure, it failed a whole run of the self-test on a loaded host (round 49's own run).
+HOST_LINES = ("% a heavy job starts under", "memory pressure at level", "GiB, over ", "the host cannot be read")
 STOPPED_UNDER = "the real watcher stopped"
 started: list[subprocess.Popen] = []
 failures: list[str] = []
