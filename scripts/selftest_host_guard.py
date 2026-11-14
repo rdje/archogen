@@ -1085,6 +1085,15 @@ def case_what_no_root_can_be() -> None:
     # A mount every Mac has, so the row tests a mount wherever the checkout stands: on an internal disk the walk above reaches `/` alone (round 37).
     said = subprocess.run([*PY, str(GUARD), "status", "--root", "/dev"], capture_output=True, text=True, errors="replace", timeout=30)
     check("`/dev`, a mount wherever the checkout stands, is refused", said.returncode == 2 and "a volume's mount" in said.stderr, (said.returncode, said.stderr[-200:]))
+    # A volume of `/`'s group shares `/`'s device, so no mount by `ismount`, and the kernel spells some of its directories there: refused by where it stands (round 38).
+    said = subprocess.run([*PY, str(GUARD), "status", "--root", "/System/Volumes/Data"], capture_output=True, text=True, errors="replace", timeout=30)
+    check("a volume of `/`'s group is refused", said.returncode == 2 and "a volume's mount" in said.stderr, (said.returncode, said.stderr[-200:]))
+    # A root that stands and is no directory is refused by every verb alike, where `check` said clear and `run` said it was gone (round 38).
+    plain = fresh("plain") / "file"
+    plain.write_text("")
+    for verb in (["check"], ["status"], ["run", "--", "true"]):
+        said = subprocess.run([*PY, str(GUARD), verb[0], "--root", str(plain), *verb[1:]], capture_output=True, text=True, errors="replace", timeout=30)
+        check(f"`{verb[0]}` refuses a root that is no directory", said.returncode == 2 and "is no directory" in said.stderr, (said.returncode, said.stderr[-200:]))
     # A name that is a pipe holds no guard that opens it: as a root, or named by a row that reads as another root's `run` (round 36).
     pipe = fresh("pipe") / "fifo"
     os.mkfifo(pipe)
@@ -1631,6 +1640,17 @@ def case_a_kill_is_read_through_what_hides_it() -> None:
         "(bash) <<< 'pkill -x foo'",
         "xargs kill <<E\n$(pgrep -x rustc)\nE",
         "python3 scripts/host_guard.py run -- xargs kill <<E\n$(pgrep -x rustc)\nE",
+        # A placeholder is the outer reading's wherever the text read again holds it, between single quotes, in a backquote or a here-document fed to a shell
+        # inside it; and a `run` inside a `run` stands for the outer run's words too (round 38).
+        "bash -c \"kill '$(pgrep -x rustc)'\"",
+        "eval \"kill '$(pgrep -x rustc)'\"",
+        "bash -c \"pkill -P '$(pgrep -x rustc)'\"",
+        "bash <<< \"kill '$(pgrep -x rustc)'\"",
+        "bash -c \"echo \\`kill $(pgrep -x rustc)\\`\"",
+        "bash -c \"bash <<'E'\nkill $(pgrep -x rustc)\nE\"",
+        "trap \"kill '$(pgrep -x rustc)'\" EXIT",
+        "bash -c \"python3 scripts/host_guard.py run -- kill '$(pgrep -x rustc)'\"",
+        'python3 scripts/host_guard.py run -- python3 scripts/host_guard.py run -- bash -c "true; kill $(pgrep -x rustc)"',
     ):
         check(f"`{text}` is refused", refused(text))
     for text in (
@@ -1665,6 +1685,9 @@ def case_a_kill_is_read_through_what_hides_it() -> None:
         "pgrep -x foo | xargs -I{} sh -c 'echo {}'",
         "python3 scripts/host_guard.py run -- sh -c 'true; true'; kill $(cat job.pid)",
         "xargs kill <<E\n123\nE",
+        # A placeholder between single quotes is still that substitution alone (round 38).
+        "bash -c \"kill '$(cat job.pid)'\"",
+        "bash -c \"echo '$(date)'\"",
     ):
         check(f"`{text}` is not", not refused(text))
     check("`env -` hides nothing it wraps", g.commands_of("env - cargo build")[0].words == ["cargo", "build"])

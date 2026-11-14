@@ -1541,7 +1541,7 @@ class ShellReader:
                 if attached is not words:
                     self.here_strings.append((said, before, attached))
                 elif runs_its_input(words) or feeds_a_group(words):
-                    self.reread(said, before)
+                    self.reread(said, before if self.outer_from is None else min(before, self.outer_from))
             if words:
                 self.emit(words, pipeline, started, self.marks > marked)
             words = []
@@ -1767,7 +1767,10 @@ class ShellReader:
             elif c == "'":
                 end = text.find("'", self.at + 1)
                 end = len(text) if end < 0 else end
-                parts.append(text[self.at + 1 : end])
+                said = text[self.at + 1 : end]
+                parts.append(said)
+                # Taken as it stands, as `$'…'` is: a placeholder here is the outer reading's all the same, `kill '$(…)'` among it (round 38).
+                self.marks += sum(said.count(mark) for mark in PLACEHOLDERS)
                 self.at = end + 1
                 quoted = True
             elif c == '"':
@@ -1866,6 +1869,7 @@ class ShellReader:
                     said.append(text[at])
                     at += 1
             parts.append("".join(said))
+            self.marks += sum("".join(said).count(mark) for mark in PLACEHOLDERS)
             self.at = at + 1
         elif two == '$"' and not in_quotes:
             self.at += 2
@@ -1888,7 +1892,8 @@ class ShellReader:
         if "".join(inner) == "…":
             self.marks += 1
         else:
-            ShellReader("".join(inner), self.found, self.pipelines, fed=self.fed).commands()
+            # Inside text read again, what a backquote runs stands where that text was a word too (round 38).
+            ShellReader("".join(inner), self.found, self.pipelines, self.outer_from, self.fed).commands()
         parts.append("`…`")
 
     def read_here_docs(self) -> None:
@@ -1911,7 +1916,7 @@ class ShellReader:
                     break
                 lines.append(line)
             if runs_its_input(fed) or feeds_a_group(fed):
-                ShellReader("\n".join(lines), self.found, self.pipelines, fed=self.fed).commands()
+                ShellReader("\n".join(lines), self.found, self.pipelines, self.outer_from, self.fed).commands()
             elif not quoted:
                 start = len(self.found)
                 self.read_expansions("\n".join(lines))
@@ -2092,7 +2097,9 @@ def read_through_runs(commands: list[Command], depth: int = 0, fresh: itertools.
                 others[each.pipeline] = next(fresh)
             pipeline = command.pipeline if each.pipeline == first else others[each.pipeline]
             own_from = start_of[command.own_from] if each.own_from == k or each.outer else base + each.own_from
-            out.append(Command(each.words, pipeline, each.fed or command.fed, own_from))
+            # Where it stands for the run's words and the run's words stand for an outer one's, so does it: a `run` inside a `run` (round 38).
+            outer = command.outer and (each.own_from == k or each.outer)
+            out.append(Command(each.words, pipeline, each.fed or command.fed, own_from, outer))
     return out
 
 
@@ -2503,8 +2510,13 @@ def main(argv: list[str]) -> int:
             overrides = json.loads(args.pop(0))
     root = canonical(root)
     # `/` is no repository: everything stands under it, so nothing would be told apart, and every process of this user standing there would be ours (round 35).
-    if root == Path("/") or os.path.ismount(root):
+    # A volume of `/`'s APFS group shares its device and so is no mount by `ismount`, and the kernel spells some of its directories there (round 38).
+    if root == Path("/") or os.path.ismount(root) or root.parent == Path("/System/Volumes"):
         say(f"host-guard: refused: a root of `/` or of a volume's mount, as `{root}` is, holds every process standing on it, and is no repository: name the repository's own directory")
+        return 2
+    # What stands and is no directory is no repository: every verb says so alike, where `check` said clear and `run` said it was gone (round 38).
+    if root.exists() and not root.is_dir():
+        say(f"host-guard: refused: `{root}` is no directory, and a root is a repository's directory")
         return 2
     # A `run` says whose it is on its command line, which is how the watcher knows its job is ours, wherever it was started from.
     # A `run` is known by what follows its root, the root's own spelling and a flag, so it writes both, as named or not.
