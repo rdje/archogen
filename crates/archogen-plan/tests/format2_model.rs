@@ -1444,7 +1444,7 @@ fn two_plans_of_one_code_have_one_preimage_and_code_moves_it() {
             "(format \"archogen-runtime-plan/2\")".to_owned(),
             "(profile rt-static-up-v1)".to_owned(),
             "(system heartbeat)".to_owned(),
-            "(target riscv-virt-up \"aa\")".to_owned(),
+            "(target target.riscv-virt-up \"aa\")".to_owned(),
             format!("(emitter archogen-emit/{emitter})"),
             format!("(catalog \"{catalog}\" riscv-virt-up)"),
             format!("(code app \"../app\" \"sha256:{digest}\")"),
@@ -1468,7 +1468,7 @@ fn two_plans_of_one_code_have_one_preimage_and_code_moves_it() {
         plan.insert(5, "(application \"cc\")".to_owned());
         plan.insert(6, "(realization \"dd\")".to_owned());
         plan.insert(7, "(record port.riscv \"ee\")".to_owned());
-        plan.extend(["(declared leaves-interrupt-hardware-alone yes (clause \"…\") (basis \"it touches no device\"))", "(realization-figure (step 1) initialisation-stack (value 128) (unit byte))", "(realization-fact (source uart.rx) acknowledge-point entry)", "(allocation (stack boot) (base 2281700288) (guard 64) (bytes 1024) (align 16))", "(image (floor 2147483648) (limit 2281700288))", "(complete yes)"].map(str::to_owned));
+        plan.extend(["(declared leaves-interrupt-hardware-alone yes (clause \"…\") (basis \"it touches no device\"))", "(realization-figure (step 1) initialisation-stack (value 128) (unit byte))", "(realization-fact (source uart.rx) acknowledge-point entry)", "(allocation (stack boot) (base 2281700288) (guard 64) (bytes 1024) (align 16) (origin (record port.riscv guard assumed)))", "(image (floor 2147483648) (limit 2281700288) (truncated-by))", "(complete yes)"].map(str::to_owned));
         plan.join("\n") + "\n"
     };
     let one = preimage(&first(shared("app::beat", "00", "c1", 7)));
@@ -2905,11 +2905,18 @@ fn origin_items(figures: &[(&str, &str, &str, u64)]) -> (Vec<String>, &'static s
         "externally-supplied",
         "analytically-established",
     ];
+    // By owner, `application`, `record`, `realization`, then by text, as §3's orders say (round 15, RP15-2).
+    let rank = |item: &str| {
+        ["(application ", "(record ", "(realization "]
+            .iter()
+            .position(|owner| item.starts_with(owner))
+            .unwrap_or(3)
+    };
     let mut items: Vec<String> = figures
         .iter()
         .map(|(owner, of, category, _)| format!("({owner} {of} {category})"))
         .collect();
-    items.sort();
+    items.sort_by(|a, b| (rank(a), a).cmp(&(rank(b), b)));
     items.dedup();
     let weakest = WEAKEST_FIRST
         .into_iter()
@@ -2922,13 +2929,8 @@ fn origin_items(figures: &[(&str, &str, &str, u64)]) -> (Vec<String>, &'static s
 fn an_origin_lists_every_figure_its_sum_reads_once() {
     // RP14-1's case: `console.write` 380 observed, `timer.read` 200 assumed, `mask` and `unmask` 96 each from one API record.
     let (items, weakest) = origin_items(&[
-        (
-            "realization",
-            "(node console) node-stack",
-            "observed-maximum",
-            380,
-        ),
-        ("realization", "(node timer) node-stack", "assumed", 200),
+        ("realization", "console node-stack", "observed-maximum", 380),
+        ("realization", "timer node-stack", "assumed", 200),
         (
             "record",
             "api.riscv primitive-stack",
@@ -2946,12 +2948,41 @@ fn an_origin_lists_every_figure_its_sum_reads_once() {
     assert_eq!(
         items,
         [
-            "(realization (node console) node-stack observed-maximum)",
-            "(realization (node timer) node-stack assumed)",
-            "(record api.riscv primitive-stack externally-supplied)"
+            "(record api.riscv primitive-stack externally-supplied)",
+            "(realization console node-stack observed-maximum)",
+            "(realization timer node-stack assumed)"
         ],
-        "one record's two figures are one item"
+        "one record's two figures are one item, by owner and then by text (round 15, RP15-2)"
     );
     assert!(RECORD.contains("each name's figures all and not its largest alone"));
     assert!(RECORD.contains("an item is written once however many figures write it"));
+}
+
+/// §5: an allocation's `origin` names what sizes and places its unit too, the guard and each alignment the catalog states of it, though no sum reads them: round 14's
+/// "every figure the sum reads" left them out where the catalog's numbers put them in, and `/1` §4 `.7` asks their category in the plan (round 15, RP15-1).
+#[test]
+fn an_origin_names_what_sizes_and_places_its_unit() {
+    let (items, weakest) = origin_items(&[
+        (
+            "realization",
+            "console node-stack",
+            "analytically-established",
+            380,
+        ),
+        ("record", "port.riscv guard", "assumed", 64),
+        ("record", "port.riscv alignment", "assumed", 16),
+    ]);
+    assert_eq!(
+        weakest, "assumed",
+        "RP15-1's case: the guard's and alignment's category is the allocation's too"
+    );
+    assert_eq!(
+        items,
+        [
+            "(record port.riscv alignment assumed)",
+            "(record port.riscv guard assumed)",
+            "(realization console node-stack analytically-established)"
+        ]
+    );
+    assert!(RECORD.contains("and the guard and each alignment the catalog states of it, which size and place it though no sum reads them"));
 }

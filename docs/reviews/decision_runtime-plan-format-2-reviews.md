@@ -207,3 +207,14 @@ Said, and left as it stands: no `/2` lowering exists, so lines are worked by han
 | RP14-4 | wording | the model's comment on `placement_obligations` kept round 11's order | It says the text's order |
 
 Said, and left as it stands: no `/2` lowering exists, so lines are worked by hand; what QEMU's hart raises of non-maskable interrupts stays `M4.1.7.3`'s.
+
+**Round 15** — `2026-11-14`, leaf `M4.1.7.2.15`: not acceptable, 4 findings, 2 defects, after 1, on `ba192dd0`. Everything else held: `format2_model` `47 passed`, `alarm_model` `25 passed`; rules with no row worked by hand, each `USE`, the allocations' order, a count as `INT` or `(pow2 P)`, the target digest, a two-channel device, the refusal of a non-maskable interrupt and §7's order; the stack sums, the floors, §4's instants and `PRIORITY` at its edges re-derived; every input the alarm and timer lines carry; the cursor and the image's limit at their edges; the composite-inputs record's ranking the model's; the code identity's 39 heads. Its rigs are `target/m4353/work/`.
+
+| # | Kind | Finding | Answer |
+| --- | --- | --- | --- |
+| RP15-1 | defect, narrow, round 14's answer, no row | the catalog's numbers put the guard's and each alignment's category in an `ORIGIN`, where round 14's `origin` held what the sum reads alone, and no sum reads them; and §6, named as the reader, composes no allocation | An `origin` names the guard and each alignment the catalog states of the unit too, which size and place it; its weakest is the allocation's category, as `/1` §4 `.7` asks it. A row of the reader's case |
+| RP15-2 | defect, narrow, round 14's answer | the new row ordered `origin` items by text, where §3 orders them by owner, `application`, `record`, `realization`, then by text | The model orders them so; the row's vector `record` first |
+| RP15-3 | wording | the model's example lines wrote `(target riscv-virt-up …)`, an image with no `truncated-by` and a laid allocation with no `origin`, and a node as `(node console)`; §5 wrote regions by base and name alone | Each written as the record writes it; §5's regions by base, name, then provider |
+| RP15-4 | wording | with no application's file a task's `needs` was left open, as the boot's was | It holds the task's `stack-bound`, `os-calls` and `node-calls` and each other figure of its own not yet stated, no node's or primitive's figure named |
+
+Said, and left as it stands: no `/2` lowering exists, so lines are worked by hand; `archogen-realization/1`'s value forms are `RPF-H3`'s, not yet defined.
