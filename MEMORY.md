@@ -16,11 +16,11 @@
 - **Active tree:** `M4` → frontier `M4.1`, the accepted runtime plan, the model's amendments done (`M4.1.2`): `/1` for
   the hosted playground; `PROGRAM` → `PROGRAM.34`, the director's.
 - **The host is shared:** every heavy job goes through `scripts/host_guard.py`, one at a time (`docs/decisions/decision_host-guard.md`). A reader's brief says so.
-- **Next action:** answer `M4.1.7.2.10`, format `/2`'s round 10 (`target/m4343/report.md`): two defects, a context's reach
-  as `joint.rs`'s `contexts_of` reads it, the expiry's delivery among it, and rank ties by the interrupt's text. Launch
-  `PROGRAM.127.39`, the guard's round 39, its brief from `target/p12738/brief.txt` as `target/p12737/land/brief38.py` made its
-  own, into `target/p12739/`. One reader is out: `M4.12.1.11`, the application inputs' round 11 (`target/m4344/report.md`,
-  none there meaning ask again). Then `M3.4.17.3`.
+- **Next action:** answer `M4.12.1.11`, the application inputs' round 11 (`target/m4344/report.md`): five defects, the copy's
+  compile checked at `place` and its environment unsaid, round 8's words beside round 10's, `/2`'s target sentence, and the
+  copy's directory in the image identity. Launch `M4.1.7.2.11`, format `/2`'s round 11, its brief from `target/m4343/brief.txt`
+  as `target/m4342/land/brief10.py` made its own, into `target/m4345/`. One reader is out: `PROGRAM.127.39`, the guard's round
+  39 (`target/p12739/report.md`, none there meaning ask again). Then `M3.4.17.3`.
   `M4.5.2` and `M4.3.6` wait on `M4.1.7`, `M4.3.4` on `M2.21`. The runtime plan's design is accepted (`M4.1.1` done).
   `M3.2.7` and `M3.5.9`, full verification, wait for the
   features (doctrine 22).

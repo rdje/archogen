@@ -590,9 +590,16 @@ impl Rounding {
         self.up((u128::from(ticks) * 1_000_000_000).div_ceil(u128::from(rate)))
     }
 
-    /// A count of ticks that a sum lies within.
+    /// A count of ticks that a sum lies within, reckoned as whole seconds of ticks and what is left, so that no count the language writes, to `(pow2 126)`,
+    /// overflows: one past what 128 bits of nanoseconds hold is past any figure the checker holds. Multiplied first, a count from `(pow2 99)` overflowed
+    /// (format `/2`'s review, round 10, RP10-3).
     fn ticks_down(self, ticks: u128, rate: u64) -> i64 {
-        self.down(ticks * 1_000_000_000 / u128::from(rate))
+        let rate = u128::from(rate);
+        let part = ticks % rate * 1_000_000_000 / rate;
+        (ticks / rate)
+            .checked_mul(1_000_000_000)
+            .and_then(|whole| whole.checked_add(part))
+            .map_or(i64::MAX, |ns| self.down(ns))
     }
 }
 
@@ -2744,4 +2751,37 @@ fn a_modular_counter_tells_a_deadline_past_from_one_ahead_only_within_its_modulu
     // Judged within the reach, the only window that was named, `R` of 100, an arrival 200 ago holds a deadline back 66, against a window of 11.
     assert_eq!((10_i64 - 200).rem_euclid(256), 66);
     assert_eq!(held_back(256, 10, 1, 200), 0);
+}
+
+/// A count of ticks reckons as multiplying first would wherever that fits, and past it gives the largest figure rather than overflowing, to the largest count
+/// the language writes (format `/2`'s review, round 10, RP10-3).
+#[test]
+fn a_count_of_ticks_reckons_exactly_to_the_language_s_largest() {
+    for unit in [1_u64, 1_000] {
+        let round = Rounding { unit };
+        for ticks in [
+            0_u128,
+            1,
+            7,
+            999_999_999,
+            1_000_000_001,
+            u128::from(u64::MAX),
+        ] {
+            for rate in [1_u64, 3, 32_768, 10_000_000, 1_000_000_000] {
+                let multiplied = ticks
+                    .checked_mul(1_000_000_000)
+                    .map(|ns| ns / u128::from(rate));
+                if let Some(ns) = multiplied {
+                    assert_eq!(
+                        round.ticks_down(ticks, rate),
+                        round.down(ns),
+                        "{ticks} {rate} {unit}"
+                    );
+                }
+            }
+        }
+        // `(pow2 99)` and the language's largest, `(pow2 126)`: past every figure, and no overflow.
+        assert_eq!(round.ticks_down(1 << 99, 1_000_000_000), i64::MAX);
+        assert_eq!(round.ticks_down(1 << 126, 1), i64::MAX);
+    }
 }

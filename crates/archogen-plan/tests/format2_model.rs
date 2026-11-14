@@ -2409,8 +2409,7 @@ fn a_delay_s_placeholder_is_held_from_its_write() {
     assert!(RECORD.contains(SPAN));
 }
 
-/// §3: the alarms an instance's context line names, each alarm's reach being `/1` §2.6 applied to that alarm alone: the instance bound by the binding that
-/// takes its channel, and every node one of these reaches.
+/// §3: the alarms an instance's context line names, of each alarm's reach, which `alarm_reach` derives as `contexts_of` derives one route's.
 fn contexts<'a>(reaches: &[(&'a str, &[&'a str])]) -> BTreeMap<&'a str, Vec<&'a str>> {
     let mut named: BTreeMap<&str, Vec<&str>> = BTreeMap::new();
     for &(alarm, reach) in reaches {
@@ -2429,19 +2428,18 @@ fn a_context_names_each_alarm_whose_reach_holds_it() {
     // own code alone; the expiry delivers to `time.deadline`, which needs `time.monotonic`.
     let wake = "(adapter epoch-extender timer.delay)";
     let expiry = "(adapter deadline-over-delay timer.delay)";
-    let named = contexts(&[
-        (wake, &[wake, "timer.delay"]),
-        (
-            expiry,
-            &[
-                expiry,
-                "time.deadline",
-                "time.monotonic",
-                wake,
-                "timer.delay",
-            ],
-        ),
-    ]);
+    // Derived, never written by hand (round 10, RP10-1): `time.monotonic` bound to the extender, `time.deadline` to the delivering adapter and needing
+    // `time.monotonic`, each adapter over the timer.
+    let edges = [
+        ("time.monotonic", wake),
+        ("time.deadline", expiry),
+        ("time.deadline", "time.monotonic"),
+        (wake, "timer.delay"),
+        (expiry, "timer.delay"),
+    ];
+    let wake_reach = alarm_reach("timer.delay", wake, &[], &edges);
+    let expiry_reach = alarm_reach("timer.delay", expiry, &["time.deadline"], &edges);
+    let named = contexts(&[(wake, &wake_reach), (expiry, &expiry_reach)]);
     assert_eq!(
         named[wake],
         [wake, expiry],
@@ -2481,7 +2479,7 @@ fn a_whole_number_compare_s_placeholder_is_held_within_its_horizon() {
     // A windowed compare's limit is its window's, as before.
     assert_eq!(one_write_reaches(reach, 256, 16), 239);
     for words in [
-        "the less of its line's `reach` and what its compare's reading leaves of its modulus",
+        "its line's `reach`, and on a compare the less of that and what its reading leaves of its modulus",
         "`what_one_write_reaches`",
     ] {
         assert!(RECORD.contains(words), "{words}");
@@ -2492,8 +2490,83 @@ fn a_whole_number_compare_s_placeholder_is_held_within_its_horizon() {
         .expect("RPF-H4");
     assert!(
         rpf_h4.contains(
-            "the less of its line's `reach` and what its compare's reading leaves of its modulus"
+            "its line's `reach`, and on a compare the less of that and what its reading leaves of its modulus"
         ),
         "{rpf_h4}"
     );
+}
+
+// ---- round 10: an alarm's reach as `contexts_of` derives one route's, and ties by the interrupt's text
+
+/// §3, `joint.rs`'s `contexts_of` for one alarm's route alone: the device, the alarm's own node, the requesters bound to that node where its kind delivers,
+/// and every node one of these reaches, by `edges`, each a node and what it reaches directly.
+fn alarm_reach<'a>(
+    device: &'a str,
+    node: &'a str,
+    delivers_to: &[&'a str],
+    edges: &[(&'a str, &'a str)],
+) -> Vec<&'a str> {
+    let mut all: BTreeSet<&str> = [device, node]
+        .into_iter()
+        .chain(delivers_to.iter().copied())
+        .collect();
+    loop {
+        let more: Vec<&str> = edges
+            .iter()
+            .filter(|(from, to)| all.contains(from) && !all.contains(to))
+            .map(|&(_, to)| to)
+            .collect();
+        if more.is_empty() {
+            return all.into_iter().collect();
+        }
+        all.extend(more);
+    }
+}
+
+/// An expiry's interrupt runs the code of the requester it delivers to, as `/1` gives it: the corpus's `dod-bare` lowers `time.deadline` with the timer's
+/// route in its context. Round 9's list, the instance and what it reaches, left that requester out, being bound to the instance and not reached by it
+/// (round 10, RP10-1).
+#[test]
+fn an_expiry_s_interrupt_names_the_requester_it_delivers_to() {
+    let expiry = "(adapter deadline-over-delay timer.delay)";
+    let edges = [("time.deadline", expiry), (expiry, "timer.delay")];
+    let reach = alarm_reach("timer.delay", expiry, &["time.deadline"], &edges);
+    let named = contexts(&[(expiry, &reach)]);
+    assert_eq!(
+        named["time.deadline"],
+        [expiry],
+        "as `dod-bare` lowers it under `/1`"
+    );
+    let round_9 = alarm_reach("timer.delay", expiry, &[], &edges);
+    assert!(
+        !round_9.contains(&"time.deadline"),
+        "round 9's words left it out"
+    );
+    assert!(RECORD.contains("the requesters bound to it where its kind delivers"));
+}
+
+/// §3: ranks follow the release alarm's §3, what states no value last and ties by the interrupt's text as an item writes it, `(alarm NODE)` or
+/// `(source NAME)`, as that record and `/1` §2.5 break them. Each is `(value, item)`.
+fn ranked(mut items: Vec<(Option<u64>, &str)>) -> Vec<&str> {
+    items.sort_by(|a, b| (a.0.is_none(), a.0, a.1).cmp(&(b.0.is_none(), b.0, b.1)));
+    items.into_iter().map(|(_, item)| item).collect()
+}
+
+/// Two items stating no value tie, and the interrupt's text breaks it, never `NODE`'s, which gave two orders and two identities (round 10, RP10-2).
+#[test]
+fn ranks_tie_by_the_interrupt_s_text() {
+    // RP10-2's case: a source `button` with no stated separation and a service `zz.watchdog` bound at a timer asking no `delivery-bound`.
+    let order = ranked(vec![
+        (None, "(source button)"),
+        (None, "(alarm zz.watchdog)"),
+        (Some(10), "(alarm a.fast)"),
+    ]);
+    assert_eq!(
+        order,
+        ["(alarm a.fast)", "(alarm zz.watchdog)", "(source button)"]
+    );
+    // By the node's text `button` would come first: the record does not say so.
+    assert!("button" < "zz.watchdog" && order[1] == "(alarm zz.watchdog)");
+    assert!(RECORD.contains("ties by the interrupt's text as an item writes it"));
+    assert!(!RECORD.contains("ties by `NODE`'s text"));
 }
