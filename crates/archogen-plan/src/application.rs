@@ -227,8 +227,8 @@ pub struct Account {
 impl Code {
     /// A compile's dep-info, `rustc --emit=dep-info` and the `.d` file cargo keeps of each unit, read as the compiler writes it and as nothing else. It says what
     /// that compile read and holds no bytes: a file cargo kept of an earlier compile says nothing of what stands there now, so a build reads the account of a compile
-    /// it has just run afresh, and hashes each file it names once that compile has ended, refusing one changed since it began: no build in place can take the bytes
-    /// the compile read (`AI-H3`; AI8-2). Its lines: a rule for each file it made, `MADE: NAME NAME …`, each followed by an empty line; a line `NAME:` for each
+    /// it has just run afresh, and the build compiles a copy it wrote of what that compile named, hashing the bytes it wrote: no build in place can take
+    /// the bytes the compile read (`AI-H4`; AI8-2, AI10-1). Its lines: a rule for each file it made, `MADE: NAME NAME …`, each followed by an empty line; a line `NAME:` for each
     /// file it read; and, where it read the environment, an empty line and a
     /// line `# env-dep:NAME=VALUE` for each variable. A space of a name is written after a backslash and nothing else of one is escaped, so a name holding a line feed
     /// breaks its lines: such an account is none, as is any text that is not wholly these lines, each rule ending in the names the lines give. Whatever a source names
@@ -491,14 +491,7 @@ fn category(
         ("externally-supplied", []) => Ok((Category::ExternallySupplied, None)),
         ("analytically-established", []) => Ok((Category::AnalyticallyEstablished, None)),
         ("observed-maximum", rest) => {
-            // A list's counts are each what was seen, and no one observation is any of them.
-            let Some(value) = value else {
-                return Err(refused(
-                    of,
-                    "a list's counts are each their own observation, so a list says `observed-maximum` alone",
-                ));
-            };
-            // A `locator` or a `basis` is the bound's own clause, beside `evidence`: written inside it, it is said so, not called unknown (round 10, AI10-6).
+            // A `locator` or a `basis` is the bound's own clause, beside `evidence`: written inside it, it is said so, not called unknown (round 10, AI10-6), a list's as a bound's (round 11, AI11-7).
             if let Some(head) = rest
                 .iter()
                 .filter_map(Form::head)
@@ -509,6 +502,13 @@ fn category(
                     format!("`{head}` is a clause beside `evidence`, not inside it"),
                 ));
             }
+            // A list's counts are each what was seen, and no one observation is any of them.
+            let Some(value) = value else {
+                return Err(refused(
+                    of,
+                    "a list's counts are each their own observation, so a list says `observed-maximum` alone",
+                ));
+            };
             let found = clauses(of, rest, &["observed", "safety-factor"])?;
             let observed = the_natural(of, clause(of, &found, "observed")?)?;
             let factor = clause(of, &found, "safety-factor")?;
