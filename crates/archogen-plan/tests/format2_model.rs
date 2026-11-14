@@ -611,8 +611,8 @@ fn the_model_refuses_a_map_as_the_joint_rules_do() {
 type Figures = BTreeMap<&'static str, Vec<u64>>;
 
 /// A cell of §5's table of sums, read as it is written: sums of names and `max(…, …)`. A name of several figures is the largest of them, and nothing where there is none
-/// (§5, "A name that is several figures"); `fault-use` is "the larger of the `fault-entry-stack` plus the `fault-path-stack`, the panic's route, and the
-/// `fault-check-stack`, a check's and a trap's" (round 18, RP18-1).
+/// (§5, "A name that is several figures"); `fault-use` is "the `fault-entry-stack` plus the larger of the `fault-path-stack`, the panic's route from the
+/// handler's call, and the `fault-check-stack`, a check's and a trap's" (rounds 18 and 20, RP18-1, RP20-1).
 struct Cell<'c> {
     rest: &'c str,
     figures: &'c Figures,
@@ -660,8 +660,10 @@ impl Cell<'_> {
 
     fn value(&self, name: &str) -> u64 {
         if name == "fault-use" {
-            return (self.value("fault-entry-stack") + self.value("fault-path-stack"))
-                .max(self.value("fault-check-stack"));
+            return self.value("fault-entry-stack")
+                + self
+                    .value("fault-path-stack")
+                    .max(self.value("fault-check-stack"));
         }
         let figures = self.figures.get(name).unwrap_or_else(|| {
             panic!("a sum names `{name}`, which this stack was given no figure of")
@@ -764,15 +766,18 @@ fn standing(unit: &str, figures: &Figures) -> u64 {
         }
         other => panic!("no stack is {other}"),
     };
-    // A fault takes one entry of the fault path, the panic's through the generated handler or the one a check's call and the trap path reach (round 18, RP18-1).
+    // A fault takes one entry of the fault path, the panic's through the generated handler or the one a check's call and the trap path reach (round 18, RP18-1);
+    // and a first fault raised in the handler before its call takes the other entry's route on top of what the handler ran (round 20, RP20-1).
     deepest(&on_it)
-        + (one("fault-entry-stack") + one("fault-path-stack")).max(one("fault-check-stack"))
+        + one("fault-entry-stack")
+        + one("fault-path-stack").max(one("fault-check-stack"))
         + one("trap-frame")
 }
 
 /// §5: the fault path has two entries and a fault takes one, the panic's through the generated handler, or the one a check's call and the trap path reach; so a
 /// stack holds the larger route. It held the panic's alone: a check ending in a deliberate trap at a node's deepest point, its route 450 beside the panic's 400,
-/// stood at 1662 bytes where the sum gave 1612 (round 18, RP18-1, its reader's case).
+/// stood at 1662 bytes where the sum gave 1612 (round 18, RP18-1, its reader's case). And a first fault raised in the generated handler before its call takes
+/// that route on top of the handler's 40: 1702 stood where round 18's sum gave 1662 (round 20, RP20-1, its reader's case).
 #[test]
 fn a_check_s_route_into_the_fault_path_is_held_too() {
     let figures: Figures = [
@@ -788,7 +793,10 @@ fn a_check_s_route_into_the_fault_path_is_held_too() {
     ]
     .into_iter()
     .collect();
-    assert_eq!(bytes("a task's", &figures).0, 48 + 512 + 380 + 450 + 272);
+    assert_eq!(
+        bytes("a task's", &figures).0,
+        48 + 512 + 380 + 40 + 450 + 272
+    );
     assert_eq!(
         bytes("a task's", &figures).0,
         standing("a task's", &figures)

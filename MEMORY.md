@@ -16,7 +16,7 @@
 - **Active tree:** `M4` → frontier `M4.1`, the accepted runtime plan, the model's amendments done (`M4.1.2`): `/1` for
   the hosted playground; `PROGRAM` → `PROGRAM.34`, the director's.
 - **The host is shared:** every heavy job goes through `scripts/host_guard.py`, one at a time (`docs/decisions/decision_host-guard.md`). A reader's brief says so.
-- **Next action:** readers out: `PROGRAM.127.49` (`target/p12749/`), `M4.1.7.2.20` (`target/m4363/`). Then
+- **Next action:** readers out: `PROGRAM.127.49` (`target/p12749/`), `M4.1.7.2.21` (`target/m4364/`). Then
   `M3.4.17.5` (the model's words on a service's offers) and `.6` (the search binds a part's needs as it binds the part).
   The application inputs' review is closed (`M4.12.1`, round 20).
 - **⏳ Blockers (the director's):** `PROGRAM.34` — a yes to restore nine nested vendored checkouts; `M1.29.4` — §7 of
