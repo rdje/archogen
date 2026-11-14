@@ -1668,6 +1668,22 @@ def case_a_kill_is_read_through_what_hides_it() -> None:
         "bash <<E\nkill \\$(pgrep -x rustc)\nE",
         "bash <<E\nkill \\`pgrep -x rustc\\`\nE",
         "python3 scripts/host_guard.py run -- bash <<E\nkill '$(pgrep -x rustc)'\nE",
+        # A backslash before a line feed is taken out as the shell takes it out, inside an operator and before a here-document's end line is compared, and a
+        # delimiter is taken as written (round 40).
+        "cat <<E\nhello\nE\\\n\npkill -x rustc",
+        "xargs kill <<E\nx\\\nE\n$(pgrep -x rustc)\nE",
+        "bash <<E\necho \\\nE\nkill '$(pgrep -x rustc)'\nE",
+        "bash <<E\\\nX\nkill '$(pgrep -x rustc)'\nEX",
+        "cat <<E$(true)\nhello\nE$(true)\npkill -x rustc",
+        "env kill $\\\n(pgrep -x rustc)",
+        "xargs kill <\\\n<E\n$(pgrep -x rustc)\nE",
+        "pkill -P $\\\n(pgrep -x rustc)",
+        "xargs kill < <\\\n(pgrep -x rustc)",
+        'env kill "${x:-$\\\n(pgrep -x rustc)}"',
+        "bash <<E\nkill '$\\\n(pgrep -x rustc)'\nE",
+        "bash -c \"kill '$\\\n(pgrep -x rustc)'\"",
+        "cat <<'E'\nfoo\\\nE\npkill -x rustc",
+        "echo a # c \\\npkill -x rustc",
     ):
         check(f"`{text}` is refused", refused(text))
     for text in (
@@ -1708,6 +1724,9 @@ def case_a_kill_is_read_through_what_hides_it() -> None:
         # An unquoted here-document fed to a shell that only prints, or kills by a file's pid (round 39).
         "bash <<E\necho '$(date)'\nE",
         "bash <<E\nkill $(cat job.pid)\nE",
+        # An unquoted body's continued line runs on, so what follows is body text, and a backslash before a line feed between single quotes stays (round 40).
+        "cat <<E\nfoo\\\nE\npkill -x rustc\nE",
+        "echo 'a\\\nb'",
         'bash -c "kill \\`cat job.pid\\`"',
     ):
         check(f"`{text}` is not", not refused(text))
@@ -2438,11 +2457,12 @@ def case_hook() -> None:
             check(f"nor waiting: {limit}", hook_says("sleep 60", scope, limit).returncode == 0)
             check(f"a heavy one is: {limit}", hook_says("cargo build", scope, limit).returncode == 2)
         builder = named("cargo", scope)
-        if host_clear():
-            done = hook_says("cargo build", scope)
-            check("one heavy job at a time", done.returncode == 2 and "one heavy job" in done.stderr, done.stderr)
-        else:
+        done = hook_says("cargo build", scope) if host_clear() else None
+        # The host may cross its line between that look and the hook's own: a refusal that names the host's line is the host's, a case taken away (round 40).
+        if done is None or ("one heavy job" not in done.stderr and ("a heavy job starts under" in done.stderr or "memory pressure" in done.stderr)):
             not_run.append(f"one heavy job at a time ({TAKEN_AWAY})")
+        else:
+            check("one heavy job at a time", done.returncode == 2 and "one heavy job" in done.stderr, done.stderr)
         check("a light command beside it passes", hook_says("touch x", scope).returncode == 0)
         os.killpg(builder.pid, signal.SIGKILL)
         builder.wait()

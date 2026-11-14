@@ -16,11 +16,11 @@
 - **Active tree:** `M4` → frontier `M4.1`, the accepted runtime plan, the model's amendments done (`M4.1.2`): `/1` for
   the hosted playground; `PROGRAM` → `PROGRAM.34`, the director's.
 - **The host is shared:** every heavy job goes through `scripts/host_guard.py`, one at a time (`docs/decisions/decision_host-guard.md`). A reader's brief says so.
-- **Next action:** answer `PROGRAM.127.40`, the guard's round 40 (`target/p12740/report.md`): a here-document's end found by raw
-  lines where shells join a backslash-newline first, `\⏎` inside an operator, one fix for both; a self-test row counting the host's
-  refusal a failure; a gone root's heavy refusal worded as an unread host. Launch `M4.12.1.13`, the application inputs' round 13,
-  its brief from `target/m4346/brief.txt` as `target/m4344/land/brief12.py` made its own, into `target/m4348/`. One reader is out:
-  `M4.1.7.2.12`, format `/2`'s round 12 (`target/m4347/report.md`, none there meaning ask again). Then `M3.4.17.3`.
+- **Next action:** answer `M4.1.7.2.12`, format `/2`'s round 12 (`target/m4347/report.md`): three defects, `(timer none)`'s span
+  in no hand-off, `(compare-magnitude false)` beside a window read two ways, the release timer's window past 64 bits; and round 11's
+  rows misnaming the placement rule. Launch `PROGRAM.127.41`, the guard's round 41, its brief from `target/p12740/brief.txt` as
+  `target/p12739/land/brief40.py` made its own, into `target/p12741/`. One reader is out: `M4.12.1.13`, the application inputs'
+  round 13 (`target/m4348/report.md`, none there meaning ask again). Then `M3.4.17.3`.
   `M4.5.2` and `M4.3.6` wait on `M4.1.7`, `M4.3.4` on `M2.21`. The runtime plan's design is accepted (`M4.1.1` done).
   `M3.2.7` and `M3.5.9`, full verification, wait for the
   features (doctrine 22).

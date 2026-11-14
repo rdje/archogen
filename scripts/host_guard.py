@@ -1377,6 +1377,108 @@ PLACEHOLDERS = ("$(…)", "`…`", "<(…)", ">(…)")
 GROUP_ENDS = {"}", "done", "fi", "esac"}
 
 
+def read_delimiter(text: str, at: int) -> tuple[str, bool, int]:
+    """A here-document's delimiter from `at`, as the shell takes it: quotes removed and nothing expanded, a substitution kept as written, a backslash before a
+    line feed no character; whether any of it was quoted; and where it ends. Read as a word, `E$(true)` ran its substitution and became `E$(…)`, and
+    `E\\⏎X` read as quoted (round 40)."""
+    parts, quoted = [], False
+    while at < len(text):
+        c = text[at]
+        if c in " \t\n;&|()<>":
+            break
+        if text.startswith("\\\n", at):
+            at += 2
+        elif c == "\\":
+            parts.append(text[at + 1 : at + 2])
+            at += 2
+            quoted = True
+        elif c in "'\"":
+            end = text.find(c, at + 1)
+            end = len(text) if end < 0 else end
+            parts.append(text[at + 1 : end])
+            at = end + 1
+            quoted = True
+        elif text.startswith(("$(", "${"), at) or c == "`":
+            opening, closing = ("`", "`") if c == "`" else (text[at + 1], ")" if text[at + 1] == "(" else "}")
+            depth, end = 1, at + (1 if c == "`" else 2)
+            while end < len(text) and depth:
+                if text[end] == closing:
+                    depth -= 1
+                elif text[end] == opening and c != "`":
+                    depth += 1
+                end += 1
+            parts.append(text[at:end])
+            at = end
+        else:
+            parts.append(c)
+            at += 1
+    return "".join(parts), quoted, at
+
+
+def joined(text: str) -> str:
+    """`text` with each backslash before a line feed taken out where the shell takes it out before it reads a token: not between single quotes, not in a
+    comment, and not in a quoted here-document's body, whose end line is compared as it stands; an unquoted body's continued lines are joined before its end
+    line is compared. Left in, `$\\⏎(`, `<\\⏎<` and a here-document ended where the shell does not end it each hid a `kill` (round 40)."""
+    out: list[str] = []
+    at, single, double = 0, False, False
+    waiting: list[tuple[str, bool, bool]] = []  # Each here-document whose body starts at the next line feed.
+    while at < len(text):
+        c = text[at]
+        if single:
+            out.append(c)
+            at += 1
+            single = c != "'"
+        elif text.startswith("\\\n", at):
+            at += 2
+        elif c == "\\":
+            out.append(text[at : at + 2])
+            at += 2
+        elif c == "'" and not double:
+            single = True
+            out.append(c)
+            at += 1
+        elif c == '"':
+            double = not double
+            out.append(c)
+            at += 1
+        elif c == "#" and not double and (at == 0 or text[at - 1] in " \t\n;&|()"):
+            end = text.find("\n", at)
+            end = len(text) if end < 0 else end
+            out.append(text[at:end])
+            at = end
+        elif text.startswith("<<", at) and not text.startswith("<<<", at) and not double:
+            begin, at = at, at + 2
+            strip = text.startswith("-", at)
+            at += strip
+            while at < len(text) and (text[at] in " \t" or text.startswith("\\\n", at)):
+                at += 2 if text[at] == "\\" else 1
+            word, quoted, at = read_delimiter(text, at)
+            out.append(text[begin:at].replace("\\\n", ""))
+            waiting.append((word, quoted, strip))
+        elif c == "\n" and not double and waiting:
+            out.append(c)
+            at += 1
+            for word, quoted, strip in waiting:
+                while at < len(text):
+                    end = text.find("\n", at)
+                    end = len(text) if end < 0 else end
+                    line = text[at:end]
+                    # Unquoted, a line ending in an odd number of backslashes runs on into the next before it is compared.
+                    while not quoted and (len(line) - len(line.rstrip("\\"))) % 2 == 1 and end < len(text):
+                        after = text.find("\n", end + 1)
+                        after = len(text) if after < 0 else after
+                        line, end = line[:-1] + text[end + 1 : after], after
+                    out.append(line + ("\n" if end < len(text) else ""))
+                    at = end + 1
+                    if (line.lstrip("\t") if strip else line) == word:
+                        break
+            waiting = []
+        else:
+            out.append(c)
+            at += 1
+    return "".join(out)
+
+
 def feeds_a_group(words: list[str]) -> bool:
     """Whether a redirection on these words feeds a group, a subshell or a loop rather than one command, `(bash) <<E` or `{ bash; } <<< …`: what it feeds is then read as a shell
     would run it, since one may stand inside (round 37)."""
@@ -1510,7 +1612,8 @@ class ShellReader:
     command, misses one in `$(…)`, and pairs a comment's apostrophe with a quote. `selftest_host_guard.py` holds this to the shell itself, running each form against stubs."""
 
     def __init__(self, text: str, found: list[Command], pipelines: itertools.count, outer_from: int | None = None, fed: bool = False) -> None:
-        self.text, self.at, self.found, self.pipelines = text, 0, found, pipelines
+        # The shell takes a backslash before a line feed out before it reads a token (round 40).
+        self.text, self.at, self.found, self.pipelines = joined(text), 0, found, pipelines
         self.here_docs: list[tuple[str, bool, bool, list[str]]] = []  # Each body starts at the next newline, at whatever level the reading then stands.
         # Each here-string waits for its command's words to be whole: a redirection may come before them, `<<< 'pkill x' bash` (round 37).
         self.here_strings: list[tuple[str, int, list[str]]] = []
@@ -1599,12 +1702,15 @@ class ShellReader:
                 while text[self.at : self.at + 1] in (" ", "\t"):
                     self.at += 1
                 before = len(self.found)
-                target, quoted = self.word()
                 operator = redirection.group().lstrip("0123456789")
                 if operator in ("<<", "<<-"):
+                    # A delimiter is taken as written: nothing of it runs (round 40).
+                    target, quoted, self.at = read_delimiter(text, self.at)
                     self.here_docs.append((target, operator == "<<-", quoted, words))
-                elif operator == "<<<":
-                    self.here_strings.append((target, before, words))
+                else:
+                    target, quoted = self.word()
+                    if operator == "<<<":
+                        self.here_strings.append((target, before, words))
             elif closing == "case" and depth == 0 and two in (";;", ";&"):
                 finish()
                 self.at += 2
@@ -2409,6 +2515,9 @@ def run(root: Path, limits: Limits, command: list[str], wait_seconds: float = 0.
 
 def heavy_refused(root: Path, limits: Limits) -> str | None:
     """Why a heavy command may not start now, if it may not."""
+    # The host can be read where the root is gone: say what is so (round 40).
+    if not root.exists():
+        return f"host-guard: refused, this is a heavy command, and its root `{root}` is gone, so there is nothing of ours to guard it by"
     try:
         reasons = start_reasons(read_host(root), limits)
     except Exception as error:

@@ -49,3 +49,14 @@ Said, and left as it stands: its reader's first self-test run wrote `scripts/__p
 | G39-3 | gap, mild, fails closed | a root removed under its watcher was said five ways by five verbs, `ensure` raising | Every verb but the hook refuses it alike, the hook letting a light command through. A row |
 
 Said, and left as it stands: its reader's oracle sent no signal, a `kill` handed 4242 being shown and never sent; its one signal was its own `stop` of its scratch watcher.
+
+**Round 40** — `2026-11-14`, leaf `PROGRAM.127.40`: not acceptable, 4 findings, 2 defects, after 2, on `c58143f0`. Round 39's answers held where it looked: a gone root refused alike by every verb, the hook passing a light command, the watcher ending in 2 s; 2,376 forms nesting two word-building readers inside six kinds of text read again all refused; `as_fed` alike to bash on 17 of 24 bodies, the rest still counting their placeholders but one; the record's kill sentences, 24 refused and 23 passing as it says; a census of 560 processes finding none of another project's. Its rigs are `target/p12740/work/`.
+
+| # | Kind | Finding | Answer |
+| --- | --- | --- | --- |
+| G40-1 | defect, fails open, written to, round 39's sentence false | the reader ended a here-document by raw lines and read its delimiter as a word, where the shell joins a line ending in a backslash before comparing an unquoted delimiter and expands nothing of one: five forms, `cat <<E` ended early with a `pkill` after it among them, passed the real hook | A backslash before a line feed is taken out as the shell takes it out before reading, an unquoted body's continued lines are joined before its end line is compared, a quoted one's compared as they stand, and a delimiter is taken as written (`joined`, `read_delimiter`). Rows for each form, and one bash reads as body text no longer refused |
+| G40-2 | gap, fails open, written to | a backslash before a line feed inside an operator, `$\⏎(` or `<\⏎<`, was not taken out, hiding the substitution or the here-document after it | The same: taken out before any token is read. Rows |
+| G40-3 | defect, mild, the self-test | a row read a refusal the host gave by crossing its line, between its look and the hook's, as a failure | A refusal naming the host's line is a case taken away, as the record says of the rest |
+| G40-4 | wording | a gone root's heavy refusal said the host could not be read | It says the root is gone |
+
+Said, and left as it stands: its reader's oracle ran `bash` only against stubs, and its one real signal was its own `stop` of its scratch watcher.
