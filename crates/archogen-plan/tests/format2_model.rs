@@ -1761,7 +1761,7 @@ fn the_catalog_digest_holds_no_cost() {
 /// no)` (round 28, RP28-1).
 #[test]
 fn every_fact_the_catalog_owes_is_handed_to_its_records() {
-    const BY_RPF_H1: [(&str, &str); 16] = [
+    const BY_RPF_H1: [(&str, &str); 17] = [
         ("trap-frame", "the trap frame"),
         ("guard", "the stack guard"),
         ("alignment", "each stack's and table's alignment"),
@@ -1787,6 +1787,7 @@ fn every_fact_the_catalog_owes_is_handed_to_its_records() {
         ("controller-line", "each source's line"),
         ("external", "each source's line and `external.<source>`"),
         ("epoch-lead", "the port's `epoch-lead`"),
+        ("controller-levels", "a controller's levels"),
     ];
     let h1 = RECORD
         .lines()
@@ -1877,6 +1878,144 @@ fn what_moves_the_code_identity_is_said_as_it_is() {
         "the timer's line is kept"
     );
     assert!(RECORD.contains("A `(record ID \"HEX\")` line writes a record's record hash"));
+}
+
+/// §3: a subject that is no node is a parenthesized form, which no node's name, a bare symbol, can be: every subject the record declares — the owed line's,
+/// `SUBJECT`'s and each owing's in the owed list — is a node's `NODE`, a metavariable whose forms are parenthesized, or a parenthesized form, and no example
+/// line writes one of those forms bare. `/1` pins a block named `timer`, and a service named `fault` or `epoch` is a description the check accepts, so a
+/// bare `timer`, `epoch` or `fault` named two things under one text (round 29, RP29-1); round 26 removed one such subject, `dispatch`, and left the class.
+#[test]
+fn no_subject_but_a_node_s_is_a_bare_word() {
+    let declared = |subject: &str| {
+        subject.starts_with('(') || subject.chars().all(|c| c.is_ascii_uppercase() || c == '-')
+    };
+    let playground = include_str!("../../../docs/decisions/decision_runtime-plan.md");
+    assert!(
+        playground.contains("a block named `timer`"),
+        "a node may bear such a name"
+    );
+    let gains = RECORD
+        .split("An owed line's subject gains ")
+        .nth(1)
+        .expect("the owed line's subjects");
+    let gains = &gains[..gains.find(" a generated figure is of.").expect("its end")];
+    let mut forms: Vec<&str> = gains.split('`').skip(1).step_by(2).collect();
+    let subject = RECORD
+        .lines()
+        .find(|line| {
+            line.starts_with(
+                "- `SUBJECT`, of what the generated code states, is what that code is of:",
+            )
+        })
+        .expect("`SUBJECT`'s bullet");
+    forms.extend(
+        subject
+            .split('`')
+            .collect::<Vec<_>>()
+            .windows(2)
+            .filter(|pair| pair[1].starts_with(" for "))
+            .map(|pair| pair[0]),
+    );
+    let owed = RECORD
+        .split("**`(owed …)`, as `/2` writes it.**")
+        .nth(1)
+        .expect("what `/2` owes");
+    let owed = &owed[..owed.find("**Orders.**").expect("its end")];
+    // Each owing that declares its subject, "of `X` by `OWNER`": a subject written in words, a node whose context line holds `job`, is a node's.
+    for (at, _) in owed.match_indices("` by `") {
+        let before = &owed[..at];
+        let open = before.rfind('`').expect("its opening");
+        if before[..open].ends_with("of ") || before[..open].ends_with("Of ") {
+            forms.push(&before[open + 1..]);
+        }
+    }
+    for must in [
+        "(timer)",
+        "(epoch)",
+        "(fault)",
+        "(controller)",
+        "NODE",
+        "UNIT",
+    ] {
+        assert!(forms.contains(&must), "`{must}` is declared: {forms:?}");
+    }
+    for form in &forms {
+        assert!(
+            declared(form),
+            "`{form}` is a bare word a node's name could be: {forms:?}"
+        );
+    }
+    for form in forms
+        .iter()
+        .filter(|form| form.starts_with('(') && !form.contains(' '))
+    {
+        let bare = form.trim_matches(|c| c == '(' || c == ')');
+        for head in [
+            "(owed ",
+            "(realization-figure ",
+            "(realization-fact ",
+            "(realization ",
+        ] {
+            assert!(
+                !RECORD.contains(&format!("{head}{bare} ")),
+                "an example writes `{bare}` bare after `{head}`"
+            );
+        }
+    }
+}
+
+/// §6 and §3: `(controller owed)` stands until a record states the source's line and the controller's levels, and each is owed apart where none states
+/// it. Before, the line was owed whichever was missing, so a stated line was owed and unstated levels were not (round 29, RP29-2).
+#[test]
+fn the_controller_owes_what_no_record_states() {
+    assert!(RECORD.contains(
+        "`(owed (controller) controller-levels (by catalog))` where none states its levels"
+    ));
+    assert!(RECORD.contains(
+        "`(owed ITEM controller-line (by catalog))` where none states the source's line"
+    ));
+}
+
+/// §3 against the composite-inputs record's table: no fact it calls hardware is owed by the realization but as that table has it, "from the record that
+/// supplies `service.<source>`", which `RA-H5` makes the realization for an alarm; a source's `external` is its controller's record's (model §8 rule 8).
+/// The class RP27-1 found, a source's `external` given to the realization for five rounds, closed by a check (round 29's audit).
+#[test]
+fn no_hardware_fact_is_owed_by_the_realization_but_as_its_table_has_it() {
+    let inputs = include_str!("../../../docs/specs/catalog/decision_runtime-composite-inputs.md");
+    let hardware: Vec<&str> = inputs
+        .lines()
+        .filter_map(|line| {
+            let cells: Vec<&str> = line.split(" | ").collect();
+            (line.starts_with("| `") && cells.len() > 2 && cells[1].starts_with("hardware"))
+                .then(|| cells[0].trim_start_matches("| ").trim_matches('`'))
+        })
+        .map(|name| name.split('.').next().unwrap_or(name))
+        .collect();
+    assert!(hardware.contains(&"external"), "{hardware:?}");
+    assert!(inputs
+        .contains("hardware, one per source, from the record that supplies `service.<source>`"));
+    let alarm = include_str!("../../../docs/decisions/decision_release-alarm.md");
+    assert!(alarm.contains("anchored by the realization and not by a catalog record (`RA-H5`)"));
+    let owed = RECORD
+        .split("**`(owed …)`, as `/2` writes it.**")
+        .nth(1)
+        .expect("what `/2` owes");
+    let owed = &owed[..owed.find("**Orders.**").expect("its end")];
+    for clause in owed
+        .split([';', '\n'])
+        .filter(|clause| clause.contains("by `realization`"))
+    {
+        let at = clause.find("by `realization`").expect("its owner");
+        for fact in clause[at..].split('`').skip(1).step_by(2) {
+            if hardware.contains(&fact) {
+                assert!(
+                    fact == "external" && clause[..at].contains("of an alarm"),
+                    "`{fact}`, a hardware fact, owed by the realization: {}",
+                    &clause[..at.min(200)]
+                );
+            }
+        }
+    }
 }
 
 /// §3, `R`: a rate in hertz, exact, a whole number or `N/D` in lowest terms, as `/1` writes a duration (round 4, RP4-7).

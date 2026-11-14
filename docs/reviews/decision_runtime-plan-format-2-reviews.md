@@ -354,3 +354,12 @@ Said, and left as it stands: no `/2` lowering, port record or `archogen-realizat
 | RP28-4 | wording, older | `(record ID "HEX")` named no hash, where a record now has two | Its record hash, as `Catalog::hashes` gives it, not the code hash |
 
 Said, and left as it stands: no `/2` lowering, controller record or `archogen-realization/1` exists, so both rest on the records and the rig.
+
+**Round 29** — `2026-11-14`, leaf `M4.1.7.2.29`: not acceptable, 2 findings, 1 defect, after 2, on `4108973f`. Round 28's answers held: `format2_model` `64 passed`, `alarm_model` `25 passed`, each alone; the catalog's row read by hand against the owed list, and every owing by description, application and realization owned; what moves the code identity against `hash.rs` and `record.rs`; `(record ID "HEX")` the record hash; the alarm and timer lines; the worked epoch, stacks and guard; the cursor never laying an empty table inside a hole; the kept questions. Its rig is `target/m4372/work/rp29-subjects/`. Each premise was read in the records before it was answered.
+
+| # | Kind | Finding | Answer |
+| --- | --- | --- | --- |
+| RP29-1 | defect, RP26-2's class left by its answer | `timer`, `epoch` and `fault` were bare subjects a node's name, or the system's, could be: `/1` pins a block named `timer`, and the check accepts services named `fault`, `epoch` and `timer` | Every subject that is no node is a parenthesized form, `(timer)`, `(epoch)`, `(fault)` and `(controller)`; `no_subject_but_a_node_s_is_a_bare_word` reads every subject the record declares, and every example line, so the class is closed by a check |
+| RP29-2 | wording | `(controller owed)`'s owed line named the source's line whichever was missing | The line owed where none states it, `(controller)`'s `controller-levels` where none states them; `the_controller_owes_what_no_record_states` |
+
+Said, and left as it stands: no `/2` lowering, controller record or `archogen-realization/1` exists. Decided, the director having left the call to the engineer, `2026-11-14`: the review goes on before the building, as this record's How to apply orders and `decision_executable-design-reviews.md` rules, and each answer closes its finding's class by a check rather than its instance by a sentence, since rounds 25 to 29 each found an instance a sentence had left. So this round's answer also adds `no_hardware_fact_is_owed_by_the_realization_but_as_its_table_has_it`, closing RP27-1's class: run on `50fba035`'s record it fails on that finding's source `external`.
