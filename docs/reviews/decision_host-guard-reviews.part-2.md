@@ -114,3 +114,18 @@ Said, and left as it stands: where a reading and a bash part on a form the shell
 | G44-7 | wording | "as bash 4 and later read it" claimed bashes not measured, where the later reading holds 5.3's own forms | "As bash 5.3 reads it", the bashes between unmeasured here |
 
 Said, and left as it stands: G44-6, as above; bash 4.0 to 5.2 are on no host here.
+
+**Round 45** — `2026-11-14`, leaf `PROGRAM.127.45`: not acceptable, 5 findings, 4 defects, after 7, on `57eac8a2`, and 3 more of this round's own reruns of the earlier rounds' rigs against its answer, 2 of them defects older than round 44. Round 44's answers held where it looked: `1312 passed`; RAM by hand 65.44% against the guard's 65.42%; the lines, the constants and the pace; a census of 534 rows, none of another project's; the record's 35 kill-sentence forms and 25 ordinary forms as it says; round 44's `closers` and G44-1's forms refused. Its rigs are `target/p12745/work/`; the reruns' are `target/p12745/land/rig45/` and `target/p12745/land/rerun/`.
+
+| # | Kind | Finding | Answer |
+| --- | --- | --- | --- |
+| G45-1 | defect, fails open on 3.2, written to, round 44's G44-3 | bash 3.2 ends a `${…}` at its first `}` past a `$[`, and between double quotes past a `$(` or `$((` too; the reader did so outside double quotes alone, and only where another marker made it read 3.2: `echo ${y#$[} ; pkill -x rustc ; echo ]}` passed | `$[` is a marker, and 3.2's reading ends a `${…}` so between double quotes as outside them. Rows |
+| G45-2 | defect, fails open, written to, round 44's G44-2 | a run's job was read once, as the reading the run stands in: `python3 scripts/host_guard.py run -- sh -c "x=\$""(echo a;# ) ; pkill -x rustc⏎)"` passed, its marker made by quote removal | At the first run, the job is read as each bash its own markers say. A row |
+| G45-3 | defect, fails open on both bashes, written to, older | `$$` is one token, and the reader took its second `$` to begin a `$[`, `${` or `$'`: `echo $$[ ; pkill -x rustc` passed | `$$` is one token. Rows |
+| G45-4 | defect, a false sentence | `kill -9 -1` was said refused "however the number is spelt"; a brace expansion spells it, `kill -9 -{1..1}`, and brace expansion has no line in the reader | Said: but by a brace expansion, which has no line, beside `{pkill,-x,rustc}` and `pk{ill,} -x rustc` in the stated limits |
+| G45-5 | wording, cost | "fails closed near sixty kilobytes" holds of the plain form; a backslash before a line feed anywhere triples the cost, each of `joined`'s readings paying for it | Said: or near thirty-six kilobytes where one stands |
+| G45-6 | defect, fails open on 3.2, older (rounds 42 and 43), found by round 43's fuzzer rerun | bash 3.2 gathers a `$(` between double quotes by its parentheses alone; it is its expansion that takes a comment after a blank or a line feed, and that rule ended `"$( (echo a⏎#)⏎(echo a))"` nowhere, so the reader fell back and a `pkill` on the next line passed | Gathered by the parser's rule, and what the expansion takes of it read too. Rows |
+| G45-7 | defect, fails open on both bashes, older, found by this round's fuzzer | what stands glued after a `<(…)` is that word's, but the reader began afresh, so `cat <(:)# ; pkill -x rustc` read a comment where bash read `/dev/fd/63#` | It is that word's. A row |
+| G45-8 | gap, measured | inside a double-quoted string in what bash 3.2 gathers, a `$(` took a comment after a blank, and a `${…}` counted a plain `{`, skipped no `'` and nested a `$(` to 3.2, each measured otherwise on both bashes; no form was found failing open by them | Each as the bashes do |
+
+Said, and left as it stands: brace expansion, a stated limit; the cost, stated; bash 4.0 to 5.2 are on no host here.

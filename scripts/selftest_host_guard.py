@@ -2279,6 +2279,10 @@ THE_SHELL_RUNS_THESE = (
     "echo \"${y:-'}\"' }\" ; pkill -x rustc ; echo '}'",
     # What round 44's reader found: a `$'…'` inside `${…}` an ANSI-C quote to both bashes.
     "echo ${msg:-$'it\\'s done'} ; pkill -f cargo", "true || echo \"${y:-$'\\''}\" ; pkill -x rustc",
+    # What round 45's reader found: `$$` one token to both bashes. And its reruns: a `#` glued after a `<(…)` that word's, and bash 3.2 running, as it expands a
+    # `$(` between double quotes, what lies past the end it gathered by its parentheses alone, which bash 5 runs as written.
+    "echo $$[ ; pkill -x rustc", "echo $${x ; pkill -x rustc ; echo }", "echo $$'\\' ; pkill -x rustc ; echo '\\'", "cat <(:)# ; pkill -x rustc",
+    "echo \"$(echo a #)\n(pkill -x rustc))\"",
 )
 # Those the shell may not reach: what it runs must still be what is read, and what is read may be more.
 THE_SHELL_MAY_NOT_REACH = ("ls || cargo build", "false && cargo build", "if false; then cargo build; else make focused; fi", "while false; do cargo build; done", "case x in y) cargo build;; esac", "case x in cargo) make focused;; esac", "f() { cargo build; }", "xargs cargo build </dev/null",
@@ -2302,7 +2306,11 @@ THE_SHELL_MAY_NOT_REACH = ("ls || cargo build", "false && cargo build", "if fals
     # Bash 5.3's `${ …; }` and a `$\⏎(` make no marker before `joined`; bash 3.2 ends an unquoted `${…}` at its first `}`; quote removal makes a marker inside a
     # shell's text; and bash 5.3 ends a here-document inside `${ …; }` at a line holding its `}` (round 44).
     "true || echo ${ : #} ; cargo build\n}", "x=$\\\n(echo a;# ) ; cargo build\n)", "true || echo ${y#$(#} ; cargo build\n)}",
-    "sh -c \"x=\\$\"\"(echo a;# ) ; cargo build\n)\"", "msg=${ cat <<EOF\nthe message\nEOF ${y} ; cargo build\nEOF\n}")
+    "sh -c \"x=\\$\"\"(echo a;# ) ; cargo build\n)\"", "msg=${ cat <<EOF\nthe message\nEOF ${y} ; cargo build\nEOF\n}",
+    # Bash 3.2 ends a `${…}` at its first `}` past a `$[`, and between double quotes past a `$(` or `$((` too; and it gathers a `$(` between double quotes by its
+    # parentheses alone, as no `$(` in a double-quoted string inside one takes a comment, where bash 5 reads each as commands (round 45).
+    "echo ${y#$[} ; cargo build ; echo ]}", "true || echo \"${y:-$(echo }\" ; cargo build ; echo \")}\"", "true || echo \"${y:-$((1+}\" ; cargo build ; echo \"))}\"",
+    "echo \"$( (echo a\n#)\n(echo a))\"\ncargo build", "echo $(echo \"$(echo a #(\n)\")\ncargo build")
 # A bare `)` of a case inside a substitution: bash 3.2 takes it for the substitution's end, as its own bug, so it runs less than bash 4 and later do, which the reader reads. Reading more is the safe side.
 ONLY_LATER_BASH_RUNS_THESE = (
     'x="$(case y in y) cargo build;; esac)"; make focused', 'x="$(case y in y) cargo build;; esac )"; make focused', 'x="$(if true; then case y in y) cargo build;; esac; fi)"', 'x=$(case y in y) cargo build; esac); ls',
@@ -2502,6 +2510,8 @@ def case_killing_by_name() -> None:
             "ps -dp 1 | awk '{print $1}' | xargs kill", "ps -d -p 1 -o pid= | xargs kill", "kill $(ps -dp 1 -o pid=,command= | grep rustc | awk '{print $1}')",
             "ps -ef -p 1 | grep rustc | awk '{print $2}' | xargs kill", "ps -Ap 1 | grep rustc | awk '{print $2}' | xargs kill", "ps -axp 1 | grep rustc | awk '{print $2}' | xargs kill", "ps -ep 1 | grep rustc | awk '{print $2}' | xargs kill", "ps -Ao pid= -p 1 | grep rustc | xargs kill", "ps -A -g 1 | grep rustc | awk '{print $2}' | xargs kill", "ps -axg 1 | grep rustc | awk '{print $2}' | xargs kill", "ps -G 20 1 | grep rustc | awk '{print $2}' | xargs kill", "ps ax 1 | grep rustc | awk '{print $1}' | xargs kill",
             "kill $(ps -G 20 | grep rustc | awk '{print $2}')", "kill $(ps -t 1 | grep rustc | awk '{print $2}')", "kill $(ps -O 1 | grep rustc | awk '{print $2}')", 'kill $(ps -U "$USER" | grep rustc | awk \'{print $2}\')',
+            # A run's job read as each bash its own markers say, quote removal making them where the command's did not (round 45).
+            'python3 scripts/host_guard.py run -- sh -c "x=\\$""(echo a;# ) ; pkill -x rustc\n)"',
         ):
             done = hook_says(command, scope)
             check(f"never by a name across the host: {command}", done.returncode == 2 and "never by a program's name" in done.stderr, done.stderr)
