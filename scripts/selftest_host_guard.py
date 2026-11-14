@@ -97,6 +97,8 @@ ROOM_SECONDS = 900.0
 UNCLEAR_LATELY_SECONDS = 30.0
 last_unclear = float("-inf")
 TAKEN_AWAY = "the host filled meanwhile"
+# What `run` says of the host's own lines when it starts nothing, as `start_reasons` words them: RAM, pressure and swap.
+HOST_LINES = ("% a heavy job starts under", "memory pressure at level", "GiB, over ")
 STOPPED_UNDER = "the real watcher stopped"
 started: list[subprocess.Popen] = []
 failures: list[str] = []
@@ -127,9 +129,10 @@ def guard(*args: str, stdin: str | None = None, root: Path | None = None, limits
     if limits is not None:
         flags += ["--limits", json.dumps(limits)]
     done = subprocess.run([*PY, str(GUARD), verb, *flags, *rest], input=stdin, capture_output=True, text=True, errors="replace", timeout=60, env=env)
-    if verb == "run" and limits is None and done.returncode == g.UNCLEAR and "wait for the host to have room" in done.stderr:
+    if verb == "run" and limits is None and done.returncode == g.UNCLEAR and any(line in done.stderr for line in HOST_LINES):
         # Refused for the host's own line, not a case's, so a check of it says nothing either way: a case that asks only a status read it as a failure when the host
-        # crossed its line between this test's look and `run`'s own (round 46).
+        # crossed its line between this test's look and `run`'s own (round 46). Its line, and no other refusal: every refusal prints the same hint, so a `run`
+        # refused for its turn, as `case_run` asks five times, marked the host too, and a real failure after it read as the host's (round 47).
         global last_unclear
         last_unclear = time.monotonic()
     return done
@@ -2524,6 +2527,9 @@ def case_killing_by_name() -> None:
             'pgrep -x rustc | python3 scripts/host_guard.py run -- sh -c "x=\\$""(echo a;# ) ; xargs kill\n)"',
             'python3 scripts/host_guard.py run -- sh -c "x=\\$""(echo a;# ) ; pgrep -x rustc\n)" | xargs kill',
             'python3 scripts/host_guard.py run -- sh -c "sh -c \\"x=\\\\\\$\\"\\"(echo a;# ) ; pkill -x rustc\n)\\""',
+            # And so in a run inside a run's job read once, directly or through a shell's text (round 47).
+            'python3 scripts/host_guard.py run -- python3 scripts/host_guard.py run -- sh -c "sh -c \\"x=\\\\\\$\\"\\"(echo a;# ) ; pkill -x rustc\n)\\""',
+            'python3 scripts/host_guard.py run -- sh -c \'python3 scripts/host_guard.py run -- sh -c "sh -c \\"x=\\\\\\$\\"\\"(echo a;# ) ; pkill -x rustc\n)\\""\'',
         ):
             done = hook_says(command, scope)
             check(f"never by a name across the host: {command}", done.returncode == 2 and "never by a program's name" in done.stderr, done.stderr)

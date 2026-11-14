@@ -921,7 +921,19 @@ mdBook that is the director's window into the project.
   Commit: `ARCHOGEN-PROGRAM-1309 (leaf PROGRAM.127.46)`
 
 - ID: `PROGRAM.127.47`
-  Status: `pending` — round 47, a fresh reader over round 46's answer. It closes on a round that finds no defect, and a form written to go round the guard, or a reader with no line for a form, is a stated limit, not a defect.
+  Status: `done` — `2026-11-14`: round 47, a fresh reader over round 46's answer: 4 findings, 2 defects, after 4, both in round 46's answers, one in the self-test and one a false sentence on a form written to, with two gaps on forms written to, stated. The findings and each answer are in `docs/reviews/decision_host-guard-reviews.part-2.md`; its report is `target/p12747/report.md`.
+
+  **Acceptance checklist (`DOCTRINE_ENFORCEMENT.md`):**
+  - [x] **REPRODUCE / ISSUE** — its reader's own runs on `29cdf880` (`target/p12747/report.md`): `g464_rig.py`, `not_run: ['a check that FAILS on a clear host, right after a `run` refused for its turn (the host filled meanwhile)']` on a clear host; `hookrun.py hook_forms.txt`, the two nested runs `exit 0` beside the control's `exit 2`. Here, this round's rows on that guard: `python3 -I -B target/p12747/land/red/scripts/selftest_host_guard.py case_killing_by_name` → `188 passed, 2 failed, 0 not run` (`target/p12747/land/red.log`).
+  - [x] **ROOT CAUSE (WHY + WHERE)** — `git grep -n -F 'done.returncode == g.UNCLEAR and "wait for the host to have room" in done.stderr:' 29cdf880 -- scripts/selftest_host_guard.py` → `130`, a hint every refusal prints; `git grep -n -F 'if any(kills_by_name(read_as(shlex.join(told), int(older), doubled), root, int(older), False) for older in bashes):' 29cdf880 -- scripts/host_guard.py` → `2886`, and `git grep -n -F 'job = read_through_runs(read_as(shlex.join(told), which, doubled if depth == 0 else BOTH_TO_DEPTH), depth + 1, fresh, which)' 29cdf880 -- scripts/host_guard.py` → `2848`: past the first run, a job read once and nothing in it twice.
+  - [x] **FIX** — `scripts/host_guard.py`: `kills_by_name` passing the first run's reading to the runs inside a job read once, `read_through_runs` its doubling, `job_bashes`' words. `scripts/selftest_host_guard.py`: `HOST_LINES`, `guard()` marking the host on its own line alone; rows for the nested runs. The record's sentences, G47-3 and G47-4 stated.
+  - [x] **ADDRESSED (verified)** — `python3 -I -B scripts/host_guard.py run --wait 1800 -- python3 -I -B scripts/selftest_host_guard.py` → `host-guard self-test: 1318 passed, 0 failed, 0 not run`, run exit 0, on the final bytes, `cmp`-equal to `target/p12747/land/draft/host_guard.py`, this round's rows among them (`target/p12747/land/selftest-full.log`); its two cases alone → `318 passed, 0 failed, 0 not run` (`target/p12747/land/green.log`); the reader's rigs on this guard (`target/p12747/land/rig47/`): `g464_rig.py` → `last_unclear moved: False`, the deliberate failure a failure, `not_run: []`; `hookrun.py hook_forms.txt` → the control and both nested runs `exit 2`, the two gaps' forms passing as the record states.
+  - [x] **NO REGRESSION** — `bash scripts/check_host_guard.sh` → `host-guard: OK`, exit 0; `bash scripts/run_self_tests.sh --self-test` → `run-self-tests self-test: 18 pass / 0 fail (18 arms)`; the earlier rounds' rigs on this guard: round 46's case files → `0 missed`, its fuzzer seeds 471 and 472 → `0 missed` of 10,000, its corpus → `344 texts in 0.72 s; refused as a kill 0`; round 45's forms through the hook → 11 refused, its fuzzers seed 473 → `0 missed`; round 44's 122 forms → no kill passed but `kill -0 "$PID"`, a probe of one pid, its fuzzers seed 474 → `0 missed`; round 43's `fuzz2.py` → `0 missed`; round 42's tables → no row open, its fuzzers `0 missed`; round 41's 49 forms → none passed with a kill run, its 20 ordinary forms passing, its here-document fuzzers → `0 fail open`; the probes of rounds 37 to 39 → `wrong 0`; `make focused` → `tier focused: passed — 3 passed, 0 failed, 0 unavailable, 0 not built, 0 quarantined`, on the staged tree.
+  - [x] **LOCKSTEP** — the record, the review history and its index, these leaves and the Commit Log; `MEMORY.md`'s next action. The book's section says nothing this round moves.
+  Commit: `ARCHOGEN-PROGRAM-1312 (leaf PROGRAM.127.47)`
+
+- ID: `PROGRAM.127.48`
+  Status: `pending` — round 48, a fresh reader over round 47's answer. It closes on a round that finds no defect, and a form written to go round the guard, or a reader with no line for a form, is a stated limit, not a defect.
 
 - ID: `PROGRAM.128`
   Status: `done` — sealed in [`PROGRAM/PROGRAM.128.md`](../task-history/PROGRAM/PROGRAM.128.md); commit `ARCHOGEN-PROGRAM-1162`
@@ -1141,6 +1153,7 @@ leaf's outcome is its row in the Commit Log below, and a sealed leaf's full reco
 | `PROGRAM.127.45` | `ARCHOGEN-PROGRAM-1304 (leaf PROGRAM.127.45)` | **the host guard's review, round 45**: `$$` one token; `$[` a marker and 3.2's `${…}` between double quotes; a run's job read as each bash; 3.2's `$(` gathered between double quotes by its parentheses alone and read as expanded; a `#` glued after `<(…)`; the `-1` sentence and the cost. |
 | `PROGRAM.142` | `ARCHOGEN-PROGRAM-1307 (leaf PROGRAM.142)` | **the M3 tree sealed**: `M3.4.16`, `M3.4.17.1` and `M3.4.17.2`, so `docs/tasks/M3.md` is under its line ceiling |
 | `PROGRAM.127.46` | `ARCHOGEN-PROGRAM-1309 (leaf PROGRAM.127.46)` | **the host guard's review, round 46**: the first run's job read as each bash in the run's place, what it holds read twice where its markers say; bash 3.2's `${…}` nesting a substitution in a double-quoted string; the self-test's `run` rows on a full host; the `-1` and `$$` sentences. |
+| `PROGRAM.127.47` | `ARCHOGEN-PROGRAM-1312 (leaf PROGRAM.127.47)` | **the host guard's review, round 47**: each run inside a job read once read as the first run's is; the self-test marking the host on its own line alone; two gaps on forms written to stated. |
 
 ## Changelog
 
@@ -1264,3 +1277,4 @@ leaf's outcome is its row in the Commit Log below, and a sealed leaf's full reco
 - `2026-11-14`: `PROGRAM.127.45` done: the guard's round 45, eight findings answered, six defects, three of its own reruns'; `PROGRAM.127.46` filed for round 46.
 - `2026-11-14`: `PROGRAM.142` done: three closed leaves of `M3` sealed, the tree under its line ceiling for `M3.4.17.3`.
 - `2026-11-14`: `PROGRAM.127.46` done: the guard's round 46, six findings answered, four defects; `PROGRAM.127.47` filed for round 47.
+- `2026-11-14`: `PROGRAM.127.47` done: the guard's round 47, four findings answered, two defects; `PROGRAM.127.48` filed for round 48.

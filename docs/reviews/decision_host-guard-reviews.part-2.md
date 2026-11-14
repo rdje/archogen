@@ -142,3 +142,14 @@ Said, and left as it stands: brace expansion, a stated limit; the cost, stated; 
 | G46-6 | wording | "`$$` is one token to both bashes" is not so inside what bash 3.2 gathers, where `$$'` opens a `$'…'`, as the code already reads it | Said: but inside what bash 3.2 gathers |
 
 Said, and left as it stands: a parameter's default run as a command word, what a variable holds; bash 4.0 to 5.2 are on no host here.
+
+**Round 47** — `2026-11-14`, leaf `PROGRAM.127.47`: not acceptable, 4 findings, 2 defects, after 4, on `29cdf880`. Round 46's answers held where it looked: every spelling of `-1` refused in 51 forms and what the record says passes passing; the `$$` sentence; 25 ordinary commands, none refused; a census of 534 rows, 7 ours, each this repository's; RAM by hand against the guard's; the pace, the lines and `ROOM_SECONDS`; the self-test `1316 passed`. Its rigs are `target/p12747/work/`.
+
+| # | Kind | Finding | Answer |
+| --- | --- | --- | --- |
+| G47-1 | defect, ordinary work, the self-test, round 46's G46-4 | `guard()` marked the host lately unclear on any `run` refusal holding the hint every refusal prints, one for its turn among them, which `case_run` asks five times, so a real failure in the next 30 s read as the host's on a clear host | It marks the host only on a refusal naming the host's own line, RAM, pressure or swap, as `start_reasons` words them |
+| G47-2 | defect, a false sentence, written to | a run past the first had its job read as one bash with nothing in it read twice, so G46-2's form passed in one more run, directly or through the first job's `sh -c` | Each run inside a job read once is read as the first run's is; a job read twice reads its runs as its bash, once. Rows |
+| G47-3 | gap, bash 3.2 alone, written to | inside 3.2's `${…}`, a double-quoted string nests `${…}` and `$[…]` as well as a substitution, so `"${y:-"}'"}"` ended the string early | Stated in the record, a form written to |
+| G47-4 | gap, both bashes, written to, older | arithmetic's end is found by scans that skip quotes as plain text: `$[ ']' ]`, `$(( "\"))" ))`, `(( $'\'))' ))` | Stated in the record, a form written to |
+
+Said, and left as it stands: G47-3 and G47-4, forms written to; bash 4.0 to 5.2 are on no host here.

@@ -2706,8 +2706,10 @@ def read_as(text: str, which: int, doubled: int = BOTH_TO_DEPTH) -> list[Command
 
 
 def job_bashes(job: str, which: int, first: bool) -> tuple[tuple[bool, ...], int]:
-    """Each bash a run's job is read as, and how deep its reading doubles: at the first run, as each bash its own markers say, quote removal making them where the
-    command's did not, and what it holds read twice where those say, as `readings_of` reads a text (rounds 45 and 46); past it, as the bash `which` names, once (round 43)."""
+    """Each bash a run's job is read as, and how deep its reading doubles: at the first run, and at each run inside a job read once, as each bash its own markers
+    say, quote removal making them where the command's did not, and what it holds read twice where those say, as `readings_of` reads a text (rounds 45 to 47);
+    inside a job read twice, as the bash `which` names, once, so that the work doubles once on any path (round 43). Read once past the first run, a run inside a
+    run hid what G46-2 found (round 47)."""
     if not first:
         return (bool(which),), BOTH_TO_DEPTH
     bashes = each_bash(job, bool(which))
@@ -2843,9 +2845,9 @@ def read_through_runs(commands: list[Command], depth: int = 0, fresh: itertools.
         if not told:
             out.append(Command(command.words, command.pipeline, command.fed, start_of[command.own_from], command.outer))
             continue
-        # Each job read as the one bash `which` names, so that a kill and the searches before it stand in one reading (round 42), the first run's doubling as its caller says
-        # (round 46).
-        job = read_through_runs(read_as(shlex.join(told), which, doubled if depth == 0 else BOTH_TO_DEPTH), depth + 1, fresh, which)
+        # Each job read as the one bash `which` names, so that a kill and the searches before it stand in one reading (round 42), doubling as its caller says, the
+        # first run's and each run's inside it (rounds 46 and 47).
+        job = read_through_runs(read_as(shlex.join(told), which, doubled), depth + 1, fresh, which, doubled)
         base, first, others = len(out), (job[0].pipeline if job else None), {}
         for k, each in enumerate(job):
             if each.pipeline != first and each.pipeline not in others:
@@ -2883,7 +2885,7 @@ def kills_by_name(commands: list[Command], root: Path, which: int = 0, jobs_both
             # removal making them where the command's did not: read once, `run -- sh -c "x=\$""(…)"` hid a kill bash 3.2 ran (round 45).
             if told:
                 bashes, doubled = job_bashes(shlex.join(told), which, jobs_both)
-                if any(kills_by_name(read_as(shlex.join(told), int(older), doubled), root, int(older), False) for older in bashes):
+                if any(kills_by_name(read_as(shlex.join(told), int(older), doubled), root, int(older), jobs_both and len(bashes) == 1) for older in bashes):
                     return True
         # And in the run's place as each of those too, so that a search outside the run and a kill one bash alone runs inside it stand in one reading: read as `which`
         # alone there, `pgrep -x rustc | run -- sh -c "x=\$""(…) ; xargs kill"` passed (round 46).
