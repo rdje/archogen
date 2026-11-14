@@ -1387,9 +1387,9 @@ fn the_realization_s_own_costs_owe_condition_8() {
         .split("**`(owed …)`, as `/2` writes it.**")
         .nth(1)
         .expect("what `/2` owes");
-    // On a target alone, the simulator stating it on the playground (round 25, RP25-2); a task's start and the dispatch among them (RP25-1).
+    // On a target alone, the simulator stating it on the playground (round 25, RP25-2).
     let of_the_costs = owed
-        .split("of each task, each node whose context line holds `job`, each alarm, each source and `dispatch` on a target by `realization`,")
+        .split("of each node whose context line holds `job`, each alarm and each source on a target by `realization`,")
         .nth(1)
         .expect("the realization's costs'");
     let of_the_costs = &of_the_costs[..of_the_costs.find(';').expect("its end")];
@@ -1400,29 +1400,34 @@ fn the_realization_s_own_costs_owe_condition_8() {
         "`masked-runs`",
         "`service-cost`",
         "`lag`",
-        "`job-start-cost`",
-        "`dispatch-cost`",
     ] {
         assert!(of_the_costs.contains(word), "{word}: {of_the_costs}");
     }
 }
 
-/// §5 and §3: each piece of generated code the `call-frame` row says runs beneath what it calls is charged by a figure the realization owes and the
-/// composition adds, `RPF-H7`, or needs none, for its reason: the boot's code runs before any job's response is timed, and core's panic frames end the
-/// run. Before, a job's start ran inside no part of `C_i`, `switch` ending and `completion` beginning at the task's own code, and the dispatch inside
-/// neither `C_s` nor `C_rel` (round 25, RP25-1).
+/// §3 and §5: each piece of generated code the `call-frame` row says runs beneath what it calls is timed inside a part a record already bounds, the
+/// catalog's image-specific figures being measured on the image, generated code included, or needs no time, for its reason. Round 25 charged a job's start
+/// and the dispatch by figures of their own, which the catalog's `switch`, `completion`, `C_rel` and `C_s` already hold, so the composition would have
+/// charged them twice, and a `service-cost` read from the service's call would have left out the trap path's entry; both are withdrawn, and the bare
+/// subject `dispatch`, which a node of that name shared, with them (round 26, RP26-1, RP26-2).
 #[test]
-fn each_piece_of_generated_code_is_charged() {
-    const CHARGED: [(&str, Option<&str>); 4] = [
+fn each_piece_of_generated_code_is_timed_once() {
+    const TIMED: [(&str, &str); 4] = [
         (
             "a job's start beneath its entry point",
-            Some("job-start-cost"),
+            "a job's start, before its entry point's call and after its return, inside the catalog's `switch`",
         ),
-        ("the boot's code beneath each step", None),
-        ("the dispatch beneath each service", Some("dispatch-cost")),
+        (
+            "the boot's code beneath each step",
+            "the boot's code before the first enabling of interrupts",
+        ),
+        (
+            "the dispatch beneath each service",
+            "the dispatch beneath each service inside the timer service's `C_rel` and each service's `C_s`",
+        ),
         (
             "core's panic frames where that code panics itself (RP21-2)",
-            None,
+            "core's panic frames on a path that ends the run",
         ),
     ];
     let row = RECORD
@@ -1438,34 +1443,24 @@ fn each_piece_of_generated_code_is_charged() {
         .split(", ")
         .map(|piece| piece.strip_prefix("and ").unwrap_or(piece))
         .collect();
-    let phrases: Vec<&str> = CHARGED.iter().map(|(phrase, _)| *phrase).collect();
+    let phrases: Vec<&str> = TIMED.iter().map(|(phrase, _)| *phrase).collect();
     assert_eq!(pieces, phrases, "the row's pieces");
-    let owed = RECORD
-        .split("**`(owed …)`, as `/2` writes it.**")
-        .nth(1)
-        .expect("what `/2` owes");
-    let added = RECORD
-        .lines()
-        .find(|line| line.starts_with("| `RPF-H7` | `M2.21.2` |"))
-        .expect("the composition's hand-off");
-    let tasks = include_str!("../../../docs/tasks/M2.md");
-    assert!(tasks.contains("- [RPF-H7] "), "`M2.21.2` quotes it");
-    for (_, figure) in CHARGED {
-        if let Some(figure) = figure {
-            assert!(
-                owed.contains(&format!("by `realization`, `{figure}`")),
-                "`{figure}` owed"
-            );
-            assert!(
-                added.contains(&format!("`{figure}`")),
-                "`{figure}` added: {added}"
-            );
-        }
+    for (_, said) in TIMED {
+        assert!(RECORD.contains(said), "where it is timed: {said}");
     }
-    assert!(
-        added.contains("`C_i`") && added.contains("`C_s`") && added.contains("`C_rel`"),
-        "{added}"
-    );
+    // The premises: the catalog's figures hold the image's generated code, and a service begins when its trap is taken.
+    let catalog =
+        include_str!("../../../docs/specs/catalog/decision_catalog-records-variant-inputs.md");
+    assert!(catalog
+        .contains("`completion` and `masked.completion` include the image's code: generated"));
+    let variant = include_str!("../../../docs/specs/analysis/decision_runtime-analysis-variant.md");
+    assert!(variant.contains("A service starts at its trap's entry"));
+    assert!(RECORD.contains("spans its trap from entry to exit, as the variant's `C_s` does"));
+    // Nothing in the record's rules charges it again; its review table keeps round 25's account.
+    let rules = &RECORD[..RECORD.find("\n## Review\n").expect("the review")];
+    for withdrawn in ["`job-start-cost`", "`dispatch-cost`", "| `RPF-H7` |"] {
+        assert!(!rules.contains(withdrawn), "{withdrawn} charges it twice");
+    }
 }
 
 /// The ledger and the variant: what condition 8 owes of the realization is read by the checker's leaf, `RPF-H6` to `M2.21.2`, quoted there, and the

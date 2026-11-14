@@ -196,7 +196,7 @@ application's inputs. A size only a catalog record can state stays owed until on
 address below it is known. The controller is told a line and a priority for each source and each alarm wired through it, in the order the plan ranks them;
 one whose interrupt bypasses it is outside what the checker composes, so a system holding one is refused, and whether each reaches it is owed
 until the realization, the generated code's own statement, says. The generated code around each job's start and each interrupt's
-dispatch has a cost of its own there, which the checker adds to what that job or interrupt takes. On a machine, each cost and time that statement
+dispatch is timed inside the catalog's own figures for the switch, the completion and each service, which are measured on the image that holds it. On a machine, each cost and time that statement
 gives says too that it holds under any preemption, as a catalog record's does, and the checker reads it so, never assuming it.
 
 Stacks are laid from the top of a region down and the image from the bottom up, so a change in the image's size moves no

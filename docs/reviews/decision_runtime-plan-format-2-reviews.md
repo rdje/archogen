@@ -324,3 +324,12 @@ Said, and left as it stands: no `/2` lowering, port record or `archogen-realizat
 | RP25-4 | gap, this design's | §2 refuses a target whose non-maskable interrupts are all unresumable, which would hold | Stated: such an interrupt ends the run as a fault does, no agreement states it of a target, and the refusal stands until one does |
 
 Said, and left as it stands: no `/2` lowering, port record or `archogen-realization/1` exists, so RP25-1 rests on the records; the composite-inputs record's §3 is `M2.21.2`'s to amend with `RPF-H7`, as its code is.
+
+**Round 26** — `2026-11-14`, leaf `M4.1.7.2.26`: not acceptable, 2 findings, 2 defects, after 1, on `ce5315d6`. Round 25's other answers held: `format2_model` `60 passed`, `alarm_model` `25 passed`, each alone; the round table against the review history for rounds 1 to 25, every count, date and order; the worked floors, guard, stacks and epoch; `PRIORITY`; `USE`, §6's channel lines and the firmware-trap refusal, by hand; condition 8 on a target alone, the last act's lead, the non-maskable refusal's reach; no generated code charged by nothing. Its logs are `target/m4369/work/`.
+
+| # | Kind | Finding | Answer |
+| --- | --- | --- | --- |
+| RP26-1 | defect, in round 25's answer | `job-start-cost` and `dispatch-cost` charged time the catalog's `switch`, `completion`, `C_rel` and `C_s` already hold, each measured on the image, generated code included, and a `service-cost` read from the service's call would leave out the trap path's entry, claim and decision: RP25-1's premise, that no part spans generated code, was false, and its answer was taken without testing it against the catalog record | Both figures and `RPF-H7` withdrawn; §3 states where each piece of generated code is timed and that a realization's `service-cost` spans its trap, entry to exit; `each_piece_of_generated_code_is_timed_once`, which reads the premises from the catalog and the variant |
+| RP26-2 | defect, in round 25's answer | the bare subject `dispatch` met a node of that name, two subjects under one text | Gone with `dispatch-cost` |
+
+Said, and left as it stands: no `/2` lowering, port record or `archogen-realization/1` exists, so both rest on the records. Learned: a reader's defect resting on "no record covers it" is tested against the records before it is answered.
