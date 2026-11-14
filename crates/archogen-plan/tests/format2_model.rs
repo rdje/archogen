@@ -611,7 +611,8 @@ fn the_model_refuses_a_map_as_the_joint_rules_do() {
 type Figures = BTreeMap<&'static str, Vec<u64>>;
 
 /// A cell of §5's table of sums, read as it is written: sums of names and `max(…, …)`. A name of several figures is the largest of them, and nothing where there is none
-/// (§5, "A name that is several figures"); `fault-use` is "the `fault-entry-stack` plus the `fault-path-stack`".
+/// (§5, "A name that is several figures"); `fault-use` is "the larger of the `fault-entry-stack` plus the `fault-path-stack`, the panic's route, and the
+/// `fault-check-stack`, a check's and a trap's" (round 18, RP18-1).
 struct Cell<'c> {
     rest: &'c str,
     figures: &'c Figures,
@@ -659,7 +660,8 @@ impl Cell<'_> {
 
     fn value(&self, name: &str) -> u64 {
         if name == "fault-use" {
-            return self.value("fault-entry-stack") + self.value("fault-path-stack");
+            return (self.value("fault-entry-stack") + self.value("fault-path-stack"))
+                .max(self.value("fault-check-stack"));
         }
         let figures = self.figures.get(name).unwrap_or_else(|| {
             panic!("a sum names `{name}`, which this stack was given no figure of")
@@ -743,7 +745,8 @@ fn standing(unit: &str, figures: &Figures) -> u64 {
                 calls: each(&["service-stack", "timer-service-stack"]),
             }],
         },
-        // The boot's code calls each step, the catalog's own initialisation, the application's, which calls nodes, and its last act, which calls the transition, the idle context following.
+        // The boot's code calls each step, the catalog's own initialisation, the application's, which calls nodes, and its last act, which calls the transition, the idle context following,
+        // measured from the transition's call, so what the transition leaves beneath it is in its figure (round 18, RP18-2).
         "the boot's" => {
             let mut calls = each(&["initialisation-stack", "initialisation-path-stack"]);
             calls.extend(figures["stack-bound"].iter().map(|&own| Runs {
@@ -761,7 +764,38 @@ fn standing(unit: &str, figures: &Figures) -> u64 {
         }
         other => panic!("no stack is {other}"),
     };
-    deepest(&on_it) + one("fault-entry-stack") + one("fault-path-stack") + one("trap-frame")
+    // A fault takes one entry of the fault path, the panic's through the generated handler or the one a check's call and the trap path reach (round 18, RP18-1).
+    deepest(&on_it)
+        + (one("fault-entry-stack") + one("fault-path-stack")).max(one("fault-check-stack"))
+        + one("trap-frame")
+}
+
+/// §5: the fault path has two entries and a fault takes one, the panic's through the generated handler, or the one a check's call and the trap path reach; so a
+/// stack holds the larger route. It held the panic's alone: a check ending in a deliberate trap at a node's deepest point, its route 450 beside the panic's 400,
+/// stood at 1662 bytes where the sum gave 1612 (round 18, RP18-1, its reader's case).
+#[test]
+fn a_check_s_route_into_the_fault_path_is_held_too() {
+    let figures: Figures = [
+        ("call-frame", vec![48]),
+        ("stack-bound", vec![512]),
+        ("node-stack", vec![380]),
+        ("primitive-stack", vec![96]),
+        ("completion-stack", vec![64]),
+        ("fault-entry-stack", vec![40]),
+        ("fault-path-stack", vec![360]),
+        ("fault-check-stack", vec![450]),
+        ("trap-frame", vec![272]),
+    ]
+    .into_iter()
+    .collect();
+    assert_eq!(bytes("a task's", &figures).0, 48 + 512 + 380 + 450 + 272);
+    assert_eq!(
+        bytes("a task's", &figures).0,
+        standing("a task's", &figures)
+    );
+    // The idle context is measured from the transition's call, so a transition that leaves its frame beneath it is in its figure (RP18-2).
+    assert!(RECORD
+        .contains("from the transition's call, so what the transition leaves beneath it is in it"));
 }
 
 /// Every set of small figures for a stack: each figure of one value in turn, and each of several as none, one or two.
@@ -793,7 +827,12 @@ fn every(
     for name in optional {
         widen(name, &[vec![], vec![0], vec![2]]);
     }
-    for name in ["fault-entry-stack", "fault-path-stack", "trap-frame"] {
+    for name in [
+        "fault-entry-stack",
+        "fault-path-stack",
+        "fault-check-stack",
+        "trap-frame",
+    ] {
         widen(name, &[vec![0], vec![1]]);
     }
     sets
@@ -855,7 +894,8 @@ fn each_stack_s_sum_is_the_most_that_can_stand_on_it() {
             run += 1;
         }
     }
-    assert_eq!(run, 5_400 + 1_080 + 106_920);
+    // Twice what it was before round 18: `fault-check-stack` is varied too, as none and as one (RP18-1).
+    assert_eq!(run, 2 * (5_400 + 1_080 + 106_920));
 }
 
 /// The record's table of figures after `<!-- machine-read: stack-figures -->`: each figure and its owner.
@@ -886,7 +926,12 @@ fn each_figure_of_a_sum_is_bounded_owned_and_owed() {
             .iter()
             .chain(*several)
             .chain(*optional)
-            .chain(&["fault-entry-stack", "fault-path-stack", "trap-frame"])
+            .chain(&[
+                "fault-entry-stack",
+                "fault-path-stack",
+                "fault-check-stack",
+                "trap-frame",
+            ])
             .map(|name| (*name, vec![1]))
             .collect();
         let (_, in_its_cell) = bytes(unit, &given);
@@ -895,7 +940,7 @@ fn each_figure_of_a_sum_is_bounded_owned_and_owed() {
             .iter()
             .map(String::as_str)
             .filter(|name| *name != "fault-use")
-            .chain(["fault-entry-stack", "fault-path-stack"])
+            .chain(["fault-entry-stack", "fault-path-stack", "fault-check-stack"])
             .collect();
         let mut had: Vec<&str> = given.keys().copied().collect();
         wanted.sort_unstable();
@@ -949,6 +994,7 @@ fn the_reviews_probes_of_the_stacks_come_out_as_the_record_says() {
                 ("completion-stack", &[64]),
                 ("fault-entry-stack", &[100]),
                 ("fault-path-stack", &[300]),
+                ("fault-check-stack", &[0]),
                 ("trap-frame", &[frame]),
             ],
         )
@@ -980,6 +1026,7 @@ fn the_reviews_probes_of_the_stacks_come_out_as_the_record_says() {
                 ("idle-stack", &[64]),
                 ("fault-entry-stack", &[100]),
                 ("fault-path-stack", &[300]),
+                ("fault-check-stack", &[0]),
                 ("trap-frame", &[frame]),
             ],
         )
@@ -1001,6 +1048,7 @@ fn the_reviews_probes_of_the_stacks_come_out_as_the_record_says() {
             ("idle-stack", &[64]),
             ("fault-entry-stack", &[100]),
             ("fault-path-stack", &[300]),
+            ("fault-check-stack", &[0]),
             ("trap-frame", &[272]),
         ],
     );
@@ -1015,6 +1063,7 @@ fn the_reviews_probes_of_the_stacks_come_out_as_the_record_says() {
             ("timer-service-stack", &[260]),
             ("fault-entry-stack", &[100]),
             ("fault-path-stack", &[300]),
+            ("fault-check-stack", &[0]),
             ("trap-frame", &[272]),
         ],
     );
