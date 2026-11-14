@@ -1363,6 +1363,18 @@ mdBook that is the director's window into the project.
   Verification: the diff against the source, the gate.
   Commit: `ARCHOGEN-PROGRAM-1273 (leaf PROGRAM.137)`
 
+- ID: `PROGRAM.138`
+  Status: `done` — the twenty-seventh artifact cleanup, asked by the director on `2026-11-14`: "ARCHOGEN weights 183.9 GB with \"target 176.5 GB mixed · 3469 logs\", please clean artefacts that can be safely removed".
+  Goal: remove from `target/` what is regenerable and idle, every nested cargo target directory in a leaf's or a reader's folder and every directory a test run left in the scratch `TMPDIR`, keeping the main build, every store, the guard's state and every report, brief, rig and log the trees cite as evidence.
+  Acceptance:
+    - [x] ROOT CAUSE — WHY: each reader and leaf since `M3.5` built in a cargo target directory of its own and never removed it, and every test run leaves its fixtures in the scratch `TMPDIR`, `target/tmp`, which only the incremental cache's cleanups passed over; WHERE, `du -sk target` → 180.0 GB, of which `target/tmp` 64.1 GB, 31,268 entries, and nested cargo target directories 63.0 GB by `CACHEDIR.TAG` and 36.1 GB more by `.rustc_info.json` alone.
+    - [x] FIX — `python3 -I -B target/artifact-cleanup/2026-11-14/cleanup.py --delete`, then `cleanup2.py --delete`: every nested cargo target directory in a leaf's or a reader's folder, every directory a test run left in `target/tmp` and in `target/trust-tests`, each checked open by no process of this user (`lsof`), its links unlinked and never followed. The main build, the per-target directories, `miri`, the stores, the guard's state and every report, brief, rig and log beside those directories stay.
+    - [x] ADDRESSED — the first pass `31076` directories, `800670` files, `136452411392` bytes, the second `3397`, `454269`, `40638951424`, each `gone: true`, none refused (`target/artifact-cleanup/2026-11-14/removed.json`, `removed2.json`); `du -sk target` → 16.5 GB, 180.0 before; the volume's free space 2408.8 GB, 2248.3 before; `bash scripts/handoff_census.sh` → `handoff: OK` before.
+    - [x] NO REGRESSION — build output and test scratch alone, each made again by the next build or test; no tracked file but the record, the leaf and the resume pointer. 5,366 logs stay, readers' and leaves' evidence and run logs.
+    - [x] LOCKSTEP — the record, `MEMORY.md` and the tree.
+  Verification: the census, the two removal reports, the sizes before and after.
+  Commit: `ARCHOGEN-PROGRAM-1279 (leaf PROGRAM.138)`
+
 ## Roadmap coverage map
 
 Every roadmap unit has exactly one owning tree. This table is the answer to "where does
@@ -1565,6 +1577,7 @@ leaf's outcome is its row in the Commit Log below, and a sealed leaf's full reco
 | `PROGRAM.136` | `ARCHOGEN-PROGRAM-1272 (leaf PROGRAM.136)` | **the twenty-sixth artifact cleanup**: only the idle incremental cache, 3.2 GB |
 | `PROGRAM.137` | `ARCHOGEN-PROGRAM-1273 (leaf PROGRAM.137)` | **fsmgen's containment doctrine at `58d5edef7` adopted**: the body verbatim, its book exception agreeing with the ruling of `2026-10-18`; no limit here moves |
 | `PROGRAM.127.37` | `ARCHOGEN-PROGRAM-1276 (leaf PROGRAM.127.37)` | **the host guard's review, round 37**: a placeholder read again stands for its substitution, and what feeds a shell's text feeds its commands; a run's further pipelines drawn from one count; the lock opened as a directory without waiting; here-strings and groups' redirections read; the mount sentence made true |
+| `PROGRAM.138` | `ARCHOGEN-PROGRAM-1279 (leaf PROGRAM.138)` | **the twenty-seventh artifact cleanup, the director's**: 164.9 GB of nested cargo build output and test scratch, `target/` 180.0 GB to 16.5 GB, every piece of evidence kept |
 
 ## Changelog
 
@@ -1676,3 +1689,4 @@ leaf's outcome is its row in the Commit Log below, and a sealed leaf's full reco
 - `2026-11-13`: `PROGRAM.136` done: the twenty-sixth artifact cleanup, the idle incremental cache alone; `PROGRAM.137` filed, fsmgen's containment revision `58d5edef7` to review.
 - `2026-11-13`: `PROGRAM.137` done: fsmgen's containment revision `58d5edef7` adopted verbatim; the other three policy sources unchanged.
 - `2026-11-13`: `PROGRAM.127.37` done: the guard's round 37, seven findings answered, four defects, two failing open in the reader; `PROGRAM.127.38` filed for round 38.
+- `2026-11-14`: `PROGRAM.138` done: the twenty-seventh artifact cleanup, asked by the director: `target/` from 180.0 GB to 16.5 GB, build output and test scratch alone.

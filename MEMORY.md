@@ -16,18 +16,18 @@
 - **Active tree:** `M4` → frontier `M4.1`, the accepted runtime plan, the model's amendments done (`M4.1.2`): `/1` for
   the hosted playground; `PROGRAM` → `PROGRAM.34`, the director's.
 - **The host is shared:** every heavy job goes through `scripts/host_guard.py`, one at a time (`docs/decisions/decision_host-guard.md`). A reader's brief says so.
-- **Next action:** answer `PROGRAM.127.38`, the guard's round 38 (`target/p12738/report.md`): three defects failing open in
-  round 37's reading, `kill '$(pgrep x)'` in a shell's text the ordinary one, and a false sentence. Launch `M4.12.1.11`, the
-  application inputs' round 11, its brief from `target/m4341/brief.txt` as `target/m4339/land/brief10.py` made its own, into
-  `target/m4344/`. One reader is out: `M4.1.7.2.10`, format `/2`'s round 10 (`target/m4343/report.md`, none there meaning ask
-  again). Then `M3.4.17.3`.
+- **Next action:** answer `PROGRAM.127.38`, the guard's round 38 (`target/p12738/report.md`): drafted and dry-run in
+  `target/p12738/land/` (`answer38.py`, `selftest38.py`, `record38.py`; its commit number to set). Answer `M4.1.7.2.10`, format
+  `/2`'s round 10 (`target/m4343/report.md`): two defects, a context's reach as `contexts_of` reads it and rank ties. Launch
+  `M4.12.1.11`, the application inputs' round 11, its brief by `target/m4341/land/brief11.py COMMIT` into `target/m4344/`.
+  Then `M3.4.17.3`.
   `M4.5.2` and `M4.3.6` wait on `M4.1.7`, `M4.3.4` on `M2.21`. The runtime plan's design is accepted (`M4.1.1` done).
   `M3.2.7` and `M3.5.9`, full verification, wait for the
   features (doctrine 22).
   After the first batch, runner leaves `M3.5.3.2`, `M3.5.5.7.4`, `M3.5.1.4.5`, `M3.5.1.6.6`; `M3.4.7` waits on `M3.7`.
   `main` is protected: a push is a batch, `scripts/open_batch.sh` (`COMMIT.md` step 2), at the ruled cadence or to
   restore CI; the director merges, and the first merge is premise 3's named commit (`M2.7.6.6.5`). No other branches.
-  The next artifact cleanup is due after `2026-11-14T21:32` UTC (`PROGRAM.136` ran the twenty-sixth).
+  The next artifact cleanup is due after `2026-11-15T00:00` UTC (`PROGRAM.138` ran the twenty-seventh).
   **Mutation testing is stopped** until the functionality is locked
   (`decision_mutation-testing-after-completion.md`, `2026-10-21`): every pending `M3.6.9` leaf and `PROGRAM.78` are
   `blocked`; every decision advances the project first. `M3.6.9.6.3.2.2.15.2.1.8.2` stays owned, a suspected defect.
