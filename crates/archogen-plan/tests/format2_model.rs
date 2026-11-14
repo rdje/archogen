@@ -1460,7 +1460,7 @@ fn two_plans_of_one_code_have_one_preimage_and_code_moves_it() {
     let first = |lines: Vec<String>| {
         let mut plan = lines;
         plan.insert(5, "(application \"bb\")".to_owned());
-        plan.extend(["(allocation (stack boot) owed (needs (realization (step 1) initialisation-stack)))", "(image (floor 2147483648) (limit owed))", "(owed (step 1) initialisation-stack (by realization))", "(complete no)"].map(str::to_owned));
+        plan.extend(["(allocation (stack boot) owed (needs (realization (step 1) initialisation-stack)))", "(image (floor 2147483648) (limit owed) (truncated-by))", "(owed (step 1) initialisation-stack (by realization))", "(complete no)"].map(str::to_owned));
         plan.join("\n") + "\n"
     };
     let second = |lines: Vec<String>| {
@@ -1669,8 +1669,8 @@ fn what_programs_a_compare_is_consumed_and_what_describes_one_is_named() {
 }
 
 /// §4, "A wake's first point": the last act arms a wake before it reads the counter for the epoch, for `P` past the wake's own read. Whether a set is admitted
-/// for it: `P` no less than the realization's `last-act-lead`, everything from a wake's read to the act's read, and the port's `epoch-lead`, from that read to the
-/// first enabling.
+/// for it: `P` no less than the realization's `last-act-lead`, from a tick of that read's own counter before it to the act's read for the epoch, or under
+/// `(timer none)` to its call of the port's transition, and the port's `epoch-lead`, from there to the first enabling (round 13, RP13-6).
 fn a_wake_s_step_outlasts_the_last_act(step: u64, act_lead: u64, lead: u64) -> bool {
     step >= act_lead + lead
 }
@@ -1948,7 +1948,8 @@ struct Written {
 }
 
 /// §4: `last-act-lead` is the realization's bound on everything from the first read any arm or placeholder of the last act takes, up to a tick of that counter old,
-/// to the act's read for the epoch; `epoch-lead` the port's from that read to the first enabling. Whether a set is admitted: each distance no less than the two.
+/// to the act's read for the epoch, or under `(timer none)` to its call of the port's transition; `epoch-lead` the port's from there to the first enabling. Whether
+/// a set is admitted: each distance no less than the two (round 13, RP13-6).
 fn the_last_act_is_held(written: &[Written], act_lead: u64, lead: u64) -> bool {
     written.iter().all(|each| each.distance >= act_lead + lead)
 }
@@ -2599,15 +2600,17 @@ fn no_timer_is_enabled_under_timer_none() {
 
 /// §3: one `(obligation placement (region PROVIDER NAME))` for each `Obligation::Placement` `Joint::map` reports, each executable region that is not reserved,
 /// in the region lines' order. Each region is `(base, name, provider, executable, reserved)`.
-fn placement_obligations(mut regions: Vec<(u64, &str, &str, bool, bool)>) -> Vec<String> {
-    regions.sort_by_key(|&(base, name, provider, _, _)| (base, name, provider));
-    regions
+fn placement_obligations(regions: Vec<(u64, &str, &str, bool, bool)>) -> Vec<String> {
+    let mut lines: Vec<String> = regions
         .into_iter()
         .filter(|&(_, _, _, executable, reserved)| executable && !reserved)
         .map(|(_, name, provider, _, _)| {
             format!("(obligation placement (region {provider} {name}))")
         })
-        .collect()
+        .collect();
+    // By their text, as `/1` orders every `obligation` line (round 13, RP13-2).
+    lines.sort();
+    lines
 }
 
 /// Two executable regions give two lines, and two providers' regions of one name two texts: round 10 wrote one, for the placement region, by its name alone
@@ -2750,4 +2753,144 @@ fn a_compare_is_read_one_way() {
         rpf_h4.contains("the release timer's or an alarm's"),
         "{rpf_h4}"
     );
+}
+
+/// §2: what checks `riscv-virt-up`'s `non-maskable-interrupts`. Not `riscv,isa` holding no `smrnmi`: the privileged specification gives every hart unresumable
+/// non-maskable interrupts, and Smrnmi adds only resumable ones, so the device tree says that none resumes and no more (round 13, RP13-1).
+#[test]
+fn no_count_is_said_checked_that_nothing_checks() {
+    let row = RECORD
+        .lines()
+        .find(|line| line.starts_with("| `non-maskable-interrupts`, a count |"))
+        .expect("its row");
+    assert!(
+        !row.contains("which says so of the emulated hart alone"),
+        "{row}"
+    );
+    assert!(row.contains("none yet"), "{row}");
+    assert!(RECORD.contains(
+        "The base machine-level architecture supports only unresumable non-maskable interrupts (UNMIs)"
+    ));
+}
+
+/// §3: placement obligations stand by their text, as `/1` orders every `obligation` line, `/2` keeping its orders: in the region lines' order as well, two
+/// builders following the two rules wrote two code identities (round 13, RP13-2).
+#[test]
+fn placement_obligations_stand_by_their_text() {
+    let lines = placement_obligations(vec![
+        (0x1000_0000, "sram", "soc", true, false),
+        (0x8000_0000, "dram", "soc", true, false),
+    ]);
+    assert_eq!(
+        lines,
+        [
+            "(obligation placement (region soc dram))",
+            "(obligation placement (region soc sram))"
+        ],
+        "RP13-2's case"
+    );
+    let lines = placement_obligations(vec![
+        (0, "ram", "z.soc", true, false),
+        (0x1000, "ram", "a.soc", true, false),
+    ]);
+    assert_eq!(
+        lines,
+        [
+            "(obligation placement (region a.soc ram))",
+            "(obligation placement (region z.soc ram))"
+        ]
+    );
+    assert!(RECORD.contains("`obligation` and `owed` lines by their text, as `/1`'s"));
+}
+
+/// §1: the catalog's digest is of one line for each record, its id, a space and its hash as `Digest` displays one, `sha256:` and its hex, by id, each ending in a
+/// line feed, with nothing before the first: three preimages fitted the record's words (round 13, RP13-3).
+fn catalog_preimage(records: &[(&str, &str)]) -> String {
+    let mut sorted = records.to_vec();
+    sorted.sort();
+    sorted
+        .iter()
+        .map(|(id, hex)| format!("{id} sha256:{hex}\n"))
+        .collect()
+}
+
+#[test]
+fn the_catalog_digest_has_one_preimage() {
+    let (a, b) = ("0".repeat(64), "f".repeat(64));
+    assert_eq!(
+        catalog_preimage(&[("uart.ns16550a", b.as_str()), ("port.riscv", a.as_str())]),
+        format!("port.riscv sha256:{a}\nuart.ns16550a sha256:{b}\n")
+    );
+    assert!(RECORD.contains("with nothing before the first"));
+    // The display the record names is `Digest`'s own.
+    let digest = include_str!("../../archogen-digest/src/lib.rs");
+    assert!(digest.contains("write!(f, \"sha256:{}\", self.hex())"));
+}
+
+/// §1 and §7: a realization of another code identity, and an application whose `(target …)` is not the plan's, are each `invalid-description`, naming both, in
+/// §7's order: every other refusal named its code, and these two named none (round 13, RP13-4).
+#[test]
+fn every_refusal_names_its_code() {
+    assert!(RECORD.contains(
+        "a lowering given one of another code refuses it `invalid-description`, naming both identities"
+    ));
+    assert!(RECORD.contains("then a realization of another code identity, `invalid-description`"));
+    assert!(RECORD.contains(
+        "its own `(target …)` against the plan's by the lowering, `invalid-description` where they differ"
+    ));
+}
+
+/// §3: which of its five facts an alarm owes, by what the checker asks of it: `floor` and `service-cost` of every alarm, `step` of a wake, `reach-ahead` of an
+/// expiry whose time base is the counter itself, `lag` of one on a target. Owed all five, an expiry owed a `step` it has none of and a simulated alarm a `lag`
+/// that §3 calls nothing, and such a plan was never `(complete yes)` (round 13, RP13-5).
+fn alarm_owes(wake: bool, counter_itself: bool, simulated: bool) -> Vec<&'static str> {
+    let mut owed = vec!["floor"];
+    if wake {
+        owed.push("step");
+    }
+    if !wake && counter_itself {
+        owed.push("reach-ahead");
+    }
+    if !simulated {
+        owed.push("lag");
+    }
+    owed.push("service-cost");
+    owed
+}
+
+#[test]
+fn each_alarm_owes_what_the_checker_asks_of_it() {
+    assert_eq!(
+        alarm_owes(false, false, false),
+        ["floor", "lag", "service-cost"],
+        "an expiry on the epoch"
+    );
+    assert_eq!(
+        alarm_owes(false, true, false),
+        ["floor", "reach-ahead", "lag", "service-cost"]
+    );
+    assert_eq!(
+        alarm_owes(true, true, false),
+        ["floor", "step", "lag", "service-cost"],
+        "a wake asks no `R`"
+    );
+    assert_eq!(
+        alarm_owes(true, false, true),
+        ["floor", "step", "service-cost"],
+        "a simulated wake"
+    );
+    // The checker's model gates each by the same, and a change there is a change here.
+    let checker = include_str!("../../rt-analysis/tests/alarm_model.rs");
+    for gate in [
+        "(line.t_s.is_none(), \"T_s\")",
+        "(!simulated && line.lag.is_none(), \"λ\")",
+        "(line.c_s.is_none(), \"C_s\")",
+        "(line.wake && line.p.is_none(), \"P\")",
+        "(on_the_counter && line.r.is_none(), \"R\")",
+    ] {
+        assert!(checker.contains(gate), "{gate}");
+    }
+    assert!(RECORD.contains(
+        "`step` of a wake, `reach-ahead` of an expiry whose time base is the counter itself"
+    ));
 }
