@@ -11,7 +11,7 @@
 
 use std::collections::{BTreeMap, BTreeSet};
 
-use eadl_front::{read, Form, SourceMap};
+use eadl_front::{read, Form, SourceMap, Verdict};
 use eadl_model::check::shipped_registry;
 use eadl_resolve::joint::{requesters, Finding, Joint, Requester, System};
 use eadl_resolve::offer::{self, Provider};
@@ -1574,12 +1574,19 @@ fn every_fact_the_realization_owes_is_handed_to_its_format() {
 
 /// §7: one order over every refusal a plan on a target makes, §6's among them: a route whose `external` the realization's file states `no` is read only
 /// from that file, after its code identity, and before placing, whose figures come from it. Before, §7 did not place it, and an input meeting it and no
-/// room had two outcomes (round 23, RP23-3).
+/// room had two outcomes (round 23, RP23-3). Where one place names more than one code, they stand as `check`'s precedence ranks them, read from
+/// `eadl_front::Verdict` itself, so one input gives the code `check` gives it: before, the two files' codes and the target's three stood in word order, no
+/// placement memory after a silent count (round 35, RP35-4).
 #[test]
 fn section_7_places_every_refusal_in_one_order() {
-    const ORDER: [&str; 10] = [
+    const ORDER: [&str; 17] = [
         "a target's own refusals",
-        "the application's file or the realization's not reading",
+        "the file not reading",
+        "a count of non-maskable interrupts or firmware traps above zero",
+        "no placement memory",
+        "either count silent",
+        "the realization's file not reading",
+        "the application's file not reading",
         "`/1`'s list in its order",
         "the assignment's `(target …)` other than the file's",
         "a finding of the generator's joint rules over the target's hardware",
@@ -1588,6 +1595,23 @@ fn section_7_places_every_refusal_in_one_order() {
         "a realization of another code identity",
         "a route whose `external` the realization's file states `no`",
         "no room while placing",
+        "The build refuses a plan whose generated code reads an owed line",
+        "A bound or a list of counts whose `binary` names another image",
+    ];
+    // The places that name more than one code, each with its codes in the order the record writes them.
+    const RANKED: [&[(&str, &str)]; 2] = [
+        &[
+            (
+                "a count of non-maskable interrupts or firmware traps above zero",
+                "unsupported-profile",
+            ),
+            ("no placement memory", "infeasible-configuration"),
+            ("either count silent", "missing-fact"),
+        ],
+        &[
+            ("the realization's file not reading", "tool-failure"),
+            ("the application's file not reading", "invalid-description"),
+        ],
     ];
     let order = "A plan on a target adds those above, in this record's order";
     // The order's own sentence, read with its soft breaks as spaces: the bullet names an application's unmet before it, as a refusal `/1` cannot make.
@@ -1602,22 +1626,71 @@ fn section_7_places_every_refusal_in_one_order() {
         })
         .collect();
     assert!(at.windows(2).all(|pair| pair[0] < pair[1]), "{at:?}");
+    for group in RANKED {
+        for (item, code) in group {
+            let from = at[ORDER
+                .iter()
+                .position(|said| said == item)
+                .expect("in the order")];
+            let next = at
+                .iter()
+                .copied()
+                .filter(|place| *place > from)
+                .min()
+                .unwrap_or(sentence.len());
+            assert!(
+                sentence[from..next].contains(&format!("`{code}`")),
+                "`{item}` is `{code}`"
+            );
+        }
+        for pair in group.windows(2) {
+            let rank = |code: &str| Verdict::parse(code).expect("a verdict").precedence();
+            assert!(
+                rank(pair[0].1) > rank(pair[1].1),
+                "{pair:?} as `check` ranks them"
+            );
+        }
+    }
+    assert!(sentence.contains("as `check`'s precedence ranks the three"));
+    assert!(sentence.contains("as that precedence ranks the two"));
+    let first = |holding: &[&str]| ORDER.iter().copied().find(|item| holding.contains(item));
     // The reader's case: a route stated not to reach the controller, and no room for the boot stack, refuses as §6 does, naming the source.
-    let first = |holding: [bool; 10]| holding.iter().position(|holds| *holds).map(|at| ORDER[at]);
     assert_eq!(
-        first([false, false, false, false, false, false, false, false, true, true]),
+        first(&[
+            "a route whose `external` the realization's file states `no`",
+            "no room while placing"
+        ]),
         Some("a route whose `external` the realization's file states `no`")
     );
     // The reader's case of round 34: a file that does not read beside a stale program digest is the file's refusal, read first (RP34-3).
     assert_eq!(
-        first([false, true, true, false, false, false, false, false, false, false]),
-        Some("the application's file or the realization's not reading")
+        first(&[
+            "the application's file not reading",
+            "`/1`'s list in its order"
+        ]),
+        Some("the application's file not reading")
     );
     // The reader's case of round 33: a result record saying `ok` over a target the joint rules find lacking is `/1`'s `tool-failure` in its place, before
     // any of `/2`'s own (RP33-2).
     assert_eq!(
-        first([false, false, false, false, true, false, false, false, false, true]),
+        first(&[
+            "a finding of the generator's joint rules over the target's hardware",
+            "no room while placing"
+        ]),
         Some("a finding of the generator's joint rules over the target's hardware")
+    );
+    // The reader's cases of round 35: both files malformed is the realization's `tool-failure`; a target silent on non-maskable interrupts with no
+    // executable region is `infeasible-configuration`, as `check` gives each (RP35-4).
+    assert_eq!(
+        first(&[
+            "the application's file not reading",
+            "the realization's file not reading"
+        ]),
+        Some("the realization's file not reading")
+    );
+    assert_eq!(
+        first(&["either count silent", "no placement memory"]),
+        Some("no placement memory")
     );
     // A source's `external` is the realization's again, so its `no` is read where an alarm's is (round 30, RP30-1).
     assert!(!RECORD.contains("a source whose `external` its controller's record states `no`"));
@@ -1906,8 +1979,9 @@ fn every_fact_the_catalog_owes_is_handed_to_its_records() {
     }
 }
 
-/// §1: what moves the code identity said as it is. No cost of a timing model moves it but the two the generated code reads, the timer's `compare-rounding`
-/// and the epoch's `epoch-lead`, each on its own kept line by value, whose `binary` stands on no kept line (round 34, RP34-1); and the facts a timing model tables, `eager-switching` among them, move it not, as `archogen_catalog` tables that one
+/// §1: what moves the code identity said as it is. No cost of a timing model moves it but those its kept lines write, the epoch's `epoch-lead`, which the
+/// generated code adds where it reads an epoch, and the timer's `compare-rounding`, which the checker reads there and no generated code does, each by value,
+/// whose `binary` stands on no kept line (round 34, RP34-1; round 35, RP35-3); and the facts a timing model tables, `eager-switching` among them, move it not, as `archogen_catalog` tables that one
 /// in the timing model. Before, the record said no cost moves it and that it moves with any record's facts (round 28, RP28-2); and a `(record ID "HEX")`
 /// line named no hash, where each record now has two (RP28-4).
 #[test]
@@ -1919,7 +1993,10 @@ fn what_moves_the_code_identity_is_said_as_it_is() {
         assert!(!RECORD.contains(false_said), "{false_said}");
     }
     assert!(RECORD.contains(
-        "the catalog figures the code identity holds are those the generated code reads, each on a kept line: the timer's `compare-rounding` and the epoch's `epoch-lead`"
+        "what the catalog states that the code identity holds is what its kept lines write: the epoch's `epoch-lead` and each route's `(controller LINE PRIORITY)`, which the generated code reads"
+    ));
+    assert!(RECORD.contains(
+        "So does a figure the checker reads there and no generated code does: the timer's `(rounding FIGURE)`, and the lead of `(epoch none (lead FIGURE))`"
     ));
     assert!(RECORD
         .contains("so that no image-specific cost moves the code identity but the epoch's lead"));
@@ -2149,7 +2226,7 @@ fn every_quote_of_the_model_is_the_model_s_text() {
 /// opening alone, so an ending could move unread (round 33, RP33-4).
 #[test]
 fn every_sentence_of_the_book_s_section_is_bound_to_the_record() {
-    const SENTENCES: [(&str, Option<&str>); 18] = [
+    const SENTENCES: [(&str, Option<&str>); 19] = [
         ("Everything above describes `archogen-runtime-plan/1`, a system on the hosted playground.", None),
         ("A real machine needs more, and the design of `/2`, `docs/decisions/decision_runtime-plan-format-2.md`, not yet built (`M4.1.7`), says what: which machine it is, by the digest of its description; which device releases tasks and which each alarm takes, with each count written as the device states it, so that the checker alone converts it; where each stack lies; and what the interrupt controller is told.", None),
         ("It also carries the application's inputs.", None),
@@ -2160,6 +2237,7 @@ fn every_sentence_of_the_book_s_section_is_bound_to_the_record() {
         ("Stacks are laid from the top of a region down and the image from the bottom up, so a change in the image's size moves no allocation.", Some("laid from the top of the region down, by a cursor that only descends")),
         ("A stack's size is what its owners state, by one table of sums: what generated code holds beneath what it calls, a task's own bound, the most the runtime's code adds in a call, what a fault adds on top of the deepest of those, since a failed check or a panic can arrive there, and the frame the port saves.", Some("What runs on a stack runs in turn")),
         ("What the generated code uses of a stack comes of that code, so a first plan generates it with those figures owed, and a second, from a file stating them, generates the same code: what an image holds of its plan leaves out the figures of that code and of the application's, and where each came from, by one table of the plan's lines, and keeps the version of what generated it, on the hosted playground as on a machine.", Some("**Two plans, one code.**")),
+        ("A figure the generated code itself reads is another matter, the port's lead, which it adds to its read, and the line and priority it writes to the controller: a plan where either is owed generates no code until a record states it.", Some("the build generates no code of such a plan and refuses it `missing-fact`")),
         ("Time on a machine is counted from a read: the last step of initialisation reads the counter and counts every release from that read plus the port's bound on everything from it to the first enabling of interrupts, so no release stands before interrupts are on, and the checker holds that one write of the timer reaches that far, the port's lead and the timer's rounding added.", Some("One write reaches the first compare")),
         ("What initialisation arms for an alarm it arms before that read, so that nothing of the generated code's own lies between the read and the enabling but the two calls into the port's code, which the port's bound counts, a limit the record states.", Some("The instructions of those two calls are the generated code's own and lie in that span")),
         ("A wake armed there must not come due before interrupts are on, so its period outlasts what the generated code states of that step and the port's bound together, which the checker holds; on the hosted playground the simulator turns interrupts on at time zero, where its wakes are armed, so nothing is held there.", Some("the scheduling checker holds each wake's `P`")),
@@ -2198,17 +2276,49 @@ fn every_sentence_of_the_book_s_section_is_bound_to_the_record() {
     }
 }
 
-/// §1, §3 and §4: every catalog figure the generated code reads stands on a kept line, so a figure restated moves the code with it: the timer's
-/// `compare-rounding`, by which its compares round, and the epoch's `epoch-lead`, which the last act adds to its read. Before, `E` stood on no line and the
-/// digest left timing models out, so two codes, or a code and a stale lead, stood under one identity (round 33, RP33-1).
+/// §1, §3, §4 and §6: every figure a record states that the generated code reads stands on a kept line, so a figure restated moves the code with it,
+/// and a plan where one is owed generates no code, the build refusing it: the epoch's `epoch-lead`, which the last act adds to its read, and each route's
+/// controller line and priority, which the code writes. The timer's `compare-rounding` stands on a kept line too, for the checker, and no generated code
+/// reads it, the catalog's timer-service code rounding as its implementation does, so a plan where it is owed generates. Before, `E` stood on no line
+/// (round 33, RP33-1); a read figure owed left what is generated unsaid (RP34-2); and the controller's line was left out of what the code reads, the
+/// rounding put in it, against `RA-H6` (round 35, RP35-2, RP35-3).
 #[test]
 fn every_figure_the_generated_code_reads_stands_on_a_kept_line() {
-    const READ: [(&str, &str, &str); 2] = [
-        ("compare-rounding", "timer", "(rounding FIGURE)"),
-        ("epoch-lead", "epoch", "(lead FIGURE)"),
+    // Each figure a kept line writes of a record: its line's head, its slot in §3's form, the owed form that withholds the code, and whether the code reads it.
+    const STATED: [(&str, &str, &str, &str, bool); 3] = [
+        (
+            "epoch-lead",
+            "epoch",
+            "(lead FIGURE)",
+            "`(epoch after-read (lead owed))`",
+            true,
+        ),
+        (
+            "controller-line",
+            "route",
+            "(controller LINE PRIORITY)",
+            "`(controller owed)`",
+            true,
+        ),
+        (
+            "compare-rounding",
+            "timer",
+            "(rounding FIGURE)",
+            "`(rounding owed)`",
+            false,
+        ),
     ];
     let kept = the_record_s_table();
-    for (figure, line, slot) in READ {
+    let row = RECORD
+        .lines()
+        .find(|line| line.starts_with("| `RPF-H10` | `M4.2` |"))
+        .expect("the generated code's hand-off");
+    let flat = RECORD.split_whitespace().collect::<Vec<_>>().join(" ");
+    let first = &flat[flat
+        .find("A first plan with the figures owed")
+        .expect("§1's first plan")..];
+    let first = &first[..first.find("(RP34-2, RP35-2, RP35-6)").expect("its end")];
+    for (figure, line, slot, owed, read) in STATED {
         assert!(
             kept.contains(&(line.to_owned(), Identity::Kept)),
             "`{line}` is kept"
@@ -2219,31 +2329,121 @@ fn every_figure_the_generated_code_reads_stands_on_a_kept_line() {
             .unwrap_or_else(|| panic!("`{line}`'s form holds `{slot}`"));
         assert!(form.contains(slot), "{form}");
         assert!(RECORD.contains(&format!("`{figure}`")), "`{figure}`");
+        assert_eq!(row.contains(owed), read, "`RPF-H10` and {owed}: {row}");
+        assert_eq!(first.contains(owed), read, "§1 and {owed}: {first}");
     }
     assert!(RECORD
         .contains("It is `compare-rounding` on the timer's line and `epoch-lead` on the epoch's"));
     assert!(RECORD.contains("the `r` it read plus the `E` its line writes"));
-    // The checker reads the `E` that line writes, the one the code adds, and no second one from the selection (round 34, RP34-1).
-    assert!(!RECORD.contains(
-        "read by the checker through `(catalog …)`'s selection, and a plan writes none of them."
-    ));
-    assert!(RECORD.contains(
-        "so the checker reads the `E` that line writes, the one the code adds, and no other"
-    ));
-    // A plan where such a figure is owed generates no code, and the leaf that writes the code is told so (round 34, RP34-2).
-    assert!(RECORD.contains(
-        "such a plan generates no code, as one whose allocations are owed links no image"
-    ));
-    let row = RECORD
-        .lines()
-        .find(|line| line.starts_with("| `RPF-H10` | `M4.2` |"))
-        .expect("the generated code's hand-off");
     assert!(
-        row.contains("`owed`") && row.contains("the `E` its plan's epoch line writes"),
-        "{row}"
+        RECORD.contains("The generated code reads `(enabled …)` and `(route …)` and writes them")
     );
+    // The code passes the write the line's `E`, writes each route's line and priority, and reads no rounding of the plan (rounds 34 and 35).
+    for said in [
+        "the `E` its plan's `(epoch after-read …)` line writes",
+        "writes each route's line and priority as its `(controller …)` writes them",
+        "reads no rounding of the plan, an alarm's compare rounding as `RA-H6` says",
+        "refusing it `missing-fact`, naming each such line",
+    ] {
+        assert!(row.contains(said), "`RPF-H10`: {said}");
+    }
+    assert!(!RECORD.contains("rounds each compare as its timer line's rounding writes"));
+    assert!(RECORD.contains(
+        "the catalog's `timer-service` record's code, whose rounding is `compare-rounding`, which the timer's line writes for the checker and no generated code reads"
+    ));
+    // The checker reads `E` from the epoch's line and from no selection (rounds 34 and 35, RP34-1, RP35-5).
+    assert!(!RECORD.contains("The platform's timing figures, `S`, `E`,"));
+    assert!(RECORD.contains(
+        "The platform's timing figures `S`, `W_wake`, `γ` and `δ` are the catalog's, read by the checker through `(catalog …)`'s selection, and a plan writes none of them."
+    ));
+    assert!(RECORD.contains(
+        "the epoch's line writes wherever the checker holds a lead, and the checker reads it there and nowhere else"
+    ));
     let tasks = include_str!("../../../docs/tasks/M4.md");
     assert!(tasks.contains("- [RPF-H10] "), "`M4.2` quotes it");
+}
+
+/// §3 and §4: the epoch's line carries a lead wherever the checker holds one, and only there: under a timer the lead the last act adds, and under
+/// `(timer none)` with an alarm the lead each wake's and placeholder's distance is held against, which no generated code reads; a hosted set is asked
+/// none, and with neither timer nor alarm none is held. So the checker reads `E` off one line in every plan, and `(owed (epoch) epoch-lead (by catalog))`
+/// stands exactly where that line writes `(lead owed)`. Before, `(timer none)` with an alarm wrote `(epoch none)`, the lead held and on no line, and §3
+/// owed it where §4 said it was owed only by a line that never said so (round 35, RP35-1).
+#[test]
+fn the_epoch_s_line_carries_a_lead_wherever_the_checker_holds_one() {
+    // The epoch's line as §4 writes it, of a hosted plan or of a target's with a timer or none and an alarm or none.
+    fn line(hosted: bool, timer: bool, alarm: bool, lead: &str) -> String {
+        match (hosted, timer, alarm) {
+            (true, _, _) => "(epoch simulator)".to_owned(),
+            (false, true, _) => format!("(epoch after-read (lead {lead}))"),
+            (false, false, true) => format!("(epoch none (lead {lead}))"),
+            (false, false, false) => "(epoch none)".to_owned(),
+        }
+    }
+    // Where `RPF-H4` has the checker hold the port's lead: the first compare's hold under a timer, each wake's and placeholder's under a timer or none,
+    // and nothing of a hosted set.
+    let h4 = RECORD
+        .lines()
+        .find(|line| line.starts_with("| `RPF-H4` | `M2.21.2` |"))
+        .expect("the checker's hand-off");
+    for said in [
+        "reads the port's `epoch-lead` as its plan's epoch line writes it, under `(timer none)` as under a timer, and no other",
+        "a set with `(timer none)` is asked neither",
+        "under `(timer none)` as under a timer, rounding `P` down and each lead up",
+        "a hosted set is asked none of it",
+    ] {
+        assert!(h4.contains(said), "`RPF-H4`: {said}");
+    }
+    let holds = |hosted: bool, timer: bool, alarm: bool| !hosted && (timer || alarm);
+    let forms: Vec<&str> = RECORD
+        .lines()
+        .find(|text| text.starts_with("(epoch simulator) | "))
+        .expect("§3's epoch forms")
+        .split(" | ")
+        .collect();
+    let mut written = BTreeSet::new();
+    for hosted in [false, true] {
+        for timer in [false, true] {
+            for alarm in [false, true] {
+                for lead in [
+                    "owed",
+                    "(value 2.4us) (record port.lead) (category measured)",
+                ] {
+                    let text = line(hosted, timer, alarm, lead);
+                    let shape = text
+                        .replace("(lead owed)", "(lead FIGURE)")
+                        .replace(&format!("(lead {lead})"), "(lead FIGURE)");
+                    assert!(
+                        forms.contains(&shape.as_str()),
+                        "{shape} is one of §3's forms: {forms:?}"
+                    );
+                    written.insert(shape);
+                    assert_eq!(
+                        text.contains("(lead "),
+                        holds(hosted, timer, alarm),
+                        "{text}"
+                    );
+                    // The owed line stands exactly where the line writes the lead owed, which only a line holding the lead can.
+                    let owes = text.contains("(lead owed)");
+                    assert_eq!(
+                        owes,
+                        holds(hosted, timer, alarm) && lead == "owed",
+                        "{text}"
+                    );
+                }
+            }
+        }
+    }
+    assert_eq!(
+        written.len(),
+        forms.len(),
+        "every form is written: {written:?}"
+    );
+    assert!(RECORD.contains(
+        "of `(epoch)` by `catalog`, `epoch-lead` (§4), where its line says `(lead owed)`"
+    ));
+    assert!(RECORD
+        .contains("writes `(epoch none)`, and `(epoch none (lead FIGURE))` where it has an alarm"));
+    assert!(!RECORD.contains("no lead is owed but where the plan has an alarm"));
 }
 
 /// Every refusal the record states has its stage: the search's and the checker's at `check` and `resolve`, the checker's of a plan, `M4.4`'s or the
@@ -2252,7 +2452,14 @@ fn every_figure_the_generated_code_reads_stands_on_a_kept_line() {
 /// class).
 #[test]
 fn every_refusal_the_record_states_has_its_stage() {
-    const STAGES: [(&str, &str); 27] = [
+    const STAGES: [(&str, &str); 31] = [
+        (
+            "and the build generates no code of a plan whose epoch line writes `(epoch after-read (lead owed))`",
+            "the build",
+        ),
+        ("the build generates no code of such a plan and refuses it `missing-fact`", "the build"),
+        ("which is no refusal, the figures being what such a build makes", "none"),
+        ("The build refuses a plan whose generated code reads an owed line before it compiles anything", "the build"),
         ("a system with placement memory staying refused as `/1` refuses it", "lowering: `/1`'s list in its order"),
         ("a lowering given one of another code refuses it `invalid-description`", "lowering: a realization of another code identity"),
         ("a file of the one is refused by a lowering of the other", "lowering: a realization of another code identity"),
@@ -2309,10 +2516,14 @@ fn every_refusal_the_record_states_has_its_stage() {
         start = at + 2;
     }
     pieces.push(&flat[start..]);
-    for piece in pieces
-        .iter()
-        .filter(|piece| piece.contains("refus") && !piece.contains(order))
-    {
+    // A sentence that withholds what a stage makes, code or an image, is a stage's outcome as a refusal is: before, the stage row read "refus" alone, and
+    // "generates no code" and "links no image" stood with no verdict and no place (round 35, RP35-6).
+    for piece in pieces.iter().filter(|piece| {
+        ["refus", "generates no", "links no"]
+            .iter()
+            .any(|word| piece.contains(word))
+            && !piece.contains(order)
+    }) {
         assert!(
             STAGES.iter().any(|(said, _)| piece.contains(said))
                 || EXEMPT.iter().any(|said| piece.contains(said)),
