@@ -540,6 +540,40 @@ fn every_fact_a_plan_owes_the_application_is_held() {
     }
 }
 
+/// What `/2` owes `(by application)` of each task where no file is given, and of a task writing an alarm it does not name, is held too: a file meets a plan owing
+/// them, and a fact this format does not hold is still said. Before, `node-calls` was said held by no format (round 17, RP17-1).
+#[test]
+fn what_format_2_owes_of_a_task_is_held() {
+    let mut text = golden("heartbeat");
+    for task in ["beat", "chime"] {
+        let after = format!("(owed (task heartbeat {task}) os-calls-category (by application))\n");
+        assert_eq!(text.matches(&after).count(), 1, "{task}");
+        let owed: String = [
+            "deadlines-within-reach",
+            "node-calls",
+            "node-calls-category",
+        ]
+        .iter()
+        .map(|fact| format!("(owed (task heartbeat {task}) {fact} (by application))\n"))
+        .collect();
+        text = text.replace(&after, &format!("{after}{owed}"));
+    }
+    let plan = contents::read(&text).expect("the plan reads");
+    let tasks: Vec<&str> = plan.tasks.iter().map(|task| task.name.as_str()).collect();
+    let application = read(&a_file(&plan.system, &tasks)).expect("it reads");
+    assert_eq!(application.unmet(&plan, &[]), Vec::<String>::new());
+    let unheld = text.replacen(
+        "(owed (task heartbeat beat) node-calls (by application))",
+        "(owed (task heartbeat beat) node-calls-bound (by application))",
+        1,
+    );
+    let plan = contents::read(&unheld).expect("the plan reads");
+    assert_eq!(
+        application.unmet(&plan, &[]),
+        vec!["the plan owes `node-calls-bound` of (task heartbeat beat), and this format holds no such thing".to_owned()]
+    );
+}
+
 /// What the plan holds them against.
 #[test]
 fn what_is_unmet_of_a_plan_is_said() {

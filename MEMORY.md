@@ -16,10 +16,10 @@
 - **Active tree:** `M4` → frontier `M4.1`, the accepted runtime plan, the model's amendments done (`M4.1.2`): `/1` for
   the hosted playground; `PROGRAM` → `PROGRAM.34`, the director's.
 - **The host is shared:** every heavy job goes through `scripts/host_guard.py`, one at a time (`docs/decisions/decision_host-guard.md`). A reader's brief says so.
-- **Next action:** answer `M4.1.7.2.17` (`target/m4357/report.md`) and `M4.12.1.18` (`target/m4358/report.md`); RP17-1
-  and AI18-2 are one gap, `HELD_OF_A_TASK` lacking `node-calls`. Launch `PROGRAM.127.46` into `target/p12746/`, its brief from
-  `target/p12745/brief.txt`. Then `M3.4.17.3`: presence stops requesting a block's or platform's composition, and the resolver
-  judges each bound provider's `needs` after binding (DC5-4), failing tests first; its survey is `target/m3417/survey.md`.
+- **Next action:** answer `M4.12.1.18` (`target/m4358/report.md`; AI18-2 is RP17-1, answered); readers out:
+  `PROGRAM.127.46` (`target/p12746/`), `M4.1.7.2.18` (`target/m4359/`). Then `M3.4.17.3`: presence stops requesting a
+  block's or platform's composition, and the resolver judges each bound provider's `needs` after binding (DC5-4), failing
+  tests first; its survey is `target/m3417/survey.md`.
 - **⏳ Blockers (the director's):** `PROGRAM.34` — a yes to restore nine nested vendored checkouts; `M1.29.4` — §7 of
   `decision_findings-for-director-review.md`; `M5` — no board procured; `M2.7.4.5` — the catalog records; `M2.7.6.4` — the director's review round;
   `TEMPLATE-REFS` — postponed. **The 17 template files archogen has not changed are never edited** (findings §10,

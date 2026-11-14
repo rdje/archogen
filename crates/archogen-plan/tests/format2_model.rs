@@ -1436,8 +1436,9 @@ fn the_record_s_table_of_lines_is_the_model_s_and_holds_every_form() {
 }
 
 /// Two plans of one system, a first with every generated figure owed and a second with a realization's file, have one preimage; and what is
-/// code moves it: an entry point, the application's sources, the catalog, a route's level. The lines the identity leaves out stand here for their heads alone, each
-/// a placeholder of its form and none a whole plan's, which no lowering writes yet: a line left out moves no identity whatever it holds (round 16, RP16-3).
+/// code moves it: an entry point, the application's sources, the catalog, a route's level. Every line here is a placeholder of its form and none a whole plan's,
+/// which no lowering writes yet, the lines kept as much as those the identity leaves out, which stand for their heads alone: the row asks only which heads move
+/// the identity, and a line left out moves none whatever it holds (rounds 16 and 17, RP16-3, RP17-3).
 #[test]
 fn two_plans_of_one_code_have_one_preimage_and_code_moves_it() {
     let shared_by = |entry: &str, digest: &str, catalog: &str, level: u64, emitter: u64| {

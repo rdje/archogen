@@ -1418,7 +1418,8 @@ impl Application {
 /// What this format holds of the system, by the plan's name for each: its one declaration, and its `initialisation`, which `/2` owes of a system where no file is given.
 pub const HELD_OF_THE_SYSTEM: &[&str] = &["leaves-interrupt-hardware-alone", "initialisation"];
 
-/// What this format holds of a task, by the plan's name for each: the plan's §2.10, and `deadlines-within-reach`, which `/2` owes of a task writing an alarm it does not name (`RA-H7`).
+/// What this format holds of a task, by the plan's name for each: the plan's §2.10, `deadlines-within-reach`, which `/2` owes of a task writing an alarm it does not name
+/// (`RA-H7`), and `node-calls` and `node-calls-category`, which `/2` owes of every task where no file is given, the file's `node-calls` and its evidence (RP17-1).
 pub const HELD_OF_A_TASK: &[&str] = &[
     "deadlines-within-reach",
     "entry-point",
@@ -1428,6 +1429,8 @@ pub const HELD_OF_A_TASK: &[&str] = &[
     "masked-category",
     "masked-runs",
     "masks-only-through-api",
+    "node-calls",
+    "node-calls-category",
     "os-calls",
     "os-calls-category",
     "stack-bound",
