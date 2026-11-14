@@ -16,9 +16,9 @@
 - **Active tree:** `M4` → frontier `M4.1`, the accepted runtime plan, the model's amendments done (`M4.1.2`): `/1` for
   the hosted playground; `PROGRAM` → `PROGRAM.34`, the director's.
 - **The host is shared:** every heavy job goes through `scripts/host_guard.py`, one at a time (`docs/decisions/decision_host-guard.md`). A reader's brief says so.
-- **Next action:** readers out: `PROGRAM.127.48` (`target/p12748/`), `M4.12.1.20` (`target/m4362/`), `M4.1.7.2.20`
-  (`target/m4363/`). Then `M3.4.17.4` (drafted, `target/m3417/land4/answer.py`: the loop detector moved to the model crate,
-  the check refusing a loop on each system's hardware), `.5` and `.6`.
+- **Next action:** readers out: `PROGRAM.127.48` (`target/p12748/`), `M4.1.7.2.20` (`target/m4363/`). Then
+  `M3.4.17.4` (drafted, `target/m3417/land4/answer.py`: the loop detector moved to the model crate, the check refusing a
+  loop on each system's hardware), `.5` and `.6`. The application inputs' review is closed (`M4.12.1`, round 20).
 - **⏳ Blockers (the director's):** `PROGRAM.34` — a yes to restore nine nested vendored checkouts; `M1.29.4` — §7 of
   `decision_findings-for-director-review.md`; `M5` — no board procured; `M2.7.4.5` — the catalog records; `M2.7.6.4` — the director's review round;
   `TEMPLATE-REFS` — postponed. **The 17 template files archogen has not changed are never edited** (findings §10,
