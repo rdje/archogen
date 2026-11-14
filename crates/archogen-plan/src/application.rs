@@ -504,6 +504,17 @@ fn category(
                     format!("`{head}` is a clause beside `evidence`, not inside it"),
                 ));
             }
+            // And `evidence` inside itself is no clause unknown: told so, it was "no clause is called `evidence`" (round 14, AI14-5).
+            if rest
+                .iter()
+                .filter_map(Form::head)
+                .any(|head| head == "evidence")
+            {
+                return Err(refused(
+                    of,
+                    "an observation holds no `evidence` of its own: the one it stands in says what backs the bound",
+                ));
+            }
             // A list's counts are each what was seen, and no one observation is any of them.
             let Some(value) = value else {
                 return Err(refused(

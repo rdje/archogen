@@ -196,3 +196,16 @@ Said, and left as it stands: `M4.13` is unbuilt, so cargo and rustc stood in for
 | AI13-6 | wording, `/2`'s | `/2` §1 held "its flags" in the identity where the record holds the remap by its fixed name | `/2` §1 and the record each say a flag remapping a directory is held by the fixed name it gives alone |
 
 Said, and left as it stands: `M4.13` is unbuilt, so cargo stood in for the build, and what answers AI13-1 and AI13-3 is `AI-H4`'s and `AI-H5`'s words until a build holds them; `CARGO_PKG_README` reads a file outside the digest, so such a crate's two accounts differ and it is refused, never wrongly admitted; round 12's leaf, sealed before this answer, keeps its lockstep line as history.
+
+**Round 14** — `2026-11-14`, leaf `M4.12.1.14`: not acceptable, 6 findings, 2 defects, after 2, on `0ba177b7`. Round 13's answers held where they were measured: `application` 13 passed and `code_digest` 7, each alone; the Cargo Book's quote verbatim and its page's sha256 the ledger's; the library the right crate, `cargo metadata` naming it as the crate is named; a library beside an auto-discovered binary, example, test and bench building at `place` and at the copy alike; two copies at two places one in 15 of 15 objects and the rmeta; the sysroot names alike in the body, the book and the reader; `AI-H1` to `AI-H5` in their leaves; 72 inputs of its own, 58 refused each truly but AI14-5's. Its rigs are `target/m4350/work/`.
+
+| # | Kind | Finding | Answer |
+| --- | --- | --- | --- |
+| AI14-1 | defect, fails safe, round 10's copy exposed by round 13's answer | a manifest declaring a binary, example, test or bench by name alone, its path left to cargo, compiles at `place` and gives no copy cargo reads, the file not being one the library's compile reads, and such a package was refused for a reason the record never stated | It is refused, saying so, in the record and `AI-H4` word for word; one declaring that target's `path` builds |
+| AI14-2 | defect, of words, round 13's book | the book said the remap leaves the image unmoved by where the build stands, where the linker writes each object's path into the image; only the identity, of the objects, is one | The book says the image identity, which is of the objects, a linker still writing where they lay into the image |
+| AI14-3 | gap, round 13's answer | a library of another crate type was called a later version's, `M4.14`'s, whose goal did not list it | `M4.14`'s goal lists it |
+| AI14-4 | wording, older | "its flags" was never said, and cargo's command line names the target directory three times | The identity holds no flag naming a directory of the build's own, `--out-dir`, `-C incremental` or `-L dependency`, in the record, `/2` §1 and `AI-H5` |
+| AI14-5 | wording, older | an `evidence` written inside an observation was refused as no clause at all | It is refused as an observation holding no `evidence` of its own. Rows |
+| AI14-6 | wording, round 13's insertion | the "So" concluding the copy followed the generated code's remap | The conclusion stands after the copy, the generated code's remap after it |
+
+Said, and left as it stands: `M4.13` is unbuilt, so cargo stood in for the build; nothing was measured on Linux or ELF, where AI14-2 may not show; a library of `["lib", "cdylib"]` reports a kind beside `lib`, and is of another crate type for this record.

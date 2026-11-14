@@ -19,7 +19,7 @@ No bootstrap read includes this directory.
 | Review history | Design record | Rounds | Status |
 | --- | --- | --- | --- |
 | [`decision_runtime-plan-format-2-reviews.md`](decision_runtime-plan-format-2-reviews.md) | [`decision_runtime-plan-format-2.md`](../decisions/decision_runtime-plan-format-2.md) | 13 | open |
-| [`decision_application-inputs-reviews.md`](decision_application-inputs-reviews.md) | [`decision_application-inputs.md`](../decisions/decision_application-inputs.md) | 13 | open |
+| [`decision_application-inputs-reviews.md`](decision_application-inputs-reviews.md) | [`decision_application-inputs.md`](../decisions/decision_application-inputs.md) | 14 | open |
 | [`decision_host-guard-reviews.md`](decision_host-guard-reviews.md) | [`decision_host-guard.md`](../decisions/decision_host-guard.md) | 41 | open |
 | [`decision_release-alarm-reviews.md`](decision_release-alarm-reviews.md) | [`decision_release-alarm.md`](../decisions/decision_release-alarm.md) | 16 | closed: round 16 found no defect (`M4.1.6.16`) |
 | [`decision_device-correspondence-reviews.md`](decision_device-correspondence-reviews.md) | [`decision_device-correspondence.md`](../decisions/decision_device-correspondence.md) | 9 | closed: round 9 found no defect (`M4.4.1.9`) |
