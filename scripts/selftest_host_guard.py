@@ -126,7 +126,13 @@ def guard(*args: str, stdin: str | None = None, root: Path | None = None, limits
         flags += ["--root", str(root)]
     if limits is not None:
         flags += ["--limits", json.dumps(limits)]
-    return subprocess.run([*PY, str(GUARD), verb, *flags, *rest], input=stdin, capture_output=True, text=True, errors="replace", timeout=60, env=env)
+    done = subprocess.run([*PY, str(GUARD), verb, *flags, *rest], input=stdin, capture_output=True, text=True, errors="replace", timeout=60, env=env)
+    if verb == "run" and limits is None and done.returncode == g.UNCLEAR and "wait for the host to have room" in done.stderr:
+        # Refused for the host's own line, not a case's, so a check of it says nothing either way: a case that asks only a status read it as a failure when the host
+        # crossed its line between this test's look and `run`'s own (round 46).
+        global last_unclear
+        last_unclear = time.monotonic()
+    return done
 
 
 def until(condition, seconds: float = 20) -> bool:
@@ -2310,7 +2316,9 @@ THE_SHELL_MAY_NOT_REACH = ("ls || cargo build", "false && cargo build", "if fals
     # Bash 3.2 ends a `${…}` at its first `}` past a `$[`, and between double quotes past a `$(` or `$((` too; and it gathers a `$(` between double quotes by its
     # parentheses alone, as no `$(` in a double-quoted string inside one takes a comment, where bash 5 reads each as commands (round 45).
     "echo ${y#$[} ; cargo build ; echo ]}", "true || echo \"${y:-$(echo }\" ; cargo build ; echo \")}\"", "true || echo \"${y:-$((1+}\" ; cargo build ; echo \"))}\"",
-    "echo \"$( (echo a\n#)\n(echo a))\"\ncargo build", "echo $(echo \"$(echo a #(\n)\")\ncargo build")
+    "echo \"$( (echo a\n#)\n(echo a))\"\ncargo build", "echo $(echo \"$(echo a #(\n)\")\ncargo build",
+    # And bash 3.2 nests a substitution in a double-quoted string inside `${…}` (round 46).
+    "x=$(echo a;# ) ; sh -c \"echo \\${y:-\\\"\\$(echo '\\\"')\\\"} ; cargo build ; echo '}'\"\n)")
 # A bare `)` of a case inside a substitution: bash 3.2 takes it for the substitution's end, as its own bug, so it runs less than bash 4 and later do, which the reader reads. Reading more is the safe side.
 ONLY_LATER_BASH_RUNS_THESE = (
     'x="$(case y in y) cargo build;; esac)"; make focused', 'x="$(case y in y) cargo build;; esac )"; make focused', 'x="$(if true; then case y in y) cargo build;; esac; fi)"', 'x=$(case y in y) cargo build; esac); ls',
@@ -2510,8 +2518,12 @@ def case_killing_by_name() -> None:
             "ps -dp 1 | awk '{print $1}' | xargs kill", "ps -d -p 1 -o pid= | xargs kill", "kill $(ps -dp 1 -o pid=,command= | grep rustc | awk '{print $1}')",
             "ps -ef -p 1 | grep rustc | awk '{print $2}' | xargs kill", "ps -Ap 1 | grep rustc | awk '{print $2}' | xargs kill", "ps -axp 1 | grep rustc | awk '{print $2}' | xargs kill", "ps -ep 1 | grep rustc | awk '{print $2}' | xargs kill", "ps -Ao pid= -p 1 | grep rustc | xargs kill", "ps -A -g 1 | grep rustc | awk '{print $2}' | xargs kill", "ps -axg 1 | grep rustc | awk '{print $2}' | xargs kill", "ps -G 20 1 | grep rustc | awk '{print $2}' | xargs kill", "ps ax 1 | grep rustc | awk '{print $1}' | xargs kill",
             "kill $(ps -G 20 | grep rustc | awk '{print $2}')", "kill $(ps -t 1 | grep rustc | awk '{print $2}')", "kill $(ps -O 1 | grep rustc | awk '{print $2}')", 'kill $(ps -U "$USER" | grep rustc | awk \'{print $2}\')',
-            # A run's job read as each bash its own markers say, quote removal making them where the command's did not (round 45).
+            # A run's job read as each bash its own markers say, quote removal making them where the command's did not (round 45), in the run's place too, and what it
+            # holds read twice where those say (round 46).
             'python3 scripts/host_guard.py run -- sh -c "x=\\$""(echo a;# ) ; pkill -x rustc\n)"',
+            'pgrep -x rustc | python3 scripts/host_guard.py run -- sh -c "x=\\$""(echo a;# ) ; xargs kill\n)"',
+            'python3 scripts/host_guard.py run -- sh -c "x=\\$""(echo a;# ) ; pgrep -x rustc\n)" | xargs kill',
+            'python3 scripts/host_guard.py run -- sh -c "sh -c \\"x=\\\\\\$\\"\\"(echo a;# ) ; pkill -x rustc\n)\\""',
         ):
             done = hook_says(command, scope)
             check(f"never by a name across the host: {command}", done.returncode == 2 and "never by a program's name" in done.stderr, done.stderr)

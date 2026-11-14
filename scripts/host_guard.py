@@ -2447,7 +2447,27 @@ class ShellReader:
                 kept.append((at, end + 1))
                 at = end + 1
             elif c == '"':
-                at = double_quoted(text, at + 1)[1]
+                # Bash 3.2 nests a substitution in a double-quoted string here, gathered by its parentheses, measured: skipped as text, `"$(echo '"')"` ended the
+                # string at the quote inside it, the `${…}` at a later `}`, and a `pkill` between passed its reading (round 46).
+                at += 1
+                while at < len(text) and text[at] != '"':
+                    if text[at] == "\\" and at + 1 < len(text):
+                        (continuations if text[at + 1] == "\n" else escapes).add(at)
+                        at += 2
+                    elif text[at] == "`":
+                        end = at + 1
+                        while end < len(text) and text[end] != "`":
+                            end += 2 if text[end] == "\\" else 1
+                        at = end + 1
+                    elif text.startswith("$(", at) and (found := gathering(text, at + 2, False, False, True)) is not None:
+                        close, more_continuations, more_escapes, more_kept = found
+                        continuations |= more_continuations
+                        escapes |= more_escapes
+                        kept += more_kept
+                        at = close + 1
+                    else:
+                        at += 1
+                at += 1
             elif c == "`":
                 end = at + 1
                 while end < len(text) and text[end] != "`":
@@ -2675,12 +2695,23 @@ def readings_of(text: str) -> list[list[Command]]:
     return readings
 
 
-def read_as(text: str, which: int) -> list[Command]:
+def read_as(text: str, which: int, doubled: int = BOTH_TO_DEPTH) -> list[Command]:
     """What `text` would run as one bash reads it, bash 4 and later for 0 and bash 3.2 for 1, once: a run's job, judged in the reading its run stands in. Read for each
-    bash at each level, nested runs doubled the work with each (round 43)."""
+    bash at each level, nested runs doubled the work with each (round 43). `doubled` is `readings_of`'s: where the first run's job is read once, what it holds is read
+    twice where its own markers say; read past `BOTH_TO_DEPTH` always, a shell's text inside the job's own shell's text, its marker made by quote removal, hid a kill
+    bash 3.2 ran (round 46)."""
     found: list[Command] = []
-    ShellReader(text, found, itertools.count(), older=bool(which), doubled=BOTH_TO_DEPTH).commands()
+    ShellReader(text, found, itertools.count(), older=bool(which), doubled=doubled).commands()
     return found
+
+
+def job_bashes(job: str, which: int, first: bool) -> tuple[tuple[bool, ...], int]:
+    """Each bash a run's job is read as, and how deep its reading doubles: at the first run, as each bash its own markers say, quote removal making them where the
+    command's did not, and what it holds read twice where those say, as `readings_of` reads a text (rounds 45 and 46); past it, as the bash `which` names, once (round 43)."""
+    if not first:
+        return (bool(which),), BOTH_TO_DEPTH
+    bashes = each_bash(job, bool(which))
+    return bashes, BOTH_TO_DEPTH if len(bashes) > 1 else 0
 
 
 # ---- what runs through it
@@ -2793,7 +2824,7 @@ def what_a_run_runs(words: list[str]) -> list[str]:
     return rest[1:] if rest[:1] == ["--"] else rest
 
 
-def read_through_runs(commands: list[Command], depth: int = 0, fresh: itertools.count | None = None, which: int = 0) -> list[Command]:
+def read_through_runs(commands: list[Command], depth: int = 0, fresh: itertools.count | None = None, which: int = 0, doubled: int = BOTH_TO_DEPTH) -> list[Command]:
     """These commands, a guard's `run` among them replaced by what its job runs as a shell would read it: in the run's pipeline where the job's first pipeline stands and in one of its own
     for each other, fed where the run is. Each command keeps its own substitutions, where they begin carried to where they now stand: a job's command's are the job's where it has any
     and otherwise the run's own words', and a command after a `run` keeps its own however many the job had. A `run` inside a job is read the same way, to a depth no command needs.
@@ -2812,8 +2843,9 @@ def read_through_runs(commands: list[Command], depth: int = 0, fresh: itertools.
         if not told:
             out.append(Command(command.words, command.pipeline, command.fed, start_of[command.own_from], command.outer))
             continue
-        # Each job read as the one bash `which` names, so that a kill and the searches before it stand in one reading (round 42).
-        job = read_through_runs(read_as(shlex.join(told), which), depth + 1, fresh, which)
+        # Each job read as the one bash `which` names, so that a kill and the searches before it stand in one reading (round 42), the first run's doubling as its caller says
+        # (round 46).
+        job = read_through_runs(read_as(shlex.join(told), which, doubled if depth == 0 else BOTH_TO_DEPTH), depth + 1, fresh, which)
         base, first, others = len(out), (job[0].pipeline if job else None), {}
         for k, each in enumerate(job):
             if each.pipeline != first and each.pipeline not in others:
@@ -2850,11 +2882,17 @@ def kills_by_name(commands: list[Command], root: Path, which: int = 0, jobs_both
             # Each job read as the bash `which` names, the reading its run stands in (round 43), and at the first run as each bash where its own markers say, quote
             # removal making them where the command's did not: read once, `run -- sh -c "x=\$""(…)"` hid a kill bash 3.2 ran (round 45).
             if told:
-                job = shlex.join(told)
-                bashes = each_bash(job, bool(which)) if jobs_both else (bool(which),)
-                if any(kills_by_name(read_as(job, int(older)), root, int(older), False) for older in bashes):
+                bashes, doubled = job_bashes(shlex.join(told), which, jobs_both)
+                if any(kills_by_name(read_as(shlex.join(told), int(older), doubled), root, int(older), False) for older in bashes):
                     return True
-        return kills_by_name(read_through_runs(commands, which=which), root, which, False)
+        # And in the run's place as each of those too, so that a search outside the run and a kill one bash alone runs inside it stand in one reading: read as `which`
+        # alone there, `pgrep -x rustc | run -- sh -c "x=\$""(…) ; xargs kill"` passed (round 46).
+        readings: set[tuple[bool, int]] = set()
+        for command in commands:
+            if told := what_a_run_runs(command.words):
+                bashes, doubled = job_bashes(shlex.join(told), which, jobs_both)
+                readings |= {(older, doubled) for older in bashes}
+        return any(kills_by_name(read_through_runs(commands, which=int(older), doubled=doubled), root, int(older), False) for older, doubled in sorted(readings))
 
     def names_this_root(word: str) -> bool:
         # Exactly it: `archogen-other` and `archogen copy` begin the same, and neither a name's own characters nor a space end a path.

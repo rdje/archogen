@@ -129,3 +129,16 @@ Said, and left as it stands: G44-6, as above; bash 4.0 to 5.2 are on no host her
 | G45-8 | gap, measured | inside a double-quoted string in what bash 3.2 gathers, a `$(` took a comment after a blank, and a `${…}` counted a plain `{`, skipped no `'` and nested a `$(` to 3.2, each measured otherwise on both bashes; no form was found failing open by them | Each as the bashes do |
 
 Said, and left as it stands: brace expansion, a stated limit; the cost, stated; bash 4.0 to 5.2 are on no host here.
+
+**Round 46** — `2026-11-14`, leaf `PROGRAM.127.46`: not acceptable, 6 findings, 4 defects, after 6, on `44a79376`. Round 45's answers held where it looked: its own forms refused; RAM by hand three times against the guard's; the pace, the lines and the constants; rows read in time linear in their length; a census of 534 rows, none of another project's; 344 of this repository's shell texts read in 0.68 s, none refused; 30,000 generated forms, one miss, a parameter's default run as a command word, which is what a variable holds. Its rigs are `target/p12746/work/`.
+
+| # | Kind | Finding | Answer |
+| --- | --- | --- | --- |
+| G46-1 | defect, a false sentence, failing open, written to | in the run's place among the rest, `read_through_runs` read the first run's job as one bash, so a search outside the run and a kill only bash 3.2 runs inside it passed: `pgrep -x rustc \| … run -- sh -c "x=\$""(…) ; xargs kill"` | The first run's job is read as each bash its markers say in the run's place too. Rows |
+| G46-2 | defect, a false sentence, failing open, written to | `read_as` read a job at the depth past which nothing doubles, so a shell's text or an `eval` in a job read once was read once: `run -- sh -c "sh -c \"x=\\\$\"\"(…)\""` passed | Read once, what the first run's job holds is read twice where its markers say, as `readings_of` reads a text. A row |
+| G46-3 | defect, a false sentence | `kill -9 -1` "refused however the number is spelt but by a brace expansion": an expansion, a substitution or `xargs` spells it too, `-1$z`, `-${x:-1}`, `-$(echo 1)`, `echo -1 \| xargs kill -9` | Said as it is: refused however the number is written, one an expansion spells or `xargs` is fed not read, as what a variable holds is not; in the stated limits by name |
+| G46-4 | defect, ordinary work, a false sentence | the self-test's `run` rows that ask only a status failed when the host crossed its start line between the test's look and `run`'s own: `1312 passed, 1 failed` on one run, `1313 passed` on the next | A `run` refused for the host's own line, with no limits of the case's, marks the host as lately unclear, so a check of it is said as not run |
+| G46-5 | gap, bash 3.2 alone, written to | `older_brace_end` skipped a double-quoted string as one nesting no substitution, and bash 3.2 nests one there, so `"$(echo '"')"` ended the string early and the `${…}` at a later `}` | Bash 3.2's reading nests a substitution there, gathered by its parentheses. A row |
+| G46-6 | wording | "`$$` is one token to both bashes" is not so inside what bash 3.2 gathers, where `$$'` opens a `$'…'`, as the code already reads it | Said: but inside what bash 3.2 gathers |
+
+Said, and left as it stands: a parameter's default run as a command word, what a variable holds; bash 4.0 to 5.2 are on no host here.
