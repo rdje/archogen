@@ -409,3 +409,16 @@ Said, and left as it stands: no `/2` lowering, controller record or `archogen-re
 | RP33-5 | wording | "states no `tick-rate` or modulus value" read as neither | Either without a value |
 
 Said, and left as it stands: no `/2` lowering, port record or `archogen-realization/1` exists.
+
+**Round 34** — `2026-11-14`, leaf `M4.1.7.2.34`: not acceptable, 6 findings, 3 defects, after 2, on `1a82d4e2`. Round 33's answers held otherwise: `format2_model` `72 passed`, `alarm_model` `25 passed`, each alone; the book's eighteen sentences; the inputs table carried in its form; `PRIORITY`; the worked stacks, guard, epoch and floors; heartbeat on `riscv-virt-up` by hand; the task-inputs order; no other figure the code reads without a kept line; the stage table; the kept questions. Each premise was read in the records and the code before it was answered.
+
+| # | Kind | Finding | Answer |
+| --- | --- | --- | --- |
+| RP34-1 | defect, in round 33's answer | §4 still had the checker read every timing figure from the selection and a plan write none, so `E` came from two places; and `RPF-H9` said no image-specific cost moves the code identity, where `E` now does | The checker reads the `E` the epoch's line writes, the one the code adds (`RPF-H4` says so); `RPF-H9` and §1 say the lead moves it, kept by value and never by the image its evidence names, a fixed point an image reaches once a measurement repeats |
+| RP34-2 | defect, in round 33's answer, RP28-2's class | a read figure written `owed`, `(lead owed)` or `(rounding owed)`, left unsaid what a first plan generates, §1 saying it generates | Such a plan generates no code, as one with owed allocations links no image; `RPF-H10`, to `M4.2`: the code passes the write `r + E` from the line, rounds as the timer's line writes, and generates nothing where either is `owed` |
+| RP34-3 | defect, since round 1 | the application's file and the realization's not reading had no code and no place | `invalid-description` for the application's, which a person writes, `tool-failure` for the realization's, which a build writes, each before `/1`'s list in §7 |
+| RP34-4 | wording | the target's two counts unordered | Above zero, `unsupported-profile`, before silent, `missing-fact`, as `check`'s precedence has them |
+| RP34-5 | wording | "the generated code adding the `E`" after the read | `e` the argument the code passes the write |
+| RP34-6 | wording | a figure's record and category moving the identity unsaid; `(code …)`'s values unstated; the model's comment | Each said |
+
+Said, and left as it stands: no `/2` lowering, port record, realization reader or `M2.21.2` checker exists.

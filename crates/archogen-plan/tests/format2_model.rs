@@ -1577,8 +1577,9 @@ fn every_fact_the_realization_owes_is_handed_to_its_format() {
 /// room had two outcomes (round 23, RP23-3).
 #[test]
 fn section_7_places_every_refusal_in_one_order() {
-    const ORDER: [&str; 9] = [
+    const ORDER: [&str; 10] = [
         "a target's own refusals",
+        "the application's file or the realization's not reading",
         "`/1`'s list in its order",
         "the assignment's `(target …)` other than the file's",
         "a finding of the generator's joint rules over the target's hardware",
@@ -1589,12 +1590,9 @@ fn section_7_places_every_refusal_in_one_order() {
         "no room while placing",
     ];
     let order = "A plan on a target adds those above, in this record's order";
-    let line = RECORD
-        .lines()
-        .find(|line| line.contains(order))
-        .expect("§7's order");
-    // The order's own sentence: the bullet names an application's unmet before it, as a refusal `/1` cannot make.
-    let sentence = &line[line.find(order).expect("its start")..];
+    // The order's own sentence, read with its soft breaks as spaces: the bullet names an application's unmet before it, as a refusal `/1` cannot make.
+    let flat = RECORD.split_whitespace().collect::<Vec<_>>().join(" ");
+    let sentence = &flat[flat.find(order).expect("§7's order")..];
     let at: Vec<usize> = ORDER
         .iter()
         .map(|item| {
@@ -1605,15 +1603,20 @@ fn section_7_places_every_refusal_in_one_order() {
         .collect();
     assert!(at.windows(2).all(|pair| pair[0] < pair[1]), "{at:?}");
     // The reader's case: a route stated not to reach the controller, and no room for the boot stack, refuses as §6 does, naming the source.
-    let first = |holding: [bool; 9]| holding.iter().position(|holds| *holds).map(|at| ORDER[at]);
+    let first = |holding: [bool; 10]| holding.iter().position(|holds| *holds).map(|at| ORDER[at]);
     assert_eq!(
-        first([false, false, false, false, false, false, false, true, true]),
+        first([false, false, false, false, false, false, false, false, true, true]),
         Some("a route whose `external` the realization's file states `no`")
+    );
+    // The reader's case of round 34: a file that does not read beside a stale program digest is the file's refusal, read first (RP34-3).
+    assert_eq!(
+        first([false, true, true, false, false, false, false, false, false, false]),
+        Some("the application's file or the realization's not reading")
     );
     // The reader's case of round 33: a result record saying `ok` over a target the joint rules find lacking is `/1`'s `tool-failure` in its place, before
     // any of `/2`'s own (RP33-2).
     assert_eq!(
-        first([false, false, false, true, false, false, false, false, true]),
+        first([false, false, false, false, true, false, false, false, false, true]),
         Some("a finding of the generator's joint rules over the target's hardware")
     );
     // A source's `external` is the realization's again, so its `no` is read where an alarm's is (round 30, RP30-1).
@@ -1903,8 +1906,8 @@ fn every_fact_the_catalog_owes_is_handed_to_its_records() {
     }
 }
 
-/// §1: what moves the code identity said as it is. No cost of a timing model moves it but the timer's `compare-rounding`, on its own kept line, whose
-/// `binary` stands on no kept line; and the facts a timing model tables, `eager-switching` among them, move it not, as `archogen_catalog` tables that one
+/// §1: what moves the code identity said as it is. No cost of a timing model moves it but the two the generated code reads, the timer's `compare-rounding`
+/// and the epoch's `epoch-lead`, each on its own kept line by value, whose `binary` stands on no kept line (round 34, RP34-1); and the facts a timing model tables, `eager-switching` among them, move it not, as `archogen_catalog` tables that one
 /// in the timing model. Before, the record said no cost moves it and that it moves with any record's facts (round 28, RP28-2); and a `(record ID "HEX")`
 /// line named no hash, where each record now has two (RP28-4).
 #[test]
@@ -1918,6 +1921,9 @@ fn what_moves_the_code_identity_is_said_as_it_is() {
     assert!(RECORD.contains(
         "the catalog figures the code identity holds are those the generated code reads, each on a kept line: the timer's `compare-rounding` and the epoch's `epoch-lead`"
     ));
+    assert!(RECORD
+        .contains("so that no image-specific cost moves the code identity but the epoch's lead"));
+    assert!(RECORD.contains("a fixed point an image reaches (RP34-1)"));
     assert!(RECORD.contains("`eager-switching` among them"));
     let record = include_str!("../../archogen-catalog/src/record.rs");
     assert!(
@@ -2216,7 +2222,28 @@ fn every_figure_the_generated_code_reads_stands_on_a_kept_line() {
     }
     assert!(RECORD
         .contains("It is `compare-rounding` on the timer's line and `epoch-lead` on the epoch's"));
-    assert!(RECORD.contains("the generated code adding the `E` its line writes"));
+    assert!(RECORD.contains("the `r` it read plus the `E` its line writes"));
+    // The checker reads the `E` that line writes, the one the code adds, and no second one from the selection (round 34, RP34-1).
+    assert!(!RECORD.contains(
+        "read by the checker through `(catalog …)`'s selection, and a plan writes none of them."
+    ));
+    assert!(RECORD.contains(
+        "so the checker reads the `E` that line writes, the one the code adds, and no other"
+    ));
+    // A plan where such a figure is owed generates no code, and the leaf that writes the code is told so (round 34, RP34-2).
+    assert!(RECORD.contains(
+        "such a plan generates no code, as one whose allocations are owed links no image"
+    ));
+    let row = RECORD
+        .lines()
+        .find(|line| line.starts_with("| `RPF-H10` | `M4.2` |"))
+        .expect("the generated code's hand-off");
+    assert!(
+        row.contains("`owed`") && row.contains("the `E` its plan's epoch line writes"),
+        "{row}"
+    );
+    let tasks = include_str!("../../../docs/tasks/M4.md");
+    assert!(tasks.contains("- [RPF-H10] "), "`M4.2` quotes it");
 }
 
 /// Every refusal the record states has its stage: the search's and the checker's at `check` and `resolve`, the checker's of a plan, `M4.4`'s or the
