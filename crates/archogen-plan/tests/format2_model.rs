@@ -1723,7 +1723,8 @@ fn a_source_s_service_group_is_read_where_it_is_stated() {
 }
 
 /// §1: the code identity's catalog digest is of each record's code hash, its lines but its `timing-model`, and no other facet's bound reads a timing
-/// model: so no cost, its value or the image its evidence names, moves the code identity, and an image-specific cost can name the image it was measured on.
+/// model: so no image-specific cost, its value or the image its evidence names, moves the code identity, and each can name the image it was measured on;
+/// the one catalog figure the identity holds is the timer's `compare-rounding`, on its own kept line (round 28, RP28-2).
 /// Before, the digest held every cost's `binary`, which names an image by an identity that holds the digest, a fixed point no image reaches, so no
 /// production claim on a board could stand (round 27, RP27-2).
 #[test]
@@ -1752,6 +1753,130 @@ fn the_catalog_digest_holds_no_cost() {
     assert!(row.contains("`timing-model`"), "{row}");
     let tasks = include_str!("../../../docs/tasks/M4.md");
     assert!(tasks.contains("- [RPF-H9] "), "`M4.10` quotes it");
+}
+
+/// §3 and the ledger: every fact the owed list owes by the catalog, read from the list itself, is one a catalog record is handed to state: by the phrase
+/// `RPF-H1` gives it, or, `compare-rounding`, by the catalog record's §12, older than `/2`. Before, a source's `external`, owed by its controller's record
+/// since round 27, was in no hand-off, so a builder following `RPF-H1` wrote a record without it and every target plan with a source stayed `(complete
+/// no)` (round 28, RP28-1).
+#[test]
+fn every_fact_the_catalog_owes_is_handed_to_its_records() {
+    const BY_RPF_H1: [(&str, &str); 16] = [
+        ("trap-frame", "the trap frame"),
+        ("guard", "the stack guard"),
+        ("alignment", "each stack's and table's alignment"),
+        (
+            "fault-path-stack",
+            "the fault path's from each of its entries",
+        ),
+        (
+            "fault-check-stack",
+            "the fault path's from each of its entries",
+        ),
+        ("idle-stack", "the idle context's"),
+        ("trap-path-stack", "the trap path's"),
+        ("timer-service-stack", "the timer service's"),
+        ("primitive-stack", "each primitive's"),
+        ("completion-stack", "the completion path's"),
+        ("initialisation-path-stack", "its own initialisation's"),
+        ("transition-stack", "the transition's"),
+        (
+            "table-size",
+            "each table a generated system holds as a base and a size",
+        ),
+        ("controller-line", "each source's line"),
+        ("external", "each source's line and `external.<source>`"),
+        ("epoch-lead", "the port's `epoch-lead`"),
+    ];
+    let h1 = RECORD
+        .lines()
+        .find(|line| line.starts_with("| `RPF-H1` | `M4.10` |"))
+        .expect("the catalog's hand-off");
+    let catalog =
+        include_str!("../../../docs/specs/catalog/decision_catalog-records-variant-inputs.md");
+    let owed = RECORD
+        .split("**`(owed …)`, as `/2` writes it.**")
+        .nth(1)
+        .expect("what `/2` owes");
+    let owed = &owed[..owed.find("**Orders.**").expect("its end")];
+    let mut found = Vec::new();
+    // Each owing by the catalog, to the end of its sentence, clause or line: one sentence's subject is not the last one's fact.
+    for (at, _) in owed.match_indices("by `catalog`") {
+        let after = &owed[at..];
+        let end = [after.find(';'), after.find('\n'), after.find(". ")]
+            .into_iter()
+            .flatten()
+            .min()
+            .unwrap_or(after.len());
+        for fact in after[..end].split('`').skip(1).step_by(2) {
+            let named =
+                !fact.is_empty() && fact.chars().all(|c| c.is_ascii_lowercase() || c == '-');
+            if named && fact != "catalog" && !found.contains(&fact) {
+                found.push(fact);
+            }
+        }
+    }
+    for fact in [
+        "external",
+        "controller-line",
+        "trap-frame",
+        "compare-rounding",
+        "epoch-lead",
+    ] {
+        assert!(found.contains(&fact), "the list read `{fact}`: {found:?}");
+    }
+    for fact in found {
+        if fact == "compare-rounding" {
+            assert!(
+                catalog.contains("`compare-rounding`, a timing cost, not a fact"),
+                "catalog §12 has a record state it"
+            );
+        } else {
+            let (_, phrase) = BY_RPF_H1
+                .iter()
+                .find(|(owed, _)| *owed == fact)
+                .unwrap_or_else(|| {
+                    panic!("`{fact}` is owed by the catalog and mapped to no hand-off")
+                });
+            assert!(
+                h1.contains(phrase),
+                "`{fact}` handed to no record: {phrase}"
+            );
+        }
+    }
+    let tasks = include_str!("../../../docs/tasks/M4.md");
+    assert!(
+        tasks.contains("each source's line and `external.<source>`"),
+        "`M4.10` quotes it"
+    );
+}
+
+/// §1: what moves the code identity said as it is. No cost of a timing model moves it but the timer's `compare-rounding`, on its own kept line, whose
+/// `binary` stands on no kept line; and the facts a timing model tables, `eager-switching` among them, move it not, as `archogen_catalog` tables that one
+/// in the timing model. Before, the record said no cost moves it and that it moves with any record's facts (round 28, RP28-2); and a `(record ID "HEX")`
+/// line named no hash, where each record now has two (RP28-4).
+#[test]
+fn what_moves_the_code_identity_is_said_as_it_is() {
+    for false_said in [
+        "so that no cost moves the code identity and",
+        "moves with any record's code or facts and with no cost",
+    ] {
+        assert!(!RECORD.contains(false_said), "{false_said}");
+    }
+    assert!(RECORD.contains(
+        "the one catalog figure the code identity holds is the timer's `compare-rounding`"
+    ));
+    assert!(RECORD.contains("`eager-switching` among them"));
+    let record = include_str!("../../archogen-catalog/src/record.rs");
+    assert!(
+        record.contains("(\"eager-switching\", FacetKind::TimingModel, true),"),
+        "tabled in the timing model"
+    );
+    assert!(
+        the_record_s_table().contains(&("timer".to_owned(), Identity::Kept)),
+        "the timer's line is kept"
+    );
+    assert!(RECORD.contains("A `(record ID \"HEX\")` line writes a record's record hash"));
 }
 
 /// §3, `R`: a rate in hertz, exact, a whole number or `N/D` in lowest terms, as `/1` writes a duration (round 4, RP4-7).

@@ -195,7 +195,7 @@ checker alone converts it; where each stack lies; and what the interrupt control
 application's inputs. A size only a catalog record can state stays owed until one does, and every allocation after it is owed too, since no
 address below it is known. The controller is told a line and a priority for each source and each alarm wired through it, in the order the plan ranks them;
 one whose interrupt bypasses it is outside what the checker composes, so a system holding one is refused, and whether each reaches it is owed
-until the realization, the generated code's own statement, says. The generated code around each job's start and each interrupt's
+until its controller's catalog record says, for a source, or the realization, the generated code's own statement, for an alarm. The generated code around each job's start and each interrupt's
 dispatch is timed inside the catalog's figures for the switch and the completion, and inside each interrupt service's own cost, the catalog's for the
 timer service and the generated code's own for a generated one, each measured on the image that holds it. On a machine, each cost and time that statement
 gives says too that it holds under any preemption, as a catalog record's does, and the checker reads it so, never assuming it.

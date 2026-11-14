@@ -18,7 +18,7 @@ No bootstrap read includes this directory.
 
 | Review history | Design record | Rounds | Status |
 | --- | --- | --- | --- |
-| [`decision_runtime-plan-format-2-reviews.md`](decision_runtime-plan-format-2-reviews.md) | [`decision_runtime-plan-format-2.md`](../decisions/decision_runtime-plan-format-2.md) | 27 | open |
+| [`decision_runtime-plan-format-2-reviews.md`](decision_runtime-plan-format-2-reviews.md) | [`decision_runtime-plan-format-2.md`](../decisions/decision_runtime-plan-format-2.md) | 28 | open |
 | [`decision_application-inputs-reviews.md`](decision_application-inputs-reviews.md) | [`decision_application-inputs.md`](../decisions/decision_application-inputs.md) | 20 | closed: round 20 found no defect (`M4.12.1.20`) |
 | [`decision_host-guard-reviews.md`](decision_host-guard-reviews.md) | [`decision_host-guard.md`](../decisions/decision_host-guard.md) | 49 | closed: round 49 found no defect (`PROGRAM.127.49`) |
 | [`decision_release-alarm-reviews.md`](decision_release-alarm-reviews.md) | [`decision_release-alarm.md`](../decisions/decision_release-alarm.md) | 16 | closed: round 16 found no defect (`M4.1.6.16`) |

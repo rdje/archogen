@@ -343,3 +343,14 @@ Said, and left as it stands: no `/2` lowering, port record or `archogen-realizat
 | RP27-3 | wording | the book had every service timed inside the catalog's figures, where a generated service's is its own | The switch and completion the catalog's, each interrupt service's its own |
 
 Said, and left as it stands: no `/2` lowering, port record or `archogen-realization/1` exists; RP27-2's rig stands in for the identities over the real catalog digest. Noted, older and not counted: an alarm's `external`, the realization's, and its device's `alarm-wiring controller`, the target's, state one fact twice, and nothing holds them equal, from the release alarm's §2 table.
+
+**Round 28** — `2026-11-14`, leaf `M4.1.7.2.28`: not acceptable, 4 findings, 2 defects, after 2, on `47632dc7`. Round 27's answers held otherwise: `format2_model` `62 passed`, `alarm_model` `25 passed`, each alone; a source's code facts the realization's and its `external` the controller's record's, against `/1` §2.5, model §8 rule 8 and the catalog record; §7 placing the record's `no` once; the catalog digest reading no timing model at any depth, everything that moves generated code still moving it; the worked stacks, guard, floors, epoch and `PRIORITY`. Its rig is `target/m4371/work/rp28/catalog_owed.py`. Each premise was read in the records before it was answered.
+
+| # | Kind | Finding | Answer |
+| --- | --- | --- | --- |
+| RP28-1 | defect, in RP27-1's answer, RP23-1's class | a source's `external`, owed by its controller's record since round 27, was in no hand-off: `RPF-H1` named the controller's levels and each source's line, and no row tied the facts owed by the catalog to one | `RPF-H1` names `external.<source>` beside the line, in both copies; `every_fact_the_catalog_owes_is_handed_to_its_records` reads each owing by the catalog in the owed list, to its sentence's end, against `RPF-H1`'s phrases and the catalog record's §12 |
+| RP28-2 | defect, narrow, in RP27-2's answer | the record said no cost moves the code identity, where the timer's `compare-rounding` stands on a kept line, and that the digest moves with any record's facts, where a timing model tables `eager-switching` | Said as it is: no image-specific cost moves it, the timer's `compare-rounding` the one catalog figure it holds, its `binary` on no kept line; the facts a timing model tables, which no generated code reads, move it not; `what_moves_the_code_identity_is_said_as_it_is` |
+| RP28-3 | wording | the book gave the realization a source's reaching | Its controller's catalog record for a source, the realization for an alarm |
+| RP28-4 | wording, older | `(record ID "HEX")` named no hash, where a record now has two | Its record hash, as `Catalog::hashes` gives it, not the code hash |
+
+Said, and left as it stands: no `/2` lowering, controller record or `archogen-realization/1` exists, so both rest on the records and the rig.
