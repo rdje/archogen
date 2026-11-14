@@ -1387,8 +1387,9 @@ fn the_realization_s_own_costs_owe_condition_8() {
         .split("**`(owed …)`, as `/2` writes it.**")
         .nth(1)
         .expect("what `/2` owes");
+    // On a target alone, the simulator stating it on the playground (round 25, RP25-2); a task's start and the dispatch among them (RP25-1).
     let of_the_costs = owed
-        .split("of each node whose context line holds `job`, each alarm and each source by `realization`,")
+        .split("of each task, each node whose context line holds `job`, each alarm, each source and `dispatch` on a target by `realization`,")
         .nth(1)
         .expect("the realization's costs'");
     let of_the_costs = &of_the_costs[..of_the_costs.find(';').expect("its end")];
@@ -1399,9 +1400,72 @@ fn the_realization_s_own_costs_owe_condition_8() {
         "`masked-runs`",
         "`service-cost`",
         "`lag`",
+        "`job-start-cost`",
+        "`dispatch-cost`",
     ] {
         assert!(of_the_costs.contains(word), "{word}: {of_the_costs}");
     }
+}
+
+/// §5 and §3: each piece of generated code the `call-frame` row says runs beneath what it calls is charged by a figure the realization owes and the
+/// composition adds, `RPF-H7`, or needs none, for its reason: the boot's code runs before any job's response is timed, and core's panic frames end the
+/// run. Before, a job's start ran inside no part of `C_i`, `switch` ending and `completion` beginning at the task's own code, and the dispatch inside
+/// neither `C_s` nor `C_rel` (round 25, RP25-1).
+#[test]
+fn each_piece_of_generated_code_is_charged() {
+    const CHARGED: [(&str, Option<&str>); 4] = [
+        (
+            "a job's start beneath its entry point",
+            Some("job-start-cost"),
+        ),
+        ("the boot's code beneath each step", None),
+        ("the dispatch beneath each service", Some("dispatch-cost")),
+        (
+            "core's panic frames where that code panics itself (RP21-2)",
+            None,
+        ),
+    ];
+    let row = RECORD
+        .lines()
+        .find(|line| line.starts_with("| `call-frame` | a stack | the realization |"))
+        .expect("the `call-frame` row");
+    let pieces = row
+        .split("beneath what it calls there: ")
+        .nth(1)
+        .expect("its pieces");
+    let pieces = &pieces[..pieces.rfind(" |").expect("its end")];
+    let pieces: Vec<&str> = pieces
+        .split(", ")
+        .map(|piece| piece.strip_prefix("and ").unwrap_or(piece))
+        .collect();
+    let phrases: Vec<&str> = CHARGED.iter().map(|(phrase, _)| *phrase).collect();
+    assert_eq!(pieces, phrases, "the row's pieces");
+    let owed = RECORD
+        .split("**`(owed …)`, as `/2` writes it.**")
+        .nth(1)
+        .expect("what `/2` owes");
+    let added = RECORD
+        .lines()
+        .find(|line| line.starts_with("| `RPF-H7` | `M2.21.2` |"))
+        .expect("the composition's hand-off");
+    let tasks = include_str!("../../../docs/tasks/M2.md");
+    assert!(tasks.contains("- [RPF-H7] "), "`M2.21.2` quotes it");
+    for (_, figure) in CHARGED {
+        if let Some(figure) = figure {
+            assert!(
+                owed.contains(&format!("by `realization`, `{figure}`")),
+                "`{figure}` owed"
+            );
+            assert!(
+                added.contains(&format!("`{figure}`")),
+                "`{figure}` added: {added}"
+            );
+        }
+    }
+    assert!(
+        added.contains("`C_i`") && added.contains("`C_s`") && added.contains("`C_rel`"),
+        "{added}"
+    );
 }
 
 /// The ledger and the variant: what condition 8 owes of the realization is read by the checker's leaf, `RPF-H6` to `M2.21.2`, quoted there, and the
@@ -1415,6 +1479,10 @@ fn the_realization_s_condition_8_is_read_by_the_checker() {
         .expect("the hand-off to the checker's leaf");
     assert!(row.contains("`holds-under-preemption`"), "{row}");
     assert!(row.contains("never defaulted"), "{row}");
+    assert!(
+        row.contains("on a target"),
+        "the simulator's on the playground: {row}"
+    );
     let tasks = include_str!("../../../docs/tasks/M2.md");
     assert!(tasks.contains("- [RPF-H6] "), "`M2.21.2` quotes it");
     let variant = include_str!("../../../docs/specs/analysis/decision_runtime-analysis-variant.md");
