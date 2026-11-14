@@ -233,3 +233,14 @@ Said, and left as it stands: `M4.13` is unbuilt, so cargo stood in for the build
 | AI16-5 | wording, round 15's answer | `default-run` naming a target with its `path` reads at the copy, beyond the reason given | `default-run` is refused whatever it names, the library's compile needing none of it |
 
 Said, and left as it stands: `M4.13` is unbuilt, so cargo stood in for the build and a small crate for the generated code and the catalog's; nothing was measured on Linux or ELF.
+
+**Round 17** — `2026-11-14`, leaf `M4.12.1.17`: not acceptable, 4 findings, 2 defects, after 2, on `e234955d`. Round 16's answers held where they were measured: `application` 13 passed and `code_digest` 7, each alone; round 16's root layout as `M4.13` would build it, `-C metadata` one for all three units and 15 of 15 objects one at two places, no object holding the place, the root's account the copy's three names under `app/` and its two variables equal; `build.rustflags` the one route; the copy's own compile carrying its profile and the root's compile the root's; the four Cargo Book sentences verbatim; 73 inputs of its own, 48 refused each truly. Its rigs are `target/m4356/work/r17/`.
+
+| # | Kind | Finding | Answer |
+| --- | --- | --- | --- |
+| AI17-1 | defect, of words, round 16's answer | the body held the root's account equal to the copy's, `AI-H5` only that it contain it, so a variable the root's compile alone read, `CARGO_MANIFEST_DIR` under a `cfg` its profile turns on, passed and the object held the place | `AI-H5` asks what the body asks: the copy's files and variables with their values, and nothing more |
+| AI17-2 | defect, fails safe, older | the digest's compiles named no target, so compiled for the host, while the root's compile is for the image's target: a module chosen by `target_arch`, or an instruction only that target has, refused a sound application or gave no digest | Both are for the image's target, by `cargo rustc --lib --target`, the host's on the hosted playground; in the record and `AI-H4` |
+| AI17-3 | gap | the root's compile was not said to run afresh, so a reused target directory's fingerprint could keep a stale object the account check passes | It runs afresh, in a target directory of its own that holds no earlier compile; in the record and `AI-H5` |
+| AI17-4 | wording | five places: "each compile" of the digest's two alone; "So the digest" after the root's sentences; any configuration file refused where one of `alias` alone is not; the External sources line and the ledger's Hash row behind the pages quoted | Each said as it is: the sentence after the copy's, `alias` excepted, the `cargo rustc` and profiles pages named, `profiles.html`'s sha256 ledgered |
+
+Said, and left as it stands: `M4.13` is unbuilt, so cargo stood in for the build; nothing was measured on Linux or ELF.
