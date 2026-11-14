@@ -962,6 +962,18 @@ mdBook that is the director's window into the project.
   Verification: the seal's own proof, the gate.
   Commit: `ARCHOGEN-PROGRAM-1302 (leaf PROGRAM.141)`
 
+- ID: `PROGRAM.142`
+  Status: `done` — `2026-11-14`, `docs/tasks/M3.md` over its line ceiling, `README-ROUTES` refusing `M3.4.17.3`.
+  Goal: bring `docs/tasks/M3.md` under its ceiling by the project's own sealing, nothing summarised and nothing lost.
+  Acceptance:
+    - [x] ROOT CAUSE — WHY: three leaves closed in `docs/tasks/M3.md` since its last seal, `M3.4.16`, `M3.4.17.1` and `M3.4.17.2`, never sealed. WHERE: `bash scripts/check_doctrines.sh` on `M3.4.17.3`, staged → `README-ROUTES: docs/tasks/: 3011 lines in its largest file, over its ceiling of 3000`.
+    - [x] FIX — `bash scripts/check_task_history.sh --seal M3`, on the committed tree, that leaf's work set aside: 3 closed subtrees and 3 leaves, each with its row in the index and a stub in the tree, and 3 log rows in `rows-0050.md`.
+    - [x] ADDRESSED — `task-history: docs/tasks/M3.md — sealed 3 subtree(s), 3 leaves: M3.4.17.1 M3.4.17.2 M3.4.16; 3 log row(s) in rows-0050.md; the reconstruction is byte for byte`; `docs/tasks/M3.md` 2,967 lines, from 2,997.
+    - [x] NO REGRESSION — `bash scripts/check_doctrines.sh` on the staged tree → exit 0. No code changed.
+    - [x] LOCKSTEP — the tree, the index and the Commit Log.
+  Verification: the seal's own proof, the gate.
+  Commit: `ARCHOGEN-PROGRAM-1307 (leaf PROGRAM.142)`
+
 ## Roadmap coverage map
 
 Every roadmap unit has exactly one owning tree. This table is the answer to "where does
@@ -1115,6 +1127,7 @@ leaf's outcome is its row in the Commit Log below, and a sealed leaf's full reco
 | `PROGRAM.127` | `ARCHOGEN-PROGRAM-1157 (leaf PROGRAM.127)` | **the host guard**: the machine is shared and holds 24 GB, so a watcher stops this repository's processes before the director's RAM lines, never another project's; `make` and every agent's shell command go through it |
 | `PROGRAM.141` | `ARCHOGEN-PROGRAM-1302 (leaf PROGRAM.141)` | **the PROGRAM and M4 trees sealed**: 60 closed leaves of the guard's rounds and others, 3 of `M4`, so `docs/tasks/` is under its ceiling |
 | `PROGRAM.127.45` | `ARCHOGEN-PROGRAM-1304 (leaf PROGRAM.127.45)` | **the host guard's review, round 45**: `$$` one token; `$[` a marker and 3.2's `${…}` between double quotes; a run's job read as each bash; 3.2's `$(` gathered between double quotes by its parentheses alone and read as expanded; a `#` glued after `<(…)`; the `-1` sentence and the cost. |
+| `PROGRAM.142` | `ARCHOGEN-PROGRAM-1307 (leaf PROGRAM.142)` | **the M3 tree sealed**: `M3.4.16`, `M3.4.17.1` and `M3.4.17.2`, so `docs/tasks/M3.md` is under its line ceiling |
 
 ## Changelog
 
@@ -1236,3 +1249,4 @@ leaf's outcome is its row in the Commit Log below, and a sealed leaf's full reco
 - `2026-11-14`: `PROGRAM.127.43` done: the guard's round 43, eight findings answered, seven defects; `PROGRAM.127.44` filed for round 44.
 - `2026-11-14`: `PROGRAM.127.44` done: the guard's round 44, seven findings answered, five defects; `PROGRAM.127.45` filed for round 45.
 - `2026-11-14`: `PROGRAM.127.45` done: the guard's round 45, eight findings answered, six defects, three of its own reruns'; `PROGRAM.127.46` filed for round 46.
+- `2026-11-14`: `PROGRAM.142` done: three closed leaves of `M3` sealed, the tree under its line ceiling for `M3.4.17.3`.
