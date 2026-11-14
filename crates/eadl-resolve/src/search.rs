@@ -362,6 +362,16 @@ fn run(
             Err(refusals) => diagnostics.extend(refusals.iter().map(|r| r.diagnostic())),
         }
     }
+    // A service's offers are read and refused alike, and judged against nothing (model §7 rule 3): it is no provider. Read by no one, two values of
+    // one fact on a service resolved (leaf `M3.4.17.5`).
+    for decl in declarations
+        .iter()
+        .filter(|decl| decl.head() == Some("defservice"))
+    {
+        if let Err(refusals) = offer::read_service(decl, vocabulary) {
+            diagnostics.extend(refusals.iter().map(|r| r.diagnostic()));
+        }
+    }
     // Every declaration is a requester for what it writes at its own level, a block's and a platform's included — their
     // `uses` is composition, never a binding (model §8 rule 1; leaf `M4.1.14`).
     let mut all: Vec<Requester> = Vec::new();

@@ -125,6 +125,39 @@ const CONSOLE: &str = "(eadl-version eadl/1)
   (platform (uses soc)))
 ";
 
+/// Model §7 rule 3: a service's offers are read and refused alike, and judged against nothing. Two values of one fact on a service are
+/// `invalid-description` from the search, as on a provider; one value is judged against nothing, and the description resolves as before. Before,
+/// `offer::read_service` had no caller but tests, and the search bound a description holding two (leaf `M3.4.17.5`, from `M4.4.1.7`'s reader,
+/// `target/m4279/work/rig`, `shapes3`).
+#[test]
+fn a_service_s_offers_are_read_and_refused_alike() {
+    let service = "(defservice console.write (requires (needs observable-output)))";
+    assert_eq!(CONSOLE.matches(service).count(), 1);
+    let two = CONSOLE.replace(
+        service,
+        "(defservice console.write (offers (tick-rate 10 MHz) (tick-rate 20 MHz)) (requires (needs observable-output)))",
+    );
+    let (verdict, codes, said) = refusal(run(&two, "s", &Policy::default(), Limits::DEFAULT));
+    assert_eq!(verdict, Verdict::InvalidDescription, "{said:?}");
+    assert!(
+        codes.iter().all(|code| *code == "invalid-description"),
+        "{codes:?}: {said:?}"
+    );
+    assert!(
+        said.iter().any(|message| message.contains("tick-rate")),
+        "{said:?}"
+    );
+    let one = CONSOLE.replace(
+        service,
+        "(defservice console.write (offers (tick-rate 10 MHz)) (requires (needs observable-output)))",
+    );
+    let resolution = resolved(run(&one, "s", &Policy::default(), Limits::DEFAULT));
+    assert_eq!(
+        bound(&resolution),
+        ["console.write observable-output console.uart"]
+    );
+}
+
 /// Two services each programming an absolute deadline, and two comparators of one channel each.
 const TWO_COMPARATORS: &str = "(eadl-version eadl/1)
 (defblock timer.a (offers (absolute-deadline true) (channels 1 tick) (reachable-at-privilege machine)))

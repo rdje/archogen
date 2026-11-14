@@ -92,8 +92,10 @@ A platform declares what it **offers** and what it declares **absent**; a system
 2. **A required fact that is declared absent makes the configuration infeasible.** A fact is absent to the
    description when some declaration declares it absent and none offers it: either the requirement or the platform
    is wrong, `infeasible-configuration`. A fact a block or platform offers is the search's to bind (`M3.4`); one
-   offered only outside the system's hardware or only by a service, which the search binds to nothing, is accepted
-   here and refused by the search until `M3.4.7` makes the check adopt its verdict.
+   offered only outside the system's hardware or only by a service, which the search binds to nothing, is refused by
+   presence where the vocabulary does not declare it, on each system's own hardware (§8 rule 7; leaves `M3.4.16` and
+   `M3.4.17.2`), and where it does, accepted here and refused by the search until `M3.4.7` makes the check adopt its
+   verdict (leaf `M3.4.17.5`: "refused by the search" was said of both).
 3. **A required fact that nothing describes is missing.** It lies inside the dependency closure of what
    the system requests, by `uses` or `needs` wherever it writes them, its tasks and its clause among it, so no decision that depends on it can be made: `missing-fact`.
    A block's or a platform's `uses` composes and requests nothing: a part enters the closure as it may be bound, offering a fact inside it or one the
@@ -267,8 +269,8 @@ which is held to the model over the model checker's whole universe (`crates/eadl
    absences are read into one state per fact: valued, in every spelling written; offered without a value; absent; or
    past the arithmetic. Two values of one fact, an offer beside its absence, a bound beside a value, a derived fact
    beside the facts it is derived from, and a counter's modulus above its width or beside a saturating wrap are each
-   `invalid-description`, as is an offer of a statement fact. A service's offers are read and refused alike, and judged
-   against nothing.
+   `invalid-description`, as is an offer of a statement fact. A service's offers are read and refused alike, by the search as a provider's are
+   (`offer::read_service`; leaf `M3.4.17.5`: before, nothing but a test called it), and judged against nothing.
 4. **A side is read whole** (`crates/eadl-resolve/src/requirement.rs`). Every `requires`, `needs` and `uses` a
    declaration writes, at the positions §2's presence reads, is read as one side, so a contradiction split across two
    clauses is one: constraints on one fact that no value satisfies together are `invalid-description`, and what the
