@@ -1427,7 +1427,7 @@ def case_a_commit_finds_a_name_bound_nowhere() -> None:
     copy.write_text(good)
     done = holds()
     check("a commit's check passes the whole file", done.returncode == 0, done.stdout + done.stderr)
-    for name in ("hold_lock", "Memory", "code_stamp", "started_from", "CODE", "tightened", "note_peak", "GIB", "ensure", "healthy", "watcher_pid", "kills_by_name", "commands_of", "stamp_for_the_next", "file_is_whole"):
+    for name in ("hold_lock", "Memory", "code_stamp", "started_from", "CODE", "tightened", "note_peak", "GIB", "ensure", "healthy", "watcher_pid", "kills_by_name", "readings_of", "stamp_for_the_next", "file_is_whole"):
         broken = re.sub(rf"^((?:def |class )?){name}\b", rf"\g<1>{name}_", good, count=1, flags=re.M)
         check(f"the rig renames {name}", broken != good)
         copy.write_text(broken)
@@ -2273,6 +2273,8 @@ THE_SHELL_RUNS_THESE = (
     "x=$(cat <<'E'\nhi\nE)\nkill $\\\n(pgrep -x rustc)", "echo $'\\''; kill $\\\n(pgrep -x rustc)", "echo a\\ #b; kill $\\\n(pgrep -x rustc)", "echo $(true)#x; kill $\\\n(pgrep -x rustc)",
     "cat <<E\nit's\n$\\\n(pgrep -x rustc)\nE", "xargs kill <<E\nx # y\n$\\\n(pgrep -x rustc)\nE", "cat <<$'E'\nE\npkill -x rustc", "cat <<$\"E\"\nE\npkill -x rustc", "cat <<\"E\\\"F\"\nE\"F\npkill -x rustc",
     "cat <<\"E\\\\F\"\nE\\F\npkill -x rustc", "cat <<\"E\\$F\"\nE$F\npkill -x rustc", "cat <<$'\\x45'\nE\npkill -x rustc", "$'\\x70kill' -x rustc", "$'\\160kill' -x rustc",
+    # What round 42's reader found: bash 5 gathering a `$((` that is no arithmetic, a NUL ending `$'…'`, and `$\⏎'a'`.
+    "x=$((echo a)# ); pkill -x rustc\n)", "x=$((:); cat <<E\nfoo)\npkill -x rustc\nE\n)", "$'pkill\\0' -x rustc", "pkill$'\\0' -x rustc", "echo $\\\n'a'; pkill -x rustc",
 )
 # Those the shell may not reach: what it runs must still be what is read, and what is read may be more.
 THE_SHELL_MAY_NOT_REACH = ("ls || cargo build", "false && cargo build", "if false; then cargo build; else make focused; fi", "while false; do cargo build; done", "case x in y) cargo build;; esac", "case x in cargo) make focused;; esac", "f() { cargo build; }", "xargs cargo build </dev/null",
@@ -2281,7 +2283,13 @@ THE_SHELL_MAY_NOT_REACH = ("ls || cargo build", "false && cargo build", "if fals
     # Bash 3.2 removes the quotes inside a delimiter's substitution, gathers a substitution by its parentheses before it reads it, and knows no `\\u`: each runs what
     # bash 5 does not, or the other way (round 41).
     "cat <<$(echo 'E')\n$(echo E)\ncargo build\n$(echo 'E')", "cat <<`echo 'E'`\n`echo E`\ncargo build\n`echo 'E'`", "x=$(cat <<E\nfoo)\ncargo build\nE\n)", "cat <<$'\\u0045'\nE\ncargo build\n\\u0045",
-    "x=\"$(cat <<-E\nsay \"hi\nE)\n\tE\\\nsay \"hi\nE\n)\"; cargo build")
+    "x=\"$(cat <<-E\nsay \"hi\nE)\n\tE\\\nsay \"hi\nE\n)\"; cargo build",
+    # Bash 3.2 takes `#` for a comment in what it gathers after a blank alone, nests a substitution, a `${…}` or backquotes in a double-quoted string, and takes any
+    # backquote in a delimiter as quoting it; bash 5 removes the quotes inside a quoted delimiter's substitution, gathers a `$((` that is no arithmetic, and keeps a
+    # substitution's pending here-documents its own (round 42).
+    "x=$(echo a;# ) ; cargo build\n)", "x=$(echo a|# ) ; cargo build\n)", "x=$(echo \"$(echo \"(\")\"; cat <<E\nfoo)\ncargo build\nE\n)", "x=$(echo \"${y:-\"(\"}\"; cat <<E\nfoo)\ncargo build\nE\n)",
+    "cat <<E`echo x`\nx\\\nE`echo x`\ncargo build\nE`echo x`", "cat <<\\E$(echo $'\\u0045')\nE$(echo E)\ncargo build\n", "x=$((:); cat <<E # )\ncargo build\nE\n)",
+    "x=$(cat <<E echo \"$(#)\"\ncargo build\nfoo)\n#\n\"\nx\nE\n)")
 # A bare `)` of a case inside a substitution: bash 3.2 takes it for the substitution's end, as its own bug, so it runs less than bash 4 and later do, which the reader reads. Reading more is the safe side.
 ONLY_LATER_BASH_RUNS_THESE = (
     'x="$(case y in y) cargo build;; esac)"; make focused', 'x="$(case y in y) cargo build;; esac )"; make focused', 'x="$(if true; then case y in y) cargo build;; esac; fi)"', 'x=$(case y in y) cargo build; esac); ls',
@@ -2314,7 +2322,7 @@ def the_reader_against(bash: str) -> None:
     stubs.mkdir()
     (work / "x").mkdir(parents=True)
     for name in STUBS:
-        (stubs / name).write_text("#!/bin/sh\nsep=$(printf '\\037')\nline=\"${0##*/}\"\nfor word in \"$@\"; do line=\"$line$sep$word\"; done\nprintf '%s\\n' \"$line\" >> \"$RAN_LOG\"\nprintf '999999\\n'\n")
+        (stubs / name).write_text("#!/bin/sh\nsep=$(printf '\\037')\nline=\"${0##*/}\"\nfor word in \"$@\"; do line=\"$line$sep$word\"; done\nprintf '%s\\036' \"$line\" >> \"$RAN_LOG\"\nprintf '999999\\n'\n")
     for name, real in (("bash", bash), ("sh", "/bin/sh"), ("env", "/usr/bin/env"), ("nohup", "/usr/bin/nohup"), ("nice", "/usr/bin/nice"), ("xargs", "/usr/bin/xargs"), ("caffeinate", "/usr/bin/caffeinate")):
         (stubs / name).write_text(f'#!/bin/sh\nexec {real} "$@"\n')
     (stubs / "timeout").write_text('#!/bin/sh\nshift\nexec "$@"\n')
@@ -2339,7 +2347,8 @@ def the_reader_against(bash: str) -> None:
             os.close(reader)
             if writer >= 0:
                 os.close(writer)
-        return {tuple(line.split("\x1f")) for line in log.read_text().splitlines()}
+        # Each call ends at a record separator, a word of it holding a line feed being one word (round 42).
+        return {tuple(record.split("\x1f")) for record in log.read_text().split("\x1e") if record}
 
     def read(command: str) -> tuple[set[str], set[tuple[str, ...]], set[tuple[str, ...]]]:
         """The names read, how each is called where no expansion can change it, and how each is called as read, an awk program's `$1` among what no expansion touches."""
@@ -2381,7 +2390,7 @@ def the_reader_against(bash: str) -> None:
     check(f"and what {bash} may not reach is read all the same", not disagree, disagree[:3])
     check("each of those is read to hold what it may run", all("cargo" in read(form)[0] or "make" in read(form)[0] for form in may_not_reach), may_not_reach)
     # `$'…'` as this bash translates it: `\\u` and `\\U` from bash 4.2, and `\\c?` DEL there, 0x1f on 3.2 (round 41).
-    escapes = ("\\x45", "\\105", "\\0105", "\\u0045", "\\U00000045", "\\cA", "\\c?", "\\e", "\\q", "\\x4G", "\\xZ", "a\\'b", "a\\?b", "\\n\\t")
+    escapes = ("\\x45", "\\105", "\\0105", "\\u0045", "\\U00000045", "\\cA", "\\c?", "\\e", "\\q", "\\x4G", "\\xZ", "a\\'b", "a\\?b", "\\n\\t", "pk\\0ill", "\\c\\\\")
     differ = []
     for each in escapes:
         printed = subprocess.run([bash, "-c", f"printf %s $'{each}'"], cwd=work, env=environment, capture_output=True, timeout=20).stdout
@@ -2394,6 +2403,7 @@ def the_reader_against(bash: str) -> None:
     delimiters = (("E", "E"), ("'E'", "E"), ('"E"', "E"), ("\\E", "E"), ("E''", "E"), ("$'E'", "E"), ('"E\\"F"', 'E"F'), ("E\\\nF", "EF"), ("$'\\x45'", "E"))
     before = ("", "n=$((1<<2))\n", "echo $'\\''\n", "x=\"$(cat <<'Q'\nq\nQ\n)\"\n", "echo a\\ #b\n", "echo $(true)#x\n", "for ((i=0; i<(1<<2); i++)); do :; done\n")
     shapes = ("cat {op}{d}\n{body}\n{end}pkill -x rustc\n", "x=\"$(cat {op}{d}\n{body}\n{end})\"; pkill -x rustc\n", "x=$(cat {op}{d}\n{body}\n{end})\npkill -x rustc\n",
+              "x=$((:); cat {op}{d}\n{body}\n{end})\npkill -x rustc\n", "x=$(echo \"$(echo \"(\")\"; cat {op}{d}\n{body}\n{end})\npkill -x rustc\n",
               "xargs kill {op}{d}\n{body}\n$\\\n(pgrep -x rustc)\n{end}")
     generated, missed = random.Random(41), []
     for _ in range(240):
@@ -2412,6 +2422,14 @@ def the_reader_against(bash: str) -> None:
     check("a substitution left open too", [each.name for each in g.commands_of("echo $(cargo build")] == ["cargo", "echo"])
     # Read once for each bash, a here-document being where they part: one command, found by each (round 41).
     check("and much of what is not there costs little", len({tuple(each.words) for each in g.commands_of("cat <<A\n" * 2000)}) == 1)
+    # Each level of shells fed here-documents within each other was read once for each bash, and twelve took twenty seconds (round 42).
+    nested = "kill $p\n"
+    for level in range(12, 0, -1):
+        nested = f"bash <<'E{level}'\n{nested}E{level}\n"
+    began = time.monotonic()
+    g.readings_of(nested)
+    check("twelve shells fed here-documents within each other are read in little time", time.monotonic() - began < 2, time.monotonic() - began)
+    check("each bash's reading is a list of its own, where the two may differ", len(g.readings_of("cat <<A\nA")) == 2 and len(g.readings_of("ls")) == 1)
     check("a case left open reads to its end", [each.name for each in g.commands_of("case x in a) cargo build")] == ["cargo"])
     check("a condition left open too", [each.name for each in g.commands_of("[[ $(cargo build)")] == ["cargo"])
     check("an array left open too", [each.name for each in g.commands_of("x=($(cargo build)")] == ["cargo"])
@@ -2476,6 +2494,8 @@ def case_killing_by_name() -> None:
             'grep -n "kill\\|pgrep" f', 'rg "xargs kill" scripts/', 'echo "use kill, not pgrep"', "kill 123; ps -ax | grep x", "ps -ax | grep x; kill 123", "kill $!; pgrep -x rustc", "ps -p 123; kill $(cat p)",
             "tools=(pkill killall); echo ${tools[0]}", 'case "$t" in a) echo a;; pkill|killall) echo b;; esac', "for t in a b; do case $t in a) echo a;; pkill) echo b;; esac; done", "[[ $cmd =~ ^(pkill|killall)$ ]] && echo careful",
             "(( pkill > 1 ))", "pkill() { :; }; echo", "cat <<'EOF'\npkill -x rustc\nEOF",
+            # A search after a kill is none before it in either bash's reading, each judged alone (round 42).
+            'kill "$PID"; sleep 1; pgrep -fl my-server || echo "<< gone"', 'kill -TERM $PID && sleep 2 && ps -ax | grep -c my-server; echo $((1<<3))',
             f"ps -ax |\n grep {scope}/x |\n awk '{{print $1}}' |\n xargs kill", 'ps -fp "$PID" && kill "$PID"', "pkill -F job.pid", "pgrep -F job.pid | xargs kill", 'ps -ax | head; kill "$(cat job.pid)"', "if true; then pkill() { :; }; fi",
             'PID=$(pgrep -n -f "make focused"); while kill -0 "$PID" 2>/dev/null; do sleep 5; done', f"pkill -f '{scope}.*rustc'", "bash -n -c 'pkill -x rustc'", "sh -n <<'E'\npkill -x rustc\nE", "ps -ax | head; kill -s TERM 123", "ps -ax | head; kill -TERM 123", "ps -ax | head; kill -- -123", 'kill -- -"$(cat job.pgid)"',
         ):

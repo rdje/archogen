@@ -1410,17 +1410,23 @@ def ansi_c(said: str, later: bool = True) -> str:
             if digits and int(digits, 16) <= 0x10FFFF:
                 out.append(chr(int(digits, 16)))
                 at += 2 + len(digits)
+            elif digits and following in "uU":
+                # Past every code point bash 5 still writes bytes, which name nothing: one character standing for them (round 42).
+                out.append("�")
+                at += 2 + len(digits)
             else:
                 out.append(said[at : at + 2])
                 at += 2
         elif following == "c" and at + 2 < len(said):
             control = said[at + 2]
             out.append("\x7f" if later and control == "?" else chr(ord(control.upper()) & 0x1F))
-            at += 3
+            # Bash 5 takes `\c\\` as one control character, both backslashes; 3.2 the first alone (round 42).
+            at += 4 if later and control == "\\" and said[at + 3 : at + 4] == "\\" else 3
         else:
             out.append(said[at : at + 2])
             at += 2
-    return "".join(out)
+    # A NUL ends the text bash gives it, a C string's, the word going on after it: `$'pkill\0'` is `pkill` (round 42).
+    return "".join(out).split("\x00", 1)[0]
 
 
 def double_quoted(text: str, at: int) -> tuple[str, int]:
@@ -1504,11 +1510,110 @@ def continued(body: str) -> str:
     return "".join(out)
 
 
-def each_bash(text: str, older: bool) -> tuple[bool, ...]:
+# How many shells' texts, each inside the one before, are read once for each bash: past it a text is read as the reading before read its own, since each such level doubled
+# the work and twelve took twenty seconds (round 42).
+BOTH_TO_DEPTH = 3
+
+
+def each_bash(text: str, older: bool, doubled: int = 0) -> tuple[bool, ...]:
     """Which bashes `text` is read as: bash 4 and later, and bash 3.2 (`older`) too where the two may read it otherwise by what the reader holds of them, a here-document
     or a `$'…'` in it; or else the one already reading. Read once for both, a body's end taken as the earlier of the two hid what the later read outside it, a quote
     there swallowing a `pkill` (round 41)."""
-    return (False, True) if "<<" in text or "$'" in text else (older,)
+    # And a `#` beside a substitution, which bash 3.2 gathers before it reads, taking `#` for a comment after a blank alone: `x=$(echo a;# ) ; pkill x` holds
+    # neither of the others, and ran its `pkill` on 3.2 alone (round 42).
+    differs = "<<" in text or "$'" in text or ("#" in text and any(mark in text for mark in ("$(", "<(", ">(")))
+    return (False, True) if doubled < BOTH_TO_DEPTH and differs else (older,)
+
+
+def gathering(text: str, start: int, comments: bool) -> tuple[int, set[int], set[int], list[tuple[int, int]]] | None:
+    """Where a substitution whose text begins at `start` ends when a bash gathers it by its parentheses before reading it, and what that takes on the way, for `joined`: a
+    backslash before a line feed a line's continuation outside single quotes, one before anything else an escape, each quote's stretch. A double-quoted string in it nests
+    a substitution, a `${…}` or backquotes, whose quotes are their own; and `#` begins a comment only where `comments` says so, after a blank or a line feed, as bash 3.2
+    gathers a `$(`, and nowhere in one it nests inside a double-quoted string or in what bash 5 gathers of a `$((` that is no arithmetic. Measured on both bashes here; nothing where it would not close. Taken as a comment
+    after `;` and as no nesting, a `)` either bash closed on was not, and a `pkill` after it passed (round 42)."""
+    continuations: set[int] = set()
+    escapes: set[int] = set()
+    kept: list[tuple[int, int]] = []
+
+    def escape(at: int) -> int:
+        (continuations if text[at + 1] == "\n" else escapes).add(at)
+        return at + 2
+
+    def backquoted(at: int) -> int | None:
+        while at < len(text) and text[at] != "`":
+            at = escape(at) if text[at] == "\\" and at + 1 < len(text) else at + 1
+        return at + 1 if at < len(text) else None
+
+    def braced(at: int) -> int | None:
+        depth = 1
+        while at is not None and at < len(text):
+            c = text[at]
+            if c == "\\" and at + 1 < len(text):
+                at = escape(at)
+            elif c == '"':
+                at = quoted(at + 1)
+            elif c == "`":
+                at = backquoted(at + 1)
+            elif text.startswith("$(", at):
+                at = substitution(at + 2, False)
+            else:
+                depth += (c == "{") - (c == "}")
+                at += 1
+                if depth == 0:
+                    return at
+        return None
+
+    def quoted(at: int) -> int | None:
+        while at is not None and at < len(text):
+            c = text[at]
+            if c == '"':
+                return at + 1
+            if c == "\\" and at + 1 < len(text):
+                at = escape(at)
+            elif c == "`":
+                at = backquoted(at + 1)
+            elif text.startswith("$(", at):
+                at = substitution(at + 2, False)
+            elif text.startswith("${", at):
+                at = braced(at + 2)
+            else:
+                at += 1
+        return None
+
+    def substitution(at: int, comments: bool) -> int | None:
+        begin, depth = at, 1
+        while at is not None and at < len(text):
+            c = text[at]
+            if c == "\\" and at + 1 < len(text):
+                at = escape(at)
+            elif text.startswith("$'", at):
+                end = ansi_end(text, at + 2)
+                kept.append((at + 1, end + 1))
+                at = end + 1
+            elif c == "'":
+                end = text.find("'", at + 1)
+                if end < 0:
+                    return None
+                kept.append((at, end + 1))
+                at = end + 1
+            elif c == '"':
+                at = quoted(at + 1)
+            elif c == "`":
+                at = backquoted(at + 1)
+            elif comments and c == "#" and (at == begin or text[at - 1] in " \t\n"):
+                end = text.find("\n", at)
+                end = len(text) if end < 0 else end
+                kept.append((at, end))
+                at = end
+            else:
+                depth += (c == "(") - (c == ")")
+                if depth == 0:
+                    return at + 1
+                at += 1
+        return None
+
+    end = substitution(start, comments)
+    return None if end is None else (end - 1, continuations, escapes, kept)
 
 
 # How many readings `joined` takes before it says a text does not settle: each takes out what the one before found, and a command an agent writes settles in two or three.
@@ -1699,13 +1804,13 @@ class ShellReader:
     """Enough of the shell's own grammar to say what it would run, instead of a pattern over its text: three rounds of review found that a pattern reads a word in a message as a
     command, misses one in `$(…)`, and pairs a comment's apostrophe with a quote. `selftest_host_guard.py` holds this to the shell itself, running each form against stubs."""
 
-    def __init__(self, text: str, found: list[Command], pipelines: itertools.count, outer_from: int | None = None, fed: bool = False, *, probing: bool = False, decided: bool = False, older: bool = False) -> None:
+    def __init__(self, text: str, found: list[Command], pipelines: itertools.count, outer_from: int | None = None, fed: bool = False, *, probing: bool = False, decided: bool = False, older: bool = False, doubled: int = 0) -> None:
         # The shell takes a backslash before a line feed out before it reads a token (round 40), where this reading says it does (round 41). A probing reading is `joined`'s,
         # of a text as it stands, and reads nothing again. Text cut from a reading, arithmetic or a here-document's body, had them taken out there, by the grammar it was cut
         # from: read again by a shell's, a body's `'` and `#` were a quote and a comment, and `xargs kill <<E` of `$\⏎(pgrep x)` passed (round 41). An `older` reading is
         # bash 3.2's, where it reads otherwise than bash 4 and later: a delimiter, a `$'…'`, and where a substitution holding a here-document ends.
         self.text, self.at, self.found, self.pipelines = (text if probing or decided else joined(text, older)), 0, found, pipelines
-        self.probing, self.older = probing, older
+        self.probing, self.older, self.doubled = probing, older, doubled
         # What the reading took of its text: where a backslash and a line feed as a line's continuation, where a backslash as escaping the character after it, and each
         # stretch in which the shell keeps a backslash before a line feed as it stands, a quote's, a comment's or a quoted body's. `joined` settles on these (round 41).
         self.continuations: set[int] = set()
@@ -1728,8 +1833,9 @@ class ShellReader:
         the shell running it being any (round 41)."""
         if self.probing:
             return
-        for older in each_bash(text, self.older):
-            ShellReader(text, self.found, self.pipelines, outer_from, fed or self.fed, older=older).commands()
+        bashes = each_bash(text, self.older, self.doubled)
+        for older in bashes:
+            ShellReader(text, self.found, self.pipelines, outer_from, fed or self.fed, older=older, doubled=self.doubled + (len(bashes) > 1)).commands()
 
     def commands(self, closing: str | None = None) -> bool:
         """Up to the end of the text, or to the `)` that closes this level, or to the end of a case's branch: an `esac` then says so by returning true."""
@@ -1804,7 +1910,9 @@ class ShellReader:
             elif two in ("<(", ">("):
                 self.at += 2
                 self.substitutions += 1
+                pending, self.here_docs = self.here_docs, []
                 self.commands(closing=")")
+                self.here_docs = pending + self.here_docs
                 self.substitutions -= 1
                 words.append(f"{two}…)")
             elif redirection:
@@ -1983,7 +2091,7 @@ class ShellReader:
         stands where the text read again was a word, as the word's own reading does (round 39)."""
         if self.probing:
             return
-        reader = ShellReader(inside, self.found, self.pipelines, self.outer_from, self.fed, decided=True, older=self.older)
+        reader = ShellReader(inside, self.found, self.pipelines, self.outer_from, self.fed, decided=True, older=self.older, doubled=self.doubled)
         reader.expansions([], None)
         self.marks += reader.marks
 
@@ -2058,6 +2166,12 @@ class ShellReader:
             parts.append("$(…)")
             self.at += 4
             self.marks += 1
+        elif three == "$((" and not self.older and (close := self.gathered(self.at + 2, comments=False)) is not None:
+            # Bash 5 gathers a `$((` that is no arithmetic by its parentheses, no comment in it, and reads what it gathered alone, measured: read inline, `$((echo a)# )`
+            # took a comment where bash closed, and a `pkill` after it passed (round 42).
+            self.read_gathered(self.at + 2, close)
+            self.at = close + 1
+            parts.append("$(…)")
         elif two == "$(" and self.older and (close := self.gathered(self.at + 2)) is not None:
             self.read_gathered(self.at + 2, close)
             self.at = close + 1
@@ -2065,7 +2179,11 @@ class ShellReader:
         elif two == "$(":
             self.at += 2
             self.substitutions += 1
+            # A here-document begun outside it is read at a line feed outside it, and one begun inside and not yet read is read after it, as bash 5 reads them: read at a
+            # line feed inside it, the body of `cat <<E` swallowed a `pkill` that ran inside `"$(#…)"` (round 42).
+            pending, self.here_docs = self.here_docs, []
             self.commands(closing=")")
+            self.here_docs = pending + self.here_docs
             self.substitutions -= 1
             parts.append("$(…)")
         elif two == "$[":
@@ -2109,9 +2227,9 @@ class ShellReader:
             parts.append("}")
             self.at += 1
         elif two == "$'" and not in_quotes:
-            # As bash translates it, a backslash before a line feed in it kept (round 41).
+            # As bash translates it, a backslash before a line feed in it kept (round 41), from its quote: kept from the `$`, `$\⏎'a'` never settled (round 42).
             end = ansi_end(text, self.at + 2)
-            self.kept.append((self.at, end + 1))
+            self.kept.append((self.at + 1, end + 1))
             said = ansi_c(text[self.at + 2 : end], later=not self.older)
             parts.append(said)
             self.marks += sum(said.count(mark) for mark in PLACEHOLDERS)
@@ -2145,7 +2263,7 @@ class ShellReader:
         elif not self.probing:
             # Inside text read again, what a backquote runs stands where that text was a word too (round 38), and a placeholder it holds is the word's own,
             # `kill \`echo $(…)\`` (round 39).
-            reader = ShellReader("".join(inner), self.found, self.pipelines, self.outer_from, self.fed, older=self.older)
+            reader = ShellReader("".join(inner), self.found, self.pipelines, self.outer_from, self.fed, older=self.older, doubled=self.doubled)
             reader.commands()
             self.marks += reader.marks
         parts.append("`…`")
@@ -2204,12 +2322,13 @@ class ShellReader:
                 if some_unquoted:
                     # Unquoted, the body is expanded before the shell reads it: its substitutions run first and leave what they print where they stood, and the
                     # backslashes the expansion takes are gone. Read as written, `bash <<E` of `kill '$(pgrep x)'` passed (round 39).
-                    expanding = ShellReader(continued(body), self.found, self.pipelines, self.outer_from, self.fed, decided=True, older=self.older)
+                    expanding = ShellReader(continued(body), self.found, self.pipelines, self.outer_from, self.fed, decided=True, older=self.older, doubled=self.doubled)
                     given.append(expanding.as_fed())
                     self.marks += expanding.marks
                 for each in given:
-                    for older in each_bash(each, self.older):
-                        ShellReader(each, self.found, self.pipelines, start if self.outer_from is None else min(start, self.outer_from), self.fed, older=older).commands()
+                    bashes = each_bash(each, self.older, self.doubled)
+                    for older in bashes:
+                        ShellReader(each, self.found, self.pipelines, start if self.outer_from is None else min(start, self.outer_from), self.fed, older=older, doubled=self.doubled + (len(bashes) > 1)).commands()
             elif some_unquoted:
                 start = len(self.found)
                 self.read_expansions(continued(body))
@@ -2219,86 +2338,45 @@ class ShellReader:
                 if command is not None and len(self.found) > start:
                     self.found.append(Command(command.words, command.pipeline, command.fed, command.own_from))
 
-    def gathered(self, start: int) -> int | None:
-        """Where bash 3.2 ends the substitution whose text begins at `start`, taking what it takes on the way, for `joined`: it gathers that text before it reads it, by its
-        parentheses, quotes, escapes and comments alone, a here-document's body in it gathered as any other text, and takes out a backslash before a line feed outside single
-        quotes as it gathers, measured on 3.2 here; bash 4 and later read a body as a body. Or nothing, where it would not close, taking nothing, and the reading goes on
-        as bash 4's: what a gathering that never closed took contradicted that reading's, and `joined` never settled (round 41)."""
-        text, depth, at = self.text, 1, start
-        continuations: set[int] = set()
-        escapes: set[int] = set()
-        kept: list[tuple[int, int]] = []
-        while at < len(text):
-            c = text[at]
-            if c == "\\" and at + 1 < len(text):
-                (continuations if text[at + 1] == "\n" else escapes).add(at)
-                at += 2
-            elif text.startswith("$'", at):
-                end = ansi_end(text, at + 2)
-                kept.append((at, end + 1))
-                at = end + 1
-            elif c == "'":
-                end = text.find("'", at + 1)
-                if end < 0:
-                    return None
-                kept.append((at, end + 1))
-                at = end + 1
-            elif c == '"':
-                inner = at + 1
-                while inner < len(text) and text[inner] != '"':
-                    if text[inner] == "\\" and inner + 1 < len(text):
-                        (continuations if text[inner + 1] == "\n" else escapes).add(inner)
-                        inner += 2
-                    else:
-                        inner += 1
-                at = double_quoted(text, at + 1)[1]
-            elif c == "`":
-                at += 1
-                while at < len(text) and text[at] != "`":
-                    if text[at] == "\\" and at + 1 < len(text):
-                        (continuations if text[at + 1] == "\n" else escapes).add(at)
-                        at += 2
-                    else:
-                        at += 1
-                at += 1
-            elif c == "#" and (at == start or text[at - 1] in " \t\n;&|()"):
-                end = text.find("\n", at)
-                end = len(text) if end < 0 else end
-                kept.append((at, end))
-                at = end
-            else:
-                depth += (c == "(") - (c == ")")
-                if depth == 0:
-                    self.continuations |= continuations
-                    self.escapes |= escapes
-                    self.kept += kept
-                    return at
-                at += 1
-        return None
+    def gathered(self, start: int, comments: bool = True) -> int | None:
+        """Where a bash that gathers it ends the substitution whose text begins at `start`, by `gathering`, taking what that takes, for `joined`. Or nothing, where it would
+        not close, taking nothing: what a gathering that never closed took contradicted the reading that goes on, and `joined` never settled (round 41)."""
+        found = gathering(self.text, start, comments)
+        if found is None:
+            return None
+        close, continuations, escapes, kept = found
+        self.continuations |= continuations
+        self.escapes |= escapes
+        self.kept += kept
+        return close
 
     def read_gathered(self, start: int, close: int) -> None:
-        """What bash 3.2 gathered of a substitution, read alone as it reads it: a here-document in it ends where the gathered text does, and a delimiter's line ending in `)`
-        is a body's line there. Read as bash 4 reads it, `x=$(cat <<E` with a body line `foo)` hid a `pkill` that 3.2 ran on the next line (round 41)."""
+        """What a bash gathered of a substitution, read alone as it reads it: a here-document in it ends where the gathered text does, and a delimiter's line ending in `)`
+        is a body's line there. Read as bash 4 reads it, `x=$(cat <<E` with a body line `foo)` hid a `pkill` that 3.2 ran on the next line (round 41); and bash 5 gathers
+        a `$((` that is no arithmetic so (round 42)."""
         if self.probing:
             return
-        reader = ShellReader(self.text[start:close], self.found, self.pipelines, self.outer_from, self.fed, decided=True, older=True)
+        reader = ShellReader(self.text[start:close], self.found, self.pipelines, self.outer_from, self.fed, decided=True, older=self.older, doubled=self.doubled)
         reader.commands()
         self.marks += reader.marks
 
     def delimiter(self) -> tuple[tuple[str, bool], ...]:
         """A here-document's delimiter from here, as this reading's bash takes it, with whether it was quoted, each measured on both bashes here: its quotes removed,
         `$'…'` translated and nothing expanded, a backslash between double quotes gone only before `"`, `$`, `` ` ``, `\\` or a line feed, and a backslash before a line
-        feed no character (round 40). Bash 4 and later keep a substitution in it as written, a `$'…'` there given as `'…'`, and judge it quoted by what stands outside one;
-        bash 3.2 removes the quotes inside one too, and a quote or a backslash inside backquotes makes it quoted. Taken otherwise, `$'E'`, `"E\\"F"` and 3.2's `$(echo 'E')`
-        each named an end line the shell never saw (round 41)."""
+        feed no character (round 40). Bash 4 and later keep a substitution in it as written, a `$'…'` there given as `'…'`, and judge it quoted by what stands outside one,
+        but where one does they remove the quotes inside it too and translate its `$'…'`; bash 3.2 removes the quotes inside one always, and takes any backquote in it as
+        quoting it. Taken otherwise, `$'E'`, `"E\\"F"` and 3.2's `$(echo 'E')` each named an end line the shell never saw (round 41), and 5.3's `\\E$(echo $'\\u0045')` and
+        3.2's ``E`echo x``` too (round 42)."""
         text = self.text
         later: list[str] = []
+        later_quoted: list[str] = []
         older: list[str] = []
         quoted = older_quoted = False
         while self.at < len(text):
             c = text[self.at]
             if c in " \t\n;&|()<>":
                 break
+            quoted_said = None
             if text.startswith("\\\n", self.at):
                 self.continuations.add(self.at)
                 self.at += 2
@@ -2315,7 +2393,7 @@ class ShellReader:
                 older_said, quoted = said, True
             elif text.startswith("$'", self.at):
                 end = ansi_end(text, self.at + 2)
-                self.kept.append((self.at, end + 1))
+                self.kept.append((self.at + 1, end + 1))
                 said, older_said = ansi_c(text[self.at + 2 : end]), ansi_c(text[self.at + 2 : end], later=False)
                 self.at, quoted = end + 1, True
             elif c == '"' or text.startswith('$"', self.at):
@@ -2326,15 +2404,16 @@ class ShellReader:
             elif text.startswith(("$(", "${"), self.at) or c == "`":
                 end = self.substitution_end(self.at)
                 written = text[self.at : end]
-                said, older_said = ansi_requoted(written), quotes_removed(written, later=False)
-                older_quoted = older_quoted or (c == "`" and any(mark in written for mark in "'\"\\"))
+                said, older_said, quoted_said = ansi_requoted(written), quotes_removed(written, later=False), quotes_removed(written)
+                older_quoted = older_quoted or c == "`"
                 self.at = end
             else:
                 said = older_said = c
                 self.at += 1
             later.append(said)
+            later_quoted.append(said if quoted_said is None else quoted_said)
             older.append(older_said)
-        return (("".join(older), quoted or older_quoted),) if self.older else (("".join(later), quoted),)
+        return (("".join(older), quoted or older_quoted),) if self.older else (("".join(later_quoted if quoted else later), quoted),)
 
     def double_quotes_taken(self, at: int) -> None:
         """What a reading takes between double quotes from `at`, for `joined`: a backslash before a line feed a line's continuation, one before anything else an escape."""
@@ -2368,7 +2447,7 @@ class ShellReader:
                 at += 2
             elif text.startswith("$'", at):
                 end = ansi_end(text, at + 2)
-                self.kept.append((at, end + 1))
+                self.kept.append((at + 1, end + 1))
                 at = end + 1
             elif c == "'":
                 end = text.find("'", at + 1)
@@ -2434,10 +2513,26 @@ def commands_of(text: str) -> list[Command]:
     unterminated quote reads to the end, since the shell will refuse it anyway. Too deep to read raises, and the hook refuses what it cannot read. Read as each bash here
     reads it, where the two may differ, and what is found is what either runs (round 41)."""
     found: list[Command] = []
-    pipelines = itertools.count()
-    for older in each_bash(text, False):
-        ShellReader(text, found, pipelines, older=older).commands()
+    for reading in readings_of(text):
+        base = len(found)
+        found += [Command(each.words, each.pipeline, each.fed, each.own_from + base, each.outer) for each in reading]
     return found
+
+
+def readings_of(text: str) -> list[list[Command]]:
+    """What `text` would run, as each bash here reads it where the two may differ, one list for each reading: a kill is judged within one, and a search another reading
+    found after it is no search before it. Appended to one list, `kill "$PID"; pgrep -fl x` of a text holding `<<` was refused (round 42)."""
+    pipelines, readings = itertools.count(), []
+    for older in each_bash(text, False):
+        found: list[Command] = []
+        ShellReader(text, found, pipelines, older=older).commands()
+        readings.append(found)
+    return readings
+
+
+def one_reading(readings: list[list[Command]], which: int) -> list[Command]:
+    """The reading `which` names, bash 4's first, or the one there is where a text is read once."""
+    return readings[min(which, len(readings) - 1)]
 
 
 # ---- what runs through it
@@ -2550,7 +2645,7 @@ def what_a_run_runs(words: list[str]) -> list[str]:
     return rest[1:] if rest[:1] == ["--"] else rest
 
 
-def read_through_runs(commands: list[Command], depth: int = 0, fresh: itertools.count | None = None) -> list[Command]:
+def read_through_runs(commands: list[Command], depth: int = 0, fresh: itertools.count | None = None, which: int = 0) -> list[Command]:
     """These commands, a guard's `run` among them replaced by what its job runs as a shell would read it: in the run's pipeline where the job's first pipeline stands and in one of its own
     for each other, fed where the run is. Each command keeps its own substitutions, where they begin carried to where they now stand: a job's command's are the job's where it has any
     and otherwise the run's own words', and a command after a `run` keeps its own however many the job had. A `run` inside a job is read the same way, to a depth no command needs.
@@ -2569,7 +2664,8 @@ def read_through_runs(commands: list[Command], depth: int = 0, fresh: itertools.
         if not told:
             out.append(Command(command.words, command.pipeline, command.fed, start_of[command.own_from], command.outer))
             continue
-        job = read_through_runs(commands_of(shlex.join(told)), depth + 1, fresh)
+        # Each job read as the one bash `which` names, so that a kill and the searches before it stand in one reading (round 42).
+        job = read_through_runs(one_reading(readings_of(shlex.join(told)), which), depth + 1, fresh, which)
         base, first, others = len(out), (job[0].pipeline if job else None), {}
         for k, each in enumerate(job):
             if each.pipeline != first and each.pipeline not in others:
@@ -2603,9 +2699,9 @@ def kills_by_name(commands: list[Command], root: Path) -> bool:
     if any(what_a_run_runs(command.words) for command in commands):
         for command in commands:
             told = what_a_run_runs(command.words)
-            if told and kills_by_name(commands_of(shlex.join(told)), root):
+            if told and any(kills_by_name(reading, root) for reading in readings_of(shlex.join(told))):
                 return True
-        return kills_by_name(read_through_runs(commands), root)
+        return any(kills_by_name(read_through_runs(commands, which=which), root) for which in (0, 1))
 
     def names_this_root(word: str) -> bool:
         # Exactly it: `archogen-other` and `archogen copy` begin the same, and neither a name's own characters nor a space end a path.
@@ -2892,8 +2988,10 @@ def hook(root: Path, limits: Limits) -> int:
         session = str(given.get("session_id", "")) + str(given.get("agent_id", ""))
         if not isinstance(command, str) or not command.strip():
             raise ValueError("no command")
-        commands = commands_of(command)
-        kills = kills_by_name(commands, root)
+        # Each bash's reading judged alone for a kill, and every command either runs for what is heavy (round 42).
+        readings = readings_of(command)
+        commands = [each for reading in readings for each in reading]
+        kills = any(kills_by_name(reading, root) for reading in readings)
     except Exception as error:
         say(f"host-guard: refused: this cannot be read as a command to judge: {error!r}")
         return 2

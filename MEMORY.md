@@ -16,9 +16,10 @@
 - **Active tree:** `M4` → frontier `M4.1`, the accepted runtime plan, the model's amendments done (`M4.1.2`): `/1` for
   the hosted playground; `PROGRAM` → `PROGRAM.34`, the director's.
 - **The host is shared:** every heavy job goes through `scripts/host_guard.py`, one at a time (`docs/decisions/decision_host-guard.md`). A reader's brief says so.
-- **Next action:** readers out: `PROGRAM.127.42`, the guard's round 42 (`target/p12742/report.md`), `M4.1.7.2.14`,
-  format `/2`'s round 14 (`target/m4351/report.md`), and `M4.12.1.15`, the application inputs' round 15
-  (`target/m4352/report.md`); none there meaning ask again. Answer each as it lands. Meanwhile `M3.4.17.3`: a device's
+- **Next action:** answer `M4.1.7.2.14`, format `/2`'s round 14 (`target/m4351/report.md`): which figures an
+  allocation's `origin` lists and whether one record's two are one item, a target not shipped naming a shipped one's
+  catalog, a `needs` list's words, a stale comment. Readers out: `M4.12.1.15` (`target/m4352/report.md`). Launch
+  `PROGRAM.127.43` into `target/p12743/`, its brief from `target/p12742/brief.txt`. Then `M3.4.17.3`: a device's
   preconditions enter the closure as it is bound.
   `M4.5.2` and `M4.3.6` wait on `M4.1.7`, `M4.3.4` on `M2.21`. The runtime plan's design is accepted (`M4.1.1` done).
   `M3.2.7` and `M3.5.9`, full verification, wait for the
