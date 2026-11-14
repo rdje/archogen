@@ -195,7 +195,8 @@ checker alone converts it; where each stack lies; and what the interrupt control
 application's inputs. A size only a catalog record can state stays owed until one does, and every allocation after it is owed too, since no
 address below it is known. The controller is told a line and a priority for each source and each alarm wired through it, in the order the plan ranks them;
 one whose interrupt bypasses it is outside what the checker composes, so a system holding one is refused, and whether each reaches it is owed
-until the realization, the generated code's own statement, says.
+until the realization, the generated code's own statement, says. Each cost and time that statement gives says too that it holds under any
+preemption, as a catalog record's does, and the checker reads it so, never assuming it.
 
 Stacks are laid from the top of a region down and the image from the bottom up, so a change in the image's size moves no
 allocation. A stack's size is what its owners state, by one table of sums: what generated code holds beneath what it calls, a task's own bound, the most the runtime's code adds in a

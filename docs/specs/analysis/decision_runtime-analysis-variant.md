@@ -70,7 +70,9 @@ from parts is decided in `decision_runtime-composite-inputs.md` (`M2.10.1`), and
 kernel or platform figure. `C_s` stays the caller's for a service whose record states `no-application-code` `no`
 (that record's §6). The enabled set and interrupt
 priorities are the plan's. Condition 8 is each catalog cost's `holds-under-preemption`, plus the application's
-declaration for its own figures. The platform fact that sections mask every interrupt is the conjunction of the catalog's
+declaration for its own figures, and, for generated code's costs and times on a target, the realization's `holds-under-preemption`
+of each node a job calls, each alarm and each source, as `decision_runtime-plan-format-2.md` §3 owes it (amended `2026-11-14`,
+its round 24). The platform fact that sections mask every interrupt is the conjunction of the catalog's
 fact for the kernel's sections and the application's declaration, for each task, that it masks only through the
 runtime API (`decision_catalog-records.md` §12). That declaration is a conjunct of the platform fact, not a fourth
 of the three task facts §1 lists and condition 4 names (`M2.27`, `2026-10-28`). `M2.7.5` composes the two. What each input **means** is unchanged, and so was the model, then `/1`. A conclusion

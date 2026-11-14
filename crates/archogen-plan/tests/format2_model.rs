@@ -1392,13 +1392,109 @@ fn the_realization_s_own_costs_owe_condition_8() {
         .nth(1)
         .expect("the realization's costs'");
     let of_the_costs = &of_the_costs[..of_the_costs.find(';').expect("its end")];
+    // An alarm's `lag`, `λ`, a time of generated code added where no `γ` is charged, among them (round 24, RP24-3).
     for word in [
         "`holds-under-preemption`",
         "`call-cost`",
         "`masked-runs`",
         "`service-cost`",
+        "`lag`",
     ] {
         assert!(of_the_costs.contains(word), "{word}: {of_the_costs}");
+    }
+}
+
+/// The ledger and the variant: what condition 8 owes of the realization is read by the checker's leaf, `RPF-H6` to `M2.21.2`, quoted there, and the
+/// variant's condition 8 names it beside the catalog's and the application's. Before, nothing read it, so a file stating `no` gave a complete plan the
+/// checker admitted (round 24, RP24-1).
+#[test]
+fn the_realization_s_condition_8_is_read_by_the_checker() {
+    let row = RECORD
+        .lines()
+        .find(|line| line.starts_with("| `RPF-H6` | `M2.21.2` |"))
+        .expect("the hand-off to the checker's leaf");
+    assert!(row.contains("`holds-under-preemption`"), "{row}");
+    assert!(row.contains("never defaulted"), "{row}");
+    let tasks = include_str!("../../../docs/tasks/M2.md");
+    assert!(tasks.contains("- [RPF-H6] "), "`M2.21.2` quotes it");
+    let variant = include_str!("../../../docs/specs/analysis/decision_runtime-analysis-variant.md");
+    let condition = variant
+        .split("Condition 8 is each catalog cost's `holds-under-preemption`")
+        .nth(1)
+        .expect("the variant's condition 8");
+    let condition = &condition[..condition.find(". ").expect("its end")];
+    assert!(
+        condition.contains("the realization's `holds-under-preemption`"),
+        "{condition}"
+    );
+}
+
+/// §3 and the ledger: every fact and figure the owed list owes by the realization, read from the list itself, is handed to the leaf that writes its file,
+/// by name in `RPF-H5`, or, a figure of a stack or the last act's lead, by the phrase `RPF-H3` gives it; a called node's `call-cost` and `masked-runs`,
+/// named where its other facts are, are `/1`'s, handed by `RTP-H2`. Before, a row read one sentence's list, and an alarm's figures and what it owes as a
+/// source were handed to no leaf (round 24, RP24-2).
+#[test]
+fn every_fact_the_realization_owes_is_handed_to_its_format() {
+    const BY_RPF_H3: [(&str, &str); 7] = [
+        ("node-stack", "each node's stack use from a call"),
+        ("service-stack", "each service's"),
+        ("initialisation-stack", "each initialisation step's"),
+        ("fault-entry-stack", "its fault handler's"),
+        ("last-act-stack", "its last act's"),
+        (
+            "call-frame",
+            "what it holds on each stack beneath what it calls",
+        ),
+        ("last-act-lead", "its `last-act-lead`"),
+    ];
+    const OF_SLASH_1: [&str; 2] = ["call-cost", "masked-runs"];
+    let row = |id: &str| {
+        RECORD
+            .lines()
+            .find(|line| line.starts_with(&format!("| `{id}` | `M4.2` |")))
+            .unwrap_or_else(|| panic!("`{id}`"))
+    };
+    let (h3, h5) = (row("RPF-H3"), row("RPF-H5"));
+    let owed = RECORD
+        .split("**`(owed …)`, as `/2` writes it.**")
+        .nth(1)
+        .expect("what `/2` owes");
+    let owed = &owed[..owed.find("**Orders.**").expect("its end")];
+    let mut found = Vec::new();
+    for clause in owed
+        .split([';', '\n'])
+        .filter(|clause| clause.contains("by `realization`"))
+    {
+        let after = &clause[clause.find("by `realization`").expect("its owner")..];
+        for fact in after.split('`').skip(1).step_by(2) {
+            let named =
+                !fact.is_empty() && fact.chars().all(|c| c.is_ascii_lowercase() || c == '-');
+            if named && fact != "realization" && !found.contains(&fact) {
+                found.push(fact);
+            }
+        }
+    }
+    for fact in [
+        "floor",
+        "lag",
+        "acknowledge-point",
+        "external",
+        "masking-balanced",
+        "holds-under-preemption",
+        "node-stack",
+        "last-act-lead",
+    ] {
+        assert!(found.contains(&fact), "the list read `{fact}`: {found:?}");
+    }
+    for fact in found {
+        if let Some((_, phrase)) = BY_RPF_H3.iter().find(|(figure, _)| *figure == fact) {
+            assert!(h3.contains(phrase), "`{fact}`: {phrase}");
+        } else if !OF_SLASH_1.contains(&fact) {
+            assert!(
+                h5.contains(&format!("`{fact}`")),
+                "`{fact}` handed to no leaf: {h5}"
+            );
+        }
     }
 }
 

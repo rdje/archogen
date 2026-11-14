@@ -599,8 +599,8 @@ a change that leaves it stale, so it is never edited by hand.
 - Postrepair caller checkpoint — [Annex C: Trust proof records](annex-trust-proofs.md#postrepair-caller-checkpoint)
 - Precise composition errors — [Modules and composition](modules.md#precise-composition-errors)
 - **preemption** — [definition](glossary.md), [The supported profile](profile.md), [What the scheduling checker
-  establishes](analysis.md), [The runtime: decisions, not actions](runtime.md), [Where generated systems
-  run](targets.md)
+  establishes](analysis.md), [The runtime plan: what the generated system is told](runtime-plan.md), [The runtime:
+  decisions, not actions](runtime.md), [Where generated systems run](targets.md)
 - **priority** — [definition](glossary.md), [Introduction](introduction.md), [A tour: from a description to a
   board](tour.md), [The supported profile](profile.md), [The use cases](usecases.md), [Reading a
   description](reading.md), [Describing a workload](workload.md), [Checking a description](checking.md),
