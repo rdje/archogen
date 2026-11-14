@@ -1327,7 +1327,19 @@ mdBook that is the director's window into the project.
   Commit: `ARCHOGEN-PROGRAM-1297 (leaf PROGRAM.127.43)`
 
 - ID: `PROGRAM.127.44`
-  Status: `pending` — round 44, a fresh reader over round 43's answer. It closes on a round that finds no defect, and a form written to go round the guard, or a reader with no line for a form, is a stated limit, not a defect.
+  Status: `done` — `2026-11-14`: round 44, a fresh reader over round 43's answer: 7 findings, 5 defects, after 7, with a gap and one of wording, four in round 43's answers, each failing open, all on forms written to but one made a regression by round 43's quote. The findings and each answer are in `docs/reviews/decision_host-guard-reviews.part-2.md`; its report is `target/p12744/report.md`.
+
+  **Acceptance checklist (`DOCTRINE_ENFORCEMENT.md`):**
+  - [x] **REPRODUCE / ISSUE** — its reader's own runs on `be5ce697`, the real hook for a scratch root (`target/p12744/report.md`, `target/p12744/work/findings_all.txt`): 17 forms, each exit 0 with a shell running the stub, and its fuzzer 10 misses of 8,000. Here, this round's rows on that guard: `python3 -I -B target/p12744/land/red/scripts/selftest_host_guard.py case_the_reader_sees_what_the_shell_runs` → `123 passed, 6 failed, 0 not run`: `echo ${msg:-$'it\\'s done'} ; pkill -f cargo` unread on both bashes, `${ : #}`, `$\⏎(` and `sh -c` forms unread (`target/p12744/land/red.log`).
+  - [x] **ROOT CAUSE (WHY + WHERE)** — `git grep -n -F 'differs = "<<" in text or' be5ce697 -- scripts/host_guard.py` → `1531`, `git grep -n -F 'ShellReader(text, found, pipelines, older=older, doubled=BOTH_TO_DEPTH).commands()' be5ce697 -- scripts/host_guard.py` → `2558`, `git grep -n -F 'closing = next((word for word, _ in readings' be5ce697 -- scripts/host_guard.py` → `2317`: line 1531, the markers read on the raw text, without `${ ` or what `joined` makes; line 2558, every reading made at the depth past which nothing doubles, a command read once included; line 2225, `$` inside `${…}` read as `dollar` in quotes, `$'…'` a `$` and a quote, and 3.2's `${…}` nesting what it does not; line 2317, a here-document inside a substitution ended at a `)` alone.
+  - [x] **FIX** — `scripts/host_guard.py`: `each_bash`'s markers after continuations and with `${ `; `readings_of` making a command read once at depth 0; `closers`, each substitution's closing character, ending a here-document in `${ …; }`; `$'…'` inside `${…}`; `older_brace_end`, 3.2's unquoted `${…}`. `scripts/selftest_host_guard.py`: rows for each. The record's sentences, G44-6 stated.
+  - [x] **ADDRESSED (verified)** — `python3 -I -B scripts/selftest_host_guard.py` → `1312 passed, 0 failed, 0 not run`, exit 0, on the final bytes, this round's rows among them (`target/p12744/land/selftest-full.log`); the reader's rigs on this guard's bytes, `cmp`-equal to `target/p12744/land/draft/host_guard.py`: its 17 forms through the real hook → each exit 2; `fuzz2.py` seeds 11 and 12 → `0 reproducible misses` of 8,000; `fuzz3.py` → `0 reproducible misses`; round 43's fuzzers → `0 missed`, `ansi.py` → `3139 texts, 0 differ`; round 42's hook forms as before, its fuzzers `0 missed`, the corpus 370 texts in 0.69 s, `raised: 0`; round 41's fuzzers → `0 fail open`, its 20 ordinary forms passing.
+  - [x] **NO REGRESSION** — `bash scripts/check_host_guard.sh` → `host-guard: OK`, exit 0; `bash scripts/run_self_tests.sh --self-test` → `run-self-tests self-test: 18 pass / 0 fail (18 arms)`; `make focused` → `tier focused: passed — 3 passed, 0 failed`, on the staged tree.
+  - [x] **LOCKSTEP** — the record, the review history and its index, these leaves and the Commit Log; `MEMORY.md`'s next action. The book's section says nothing this round moves.
+  Commit: `ARCHOGEN-PROGRAM-1300 (leaf PROGRAM.127.44)`
+
+- ID: `PROGRAM.127.45`
+  Status: `pending` — round 45, a fresh reader over round 44's answer. It closes on a round that finds no defect, and a form written to go round the guard, or a reader with no line for a form, is a stated limit, not a defect.
 
 - ID: `PROGRAM.128`
   Status: `done` — `2026-11-05`: by the director's word, "If you ever need new CPU, DSP, MCU, BOARD, ISA or in general digital chip PDF just look here", naming `chipdoc`'s `AGENTS.md`. The record, its index row, the book's ledger and a `TOOLBOX.md` row now start any chip document's need there. Reading it corrected three things of ours: the record and the ledger still said `REQ-007` was `requested`, fulfilled `2026-09-30`; the ledger said the corpus was off this volume; and the record said what is adopted is copied here, where most of the corpus may not be republished and this repository is public, so a fact and its citation are copied and never a document. A documents-only leaf.
@@ -1682,6 +1694,7 @@ leaf's outcome is its row in the Commit Log below, and a sealed leaf's full reco
 | `PROGRAM.127.42` | `ARCHOGEN-PROGRAM-1293 (leaf PROGRAM.127.42)` | **the host guard's review, round 42**: each bash's reading its own list, a kill judged within one; each bash's gathering as it does; a quoted delimiter and a backquote as each bash takes them; `$'…'` at a NUL and from its quote; a substitution's pending here-documents its own; reading twice to three levels. |
 | `PROGRAM.140` | `ARCHOGEN-PROGRAM-1296 (leaf PROGRAM.140)` | **the M4 tree sealed again**: 6 closed subtrees and 6 leaves, so `docs/tasks/` is under its ceiling |
 | `PROGRAM.127.43` | `ARCHOGEN-PROGRAM-1297 (leaf PROGRAM.127.43)` | **the host guard's review, round 43**: what a text holds read once, as the reading it stands in; a text read twice wherever a substitution stands; bash 5.3's `${ …; }` and its here-document in a substitution; a quote in a quoted `${…}`; bash 3.2's comment, unclosed `$(` and `\c`. |
+| `PROGRAM.127.44` | `ARCHOGEN-PROGRAM-1300 (leaf PROGRAM.127.44)` | **the host guard's review, round 44**: the markers after continuations and with `${ `; what a command read once holds read twice where it says; `$'…'` inside `${…}`; bash 3.2's unquoted `${…}`; a here-document inside `${ …; }`; a cost stated. |
 
 ## Changelog
 
@@ -1801,3 +1814,4 @@ leaf's outcome is its row in the Commit Log below, and a sealed leaf's full reco
 - `2026-11-14`: `PROGRAM.127.41` done: the guard's round 41, two findings answered, two defects failing open in round 40's answer; `PROGRAM.127.42` filed for round 42.
 - `2026-11-14`: `PROGRAM.127.42` done: the guard's round 42, nine findings answered, seven defects; `PROGRAM.127.43` filed for round 43.
 - `2026-11-14`: `PROGRAM.127.43` done: the guard's round 43, eight findings answered, seven defects; `PROGRAM.127.44` filed for round 44.
+- `2026-11-14`: `PROGRAM.127.44` done: the guard's round 44, seven findings answered, five defects; `PROGRAM.127.45` filed for round 45.

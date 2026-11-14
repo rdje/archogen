@@ -2277,6 +2277,8 @@ THE_SHELL_RUNS_THESE = (
     "x=$((echo a)# ); pkill -x rustc\n)", "x=$((:); cat <<E\nfoo)\npkill -x rustc\nE\n)", "$'pkill\\0' -x rustc", "pkill$'\\0' -x rustc", "echo $\\\n'a'; pkill -x rustc",
     # What round 43's reader found: a quote inside a double-quoted `${…}`, a quote to both bashes.
     "echo \"${y:-'}\"' }\" ; pkill -x rustc ; echo '}'",
+    # What round 44's reader found: a `$'…'` inside `${…}` an ANSI-C quote to both bashes.
+    "echo ${msg:-$'it\\'s done'} ; pkill -f cargo", "true || echo \"${y:-$'\\''}\" ; pkill -x rustc",
 )
 # Those the shell may not reach: what it runs must still be what is read, and what is read may be more.
 THE_SHELL_MAY_NOT_REACH = ("ls || cargo build", "false && cargo build", "if false; then cargo build; else make focused; fi", "while false; do cargo build; done", "case x in y) cargo build;; esac", "case x in cargo) make focused;; esac", "f() { cargo build; }", "xargs cargo build </dev/null",
@@ -2296,7 +2298,11 @@ THE_SHELL_MAY_NOT_REACH = ("ls || cargo build", "false && cargo build", "if fals
     # substitution, takes `$(` in `${…}` that never closes as text, takes no comment at a `$(` inside a double-quoted string, and a `\c` ending `$'…'` is a
     # backslash to it (round 43).
     "echo ${ cargo build; }", "x=\"$(cat <<'EOF'\nEOF cargo build; echo )\n\"", "echo \"$(echo ${y:-)}\"; cargo build; \"} )\"", "echo \"${y:-$(}\"\ncargo build", "x=\"$(# )\"; cargo build",
-    "cat <<$'E\\c'\nE\\\ncargo build\nE\\c")
+    "cat <<$'E\\c'\nE\\\ncargo build\nE\\c",
+    # Bash 5.3's `${ …; }` and a `$\⏎(` make no marker before `joined`; bash 3.2 ends an unquoted `${…}` at its first `}`; quote removal makes a marker inside a
+    # shell's text; and bash 5.3 ends a here-document inside `${ …; }` at a line holding its `}` (round 44).
+    "true || echo ${ : #} ; cargo build\n}", "x=$\\\n(echo a;# ) ; cargo build\n)", "true || echo ${y#$(#} ; cargo build\n)}",
+    "sh -c \"x=\\$\"\"(echo a;# ) ; cargo build\n)\"", "msg=${ cat <<EOF\nthe message\nEOF ${y} ; cargo build\nEOF\n}")
 # A bare `)` of a case inside a substitution: bash 3.2 takes it for the substitution's end, as its own bug, so it runs less than bash 4 and later do, which the reader reads. Reading more is the safe side.
 ONLY_LATER_BASH_RUNS_THESE = (
     'x="$(case y in y) cargo build;; esac)"; make focused', 'x="$(case y in y) cargo build;; esac )"; make focused', 'x="$(if true; then case y in y) cargo build;; esac; fi)"', 'x=$(case y in y) cargo build; esac); ls',

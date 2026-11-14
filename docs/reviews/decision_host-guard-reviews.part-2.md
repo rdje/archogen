@@ -100,3 +100,17 @@ Found in answering: the self-test's oracle split a stub's line where a word held
 | G43-8 | defect, mild, fails open on 3.2, written to | a `\c` ending a `$'…'` is a lone backslash to 3.2 | So for 3.2. `printf` held to it |
 
 Said, and left as it stands: where a reading and a bash part on a form the shell refuses, the reading reads more, the safe side; eight of round 43's 73 forms are so, and its fuzzers' 1,800 forms and 3,139 `$'…'` texts missed none.
+
+**Round 44** — `2026-11-14`, leaf `PROGRAM.127.44`: not acceptable, 7 findings, 5 defects, after 7, on `be5ce697`. Round 43's answers held where it looked: `1312 passed`; round 43's own forms refused where a shell kills and G43-6 passing; 2,929 here-documents inside substitutions, none missed on any of three shells; `ansi_c` against each bash on 786 texts; 12 ordinary kill and commit forms passing; 81 repository scripts read in 0.61 s, none refused; RAM by hand, the lines and the pace; a census of 525 rows, none of another project's. Its rigs are `target/p12744/work/`.
+
+| # | Kind | Finding | Answer |
+| --- | --- | --- | --- |
+| G44-1 | defect, fails open on 3.2, round 43's `each_bash` | the markers were read on the raw text, missing bash 5.3's `${ …; }` and a `$\⏎(` that `joined` makes a `$(` after | They are read with each backslash before a line feed taken out, and `${ ` among them. Rows |
+| G44-2 | defect, fails open, written to, round 43's answer | a shell's text reads markers quote removal makes, which the command did not hold, `sh` being 3.2 whatever the command is read as | Where the command was read once, what it holds is read twice where its own markers say; where twice, its readings carry it. A row of `sh -c` |
+| G44-3 | defect, fails open on 3.2, written to | bash 3.2 ends an unquoted `${…}` at its first `}` its quotes, backquotes and inner `${…}` leave, nesting no `$(`, `$((` or `$[` | 3.2's reading ends it so and reads what it holds after. A row |
+| G44-4 | defect, fails open, both bashes, round 43's answer | a `$'…'` inside `${…}` was read as `$` and a quote, its `\'` closing that early: `${msg:-$'it\'s done'} ; pkill -f cargo` passed | It is an ANSI-C quote there, between double quotes or not. Rows |
+| G44-5 | defect, fails open on 5.3, written to | inside `${ …; }` bash 5.3 ends a here-document at a line beginning with its delimiter and holding the `}` | The reading's innermost closer, `)` or `}`, ends it so. A row |
+| G44-6 | gap, cost, written to | thousands of unclosed `$((` or `$(` inside one `${…}` cost the square of their length, 5.45 s at 16 kilobytes | Stated: a form written to, failing closed near sixty kilobytes when the hook's time runs out |
+| G44-7 | wording | "as bash 4 and later read it" claimed bashes not measured, where the later reading holds 5.3's own forms | "As bash 5.3 reads it", the bashes between unmeasured here |
+
+Said, and left as it stands: G44-6, as above; bash 4.0 to 5.2 are on no host here.

@@ -1528,7 +1528,10 @@ def each_bash(text: str, older: bool, doubled: int = 0) -> tuple[bool, ...]:
     # neither of the others, and ran its `pkill` on 3.2 alone (round 42).
     # And any substitution, which bash 3.2 gathers before it reads, nesting no `${…}` in it: `echo "$(echo ${y:-)}"; pkill x; "} )"` held no `#`, and ran its
     # `pkill` on 3.2 alone (round 43).
-    differs = "<<" in text or "$'" in text or any(mark in text for mark in ("$(", "<(", ">("))
+    # Read with each backslash before a line feed taken out, as `joined` may take it, and with bash 5.3's `${ …; }`, which 3.2 calls a bad substitution: `$\⏎(`
+    # and `${ : #}` each held no marker, and ran a `pkill` on 3.2 alone (round 44).
+    plain = text.replace("\\\n", "")
+    differs = "<<" in plain or "$'" in plain or any(mark in plain for mark in ("$(", "<(", ">(", "${ ", "${\t", "${\n", "${|"))
     return (False, True) if doubled < BOTH_TO_DEPTH and differs else (older,)
 
 
@@ -1830,6 +1833,7 @@ class ShellReader:
         # Each here-string waits for its command's words to be whole: a redirection may come before them, `<<< 'pkill x' bash` (round 37).
         self.here_strings: list[tuple[str, int, list[str]]] = []
         self.substitutions = 0  # How many `$(…)` the reading stands in.
+        self.closers: list[str] = []  # What closes each it stands in, `)` or a `${ …; }`'s `}`, the innermost last.
         # Text read again was read first as a word: its placeholders stand for the substitutions found from `outer_from` on. And what feeds it, as `xargs` feeds what it runs, feeds
         # each command it holds: `xargs -I{} sh -c 'kill $(pgrep -P {})'` lost that mark (round 37).
         self.outer_from, self.fed = outer_from, fed
@@ -1919,7 +1923,9 @@ class ShellReader:
                 self.at += 2
                 self.substitutions += 1
                 pending, self.here_docs = self.here_docs, []
+                self.closers.append(")")
                 self.commands(closing=")")
+                self.closers.pop()
                 self.here_docs = pending + self.here_docs
                 self.substitutions -= 1
                 words.append(f"{two}…)")
@@ -2193,7 +2199,9 @@ class ShellReader:
             # A here-document begun outside it is read at a line feed outside it, and one begun inside and not yet read is read after it, as bash 5 reads them: read at a
             # line feed inside it, the body of `cat <<E` swallowed a `pkill` that ran inside `"$(#…)"` (round 42).
             pending, self.here_docs = self.here_docs, []
+            self.closers.append(")")
             self.commands(closing=")")
+            self.closers.pop()
             self.here_docs = pending + self.here_docs
             self.substitutions -= 1
             parts.append("$(…)")
@@ -2213,16 +2221,31 @@ class ShellReader:
             self.at += 3
             self.substitutions += 1
             pending, self.here_docs = self.here_docs, []
+            self.closers.append("}")
             self.commands(closing="}")
+            self.closers.pop()
             self.here_docs = pending + self.here_docs
             self.substitutions -= 1
             parts.append("$(…)")
+        elif two == "${" and self.older and not in_quotes and (close := self.older_brace_end(self.at + 2)) is not None:
+            # Bash 3.2 ends an unquoted `${…}` at its first `}` its quotes, backquotes and inner `${…}` leave, nesting no `$(`, `$((` or `$[`, measured, and expands
+            # what it holds after: read nesting them, `${y#$(#} ; pkill x` hid the kill (round 44).
+            self.read_expansions(text[self.at + 2 : close])
+            parts.append(text[self.at : close + 1])
+            self.at = close + 1
         elif two == "${":
             self.at += 2
             parts.append("${")
             while self.at < len(text) and text[self.at] != "}":
                 c = text[self.at]
-                if c == "$" and self.older and text.startswith("$(", self.at) and gathering(text, self.at + 2, True, False) is None:
+                if c == "$" and text.startswith("$'", self.at):
+                    # An ANSI-C quote there too, between double quotes or not, measured on both bashes: read as `$` and a quote, `${msg:-$'it\'s done'} ; pkill -f cargo`
+                    # hid the kill behind a quote the shell never opened (round 44).
+                    end = ansi_end(text, self.at + 2)
+                    self.kept.append((self.at + 1, end + 1))
+                    parts.append(ansi_c(text[self.at + 2 : end], later=not self.older))
+                    self.at = end + 1
+                elif c == "$" and self.older and text.startswith("$(", self.at) and gathering(text, self.at + 2, True, False) is None:
                     # A `$(` there that never closes is text to bash 3.2, which then ends the `${…}` at its `}`, measured: read as a substitution, it swallowed what
                     # followed (round 43).
                     parts.append("$(")
@@ -2314,7 +2337,9 @@ class ShellReader:
                 # Inside a substitution a delimiter may close on its `)`, which is then the substitution's.
                 # Bash 5.3 ends it at a line beginning with the delimiter and holding a `)` anywhere after it, and reads the rest of that line as commands, measured;
                 # ended at the delimiter, blanks and a `)` alone, `EOF kill $(pgrep x); echo )` passed in the harness's own commit idiom (round 43).
-                closing = next((word for word, _ in readings if plain.startswith(word) and (")" in plain[len(word) :] if not self.older else plain[len(word) :].lstrip(" \t").startswith(")"))), None)
+                # Inside a `${ …; }` its `}` does as a substitution's `)` does, measured on 5.3: looking for `)` alone, a body there swallowed a `pkill` (round 44).
+                closer = self.closers[-1] if self.closers else ")"
+                closing = next((word for word, _ in readings if plain.startswith(word) and (closer in plain[len(word) :] if not self.older else plain[len(word) :].lstrip(" \t").startswith(closer))), None)
                 if self.substitutions and closing is not None:
                     self.at += len(line) - len(plain) + len(closing)
                     break
@@ -2367,6 +2392,50 @@ class ShellReader:
                 command = self.emitted.get(id(fed))
                 if command is not None and len(self.found) > start:
                     self.found.append(Command(command.words, command.pipeline, command.fed, command.own_from))
+
+    def older_brace_end(self, at: int) -> int | None:
+        """Where bash 3.2 ends an unquoted `${…}` whose text begins at `at`: at its first `}` that its quotes, its backquotes and an inner `${…}` leave, taking what that
+        takes for `joined`; or nothing, where none does (round 44)."""
+        text, depth = self.text, 1
+        continuations: set[int] = set()
+        escapes: set[int] = set()
+        kept: list[tuple[int, int]] = []
+        while at < len(text):
+            c = text[at]
+            if c == "\\" and at + 1 < len(text):
+                (continuations if text[at + 1] == "\n" else escapes).add(at)
+                at += 2
+            elif text.startswith("$'", at):
+                end = ansi_end(text, at + 2)
+                kept.append((at + 1, end + 1))
+                at = end + 1
+            elif c == "'":
+                end = text.find("'", at + 1)
+                if end < 0:
+                    return None
+                kept.append((at, end + 1))
+                at = end + 1
+            elif c == '"':
+                at = double_quoted(text, at + 1)[1]
+            elif c == "`":
+                end = at + 1
+                while end < len(text) and text[end] != "`":
+                    end += 2 if text[end] == "\\" else 1
+                at = end + 1
+            elif text.startswith("${", at):
+                depth += 1
+                at += 2
+            elif c == "}":
+                depth -= 1
+                if depth == 0:
+                    self.continuations |= continuations
+                    self.escapes |= escapes
+                    self.kept += kept
+                    return at
+                at += 1
+            else:
+                at += 1
+        return None
 
     def gathered(self, start: int, comments: bool = True, comment_first: bool = True) -> int | None:
         """Where a bash that gathers it ends the substitution whose text begins at `start`, by `gathering`, taking what that takes, for `joined`. Or nothing, where it would
@@ -2553,9 +2622,12 @@ def readings_of(text: str) -> list[list[Command]]:
     """What `text` would run, as each bash here reads it where the two may differ, one list for each reading: a kill is judged within one, and a search another reading
     found after it is no search before it. Appended to one list, `kill "$PID"; pgrep -fl x` of a text holding `<<` was refused (round 42)."""
     pipelines, readings = itertools.count(), []
-    for older in each_bash(text, False):
+    bashes = each_bash(text, False)
+    for older in bashes:
         found: list[Command] = []
-        ShellReader(text, found, pipelines, older=older, doubled=BOTH_TO_DEPTH).commands()
+        # Read twice, what it holds is read once, as the reading it stands in; read once, what it holds is read twice where its own markers say, quote removal
+        # making them, `sh -c "x=\$""(echo a;# ) ; pkill x"` among it (round 44).
+        ShellReader(text, found, pipelines, older=older, doubled=BOTH_TO_DEPTH if len(bashes) > 1 else 0).commands()
         readings.append(found)
     return readings
 
