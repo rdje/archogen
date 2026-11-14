@@ -1411,6 +1411,18 @@ mdBook that is the director's window into the project.
   Verification: the census, the two removal reports, the sizes before and after.
   Commit: `ARCHOGEN-PROGRAM-1279 (leaf PROGRAM.138)`
 
+- ID: `PROGRAM.139`
+  Status: `done` — `2026-11-14`, the live task trees over their ceiling again, `README-ROUTES` refusing format `/2`'s round 12.
+  Goal: bring `docs/tasks/` under its ceiling by the project's own sealing, nothing summarised and nothing lost.
+  Acceptance:
+    - [x] ROOT CAUSE — WHY: the review rounds' closed leaves in `docs/tasks/M4.md`, format `/2`'s rounds 7 to 11 and the application inputs' 8 to 12, had grown it since `PROGRAM.134` sealed it. WHERE: `bash scripts/check_doctrines.sh` on format `/2`'s round 12, staged → `README-ROUTES: docs/tasks/: 820961 bytes in total, over its ceiling of 819200`.
+    - [x] FIX — `bash scripts/check_task_history.sh --seal M4`, on the committed tree, that round's work set aside: 10 closed subtrees, 10 leaves, into `docs/task-history/M4/`, 10 log rows into `rows-0005.md`, each with its row in the index and a stub in the tree.
+    - [x] ADDRESSED — `task-history: OK (563 sealed file(s), each against its row and its sealing commit`, "the reconstruction is byte for byte"; `docs/tasks/` 768,673 bytes in all.
+    - [x] NO REGRESSION — `bash scripts/check_doctrines.sh` on the staged tree → exit 0. No code changed.
+    - [x] LOCKSTEP — the tree, the index and the Commit Log.
+  Verification: the seal's own proof, the gate.
+  Commit: `ARCHOGEN-PROGRAM-1287 (leaf PROGRAM.139)`
+
 ## Roadmap coverage map
 
 Every roadmap unit has exactly one owning tree. This table is the answer to "where does
@@ -1617,6 +1629,7 @@ leaf's outcome is its row in the Commit Log below, and a sealed leaf's full reco
 | `PROGRAM.127.38` | `ARCHOGEN-PROGRAM-1280 (leaf PROGRAM.127.38)` | **the host guard's review, round 38**: a placeholder counted wherever text is taken as it stands; a nested run's job standing for the outer run's words; a group fed a here-document a stated limit; a volume of `/`'s group and a root that is no directory refused by every verb |
 | `PROGRAM.127.39` | `ARCHOGEN-PROGRAM-1283 (leaf PROGRAM.127.39)` | **the host guard's review, round 39**: each reader a word builds hands back its count and stands where the text was a word; an unquoted here-document expanded before its shell reads it; a gone root said alike by every verb but the hook |
 | `PROGRAM.127.40` | `ARCHOGEN-PROGRAM-1286 (leaf PROGRAM.127.40)` | **the host guard's review, round 40**: a backslash before a line feed taken out as the shell takes it out; a here-document's delimiter taken as written and its end found as the shell finds it; a self-test row reading the host's refusal; a gone root's heavy refusal saying so |
+| `PROGRAM.139` | `ARCHOGEN-PROGRAM-1287 (leaf PROGRAM.139)` | **the M4 tree sealed again**: 10 closed subtrees and 10 leaves, so `docs/tasks/` is under its ceiling |
 
 ## Changelog
 
@@ -1732,3 +1745,4 @@ leaf's outcome is its row in the Commit Log below, and a sealed leaf's full reco
 - `2026-11-14`: `PROGRAM.127.38` done: the guard's round 38, seven findings answered, four defects, three failing open in round 37's reading; `PROGRAM.127.39` filed for round 39.
 - `2026-11-14`: `PROGRAM.127.39` done: the guard's round 39, three findings answered, two defects failing open in the reader of a kill; `PROGRAM.127.40` filed for round 40.
 - `2026-11-14`: `PROGRAM.127.40` done: the guard's round 40, four findings answered, two defects, one failing open in the reader; `PROGRAM.127.41` filed for round 41.
+- `2026-11-14`: `PROGRAM.139` done: the M4 tree sealed again, ten closed leaves of two reviews, `docs/tasks/` under its ceiling.
