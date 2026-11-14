@@ -1301,22 +1301,31 @@ fn what_an_alarm_owes_as_a_source_has_its_owed_fact() {
     }
 }
 
-/// §3: a source on a target owes `external`, which the composition gates every `J` on (`compose.rs`, `external.<source>`), by its controller's catalog
-/// record, as model §8 rule 8 has the controller's line and context; `/1` §2.5 gives it the simulator on the playground alone (round 22, RP22-1; round 27,
-/// RP27-1, which took it from the realization). `(realization-fact …)` carries an alarm's, and a called node's two facts below.
+/// §3: a source on a target owes `external`, which the composition gates every `J` on (`compose.rs`, `external.<source>`), by the realization, the
+/// supplier of its generated service, as `archogen_catalog::selection` and the catalog record's §12 group `external.<source>` with `service.<source>`,
+/// read from that group's supplier alone; `/1` §2.5 gives it the simulator on the playground alone (round 22, RP22-1). Round 27 gave it the controller's
+/// record, which no reader reads it from where no record supplies the service (round 30, RP30-1). `(realization-fact …)` carries it, an alarm's, and a
+/// called node's two facts below.
 #[test]
-fn a_source_s_external_on_a_target_is_its_controller_record_s() {
+fn a_source_s_external_comes_with_its_service() {
     let owed = RECORD
         .split("**`(owed …)`, as `/2` writes it.**")
         .nth(1)
         .expect("what `/2` owes");
     // Its subject is the source's, `(source NAME)`, as `/1` writes the source's other facts (round 23, RP23-5).
     let of_a_route = owed
-        .split("of a source on a target by `catalog`,")
+        .split("of a source on a target by `realization`,")
         .nth(1)
         .expect("a source's");
+    let selection = include_str!("../../archogen-catalog/src/selection.rs");
+    assert!(
+        selection.contains("\"one-request-per-arrival.\",\n        \"external.\","),
+        "grouped with its service"
+    );
     let model = include_str!("../../../docs/semantics/model.md");
-    assert!(model.contains("line and context, and the latency are the catalog's"));
+    assert!(model.contains(
+        "a source's `external.<source>` being stated with its service by that service's supplier"
+    ));
     let of_a_route = &of_a_route[..of_a_route.find(';').expect("its end")];
     assert!(of_a_route.contains("`external`"), "{of_a_route}");
     assert!(of_a_route.contains("`(source NAME)`"), "{of_a_route}");
@@ -1568,12 +1577,11 @@ fn every_fact_the_realization_owes_is_handed_to_its_format() {
 /// room had two outcomes (round 23, RP23-3).
 #[test]
 fn section_7_places_every_refusal_in_one_order() {
-    const ORDER: [&str; 8] = [
+    const ORDER: [&str; 7] = [
         "a target's own refusals",
         "`missing-fact` from the joint rules",
         "an application's unmet",
         "too few levels while lowering the plan's code",
-        "a source whose `external` its controller's record states `no`",
         "a realization of another code identity",
         "a route whose `external` the realization's file states `no`",
         "no room while placing",
@@ -1595,16 +1603,13 @@ fn section_7_places_every_refusal_in_one_order() {
         .collect();
     assert!(at.windows(2).all(|pair| pair[0] < pair[1]), "{at:?}");
     // The reader's case: a route stated not to reach the controller, and no room for the boot stack, refuses as §6 does, naming the source.
-    let first = |holding: [bool; 8]| holding.iter().position(|holds| *holds).map(|at| ORDER[at]);
+    let first = |holding: [bool; 7]| holding.iter().position(|holds| *holds).map(|at| ORDER[at]);
     assert_eq!(
-        first([false, false, false, false, false, false, true, true]),
+        first([false, false, false, false, false, true, true]),
         Some("a route whose `external` the realization's file states `no`")
     );
-    // A source's, read with the catalog, before any realization (round 27, RP27-1).
-    assert_eq!(
-        first([false, false, false, false, true, false, true, true]),
-        Some("a source whose `external` its controller's record states `no`")
-    );
+    // A source's `external` is the realization's again, so its `no` is read where an alarm's is (round 30, RP30-1).
+    assert!(!RECORD.contains("a source whose `external` its controller's record states `no`"));
     assert!(RECORD.contains("refuses the system `unsupported-profile`, naming its source"));
 }
 
@@ -1691,10 +1696,10 @@ fn every_route_of_a_plan_reaches_the_controller() {
     ));
 }
 
-/// The ledger: on a target the checker reads each part of a source's service group where it is stated, its code facts from the realization, the generated
-/// service in a record's place as an alarm's (`RA-H5`), and its `external.<source>` from the controller's record (model §8 rule 8). Before, the records gave
-/// the whole group to a catalog record, `compose.rs` knew no realization as its supplier, and `RA-H5` re-anchored an alarm's alone, so a complete plan with
-/// a source was one the checker could not read (round 27, RP27-1).
+/// The ledger: on a target the checker reads a source's whole service group, `external.<source>` among it, from the realization, the generated service in a
+/// record's place as an alarm's (`RA-H5`), as the catalog's selection groups it. Before round 27, the records gave the group to a catalog record and
+/// `compose.rs` knew no realization as its supplier (RP27-1); round 27 then split `external.<source>` off to the controller's record, which no reader reads
+/// it from (round 30, RP30-1).
 #[test]
 fn a_source_s_service_group_is_read_where_it_is_stated() {
     let row = RECORD
@@ -1705,7 +1710,7 @@ fn a_source_s_service_group_is_read_where_it_is_stated() {
         "`C_s`",
         "`external.<source>`",
         "`RA-H5`",
-        "model §8 rule 8",
+        "`archogen_catalog::selection`",
         "never defaulted",
     ] {
         assert!(row.contains(said), "{said}: {row}");
@@ -1717,8 +1722,8 @@ fn a_source_s_service_group_is_read_where_it_is_stated() {
         .find(|line| line.starts_with("| `RPF-H5` | `M4.2` |"))
         .expect("the realization's format");
     assert!(
-        !h5.contains("a source's `external`"),
-        "the controller's record states it: {h5}"
+        h5.contains("a source's `external`"),
+        "the realization's format states it: {h5}"
     );
 }
 
@@ -1761,7 +1766,7 @@ fn the_catalog_digest_holds_no_cost() {
 /// no)` (round 28, RP28-1).
 #[test]
 fn every_fact_the_catalog_owes_is_handed_to_its_records() {
-    const BY_RPF_H1: [(&str, &str); 17] = [
+    const BY_RPF_H1: [(&str, &str); 16] = [
         ("trap-frame", "the trap frame"),
         ("guard", "the stack guard"),
         ("alignment", "each stack's and table's alignment"),
@@ -1785,7 +1790,6 @@ fn every_fact_the_catalog_owes_is_handed_to_its_records() {
             "each table a generated system holds as a base and a size",
         ),
         ("controller-line", "each source's line"),
-        ("external", "each source's line and `external.<source>`"),
         ("epoch-lead", "the port's `epoch-lead`"),
         ("controller-levels", "a controller's levels"),
     ];
@@ -1818,8 +1822,8 @@ fn every_fact_the_catalog_owes_is_handed_to_its_records() {
         }
     }
     for fact in [
-        "external",
         "controller-line",
+        "controller-levels",
         "trap-frame",
         "compare-rounding",
         "epoch-lead",
@@ -1846,10 +1850,36 @@ fn every_fact_the_catalog_owes_is_handed_to_its_records() {
         }
     }
     let tasks = include_str!("../../../docs/tasks/M4.md");
-    assert!(
-        tasks.contains("each source's line and `external.<source>`"),
-        "`M4.10` quotes it"
-    );
+    assert!(tasks.contains("- [RPF-H1] "), "`M4.10` quotes it");
+    // A fact of a service's group comes from the group's supplier, which no catalog record is for a generated service, so the catalog owes none of them
+    // (round 30, RP30-1): read from `archogen_catalog::selection`'s own table.
+    let selection = include_str!("../../archogen-catalog/src/selection.rs");
+    let service = selection
+        .split("const SERVICE: [&str; 5] = [")
+        .nth(1)
+        .expect("the service group");
+    let service = &service[..service.find("];").expect("its end")];
+    let members: Vec<&str> = service
+        .split('"')
+        .skip(1)
+        .step_by(2)
+        .map(|member| member.trim_end_matches('.'))
+        .collect();
+    assert!(members.contains(&"external"), "{members:?}");
+    for (at, _) in owed.match_indices("by `catalog`") {
+        let after = &owed[at..];
+        let end = [after.find(';'), after.find('\n'), after.find(". ")]
+            .into_iter()
+            .flatten()
+            .min()
+            .unwrap_or(after.len());
+        for fact in after[..end].split('`').skip(1).step_by(2) {
+            assert!(
+                !members.contains(&fact),
+                "`{fact}` is a service's, owed by the catalog"
+            );
+        }
+    }
 }
 
 /// §1: what moves the code identity said as it is. No cost of a timing model moves it but the timer's `compare-rounding`, on its own kept line, whose
@@ -1977,8 +2007,8 @@ fn the_controller_owes_what_no_record_states() {
 }
 
 /// §3 against the composite-inputs record's table: no fact it calls hardware is owed by the realization but as that table has it, "from the record that
-/// supplies `service.<source>`", which `RA-H5` makes the realization for an alarm; a source's `external` is its controller's record's (model §8 rule 8).
-/// The class RP27-1 found, a source's `external` given to the realization for five rounds, closed by a check (round 29's audit).
+/// supplies `service.<source>`", which is the realization for a generated service, an alarm's by `RA-H5` and a source's by `RPF-H8`. Round 29 wrote this row
+/// to hold round 27's owner, a source's `external` the controller's record's, against the table it reads (round 30, RP30-1).
 #[test]
 fn no_hardware_fact_is_owed_by_the_realization_but_as_its_table_has_it() {
     let inputs = include_str!("../../../docs/specs/catalog/decision_runtime-composite-inputs.md");
@@ -2009,7 +2039,9 @@ fn no_hardware_fact_is_owed_by_the_realization_but_as_its_table_has_it() {
         for fact in clause[at..].split('`').skip(1).step_by(2) {
             if hardware.contains(&fact) {
                 assert!(
-                    fact == "external" && clause[..at].contains("of an alarm"),
+                    fact == "external"
+                        && (clause[..at].contains("of an alarm")
+                            || clause[..at].contains("of a source")),
                     "`{fact}`, a hardware fact, owed by the realization: {}",
                     &clause[..at.min(200)]
                 );
@@ -2869,7 +2901,14 @@ fn a_hosted_plan_owes_what_section_3_owes() {
         .expect("the table's owed row");
     assert!(owed.contains("§3's"), "{owed}");
     assert!(!owed.contains("as `/1` writes each"), "{owed}");
-    for what in ["`epoch-lead`", "`last-act-lead`", "§5"] {
+    // A hosted route writes no `(controller …)`, so it owes neither the line nor the levels (round 30, RP30-2).
+    for what in [
+        "`epoch-lead`",
+        "`last-act-lead`",
+        "§5",
+        "`controller-line`",
+        "`controller-levels`",
+    ] {
         assert!(owed.contains(what), "{owed} lacks {what}");
     }
 }

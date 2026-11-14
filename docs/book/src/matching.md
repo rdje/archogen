@@ -255,7 +255,8 @@ with the search (`M3.4`).
 **The interrupts an assignment relies on.** Under one active core, every interrupt a plan relies on must be routed
 from its source to the core, and the analysis requires the interrupts the build enables to equal its declared sources
 plus the timer. The description says which source is part of the system; the controller between them, its line and
-the latency are the catalog's. So the check reports a **route obligation** for each provider an assignment relies on
+the latency are the catalog's, and whether a source reaches the core through that controller is stated with its
+interrupt service, by whoever supplies that service: the generated code, where the plan generates it. So the check reports a **route obligation** for each provider an assignment relies on
 for an interrupt — never a refusal. In the sporadic-release case,
 
 ```text
