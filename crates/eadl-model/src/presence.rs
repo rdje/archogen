@@ -174,15 +174,18 @@ pub struct FactMap {
     ///
     /// ⭐ A composition reference is not a fact request. `(requires (uses timer.counter))` on a
     /// platform names a *block that is declared right there*, and that block's own obligations
-    /// are checked by its own declaration. Treating every `uses` target as a leaf fact made the
-    /// first real example fail with `missing-fact: console.uart` — found by the example suite,
-    /// not by inspection.
+    /// enter the closure as it may be bound (`composed`). Treating every `uses` target as a leaf
+    /// fact made the first real example fail with `missing-fact: console.uart` — found by the
+    /// example suite, not by inspection.
     declared: BTreeSet<String>,
     /// `name` → the facts and services it needs.
     needs: BTreeMap<String, Vec<(String, Span)>>,
-    /// What the system requests: every `uses`, and a system's own `needs`, its tasks and its clauses among it. A
-    /// `needs` of anything else is an edge, followed only once what wrote it is reached.
+    /// What the system requests: every `uses` but a block's or a platform's, which composes, and a system's own `needs`, its tasks and its clauses among it.
+    /// A `needs` of anything else is an edge, followed only once what wrote it is reached.
     requested: Vec<(String, Span)>,
+    /// Each name a block's or a platform's `uses` composes. It requests nothing: a part enters the closure as it may be bound, offering a fact inside it, and
+    /// one that offers none fails nothing (`ROADMAP.md` §5.3; leaf `M3.4.17.3`). A name no declaration bears is requested all the same, so it is refused.
+    composed: Vec<(String, Span)>,
     /// Each block's and platform's direct composition, by [`composition`] (leaf `M3.4.8`).
     composes: BTreeMap<String, Vec<String>>,
     /// What a declaration read for its name alone, or its asking alone, says beside that: it answers nothing, and stays visible (model §2 rule 4).
@@ -250,7 +253,8 @@ impl FactMap {
         if owner != "<unnamed>" {
             self.declared.insert(owner.clone());
         }
-        if matches!(form.head(), Some("defblock" | "defplatform")) {
+        let composing = matches!(form.head(), Some("defblock" | "defplatform"));
+        if composing {
             self.composes.insert(owner.clone(), composition(form));
         }
         let asks = form.head() == Some("defsystem");
@@ -270,7 +274,11 @@ impl FactMap {
                 }
                 "uses" => {
                     for name in names_in(clause) {
-                        self.requested.push(name);
+                        if composing {
+                            self.composed.push(name);
+                        } else {
+                            self.requested.push(name);
+                        }
                     }
                 }
                 // A refinement pair is two declarations, one owing the other model §3's obligations,
@@ -281,7 +289,7 @@ impl FactMap {
                 _ => {
                     // `requires` and other clauses can nest `uses`/`needs`, so recurse into
                     // anything that is not itself a presence clause.
-                    self.collect_nested(clause, &owner, asks);
+                    self.collect_nested(clause, &owner, asks, composing);
                 }
             }
         }
@@ -332,7 +340,7 @@ impl FactMap {
         self.offered = offered;
     }
 
-    fn collect_nested(&mut self, clause: &Form, owner: &str, asks: bool) {
+    fn collect_nested(&mut self, clause: &Form, owner: &str, asks: bool, composing: bool) {
         match clause.head() {
             Some("needs") => {
                 for name in names_in(clause) {
@@ -344,13 +352,17 @@ impl FactMap {
             }
             Some("uses") => {
                 for name in names_in(clause) {
-                    self.requested.push(name);
+                    if composing {
+                        self.composed.push(name);
+                    } else {
+                        self.requested.push(name);
+                    }
                 }
             }
             _ => {
                 for item in clause.items().iter().skip(1) {
                     if matches!(item, Form::List { .. }) {
-                        self.collect_nested(item, owner, asks);
+                        self.collect_nested(item, owner, asks, composing);
                     }
                 }
             }
@@ -376,9 +388,10 @@ impl FactMap {
     /// [`collect`](Self::collect), for a block or a platform that is none of the hardware of the system this map is read for (model §8 rule 7; leaf `M3.4.16`): what it offers or
     /// declares absent answers no need there, and what it names or needs asks nothing. It is still a declaration: its own contradiction is one, and all it says stays visible.
     pub fn collect_silent(&mut self, form: &Form) {
-        let (needs, requested) = (
+        let (needs, requested, composed) = (
             std::mem::take(&mut self.needs),
             std::mem::take(&mut self.requested),
+            std::mem::take(&mut self.composed),
         );
         self.collect(form);
         let asked: Vec<String> = self
@@ -388,11 +401,13 @@ impl FactMap {
                 std::iter::once(owner).chain(edges.iter().map(|(name, _)| name))
             })
             .chain(self.requested.iter().map(|(name, _)| name))
+            .chain(self.composed.iter().map(|(name, _)| name))
             .cloned()
             .collect();
         self.mentioned.extend(asked);
         self.needs = needs;
         self.requested = requested;
+        self.composed = composed;
         if let Some(name) = form.items().get(1).and_then(Form::as_symbol) {
             self.silent.insert(name.to_string());
         }
@@ -423,27 +438,69 @@ impl FactMap {
         }
     }
 
+    /// What the closure starts from: what the system requests, and each composed name no declaration bears.
+    fn roots(&self) -> Vec<String> {
+        self.requested
+            .iter()
+            .chain(
+                self.composed
+                    .iter()
+                    .filter(|(name, _)| !self.declared.contains(name)),
+            )
+            .map(|(name, _)| name.clone())
+            .collect()
+    }
+
+    /// What `name`, inside the closure, brings into it: each name it needs, then each block or platform that may be bound for it, offering it, or offering a
+    /// fact the vocabulary's rule derives it of. Such a part's own needs are then followed, as its preconditions: a part that offers nothing inside fails
+    /// nothing, and stays visible (`ROADMAP.md` §5.3; leaf `M3.4.17.3`). Which one the search binds is the search's, so each that may be is read, a precondition
+    /// of one it does not bind refused all the same. Each comes with whether it offers `name`, a part, rather than being needed by it.
+    fn brought_by(&self, name: &str) -> Vec<(String, bool)> {
+        let mut next: Vec<(String, bool)> = self
+            .needs
+            .get(name)
+            .into_iter()
+            .flatten()
+            .map(|(fact, _)| (fact.clone(), false))
+            .collect();
+        let rule = self
+            .derived
+            .get(name)
+            .into_iter()
+            .flatten()
+            .map(String::as_str);
+        for fact in std::iter::once(name).chain(rule) {
+            for offer in self.offered.get(fact).into_iter().flatten() {
+                let part = &offer.declared_by;
+                if self.composes.contains_key(part)
+                    && !self.silent.contains(part)
+                    && !next.iter().any(|(named, _)| named == part)
+                {
+                    next.push((part.clone(), true));
+                }
+            }
+        }
+        next
+    }
+
     /// The transitive closure of everything the requested services depend on.
     ///
-    /// Breadth-first from the requests, following `needs` edges. A name that needs nothing is a
-    /// leaf fact; a name that needs others is a service.
+    /// Breadth-first from the requests, following `needs` edges and each part that may be bound ([`brought_by`](Self::brought_by)). A name
+    /// that needs nothing is a leaf fact; a name that needs others is a service.
     #[must_use]
     pub fn closure(&self) -> BTreeSet<String> {
+        // Each name is queued once: a part offering many facts inside, each taking it into the queue apart, held its name once for each (`crates/archogen-api/tests/cost.rs`).
         let mut seen: BTreeSet<String> = BTreeSet::new();
-        let mut queue: Vec<String> = self
-            .requested
-            .iter()
-            .map(|(name, _)| name.clone())
-            .collect();
-        while let Some(name) = queue.pop() {
-            if !seen.insert(name.clone()) {
-                continue;
+        let mut queue: Vec<String> = Vec::new();
+        for name in self.roots() {
+            if seen.insert(name.clone()) {
+                queue.push(name);
             }
-            if let Some(edges) = self.needs.get(&name) {
-                for (next, _) in edges {
-                    if !seen.contains(next) {
-                        queue.push(next.clone());
-                    }
+        }
+        while let Some(name) = queue.pop() {
+            for (next, _) in self.brought_by(&name) {
+                if seen.insert(next.clone()) {
+                    queue.push(next);
                 }
             }
         }
@@ -451,7 +508,8 @@ impl FactMap {
     }
 
     /// Each fact of the closure, and what pulled it in: `None` for a fact the description requests itself,
-    /// `Some(owner)` for one a fact already inside needs (leaf `M1.30`).
+    /// `Some(owner)` for one a fact already inside needs (leaf `M1.30`). A part that may be bound is pulled in by what needs the fact it offers, so
+    /// `None` where the description requests that fact itself (leaf `M3.4.17.3`): a fact needs no provider, its requester does.
     ///
     /// The same traversal as [`Self::closure`], breadth-first so the recorded owner is on a shortest path
     /// from a request, and deterministic because `requested` and `needs` are ordered. Its facts are exactly
@@ -459,20 +517,26 @@ impl FactMap {
     #[must_use]
     pub fn closure_origins(&self) -> Vec<(String, Option<String>)> {
         let mut origin: BTreeMap<String, Option<String>> = BTreeMap::new();
+        // Each name queued once, as in `closure`: the first to queue it is the first taken off, so it decides what pulled the name in, as before.
+        let mut queued: BTreeSet<String> = BTreeSet::new();
         let mut queue: std::collections::VecDeque<(String, Option<String>)> = self
-            .requested
-            .iter()
-            .map(|(name, _)| (name.clone(), None))
+            .roots()
+            .into_iter()
+            .filter(|name| queued.insert(name.clone()))
+            .map(|name| (name, None))
             .collect();
         while let Some((name, by)) = queue.pop_front() {
             if origin.contains_key(&name) {
                 continue;
             }
-            if let Some(edges) = self.needs.get(&name) {
-                for (next, _) in edges {
-                    if !origin.contains_key(next) {
-                        queue.push_back((next.clone(), Some(name.clone())));
-                    }
+            for (next, offers) in self.brought_by(&name) {
+                if !origin.contains_key(&next) && queued.insert(next.clone()) {
+                    let pulled_by = if offers {
+                        by.clone()
+                    } else {
+                        Some(name.clone())
+                    };
+                    queue.push_back((next, pulled_by));
                 }
             }
             origin.insert(name, by);
@@ -492,6 +556,7 @@ impl FactMap {
             all.extend(edges.iter().map(|(name, _)| name.clone()));
         }
         all.extend(self.requested.iter().map(|(name, _)| name.clone()));
+        all.extend(self.composed.iter().map(|(name, _)| name.clone()));
         all.extend(self.mentioned.iter().cloned());
         all
     }

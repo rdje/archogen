@@ -58,7 +58,7 @@ use crate::workload;
 /// nothing. `docs/semantics/model.md` §2 rule 4 states the channel.
 #[derive(Debug, Clone, Default, PartialEq, Eq)]
 pub struct Closure {
-    /// Each fact inside, with the fact that needs it — `None` for one the description requests itself.
+    /// Each fact inside, with the fact that needs it — `None` for one the description requests itself — a part that may be bound with what needs the fact it offers.
     pub inside: Vec<(String, Option<String>)>,
     /// Each fact declared or needed that lies outside: nothing this description requests depends on it.
     pub outside: Vec<String>,

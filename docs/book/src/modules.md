@@ -159,8 +159,8 @@ means `board.bus.clock` — without the rule both would be looked for at the roo
 $ archogen check docs/semantics/modules/app.sibling.eadl
 docs/semantics/modules/app.sibling.eadl: accepted against profile `rt-static-up-v1` (5 declaration(s))
   elaborated from 2 instance(s): board = hw.bus 1.0, (root) = app.sibling 1.0
-  closure: board.bus.clock (needed by board.bus.fast), board.bus.fast (requested), board.bus.main (requested), board.bus.timer (requested)
-  outside the closure, needed by nothing requested: app.rt, bus-width, clock-rate, counter-width
+  closure: board.bus.clock (needed by board.bus.fast), board.bus.fast (requested), board.bus.main (requested)
+  outside the closure, needed by nothing requested: app.rt, board.bus.timer, bus-width, clock-rate, counter-width
   this checks the description, not a system: no resolution, generation or analysis has run
 ```
 

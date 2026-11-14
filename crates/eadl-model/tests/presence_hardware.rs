@@ -13,7 +13,7 @@ use eadl_front::{SourceMap, Verdict};
 use std::collections::BTreeMap;
 
 use eadl_model::check::{
-    check, check_with_vocabulary, default_profile, shipped_registry, VocabularyFacts,
+    check, check_with_vocabulary, default_profile, shipped_registry, Outcome, VocabularyFacts,
 };
 
 fn repo_root() -> PathBuf {
@@ -41,6 +41,17 @@ fn vocabulary() -> VocabularyFacts {
 
 /// The verdict of the check on `text`, told the vocabulary or not, and each error it gives as `code: message`.
 fn judged(text: &str, told_the_vocabulary: bool) -> (Verdict, Vec<String>) {
+    let outcome = outcome_of(text, told_the_vocabulary);
+    let said = outcome
+        .diagnostics
+        .iter()
+        .map(|d| format!("{}: {}", d.code, d.message))
+        .collect();
+    (outcome.verdict, said)
+}
+
+/// The check's whole outcome on `text`, told the vocabulary or not.
+fn outcome_of(text: &str, told_the_vocabulary: bool) -> Outcome {
     let mut sources = SourceMap::new();
     let kinds: Vec<(String, String)> = [
         "docs/semantics/kinds/core.eadl",
@@ -56,17 +67,11 @@ fn judged(text: &str, told_the_vocabulary: bool) -> (Verdict, Vec<String>) {
     let id = sources
         .add("t.eadl", format!("(eadl-version eadl/1)\n{text}"))
         .expect("small");
-    let outcome = if told_the_vocabulary {
+    if told_the_vocabulary {
         check_with_vocabulary(&sources, id, &registry, default_profile(), &vocabulary())
     } else {
         check(&sources, id, &registry, default_profile())
-    };
-    let said = outcome
-        .diagnostics
-        .iter()
-        .map(|d| format!("{}: {}", d.code, d.message))
-        .collect();
-    (outcome.verdict, said)
+    }
 }
 
 /// As the commands check a description: told the vocabulary.
@@ -260,4 +265,111 @@ fn a_description_of_no_system_is_read_whole() {
 (defblock accel (offers sha-accel (reachable-at-privilege machine)))
 (defservice hash (requires (needs sha-accel)))";
     assert_eq!(checked(none).0, Verdict::Ok, "{:?}", checked(none).1);
+}
+
+/// `ROADMAP.md` §5.3: "adding an unused device is not automatically an invalid refinement". `dma.x` is composed by the
+/// platform and offers nothing the system asks, so none of it may be bound: its need lies outside the closure, visible,
+/// and fails nothing. Before, a block's or platform's composition requested what it composes, and `dma-engine` was
+/// `missing-fact` (leaf `M3.4.17.3`, from `M4.4.1.5`'s reader).
+const UNUSED: &str = "
+(defblock console.uart (offers (observable-output true) (reachable-at-privilege machine)))
+(defblock dma.x (offers (reachable-at-privilege machine)) (requires (needs dma-engine)))
+(defplatform soc.here (offers (core-count 1 tick) (reachable-at-privilege machine)) (requires (uses console.uart dma.x)))
+(defservice out (requires (needs observable-output)))
+(defsystem s (requires (uses out)) (platform (uses soc.here)))";
+
+#[test]
+fn an_unused_device_s_need_fails_nothing_and_stays_visible() {
+    for told in [true, false] {
+        let outcome = outcome_of(UNUSED, told);
+        let said: Vec<String> = outcome
+            .diagnostics
+            .iter()
+            .map(|d| format!("{}: {}", d.code, d.message))
+            .collect();
+        assert_eq!(
+            outcome.verdict,
+            Verdict::Ok,
+            "told the vocabulary: {told}: {said:?}"
+        );
+        for name in ["dma-engine", "dma.x"] {
+            assert!(
+                outcome
+                    .closure
+                    .outside
+                    .iter()
+                    .any(|outside| outside == name),
+                "told the vocabulary: {told}: `{name}` lies outside the closure: {:?}",
+                outcome.closure
+            );
+        }
+    }
+}
+
+/// A device enters the closure as it may be bound, and its need with it: `console.uart` offers what `out` needs.
+#[test]
+fn a_device_that_may_be_bound_brings_its_need() {
+    let bound = UNUSED.replace(
+        "(defblock console.uart (offers (observable-output true) (reachable-at-privilege machine)))",
+        "(defblock console.uart (offers (observable-output true) (reachable-at-privilege machine)) (requires (needs dma-engine)))",
+    );
+    assert_ne!(bound, UNUSED);
+    for told in [true, false] {
+        let (verdict, said) = judged(&bound, told);
+        assert_eq!(
+            verdict,
+            Verdict::MissingFact,
+            "told the vocabulary: {told}: {said:?}"
+        );
+        assert!(
+            said.iter()
+                .any(|d| d.starts_with("missing-fact: `dma-engine`")),
+            "told the vocabulary: {told}: {said:?}"
+        );
+    }
+    // So does one that answers a need outside the vocabulary, and one composed deeper: `dma.x` offers `sha-accel`.
+    let answering = UNUSED
+        .replace(
+            "(defblock dma.x (offers (reachable-at-privilege machine))",
+            "(defblock dma.x (offers sha-accel (reachable-at-privilege machine))",
+        )
+        .replace(
+            "(defservice out (requires (needs observable-output)))",
+            "(defservice out (requires (needs observable-output sha-accel)))",
+        );
+    assert_ne!(answering, UNUSED);
+    for told in [true, false] {
+        let (verdict, said) = judged(&answering, told);
+        assert_eq!(
+            verdict,
+            Verdict::MissingFact,
+            "told the vocabulary: {told}: {said:?}"
+        );
+        assert!(
+            said.iter()
+                .any(|d| d.starts_with("missing-fact: `dma-engine`")),
+            "told the vocabulary: {told}: {said:?}"
+        );
+    }
+}
+
+/// What the system names itself is requested as before: its platform's own need, and a block it uses.
+#[test]
+fn what_the_system_names_brings_its_need_as_before() {
+    let platform = UNUSED.replace(
+        "(requires (uses console.uart dma.x)))",
+        "(requires (uses console.uart dma.x) (needs soc-clock)))",
+    );
+    let used = UNUSED.replace("(requires (uses out))", "(requires (uses out dma.x))");
+    for text in [&platform, &used] {
+        assert_ne!(text.as_str(), UNUSED);
+        for told in [true, false] {
+            let (verdict, said) = judged(text, told);
+            assert_eq!(
+                verdict,
+                Verdict::MissingFact,
+                "told the vocabulary: {told}: {said:?}"
+            );
+        }
+    }
 }

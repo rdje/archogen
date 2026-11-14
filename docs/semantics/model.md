@@ -96,6 +96,9 @@ A platform declares what it **offers** and what it declares **absent**; a system
    here and refused by the search until `M3.4.7` makes the check adopt its verdict.
 3. **A required fact that nothing describes is missing.** It lies inside the dependency closure of what
    the system requests, by `uses` or `needs` wherever it writes them, its tasks and its clause among it, so no decision that depends on it can be made: `missing-fact`.
+   A block's or a platform's `uses` composes and requests nothing: a part enters the closure as it may be bound, offering a fact inside it or one the
+   vocabulary's rule derives such a fact of, and its own needs enter with it. Which part the search binds is the search's, so each that may be is read, and
+   a precondition of one it does not bind is refused all the same (leaf `M3.4.17.3`).
    **Rules 2 and 3 and the engine's adapters** (`SR-H9`; leaf `M3.2.4`, `docs/specs/adapters/decision_engine-adapters.md`
    §7). For a required fact one of the engine's adapter kinds **adds** — offers, not passed through from itself, and
    not named in what it requires beneath — both rules ask whether one block or platform of the description offers,
@@ -131,7 +134,8 @@ A platform declares what it **offers** and what it declares **absent**; a system
    `crates/eadl-resolve/tests/system_reading.rs` reads. The vocabulary is the search's to read, so the commands hand
    its facts' names to the check (`check_with_vocabulary`), and a check told none reads every description whole.
 4. **What lies outside the closure fails nothing, and stays visible** (§5.3). An undescribed fact that nothing
-   the description requests depends on is not an error. It is reported as metadata: `archogen check` prints,
+   the description requests depends on is not an error, a composed part's that offers nothing inside the closure among it, `ROADMAP.md` §5.3's unused device
+   (rule 3), though the search still binds such a part's needs on facts the vocabulary declares, used or not, until `M3.4.17.6`. It is reported as metadata: `archogen check` prints,
    after its verdict, the closure with what pulled each fact in and then every fact outside it
    (`Closure` in `crates/eadl-model/src/check.rs`). Those lines are not diagnostics, so the reference's §4
    rule 1 holds (leaf `M1.30`).
@@ -344,7 +348,8 @@ written from this section alone (`crates/archogen-plan-check/src/joint.rs`, `M3.
    or not, composed or not; one past the exact arithmetic, a decimal too precise to hold exactly (§1 rule 5) among them,
    which no one can say is whole (`M4.1.20`), `unsupported-profile`. A provider nothing is bound to owns
    nothing: an unused device costs nothing (`ROADMAP.md` §5.3) but the bytes it occupies in memory, which rule 10
-   charges.
+   charges. Its needs on facts the vocabulary declares are bound all the same, as any requester's, until `M3.4.17.6`; presence reads its other needs only as
+   it may be bound (§2 rule 3).
 6. **One assignment, then the search.** A conflict refuses the assignment it is found in, and an unknown blocks it. When
    no assignment holds, the description takes the highest code, by precedence, of one assignment's findings: the first
    blocked by unknowns alone, `missing-fact`, or, where every assignment has a conflict, the first's conflicts,

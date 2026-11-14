@@ -9,7 +9,8 @@ answer, an "I don't know" is a gap to fill.
 
 A gap matters only where something depends on it. A board's description mentions hardware the system never uses,
 so archogen works out what the system actually depends on — the **closure** of what it requests — blocks only on
-gaps inside it, and lists the rest for the author to see. A description that says both yes and no about the same
+gaps inside it, and lists the rest for the author to see. A device the board is made of enters the closure only where the
+system may use it, offering something the system needs: one it never uses fails nothing, and what it would need is listed too. A description that says both yes and no about the same
 fact is refused: archogen will not guess which half was meant.
 
 > **In one minute, for engineers.** Offered is a claim, not evidence; absent is a definite negative; undescribed is
@@ -70,8 +71,8 @@ nothing requests:
 ```console
 $ archogen check docs/semantics/cases/positive-unrelated-unknown.eadl
 docs/semantics/cases/positive-unrelated-unknown.eadl: accepted against profile `rt-static-up-v1` (5 declaration(s))
-  closure: counter-width (needed by time.monotonic), soc.p (requested), time.monotonic (requested), timer.counter (requested)
-  outside the closure, needed by nothing requested: core-count, descriptor-format, other.engine, s, transfer-engine
+  closure: counter-width (needed by time.monotonic), soc.p (requested), time.monotonic (requested), timer.counter (needed by time.monotonic)
+  outside the closure, needed by nothing requested: core-count, descriptor-format, other.engine, reachable-at-privilege, s, transfer-engine
   this checks the description, not a system: no resolution, generation or analysis has run
 ```
 
@@ -80,6 +81,15 @@ warning, no note) still holds (`docs/semantics/model.md` §2 rule 4). ⚠️ Unt
 paragraph said the fact "appears in the report's metadata" and it did not: the presence pass computed
 the boundary and nothing showed it. A test now reads the report of every accepted description
 (`crates/archogen-cli/tests/closure_report.rs`), so the boundary cannot be dropped again unseen.
+
+A platform's or a block's `uses` composes, and requests nothing. A part enters the closure as it may be bound, offering a fact
+inside it, and brings its own needs with it; `timer.counter` above is inside because `time.monotonic` needs the `counter-width`
+it offers, and the report says so. A part that offers nothing inside is listed outside and fails nothing: `ROADMAP.md` §5.3's
+"adding an unused device is not automatically an invalid refinement". Which part the search binds is the search's, so each
+that may be bound is read, and a precondition of one it does not bind is refused all the same. ⚠️ The search still binds a part's
+needs on facts the vocabulary declares, used or not, so `resolve` refuses an unused device's undescribed need that `check` now
+passes, which `M3.4.17.6` narrows (leaf `M3.4.17.3`; before it, every `uses` was a request, and an unused device's need was
+`missing-fact`).
 
 The fixtures F04 and F05 are deliberately run against the *same* description. A checker that
 blocks on every unknown passes F04 and fails F05; one that blocks on nothing passes F05 and
