@@ -129,10 +129,12 @@ def guard(*args: str, stdin: str | None = None, root: Path | None = None, limits
     if limits is not None:
         flags += ["--limits", json.dumps(limits)]
     done = subprocess.run([*PY, str(GUARD), verb, *flags, *rest], input=stdin, capture_output=True, text=True, errors="replace", timeout=60, env=env)
-    if verb == "run" and limits is None and done.returncode == g.UNCLEAR and any(line in done.stderr for line in HOST_LINES):
+    if verb == "run" and limits is None and done.returncode == g.UNCLEAR and refused_for_the_host(done.stderr):
         # Refused for the host's own line, not a case's, so a check of it says nothing either way: a case that asks only a status read it as a failure when the host
         # crossed its line between this test's look and `run`'s own (round 46). Its line, and no other refusal: every refusal prints the same hint, so a `run`
         # refused for its turn, as `case_run` asks five times, marked the host too, and a real failure after it read as the host's (round 47).
+        # And in its "not started" line alone, which names why it started nothing: a stop it tells before, "one process of ours holds X GiB, over Y", read as
+        # the host's swap (round 48).
         global last_unclear
         last_unclear = time.monotonic()
     return done
@@ -148,10 +150,17 @@ def until(condition, seconds: float = 20) -> bool:
     return bool(condition())
 
 
+def refused_for_the_host(said: str) -> bool:
+    """Whether `run` started nothing for the host's own line, read in its "not started" line alone and not in a stop it tells before it (round 48)."""
+    return any(line.startswith("host-guard: not started:") and any(mark in line for mark in HOST_LINES) for line in said.splitlines())
+
+
 def run_refused(job: subprocess.Popen, what: str) -> bool:
-    """Whether the host filled between this test's look and `run`'s own, so that `run` started nothing: that says nothing of what the case asks, and is said as not run."""
+    """Whether the host filled between this test's look and `run`'s own, so that `run` started nothing: that says nothing of what the case asks, and is said as not run.
+    An exit 75 is the host's only where the host was lately unclear, as `check` reads a failure: any other is the case's to judge, a refusal for its turn among them,
+    which read as the host's before and hid a failure after it (round 48)."""
     until(lambda: jobs_of(job.pid) or job.poll() is not None)
-    if job.poll() == g.UNCLEAR:
+    if job.poll() == g.UNCLEAR and (not host_clear() or time.monotonic() - last_unclear < UNCLEAR_LATELY_SECONDS):
         not_run.append(f"{what} ({TAKEN_AWAY})")
         return True
     return False

@@ -153,3 +153,15 @@ Said, and left as it stands: a parameter's default run as a command word, what a
 | G47-4 | gap, both bashes, written to, older | arithmetic's end is found by scans that skip quotes as plain text: `$[ ']' ]`, `$(( "\"))" ))`, `(( $'\'))' ))` | Stated in the record, a form written to |
 
 Said, and left as it stands: G47-3 and G47-4, forms written to; bash 4.0 to 5.2 are on no host here.
+
+**Round 48** — `2026-11-14`, leaf `PROGRAM.127.48`: not acceptable, 5 findings, 3 defects, after 2, on `3b6ffee4`, none in ordinary work and none failing open. Round 47's answers held where it looked: the self-test `1318 passed`; RAM by hand against the guard's; the lines, the constants and the pace; a census of 524 rows, 6 ours, each this repository's; rows read in time linear in their length; the record's 35 kill sentences; 24 ordinary commands passing; 6,156 generated nested-run forms, each refused. Its rigs are `target/p12748/work/`.
+
+| # | Kind | Finding | Answer |
+| --- | --- | --- | --- |
+| G48-1 | defect, the self-test, round 47's G47-1 answer and the code beside it | a `run` refused for its turn still read as the host's: `HOST_LINES` matched a stop `run` tells before \"not started\", \"one process of ours holds X GiB, over Y\", and `run_refused` read any exit 75 as the host's; no case today reaches either | The host's line read in the \"not started\" line alone; an exit 75 the host's only where the host was lately unclear, as `check` reads a failure |
+| G48-2 | defect, a false sentence, failing closed, written to | \"each bash's reading is a list of its own\" is not so where a shell's text is read twice inside a command read once: both readings go to one list, and `sh -c \"kill …; pgrep -fl x; echo \\$\"\"(date)\"` is refused | Said: such a text's two readings stand in one list, which fails closed |
+| G48-3 | defect, a false sentence, no harm measured | \"the work doubles once on any path\": a run in a shell's text read twice is found in each reading and read as a first run, so the innermost text is read 4, 12, 32, 80, 192 and 448 times at one to six levels | Said as measured: the work grows with the nesting, the quoting as fast, the cost near linear, ten levels 180 KB in 1.2 s |
+| G48-4 | gap, written to | a text only bash 5.3 runs around one only bash 3.2 runs, `bash -c 'echo ${ sh -c \"…\"; }'`, is read as one bash at every level, and a kill inside passes | Stated in the record |
+| G48-5 | gap, wording, written to | a `[` inside backquotes in `$[…]`, which both bashes skip, the reader counts, so the scan ends late, where the stated limit said only early | Stated in the record with it |
+
+Said, and left as it stands: G48-4 and G48-5, forms written to; bash 4.0 to 5.2 are on no host here.
