@@ -170,3 +170,16 @@ Said, and left as it stands: no `/2` lowering or alarm checker exists, so lines 
 | RP11-6 | wording | a context line's subject called an instance where it can be any node; `riscv-virt-up`'s file said to state a fact it will state; a delay said to leave nothing where it takes its `reach` whole | Each mended |
 
 Said, and left as it stands: `RA-H5` asks every alarm for `P`, `R` and `λ` where the release alarm's table gives some of them to some alarms alone, harmless, the checker's model asking none where none applies; no `/2` lowering exists, so lines are worked by hand.
+
+**Round 12** — `2026-11-14`, leaf `M4.1.7.2.12`: not acceptable, 6 findings, 3 defects, after 4, on `b18ac3c4`. The model held: `format2_model` `39 passed`, `alarm_model` `25 passed`; round 11's enabled set agreeing with `RA-H2` and model §8 rule 8; the placement row's rule `Joint::map`'s, `is_memory()` and one obligation per region; `(unit UNIT)` one answer in every order of §5; the counts fitting `u128`; the memory, the floor, the limit, `truncated-by`, the cursor and each stack's sum right by hand; `PRIORITY` at its edges; every kept question and hand-off answered or owned; no plan taken for another's. Its logs are `target/m4347/work/`.
+
+| # | Kind | Finding | Answer |
+| --- | --- | --- | --- |
+| RP12-1 | defect, no row | under `(timer none)` §4 ran the span to the act's call of the transition, where `RPF-H3`, all `M4.2` sees, ran it to a read for the epoch that never happens, admitting a wake due before the enabling | The span runs to the act's read for the epoch, or under `(timer none)` to its call of the port's transition, in §4 and `RPF-H3` word for word. A row of the reader's case |
+| RP12-2 | defect, narrow, no row | `(compare-magnitude false)` beside a window was a window read one way and refused the other | `(compare-magnitude true)` beside a window is refused; `false` beside one says nothing more and the device reads by its window. A row over every pair |
+| RP12-3 | defect, narrow, round 11's answer | the release timer's window or step past 64 bits had no outcome, `RPF-H4` refusing an alarm's alone | It refuses the release timer's as an alarm's, in `RPF-H4` word for word. A row reads it |
+| RP12-4 | gap | under `(timer none)` the interrupt's sum still named `timer-service-stack`, owing a figure of a service the plan has none of | It is nothing there and owed by no one |
+| RP12-5 | gap, unverified | a first plan's allocations are owed, and how such a plan is linked to measure its figures on was unsaid | No image is linked of it: its figures are measured or derived on what its compile makes, and the build links no image of a plan whose allocations are owed |
+| RP12-6 | wording, round 11's | round 11's rows said a placement obligation for each hole, where `Joint::map` reports one for each executable region not reserved | The record's row says so; `M4.md`'s was sealed with round 11's leaf by `PROGRAM.139` before this answer landed, and a sealed row is history, kept as it stood |
+
+Said, and left as it stands: no `/2` lowering exists, so lines are worked by hand; `riscv-virt-up`'s non-maskable interrupt was not checked against the privileged specification, which its reader's brief kept it from.

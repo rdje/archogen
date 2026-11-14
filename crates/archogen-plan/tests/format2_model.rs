@@ -2125,7 +2125,7 @@ fn last_act_lead(reads: &[(u64, u64)], act: u64) -> u64 {
 }
 
 /// §4's words for the span, which `RPF-H3` carries word for word.
-const SPAN: &str = "the greatest, over each read any arm or placeholder of the last act takes and each delay it writes, of the time from a tick of that read's or write's own counter before it to the act's read for the epoch";
+const SPAN: &str = "the greatest, over each read any arm or placeholder of the last act takes and each delay it writes, of the time from a tick of that read's or write's own counter before it to the act's read for the epoch, or under `(timer none)` to its call of the port's transition";
 
 /// Two reads of the last act on counters of their own ticks, each as `[release, write, transition, first, first_tick, second, second_tick, act]`: the
 /// release timer's tick, the port's write and transition, the two reads and their counters' ticks, and the act's read after both.
@@ -2675,4 +2675,79 @@ fn an_owed_unit_names_what_it_waits_on() {
         "nothing lacking, nothing owed"
     );
     assert!(RECORD.contains("`(unit UNIT)` naming the last such before it"));
+}
+
+// ---- round 12: the span under no timer, one reading of a compare, the release timer's counts past 64 bits
+
+/// Under `(timer none)` the act reads nothing for an epoch, so the span runs to its call of the port's transition, and `RPF-H3` says so: ended at the act's
+/// last write, a wake came due before the enabling (round 12, RP12-1).
+#[test]
+fn under_no_timer_the_span_ends_at_the_transition_call() {
+    // RP12-1's case: a wake read at 0 on a counter of tick 1, a placeholder written at 5, the call of the transition at 9, `epoch-lead` 4, the enabling at 11.
+    let (lead, enabling, call) = (4, 11, 9);
+    let reads = [(0, 1), (5, 1)];
+    let wake = Written {
+        read_at: 0,
+        distance: 10,
+    };
+    assert!(
+        wake.distance >= last_act_lead(&reads, 5) + lead && comes_due(&wake, 1) < enabling,
+        "ended at the last write"
+    );
+    assert!(
+        wake.distance < last_act_lead(&reads, call) + lead,
+        "ended at the call"
+    );
+    assert!(SPAN.ends_with("or under `(timer none)` to its call of the port's transition"));
+    let rpf_h3 = RECORD
+        .lines()
+        .find(|line| line.starts_with("| `RPF-H3` |"))
+        .expect("RPF-H3");
+    assert!(
+        rpf_h3.contains(SPAN),
+        "RPF-H3 carries the span under no timer too"
+    );
+}
+
+/// §2: how a device's compare is read, of its `compare-window` and its `compare-magnitude`: a window, whole numbers, nothing stated, or refused.
+#[derive(Debug, PartialEq)]
+enum Reading {
+    Window(u64),
+    WholeNumbers,
+    Unstated,
+    Refused,
+}
+
+fn compare_reading(window: Option<u64>, magnitude: Option<bool>) -> Reading {
+    match (window, magnitude) {
+        (Some(_), Some(true)) => Reading::Refused,
+        (None, Some(true)) => Reading::WholeNumbers,
+        (Some(window), _) => Reading::Window(window),
+        (None, _) => Reading::Unstated,
+    }
+}
+
+/// `(compare-magnitude false)` says nothing, so beside a window the device reads by its window, and only `(compare-magnitude true)` beside one is refused:
+/// round 11's "a magnitude beside a window" read two ways (round 12, RP12-2).
+#[test]
+fn a_compare_is_read_one_way() {
+    assert_eq!(
+        compare_reading(Some(16), Some(false)),
+        Reading::Window(16),
+        "RP12-2's case"
+    );
+    assert_eq!(compare_reading(Some(16), None), Reading::Window(16));
+    assert_eq!(compare_reading(Some(16), Some(true)), Reading::Refused);
+    assert_eq!(compare_reading(None, Some(true)), Reading::WholeNumbers);
+    assert_eq!(compare_reading(None, Some(false)), Reading::Unstated);
+    assert!(RECORD.contains("`(compare-magnitude true)` beside a window is `invalid-description`"));
+    // And the release timer's counts past 64 bits are refused as an alarm's are (RP12-3).
+    let rpf_h4 = RECORD
+        .lines()
+        .find(|line| line.starts_with("| `RPF-H4` |"))
+        .expect("RPF-H4");
+    assert!(
+        rpf_h4.contains("the release timer's or an alarm's"),
+        "{rpf_h4}"
+    );
 }
