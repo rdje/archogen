@@ -16,11 +16,12 @@
 - **Active tree:** `M4` → frontier `M4.1`, the accepted runtime plan, the model's amendments done (`M4.1.2`): `/1` for
   the hosted playground; `PROGRAM` → `PROGRAM.34`, the director's.
 - **The host is shared:** every heavy job goes through `scripts/host_guard.py`, one at a time (`docs/decisions/decision_host-guard.md`). A reader's brief says so.
-- **Next action:** answer `M4.1.7.2.11`, format `/2`'s round 11 (`target/m4345/report.md`): four defects, `(enabled …)` under
-  `(timer none)`, one placement obligation or many, an owed unit's `needs` lacking nothing of its own, and window and step counts
-  past 64 bits in the checker's model. Launch `PROGRAM.127.40`, the guard's round 40, its brief from `target/p12739/brief.txt`
-  as `target/p12738/land/brief39.py` made its own, into `target/p12740/`. One reader is out: `M4.12.1.12`, the application
-  inputs' round 12 (`target/m4346/report.md`, none there meaning ask again). Then `M3.4.17.3`.
+- **Next action:** answer `M4.12.1.12`, the application inputs' round 12 (`target/m4346/report.md`): five defects, a copy under
+  this repository's `Cargo.toml` refused by `AI-H3`, variables that move with the host, the remap flag's absolute directory in
+  the image identity, `AI-H3`'s and `AI-H4`'s digests diverging, and `std`/`core` as a crate's name. Launch `M4.1.7.2.12`, format
+  `/2`'s round 12, its brief from `target/m4345/brief.txt` as `target/m4343/land/brief11.py` made its own, into `target/m4347/`.
+  One reader is out: `PROGRAM.127.40`, the guard's round 40 (`target/p12740/report.md`, none there meaning ask again). Then
+  `M3.4.17.3`.
   `M4.5.2` and `M4.3.6` wait on `M4.1.7`, `M4.3.4` on `M2.21`. The runtime plan's design is accepted (`M4.1.1` done).
   `M3.2.7` and `M3.5.9`, full verification, wait for the
   features (doctrine 22).

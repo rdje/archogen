@@ -2324,7 +2324,7 @@ fn a_device_of_two_alarms_writes_each_line_once_for_each() {
     assert_eq!(obliged, alarms, "one for each alarm");
     for words in [
         "a requester on the route of each node it reaches",
-        "for each alarm whose reach holds its instance",
+        "for each alarm whose reach holds the line's subject",
         "an `(obligation route …)` line once for each alarm",
     ] {
         assert!(RECORD.contains(words), "{words}");
@@ -2453,7 +2453,7 @@ fn a_context_names_each_alarm_whose_reach_holds_it() {
     assert_eq!(named["time.monotonic"], [expiry]);
     assert_eq!(named["time.deadline"], [expiry]);
     assert!(!named.contains_key("an.unreached.node"));
-    assert!(RECORD.contains("for each alarm whose reach holds its instance"));
+    assert!(RECORD.contains("for each alarm whose reach holds the line's subject"));
 }
 
 /// §4: what one write reaches, as `decision_release-alarm.md` §2's `write` row and the checker's model say, in ticks: the less of the line's `reach` and what
@@ -2569,4 +2569,110 @@ fn ranks_tie_by_the_interrupt_s_text() {
     assert!("button" < "zz.watchdog" && order[1] == "(alarm zz.watchdog)");
     assert!(RECORD.contains("ties by the interrupt's text as an item writes it"));
     assert!(!RECORD.contains("ties by `NODE`'s text"));
+}
+
+// ---- round 11: the enabled set under no timer, a placement obligation for each hole, what an owed unit waits on
+
+/// §3: the `(enabled …)` line, `timer` then the routes by rank, and no `timer` where the plan writes `(timer none)`: the release alarm's §1 and model §8
+/// rule 8 enable no release timer a system has none of.
+fn enabled<'a>(timer: bool, routes: &[&'a str]) -> Vec<&'a str> {
+    let timer: &[&str] = if timer { &["timer"] } else { &[] };
+    timer.iter().chain(routes).copied().collect()
+}
+
+/// Under `(timer none)` the line holds no `timer`: `/1`'s order, read alone, gave a system whose only task is sporadic `(enabled timer)`, a trap the release
+/// alarm calls unexpected, and two identities (round 11, RP11-1).
+#[test]
+fn no_timer_is_enabled_under_timer_none() {
+    assert_eq!(
+        enabled(false, &[]),
+        Vec::<&str>::new(),
+        "a sporadic task alone on `riscv-virt-up`"
+    );
+    assert_eq!(enabled(false, &["(source button)"]), ["(source button)"]);
+    assert_eq!(
+        enabled(true, &["(source button)"]),
+        ["timer", "(source button)"]
+    );
+    assert!(RECORD.contains("its `(enabled …)` holds no `timer`"));
+}
+
+/// §3: one `(obligation placement (region PROVIDER NAME))` for each `Obligation::Placement` `Joint::map` reports, each executable region that is not reserved,
+/// in the region lines' order. Each region is `(base, name, provider, executable, reserved)`.
+fn placement_obligations(mut regions: Vec<(u64, &str, &str, bool, bool)>) -> Vec<String> {
+    regions.sort_by_key(|&(base, name, provider, _, _)| (base, name, provider));
+    regions
+        .into_iter()
+        .filter(|&(_, _, _, executable, reserved)| executable && !reserved)
+        .map(|(_, name, provider, _, _)| {
+            format!("(obligation placement (region {provider} {name}))")
+        })
+        .collect()
+}
+
+/// Two executable regions give two lines, and two providers' regions of one name two texts: round 10 wrote one, for the placement region, by its name alone
+/// (round 11, RP11-2).
+#[test]
+fn each_placement_obligation_has_a_line_of_its_own() {
+    // RP11-2's case: a platform with two executable regions, `sram1` and `sram2`; and a reserved one, which no placement takes.
+    let lines = placement_obligations(vec![
+        (0x2000_0000, "sram2", "soc", true, false),
+        (0x1000_0000, "sram1", "soc", true, false),
+        (0x3000_0000, "boot", "soc", true, true),
+    ]);
+    assert_eq!(
+        lines,
+        [
+            "(obligation placement (region soc sram1))",
+            "(obligation placement (region soc sram2))"
+        ]
+    );
+    let two_rams = placement_obligations(vec![
+        (0, "ram", "a", true, false),
+        (0, "ram", "b", true, false),
+    ]);
+    assert_eq!(two_rams.len(), 2);
+    assert_ne!(two_rams[0], two_rams[1]);
+    assert!(RECORD.contains("one line for each `Obligation::Placement` `Joint::map` reports"));
+}
+
+/// §5: each owed unit's `(needs …)`: the figures it lacks of its own, then `(unit UNIT)` naming the last owed unit before it, so one that lacks nothing of its
+/// own is never written with an empty list. Each unit is `(name, what it lacks of its own)`, in §5's order.
+fn owed_needs<'a>(units: &[(&'a str, &[&'a str])]) -> Vec<(&'a str, Vec<String>)> {
+    let mut last_owed: Option<&str> = None;
+    let mut out = Vec::new();
+    for &(name, lacks) in units {
+        if lacks.is_empty() && last_owed.is_none() {
+            continue;
+        }
+        let mut needs: Vec<String> = lacks
+            .iter()
+            .map(|fact| format!("(record {fact})"))
+            .collect();
+        if let Some(earlier) = last_owed {
+            needs.push(format!("(unit {earlier})"));
+        }
+        out.push((name, needs));
+        last_owed = Some(name);
+    }
+    out
+}
+
+/// A unit owed only because an earlier one is names that unit: round 10's words allowed `(needs)` or a copy of the earlier unit's needs (round 11, RP11-3).
+#[test]
+fn an_owed_unit_names_what_it_waits_on() {
+    // RP11-3's case: every figure stated but `idle-stack`, which the boot's stack lacks; the interrupt stack lacks nothing of its own.
+    let owed = owed_needs(&[("boot", &["idle-stack"]), ("interrupt", &[])]);
+    assert_eq!(
+        owed,
+        [
+            ("boot", vec!["(record idle-stack)".to_string()]),
+            ("interrupt", vec!["(unit boot)".to_string()])
+        ]
+    );
+    assert!(
+        owed_needs(&[("boot", &[]), ("interrupt", &[])]).is_empty(),
+        "nothing lacking, nothing owed"
+    );
+    assert!(RECORD.contains("`(unit UNIT)` naming the last such before it"));
 }
