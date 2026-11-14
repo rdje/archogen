@@ -13,6 +13,7 @@ import hashlib
 import io
 import json
 import os
+import random
 import re
 import select
 import shutil
@@ -2265,11 +2266,22 @@ THE_SHELL_RUNS_THESE = (
     # What round 7's reader found parting them.
     "if [[ '#c' =~ ^([[:space:]]*)#(.*)$ ]]; then cargo build; fi", "[[ a == a ]]>log; cargo build", "bash -s -- x <<'E'\ncargo build\nE", "bash -s x <<< 'cargo build'", "bash /dev/stdin <<'E'\ncargo build\nE",
     'x="$(cat <<EOF\nbody\nEOF)" && cargo build', "a[0]=x cargo build", "echo ${x:-'}'} ; cargo build", "env -S 'cargo build'", "for x in a; do g() { :; }; done; ls", "if true; then h() { :; }; fi; ls", "bash -n -c 'cargo build'; ls", "command -pv cargo; ls",
+    # What round 41's reader found parting them: `joined`'s own scan of arithmetic, of a body inside `"$(…)"`, of `$'\''` and of what begins a comment, a body read again
+    # as shell text, a delimiter's quotes as bash removes them, and `$'…'` as bash translates it.
+    "n=$((1<<2))\ncat > t.sh <<'EOF'\ncargo test \\\nEOF\npkill -x rustc", "(( n = 1 << 2 ))\ncat <<'E'\nx\\\nE\npkill -x rustc", "echo $[1<<2]\ncat <<'E'\nx\\\nE\npkill -x rustc",
+    "for ((i=0; i<(1<<2); i++)); do :; done\ncat <<'E'\ny\\\nE\npkill -x rustc", "script=\"$(cat <<'EOF'\ncargo test \\\nEOF\n)\"\npkill -x rustc", "git commit -m \"$(cat <<'EOF'\nKeep C:\\\nEOF\n)\" && pkill -x rustc",
+    "x=$(cat <<'E'\nhi\nE)\nkill $\\\n(pgrep -x rustc)", "echo $'\\''; kill $\\\n(pgrep -x rustc)", "echo a\\ #b; kill $\\\n(pgrep -x rustc)", "echo $(true)#x; kill $\\\n(pgrep -x rustc)",
+    "cat <<E\nit's\n$\\\n(pgrep -x rustc)\nE", "xargs kill <<E\nx # y\n$\\\n(pgrep -x rustc)\nE", "cat <<$'E'\nE\npkill -x rustc", "cat <<$\"E\"\nE\npkill -x rustc", "cat <<\"E\\\"F\"\nE\"F\npkill -x rustc",
+    "cat <<\"E\\\\F\"\nE\\F\npkill -x rustc", "cat <<\"E\\$F\"\nE$F\npkill -x rustc", "cat <<$'\\x45'\nE\npkill -x rustc", "$'\\x70kill' -x rustc", "$'\\160kill' -x rustc",
 )
 # Those the shell may not reach: what it runs must still be what is read, and what is read may be more.
 THE_SHELL_MAY_NOT_REACH = ("ls || cargo build", "false && cargo build", "if false; then cargo build; else make focused; fi", "while false; do cargo build; done", "case x in y) cargo build;; esac", "case x in cargo) make focused;; esac", "f() { cargo build; }", "xargs cargo build </dev/null",
     'arch="$(case "$(ls)" in arm64) touch a;; *) file b;; esac)"; cargo build', 'case "$t" in a) ls;; pkill|killall) make focused;; esac', "case y in\nz) make x ;;\nesac\nls", "case y in z) cargo build; esac", "case y in z) cat <<E ;; esac\nmake\nE\nmake focused",
-    "[[ $x =~ ^(pkill|killall)$ ]] && cargo build")
+    "[[ $x =~ ^(pkill|killall)$ ]] && cargo build",
+    # Bash 3.2 removes the quotes inside a delimiter's substitution, gathers a substitution by its parentheses before it reads it, and knows no `\\u`: each runs what
+    # bash 5 does not, or the other way (round 41).
+    "cat <<$(echo 'E')\n$(echo E)\ncargo build\n$(echo 'E')", "cat <<`echo 'E'`\n`echo E`\ncargo build\n`echo 'E'`", "x=$(cat <<E\nfoo)\ncargo build\nE\n)", "cat <<$'\\u0045'\nE\ncargo build\n\\u0045",
+    "x=\"$(cat <<-E\nsay \"hi\nE)\n\tE\\\nsay \"hi\nE\n)\"; cargo build")
 # A bare `)` of a case inside a substitution: bash 3.2 takes it for the substitution's end, as its own bug, so it runs less than bash 4 and later do, which the reader reads. Reading more is the safe side.
 ONLY_LATER_BASH_RUNS_THESE = (
     'x="$(case y in y) cargo build;; esac)"; make focused', 'x="$(case y in y) cargo build;; esac )"; make focused', 'x="$(if true; then case y in y) cargo build;; esac; fi)"', 'x=$(case y in y) cargo build; esac); ls',
@@ -2368,9 +2380,38 @@ def the_reader_against(bash: str) -> None:
             disagree.append((form, sorted(names), sorted(shown)))
     check(f"and what {bash} may not reach is read all the same", not disagree, disagree[:3])
     check("each of those is read to hold what it may run", all("cargo" in read(form)[0] or "make" in read(form)[0] for form in may_not_reach), may_not_reach)
+    # `$'…'` as this bash translates it: `\\u` and `\\U` from bash 4.2, and `\\c?` DEL there, 0x1f on 3.2 (round 41).
+    escapes = ("\\x45", "\\105", "\\0105", "\\u0045", "\\U00000045", "\\cA", "\\c?", "\\e", "\\q", "\\x4G", "\\xZ", "a\\'b", "a\\?b", "\\n\\t")
+    differ = []
+    for each in escapes:
+        printed = subprocess.run([bash, "-c", f"printf %s $'{each}'"], cwd=work, env=environment, capture_output=True, timeout=20).stdout
+        if printed != g.ansi_c(each, later=version >= 4).encode():
+            differ.append((each, printed, g.ansi_c(each, later=version >= 4)))
+    check(f"`$'…'` is translated as {bash} translates it", not differ, differ)
+    # Generated here-documents, each with a `pkill` after it, in the places round 41 found the reader's grammar parting from the shell's: nothing this bash runs goes unread.
+    # A form the shell refuses runs nothing, and reading more there is the safe side, so this holds one way.
+    lines = ("x", "E", "E\\", "\\", "x\\", "\tE", "\tE\\", "E)", "it's", 'say "hi', "# c", "$(true)", "`true`", "a\\\\", "E\\\\", "", "EO\\", "F", "E F", "foo)", "pkill -x rustc")
+    delimiters = (("E", "E"), ("'E'", "E"), ('"E"', "E"), ("\\E", "E"), ("E''", "E"), ("$'E'", "E"), ('"E\\"F"', 'E"F'), ("E\\\nF", "EF"), ("$'\\x45'", "E"))
+    before = ("", "n=$((1<<2))\n", "echo $'\\''\n", "x=\"$(cat <<'Q'\nq\nQ\n)\"\n", "echo a\\ #b\n", "echo $(true)#x\n", "for ((i=0; i<(1<<2); i++)); do :; done\n")
+    shapes = ("cat {op}{d}\n{body}\n{end}pkill -x rustc\n", "x=\"$(cat {op}{d}\n{body}\n{end})\"; pkill -x rustc\n", "x=$(cat {op}{d}\n{body}\n{end})\npkill -x rustc\n",
+              "xargs kill {op}{d}\n{body}\n$\\\n(pgrep -x rustc)\n{end}")
+    generated, missed = random.Random(41), []
+    for _ in range(240):
+        op = generated.choice(("<<", "<<-"))
+        written, word = generated.choice(delimiters)
+        body = "\n".join(generated.choice(lines) for _ in range(generated.randint(0, 4)))
+        end = (generated.choice(("", "\t")) if op == "<<-" else "") + word + "\n"
+        form = generated.choice(before) + generated.choice(shapes).format(op=op, d=written, body=body, end=end)
+        # An argument holding a line feed parts a stub's line, so what it wrote is read by the stubs' names alone.
+        shown = {call[0] for call in ran(form)} & set(STUBS)
+        names = read(form)[0]
+        if not shown <= names:
+            missed.append((form, sorted(shown), sorted(names)))
+    check(f"over 240 generated here-documents nothing {bash} ran goes unread", not missed, missed[:4])
     check("a quote left open is read to its end, with nothing raised", [each.words for each in g.commands_of("ls 'a b")] == [["ls", "a b"]])
     check("a substitution left open too", [each.name for each in g.commands_of("echo $(cargo build")] == ["cargo", "echo"])
-    check("and much of what is not there costs little", len(g.commands_of("cat <<A\n" * 2000)) == 1)
+    # Read once for each bash, a here-document being where they part: one command, found by each (round 41).
+    check("and much of what is not there costs little", len({tuple(each.words) for each in g.commands_of("cat <<A\n" * 2000)}) == 1)
     check("a case left open reads to its end", [each.name for each in g.commands_of("case x in a) cargo build")] == ["cargo"])
     check("a condition left open too", [each.name for each in g.commands_of("[[ $(cargo build)")] == ["cargo"])
     check("an array left open too", [each.name for each in g.commands_of("x=($(cargo build)")] == ["cargo"])
