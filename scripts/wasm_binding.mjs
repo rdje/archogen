@@ -4,17 +4,19 @@
 //   node scripts/wasm_binding.mjs inspect <module.wasm>
 //     Read the artifact with the platform's own parser: it must import nothing, and export exactly the record's
 //     functions, its memory and the linker's two globals. Exit 0 as decided, 1 otherwise, naming each difference.
-//   node scripts/wasm_binding.mjs answer <module.wasm> <description.eadl>…
+//   node scripts/wasm_binding.mjs answer <module.wasm> [--target <file>] <description.eadl>…
 //     Inspect it, then answer each description through crates/archogen-wasm/js/archogen.mjs, the loader a page
 //     loads, one JSON response per line. The request is what `archogen check <path>` asks: the path as the name,
-//     the default profile, and every `*.eadl` of the description's directory as a module under its stem.
+//     the default profile, and every `*.eadl` of the description's directory as a module under its stem; with
+//     `--target`, what `archogen check <path> --target <file>` asks, the target named by its path (leaf `M4.1.7.4.2.3`).
 //   node scripts/wasm_binding.mjs show <module.wasm> <file>
 //     Inspect it, then print what the page (crates/archogen-wasm/page/) shows for the file's text typed into it:
 //     the page's own `show`, over the page's own request.
-//   node scripts/wasm_binding.mjs page <module.wasm> <file>
+//   node scripts/wasm_binding.mjs page <module.wasm> <file> [<target>]
 //     Inspect it, then run the page's own wiring (page.mjs) against a stand-in document whose `fetch` reads the
 //     file the page's relative URL names: on load it must show its default description's answer (read from
-//     index.html), and after Check with the file's text, that text's answer. Exit 1 on either difference.
+//     index.html), and after Check with the file's text, that text's answer, and with the target's text typed in
+//     beside it, that answer on the target. Exit 1 on any difference.
 
 import { readFileSync, readdirSync, statSync } from "node:fs";
 import { dirname, join } from "node:path";
@@ -55,8 +57,8 @@ function inspect(bytes) {
   return problems;
 }
 
-/** The request `archogen check <path>` makes. */
-function request(path) {
+/** The request `archogen check <path>` makes, on the target at `target` when one is named. */
+function request(path, target = null) {
   const dir = dirname(path);
   const modules = {};
   for (const entry of readdirSync(dir).sort()) {
@@ -65,7 +67,13 @@ function request(path) {
       modules[entry.slice(0, -".eadl".length)] = readFileSync(file, "utf8");
     }
   }
-  return { name: path, text: readFileSync(path, "utf8"), profile: "", modules };
+  return {
+    name: path,
+    text: readFileSync(path, "utf8"),
+    profile: "",
+    modules,
+    target: target === null ? null : { name: target, text: readFileSync(target, "utf8") },
+  };
 }
 
 const [mode, wasm, ...paths] = process.argv.slice(2);
@@ -86,8 +94,9 @@ if (problems.length > 0) {
 }
 if (mode === "answer") {
   const binding = await instantiate(bytes);
-  for (const path of paths) {
-    process.stdout.write(binding.answer(request(path)) + "\n");
+  const target = paths[0] === "--target" ? paths[1] : null;
+  for (const path of target === null ? paths : paths.slice(2)) {
+    process.stdout.write(binding.answer(request(path, target)) + "\n");
   }
 }
 if (mode === "show") {
@@ -97,7 +106,7 @@ if (mode === "show") {
 }
 if (mode === "page") {
   const binding = await instantiate(bytes);
-  const expected = (text) => show(binding.check(pageRequest(text)));
+  const expected = (text, target = "") => show(binding.check(pageRequest(text, "", target)));
   const html = readFileSync(new URL("../crates/archogen-wasm/page/index.html", import.meta.url), "utf8");
   const found = html.match(/<textarea id="description"[^>]*>([\s\S]*?)<\/textarea>/);
   if (!found) {
@@ -108,6 +117,7 @@ if (mode === "page") {
   const elements = {
     description: { value: unescape(found[1]) },
     profile: { value: "" },
+    target: { value: "" },
     output: { textContent: "" },
     check: { listeners: [], addEventListener(type, listener) { if (type === "click") this.listeners.push(listener); } },
   };
@@ -131,6 +141,13 @@ if (mode === "page") {
   elements.check.listeners.forEach((listener) => listener());
   if (elements.output.textContent !== expected(elements.description.value)) {
     problems.push(`after Check the page showed:\n${elements.output.textContent}`);
+  }
+  if (paths[1] !== undefined) {
+    elements.target.value = readFileSync(paths[1], "utf8");
+    elements.check.listeners.forEach((listener) => listener());
+    if (elements.output.textContent !== expected(elements.description.value, elements.target.value)) {
+      problems.push(`after Check on the target the page showed:\n${elements.output.textContent}`);
+    }
   }
   for (const problem of problems) {
     console.error(`wasm-binding: ${problem}`);

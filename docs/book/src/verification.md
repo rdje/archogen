@@ -691,6 +691,10 @@ page uses (`crates/archogen-wasm/js/archogen.mjs`). It checks three things:
 - **and the same verdict as the command line.** Each response's exit code equals what `archogen check` exits
   with for that file.
 
+The last two hold again on the shipped target, each request naming `targets/riscv-virt-up.eadl` as
+`archogen check --target` does (leaf `M4.1.7.4.2.3`), and the page's code is run with that target typed beside its
+input too.
+
 It also runs the page's own code (`crates/archogen-wasm/page/page.mjs`) against a stand-in for the browser's
 document. The page must load this module, answer its default description on load, and show exactly what the
 engine-API chapter says it shows for that chapter's example. The director has since opened the page in a real

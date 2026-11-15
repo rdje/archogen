@@ -236,12 +236,12 @@ their versioned readers and permanent refusal controls enforce their local contr
 
 | Field | Value |
 | --- | --- |
-| Surface | the request a page writes to the wasm binding: length-prefixed fields for the description, its profile and its modules ([The engine API](engine-api.md), `docs/decisions/decision_wasm-binding.md` §4) |
-| Version | `archogen-wasm-request/1` |
-| Declared at | `const:crates/archogen-wasm/src/lib.rs:REQUEST_FORMAT` |
+| Surface | the request a page writes to the wasm binding: length-prefixed fields for the description, its profile, its target and its modules ([The engine API](engine-api.md), `docs/decisions/decision_wasm-binding.md` §4) |
+| Version | `archogen-wasm-request/2`, which the loader writes — `/1` fixed by `API.5`; `/2` names a target after the profile, at most one (`M4.1.7.4.2.3`) — and `archogen-wasm-request/1`, still read as `/2` naming none |
+| Declared at | `const:crates/archogen-wasm/src/lib.rs:REQUEST_FORMAT`, `const:crates/archogen-wasm/src/lib.rs:REQUEST_FORMAT_1` |
 | Changes when | a field is added, removed, reordered or reinterpreted. A request naming another format is answered `usage`, never read |
-| Pinned by | the framing tests of `crates/archogen-wasm/tests/binding.rs`: a request reads back as it was framed, and each refusal names its field and byte offset |
-| Keeps | a loader that writes `archogen-wasm-request/1` is read the same way by every module that accepts it |
+| Pinned by | the framing tests of `crates/archogen-wasm/tests/binding.rs`: a request reads back as it was framed, a `/1` request is answered as `/2` naming no target, and each refusal names its field and byte offset |
+| Keeps | a loader that writes `archogen-wasm-request/1` or `/2` is read the same way by every module that accepts it |
 
 ## `wasm-response-format`
 

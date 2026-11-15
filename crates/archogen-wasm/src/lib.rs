@@ -23,10 +23,16 @@ pub mod request;
 
 use std::cell::RefCell;
 
-use archogen_api::{check_with, Limits, MemoryModules, Request, Response, SourceMap, Status};
+use archogen_api::{
+    check_with, Limits, MemoryModules, Request, Response, SourceMap, Status, TargetFile,
+};
 
-/// The request's format identifier, the first field of every request (the record's §4).
-pub const REQUEST_FORMAT: &str = "archogen-wasm-request/1";
+/// The request's format identifier, the first field of every request the loader writes (the record's §4): `/2`, which names
+/// a target after the profile (leaf `M4.1.7.4.2.3`).
+pub const REQUEST_FORMAT: &str = "archogen-wasm-request/2";
+
+/// The first format, which names no target: still read, as `/2` with none (the record's §4 and §10).
+pub const REQUEST_FORMAT_1: &str = "archogen-wasm-request/1";
 
 /// The response's format identifier, the first key of every response (the record's §6).
 pub const RESPONSE_FORMAT: &str = "archogen-wasm-response/1";
@@ -55,7 +61,10 @@ pub fn answer(bytes: &[u8]) -> String {
                     text: &framed.text,
                     profile: framed.profile.as_deref(),
                     modules: &modules,
-                    target: None,
+                    target: framed
+                        .target
+                        .as_ref()
+                        .map(|(name, text)| TargetFile { name, text }),
                 },
                 Limits::DEFAULT,
             )

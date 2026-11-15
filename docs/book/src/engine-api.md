@@ -106,8 +106,8 @@ timer answering what their time services ask of a counter, its width among it (l
 contrast with `check` on the description's own hardware.
 
 The command line carries it as `archogen check --target FILE` ([On a target](checking.md#on-a-target), leaf
-`M4.1.7.4.2.1`), and the agent's server as the `check` tool's `target` (leaf `M4.1.7.4.2.2`); the page carries it with
-leaf `M4.1.7.4.2.3`. `resolve` and `explain`
+`M4.1.7.4.2.1`), the agent's server as the `check` tool's `target` (leaf `M4.1.7.4.2.2`), and the page as its Target
+box, the binding's request `/2` (leaf `M4.1.7.4.2.3`). `resolve` and `explain`
 on a target are leaf `M4.1.7.5`'s: until then a request naming one is answered `unimplemented`, saying so, since a
 plan of the description's own hardware is no plan on the machine.
 
@@ -282,8 +282,9 @@ The most severe of what was found decides the status whether or not it was said:
 
 A page reaches the API through `archogen-wasm` (`crates/archogen-wasm/src/lib.rs`), a module built for
 `wasm32-unknown-unknown` (`docs/decisions/decision_wasm-binding.md`). A page asks it three things: a buffer for
-its request, an answer, and where the answer is. The request carries the description, its profile and its
-modules as length-prefixed text. The answer is JSON in one fixed encoding, and it carries every field of the
+its request, an answer, and where the answer is. The request carries the description, its profile, the target it is
+judged on when there is one, and its modules as length-prefixed text, `archogen-wasm-request/2` (leaf `M4.1.7.4.2.3`;
+the first format, which names no target, is still read). The answer is JSON in one fixed encoding, and it carries every field of the
 API's response, including the diagnostics rendered exactly as the command line prints them:
 
 ```text
@@ -310,7 +311,9 @@ Then open `http://localhost:8000/crates/archogen-wasm/page/`. The page loads the
 `crates/archogen-wasm/js/archogen.mjs`, the same loader the checks use, and answers each time Check is pressed.
 It shows the outcome and its exit code first. For a description that is refused, it then shows the diagnostics
 exactly as `archogen check` prints them. For one that is accepted, it shows what the description was judged
-under. Typed into the page, this description:
+under. A target's file pasted into the Target box beside the description judges it on that machine, as
+`archogen check --target` does ([Checking on a target](#checking-on-a-target)); an empty box judges it on its own
+hardware. Typed into the page, this description:
 
 <!-- wasm-page-transcript: the harness (scripts/wasm_binding.sh) types the first block into the page's logic and
      compares its answer with the second -->
@@ -389,7 +392,7 @@ consumers reach the engine today, and all four reach the same operation:
 | --- | --- | --- | --- |
 | a person | `archogen check` (`crates/archogen-cli`) | check a description, its imports read from a directory | the status as the exit code, and the diagnostics rendered as text |
 | a Rust program | `archogen_api::check` (`crates/archogen-api`) | check text it holds, its imports from memory or none, on a target it holds or on the description's own hardware | a `Response`: the status, the diagnostics and their sources, and, when judged, the verdict and what was read |
-| a web page | the wasm binding (`crates/archogen-wasm`, `docs/decisions/decision_wasm-binding.md`) | check text, its imports framed into the request | the same response, encoded as JSON |
+| a web page | the wasm binding (`crates/archogen-wasm`, `docs/decisions/decision_wasm-binding.md`) | check text, its imports and a target framed into the request | the same response, encoded as JSON |
 | an agent | `archogen mcp` (`crates/archogen-cli/src/mcp.rs`, `docs/decisions/decision_mcp-server.md`) | call the `check` tool, on a target it holds or none, and discover the others with their maturity and the leaf that owns each | the binding's JSON as the tool's structured result, marked an error unless the description was accepted |
 
 `resolve` reaches the person, through `archogen resolve`; the Rust program, through
@@ -446,8 +449,7 @@ the language and the MCP surface are not Rust items, and stay the book's alone.
 
 ## Today and ahead
 
-- **Today:** `check` on a target through the library, the command line and the MCP server (API `1.10`, `M4.1.7.4.1`,
-  `M4.1.7.4.2.1`, `M4.1.7.4.2.2`), the page carrying it with `M4.1.7.4.2.3`; `check` through four doors — the command line, the library, the page and the MCP server — each held to
+- **Today:** `check` on a target through all four doors (API `1.10`, `M4.1.7.4.1`, `M4.1.7.4.2`); `check` through four doors — the command line, the library, the page and the MCP server — each held to
   the same answers by tests: the command line's parity legs, the integration tier's `wasm-binding` step, and the MCP
   server's stdio test over the conformance cases in both protocol eras; and `resolve`, the search alone, through the
   command line, the library and the MCP server (`M3.4.4`, `M3.4.6`), the first two held to one answer by its parity

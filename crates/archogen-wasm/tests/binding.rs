@@ -10,11 +10,13 @@ use std::collections::BTreeSet;
 use std::fs;
 use std::path::{Path, PathBuf};
 
-use archogen_api::{check_with, Limits, MemoryModules, Request, Response, SourceMap, Status};
+use archogen_api::{
+    check_with, Limits, MemoryModules, Request, Response, SourceMap, Status, TargetFile,
+};
 use archogen_wasm::request::{frame, parse, Framed};
 use archogen_wasm::{
     answer, archogen_check, archogen_input, archogen_output, INPUT_CAP, REQUEST_FORMAT,
-    RESPONSE_FORMAT,
+    REQUEST_FORMAT_1, RESPONSE_FORMAT,
 };
 
 /// A strict JSON reader: RFC 8259's grammar, integers only (the format writes no other number), object keys in
@@ -338,6 +340,7 @@ impl Case {
                 name: format!("{name}.eadl"),
                 text: text.to_string(),
                 profile: profile.map(str::to_string),
+                target: None,
                 modules: modules
                     .iter()
                     .map(|(module, text)| ((*module).to_string(), (*text).to_string()))
@@ -361,7 +364,11 @@ impl Case {
                 text: &self.framed.text,
                 profile: self.framed.profile.as_deref(),
                 modules: &modules,
-                target: None,
+                target: self
+                    .framed
+                    .target
+                    .as_ref()
+                    .map(|(name, text)| TargetFile { name, text }),
             },
             Limits::DEFAULT,
         )
@@ -381,8 +388,28 @@ fn module_case() -> Case {
     case
 }
 
+/// A system on a machine stating a source no mask stops, which the target's own judgement refuses (leaf `M4.1.7.4.2.3`).
+fn target_case() -> Case {
+    let mut case = Case::new(
+        "beat",
+        "(defservice console.write (requires (needs observable-output)))\n\
+         (defsystem beat (task tick (period 10 ms) (deadline 10 ms) (deadline-from release) (priority 1) \
+         (uses console.write) (on-overrun fault)) (requires (uses console.write)))\n",
+        None,
+        &[],
+    );
+    case.framed.target = Some((
+        "board.eadl".to_string(),
+        "(defblock board.uart (offers (observable-output true)))\n\
+         (defplatform board.soc (offers (core-count 1 tick) (non-maskable-interrupts 1) (firmware-traps 0) \
+         (region board.ram (base 0x8000_0000) (size 1 MiB) (executable true))) (requires (uses board.uart)))\n"
+            .to_string(),
+    ));
+    case
+}
+
 /// One request of each kind the response distinguishes: accepted, judged and refused, not judged, a diagnostic
-/// with a secondary label, and a module tree.
+/// with a secondary label, a module tree, and a system on a target.
 fn cases() -> Vec<Case> {
     vec![
         Case::new(
@@ -410,6 +437,7 @@ fn cases() -> Vec<Case> {
             &[],
         ),
         module_case(),
+        target_case(),
     ]
 }
 
@@ -639,6 +667,7 @@ fn refusal(bytes: &[u8]) -> (String, String) {
     (note, error.field)
 }
 
+/// Each refusal of the fields both formats share, written in `/1`, which names no target, so a module count follows the profile.
 #[test]
 fn every_framing_refusal_is_answered_with_usage_and_names_its_field_and_offset() {
     // Nothing at all.
@@ -669,7 +698,7 @@ fn every_framing_refusal_is_answered_with_usage_and_names_its_field_and_offset()
 
     // Bytes that are not UTF-8, in the text.
     let mut bytes = Vec::new();
-    field(&mut bytes, REQUEST_FORMAT.as_bytes());
+    field(&mut bytes, REQUEST_FORMAT_1.as_bytes());
     field(&mut bytes, b"d.eadl");
     let text_at = bytes.len();
     field(&mut bytes, &[0x28, 0xff, 0x29]);
@@ -683,19 +712,19 @@ fn every_framing_refusal_is_answered_with_usage_and_names_its_field_and_offset()
     );
 
     // No module count.
-    let bytes = head(REQUEST_FORMAT);
+    let bytes = head(REQUEST_FORMAT_1);
     let (_, field_name) = refusal(&bytes);
     assert_eq!(field_name, "module count");
 
     // A module count larger than the request holds: the first missing field fails, and nothing is allocated for
     // the count.
-    let mut bytes = head(REQUEST_FORMAT);
+    let mut bytes = head(REQUEST_FORMAT_1);
     bytes.extend_from_slice(&u32::MAX.to_le_bytes());
     let (_, field_name) = refusal(&bytes);
     assert_eq!(field_name, "module 1 name");
 
     // A module named twice.
-    let mut bytes = head(REQUEST_FORMAT);
+    let mut bytes = head(REQUEST_FORMAT_1);
     bytes.extend_from_slice(&2u32.to_le_bytes());
     field(&mut bytes, b"hw.bus");
     field(&mut bytes, b"(defmodule hw.bus (version 1 0))");
@@ -712,7 +741,7 @@ fn every_framing_refusal_is_answered_with_usage_and_names_its_field_and_offset()
     );
 
     // Bytes after the last module.
-    let mut bytes = head(REQUEST_FORMAT);
+    let mut bytes = head(REQUEST_FORMAT_1);
     bytes.extend_from_slice(&0u32.to_le_bytes());
     let end_at = bytes.len();
     bytes.push(0);
@@ -724,6 +753,51 @@ fn every_framing_refusal_is_answered_with_usage_and_names_its_field_and_offset()
         )),
         "{note}"
     );
+}
+
+/// `/2`'s own field: a count of targets, none or one, and the target's name and text (leaf `M4.1.7.4.2.3`).
+#[test]
+fn a_target_is_framed_after_the_profile_and_at_most_one() {
+    let case = target_case();
+    assert_eq!(parse(&frame(&case.framed)), Ok(case.framed.clone()));
+
+    // No target count.
+    let (_, field_name) = refusal(&head(REQUEST_FORMAT));
+    assert_eq!(field_name, "target count");
+
+    // Two targets.
+    let mut bytes = head(REQUEST_FORMAT);
+    let count_at = bytes.len();
+    bytes.extend_from_slice(&2u32.to_le_bytes());
+    let (note, field_name) = refusal(&bytes);
+    assert_eq!(field_name, "target count");
+    assert!(
+        note.contains(&format!(
+            "target count field, at byte {count_at}, is 2, and a request names at most one target"
+        )),
+        "{note}"
+    );
+
+    // A target whose text runs past the end.
+    let mut bytes = head(REQUEST_FORMAT);
+    bytes.extend_from_slice(&1u32.to_le_bytes());
+    field(&mut bytes, b"t.eadl");
+    bytes.extend_from_slice(&9u32.to_le_bytes());
+    let (_, field_name) = refusal(&bytes);
+    assert_eq!(field_name, "target text");
+}
+
+/// `/1` is still read, as `/2` naming no target: the same answer, byte for byte.
+#[test]
+fn a_first_format_request_is_answered_as_one_naming_no_target() {
+    let mut first = head(REQUEST_FORMAT_1);
+    first.extend_from_slice(&0u32.to_le_bytes());
+    let mut second = head(REQUEST_FORMAT);
+    second.extend_from_slice(&0u32.to_le_bytes());
+    second.extend_from_slice(&0u32.to_le_bytes());
+    assert_eq!(parse(&first), parse(&second));
+    assert_eq!(answer(&first), answer(&second));
+    assert_eq!(read(&answer(&first)).get("status").str(), "ok");
 }
 
 #[test]

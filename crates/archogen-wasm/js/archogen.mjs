@@ -4,8 +4,8 @@
 // checks is what a page runs. It uses only `WebAssembly`, `TextEncoder` and `TextDecoder`, which browsers and Node
 // both provide, and it gives the module nothing to import: the module imports nothing (§7).
 
-/** The request's format, the first field of every request (§4). */
-export const REQUEST_FORMAT = "archogen-wasm-request/1";
+/** The request's format, the first field of every request (§4): `/2`, which names a target after the profile. */
+export const REQUEST_FORMAT = "archogen-wasm-request/2";
 
 /** A 4-byte little-endian integer. */
 function u32(value) {
@@ -15,10 +15,12 @@ function u32(value) {
 }
 
 /**
- * Frame a request (§4): the format, the name, the text, the profile (empty for the default), the number of
- * modules, then each module's name and text. Every field is a length, then that many bytes of UTF-8.
+ * Frame a request (§4): the format, the name, the text, the profile (empty for the default), the number of targets,
+ * none or one, then the target's name and text, the number of modules, then each module's name and text. Every field
+ * is a length, then that many bytes of UTF-8. `target` is `{ name, text }`, its name `target.eadl` when absent, or
+ * `null` to judge the description on its own hardware.
  */
-export function frame({ name, text, profile = "", modules = {} }) {
+export function frame({ name, text, profile = "", modules = {}, target = null }) {
   const encoder = new TextEncoder();
   const parts = [];
   const field = (value) => {
@@ -29,6 +31,11 @@ export function frame({ name, text, profile = "", modules = {} }) {
   field(name);
   field(text);
   field(profile ?? "");
+  parts.push(u32(target ? 1 : 0));
+  if (target) {
+    field(target.name ?? "target.eadl");
+    field(target.text);
+  }
   const entries = Object.entries(modules);
   parts.push(u32(entries.length));
   for (const [module, moduleText] of entries) {

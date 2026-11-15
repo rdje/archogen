@@ -67,9 +67,14 @@ A request is length-framed, not JSON, so the module needs no parser for a format
   5. the number of modules, as a 4-byte little-endian integer;
   6. for each module, a field holding its name, then a field holding its text.
 - Nothing may follow the last module.
+- *Amended `2026-11-15` (leaf `M4.1.7.4.2.3`):* **`archogen-wasm-request/2`** names the target the description's systems
+  are judged on, the engine API's `TargetFile` (API `1.10`): its first field holds `archogen-wasm-request/2`, and
+  after the profile come the number of targets, `0` or `1`, as a 4-byte little-endian integer, and for one, a field
+  holding its name, then a field holding its text; the module count and the modules follow as in `/1`. The loader
+  writes `/2`. A `/1` request is still read, as `/2` naming no target, and answered the same, byte for byte.
 - **A request that breaks this is answered, not judged.** A length that runs past the end, bytes that are not
-  UTF-8, another format, a module named twice, and bytes after the last module each get the status `usage`. The
-  note names the field and its byte offset, and the description is not read.
+  UTF-8, another format, a target count above one, a module named twice, and bytes after the last module each get
+  the status `usage`. The note names the field and its byte offset, and the description is not read.
 
 ### 5. The answer
 
@@ -133,7 +138,8 @@ not with a reading of the source. That the crate names no `std::fs`, `std::proce
 ### 9. The loader
 
 - An ES module in the crate, `crates/archogen-wasm/js/archogen.mjs`. It exports `instantiate(bytes)`, whose result
-  has `check({ name, text, profile, modules })`. `modules` maps a module's name to its text.
+  has `check({ name, text, profile, modules, target })`. `modules` maps a module's name to its text, and `target` is
+  `{ name, text }`, or `null` for none (`M4.1.7.4.2.3`).
 - It encodes the request, calls the three exports, and decodes the response with `JSON.parse`.
 - It uses only `WebAssembly`, `TextEncoder` and `TextDecoder`, which browsers and [Node](../book/src/ledger.md#node)
   both provide. The page
@@ -141,8 +147,8 @@ not with a reading of the source. That the crate names no `std::fs`, `std::proce
 
 ### 10. Versions
 
-- The request and response formats are `pub const`s of the crate, `archogen-wasm-request/1` and
-  `archogen-wasm-response/1`, so the version register holds them (`VERSION-REGISTER`).
+- The request and response formats are `pub const`s of the crate, `archogen-wasm-request/2` beside `/1`, which is
+  still read, and `archogen-wasm-response/1`, so the version register holds them (`VERSION-REGISTER`).
 - A response also names the API version and the engine version, as every API response does.
 - Any change to what §4 or §6 says moves the format's number, and the register's entry says what changed.
 

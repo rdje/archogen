@@ -14,7 +14,10 @@
 #   4. the book's transcript of the page (docs/book/src/engine-api.md, the blocks after its
 #      `wasm-page-transcript` marker) is what the page's own logic shows for that input (leaf `API.5.4`);
 #   5. the page's own wiring, run against a stand-in document, fetches this artifact by its relative URL and shows
-#      its default description's answer on load, and the transcript input's answer after Check.
+#      its default description's answer on load, the transcript input's answer after Check, and that input's answer on
+#      the shipped target with the target typed beside it;
+#   6. legs 2 and 3 again on the shipped target, `TARGET` below: each request naming it as `archogen check <path>
+#      --target <file>` does, request format `archogen-wasm-request/2` (leaf `M4.1.7.4.2.3`).
 # THE POPULATION is derived on every run: every tracked `*.eadl` outside `docs/feedback/` (the vendors' own
 # reproduction inputs).
 #
@@ -28,6 +31,7 @@ ROOT="$(git rev-parse --show-toplevel)"; cd "$ROOT"
 
 SCRATCH="$ROOT/target/doctrine_scratch/wasm_binding"
 WASM="$ROOT/target/wasm32-unknown-unknown/release/archogen_wasm.wasm"
+TARGET="targets/riscv-virt-up.eadl"
 note() { printf 'wasm-binding: %s\n' "$1" >&2; }
 
 # Compare the three sides, one line per description in the list's order: $1 the list, $2 the host build's
@@ -169,6 +173,23 @@ if ! result="$(compare "$SCRATCH/list" "$SCRATCH/native" "$SCRATCH/wasm" "$SCRAT
   note "the artifact disagrees with the host build or the command line"
   exit 1
 fi
+
+# Leg 6: the same population on the shipped target.
+# shellcheck disable=SC2046
+node scripts/wasm_binding.mjs answer "$WASM" --target "$TARGET" $(cat "$SCRATCH/list") > "$SCRATCH/wasm-on-target" || exit 1
+# shellcheck disable=SC2046
+cargo run -q -p archogen-wasm --example answers -- --target "$TARGET" $(cat "$SCRATCH/list") > "$SCRATCH/native-on-target" ||
+  { note "the host build could not answer on $TARGET"; exit 2; }
+: > "$SCRATCH/cli-on-target"
+while IFS= read -r path; do
+  "$ROOT/target/debug/archogen" check "$path" --target "$TARGET" >/dev/null 2>&1
+  echo "$?" >> "$SCRATCH/cli-on-target"
+done < "$SCRATCH/list"
+if ! on_target="$(compare "$SCRATCH/list" "$SCRATCH/native-on-target" "$SCRATCH/wasm-on-target" "$SCRATCH/cli-on-target")"; then
+  printf '%s\n' "$on_target" | sed 's/^/wasm-binding: /' >&2
+  note "on $TARGET, the artifact disagrees with the host build or the command line"
+  exit 1
+fi
 page_transcript "$CHAPTER" "$SCRATCH/page-input" "$SCRATCH/page-answer" ||
   { note "$CHAPTER shows no page transcript after a wasm-page-transcript marker"; exit 1; }
 node scripts/wasm_binding.mjs show "$WASM" "$SCRATCH/page-input" > "$SCRATCH/page-shown" || exit 1
@@ -176,6 +197,6 @@ if ! page="$(compare_page "$SCRATCH/page-answer" "$SCRATCH/page-shown")"; then
   printf '%s\n' "$page" | sed 's/^/wasm-binding: /' >&2
   exit 1
 fi
-node scripts/wasm_binding.mjs page "$WASM" "$SCRATCH/page-input" || { note "the page's wiring did not answer as its logic does"; exit 1; }
-echo "wasm-binding: OK — the artifact imports nothing and exports what the record lists; $result answered byte for byte as the host build answers them, each with archogen check's exit code; the book's page transcript is what the page shows, and the page's wiring shows it ($(node --version))"
+node scripts/wasm_binding.mjs page "$WASM" "$SCRATCH/page-input" "$TARGET" || { note "the page's wiring did not answer as its logic does"; exit 1; }
+echo "wasm-binding: OK — the artifact imports nothing and exports what the record lists; $result answered byte for byte as the host build answers them, each with archogen check's exit code, and on $TARGET $on_target; the book's page transcript is what the page shows, and the page's wiring shows it, on the target too ($(node --version))"
 exit 0
