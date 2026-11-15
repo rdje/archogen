@@ -75,7 +75,19 @@ readings equal — what each accepts, the codes of what each refuses, and the ha
 over the shipped target, the examples and a case for each row (`crates/eadl-resolve/tests/target_parity.rs`). Its first
 run found one sentence read two ways, the row exempting a `platform` clause's own `uses`: the checker took "its" for the
 system's alone, the generator for the namer's, so another system named had its clause refused by the one and put on
-the target by the other. The record now says the namer's. `--target` offers it with `M4.1.7.5.4.4`.
+the target by the other. The record now says the namer's.
+
+On the target it judges a plan of `/3` (`archogen_plan_check::check::plan_on_target`, leaf `M4.1.7.5.4.3`): the record's
+target compared with the file's, by its platform and its fingerprint, then checks 2 to 5 over what the system reads
+there, its **release requester** among its requesters (`crates/archogen-plan-check/src/release.rs`). The checker writes
+the requester's requirements from the shortest period itself, so it can tell a missing binding from one too many; each
+must be bound once, to a device itself and never to an adapter's instance, and met there, and the device must state
+the step its compare matches on and how it reads a value as due. Every plan the search writes on the shipped target,
+over every tracked description `check` admits there, is one this accepts, which `crates/eadl-resolve/tests/target_parity.rs`
+holds — and its first run found a second sentence read two ways: "another system, but for one it names", which the
+checker took for one the system names itself, so a system its services name was dropped and their `uses` dangled.
+The record now says "itself or through a service or a policy it reaches". `--target` offers all of it with
+`M4.1.7.5.4.4`.
 
 ### The checks, in order
 

@@ -32,15 +32,17 @@
 //!   system names writes in its own clause's own `uses` is refused no more than the system's, and what that system
 //!   names anywhere else at its own level is refused as before. A `uses` nested in a clause, inside a `requires`, is a
 //!   requirement the clause holds, kept, and hardware it names is refused by the third row.
-//! - **"Another system, but for one it names"**: a system the system names itself, by `uses` or `needs`, wherever it
-//!   writes them, which "stands on the target as `S` does, its own clause's hardware replaced by that platform" (rule
-//!   1): its clause is put on the target's platform as the system's is, a clause given where it wrote none. Every other
-//!   system of the description is gone from what is read.
-//! - **What asks** (the third row): the system, each of its tasks, each system it names at that system's own level —
-//!   every clause but its tasks, its clause's own `uses` judged no more than the system's — and each service and
-//!   policy those reach through `uses` and `needs`, through services
-//!   and policies alone. What is reached only through hardware the target replaces is not reached there (rule 1), and
-//!   the target's hardware names nothing of the description's.
+//! - **"Another system, but for one it names"**: rule 1 as amended reads it "itself or through a service or a policy it
+//!   reaches (model §8 rule 7's closure, by `uses` and `needs`)", so a system is kept that the system names by `uses` or
+//!   `needs`, wherever it writes them, or that a service, a policy or a kept system's own level names along that
+//!   closure, which never passes through hardware. Each "stands on the target as `S` does, its own clause's hardware
+//!   replaced by that platform": its clause is put on the target's platform as the system's is, a clause given where it
+//!   wrote none. Every other system of the description is gone from what is read.
+//! - **What asks** (the third row, "another system it names, itself or through what it reaches (rule 1), at that
+//!   system's own level"): the system, each of its tasks, each system kept so, at its own level — every clause but its
+//!   tasks, its clause's own `uses` judged no more than the system's — and each service and policy reached along the
+//!   same closure. What is reached only through hardware the target replaces is not reached there (rule 1), and the
+//!   target's hardware names nothing of the description's.
 //! - **The second row is of the files, reached or not**: any declaration of the description naming what only the target
 //!   declares is refused, its own hardware and a service the system does not reach among them, and a name is the
 //!   description's when it resolves in its instance's scope.
@@ -69,7 +71,8 @@ use archogen_outcome::record::{Finding, Severity};
 use archogen_outcome::Status;
 use eadl_front::{Form, Instance, Program, SourceId, SourceMap, Span, Verdict as Concluded};
 
-use crate::check::{at, finding, status_of, Verdict};
+use crate::assignment::program_digest;
+use crate::check::{at, finding, plain, status_of, Verdict};
 use crate::requesters::{declarations, hardware};
 
 /// The record's code for a file malformed as a target's, or for hardware no machine stands on.
@@ -175,6 +178,14 @@ impl Target {
             .filter_map(name_of)
             .map(|(name, _)| name.to_owned())
             .collect()
+    }
+
+    /// The target's digest, as a plan on it writes it in `(target NAME "HEX")`: the sha256 of its forms' program text, as
+    /// [`crate::assignment::program_text`] writes a plain program's (`docs/decisions/decision_runtime-plan-format-2.md`
+    /// §1, "The target in the identity"), the language-version identifier aside, so a comment moves it not.
+    #[must_use]
+    pub fn digest(&self) -> String {
+        program_digest(&plain(self.declarations.clone()))
     }
 }
 
@@ -919,10 +930,11 @@ impl Putting<'_, '_> {
         looped
     }
 
-    /// The table's third row: the system, a task, another system it names at that system's own level, or a service or a
-    /// policy the system reaches on the target naming a block or platform itself, by `uses` or `needs`, anywhere but its
-    /// `platform` clause's own `uses`, `its` the namer's — the system's, or another system's it names, which stands on
-    /// the target's platform as the system's does. Returns the systems the system names, which stay in what is read.
+    /// The table's third row: the system, a task, another system it names, itself or through what it reaches, at that
+    /// system's own level, or a service or a policy the system reaches on the target naming a block or platform itself, by
+    /// `uses` or `needs`, anywhere but its `platform` clause's own `uses`, `its` the namer's — the system's, or another
+    /// system's it names, which stands on the target's platform as the system's does. Returns the systems the system
+    /// names so, which stay in what is read (rule 1).
     fn what_asks(&self, refusals: &mut Vec<Refusal>) -> BTreeSet<String> {
         let description = &self.description;
         let system = self.system;
@@ -938,9 +950,30 @@ impl Putting<'_, '_> {
             .iter()
             .map(|operand| (self.instance, *operand))
             .collect();
-        let others: BTreeSet<String> = named_by(&mine)
-            .into_iter()
-            .filter(|named| named != system && description.head(named) == Some("defsystem"))
+        // What asks beside the system and its tasks: each service, policy and other system the system reaches by `uses` and
+        // `needs`, itself or through a service or a policy it reaches (rule 1; model §8 rule 7's closure) — through another
+        // system at that system's own level too, its tasks being its own, and never through hardware, the description's
+        // being gone and the target's naming nothing of the description's.
+        let asks = |named: &String| {
+            named != system
+                && matches!(
+                    description.head(named),
+                    Some("defservice" | "defpolicy" | "defsystem")
+                )
+        };
+        let reached = closure(named_by(&mine).into_iter().filter(asks), |name: &String| {
+            let &(instance, form) = &description.declarations[name];
+            let theirs: Vec<(usize, Operand<'_>)> = operands(form)
+                .into_iter()
+                .filter(|operand| operand.place != Place::Task)
+                .map(|operand| (instance, operand))
+                .collect();
+            named_by(&theirs).into_iter().filter(asks).collect()
+        });
+        let others: BTreeSet<String> = reached
+            .iter()
+            .filter(|named| description.head(named) == Some("defsystem"))
+            .cloned()
             .collect();
         // Who asks, with each operand of theirs judged.
         let mut judged: Vec<(String, usize, Operand<'_>)> = Vec::new();
@@ -960,49 +993,21 @@ impl Putting<'_, '_> {
                 }
             }
         }
-        let mut reaching = mine;
-        for other in &others {
-            let &(instance, form) = &description.declarations[other];
-            // At its own level, its tasks being its own; its clause's own `uses` stands on the target's platform as the
-            // system's does, so it is judged no more than the system's.
-            for operand in operands(form)
-                .into_iter()
-                .filter(|operand| operand.place != Place::Task)
-            {
-                if operand.place == Place::Own {
-                    judged.push((
-                        format!("the system `{other}`, which `{system}` names,"),
-                        instance,
-                        operand,
-                    ));
-                }
-                reaching.push((instance, operand));
-            }
-        }
-        // The services and policies reached, through services and policies alone.
-        let asks =
-            |named: &String| matches!(description.head(named), Some("defservice" | "defpolicy"));
-        let reached = closure(
-            named_by(&reaching).into_iter().filter(asks),
-            |name: &String| {
-                let &(instance, form) = &description.declarations[name];
-                let theirs: Vec<(usize, Operand<'_>)> = operands(form)
-                    .into_iter()
-                    .map(|operand| (instance, operand))
-                    .collect();
-                named_by(&theirs).into_iter().filter(asks).collect()
-            },
-        );
         for name in &reached {
             let &(instance, form) = &description.declarations[name];
-            let kind = if form.head() == Some("defpolicy") {
-                "policy"
-            } else {
-                "service"
+            let (kind, own_level) = match form.head() {
+                Some("defsystem") => ("system", true),
+                Some("defpolicy") => ("policy", false),
+                _ => ("service", false),
             };
             for operand in operands(form) {
+                // Another system at its own level, its tasks being its own; its clause's own `uses` stands on the target's
+                // platform as the system's does, so it is judged no more than the system's.
+                if own_level && operand.place != Place::Own {
+                    continue;
+                }
                 judged.push((
-                    format!("the {kind} `{name}`, which the system reaches,"),
+                    format!("the {kind} `{name}`, which `{system}` reaches,"),
                     instance,
                     operand,
                 ));

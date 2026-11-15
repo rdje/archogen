@@ -15,6 +15,12 @@
 //! 4). A requirement bound to it is judged at what it offers ([`crate::instances::offered`]), and only where the
 //! mediation gate admits its requester (§6) — a refusal of check (4)'s, since a mediating kind offers nothing to a
 //! requester that did not allow mediation.
+//!
+//! ⭐ **The release requester** (model §8 rule 1; `docs/decisions/decision_release-alarm.md` §1; leaf `M4.1.7.5.4.3`),
+//! `(release SYSTEM)`, is served on a target alone — a plan whose record names one — by a system with a task the timer
+//! releases, its requirements the record's six lines ([`crate::release::side`]), read and filed as any requester's. Each
+//! that binds is bound once, to a block or a platform itself — never an adapter's instance — and met there; a binding of
+//! a release requester the system does not have is a binding of a requester it does not serve.
 
 use std::collections::{BTreeMap, BTreeSet};
 
@@ -30,7 +36,8 @@ use crate::model::judge::{judge, Verdict as Judged};
 use crate::model::provider as model;
 use crate::model::requirement::{NotJudged, Requirement};
 use crate::model::vocab::{self, Function, Role};
-use crate::requesters::{served, Located};
+use crate::release;
+use crate::requesters::{served, sides, Located};
 
 /// Whether a requirement on a fact binds a provider.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -123,15 +130,33 @@ pub(crate) fn check(
             )],
         }
     })?;
+    // The release requester, on a target alone (model §8 rule 1; `docs/decisions/decision_release-alarm.md` §1): what its
+    // side requires, read as any side is. A side the model refused would leave it nothing to bind, and every binding of it
+    // refused, failing closed.
+    let release = Requester::Release {
+        system: assignment.system.clone(),
+    };
+    let release_form = assignment
+        .target
+        .as_ref()
+        .and_then(|_| release::side(program, &assignment.system));
+    let release_side: Option<Vec<Located>> = release_form.as_ref().map(|form| {
+        sides(form)
+            .ok()
+            .and_then(|read| read.into_iter().next())
+            .map(|side| side.requirements)
+            .unwrap_or_default()
+    });
+    let binds_a_function = |located: &[Located]| {
+        located
+            .iter()
+            .any(|l| binds(fact_of(&l.requirement)) == Binds::Function)
+    };
     // Which requesters bind a function, so which may bind a qualifier (rule 13).
     let functional: BTreeSet<&Requester> = served
         .sides
         .iter()
-        .filter(|(_, side)| {
-            side.requirements
-                .iter()
-                .any(|l| binds(fact_of(&l.requirement)) == Binds::Function)
-        })
+        .filter(|(_, side)| binds_a_function(&side.requirements))
         .map(|(requester, _)| requester)
         .collect();
     let mut expected: BTreeMap<(Requester, String), Vec<&Located>> = BTreeMap::new();
@@ -142,24 +167,23 @@ pub(crate) fn check(
                 .reach(requester)
                 .iter()
                 .all(|r| !functional.contains(r));
-        for located in &side.requirements {
-            let fact = fact_of(&located.requirement);
-            let key = (requester.clone(), fact.to_owned());
-            match binds(fact) {
-                Binds::Function => expected.entry(key).or_default().push(located),
-                Binds::Qualifier if qualifies => expected.entry(key).or_default().push(located),
-                Binds::Qualifier => {
-                    unbinding.entry(key).or_insert((
-                        "a qualifier binds nothing where its requester, or one it reaches through `uses` and `needs`, \
-                         binds a function: it is judged at each provider bound for them (rule 13)",
-                        located,
-                    ));
-                }
-                Binds::Never(why) => {
-                    unbinding.entry(key).or_insert((why, located));
-                }
-            }
-        }
+        expect(
+            requester,
+            &side.requirements,
+            qualifies,
+            &mut expected,
+            &mut unbinding,
+        );
+    }
+    // The release requester names nothing, so it reaches no requester: it binds a qualifier where it binds no function.
+    if let Some(located) = &release_side {
+        expect(
+            &release,
+            located,
+            !binds_a_function(located),
+            &mut expected,
+            &mut unbinding,
+        );
     }
     // The instances the system serves (rule 7, as rule 15 amends it): each one a requester it serves is bound to.
     let mut serving: BTreeMap<&Instance, &(Requester, String)> = BTreeMap::new();
@@ -187,7 +211,7 @@ pub(crate) fn check(
             found.push(finding(
                 PLAN_BINDING,
                 format!("{}'s requirement on `{fact}` is bound to no provider", who(requester)),
-                at(sources, located[0].span, "the requirement"),
+                at(sources, located[0].span, written_at(requester)),
                 Vec::new(),
                 "resolve again: a plan binds each requirement on a function's guarantee to one provider",
             ));
@@ -245,7 +269,47 @@ pub(crate) fn check(
             }
             continue;
         }
-        if !served.sides.contains_key(requester) {
+        if matches!(requester, Requester::Release { .. }) {
+            // Model §8 rule 1: a system has one on a target, with a task the timer releases, and it binds a block or a
+            // platform itself, never an adapter's instance.
+            let refusal = if *requester != release || release_side.is_none() {
+                Some((
+                    format!(
+                        "the plan binds `{fact}` for {}, which the system `{}` does not have: on a target a system has a \
+                         release requester where one of its tasks writes a `period`, and it is that system's own (model \
+                         §8 rule 1)",
+                        who(requester),
+                        assignment.system
+                    ),
+                    "resolve again: a plan binds the release requester of its own system, where a task the timer \
+                     releases asks for one",
+                ))
+            } else if let Provider::Instance(instance) = provider {
+                Some((
+                    format!(
+                        "the plan binds `{fact}` for {} to `{}`, and the release requester binds a block or a platform \
+                         itself, never an adapter's instance: what releases tasks is the catalog's timer service over the \
+                         device it is bound to (model §8 rule 1)",
+                        who(requester),
+                        instance.canonical()
+                    ),
+                    "resolve again: bind the release requester's requirements to a block or platform of the system's \
+                     hardware",
+                ))
+            } else {
+                None
+            };
+            if let Some((message, repair)) = refusal {
+                found.push(finding(
+                    PLAN_BINDING,
+                    message,
+                    place(key),
+                    Vec::new(),
+                    repair,
+                ));
+                continue;
+            }
+        } else if !served.sides.contains_key(requester) {
             found.push(finding(
                 PLAN_BINDING,
                 format!(
@@ -366,7 +430,15 @@ pub(crate) fn check(
                     .into_iter()
                     .map(|offer| at(sources, offer.span(), &format!("what `{provider}` states"))),
             );
-            found.push(unmet(sources, &key.0, l, provider, verdict, secondary));
+            found.push(unmet(
+                sources,
+                release_form.as_ref(),
+                &key.0,
+                l,
+                provider,
+                verdict,
+                secondary,
+            ));
         }
     }
     // An instance offers what its kind does over its device (record §3.1), to a requester the gate admits (§6).
@@ -425,6 +497,7 @@ pub(crate) fn check(
             if verdict != Judged::Satisfied {
                 found.push(unmet(
                     sources,
+                    release_form.as_ref(),
                     requester,
                     l,
                     &canonical,
@@ -569,27 +642,85 @@ fn through_instance(instance: &Instance, requester: &Requester) -> Result<&'stat
     }
 }
 
-/// A requirement not met at the provider a plan binds it to: check (4)'s finding.
+/// A requirement not met at the provider a plan binds it to: check (4)'s finding. `release` is the release requester's
+/// side, where it has one, whose requirements the description does not write.
 fn unmet(
     sources: &SourceMap,
+    release: Option<&Form>,
     requester: &Requester,
     located: &Located,
     provider: &str,
     verdict: Judged,
     secondary: Vec<Label>,
 ) -> Finding {
+    let written = match (requester, release) {
+        (Requester::Release { .. }, Some(side)) => release_written(side, &located.requirement),
+        _ => written(sources, located),
+    };
     finding(
         PLAN_UNSATISFIED,
         format!(
-            "{}'s requirement `{}` is not met at `{provider}`, the provider the plan binds it to: {}",
+            "{}'s requirement `{written}` is not met at `{provider}`, the provider the plan binds it to: {}",
             who(requester),
-            written(sources, located),
             outcome(verdict, provider)
         ),
-        at(sources, located.span, "the requirement"),
+        at(sources, located.span, written_at(requester)),
         secondary,
         "resolve again: a plan binds each requirement to a provider that satisfies it",
     )
+}
+
+/// Each requirement `requester` writes, as its side's `requirements` read them, filed by whether it binds (rule 13):
+/// under `expected` where it does, under `unbinding` with why where it does not. A qualifier binds where `qualifies`
+/// says its requester and what it reaches bind no function.
+fn expect<'l>(
+    requester: &Requester,
+    located: &'l [Located],
+    qualifies: bool,
+    expected: &mut BTreeMap<(Requester, String), Vec<&'l Located>>,
+    unbinding: &mut BTreeMap<(Requester, String), (&'static str, &'l Located)>,
+) {
+    for located in located {
+        let fact = fact_of(&located.requirement);
+        let key = (requester.clone(), fact.to_owned());
+        match binds(fact) {
+            Binds::Function => expected.entry(key).or_default().push(located),
+            Binds::Qualifier if qualifies => expected.entry(key).or_default().push(located),
+            Binds::Qualifier => {
+                unbinding.entry(key).or_insert((
+                    "a qualifier binds nothing where its requester, or one it reaches through `uses` and `needs`, binds \
+                     a function: it is judged at each provider bound for them (rule 13)",
+                    located,
+                ));
+            }
+            Binds::Never(why) => {
+                unbinding.entry(key).or_insert((why, located));
+            }
+        }
+    }
+}
+
+/// What a finding's place in the description says of a requirement of `requester`: the release requester's is the
+/// `period` that gives the system one, its requirements being the engine's (`decision_release-alarm.md` §1).
+const fn written_at(requester: &Requester) -> &'static str {
+    match requester {
+        Requester::Release { .. } => "the `period` that gives the system its release requester",
+        _ => "the requirement",
+    }
+}
+
+/// A requirement of the release requester as its side writes it: `(needs f)`, or the constraint on its fact.
+fn release_written(side: &Form, requirement: &Requirement) -> String {
+    let fact = fact_of(requirement);
+    if matches!(requirement, Requirement::Presence(_)) {
+        return format!("(needs {fact})");
+    }
+    side.items()
+        .iter()
+        .filter(|clause| clause.head() == Some("requires"))
+        .flat_map(|clause| clause.items().iter().skip(1))
+        .find(|item| item.head() == Some(fact))
+        .map_or_else(|| format!("({fact} …)"), Form::to_canonical)
 }
 
 /// The checker's own table does not read: its fault, never the plan's.

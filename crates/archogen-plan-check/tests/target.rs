@@ -382,6 +382,40 @@ fn another_system_is_gone_from_what_is_read_but_one_it_names() {
 }
 
 #[test]
+fn another_system_it_reaches_through_a_service_is_kept_and_stands_on_the_target_too() {
+    // Rule 1 as amended: another system is kept where the system names it "itself or through a service or a policy it
+    // reaches" — here `y`, which the services `m` and `m.s` a task of `s` uses each name (the shape of
+    // `crates/archogen-plan/tests/corpus/naming-namer-prefix.eadl`) — and it stands on the target as `s` does.
+    let description = "(defblock console.uart (offers (observable-output true)))
+(defplatform soc (offers (core-count 1 tick)) (requires (uses console.uart)))
+(defsystem y (task t (period 10 ms) (deadline 10 ms) (priority 1)) (platform (uses soc)))
+(defservice m (requires (uses y)))
+(defservice m.s (requires (uses y)))
+(defsystem s (task a (period 10 ms) (deadline 10 ms) (priority 1) (uses m m.s)) (platform (uses soc)))";
+    let on = put(description, TARGET, "s").expect("put on the target");
+    assert_eq!(
+        read_there(&on),
+        names(&["m", "m.s", "s", "y", "t.soc", "t.timer", "t.console"])
+    );
+    let read = declarations(&on.program);
+    let (_, y) = read["y"];
+    let clauses: Vec<&Form> = y
+        .items()
+        .iter()
+        .filter(|item| item.head() == Some("platform"))
+        .collect();
+    assert_eq!(clauses.len(), 1, "{}", y.to_canonical());
+    assert!(
+        clauses[0].structurally_eq(&form("(platform (uses t.soc))")),
+        "{}",
+        y.to_canonical()
+    );
+    for system in ["s", "y"] {
+        assert_eq!(hardware(&on.program, &read, system), machine(), "{system}");
+    }
+}
+
+#[test]
 fn another_system_it_names_stands_on_the_target_as_the_system_does() {
     // The table's third row, `its` the namer's: a system the system names stands on the target as the system does (rule
     // 1), its own clause's hardware replaced by the target's platform, so the hardware that clause's own `uses` names is
@@ -612,6 +646,17 @@ fn what_asks_naming_a_block_or_platform_outside_the_clause_s_own_uses_is_refused
                 &HEARTBEAT.replace(
                     "(requires (uses console.write))",
                     "(requires (uses console.write other))",
+                ),
+            ),
+        ),
+        (
+            "another system it reaches through a service, outside its clause",
+            described(
+                "(defsystem other (requires (needs console.uart)) (platform (uses host.playground)))
+(defservice log.write (requires (uses other)))",
+                &HEARTBEAT.replace(
+                    "(requires (uses console.write))",
+                    "(requires (uses console.write log.write))",
                 ),
             ),
         ),

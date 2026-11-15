@@ -16,7 +16,8 @@ use eadl_model::check::{check, check_program, shipped_registry};
 use eadl_model::kind::Registry;
 use eadl_model::profile::Profile;
 
-use crate::assignment::{program_digest, Assignment, FORMAT_3};
+use crate::assignment::{program_digest, Assignment, FORMAT, FORMAT_3};
+use crate::target::{on_target, Target};
 
 /// Check (1)'s code: the record does not read — another format, `archogen-assignment/1` among them, another adapter
 /// catalog, a kind the checker's table does not hold, an instance of another shape — or names another profile or a
@@ -80,30 +81,10 @@ pub fn record(
     name: &str,
     text: &str,
 ) -> Result<Assignment, Verdict> {
-    let refused = |status, line_of: &str, message: String, repair: &str| Verdict {
-        status,
-        findings: vec![Finding {
-            code: if status == Status::StaleInput {
-                PLAN_STALE
-            } else {
-                PLAN_RECORD
-            }
-            .to_owned(),
-            severity: Severity::Error,
-            message,
-            primary: label(name, text, line_of),
-            secondary: Vec::new(),
-            repair: repair.to_owned(),
-        }],
+    let refused = |status, line_of: &str, message: String, repair: &str| {
+        refused(name, text, status, line_of, message, repair)
     };
-    let assignment = Assignment::read(text).map_err(|refusal| {
-        refused(
-            Status::ToolFailure,
-            "",
-            refusal.to_string(),
-            "write the plan again with `archogen resolve`: this record is not one it writes",
-        )
-    })?;
+    let assignment = read_record(name, text)?;
     // A plan of a system on a target was resolved for another run than one given no target, and nothing failed
     // (`docs/decisions/decision_runtime-plan-format-2.md` §1): a record of other inputs, before any judgement. The checker
     // judges a plan on its target with leaf `M4.1.7.5.4.4`.
@@ -119,6 +100,128 @@ pub fn record(
              leaf M4.1.7.5.4.4 (docs/TASK_TREE.md)",
         ));
     }
+    of_these_inputs(program, profile, name, text, assignment)
+}
+
+/// Check (1) of a plan of a system on `target` (`docs/decisions/decision_runtime-plan-format-2.md` §1, "The target in
+/// the identity" and "The checker"; leaf `M4.1.7.5.4.3`): the record reads and is `archogen-assignment/3`; it was
+/// resolved for these inputs — its `(program …)` the description's elaborated program's digest, as with no target, and
+/// its `(target NAME "HEX")` the target given, `NAME` its one platform and `HEX` [`Target::digest`] — else a record of
+/// other inputs, refused before any judgement; and it names the profile the check runs under and a system the
+/// description declares. `name` names the record in each finding's span.
+///
+/// # Errors
+///
+/// The [`Verdict`] refusing it: `stale-input` and [`PLAN_STALE`] for a `/2` record, of no target, for a record of
+/// another target and for a stale program, "resolve again"; `tool-failure` and [`PLAN_RECORD`] for a record that does
+/// not read or names what the description and the check do not.
+pub fn record_on_target(
+    program: &Program,
+    target: &Target,
+    profile: &Profile,
+    name: &str,
+    text: &str,
+) -> Result<Assignment, Verdict> {
+    let refused = |line_of: &str, message: String| {
+        refused(
+            name,
+            text,
+            Status::StaleInput,
+            line_of,
+            message,
+            "resolve again: the plan was resolved for another run, and nothing failed",
+        )
+    };
+    let assignment = read_record(name, text)?;
+    let given = &target.platform;
+    let digest = target.digest();
+    match &assignment.target {
+        None => {
+            return Err(refused(
+                "format",
+                format!(
+                    "the plan is `{FORMAT}`, resolved on no target, and the target `{given}` is given: resolve again on \
+                     it"
+                ),
+            ))
+        }
+        Some((platform, _)) if platform != given => {
+            return Err(refused(
+                "target",
+                format!(
+                    "the plan was resolved on the target `{platform}`, and the target given is `{given}`: resolve again \
+                     on it"
+                ),
+            ))
+        }
+        Some((_, written)) if *written != digest => {
+            return Err(refused(
+                "target",
+                format!(
+                    "the plan was resolved on another file of the target `{given}`: its digest is {written}, the given \
+                     file's is {digest}"
+                ),
+            ))
+        }
+        Some(_) => {}
+    }
+    of_these_inputs(program, profile, name, text, assignment)
+}
+
+/// A refusal of check (1), one finding at the record's clause `line_of`: [`PLAN_STALE`] for `stale-input`, else
+/// [`PLAN_RECORD`].
+fn refused(
+    name: &str,
+    text: &str,
+    status: Status,
+    line_of: &str,
+    message: String,
+    repair: &str,
+) -> Verdict {
+    Verdict {
+        status,
+        findings: vec![Finding {
+            code: if status == Status::StaleInput {
+                PLAN_STALE
+            } else {
+                PLAN_RECORD
+            }
+            .to_owned(),
+            severity: Severity::Error,
+            message,
+            primary: label(name, text, line_of),
+            secondary: Vec::new(),
+            repair: repair.to_owned(),
+        }],
+    }
+}
+
+/// The record `text`, read: a record that does not read is a corrupted plan, `tool-failure` and [`PLAN_RECORD`].
+fn read_record(name: &str, text: &str) -> Result<Assignment, Verdict> {
+    Assignment::read(text).map_err(|refusal| {
+        refused(
+            name,
+            text,
+            Status::ToolFailure,
+            "",
+            refusal.to_string(),
+            "write the plan again with `archogen resolve`: this record is not one it writes",
+        )
+    })
+}
+
+/// Check (1)'s rest, of a record of the right kind: its digest is the elaborated program's, else a stale plan; and it
+/// names the profile the check runs under and a system the description declares.
+fn of_these_inputs(
+    program: &Program,
+    profile: &Profile,
+    name: &str,
+    text: &str,
+    assignment: Assignment,
+) -> Result<Assignment, Verdict> {
+    let refused = |status, line_of: &str, message: String, repair: &str| {
+        refused(name, text, status, line_of, message, repair)
+    };
     let digest = program_digest(program);
     if assignment.program != digest {
         return Err(refused(
@@ -346,6 +449,32 @@ pub fn plan(
     let assignment = record(program, profile, name, text)?;
     description(sources, program, profile)?;
     bound(sources, program, profile, name, text, &assignment)
+}
+
+/// Every check over one plan of a system on `target` (`docs/decisions/decision_runtime-plan-format-2.md` §1, "The
+/// checker"; `DC-H2`; leaf `M4.1.7.5.4.3`), in the order the checker reads a plan in: check (1) for
+/// `archogen-assignment/3` ([`record_on_target`]), a record of other inputs refused before any judgement; then the plan's
+/// system put on the target ([`on_target`]), whose refusals are the target's own, in the judgement; then checks (2) to
+/// (5), as [`plan`] runs them, over what is read there ([`crate::target::OnTarget::program`]) — the release requester
+/// among the requesters checks (3) to (5) judge (`docs/decisions/decision_release-alarm.md` §1). The description's own
+/// program is what the record's digest names. `sources` holds the description's files and the target's; `text` is the
+/// record `name` names.
+///
+/// # Errors
+///
+/// The [`Verdict`] of the first check that refuses.
+pub fn plan_on_target(
+    sources: &SourceMap,
+    program: &Program,
+    target: &Target,
+    profile: &Profile,
+    name: &str,
+    text: &str,
+) -> Result<(), Verdict> {
+    let assignment = record_on_target(program, target, profile, name, text)?;
+    let on = on_target(sources, program, &assignment.system, target)?;
+    description(sources, &on.program, profile)?;
+    bound(sources, &on.program, profile, name, text, &assignment)
 }
 
 /// Checks (3) to (5) over a plan checks (1) and (2) accepted. A service or a policy of the plan's system naming hardware

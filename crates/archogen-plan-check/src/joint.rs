@@ -40,6 +40,15 @@
 //!   task is its own clauses; any other declaration is its whole side, as §7 rule 4 reads one.
 //! - Rule 1: a binding whose requester names no declaration or no task of its system, or whose fact the vocabulary does
 //!   not declare — a `uses` is composition, never a binding — is refused here too, though check (3) refuses it first.
+//! - Rule 1, the release requester (`docs/decisions/decision_release-alarm.md` §1; leaf `M4.1.7.5.4.3`): served on a
+//!   target alone — a plan whose record names one — by a system with a task writing a `period` that reads as a time,
+//!   last; its requirements the record's six lines, a side of its own ([`crate::release::side`]), judged by every rule
+//!   as any requester's — rule 3 counts the channel `relative-delay` takes, rule 9 calls it at the system's level, rule
+//!   13 holds its `counter` facts to one provider and judges `available-in-state` there as a qualifier. A binding of it
+//!   to an adapter's instance, of another system's, or of a system with none is a conflict; the device bound for it
+//!   stating no `compare-step`, or neither a `compare-window` nor `(compare-magnitude true)`, each a value, is an unknown
+//!   of the assignment, `missing-fact` in its message, as rule 3's and rule 16's are. Rule 8's route and rule 12's
+//!   initialization graph are obligations, never a finding of this checker's, so what they say of it adds none here.
 //! - Rule 7: the system serves its own level, its tasks and every declaration reached from any of them — the platform
 //!   clause included — through `uses` and `needs`, at any depth and through declarations of every kind; a task of
 //!   another system is refused under rule 7, an assignment being one system's.
@@ -115,6 +124,7 @@ use crate::model::requirement::{read_side, NotJudged, Requirement};
 use crate::model::value::Value;
 use crate::model::vocab::{self, Direction, Domain, Function};
 use crate::providers::fills;
+use crate::release;
 
 /// The qualifier rule 9 judges against the level, and rule 13 never repeats.
 const PRIVILEGE: &str = "reachable-at-privilege";
@@ -196,6 +206,7 @@ pub(crate) fn check(
     };
     let mut judgement = Judgement::new(sources, world, system, assignment, record);
     judgement.requesters();
+    judgement.release_device();
     judgement.channels();
     judgement.ownership();
     judgement.privilege(profile.id, level);
@@ -530,9 +541,15 @@ impl<'p> World<'p> {
                 })?;
                 Some((clauses(form, |_| false), declaration.instance))
             }
-            // An instance writes nothing in the description: what it requires is its kind's. Nor does the release requester,
-            // whose requirements the engine adds (`decision_release-alarm.md` §1; this model's of it is `M4.1.7.5.4.3`'s).
-            Requester::Instance(_) | Requester::Release { .. } => None,
+            // The release requester's requirements are the engine's, the record's six lines, written as a side of its own
+            // at the `period` that asks for it (`decision_release-alarm.md` §1; `crate::release`); whether a plan's system
+            // has one at all, on a target alone, is the judgement's to say.
+            Requester::Release { system } => {
+                let declaration = self.system(system)?;
+                Some((release::side(self.program, system)?, declaration.instance))
+            }
+            // An instance writes nothing in the description: what it requires is its kind's.
+            Requester::Instance(_) => None,
         }
     }
 }
@@ -888,8 +905,15 @@ impl<'a, 'p> Judgement<'a, 'p> {
         let Reading {
             hardware,
             reached,
-            served,
+            mut served,
         } = Reading::of(&world, &assignment.system, system);
+        // On a target, a system with a task the timer releases serves one more, its release requester, last (rule 1).
+        let release = Requester::Release {
+            system: assignment.system.clone(),
+        };
+        if assignment.target.is_some() && world.side(&release).is_some() {
+            served.push(release);
+        }
         Self {
             sources,
             world,
@@ -1143,18 +1167,83 @@ impl<'a, 'p> Judgement<'a, 'p> {
         self.served.clone()
     }
 
-    /// The instances the system serves (rule 7, as rule 15 amends it): each one a requester it serves is bound to.
+    /// The instances the system serves (rule 7, as rule 15 amends it): each one a requester it serves is bound to — but
+    /// the release requester, which binds no instance (rule 1), a binding of it to one being a conflict of its own.
     fn instances(&self) -> BTreeSet<Instance> {
         self.assignment
             .bindings
             .iter()
             .filter_map(|((requester, _), provider)| match provider {
-                Bound::Instance(instance) if self.served.contains(requester) => {
+                Bound::Instance(instance)
+                    if self.served.contains(requester)
+                        && !matches!(requester, Requester::Release { .. }) =>
+                {
                     Some(instance.clone())
                 }
                 _ => None,
             })
             .collect()
+    }
+
+    /// Rule 1's device of the release requester: the block or platform bound for it states its `compare-step` and a
+    /// `compare-window` or `(compare-magnitude true)`, each a value, or what the analysis reads of it is unknown,
+    /// `missing-fact` — an unknown of the assignment, which another device may lift (rule 6), so the plan's, as rule 3's
+    /// and rule 16's are. Judged once for each device the release requester is bound to.
+    fn release_device(&mut self) {
+        let release = Requester::Release {
+            system: self.assignment.system.clone(),
+        };
+        if !self.served.contains(&release) {
+            return;
+        }
+        let mut devices: BTreeMap<String, String> = BTreeMap::new();
+        for ((requester, fact), provider) in &self.assignment.bindings {
+            if let Bound::Named(device) = provider {
+                if *requester == release && self.world.provides(device) {
+                    devices
+                        .entry(device.clone())
+                        .or_insert_with(|| fact.clone());
+                }
+            }
+        }
+        for (device, fact) in devices {
+            let Some(read) = self.provider(&Bound::Named(device.clone())) else {
+                continue;
+            };
+            let valued = |fact: &str| matches!(outcome(&read, fact), Ok(Outcome::Valued(_)));
+            let step = valued("compare-step");
+            let window = valued("compare-window")
+                || matches!(
+                    outcome(&read, "compare-magnitude"),
+                    Ok(Outcome::Valued(values)) if matches!(values.first(), Some(Value::Bool(true)))
+                );
+            if step && window {
+                continue;
+            }
+            let lacking: Vec<&str> = [
+                (!step).then_some("no `compare-step` with a value"),
+                (!window).then_some(
+                    "neither a `compare-window` with a value nor `(compare-magnitude true)`",
+                ),
+            ]
+            .into_iter()
+            .flatten()
+            .collect();
+            let primary = self.bound(&release, &fact);
+            let secondary = self.declared(&device).into_iter().collect();
+            self.conflict(
+                format!(
+                    "`{device}`, bound for `{}`, states {}: what the analysis reads of the device that releases the \
+                     system's tasks is unknown, `missing-fact`, which blocks the assignment (rule 1)",
+                    release.canonical(),
+                    lacking.join(", and ")
+                ),
+                primary,
+                secondary,
+                "state the device's `compare-step`, and its `compare-window` or `(compare-magnitude true)`, each with a \
+                 value, or resolve again binding the release requester to a device that states them",
+            );
+        }
     }
 
     /// Every declaration `requester` reaches through `needs` and `uses`, at any depth.
@@ -1235,6 +1324,20 @@ impl<'a, 'p> Judgement<'a, 'p> {
                      declaration its closure reaches through `uses` and `needs` (rule 7)"
                 )),
                 Requester::Instance(instance) => self.instance_requester(instance, fact, provider, &instances),
+                Requester::Release { system: of } if *of != system => Some(format!(
+                    "`{who}` is the release requester of `{of}`, and the plan is `{system}`'s: an assignment is one \
+                     system's (rule 7)"
+                )),
+                Requester::Release { .. } if !self.served.contains(requester) => Some(format!(
+                    "`{system}` has no release requester: on a target one is added for a system with a task the timer \
+                     releases, one writing a `period`, and none on the playground or with no such task (rule 1)"
+                )),
+                Requester::Release { .. } if matches!(provider, Bound::Instance(_)) => Some(format!(
+                    "`{who}` is bound for `{fact}` to `{}`, and the release requester binds a block or a platform \
+                     itself, never an adapter's instance: what releases tasks is the catalog's timer service over the \
+                     device it is bound to (rule 1)",
+                    provider.canonical()
+                )),
                 _ => None,
             };
             if let Some(message) = refusal {
