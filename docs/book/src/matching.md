@@ -109,8 +109,10 @@ together, and the joint check keeps one requester's facts of one function at one
 
 `/1`'s functions: `counter` — the width, modulus, rate, unit, wrap behaviour, horizon, coherent reads and low-power
 counting, and the two alarms with `channels`, since an absolute deadline is a time in the counter's time base and a
-relative delay a comparator on it; `interrupt` — a source and its arrival separation; `arrival` — `bounded-arrival`,
-which the realization gives; `output`, `queue`, `transfer`, `processor`, `scheduler`, `clock`, `release`, `debug`,
+relative delay a comparator on it, and the five that describe its compare, how it is wired, its kind, its step, its
+window and whether it reads whole numbers, which format `/2` reads; `interrupt` — a source and its arrival separation; `arrival` — `bounded-arrival`,
+which the realization gives; `output`, `queue`, `transfer`, `processor`, its cores, and for `/2` how many interrupt
+sources no mask stops and how many traps firmware beneath the image takes; `scheduler`, `clock`, `release`, `debug`,
 `mutex` and `bus`. Two facts are **qualifiers**, `(function each)`: `available-in-state` and `reachable-at-privilege`
 describe every function their requirer relies on, as an operating condition must hold of all of it.
 `or-through-mediation`, the requirer's word about itself, names none. A `requires` clause is not the unit: a description
@@ -567,6 +569,8 @@ computed from the device it programs — a value its kind writes, a fact passed 
 device, derived there or offered, a bound it is obliged to at its requester's tightest — and itself a requester of that
 device, served when a requester it serves is, a caller at its kind's level, owning nothing and composing nothing, its
 device's route carrying its requesters. Rule 14 holds a deadline and every time its requester reaches to one device.
+A fact that describes only a counter's compare, how it is wired or how fine its step is, reads none of its time, so
+rule 14 reads none of those five.
 The search proposes one in a second phase (`M3.2.3.2`): it runs over the hardware alone first, and only when that
 concludes with no plan and some instance meets some pair does it run again, each pair's candidates its hardware and then
 its instances, under what is left of the budget — so a plan that needs no adapter binds none. An instance tried for a

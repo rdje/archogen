@@ -1908,6 +1908,7 @@ fn each_input_has_an_owner_a_direction_and_a_path_to_the_checker() {
     ] {
         assert!(VOCABULARY.contains(&format!("(deffact {fact}")), "{fact}");
     }
+    // `RA-H8`'s five, which this record handed to the vocabulary and leaf `M4.1.7.3.1` declared: each now an entry.
     for added in [
         "alarm-wiring",
         "alarm-kind",
@@ -1916,8 +1917,8 @@ fn each_input_has_an_owner_a_direction_and_a_path_to_the_checker() {
         "compare-magnitude",
     ] {
         assert!(
-            !VOCABULARY.contains(&format!("(deffact {added}")),
-            "{added}: said to be added"
+            VOCABULARY.contains(&format!("(deffact {added}")),
+            "{added}: declared by `M4.1.7.3.1`"
         );
         assert!(RECORD.contains(&format!("`{added}`")), "{added}");
     }

@@ -237,7 +237,7 @@ it the way it answers a kind module (leaf `M3.1.2.1`):
 
 ```console
 $ archogen check docs/semantics/vocabulary/vocabulary.eadl ; echo $?
-archogen: unimplemented: docs/semantics/vocabulary/vocabulary.eadl:26:1 declares a fact of the capability vocabulary, `(deffact absolute-deadline …)`: the language's own definition, not a description, and no command loads vocabulary a user writes yet
+archogen: unimplemented: docs/semantics/vocabulary/vocabulary.eadl:27:1 declares a fact of the capability vocabulary, `(deffact absolute-deadline …)`: the language's own definition, not a description, and no command loads vocabulary a user writes yet
   hint: the facts a description may constrain are the vocabulary this toolchain ships with `eadl/1` (docs/semantics/vocabulary/vocabulary.eadl). Extending the vocabulary is task-tree leaf M6.3 (docs/TASK_TREE.md); until then, check a description that offers and requires the shipped facts
 20
 ```

@@ -128,6 +128,16 @@ const DEADLINE: &str = "absolute-deadline";
 /// The function rule 14 reads a time base from.
 const COUNTER: &str = "counter";
 
+/// The facts of that function that describe its compare and read none of its time, which rule 14 reads as no reader of a time base
+/// (`docs/decisions/decision_release-alarm.md`'s `RA-H8`, leaf `M4.1.7.3.1`).
+const DESCRIBES_A_COMPARE: [&str; 5] = [
+    "alarm-wiring",
+    "alarm-kind",
+    "compare-step",
+    "compare-window",
+    "compare-magnitude",
+];
+
 /// The fact a task binds itself to the source releasing it through (rule 16).
 const SOURCE: &str = "interrupt-source";
 
@@ -2109,7 +2119,7 @@ impl<'a, 'p> Judgement<'a, 'p> {
     }
 
     /// Rule 14, one time base: where a requester is bound for `absolute-deadline`, every other requester it reaches
-    /// through `needs` and `uses` that is bound for a fact of the function `counter` that is not consumed is bound at
+    /// through `needs` and `uses` that is bound for a fact of the function `counter` that is not consumed, and describes no compare, is bound at
     /// the same device — a block or platform its own, an instance the one it programs.
     fn time_base(&mut self) {
         let assignment = self.assignment;
@@ -2128,8 +2138,9 @@ impl<'a, 'p> Judgement<'a, 'p> {
                 if other == requester || !reaches.contains(name) {
                     continue;
                 }
-                let counter = vocab::entry(read)
-                    .is_some_and(|e| e.function == Some(Function::Of(COUNTER)) && !e.consumed);
+                let counter = !DESCRIBES_A_COMPARE.contains(&read.as_str())
+                    && vocab::entry(read)
+                        .is_some_and(|e| e.function == Some(Function::Of(COUNTER)) && !e.consumed);
                 let theirs = instances::device(bound);
                 if counter && theirs != device {
                     elsewhere

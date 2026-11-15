@@ -2514,6 +2514,45 @@ fn rule_14_a_deadline_and_the_counter_its_requester_reaches_are_bound_at_one_dev
     assert_eq!(findings[0].secondary.len(), 3, "{findings:#?}");
 }
 
+/// Rule 14 reads none of the five facts that describe a counter's compare as a reader of a time base (`decision_release-alarm.md`'s `RA-H8`,
+/// `M4.1.7.3.1`): the requester the deadline's reaches, bound for each of them at another device, splits no time base, while `tick-rate`, a
+/// reading of the counter's time, bound there, does.
+#[test]
+fn rule_14_reads_no_fact_describing_a_compare_as_a_reader_of_time() {
+    const FIVE: [(&str, &str); 5] = [
+        ("alarm-kind", "(alarm-kind level-compare)"),
+        ("alarm-wiring", "(alarm-wiring core)"),
+        ("compare-step", "(compare-step (at-most 1 tick))"),
+        ("compare-window", "(compare-window (at-least 16 tick))"),
+        ("compare-magnitude", "(compare-magnitude false)"),
+    ];
+    let required: String = FIVE.iter().map(|(_, r)| *r).collect::<Vec<_>>().join(" ");
+    let describe = |more: &str| {
+        adapted(
+            "(channels 1 tick)",
+            "(alarm-kind level-compare) (alarm-wiring core) (compare-step 1 tick) (compare-window 16 tick) (compare-magnitude false)",
+            &format!(
+                "(defservice time.kind (requires {required} {more}))
+                 (defservice alarm.now (requires (absolute-deadline (supported-horizon (at-least 10 s))) (uses time.kind)))"
+            ),
+            "(defsystem s (requires (uses alarm.now)) (platform (uses soc)))",
+        )
+    };
+    let mut binds: Vec<Bind> = vec![(named("alarm.now"), "absolute-deadline", "timer.abs")];
+    binds.extend(
+        FIVE.iter()
+            .map(|(fact, _)| (named("time.kind"), *fact, "timer.e")),
+    );
+    assert_eq!(describe("").bound(&binds), Ok(()));
+    binds.push((named("time.kind"), "tick-rate", "timer.e"));
+    let message = refused(describe("(tick-rate 1 MHz)").bound(&binds), 14);
+    assert!(
+        message.contains("at the device `timer.abs`, and `time.kind`")
+            && message.contains("at the device `timer.e`"),
+        "{message}"
+    );
+}
+
 #[test]
 fn rule_14_judges_direct_bindings_too() {
     // A comparator programmed with absolute times itself, of two channels, and the clock reading it, or another.

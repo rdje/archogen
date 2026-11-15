@@ -2232,6 +2232,46 @@ fn one_requester_s_counter_facts_across_two_timers_are_refused_naming_both() {
     );
 }
 
+/// Model §8 rule 14 reads none of the five facts that describe a counter's compare as a reader of a time base (`decision_release-alarm.md`'s
+/// `RA-H8`, `M4.1.7.3.1`): a requester the deadline's reaches, bound for each of them at another device, splits no time base, while one of its
+/// facts that is a reading of the counter's time, `tick-rate`, bound there, does.
+#[test]
+fn rule_14_reads_no_fact_describing_a_compare_as_a_reader_of_time() {
+    let v = vocabulary();
+    let devices = "(defblock timer.abs (offers (absolute-deadline true) (supported-horizon 3600 s) (counter-modulus 4294967296)
+  (tick-rate 1 MHz) (channels 1 tick) (reachable-at-privilege machine)))
+(defblock timer.e (offers (alarm-kind level-compare) (alarm-wiring core) (compare-step 1 tick) (compare-window 16 tick)
+  (compare-magnitude false) (tick-rate 1 MHz) (reachable-at-privilege machine)))
+(defplatform soc (offers (core-count 1 tick) (reachable-at-privilege machine)) (requires (uses timer.abs timer.e)))
+(defservice alarm.now (requires (absolute-deadline (supported-horizon (at-least 10 s))) (uses time.kind)))
+(defsystem s (requires (uses alarm.now)) (platform (uses soc)))";
+    let describing = format!(
+        "{devices}
+(defservice time.kind (requires (alarm-kind level-compare) (alarm-wiring core) (compare-step (at-most 1 tick))
+  (compare-window (at-least 16 tick)) (compare-magnitude false)))"
+    );
+    let got: Vec<(Vec<String>, Vec<String>)> = every_named_with(&describing, &v)
+        .into_iter()
+        .map(|(c, u, _)| (c, u))
+        .collect();
+    assert_eq!(got, [(vec![], vec![])]);
+    let reading = format!(
+        "{devices}
+(defservice time.kind (requires (alarm-kind level-compare) (alarm-wiring core) (compare-step (at-most 1 tick))
+  (compare-window (at-least 16 tick)) (compare-magnitude false) (tick-rate 1 MHz)))"
+    );
+    let conflicts: Vec<String> = every_named_with(&reading, &v)
+        .into_iter()
+        .flat_map(|(c, _, _)| c)
+        .collect();
+    assert!(
+        conflicts
+            .iter()
+            .any(|c| c.ends_with("time bases alarm.now at timer.abs / time.kind at timer.e")),
+        "{conflicts:#?}"
+    );
+}
+
 #[test]
 fn a_counter_whole_at_one_timer_holds_and_a_split_beside_it_is_that_assignment_s() {
     // A third timer meets both: the assignment binding both to it holds; the one splitting them is refused, a conflict

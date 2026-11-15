@@ -180,7 +180,7 @@ as today's corpus writes it, because a reader of a bound should see which way it
 a bare value, `(counter-width 32 bit)`, takes its direction from the vocabulary, which is what makes both checkable
 (R16 9).
 
-**The entries of `/1`**, one per fact the census writes, and `channels`, which `M3.3`'s joint check reads, each direction and function with its reason; `M3.1.2` ships them as
+**The entries of `/1`**, one per fact the census writes, `channels`, which `M3.3`'s joint check reads, and the seven format `/2` reads (`M4.1.7.3.1`), each direction and function with its reason; `M3.1.2` ships them as
 `vocabulary.eadl` and adds none without a row here (R2 B8). A fact marked *interface* takes `exact` because a
 different value is a different interface, not a better one (§5.2); a *capacity* takes the direction in which more
 of it satisfies more.
@@ -221,8 +221,14 @@ of it satisfies more.
 | `tick-unit` | enumeration `ns us ms` | guarantee | `exact` | `counter` | interface (§4.3, representation units) |
 | `unambiguous-horizon` | quantity time | guarantee | `at-least` | `counter` | capacity; derived from `counter-modulus` and `tick-rate`, and offered only where neither is, nor `wrap-behavior` (§4) |
 | `wrap-behavior` | enumeration `modular saturating` | guarantee | `exact` | `counter` | read by §4's rule |
+| `alarm-wiring` | enumeration `core controller` | guarantee | `exact` | `counter` | interface: where the counter's alarm interrupts, the core's own line or the controller's, `/2` writing no route for one wired to the core (`decision_release-alarm.md` `RA-H8`; `decision_runtime-plan-format-2.md` §6); like the four after it, no reader of a time base (model §8 rule 14) |
+| `alarm-kind` | enumeration `level-compare delay edge` | guarantee | `exact` | `counter` | interface: a level compare, a delay and an edge are three alarms, none a better other (`RA-H8`; the variant's condition 6) |
+| `compare-step` | count | guarantee | `at-most` | `counter` | capacity: the step its compare matches on, in its counter's ticks, so a whole number of them by its domain; a finer step satisfies more (`RA-H8`) |
+| `compare-window` | count | guarantee | `at-least` | `counter` | capacity: how far past a value, in its counter's ticks, its compare still reads it as due; a wider window reads more as due (`RA-H8`; `/2` §2) |
+| `compare-magnitude` | boolean | guarantee | `exact` | `counter` | that its compare reads the two values as whole numbers; a device states it or a window (`RA-H8`; `/2` §2) |
+| `non-maskable-interrupts`, `firmware-traps` | count | guarantee | `at-most` | `processor` | capacity: the sources no mask stops, and the traps firmware beneath the image takes, fewer satisfying more; the profile's admission asks each of every target (`/2` §2, R4-D15) |
 
-`region` and `ordering` have no entry in `/1` (§10).
+`region` and `ordering` have no entry in `/1` (§10), nor `catalog-target`, a target's name for its catalog records, which no domain of §2 holds, no requirement constrains and the catalog's selection alone reads (`decision_runtime-plan-format-2.md` §2; `M4.1.7.3.1`).
 
 ### 2. The value domains
 

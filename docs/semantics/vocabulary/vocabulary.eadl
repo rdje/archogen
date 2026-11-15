@@ -20,6 +20,7 @@
 ;
 ; Two facts the corpus names have no entry, `region` and `ordering`, fitting no domain of record §2: a region stays
 ; outside `/1`, read by model §8 rules 5 and 10 (`SR-H13`, amended); `ordering` waits for a profile admitting `dma` (rule 11).
+; Nor has `catalog-target`, a target's name for its catalog records, which the catalog's selection alone reads (`M4.1.7.3.1`).
 
 (eadl-version eadl/1)
 
@@ -279,3 +280,55 @@
   (role guarantee)
   (direction exact)
   (function counter))
+
+; The seven format `/2` reads (`M4.1.7.3.1`): the first five describe a counter's compare and are no reader of a time
+; base, model §8 rule 14 (`decision_release-alarm.md` `RA-H8`); the last two are the platform's (`/2` §2).
+
+(deffact alarm-wiring
+  (doc "where the counter's alarm interrupts, the core's own line or the controller's")
+  (domain enumeration core controller)
+  (role guarantee)
+  (direction exact)
+  (function counter))
+
+(deffact alarm-kind
+  (doc "the counter's alarm, a level compare, a delay or an edge")
+  (domain enumeration level-compare delay edge)
+  (role guarantee)
+  (direction exact)
+  (function counter))
+
+(deffact compare-step
+  (doc "the step the counter's compare matches on, in its ticks, a capacity: a finer step satisfies more")
+  (domain count)
+  (role guarantee)
+  (direction at-most)
+  (function counter))
+
+(deffact compare-window
+  (doc "how far past a value, in its ticks, the counter's compare still reads it as due, a capacity")
+  (domain count)
+  (role guarantee)
+  (direction at-least)
+  (function counter))
+
+(deffact compare-magnitude
+  (doc "that the counter's compare reads the two values as whole numbers")
+  (domain boolean)
+  (role guarantee)
+  (direction exact)
+  (function counter))
+
+(deffact non-maskable-interrupts
+  (doc "how many interrupt sources no mask stops, a capacity: fewer satisfy more")
+  (domain count)
+  (role guarantee)
+  (direction at-most)
+  (function processor))
+
+(deffact firmware-traps
+  (doc "how many traps firmware beneath the image takes, a capacity: fewer satisfy more")
+  (domain count)
+  (role guarantee)
+  (direction at-most)
+  (function processor))

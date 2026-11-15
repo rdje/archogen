@@ -114,8 +114,8 @@ a requester binding what its kind needs beneath to the device it programs
    need that qualifies everything its requester relies on, such as being available while the processor idles, is
    checked against every part the requester is bound to through its functions, and every part the services it uses are
    bound to. Seventh, is a deadline programmed in the time it is read in? Where a requester's
-   deadline is programmed at one timer, every other requester it reaches that reads a counter reads that same timer
-   (model §8 rule 14). An engine adapter's instance answers these questions as any provider does, with three
+   deadline is programmed at one timer, every other requester it reaches that reads a counter's time reads that same
+   timer, a fact describing only a timer's compare reading none (model §8 rule 14). An engine adapter's instance answers these questions as any provider does, with three
    differences: it is no hardware itself, its device must be; it owns no address and is built from nothing; and it is
    a caller at its kind's level, so its device must be reachable there (leaf `M3.2.5`; model §8 rule 15).
 

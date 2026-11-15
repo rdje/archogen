@@ -469,12 +469,14 @@ written from this section alone (`crates/archogen-plan-check/src/joint.rs`, `M3.
    is one provider for this rule (`M3.2`).
 14. **One time base** (`M3.2.3.1`; `docs/specs/adapters/decision_engine-adapters.md` §4). Where a requester is bound for
    `absolute-deadline`, every other requester it reaches through `needs` and `uses` that is bound for a fact of the
-   function `counter` that is not consumed is bound at the same device — a provider being its own device, an adapter's
+   function `counter` that is not consumed, and describes no compare, is bound at the same device — a provider being its own device, an adapter's
    instance the provider it programs: a deadline programmed in one counter's time and read in another's is a conflict
    naming both requesters and both devices. Its own facts of the function are rule 13's. It is wider than any one
    service's time on purpose: `/1`'s vocabulary cannot tell a time base from another use of a counter, so a description
    wanting a second counter for another purpose writes it as a requester the deadline's does not reach. Measured over
-   every tracked description on `2026-10-27`, it refuses none.
+   every tracked description on `2026-10-27`, it refuses none. The five facts that describe a counter's compare,
+   `alarm-wiring`, `alarm-kind`, `compare-step`, `compare-window` and `compare-magnitude`, read none of its time, so none
+   is a reader of one (`decision_release-alarm.md`'s `RA-H8`, `M4.1.7.3.1`).
 15. **An adapter's instance** (`M3.2`; the record §1, §4), a provider the engine supplies over one device, is judged by
    these rules as one: a provider for its offers and a requester for what its kind requires beneath (rule 1); served by
    a system when a requester it serves is, taking that system (rule 7) — its device must be of the system's hardware,

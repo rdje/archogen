@@ -337,6 +337,46 @@ pub const VOCABULARY: &[Entry] = &[
             Direction::Exact,
         ),
     ),
+    // The seven format `/2` reads (`M4.1.7.3.1`): five describing a counter's compare, then two of the platform.
+    of(
+        "counter",
+        plain(
+            "alarm-wiring",
+            Domain::Enumeration {
+                alternatives: &["core", "controller"],
+                ordered: false,
+            },
+            Direction::Exact,
+        ),
+    ),
+    of(
+        "counter",
+        plain(
+            "alarm-kind",
+            Domain::Enumeration {
+                alternatives: &["level-compare", "delay", "edge"],
+                ordered: false,
+            },
+            Direction::Exact,
+        ),
+    ),
+    of(
+        "counter",
+        plain("compare-step", Domain::Count, Direction::AtMost),
+    ),
+    of(
+        "counter",
+        plain("compare-window", Domain::Count, Direction::AtLeast),
+    ),
+    of("counter", boolean("compare-magnitude")),
+    of(
+        "processor",
+        plain("non-maskable-interrupts", Domain::Count, Direction::AtMost),
+    ),
+    of(
+        "processor",
+        plain("firmware-traps", Domain::Count, Direction::AtMost),
+    ),
 ];
 
 /// The entry named `name`, if `/1` declares one.
@@ -350,9 +390,9 @@ mod tests {
     use super::{entry, VOCABULARY};
 
     #[test]
-    fn the_table_holds_thirty_six_entries_named_once() {
-        // Thirty-five from the census, and `channels`, which `M3.3`'s joint check reads.
-        assert_eq!(VOCABULARY.len(), 36);
+    fn the_table_holds_forty_three_entries_named_once() {
+        // Thirty-five from the census, `channels`, which `M3.3`'s joint check reads, and the seven format `/2` reads (`M4.1.7.3.1`).
+        assert_eq!(VOCABULARY.len(), 43);
         for e in VOCABULARY {
             assert_eq!(
                 VOCABULARY.iter().filter(|o| o.name == e.name).count(),

@@ -345,6 +345,15 @@ pub struct Binding {
 const INTERRUPT_SOURCE: &str = "interrupt-source";
 /// A deadline programmed at an absolute time, whose time base rule 14 holds to one device.
 const ABSOLUTE_DEADLINE: &str = "absolute-deadline";
+/// The facts of the function `counter` that describe its compare and read none of its time, so rule 14 reads none of them as a reader of a
+/// time base (`docs/decisions/decision_release-alarm.md`'s `RA-H8`, leaf `M4.1.7.3.1`).
+pub const DESCRIBES_A_COMPARE: [&str; 5] = [
+    "alarm-wiring",
+    "alarm-kind",
+    "compare-step",
+    "compare-window",
+    "compare-magnitude",
+];
 /// The source's own bound on how often it fires, which the analysis reads with the route.
 const MIN_ARRIVAL_SEPARATION: &str = "min-arrival-separation";
 /// The levels a function is reachable from, and the level a caller states it calls from.
@@ -2584,14 +2593,17 @@ impl<'v> Joint<'v> {
 
     /// Model §8 rule 14, one time base (`docs/specs/adapters/decision_engine-adapters.md` §4): where a requester is bound
     /// for `absolute-deadline`, every other requester it reaches through `needs` and `uses`, bound for a fact of the
-    /// function `counter` that is not consumed, is bound at the same device — an instance's being its provider. A
+    /// function `counter` that is not consumed and describes no compare (`DESCRIBES_A_COMPARE`), is bound at the same device — an
+    /// instance's being its provider. A
     /// deadline programmed in one counter's time and read in another's is a conflict. Its own facts of the function are
     /// rule 13's, whose codes tell a split from one describing a fact would make whole (`SR-H17`).
     fn time_base(&self, system: &System, assignment: &[Binding], report: &mut Report) {
         let counter = |fact: &str| {
-            self.vocabulary.fact(fact).is_some_and(|f| {
-                f.usage == Usage::Shared && f.function == Some(Function::Of("counter".to_string()))
-            })
+            !DESCRIBES_A_COMPARE.contains(&fact)
+                && self.vocabulary.fact(fact).is_some_and(|f| {
+                    f.usage == Usage::Shared
+                        && f.function == Some(Function::Of("counter".to_string()))
+                })
         };
         let mut found = BTreeSet::new();
         for deadline in assignment
