@@ -1055,6 +1055,18 @@ mdBook that is the director's window into the project.
   Verification: the census, the removal report, the sizes before and after.
   Commit: `ARCHOGEN-PROGRAM-1340 (leaf PROGRAM.145)`
 
+- ID: `PROGRAM.146`
+  Status: `done` — `2026-11-15`, `docs/tasks/` at 820,882 of its 819,200 bytes once `M4.1.7.5.4`'s split was staged (`README-ROUTES`).
+  Goal: keep `docs/tasks/` under its ceiling by the project's own sealing, nothing summarised and nothing lost, before `M4`'s next leaves need the room.
+  Acceptance:
+    - [x] ROOT CAUSE — WHY: `M4.1.7.3` and `M4.1.7.4`, done with their leaves by `ARCHOGEN-M4-1351` and `ARCHOGEN-M4-1355`, unsealed in the tree. WHERE: `bash scripts/check_task_history.sh --census HEAD` on `db95bdda` → `census: M4 — 119089 byte(s) of done leaves under open top-level subtrees, 119089 of them in 6 closed subtree(s) below the top level`.
+    - [x] FIX — `bash scripts/check_task_history.sh --seal M4`, on the committed tree: each closed subtree with its row in the index and a stub in the tree.
+    - [x] ADDRESSED — `task-history: docs/tasks/M4.md — sealed 7 subtree(s), 46 leaves: M4.1.7.2 M4.1.7.3 M4.1.7.4 M4.1.7.5.1 M4.1.7.5.2 M4.1.7.5.3 M4.12; 44 log row(s) in rows-0008.md; the reconstruction is byte for byte`; `docs/tasks/` 679,653 bytes, from 818,581 at `db95bdda`, and `docs/tasks/M4.md` 1,116 lines, from 1,551.
+    - [x] NO REGRESSION — `bash scripts/check_doctrines.sh` on the staged tree → exit 0. No code changed.
+    - [x] LOCKSTEP — the tree, the index and the Commit Log.
+  Verification: the seal's own proof, the gate.
+  Commit: `ARCHOGEN-PROGRAM-1361 (leaf PROGRAM.146)`
+
 ## Roadmap coverage map
 
 Every roadmap unit has exactly one owning tree. This table is the answer to "where does
@@ -1216,6 +1228,7 @@ leaf's outcome is its row in the Commit Log below, and a sealed leaf's full reco
 | `PROGRAM.144` | `ARCHOGEN-PROGRAM-1324 (leaf PROGRAM.144)` | **the M3 tree sealed again**: `M3.4.17` with its six leaves, so `docs/tasks/M3.md` keeps room under its line ceiling |
 | `PROGRAM.145` | `ARCHOGEN-PROGRAM-1340 (leaf PROGRAM.145)` | **the twenty-eighth artifact cleanup**: 29.3 GB of nested cargo target directories and test scratch, `target/` from 46.1 GB to 20.2 GB |
 | `PROGRAM.127.49` | `ARCHOGEN-PROGRAM-1320 (leaf PROGRAM.127.49)` | **the host guard's review, round 49**: no defect, so the review closes; arithmetic's end said as a rule; `job_bashes`' docstring. |
+| `PROGRAM.146` | `ARCHOGEN-PROGRAM-1361 (leaf PROGRAM.146)` | **the M4 tree sealed again**, `M4.1.7.3` and `M4.1.7.4` with their leaves, so `docs/tasks/` is under its ceiling. |
 
 ## Changelog
 
