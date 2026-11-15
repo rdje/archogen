@@ -39,8 +39,11 @@ use eadl_resolve::requirement::Requirement;
 use eadl_resolve::value::Value;
 use eadl_resolve::vocabulary::{Usage, Vocabulary};
 
+pub mod alarm;
 pub mod application;
 pub mod contents;
+pub mod controller;
+pub mod identity;
 pub mod layout;
 
 /// The format's identifier (§3).

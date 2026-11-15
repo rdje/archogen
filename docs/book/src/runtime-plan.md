@@ -230,7 +230,10 @@ code, what the joint rules refuse of a memory map, the model is held to that cod
 lie, where each allocation lies, what an owed one waits on, each stack's sum and what its figures rest on are
 `crates/archogen-plan/src/layout.rs` (leaf `M4.1.7.6.1`). Every small region, unit and set of figures the model runs, and
 each of its rounds' probes, runs through that code too, and the two must agree. It counts addresses past 64 bits, so a
-region ending at the top of a 64-bit address space is laid whole. No command writes a `/2` plan yet.
+region ending at the top of a 64-bit address space is laid whole. The code identity and the catalog's digest are
+`identity.rs`; the routes' ranks, which reach the controller, the priority each takes and the `(enabled …)` line are
+`controller.rs`; an alarm's time base, what it owes, how its compare is read, a rate and the epoch's line are `alarm.rs`
+(leaf `M4.1.7.6.2`), each held to the model over every small input. No command writes a `/2` plan yet.
 
 ## From a plan to a generated system
 

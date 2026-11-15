@@ -284,6 +284,12 @@ pub fn limit(region: Span, holes: &[Hole], floor: u128, laid: &[Span], owed: boo
     }
 }
 
+/// §3, "Orders": `region` lines by base, then name, then provider, two blocks' regions of one name at one base being two
+/// lines with an order (RP4-7, RP15-3). Each region is its base, its name and its provider.
+pub fn in_order(regions: &mut [(u128, &str, &str)]) {
+    regions.sort_unstable();
+}
+
 // ---- §5: the stacks
 
 /// The fault path's figures, which every stack adds on top of the deepest of what it holds (§5, "A fault is added, and

@@ -2573,6 +2573,17 @@ fn every_figure_the_generated_code_reads_stands_on_a_kept_line() {
     assert!(tasks.contains("- [RPF-H10] "), "`M4.2` quotes it");
 }
 
+/// §4: the epoch's line as it writes it, of a hosted plan or of a target's with a timer or none and an alarm or none (lifted out of its test by leaf
+/// `M4.1.7.6.2`, so the library's is held to it).
+fn epoch_line(hosted: bool, timer: bool, alarm: bool, lead: &str) -> String {
+    match (hosted, timer, alarm) {
+        (true, _, _) => "(epoch simulator)".to_owned(),
+        (false, true, _) => format!("(epoch after-read (lead {lead}))"),
+        (false, false, true) => format!("(epoch none (lead {lead}))"),
+        (false, false, false) => "(epoch none)".to_owned(),
+    }
+}
+
 /// §3 and §4: the epoch's line carries a lead wherever the checker holds one, and only there: under a timer the lead the last act adds, and under
 /// `(timer none)` with an alarm the lead each wake's and placeholder's distance is held against, which no generated code reads; a hosted set is asked
 /// none, and with neither timer nor alarm none is held. So the checker reads `E` off one line in every plan, and `(owed (epoch) epoch-lead (by catalog))`
@@ -2580,15 +2591,7 @@ fn every_figure_the_generated_code_reads_stands_on_a_kept_line() {
 /// owed it where §4 said it was owed only by a line that never said so (round 35, RP35-1).
 #[test]
 fn the_epoch_s_line_carries_a_lead_wherever_the_checker_holds_one() {
-    // The epoch's line as §4 writes it, of a hosted plan or of a target's with a timer or none and an alarm or none.
-    fn line(hosted: bool, timer: bool, alarm: bool, lead: &str) -> String {
-        match (hosted, timer, alarm) {
-            (true, _, _) => "(epoch simulator)".to_owned(),
-            (false, true, _) => format!("(epoch after-read (lead {lead}))"),
-            (false, false, true) => format!("(epoch none (lead {lead}))"),
-            (false, false, false) => "(epoch none)".to_owned(),
-        }
-    }
+    let line = epoch_line;
     // Where `RPF-H4` has the checker hold the port's lead: the first compare's hold under a timer, each wake's and placeholder's under a timer or none,
     // and nothing of a hosted set.
     let h4 = RECORD
@@ -2946,6 +2949,38 @@ fn preimage(plan: &str) -> String {
     out
 }
 
+/// [`preimage`], the library's held to it, and the library's identity the sha256 of it (leaf `M4.1.7.6.2`).
+fn preimage_held(plan: &str) -> String {
+    let model = preimage(plan);
+    assert_eq!(
+        archogen_plan::identity::preimage(plan).as_deref(),
+        Ok(model.as_str()),
+        "the library's preimage of {plan}"
+    );
+    assert_eq!(
+        archogen_plan::identity::code_identity(plan),
+        Ok(archogen_digest::Digest::of(model.as_bytes()))
+    );
+    model
+}
+
+/// The library's table of lines as the model's: each head, and what the identity does with it.
+fn library_lines() -> Vec<(String, Identity)> {
+    archogen_plan::identity::LINES
+        .iter()
+        .map(|(head, treatment)| {
+            (
+                (*head).to_owned(),
+                match treatment {
+                    archogen_plan::identity::Treatment::Kept => Identity::Kept,
+                    archogen_plan::identity::Treatment::LeftOut => Identity::LeftOut,
+                    archogen_plan::identity::Treatment::EntryPoint => Identity::EntryPoint,
+                },
+            )
+        })
+        .collect()
+}
+
 /// The record's own table of lines, after `<!-- machine-read: code-identity -->`: each head and what the identity does with it.
 fn the_record_s_table() -> Vec<(String, Identity)> {
     let after = RECORD
@@ -3010,6 +3045,11 @@ fn the_record_s_table_of_lines_is_the_model_s_and_holds_every_form() {
         .map(|(head, does)| ((*head).to_owned(), *does))
         .collect();
     assert_eq!(table, model);
+    assert_eq!(
+        library_lines(),
+        model,
+        "the library's table is the model's (leaf `M4.1.7.6.2`)"
+    );
     let heads = the_forms_heads();
     for head in &heads {
         assert!(
@@ -3063,8 +3103,11 @@ fn two_plans_of_one_code_have_one_preimage_and_code_moves_it() {
         plan.extend(["(declared leaves-interrupt-hardware-alone yes (clause \"…\") (basis \"it touches no device\"))", "(realization-figure (step 1) initialisation-stack (value 128) (unit byte))", "(realization-fact (source uart.rx) acknowledge-point entry)", "(allocation (stack boot) (base 2281700288) (guard 64) (bytes 1024) (align 16) (origin (record port.riscv guard assumed)))", "(image (floor 2147483648) (limit 2281700288) (truncated-by))", "(complete yes)"].map(str::to_owned));
         plan.join("\n") + "\n"
     };
-    let one = preimage(&first(shared("app::beat", "00", "c1", 7)));
-    assert_eq!(one, preimage(&second(shared("app::beat", "00", "c1", 7))));
+    let one = preimage_held(&first(shared("app::beat", "00", "c1", 7)));
+    assert_eq!(
+        one,
+        preimage_held(&second(shared("app::beat", "00", "c1", 7)))
+    );
     assert!(
         one.contains("(task-inputs (task heartbeat beat) (entry-point \"app::beat\"))\n")
             && one.contains("(initialisation-inputs none)\n"),
@@ -3082,9 +3125,9 @@ fn two_plans_of_one_code_have_one_preimage_and_code_moves_it() {
         // RP4-2: an engine rebuilt with another emitter generates other code of the same plan, and its version is a line the identity keeps.
         shared_by("app::beat", "00", "c1", 7, 2),
     ] {
-        assert_ne!(preimage(&first(moved)), one);
+        assert_ne!(preimage_held(&first(moved)), one);
     }
-    let named = preimage("(initialisation-inputs (entry-point \"app::init\") (stack-bound (value 256) (unit byte)) (node-calls (call console.write 1)))\n");
+    let named = preimage_held("(initialisation-inputs (entry-point \"app::init\") (stack-bound (value 256) (unit byte)) (node-calls (call console.write 1)))\n");
     assert_eq!(
         named,
         "(initialisation-inputs (entry-point \"app::init\"))\n"
@@ -4454,12 +4497,42 @@ fn catalog_preimage(records: &[(&str, &str)]) -> String {
         .collect()
 }
 
+/// [`catalog_preimage`], the library's held to it, each hash read as [`archogen_digest::Digest`] parses its written form (leaf `M4.1.7.6.2`).
+fn catalog_held(records: &[(&str, &str)]) -> String {
+    let model = catalog_preimage(records);
+    let library: Vec<(String, archogen_digest::Digest)> = records
+        .iter()
+        .map(|(id, hex)| {
+            (
+                (*id).to_owned(),
+                archogen_digest::Digest::parse(&format!("sha256:{hex}")).expect("a digest"),
+            )
+        })
+        .collect();
+    assert_eq!(archogen_plan::identity::catalog_preimage(&library), model);
+    assert_eq!(
+        archogen_plan::identity::catalog_digest(&library),
+        archogen_digest::Digest::of(model.as_bytes())
+    );
+    model
+}
+
 #[test]
 fn the_catalog_digest_has_one_preimage() {
     let (a, b) = ("0".repeat(64), "f".repeat(64));
     assert_eq!(
-        catalog_preimage(&[("uart.ns16550a", b.as_str()), ("port.riscv", a.as_str())]),
+        catalog_held(&[("uart.ns16550a", b.as_str()), ("port.riscv", a.as_str())]),
         format!("port.riscv sha256:{a}\nuart.ns16550a sha256:{b}\n")
+    );
+    assert_eq!(
+        catalog_held(&[]),
+        "",
+        "an empty catalog: nothing before the first, and no line"
+    );
+    assert_eq!(
+        catalog_held(&[("port.riscv", b.as_str()), ("port.riscv", a.as_str())]),
+        format!("port.riscv sha256:{a}\nport.riscv sha256:{b}\n"),
+        "one id twice: by its hash"
     );
     assert!(RECORD.contains("with nothing before the first"));
     // The display the record names is `Digest`'s own.
@@ -4767,4 +4840,186 @@ fn an_origin_names_the_lists_its_largest_is_taken_over() {
     );
     assert_eq!(items[0], "(application (task s t) node-calls assumed)");
     assert!(RECORD.contains("and each list its sums take their largest over, a task's `node-calls` and `os-calls` and the initialisation's `node-calls`, by its own category"));
+}
+
+// ---- the library's small procedures beside the model's (leaf `M4.1.7.6.2`)
+
+/// §3, §4 and §6's small procedures, the library's held to the model's over every small input: a route's priority and which reach the controller,
+/// the ranks, the `(enabled …)` line, an alarm's `BASE`, what it owes and whether a task owes the application's word of it, a compare's reading, a rate,
+/// the regions' order and the epoch's line.
+#[test]
+fn the_library_s_small_procedures_are_the_model_s() {
+    use archogen_plan::{alarm, controller, layout};
+    for levels in 0..=8 {
+        for routes in 0..=9 {
+            for rank in 0..=10 {
+                assert_eq!(
+                    controller::priority(levels, routes, rank),
+                    priority(levels, routes, rank),
+                    "{levels} {routes} {rank}"
+                );
+            }
+        }
+    }
+    let externals = [Some(true), Some(false), None];
+    let mut lists: Vec<Vec<Option<bool>>> = vec![Vec::new()];
+    for _ in 0..4 {
+        let longer: Vec<Vec<Option<bool>>> = lists
+            .iter()
+            .filter(|list| list.len() == lists.iter().map(Vec::len).max().unwrap_or(0))
+            .flat_map(|list| {
+                externals
+                    .iter()
+                    .map(move |external| [list.clone(), vec![*external]].concat())
+            })
+            .collect();
+        lists.extend(longer);
+    }
+    assert_eq!(lists.len(), 1 + 3 + 9 + 27 + 81);
+    for list in &lists {
+        assert_eq!(controller::reaching(list), reaching(list), "{list:?}");
+    }
+    let items = [
+        (None, "(source button)"),
+        (None, "(alarm zz.watchdog)"),
+        (Some(10), "(alarm a.fast)"),
+        (Some(3), "(source b)"),
+        (Some(10), "(alarm a.slow)"),
+    ];
+    for first in 0..items.len() {
+        for second in 0..items.len() {
+            for third in 0..items.len() {
+                let chosen = vec![items[first], items[second], items[third]];
+                assert_eq!(
+                    controller::ranked(chosen.clone()),
+                    ranked(chosen.clone()),
+                    "{chosen:?}"
+                );
+            }
+        }
+    }
+    for timer in [false, true] {
+        for routes in [
+            &[][..],
+            &["(alarm a)"][..],
+            &["(source s)", "(alarm a)"][..],
+        ] {
+            assert_eq!(
+                controller::enabled(timer, routes),
+                enabled(timer, routes),
+                "{timer} {routes:?}"
+            );
+        }
+    }
+    let readers_of = |model: Reader| match model {
+        Reader::AtTheDevice => alarm::Reader::AtTheDevice,
+        Reader::ExtendedOverIt => alarm::Reader::ExtendedOverIt,
+        Reader::OnAnother => alarm::Reader::OnAnother,
+        Reader::ExtendedOverAnother => alarm::Reader::ExtendedOverAnother,
+    };
+    let mut sets: Vec<Vec<Reader>> = vec![Vec::new()];
+    for a in READERS {
+        sets.push(vec![a]);
+        for b in READERS {
+            sets.push(vec![a, b]);
+            for c in READERS {
+                sets.push(vec![a, b, c]);
+            }
+        }
+    }
+    for wake in [false, true] {
+        for set in &sets {
+            let library = alarm::base(
+                wake,
+                &set.iter().copied().map(readers_of).collect::<Vec<_>>(),
+            );
+            let model = match base(wake, set) {
+                Base::Counter => alarm::Base::Counter,
+                Base::Epoch => alarm::Base::Epoch,
+            };
+            assert_eq!(library, model, "{wake} {set:?}");
+        }
+        for on_the_counter in [false, true] {
+            assert_eq!(
+                alarm::asks_application(wake, on_the_counter),
+                asks_the_application(wake, on_the_counter)
+            );
+            for simulated in [false, true] {
+                assert_eq!(
+                    alarm::owes(wake, on_the_counter, simulated),
+                    alarm_owes(wake, on_the_counter, simulated)
+                );
+            }
+        }
+    }
+    for window in [None, Some(0), Some(5)] {
+        for magnitude in [None, Some(false), Some(true)] {
+            let library = match alarm::compare_reading(window, magnitude) {
+                alarm::Reading::Window(window) => Reading::Window(window),
+                alarm::Reading::WholeNumbers => Reading::WholeNumbers,
+                alarm::Reading::Unstated => Reading::Unstated,
+                alarm::Reading::Refused => Reading::Refused,
+            };
+            assert_eq!(
+                library,
+                compare_reading(window, magnitude),
+                "{window:?} {magnitude:?}"
+            );
+        }
+    }
+    for numerator in 0..=24_u64 {
+        for denominator in 1..=24_u64 {
+            assert_eq!(
+                alarm::rate(
+                    u128::from(numerator),
+                    std::num::NonZeroU128::new(u128::from(denominator)).expect("not zero")
+                ),
+                rate(numerator, denominator),
+                "{numerator}/{denominator}"
+            );
+        }
+    }
+    let regions = [
+        (0x8000_0000_u64, "ram", "b"),
+        (0x8000_0000, "ram", "a"),
+        (0x1000, "rom", "a"),
+        (0x8000_0000, "io", "z"),
+    ];
+    for first in 0..regions.len() {
+        for second in 0..regions.len() {
+            let chosen = vec![
+                regions[first],
+                regions[second],
+                regions[(first + second) % regions.len()],
+            ];
+            let mut library: Vec<(u128, &str, &str)> = chosen
+                .iter()
+                .map(|&(base, name, provider)| (u128::from(base), name, provider))
+                .collect();
+            layout::in_order(&mut library);
+            assert_eq!(
+                library,
+                in_the_plan_s_order(chosen.clone())
+                    .into_iter()
+                    .map(|(base, name, provider)| (u128::from(base), name, provider))
+                    .collect::<Vec<_>>(),
+                "{chosen:?}"
+            );
+        }
+    }
+    for hosted in [false, true] {
+        for timer in [false, true] {
+            for alarmed in [false, true] {
+                for lead in [
+                    "owed",
+                    "(value 2.4us) (record port.lead) (category measured)",
+                ] {
+                    assert_eq!(
+                        alarm::epoch_line(hosted, timer, alarmed, lead),
+                        epoch_line(hosted, timer, alarmed, lead)
+                    );
+                }
+            }
+        }
+    }
 }
