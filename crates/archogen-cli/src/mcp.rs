@@ -28,6 +28,7 @@ use std::io::{self, BufRead, Write};
 
 use archogen_api::{
     check_with, Diagnostic, Explain, Limits, MemoryModules, Plan, Request, Resolve, Status,
+    TargetFile,
 };
 use archogen_transport::{integer, object, string, text_block, tool_error, Failure, Tools};
 
@@ -161,7 +162,7 @@ fn tool(spec: &CommandSpec) -> Value {
         (
             "inputSchema",
             match spec.name {
-                "check" => check_schema(),
+                "check" => check_tool_schema(),
                 "resolve" => resolve_schema(),
                 "explain" => explain_schema(),
                 _ => object(vec![("type", string("object"))]),
@@ -223,16 +224,92 @@ fn check_schema() -> Value {
     ])
 }
 
+/// What the `check` tool takes: the request every tool reads, and `target`, the machine the description's systems are judged on (leaf
+/// `M4.1.7.4.2.2`). The search on a target is `M4.1.7.5`'s, so no other tool takes one yet.
+fn check_tool_schema() -> Value {
+    let mut schema = check_schema();
+    if let Value::Object(members) = &mut schema {
+        for (key, value) in members.iter_mut() {
+            if let ("properties", Value::Object(properties)) = (key.as_str(), value) {
+                properties.push((
+                    "target".to_owned(),
+                    object(vec![
+                        ("type", string("object")),
+                        (
+                            "description",
+                            string(
+                                "the target its systems are judged on, a file declaring a machine's hardware alone: its `text`, and \
+                                 how diagnostics name it, `name`, `target.eadl` when absent",
+                            ),
+                        ),
+                        (
+                            "properties",
+                            object(vec![
+                                (
+                                    "text",
+                                    object(vec![
+                                        ("type", string("string")),
+                                        ("description", string("the target's file")),
+                                    ]),
+                                ),
+                                (
+                                    "name",
+                                    object(vec![
+                                        ("type", string("string")),
+                                        ("description", string("how diagnostics name the target")),
+                                    ]),
+                                ),
+                            ]),
+                        ),
+                        ("required", Value::Array(vec![string("text")])),
+                        ("additionalProperties", Value::Bool(false)),
+                    ]),
+                ));
+            }
+        }
+    }
+    schema
+}
+
 /// `check`: the arguments read as the engine API's request, judged, and answered in the wasm binding's encoding.
 /// An argument it cannot use is a tool error, with what to change.
 fn check(arguments: &Value) -> Result<Value, Failure> {
-    match check_request(arguments, &[]) {
-        Ok((name, text, profile, modules)) => judge(name, text, profile, &modules),
+    let read = check_request(arguments, &["target"])
+        .and_then(|request| Ok((request, target_of(arguments)?)));
+    match read {
+        Ok(((name, text, profile, modules), target)) => {
+            judge(name, text, profile, &modules, target)
+        }
         Err(problem) => Ok(tool_error(&format!(
-            "{problem}; `check` takes `description` (the text), and optionally `name`, `profile` and `modules`, \
-             each module's name mapped to its text"
+            "{problem}; `check` takes `description` (the text), and optionally `name`, `profile`, `modules`, \
+             each module's name mapped to its text, and `target`, an object of a target's `text` and its `name`"
         ))),
     }
+}
+
+/// `check`'s `target` argument: none, or the target's file, named `target.eadl` when it names itself nothing.
+fn target_of(arguments: &Value) -> Result<Option<TargetFile<'_>>, String> {
+    let Some(target) = arguments.get("target") else {
+        return Ok(None);
+    };
+    let Value::Object(members) = target else {
+        return Err("`target` is not an object".to_owned());
+    };
+    if let Some((key, _)) = members
+        .iter()
+        .find(|(key, _)| !matches!(key.as_str(), "text" | "name"))
+    {
+        return Err(format!("`target` holds no `{key}`"));
+    }
+    let Some(text) = target.get("text").and_then(Value::as_str) else {
+        return Err("`target`'s `text`, the target's file, is missing or not a string".to_owned());
+    };
+    let name = match target.get("name") {
+        None => "target.eadl",
+        Some(Value::String(name)) => name.as_str(),
+        Some(_) => return Err("`target`'s `name` is not a string".to_owned()),
+    };
+    Ok(Some(TargetFile { name, text }))
 }
 
 /// `check`'s arguments — and `extra`, which a tool taking them adds — read, or what is wrong with them.
@@ -601,6 +678,7 @@ fn judge(
     text: &str,
     profile: Option<&str>,
     modules: &MemoryModules,
+    target: Option<TargetFile<'_>>,
 ) -> Result<Value, Failure> {
     let response = check_with(
         &Request {
@@ -608,7 +686,7 @@ fn judge(
             text,
             profile,
             modules,
-            target: None,
+            target,
         },
         Limits::DEFAULT,
     );
@@ -1131,6 +1209,112 @@ mod tests {
         );
     }
 
+    /// A machine of one console, one core and memory, and `NMI` sources no mask stops (leaf `M4.1.7.4.2.2`).
+    fn board(nmi: u32) -> String {
+        format!(
+            "(defblock board.uart (offers (observable-output true)))\n\
+             (defplatform board.soc (offers (core-count 1 tick) (non-maskable-interrupts {nmi}) (firmware-traps 0) \
+             (region board.ram (base 0x8000_0000) (size 1 MiB) (executable true))) (requires (uses board.uart)))\n"
+        )
+    }
+
+    /// A system whose one task writes to a console.
+    const BEAT: &str = "(defservice console.write (requires (needs observable-output)))\n\
+        (defsystem beat (task tick (period 10 ms) (deadline 10 ms) (deadline-from release) (priority 1) \
+        (uses console.write) (on-overrun fault)) (requires (uses console.write)))\n";
+
+    #[test]
+    fn check_judges_on_the_target_its_arguments_hold() {
+        let mut server = Server::default();
+        let status = |value: &Value| {
+            value
+                .get("result")
+                .and_then(|r| r.get("structuredContent"))
+                .and_then(|s| s.get("status"))
+                .and_then(Value::as_str)
+                .map(str::to_owned)
+        };
+        for (nmi, expected) in [(0, "ok"), (1, "unsupported-profile")] {
+            let target = board(nmi);
+            let called = answer(
+                &mut server,
+                &check_call(&format!(
+                    r#"{{"description":{},"name":"beat.eadl","target":{{"name":"board.eadl","text":{}}}}}"#,
+                    json::write(&string(BEAT)),
+                    json::write(&string(&target))
+                )),
+            )
+            .unwrap();
+            assert_eq!(
+                status(&called).as_deref(),
+                Some(expected),
+                "{}",
+                json::write(&called)
+            );
+            // The structured result is the binding's encoding of the API's answer to the same request.
+            let response = check_with(
+                &Request {
+                    name: "beat.eadl",
+                    text: BEAT,
+                    profile: None,
+                    modules: &MemoryModules::new(),
+                    target: Some(archogen_api::TargetFile {
+                        name: "board.eadl",
+                        text: &target,
+                    }),
+                },
+                Limits::DEFAULT,
+            );
+            let text = called
+                .get("result")
+                .and_then(|r| r.get("content"))
+                .and_then(|c| match c {
+                    Value::Array(blocks) => blocks.first(),
+                    _ => None,
+                })
+                .and_then(|block| block.get("text"))
+                .and_then(Value::as_str)
+                .map(str::to_owned);
+            assert_eq!(text, Some(archogen_wasm::json::encode(&response)));
+        }
+    }
+
+    /// The search on a target is `M4.1.7.5`'s, so `target` is `check`'s argument alone: offered by its schema, and by no other tool's.
+    #[test]
+    fn only_check_takes_a_target() {
+        let mut server = Server::default();
+        let listed = answer(&mut server, &modern("tools/list", "")).unwrap();
+        let tools = match listed.get("result").and_then(|r| r.get("tools")) {
+            Some(Value::Array(tools)) => tools.clone(),
+            other => panic!("no tools: {other:?}"),
+        };
+        for tool in &tools {
+            let name = tool.get("name").and_then(Value::as_str).unwrap_or("?");
+            let takes = tool
+                .get("inputSchema")
+                .and_then(|schema| schema.get("properties"))
+                .and_then(|properties| properties.get("target"))
+                .is_some();
+            assert_eq!(takes, name == "check", "{name}");
+        }
+        let resolved = answer(
+            &mut server,
+            &modern(
+                "tools/call",
+                &format!(
+                    r#","name":"resolve","arguments":{{"description":{},"unchecked":true,"target":{{"text":"t"}}}}"#,
+                    json::write(&string(BEAT))
+                ),
+            ),
+        )
+        .unwrap();
+        assert!(
+            json::write(&resolved).contains("no argument `target`"),
+            "{}",
+            json::write(&resolved)
+        );
+    }
+
     #[test]
     fn check_reads_its_modules_from_the_arguments() {
         let mut server = Server::default();
@@ -1219,6 +1403,23 @@ mod tests {
             (
                 r#"{"description":"x","modules":[]}"#,
                 "`modules` is not an object",
+            ),
+            (
+                r#"{"description":"x","target":"t"}"#,
+                "`target` is not an object",
+            ),
+            (r#"{"description":"x","target":{}}"#, "`target`'s `text`"),
+            (
+                r#"{"description":"x","target":{"text":1}}"#,
+                "`target`'s `text`",
+            ),
+            (
+                r#"{"description":"x","target":{"text":"t","name":7}}"#,
+                "`target`'s `name` is not a string",
+            ),
+            (
+                r#"{"description":"x","target":{"text":"t","path":"p"}}"#,
+                "`target` holds no `path`",
             ),
         ] {
             let value = answer(&mut server, &check_call(arguments)).unwrap();

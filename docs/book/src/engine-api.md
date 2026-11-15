@@ -106,7 +106,8 @@ timer answering what their time services ask of a counter, its width among it (l
 contrast with `check` on the description's own hardware.
 
 The command line carries it as `archogen check --target FILE` ([On a target](checking.md#on-a-target), leaf
-`M4.1.7.4.2.1`); the agent's server and the page carry it with leaves `M4.1.7.4.2.2` and `M4.1.7.4.2.3`. `resolve` and `explain`
+`M4.1.7.4.2.1`), and the agent's server as the `check` tool's `target` (leaf `M4.1.7.4.2.2`); the page carries it with
+leaf `M4.1.7.4.2.3`. `resolve` and `explain`
 on a target are leaf `M4.1.7.5`'s: until then a request naming one is answered `unimplemented`, saying so, since a
 plan of the description's own hardware is no plan on the machine.
 
@@ -342,8 +343,11 @@ the generator's, runs no checker, so it refuses otherwise with the repair: compo
 takes `check`'s arguments, `requirement` — a fact — and optionally `requester` or `task` and `system`, and answers
 `{"response": …, "plan": …, "accounts": […]}`, each account the API's, its clauses as file, line and column; it asks
 no `unchecked`, handing over no plan to build on (leaf `M3.4.13.2`). `check`
-takes the API's request — the description's text, its profile and its modules' texts, never a path — and answers the
-API's response in the wasm binding's encoding above, the same bytes, both as structured content and as text. Its
+takes the API's request — the description's text, its profile and its modules' texts, never a path, and optionally
+`target`, an object holding a target's file as `text` and how diagnostics name it as `name`, `target.eadl` when absent
+(leaf `M4.1.7.4.2.2`, [Checking on a target](#checking-on-a-target)) — and answers the API's response in the wasm
+binding's encoding above, the same bytes, both as structured content and as text. No other tool takes a target until
+the search on one is built (`M4.1.7.5`), so `resolve` and `explain` refuse it as an argument they do not have. Its
 result is an error whenever the description is not accepted, so a client that reads one flag never mistakes a
 refusal for a pass. An argument `check` cannot use is answered the same way, saying what to change, so a model can
 correct its call. A tool that is not built answers with its leaf, and a version the server does not speak is refused
@@ -386,7 +390,7 @@ consumers reach the engine today, and all four reach the same operation:
 | a person | `archogen check` (`crates/archogen-cli`) | check a description, its imports read from a directory | the status as the exit code, and the diagnostics rendered as text |
 | a Rust program | `archogen_api::check` (`crates/archogen-api`) | check text it holds, its imports from memory or none, on a target it holds or on the description's own hardware | a `Response`: the status, the diagnostics and their sources, and, when judged, the verdict and what was read |
 | a web page | the wasm binding (`crates/archogen-wasm`, `docs/decisions/decision_wasm-binding.md`) | check text, its imports framed into the request | the same response, encoded as JSON |
-| an agent | `archogen mcp` (`crates/archogen-cli/src/mcp.rs`, `docs/decisions/decision_mcp-server.md`) | call the `check` tool, and discover the others with their maturity and the leaf that owns each | the binding's JSON as the tool's structured result, marked an error unless the description was accepted |
+| an agent | `archogen mcp` (`crates/archogen-cli/src/mcp.rs`, `docs/decisions/decision_mcp-server.md`) | call the `check` tool, on a target it holds or none, and discover the others with their maturity and the leaf that owns each | the binding's JSON as the tool's structured result, marked an error unless the description was accepted |
 
 `resolve` reaches the person, through `archogen resolve`; the Rust program, through
 `archogen_api::resolve_with`; and the agent, through the MCP tool `resolve` (leaf `M3.4.6`). `explain` reaches the same
@@ -442,8 +446,8 @@ the language and the MCP surface are not Rust items, and stay the book's alone.
 
 ## Today and ahead
 
-- **Today:** `check` on a target through the library and the command line (API `1.10`, `M4.1.7.4.1`, `M4.1.7.4.2.1`),
-  the server and the page carrying it with `M4.1.7.4.2.2` and `.3`; `check` through four doors — the command line, the library, the page and the MCP server — each held to
+- **Today:** `check` on a target through the library, the command line and the MCP server (API `1.10`, `M4.1.7.4.1`,
+  `M4.1.7.4.2.1`, `M4.1.7.4.2.2`), the page carrying it with `M4.1.7.4.2.3`; `check` through four doors — the command line, the library, the page and the MCP server — each held to
   the same answers by tests: the command line's parity legs, the integration tier's `wasm-binding` step, and the MCP
   server's stdio test over the conformance cases in both protocol eras; and `resolve`, the search alone, through the
   command line, the library and the MCP server (`M3.4.4`, `M3.4.6`), the first two held to one answer by its parity

@@ -97,7 +97,10 @@ by `API.6.5`'s review:
   carries `resultType: "complete"` and the server's `serverInfo` in its `_meta`; a `2025-11-25` result carries
   neither, its revision having no `resultType`.
 - `check` takes `description`, and optionally `name`, `profile` and `modules`, an object from each module's name to
-  its text; any other argument, or one of the wrong type, is a tool error (§4). An unbuilt tool's description says it
+  its text; any other argument, or one of the wrong type, is a tool error (§4). *Amended `2026-11-15` (leaf
+  `M4.1.7.4.2.2`):* and `target`, an object of a target's file, `text`, and optionally its `name`, `target.eadl` when
+  absent, the engine API's `TargetFile` (API `1.10`); a `target` that is no such object is a tool error too. No other
+  tool takes one until the search on a target is built (`M4.1.7.5`). An unbuilt tool's description says it
   is not built and names its leaf, since a model reads a description and few clients show it `_meta`.
 - The line bound is six times the API's byte budget and 64 KiB (§5): a bound that refused a description the API
   accepts, for how its client escaped it, would be a transport overruling the engine.
