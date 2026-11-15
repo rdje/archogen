@@ -12,7 +12,8 @@ choose a system's providers — the plan — though not to check that plan: the 
 can ask what that choice did with one requirement, and why.
 
 > **In one minute, for engineers.** `crates/archogen-api` declares three versioned operations: `check`, description
-> text plus a profile in, a `Response` carrying §5.5's verdict, diagnostics and the engine's version out; `resolve`,
+> text plus a profile in, and optionally a target, the machine its systems are judged on, a `Response` carrying §5.5's
+> verdict, diagnostics and the engine's version out; `resolve`,
 > the search alone, asked with `unchecked` set, which answers the same response and, for one system, the plan
 > `archogen-assignment/2`; and `explain`, the same search's account of each requirement on one fact. It reads no
 > file, writes none, spawns nothing, and compiles for `wasm32-unknown-unknown`. An instance is one running copy of one
@@ -44,6 +45,7 @@ plus a profile in, a structured response out, and `resolve`, below, which takes 
 | `text` | the description itself |
 | `profile` | the profile's identifier, or none for the default, `rt-static-up-v1` |
 | `modules` | where an import resolves: a directory for the CLI, `MemoryModules` for a consumer with no filesystem, `NoModules` for a description that imports nothing |
+| `target` | the machine the description's systems are judged on, a `TargetFile` holding its name and its text, or none to judge them on the description's own hardware (API `1.10`, below) |
 
 A `Response` holds:
 
@@ -56,6 +58,56 @@ A `Response` holds:
 | `sources` | the texts those spans point into, so any consumer can render them |
 | `notes`, `hint` | what the API says about a request it did not judge, and the repair |
 | `judged` | present exactly when the description was judged: the verdict, the language version and profile it was judged under, the declarations it read, a module tree's instances, and the closure |
+
+### Checking on a target
+
+A description is written against a platform of its own. A **target** is a real machine, described in a file of its own
+that declares its hardware and nothing else, such as `targets/riscv-virt-up.eadl`
+([Where generated systems run](targets.md)). Naming one in the request (API `1.10`, leaf `M4.1.7.4.1`) asks whether the description's
+systems can run **there**: each system is given the target's platform in place of its own, so the machine answers
+what the system asks, and the description's own hardware is just one platform it could run on. So a description
+need not pass presence over hardware of its own; one whose own console is silent can still run on a target that has
+one ([A system on a target](targets.md#a-system-on-a-target-which-device-is-which), `docs/decisions/decision_device-correspondence.md`).
+
+`check` judges, in this order, and goes on past a stage that refuses, so one request gives every answer it can
+(`crates/archogen-api/src/on_target.rs`):
+
+1. **The target's file alone.** `check`'s own judgement of it; what keeps it from being a target at all — a
+   declaration that is no hardware, a device its platform does not compose (`crates/eadl-resolve/src/target.rs`,
+   `Target::read`); what the search's reading of its devices refuses, a compare read two ways among it; and what the
+   profile asks of any machine (`Target::admission`):
+
+   | The machine | Status |
+   | --- | --- |
+   | more than one active core | `unsupported-profile`, as `check` refuses `core-count` above one |
+   | a count of `non-maskable-interrupts` or `firmware-traps` above zero: a source no mask stops | `unsupported-profile`, naming it |
+   | no region of placement memory, `(executable true)` and not reserved, to lay an image out in | `infeasible-configuration` |
+   | either count stated by no device | `missing-fact`, naming it: silence gives no value |
+
+2. **Every pass on the description itself but presence**: reading, the boundary, the schema, the profile's
+   admission, the workload and refinement, as `check` runs them, and a module tree's composition.
+3. **What the search refuses of what the description writes**, each reading asked alone: a provider offering one
+   fact twice, a compare read two ways, a requirement contradicting another, a consumed fact offered with no
+   channel, a declaration named like a fact. The search itself stops at its first stage that refuses, which would
+   hide what a later one says; here each is asked. What binding would say, such as a fact the machine lacks, is
+   not asked here: that is a plan's absence, not a mistake in what is written.
+4. **Presence on each system put on the target**, before any search. What keeps a system from being read there is
+   refused under `check`'s status for its code: a description naming one of the target's devices itself, or a name
+   both files declare. A platform declaring absent a fact the target offers is reported as `refinement-violated`
+   under `infeasible-configuration`.
+
+The status is the highest of all of them, by the precedence every verdict has ([Checking a
+description](checking.md)), and the closure is what presence read on the machine. A description that declares no
+system puts nothing on the target: presence judges nothing there, and the closure is empty.
+
+For example, `targets/riscv-virt-up.eadl` admits `examples/s0-heartbeat/system.eadl`, its console answering the
+heartbeat's writes, and refuses the examples that ask the timer for `counter-width` `missing-fact`, the target not
+stating it yet (leaf `M4.1.7.3.5`). `crates/archogen-api/tests/target.rs` holds each row above, each stage, and the
+contrast with `check` on the description's own hardware.
+
+The command line, the page and the agent's server carry the target with leaf `M4.1.7.4.2`. `resolve` and `explain`
+on a target are leaf `M4.1.7.5`'s: until then a request naming one is answered `unimplemented`, saying so, since a
+plan of the description's own hardware is no plan on the machine.
 
 ### The second operation: resolve, the search alone
 
@@ -121,18 +173,24 @@ reading, which is flagged for the director's call.
 
 ### An example that runs
 
-`crates/archogen-api/examples/in_memory.rs` sends three requests, all held in memory: one accepted,
-one judged and refused, and one the API does not judge.
+`crates/archogen-api/examples/in_memory.rs` sends requests that are all held in memory: one accepted,
+one judged and refused, one the API does not judge, and a system on a machine of its own, admitted, then refused
+when the machine states an interrupt source no mask stops.
 
 ```console
 $ cargo run -q -p archogen-api --example in_memory
-api 1.9 · engine 0.1.0 · status ok
+api 1.10 · engine 0.1.0 · status ok
   judged under eadl/1, profile rt-static-up-v1: 1 declaration(s)
-api 1.9 · engine 0.1.0 · status invalid-description
+api 1.10 · engine 0.1.0 · status invalid-description
   judged under eadl/1, profile rt-static-up-v1: 1 declaration(s)
   quantity-unknown-unit: `parsec` is not a known unit
-api 1.9 · engine 0.1.0 · status unsupported-profile
+api 1.10 · engine 0.1.0 · status unsupported-profile
   not judged: `rt-dynamic-mp` is not a supported profile
+api 1.10 · engine 0.1.0 · status ok
+  judged under eadl/1, profile rt-static-up-v1: 2 declaration(s)
+api 1.10 · engine 0.1.0 · status unsupported-profile
+  judged under eadl/1, profile rt-static-up-v1: 2 declaration(s)
+  unsupported-profile: `board.soc` states `(non-maskable-interrupts 1)`, interrupt sources no mask stops, and profile `rt-static-up-v1` admits none
 ```
 
 `crates/archogen-api/tests/book_example.rs` runs the example and compares its output with the block
@@ -174,15 +232,15 @@ has at most 1 024 instances and 16-module import chains ([Reading a description]
 [Modules and composition](modules.md)), and a symbol as written at most 256 characters. What is left grows with the text: measured
 on a debug build, 1 MB of description checked in 0.36 s and held 82 MB, and 5 MB took 1.95 s and 383 MB. No sentence can say that of every shape, and what compares pairs grows with the pairs and not with the text. So `crates/archogen-api/tests/cost.rs` counts what a request holds at its most for each shape a review has found to cost it, and each row says what its text reaches, since a fixture refused before the cost holds nothing, and how many pairs it compares.
 
-So an instance gives each request a **byte budget**, counted over the description and every module text
-elaboration loads. Each instance reloads its module, so a module imported a hundred times counts a hundred
+So an instance gives each request a **byte budget**, counted over the description, its target's file and every
+module text elaboration loads. Each instance reloads its module, so a module imported a hundred times counts a hundred
 times. `check` applies the default, 1 MiB, which is two hundred times the largest description in the
 repository. `check_with(request, limits)` applies the budget the instance chose. The instance sets it and
 the consumer cannot, because its purpose is to protect the host from what a consumer sends. A request over
 its budget is `tool-failure`, with a note naming the budget and what went past it, and nothing about the
 description, because a judgement cut short is not one. A request within its budget gets exactly the answer
 it would get with no budget. `crates/archogen-api/tests/budget.rs` pins both edges, through the description
-and through the modules.
+and through the modules, and `crates/archogen-api/tests/target.rs` through a target.
 
 The command line asks with no budget. It is its own consumer and trusts the files it was given. The
 language's limits still apply to it, because they belong to the language.
@@ -325,7 +383,7 @@ consumers reach the engine today, and all four reach the same operation:
 | Consumer | Its door | What it can do | What it receives |
 | --- | --- | --- | --- |
 | a person | `archogen check` (`crates/archogen-cli`) | check a description, its imports read from a directory | the status as the exit code, and the diagnostics rendered as text |
-| a Rust program | `archogen_api::check` (`crates/archogen-api`) | check text it holds, its imports from memory or none | a `Response`: the status, the diagnostics and their sources, and, when judged, the verdict and what was read |
+| a Rust program | `archogen_api::check` (`crates/archogen-api`) | check text it holds, its imports from memory or none, on a target it holds or on the description's own hardware | a `Response`: the status, the diagnostics and their sources, and, when judged, the verdict and what was read |
 | a web page | the wasm binding (`crates/archogen-wasm`, `docs/decisions/decision_wasm-binding.md`) | check text, its imports framed into the request | the same response, encoded as JSON |
 | an agent | `archogen mcp` (`crates/archogen-cli/src/mcp.rs`, `docs/decisions/decision_mcp-server.md`) | call the `check` tool, and discover the others with their maturity and the leaf that owns each | the binding's JSON as the tool's structured result, marked an error unless the description was accepted |
 
@@ -383,7 +441,8 @@ the language and the MCP surface are not Rust items, and stay the book's alone.
 
 ## Today and ahead
 
-- **Today:** `check` through four doors — the command line, the library, the page and the MCP server — each held to
+- **Today:** `check` on a target through the library alone (API `1.10`, `M4.1.7.4.1`), the other doors carrying it with
+  `M4.1.7.4.2`; `check` through four doors — the command line, the library, the page and the MCP server — each held to
   the same answers by tests: the command line's parity legs, the integration tier's `wasm-binding` step, and the MCP
   server's stdio test over the conformance cases in both protocol eras; and `resolve`, the search alone, through the
   command line, the library and the MCP server (`M3.4.4`, `M3.4.6`), the first two held to one answer by its parity

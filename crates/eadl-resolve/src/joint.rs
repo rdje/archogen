@@ -2737,6 +2737,22 @@ impl<'v> Joint<'v> {
     pub fn span_of(&self, provider: &str) -> Option<Span> {
         self.held.get(provider).map(|h| h.span)
     }
+
+    /// Every region of placement memory a block or a platform offers (model §8 rule 10), with its provider, by provider name and in
+    /// written order: what a target lays an image out in (`docs/decisions/decision_device-correspondence.md`, `DC-H4`).
+    #[must_use]
+    pub fn placement_memory(&self) -> Vec<(&str, &Region)> {
+        self.held
+            .iter()
+            .filter(|(_, held)| held.hardware)
+            .flat_map(|(name, held)| {
+                held.regions
+                    .iter()
+                    .filter(|region| region.is_memory())
+                    .map(move |region| (name.as_str(), region))
+            })
+            .collect()
+    }
 }
 
 /// The strongly connected components of more than one node, each by name, in the order of their least names (Tarjan's

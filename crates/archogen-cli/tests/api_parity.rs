@@ -255,6 +255,7 @@ fn api_says(path: &Path) -> Said {
         text: &text,
         profile: None,
         modules: &modules,
+        target: None,
     });
     Said {
         status: response.status,
@@ -398,6 +399,7 @@ fn api_resolves(path: &Path) -> (Said, Option<String>) {
             text: &text,
             profile: None,
             modules: &modules,
+            target: None,
         },
         &archogen_api::Resolve {
             system: None,
@@ -546,6 +548,7 @@ fn api_explains(path: &Path, fact: &str) -> (Said, Vec<String>) {
             text: &text,
             profile: None,
             modules: &modules,
+            target: None,
         },
         &archogen_api::Explain {
             fact,

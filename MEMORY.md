@@ -16,10 +16,10 @@
 - **Active tree:** `M4` → frontier `M4.1`, the accepted runtime plan, the model's amendments done (`M4.1.2`): `/1` for
   the hosted playground; `PROGRAM` → `PROGRAM.34`, the director's.
 - **The host is shared:** every heavy job goes through `scripts/host_guard.py`, one at a time (`docs/decisions/decision_host-guard.md`). A reader's brief says so.
-- **Next action:** `M4.1.7.4.1`, the engine API's `Request` gaining a target and `check` running `DC-H3`'s judgement with it. Closed reviews:
-  format `/2`'s (`M4.1.7.2`, round 39), the application inputs' (`M4.12.1`, round 20) and the host guard's (`PROGRAM.127`,
-  round 49). Daily artifact cleanup next due after
-  `2026-11-16T00:09` UTC.
+- **Next action:** `M4.1.7.4.3`, a target silent on `core-count` refused `missing-fact`; then `M4.1.7.3.5`,
+  `riscv-virt-up` stating its counter's width; then `M4.1.7.4.2`, `check --target`. Closed reviews: format `/2`'s
+  (`M4.1.7.2`, round 39), the application inputs' (`M4.12.1`, round 20) and the host guard's (`PROGRAM.127`, round 49).
+  Daily artifact cleanup next due after `2026-11-16T00:09` UTC.
 - **⏳ Blockers (the director's):** `PROGRAM.34` — a yes to restore nine nested vendored checkouts; `M1.29.4` — §7 of
   `decision_findings-for-director-review.md`; `M5` — no board procured; `M2.7.4.5` — the catalog records; `M2.7.6.4` — the director's review round;
   `TEMPLATE-REFS` — postponed. **The 17 template files archogen has not changed are never edited** (findings §10,

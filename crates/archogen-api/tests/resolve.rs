@@ -22,6 +22,7 @@ fn ask(text: &str, modules: &MemoryModules, resolve: Resolve<'_>) -> archogen_ap
             text,
             profile: None,
             modules,
+            target: None,
         },
         &resolve,
         Limits::DEFAULT,

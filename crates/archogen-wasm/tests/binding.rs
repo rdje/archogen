@@ -361,6 +361,7 @@ impl Case {
                 text: &self.framed.text,
                 profile: self.framed.profile.as_deref(),
                 modules: &modules,
+                target: None,
             },
             Limits::DEFAULT,
         )

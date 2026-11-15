@@ -19,6 +19,7 @@ fn with_budget(text: &str, modules: &MemoryModules, bytes: usize) -> Response {
             text,
             profile: None,
             modules,
+            target: None,
         },
         Limits { bytes: Some(bytes) },
     )
@@ -93,6 +94,7 @@ fn a_request_within_its_budget_gets_the_answer_it_gets_with_no_budget() {
                 text,
                 profile: None,
                 modules,
+                target: None,
             },
             Limits::NONE,
         );
@@ -109,6 +111,7 @@ fn check_applies_the_default_budget() {
         text: &text,
         profile: None,
         modules: &NoModules,
+        target: None,
     });
     assert_over_budget(&response, DEFAULT_BYTES);
     assert_eq!(Limits::DEFAULT.bytes, Some(DEFAULT_BYTES));

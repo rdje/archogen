@@ -25,6 +25,7 @@
 //!     text: "(defblock console.uart (offers observable-output))\n",
 //!     profile: None,
 //!     modules: &NoModules,
+//!     target: None,
 //! });
 //! assert_eq!(response.status.slug(), "ok");
 //! assert!(response.judged.is_some(), "a judged description says what it was judged under");
@@ -35,6 +36,7 @@
 //!     text: "(defblock console.uart (offers observable-output))\n",
 //!     profile: Some("rt-dynamic-mp"),
 //!     modules: &NoModules,
+//!     target: None,
 //! });
 //! assert_eq!(not_judged.status.slug(), "unsupported-profile");
 //! assert!(not_judged.judged.is_none());
@@ -46,6 +48,7 @@
 #![deny(missing_docs)]
 
 mod explain;
+mod on_target;
 mod resolve;
 mod status;
 
@@ -78,9 +81,13 @@ pub use status::verdict_status;
 /// `1.6` added [`Definition::Adapter`], the definitions growing as `1.3`'s statuses did (leaf `M3.2.2`); `1.7` added
 /// [`Plan::obligations`], what a plan binding an engine adapter owes (leaf `M3.2.6.1`); `1.8` added
 /// [`Resolution::elaborated`], what a plan was written from, for the command line's build (leaf `M4.2.3.1`); `1.9` added
-/// [`is_a_plan`], which the command line asks before a plan replaces what stands at its name (leaf `M4.2.3.3.10`).
+/// [`is_a_plan`], which the command line asks before a plan replaces what stands at its name (leaf `M4.2.3.3.10`); `1.10` added
+/// [`Request::target`], the machine a description's systems are judged on (leaf `M4.1.7.4.1`).
 /// `docs/book/src/versions.md` registers it.
-pub const VERSION: Version = Version { major: 1, minor: 9 };
+pub const VERSION: Version = Version {
+    major: 1,
+    minor: 10,
+};
 
 /// The engine version: the one the workspace's members share, which `archogen --version` reports and
 /// `docs/book/src/versions.md` registers as `engine`. With [`VERSION`] it names the build a response came from
@@ -120,14 +127,21 @@ fn vocabulary_facts(
 ) -> Option<eadl_model::check::VocabularyFacts> {
     let mut sources = eadl_front::SourceMap::new();
     let vocabulary = eadl_resolve::vocabulary::Vocabulary::shipped(&mut sources, kinds).ok()?;
-    Some(eadl_model::check::VocabularyFacts {
+    Some(facts_of(&vocabulary))
+}
+
+/// What `vocabulary` says that the check reads: [`vocabulary_facts`]'s answer, of a vocabulary already read.
+fn facts_of(
+    vocabulary: &eadl_resolve::vocabulary::Vocabulary,
+) -> eadl_model::check::VocabularyFacts {
+    eadl_model::check::VocabularyFacts {
         declared: vocabulary.facts().map(|fact| fact.name.clone()).collect(),
         derived: vocabulary
             .facts()
             .filter(|fact| !fact.derived_from.is_empty())
             .map(|fact| (fact.name.clone(), fact.derived_from.clone()))
             .collect(),
-    })
+    }
 }
 
 /// The shipped kind modules, owned so a [`SourceMap`] can take them.
@@ -164,7 +178,7 @@ pub const DEFAULT_BYTES: usize = 1024 * 1024;
 /// get with no budget, so a response that is not a refusal does not depend on it.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct Limits {
-    /// The most text one request may bring, the description and its modules together; `None` is no budget.
+    /// The most text one request may bring, the description, its target and its modules together; `None` is no budget.
     pub bytes: Option<usize>,
 }
 
@@ -208,7 +222,8 @@ impl ModuleSource for Budgeted<'_> {
     }
 }
 
-/// What a consumer asks: one description, the profile to judge it against, and where its imports resolve.
+/// What a consumer asks: one description, the profile to judge it against, where its imports resolve, and the machine its
+/// systems are judged on, when it names one.
 pub struct Request<'a> {
     /// How spans and notes name the description — a path for the CLI, any label for another consumer.
     pub name: &'a str,
@@ -218,6 +233,20 @@ pub struct Request<'a> {
     pub profile: Option<&'a str>,
     /// Where an import resolves. [`NoModules`] for a description that imports nothing.
     pub modules: &'a dyn ModuleSource,
+    /// The target its systems are judged on, its hardware alone; `None` judges them on the description's own hardware (API `1.10`,
+    /// `docs/decisions/decision_runtime-plan-format-2.md` §1). [`check`] alone takes one yet: [`resolve_with`] and [`explain_with`] answer a
+    /// request naming one `unimplemented`, the search on a target being leaf `M4.1.7.5`'s.
+    pub target: Option<TargetFile<'a>>,
+}
+
+/// A target a request names: a machine's file, which declares its hardware alone and is identified by what it holds, never found by a name
+/// under a directory (`docs/decisions/decision_runtime-plan-format-2.md` §1, `docs/decisions/decision_device-correspondence.md`).
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub struct TargetFile<'a> {
+    /// How spans and notes name it — a path for the CLI, any label for another consumer.
+    pub name: &'a str,
+    /// Its text.
+    pub text: &'a str,
 }
 
 /// A source that holds no module: every import is `module-not-found`.
@@ -369,9 +398,21 @@ fn checked(request: &Request<'_>, limits: Limits, elaborated: &mut Option<Progra
                 request.text.len()
             ));
         }
+        let target = request.target.map_or(0, |target| target.text.len());
+        if let Some(named) = request
+            .target
+            .filter(|_| target > budget - request.text.len())
+        {
+            return over_budget(format!(
+                "{} and its target {} come to {} bytes, over this instance's budget of {budget} bytes for one request",
+                request.name,
+                named.name,
+                request.text.len() + target
+            ));
+        }
         let budgeted = Budgeted {
             inner: request.modules,
-            remaining: Cell::new(budget - request.text.len()),
+            remaining: Cell::new(budget - request.text.len() - target),
             over: RefCell::new(None),
         };
         let response = judge(
@@ -439,10 +480,35 @@ fn judge(request: &Request<'_>, elaborated: &mut Option<Program>) -> Response {
             Vec::new(),
         );
     };
+    let target = match request.target {
+        Some(target) => match sources.add(target.name.to_string(), target.text.to_string()) {
+            Ok(file) => Some(file),
+            Err(_) => {
+                return Response::not_judged(
+                    Status::ToolFailure,
+                    sources,
+                    vec![format!("{} is too large to address", target.name)],
+                    None,
+                    Vec::new(),
+                )
+            }
+        },
+        None => None,
+    };
 
     if !is_module_file(&sources, id) {
         if let Some(kind) = kind_module(&sources, id) {
             return refuse_kind_module(request.name, &kind, sources);
+        }
+        if let Some(file) = target {
+            return on_target::judge(
+                sources,
+                &registry,
+                active,
+                id,
+                file,
+                on_target::Described::Plain,
+            );
         }
         let outcome = match vocabulary_facts(&registry) {
             Some(vocabulary) => eadl_model::check::check_with_vocabulary(
@@ -481,16 +547,19 @@ fn judge(request: &Request<'_>, elaborated: &mut Option<Program>) -> Response {
             Vec::new(),
         );
     }
+    if let Some(file) = target {
+        let described = if diagnostics.has_errors() {
+            on_target::Described::Uncomposed(diagnostics.items())
+        } else {
+            on_target::Described::Tree(&program)
+        };
+        return on_target::judge(sources, &registry, active, id, file, described);
+    }
     if diagnostics.has_errors() {
         // A composition problem is a verdict about the description, carried by each code through the one
         // accessor every consumer shares — and nothing past elaboration, because the passes cannot read a
         // tree that did not compose.
-        let verdict = diagnostics
-            .items()
-            .iter()
-            .map(|diagnostic| Verdict::of_code(diagnostic.code))
-            .max_by_key(|verdict| verdict.precedence())
-            .unwrap_or(Verdict::InvalidDescription);
+        let verdict = composition_verdict(diagnostics.items());
         let outcome = Outcome {
             verdict,
             diagnostics: diagnostics.items().to_vec(),
@@ -499,18 +568,7 @@ fn judge(request: &Request<'_>, elaborated: &mut Option<Program>) -> Response {
         };
         return Response::judged(outcome, None, active, id, sources);
     }
-    let instances = program
-        .instances
-        .iter()
-        .map(|instance| {
-            let name = if instance.path.is_empty() {
-                "(root)"
-            } else {
-                instance.path.as_str()
-            };
-            format!("{name} = {} {}", instance.module, instance.version)
-        })
-        .collect();
+    let instances = instances_of(&program);
     let outcome = match vocabulary_facts(&registry) {
         Some(vocabulary) => eadl_model::check::check_program_with_vocabulary(
             &program,
@@ -522,6 +580,31 @@ fn judge(request: &Request<'_>, elaborated: &mut Option<Program>) -> Response {
     };
     *elaborated = Some(program);
     Response::judged(outcome, Some(instances), active, id, sources)
+}
+
+/// The verdict of a module tree that did not compose: each code's, through the one accessor every consumer shares.
+fn composition_verdict(diagnostics: &[Diagnostic]) -> Verdict {
+    diagnostics
+        .iter()
+        .map(|diagnostic| Verdict::of_code(diagnostic.code))
+        .max_by_key(|verdict| verdict.precedence())
+        .unwrap_or(Verdict::InvalidDescription)
+}
+
+/// A module tree's instances as a judgement names them: `<alias path> = <module> <version>`, the root as `(root)`.
+fn instances_of(program: &Program) -> Vec<String> {
+    program
+        .instances
+        .iter()
+        .map(|instance| {
+            let name = if instance.path.is_empty() {
+                "(root)"
+            } else {
+                instance.path.as_str()
+            };
+            format!("{name} = {} {}", instance.module, instance.version)
+        })
+        .collect()
 }
 
 /// The response for a profile nobody supports, or `None` when `requested` names one this build supports —

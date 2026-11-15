@@ -202,7 +202,13 @@ pub fn check(
             closure: Closure::default(),
         };
     }
-    passes(forms, registry, active_profile, Vec::new(), None)
+    passes(
+        forms,
+        registry,
+        active_profile,
+        Vec::new(),
+        Presence::Judged(None),
+    )
 }
 
 /// What the capability vocabulary says that the check reads, handed down by a caller that has read it: the vocabulary is the search's to read, and this crate lies
@@ -245,7 +251,7 @@ pub fn check_with_vocabulary(
         registry,
         active_profile,
         Vec::new(),
-        Some(vocabulary),
+        Presence::Judged(Some(vocabulary)),
     )
 }
 
@@ -260,7 +266,13 @@ pub fn check_program(program: &Program, registry: &Registry, active_profile: &Pr
     let (forms, unresolved) = resolved_declarations(program);
     let mut findings = Vec::new();
     push(&mut findings, Verdict::InvalidDescription, unresolved);
-    passes(forms, registry, active_profile, findings, None)
+    passes(
+        forms,
+        registry,
+        active_profile,
+        findings,
+        Presence::Judged(None),
+    )
 }
 
 /// [`check_program`], told each fact the capability vocabulary declares, as [`check_with_vocabulary`] is.
@@ -274,7 +286,54 @@ pub fn check_program_with_vocabulary(
     let (forms, unresolved) = resolved_declarations(program);
     let mut findings = Vec::new();
     push(&mut findings, Verdict::InvalidDescription, unresolved);
-    passes(forms, registry, active_profile, findings, Some(vocabulary))
+    passes(
+        forms,
+        registry,
+        active_profile,
+        findings,
+        Presence::Judged(Some(vocabulary)),
+    )
+}
+
+/// [`check`] with every pass but presence, for a description whose system is put on a target, where presence is judged
+/// of what it asks of the machine (`docs/decisions/decision_device-correspondence.md`, `DC-H3`): a description need not
+/// pass presence over hardware of its own. The [`Outcome::closure`] is empty, presence not having run; the caller's
+/// reading there carries one.
+#[must_use]
+pub fn check_but_presence(
+    sources: &SourceMap,
+    source: SourceId,
+    registry: &Registry,
+    active_profile: &Profile,
+) -> Outcome {
+    let (document, read_diagnostics) = read(sources, source);
+    let forms: Vec<Form> = document
+        .forms
+        .into_iter()
+        .filter(|form| !is_identifier(form))
+        .collect();
+    if read_diagnostics.has_errors() {
+        return Outcome {
+            verdict: Verdict::InvalidDescription,
+            diagnostics: read_diagnostics.items().to_vec(),
+            declarations: forms,
+            closure: Closure::default(),
+        };
+    }
+    passes(forms, registry, active_profile, Vec::new(), Presence::Left)
+}
+
+/// [`check_program`] with every pass but presence, as [`check_but_presence`] is.
+#[must_use]
+pub fn check_program_but_presence(
+    program: &Program,
+    registry: &Registry,
+    active_profile: &Profile,
+) -> Outcome {
+    let (forms, unresolved) = resolved_declarations(program);
+    let mut findings = Vec::new();
+    push(&mut findings, Verdict::InvalidDescription, unresolved);
+    passes(forms, registry, active_profile, findings, Presence::Left)
 }
 
 /// A module tree's declarations as one description, by `docs/semantics/reference.md` §6 rules 9 and 10: each renamed
@@ -388,6 +447,15 @@ fn resolve_name(
     }
 }
 
+/// Whether the passes judge presence, and with what the vocabulary says.
+#[derive(Debug, Clone, Copy)]
+enum Presence<'v> {
+    /// Judged, told each fact the capability vocabulary declares and derives where the caller has read it.
+    Judged(Option<&'v VocabularyFacts>),
+    /// Left to the caller, which judges each system put on a target there (`DC-H3`).
+    Left,
+}
+
 /// Every pass after reading, in the order in which a failure in one makes the next meaningless. `check` and
 /// `check_program` both end here; `findings` carries what the caller found before handing over.
 fn passes(
@@ -395,7 +463,7 @@ fn passes(
     registry: &Registry,
     active_profile: &Profile,
     mut findings: Vec<Finding>,
-    vocabulary: Option<&VocabularyFacts>,
+    presence: Presence<'_>,
 ) -> Outcome {
     // ── boundary (F27) ───────────────────────────────────────────────────────────────────────
     let mut boundary_errors = Vec::new();
@@ -452,84 +520,14 @@ fn passes(
     }
 
     // ── presence and relevance ───────────────────────────────────────────────────────────────
-    // A fact the vocabulary derives is stated by no declaration, and the search computes it: presence is told the rule's facts, and reads it as described where one
-    // block or platform offers each (leaf `M3.4.17.1`). A fact an engine's adapter adds is realized over a block or a platform offering what its `beneath`
-    // names: such a part may be bound for it, so its own needs are followed, as the search counts them. Each reading below is told both (leaf `M3.4.17.6`).
-    let paths = crate::presence::adapter_paths();
-    let tell = |map: &mut FactMap| {
-        for (fact, of) in vocabulary.iter().flat_map(|told| &told.derived) {
-            map.derive(fact, of);
+    // Left to the caller that judges a system put on a target there, where the machine answers in place of the description's own
+    // hardware, which a description need not pass presence over (`docs/decisions/decision_device-correspondence.md`, `DC-H3`).
+    let closure = match presence {
+        Presence::Judged(vocabulary) => {
+            judge_presence(&forms, &out_of_profile, vocabulary, &mut findings)
         }
-        for path in &paths {
-            for fact in &path.adds {
-                map.realize(fact, &path.beneath);
-            }
-        }
+        Presence::Left => Closure::default(),
     };
-    let mut facts = FactMap::new();
-    for form in &forms {
-        facts.collect(form);
-    }
-    tell(&mut facts);
-    let presence = facts.check_excluding(&out_of_profile);
-    let closure = Closure {
-        inside: presence.pulled_in_by.clone(),
-        outside: presence.outside_closure.clone(),
-    };
-    // A fact the vocabulary does not declare is judged by presence alone, the search binding nothing for it, so it is
-    // read as the search reads a system: on that system's own hardware (model §8 rule 7; leaf `M3.4.16`). A block or a
-    // platform outside it neither asks nor answers there, and another system asks in its own reading. What the
-    // description read whole says of such a fact gives way to that; a fact of the vocabulary is the search's to bind
-    // or refuse, and is read as before. A description of no system is read whole, as every one is where the caller
-    // names no vocabulary.
-    let systems: Vec<&Form> = forms
-        .iter()
-        .filter(|form| form.head() == Some("defsystem"))
-        .collect();
-    // One reading is held at a time: a map names its declaration beside each fact, so two of a deep module tree's would
-    // hold twice what one request may (`crates/archogen-api/tests/cost.rs`).
-    drop(facts);
-    let mut said: Vec<Diagnostic> = presence.diagnostics;
-    if let Some(vocabulary) = vocabulary.filter(|_| !systems.is_empty()) {
-        said.retain(|diagnostic| {
-            !presence
-                .judged
-                .iter()
-                .any(|(fact, of_it)| of_it == diagnostic && !vocabulary.declared.contains(fact))
-        });
-        for system in systems {
-            let has = crate::presence::hardware(system, &forms);
-            let mut on_its_hardware = FactMap::new();
-            // Presence alone judges what this map is read for, so it reads what the search would: an offer's value, `false` offering nothing, and offers
-            // of blocks and platforms alone, the search binding nothing to a service, a policy or a system (leaf `M3.4.17.2`).
-            on_its_hardware.read_values();
-            tell(&mut on_its_hardware);
-            for form in &forms {
-                let name = form.items().get(1).and_then(Form::as_symbol);
-                if form.head() == Some("defsystem") && !std::ptr::eq(system, form) {
-                    on_its_hardware.declare(form);
-                } else if !matches!(form.head(), Some("defblock" | "defplatform")) {
-                    on_its_hardware.collect_unanswering(form);
-                } else if !name.is_some_and(|name| has.contains(name)) {
-                    on_its_hardware.collect_silent(form);
-                } else {
-                    on_its_hardware.collect(form);
-                }
-            }
-            for (fact, diagnostic) in on_its_hardware.check_excluding(&out_of_profile).judged {
-                if !vocabulary.declared.contains(&fact) && !said.contains(&diagnostic) {
-                    said.push(diagnostic);
-                }
-            }
-        }
-    }
-    for diagnostic in said {
-        push(
-            &mut findings,
-            Verdict::of_code(diagnostic.code),
-            vec![diagnostic],
-        );
-    }
 
     // ── refinement ───────────────────────────────────────────────────────────────────────────
     let found = refinements(&forms);
@@ -596,6 +594,94 @@ fn push(findings: &mut Vec<Finding>, verdict: Verdict, diagnostics: Vec<Diagnost
             diagnostics,
         });
     }
+}
+
+/// The presence pass (`M1.5`): what is offered, absent or undescribed of what is asked, and the closure it reads (model §2).
+fn judge_presence(
+    forms: &[Form],
+    out_of_profile: &BTreeSet<String>,
+    vocabulary: Option<&VocabularyFacts>,
+    findings: &mut Vec<Finding>,
+) -> Closure {
+    // A fact the vocabulary derives is stated by no declaration, and the search computes it: presence is told the rule's facts, and reads it as described where one
+    // block or platform offers each (leaf `M3.4.17.1`). A fact an engine's adapter adds is realized over a block or a platform offering what its `beneath`
+    // names: such a part may be bound for it, so its own needs are followed, as the search counts them. Each reading below is told both (leaf `M3.4.17.6`).
+    let paths = crate::presence::adapter_paths();
+    let tell = |map: &mut FactMap| {
+        for (fact, of) in vocabulary.iter().flat_map(|told| &told.derived) {
+            map.derive(fact, of);
+        }
+        for path in &paths {
+            for fact in &path.adds {
+                map.realize(fact, &path.beneath);
+            }
+        }
+    };
+    let mut facts = FactMap::new();
+    for form in forms {
+        facts.collect(form);
+    }
+    tell(&mut facts);
+    let presence = facts.check_excluding(out_of_profile);
+    let closure = Closure {
+        inside: presence.pulled_in_by.clone(),
+        outside: presence.outside_closure.clone(),
+    };
+    // A fact the vocabulary does not declare is judged by presence alone, the search binding nothing for it, so it is
+    // read as the search reads a system: on that system's own hardware (model §8 rule 7; leaf `M3.4.16`). A block or a
+    // platform outside it neither asks nor answers there, and another system asks in its own reading. What the
+    // description read whole says of such a fact gives way to that; a fact of the vocabulary is the search's to bind
+    // or refuse, and is read as before. A description of no system is read whole, as every one is where the caller
+    // names no vocabulary.
+    let systems: Vec<&Form> = forms
+        .iter()
+        .filter(|form| form.head() == Some("defsystem"))
+        .collect();
+    // One reading is held at a time: a map names its declaration beside each fact, so two of a deep module tree's would
+    // hold twice what one request may (`crates/archogen-api/tests/cost.rs`).
+    drop(facts);
+    let mut said: Vec<Diagnostic> = presence.diagnostics;
+    if let Some(vocabulary) = vocabulary.filter(|_| !systems.is_empty()) {
+        said.retain(|diagnostic| {
+            !presence
+                .judged
+                .iter()
+                .any(|(fact, of_it)| of_it == diagnostic && !vocabulary.declared.contains(fact))
+        });
+        for system in systems {
+            let has = crate::presence::hardware(system, forms);
+            let mut on_its_hardware = FactMap::new();
+            // Presence alone judges what this map is read for, so it reads what the search would: an offer's value, `false` offering nothing, and offers
+            // of blocks and platforms alone, the search binding nothing to a service, a policy or a system (leaf `M3.4.17.2`).
+            on_its_hardware.read_values();
+            tell(&mut on_its_hardware);
+            for form in forms {
+                let name = form.items().get(1).and_then(Form::as_symbol);
+                if form.head() == Some("defsystem") && !std::ptr::eq(system, form) {
+                    on_its_hardware.declare(form);
+                } else if !matches!(form.head(), Some("defblock" | "defplatform")) {
+                    on_its_hardware.collect_unanswering(form);
+                } else if !name.is_some_and(|name| has.contains(name)) {
+                    on_its_hardware.collect_silent(form);
+                } else {
+                    on_its_hardware.collect(form);
+                }
+            }
+            for (fact, diagnostic) in on_its_hardware.check_excluding(out_of_profile).judged {
+                if !vocabulary.declared.contains(&fact) && !said.contains(&diagnostic) {
+                    said.push(diagnostic);
+                }
+            }
+        }
+    }
+    for diagnostic in said {
+        push(
+            findings,
+            Verdict::of_code(diagnostic.code),
+            vec![diagnostic],
+        );
+    }
+    closure
 }
 
 /// Refuse anything the active profile excludes.

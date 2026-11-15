@@ -179,6 +179,23 @@ pub(crate) fn prepare<T>(
     limits: Limits,
     then: impl FnOnce(Ready<'_>) -> T,
 ) -> Result<T, Box<Response>> {
+    // A plan of the description's own hardware is no plan on a target, so a request naming one is not searched (API `1.10`).
+    if let Some(target) = request.target {
+        return Err(Box::new(Response::not_judged(
+            Status::Unimplemented,
+            SourceMap::new(),
+            vec![format!(
+                "{} names a target, {}, and searching a system on a target is not built yet",
+                request.name, target.name
+            )],
+            Some(
+                "ask `check` with the target, which judges the systems there; the search on a target is task-tree leaf \
+                 M4.1.7.5 (docs/TASK_TREE.md)"
+                    .to_owned(),
+            ),
+            Vec::new(),
+        )));
+    }
     let mut elaborated = None;
     let response = checked(request, limits, &mut elaborated);
     let Some(judged) = response.judged.as_ref().filter(|_| response.is_ok()) else {

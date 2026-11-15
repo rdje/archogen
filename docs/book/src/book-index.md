@@ -54,10 +54,11 @@ a change that leaves it stale, so it is never edited by hand.
 - analysis-model — [What is versioned, and what changing it costs](versions.md#analysis-model)
 - **API** — [definition](glossary.md), [Matching an offer to a requirement](matching.md), [Generated-sources test
   adequacy](trust-adequacy.md), [The runtime plan: what the generated system is told](runtime-plan.md), [The runtime:
-  decisions, not actions](runtime.md), [Building a system](building.md), [The archogen command line](cli.md), [The
-  engine API](engine-api.md), [Verifying the toolchain](verification.md), [What this project relies on from
-  outside](ledger.md), [What is versioned, and what changing it costs](versions.md), [Annex B: The checks that keep the
-  repository honest](annex-repository.md), [Annex C: Trust proof records](annex-trust-proofs.md)
+  decisions, not actions](runtime.md), [Building a system](building.md), [Where generated systems run](targets.md), [The
+  archogen command line](cli.md), [The engine API](engine-api.md), [Verifying the toolchain](verification.md), [What
+  this project relies on from outside](ledger.md), [What is versioned, and what changing it costs](versions.md), [Annex
+  B: The checks that keep the repository honest](annex-repository.md), [Annex C: Trust proof
+  records](annex-trust-proofs.md)
 - application-inputs-format — [What is versioned, and what changing it costs](versions.md#application-inputs-format)
 - Approved disposable fixture verification — [Annex C: Trust proof
   records](annex-trust-proofs.md#approved-disposable-fixture-verification)
@@ -118,6 +119,7 @@ a change that leaves it stale, so it is never edited by hand.
 - catalog-rules — [What is versioned, and what changing it costs](versions.md#catalog-rules)
 - **check-passing convention** — [definition](glossary.md), [Where the engine's knowledge comes from: the
   catalog](catalog.md)
+- Checking on a target — [The engine API](engine-api.md#checking-on-a-target)
 - Checking restored inputs — [Annex B: The checks that keep the repository
   honest](annex-repository.md#checking-restored-inputs)
 - chipdoc — [What this project relies on from outside](ledger.md#chipdoc)
@@ -438,8 +440,8 @@ a change that leaves it stale, so it is never edited by hand.
   board](tour.md), [The supported profile](profile.md), [Matching an offer to a requirement](matching.md), [What the
   scheduling checker establishes](analysis.md), [Where the engine's knowledge comes from: the catalog](catalog.md), [The
   runtime plan: what the generated system is told](runtime-plan.md), [The runtime: decisions, not actions](runtime.md),
-  [Where generated systems run](targets.md), [What this project relies on from outside](ledger.md), [Annex A: The
-  runtime's rules in detail](annex-runtime.md)
+  [Where generated systems run](targets.md), [The engine API](engine-api.md), [What this project relies on from
+  outside](ledger.md), [Annex A: The runtime's rules in detail](annex-runtime.md)
 - **IPC** — [definition](glossary.md), [The supported profile](profile.md)
 - **ISA** — [definition](glossary.md), [What this project relies on from outside](ledger.md)
 - **ISR** — [definition](glossary.md), [The use cases](usecases.md), [What the scheduling checker

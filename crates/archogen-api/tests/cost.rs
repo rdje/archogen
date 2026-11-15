@@ -349,6 +349,7 @@ fn what_a_request_holds_is_within_each_row_s_allowance() {
             text: &row.text,
             profile: None,
             modules: row.modules.as_ref().map_or(&no_modules, |modules| modules),
+            target: None,
         };
         let began = std::time::Instant::now();
         let mut status = Status::Ok;

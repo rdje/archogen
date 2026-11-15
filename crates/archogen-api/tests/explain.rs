@@ -23,6 +23,7 @@ fn ask(text: &str, explain: Explain<'_>) -> Explanation {
             text,
             profile: None,
             modules: &NoModules,
+            target: None,
         },
         &explain,
         Limits::DEFAULT,

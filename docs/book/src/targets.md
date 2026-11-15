@@ -220,7 +220,9 @@ The engine refuses these before it searches, because no requirement can answer t
 A target's file holds what its agreement with the machine checks, so what it does not state it does not offer. A system that declares a fact absent lands on a target that is silent about it, even where the machine has the device.
 
 ⚠️ Two devices no requirement tells apart are not told apart: the policy's order chooses. And this says what is judged, not that two runs match, which is
-`M4.9`'s. No command names a target yet: that is `M4.1.7`, with the plan format that reads this rule.
+`M4.9`'s. The engine API's `check` names a target and judges a description's systems there, the target's own file first
+([Checking on a target](engine-api.md#checking-on-a-target), leaf `M4.1.7.4.1`); the command line's `--target` is leaf `M4.1.7.4.2`, and the
+search on a target, with the plan format that reads this rule, `M4.1.7.5` and after.
 
 ### What releases a task on a target
 

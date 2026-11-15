@@ -234,6 +234,78 @@ pub fn search(
     .search
 }
 
+/// What the search reads of what a description writes, before it binds anything: each block and platform as a provider, each
+/// declaration's requesters, and what refuses either, a service's offers among it, read and judged against nothing.
+struct Written<'d> {
+    /// Each block and platform that reads as a provider, with its declaration.
+    providers: Vec<(Provider, &'d Form)>,
+    /// Every requester the declarations write.
+    all: Vec<Requester>,
+    /// What refuses what is written: each refusal of each reading.
+    refusals: Vec<Diagnostic>,
+}
+
+/// Read what `declarations` write, as the search does first: every reading made, each refusal kept.
+fn written<'d>(declarations: &'d [Form], vocabulary: &Vocabulary) -> Written<'d> {
+    let hardware = |decl: &Form| matches!(decl.head(), Some("defblock" | "defplatform"));
+    let mut providers: Vec<(Provider, &Form)> = Vec::new();
+    let mut refusals = Vec::new();
+    for decl in declarations.iter().filter(|decl| hardware(decl)) {
+        match offer::read(decl, vocabulary) {
+            Ok(provider) => providers.push((provider, decl)),
+            Err(refused) => refusals.extend(refused.iter().map(|r| r.diagnostic())),
+        }
+    }
+    // A service's offers are read and refused alike, and judged against nothing (model §7 rule 3): it is no provider. Read by no one, two values of
+    // one fact on a service resolved (leaf `M3.4.17.5`).
+    for decl in declarations
+        .iter()
+        .filter(|decl| decl.head() == Some("defservice"))
+    {
+        if let Err(refused) = offer::read_service(decl, vocabulary) {
+            refusals.extend(refused.iter().map(|r| r.diagnostic()));
+        }
+    }
+    // Every declaration is a requester for what it writes at its own level, a block's and a platform's included — their
+    // `uses` is composition, never a binding (model §8 rule 1; leaf `M4.1.14`).
+    let mut all: Vec<Requester> = Vec::new();
+    for decl in declarations
+        .iter()
+        .filter(|decl| decl.head().is_some_and(|head| head.starts_with("def")))
+    {
+        match requesters(decl, vocabulary) {
+            Ok(written) => all.extend(written),
+            Err(refused) => refusals.extend(refused.iter().map(|r| r.diagnostic())),
+        }
+    }
+    Written {
+        providers,
+        all,
+        refusals,
+    }
+}
+
+/// What the search refuses of what `declarations` write themselves, each reading asked alone: each provider's and each service's offers, two values of
+/// one fact and a compare read two ways among them; each declaration's requirements, a side's contradictions among them; and the joint rules' reading of
+/// each provider, its channels contradicted and its regions. Asked alone, since [`search`] stops at the first stage that refuses, which hides what a later
+/// one would say; and never what binding says, a map's `missing-fact` among it, since that is a plan's absence and not a reading of a form (the command
+/// that names a target, `docs/decisions/decision_device-correspondence.md`, `DC-H3`). Each keeps its own code.
+#[must_use]
+pub fn refusals_of_what_is_written(
+    declarations: &[Form],
+    vocabulary: &Vocabulary,
+) -> Vec<Diagnostic> {
+    let Written {
+        providers,
+        all,
+        mut refusals,
+    } = written(declarations, vocabulary);
+    if let Err(findings) = Joint::new(&providers, &all, vocabulary) {
+        refusals.extend(findings.iter().map(|finding| finding.diagnostic()));
+    }
+    refusals
+}
+
 /// Which requirements of a fact [`explain`] gives an account of.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum Select<'a> {
@@ -353,39 +425,13 @@ fn run(
             )]))
         }
     };
-    let hardware = |decl: &Form| matches!(decl.head(), Some("defblock" | "defplatform"));
-    let mut providers: Vec<(Provider, &Form)> = Vec::new();
-    let mut diagnostics = Vec::new();
-    for decl in declarations.iter().filter(|decl| hardware(decl)) {
-        match offer::read(decl, vocabulary) {
-            Ok(provider) => providers.push((provider, decl)),
-            Err(refusals) => diagnostics.extend(refusals.iter().map(|r| r.diagnostic())),
-        }
-    }
-    // A service's offers are read and refused alike, and judged against nothing (model §7 rule 3): it is no provider. Read by no one, two values of
-    // one fact on a service resolved (leaf `M3.4.17.5`).
-    for decl in declarations
-        .iter()
-        .filter(|decl| decl.head() == Some("defservice"))
-    {
-        if let Err(refusals) = offer::read_service(decl, vocabulary) {
-            diagnostics.extend(refusals.iter().map(|r| r.diagnostic()));
-        }
-    }
-    // Every declaration is a requester for what it writes at its own level, a block's and a platform's included — their
-    // `uses` is composition, never a binding (model §8 rule 1; leaf `M4.1.14`).
-    let mut all: Vec<Requester> = Vec::new();
-    for decl in declarations
-        .iter()
-        .filter(|decl| decl.head().is_some_and(|head| head.starts_with("def")))
-    {
-        match requesters(decl, vocabulary) {
-            Ok(written) => all.extend(written),
-            Err(refusals) => diagnostics.extend(refusals.iter().map(|r| r.diagnostic())),
-        }
-    }
-    if !diagnostics.is_empty() {
-        return stopped(refused(diagnostics));
+    let Written {
+        providers,
+        mut all,
+        refusals,
+    } = written(declarations, vocabulary);
+    if !refusals.is_empty() {
+        return stopped(refused(refusals));
     }
     // A part's needs are the search's to bind as the part may be bound, as presence reads them (model §2 rule 3, §8 rule 5; leaf `M3.4.17.6`).
     let counted = crate::joint::counted_parts(

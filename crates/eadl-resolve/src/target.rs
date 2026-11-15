@@ -15,9 +15,19 @@ use eadl_model::check::{default_profile, out_of_profile};
 use eadl_model::presence::{composition, FactMap, PresenceReport};
 use eadl_model::refinement::{loops_refused, Facets};
 
-use crate::joint::System;
+use crate::joint::{Joint, System};
+use crate::offer::{self, State};
 use crate::requirement::side_name_lists;
 use crate::search::{Resolution, Who};
+use crate::value::Value;
+use crate::vocabulary::Vocabulary;
+
+/// The counts of sources no mask stops that the profile asks of every target (`docs/decisions/decision_runtime-plan-format-2.md` §2, R4-D15): each
+/// with what it is, for a refusal to say.
+const SOURCES_NO_MASK_STOPS: [(&str, &str); 2] = [
+    ("non-maskable-interrupts", "interrupt sources no mask stops"),
+    ("firmware-traps", "traps firmware beneath the image takes"),
+];
 
 /// The name a declaration gives itself, if it is one.
 fn declared_name(form: &Form) -> Option<&str> {
@@ -167,6 +177,80 @@ impl Target {
             span: root.span(),
             declarations: forms.into_iter().cloned().collect(),
         })
+    }
+
+    /// What `rt-static-up-v1`, the one profile, asks of a machine beyond what `check` judges of the target's file, its one active core among that
+    /// (`docs/decisions/decision_device-correspondence.md`, `DC-H4`; `docs/decisions/decision_runtime-plan-format-2.md` §2): no source no mask stops,
+    /// since the variant's condition 5 masks every interrupt in a masked section, so a count of non-maskable interrupts or of firmware traps above zero
+    /// is `unsupported-profile`, naming it, and one no device states as a count is `missing-fact`, since silence gives no value and a machine with
+    /// such a source would otherwise be admitted; and memory to place an image in, since no playground provides it there, so a target with no
+    /// placement memory is `infeasible-configuration`.
+    ///
+    /// Read off every device of the file, since the platform composes each: a count stated above zero anywhere is a source on the machine. What a
+    /// device's offers or regions refuse is the readings', which a check of the file asks (`search::refusals_of_what_is_written`): a device that does not
+    /// read states nothing here, and with a region that does not read, whether any is placement memory is not judged.
+    #[must_use]
+    pub fn admission(&self, vocabulary: &Vocabulary) -> Vec<Diagnostic> {
+        let read: Vec<(offer::Provider, &Form)> = self
+            .declarations
+            .iter()
+            .filter_map(|form| {
+                offer::read(form, vocabulary)
+                    .ok()
+                    .map(|provider| (provider, form))
+            })
+            .collect();
+        let mut refused = Vec::new();
+        for (fact, what) in SOURCES_NO_MASK_STOPS {
+            let mut stated = false;
+            for (provider, _) in &read {
+                let Some(statement) = provider.facts.get(fact) else {
+                    continue;
+                };
+                let State::Valued(values) = &statement.state else {
+                    continue;
+                };
+                let Some(Value::Count(count)) = values.first() else {
+                    continue;
+                };
+                stated = true;
+                if *count > 0 {
+                    refused.push(Diagnostic::error(
+                        "unsupported-profile",
+                        format!(
+                            "`{}` states `({fact} {count})`, {what}, and profile `rt-static-up-v1` admits none",
+                            provider.name
+                        ),
+                        Label::new(statement.spans.first().copied().unwrap_or(provider.span), "stated here"),
+                        "the profile masks every interrupt in a masked section, and a source no mask stops breaks that: run on a machine with none, \
+                         or wait for a profile whose analysis charges one",
+                    ));
+                }
+            }
+            if !stated {
+                refused.push(Diagnostic::error(
+                    "missing-fact",
+                    format!("no device of `{}` states a count of `{fact}`, {what}", self.platform),
+                    Label::new(self.span, "the machine"),
+                    format!(
+                        "state `({fact} N)` on `{}` with what checks it: silence gives no value, and the profile admits a machine only with none",
+                        self.platform
+                    ),
+                ));
+            }
+        }
+        if let Ok(joint) = Joint::new(&read, &[], vocabulary) {
+            if joint.placement_memory().is_empty() {
+                refused.push(Diagnostic::error(
+                    "infeasible-configuration",
+                    format!("`{}` offers no placement memory, so no image can be laid out on it", self.platform),
+                    Label::new(self.span, "the machine"),
+                    "offer the RAM an image starts in as a region with `(executable true)` and not reserved: on a target no playground provides \
+                     memory",
+                ));
+            }
+        }
+        refused
     }
 }
 

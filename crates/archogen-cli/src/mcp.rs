@@ -354,6 +354,7 @@ fn resolve(arguments: &Value) -> Result<Value, Failure> {
             text,
             profile,
             modules: &modules,
+            target: None,
         },
         &Resolve { system, unchecked },
         Limits::DEFAULT,
@@ -461,6 +462,7 @@ fn explain(arguments: &Value) -> Result<Value, Failure> {
             text,
             profile,
             modules: &modules,
+            target: None,
         },
         &asked,
         Limits::DEFAULT,
@@ -606,6 +608,7 @@ fn judge(
             text,
             profile,
             modules,
+            target: None,
         },
         Limits::DEFAULT,
     );
@@ -1099,6 +1102,7 @@ mod tests {
                 text: ACCEPTED,
                 profile: None,
                 modules: &MemoryModules::new(),
+                target: None,
             },
             Limits::DEFAULT,
         ));
@@ -1287,6 +1291,7 @@ mod tests {
                     text,
                     profile: None,
                     modules: &MemoryModules::new(),
+                    target: None,
                 },
                 Limits::DEFAULT,
             ));
