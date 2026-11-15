@@ -23,6 +23,12 @@
 //! kind needs beneath; the bindings sorted by requester, every name, then every task, then every instance, each by its
 //! text, then by fact.
 //!
+//! ⭐ **`archogen-assignment/3`** (leaf `M4.1.7.5.2`; `docs/decisions/decision_runtime-plan-format-2.md` §1, "The target in
+//! the identity") is the plan of a system on a target: the same clauses, its format `/3`, and after `(program …)` the
+//! line `(target NAME "SHA256")`, the target's one platform and the digest of its forms' program text as
+//! [`program_text`] writes one ([`target_digest`]); its bindings may name the system's release requester, `(release
+//! SYSTEM)`, last among requesters (`decision_release-alarm.md` §1). `/2` stays the hosted one.
+//!
 //! ⭐ **Read back** (leaf `M4.1.3`): [`read`] is the generator's own reader of the format, accepting only the text
 //! [`write`] writes, and [`rebuild`] gives the joint rules the record's bindings over the description as the search held
 //! them, so the runtime plan is lowered from the record the checker accepted (`docs/decisions/decision_runtime-plan.md`
@@ -44,6 +50,9 @@ use crate::vocabulary::Vocabulary;
 
 /// The format's identifier: the search's own constant, held with the checker's to one golden.
 pub const FORMAT: &str = "archogen-assignment/2";
+
+/// The format of a plan of a system on a target, which names the target after its program (leaf `M4.1.7.5.2`).
+pub const FORMAT_3: &str = "archogen-assignment/3";
 
 /// The module a plain description's one root instance names: no module name is `-` (`docs/semantics/reference.md` §6
 /// rule 8), so no module's instance writes the same line of the digest.
@@ -107,6 +116,13 @@ pub fn program_digest(program: &Program) -> String {
     Digest::of(program_text(program).as_bytes()).hex()
 }
 
+/// A target's digest, as `/3`'s `(target …)` writes it: the sha256 of its forms' program text, the file read as one plain
+/// description, so a comment or spacing moves it not (`docs/decisions/decision_runtime-plan-format-2.md` §1).
+#[must_use]
+pub fn target_digest(target: &crate::target::Target) -> String {
+    program_digest(&plain(target.declarations.clone()))
+}
+
 /// `resolution` as the record's canonical text, resolved under `profile` for the program whose digest is `program`
 /// (`docs/specs/adapters/decision_engine-adapters.md` §5): the catalog the plan was resolved with named after the
 /// program; every binding of a requester, and each instance bound as a requester of its own, binding each fact its
@@ -114,11 +130,37 @@ pub fn program_digest(program: &Program) -> String {
 /// its canonical text — then by fact.
 #[must_use]
 pub fn write(resolution: &Resolution, profile: &str, program: &str) -> String {
+    written(resolution, profile, program, None)
+}
+
+/// [`write`] of a plan of a system on a target, `archogen-assignment/3`: `target` the target's platform and its
+/// [`target_digest`], written after the program.
+#[must_use]
+pub fn write_on_target(
+    resolution: &Resolution,
+    profile: &str,
+    program: &str,
+    target: (&str, &str),
+) -> String {
+    written(resolution, profile, program, Some(target))
+}
+
+/// The record's text, `/3` naming `target` where one is given and `/2` otherwise.
+fn written(
+    resolution: &Resolution,
+    profile: &str,
+    program: &str,
+    target: Option<(&str, &str)>,
+) -> String {
+    let format = if target.is_some() { FORMAT_3 } else { FORMAT };
     let mut out = format!(
-        "(format \"{FORMAT}\")\n(profile {profile})\n(system {})\n(program \"{program}\")\n(adapters {})\n",
-        resolution.system,
-        adapter::VERSION
+        "(format \"{format}\")\n(profile {profile})\n(system {})\n(program \"{program}\")\n",
+        resolution.system
     );
+    if let Some((platform, digest)) = target {
+        out.push_str(&format!("(target {platform} \"{digest}\")\n"));
+    }
+    out.push_str(&format!("(adapters {})\n", adapter::VERSION));
     if let Some((provider, region)) = &resolution.placement {
         out.push_str(&format!("(placement {provider} {region})\n"));
     }
@@ -173,7 +215,7 @@ pub fn instance_text(instance: &AdapterInstance, _system: &str) -> String {
 // sharing nothing with the checker's, `archogen_plan_check::assignment`, as the two writers share nothing — and rebuilds
 // the bindings the joint rules judge from it, as the search held them.
 
-/// One `archogen-assignment/2` record, read back by the generator's own reader.
+/// One `archogen-assignment/2` or `/3` record, read back by the generator's own reader.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Record {
     /// The profile the plan was resolved under.
@@ -182,6 +224,8 @@ pub struct Record {
     pub system: String,
     /// The elaborated program's digest, 64 lowercase hexadecimal digits.
     pub program: String,
+    /// The target the system was put on, a `/3` record's: its platform and its [`target_digest`]; none for `/2`.
+    pub target: Option<(String, String)>,
     /// The adapter catalog's version.
     pub adapters: String,
     /// The placement memory chosen, where the system has some: its provider and its region.
@@ -212,12 +256,15 @@ impl std::fmt::Display for Unread {
     }
 }
 
-/// The record's order for a requester's or a provider's text: a name 0, a task 1, an instance 2 ([`write`]'s classes).
+/// The record's order for a requester's or a provider's text: a name 0, a task 1, an instance 2, the release requester 3
+/// ([`write`]'s classes).
 fn class(text: &str) -> u8 {
     if text.starts_with("(task ") {
         1
     } else if text.starts_with("(adapter ") {
         2
+    } else if text.starts_with("(release ") {
+        3
     } else {
         0
     }
@@ -227,10 +274,19 @@ impl Record {
     /// The record's canonical text, as [`write`] writes it.
     #[must_use]
     pub fn text(&self) -> String {
+        let format = if self.target.is_some() {
+            FORMAT_3
+        } else {
+            FORMAT
+        };
         let mut out = format!(
-            "(format \"{FORMAT}\")\n(profile {})\n(system {})\n(program \"{}\")\n(adapters {})\n",
-            self.profile, self.system, self.program, self.adapters
+            "(format \"{format}\")\n(profile {})\n(system {})\n(program \"{}\")\n",
+            self.profile, self.system, self.program
         );
+        if let Some((platform, digest)) = &self.target {
+            out.push_str(&format!("(target {platform} \"{digest}\")\n"));
+        }
+        out.push_str(&format!("(adapters {})\n", self.adapters));
         if let Some((provider, region)) = &self.placement {
             out.push_str(&format!("(placement {provider} {region})\n"));
         }
@@ -242,9 +298,41 @@ impl Record {
         }
         out
     }
+
+    /// Why this record belongs to another run than one given `target`, its platform and its [`target_digest`], or none:
+    /// `None` when it does belong (`docs/decisions/decision_runtime-plan-format-2.md` §1). A `/3` record given no target, a
+    /// `/2` given one, or a `/3` naming another target than the one given was resolved for another run and nothing failed:
+    /// the consumer refuses it `stale-input`, "resolve again", with this sentence.
+    #[must_use]
+    pub fn stale_for(&self, target: Option<(&str, &str)>) -> Option<String> {
+        let format = if self.target.is_some() {
+            FORMAT_3
+        } else {
+            FORMAT
+        };
+        match (&self.target, target) {
+            (None, None) => None,
+            (Some((platform, digest)), Some((given, given_digest)))
+                if platform == given && digest == given_digest =>
+            {
+                None
+            }
+            (Some((platform, digest)), Some((given, given_digest))) => Some(format!(
+                "the plan was resolved on the target `{platform}` (sha256 {digest}), and the target given is `{given}` \
+                 (sha256 {given_digest}): resolve again"
+            )),
+            (Some((platform, _)), None) => Some(format!(
+                "the plan is `{format}`, resolved on the target `{platform}`, and no target is given: resolve again, or name \
+                 the target"
+            )),
+            (None, Some((given, _))) => Some(format!(
+                "the plan is `{format}`, resolved on no target, and the target `{given}` is given: resolve again on it"
+            )),
+        }
+    }
 }
 
-/// `text` read as an `archogen-assignment/2` record. It accepts only the canonical text [`write`] writes — one clause a
+/// `text` read as an `archogen-assignment/2` or `/3` record. It accepts only the canonical text [`write`] writes — one clause a
 /// line, in its order, the bindings sorted and none twice — so a record read back writes back the same bytes.
 ///
 /// # Errors
@@ -272,15 +360,16 @@ pub fn read(text: &str) -> Result<Record, Unread> {
             ))),
         }
     };
-    match clause("format", 1)? {
-        [Form::Str { value, .. }] if value == FORMAT => {}
+    let on_a_target = match clause("format", 1)? {
+        [Form::Str { value, .. }] if value == FORMAT => false,
+        [Form::Str { value, .. }] if value == FORMAT_3 => true,
         [Form::Str { value, .. }] => {
             return Err(Unread(format!(
-                "the record names the format `{value}`, and this reader reads `{FORMAT}`"
+                "the record names the format `{value}`, and this reader reads `{FORMAT}` and `{FORMAT_3}`"
             )))
         }
         _ => return Err(Unread("the record's format is no string".to_string())),
-    }
+    };
     let symbol = |items: &[Form], what: &str| -> Result<String, Unread> {
         items
             .first()
@@ -305,6 +394,28 @@ pub fn read(text: &str) -> Result<Record, Unread> {
             ))
         }
     };
+    let hex = |value: &str| {
+        value.len() == 64
+            && value
+                .bytes()
+                .all(|b| b.is_ascii_digit() || (b'a'..=b'f').contains(&b))
+    };
+    let target = if on_a_target {
+        match clause("target", 2)? {
+            [platform, Form::Str { value, .. }] if hex(value) => Some((
+                symbol(std::slice::from_ref(platform), "target")?,
+                value.clone(),
+            )),
+            _ => {
+                return Err(Unread(
+                    "the record's target is no name and 64 lowercase hexadecimal digits"
+                        .to_string(),
+                ))
+            }
+        }
+    } else {
+        None
+    };
     let adapters = symbol(clause("adapters", 1)?, "catalog version")?;
     let rest: Vec<&Form> = forms.collect();
     let mut placement = None;
@@ -321,6 +432,9 @@ pub fn read(text: &str) -> Result<Record, Unread> {
                 let text = |form: &Form, what: &str| match form {
                     Form::Symbol { name, .. } => Ok(name.clone()),
                     Form::List { .. } if matches!(form.head(), Some("task" | "adapter")) => {
+                        Ok(form.to_canonical())
+                    }
+                    Form::List { .. } if on_a_target && form.head() == Some("release") => {
                         Ok(form.to_canonical())
                     }
                     _ => Err(Unread(format!(
@@ -352,6 +466,7 @@ pub fn read(text: &str) -> Result<Record, Unread> {
         profile,
         system,
         program,
+        target,
         adapters,
         placement,
         binds,
@@ -470,6 +585,16 @@ pub fn rebuild<'v>(
             joint::requesters(d, vocabulary)
                 .map_err(|_| Unread(format!("`{}`'s requirements do not read", name_of(d))))?,
         );
+    }
+    // A plan of a system on a target binds its release requester where it has one, `declarations` being what `on_target` gives
+    // (leaf `M4.1.7.5.2`).
+    if record.target.is_some() {
+        requesters.extend(joint::release_requester(decl, vocabulary).map_err(|_| {
+            Unread(format!(
+                "`{}`'s release requester does not read",
+                record.system
+            ))
+        })?);
     }
     // A part's needs as the search reads them, counted as the part may be bound (leaf `M3.4.17.6`).
     let counted = joint::counted_parts(decl, &system, &providers, &requesters, vocabulary, catalog);

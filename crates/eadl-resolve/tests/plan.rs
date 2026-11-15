@@ -14,7 +14,7 @@ use eadl_front::module::{elaborate, DirectoryModules, MemoryModules};
 use eadl_front::{Form, Program, SourceMap};
 use eadl_model::check::shipped_registry;
 use eadl_model::profile::RT_STATIC_UP_V1;
-use eadl_resolve::plan::{self, FORMAT};
+use eadl_resolve::plan::{self, FORMAT, FORMAT_3};
 use eadl_resolve::search::{search, Limits, Policy, Resolution, Search, Who};
 use eadl_resolve::vocabulary::Vocabulary;
 
@@ -1075,5 +1075,247 @@ fn a_block_bound_for_requirements_of_its_own_is_a_node_of_rule_12_s_graph() {
             .any(|(from, to, _)| from.starts_with("(adapter deadline-over-delay") && to == "dma.x"),
         "{:?}",
         graph.edges
+    );
+}
+
+// ── `archogen-assignment/3`, a plan of a system on a target (leaf `M4.1.7.5.2`) ──────────────────────────────────────────
+
+const GOLDEN_3: &str = "crates/archogen-plan-check/tests/goldens/archogen-assignment-3.golden";
+
+/// `/3`'s golden, written apart from this writer: its target line after the program, and the release requester last among
+/// requesters, after a task and an instance.
+#[test]
+fn the_writer_writes_the_target_format_s_golden() {
+    let v = vocabulary();
+    let catalog = eadl_resolve::adapter::Catalog::shipped(&mut SourceMap::new(), &v)
+        .expect("the shipped catalog reads");
+    let kind = catalog.kind("epoch-extender").expect("a kind");
+    let extender = eadl_resolve::adapter::Instance {
+        kind: "epoch-extender".to_owned(),
+        over: "target.timer".to_owned(),
+        serves: None,
+        provider: eadl_resolve::offer::Provider {
+            name: eadl_resolve::adapter::instance_name("epoch-extender", "target.timer", None),
+            span: eadl_front::Span::new(eadl_front::SourceId(0), 0, 0),
+            facts: std::collections::BTreeMap::new(),
+        },
+        beneath: vec!["counter-modulus".to_owned()],
+        delivers: kind.delivers(),
+    };
+    let mut bindings = std::collections::BTreeMap::new();
+    let release = || Who::Release {
+        system: "app.rt".to_owned(),
+    };
+    for (who, fact, provider) in [
+        (release(), "supported-horizon", "target.timer".to_owned()),
+        (
+            Who::Named("console.write".to_owned()),
+            "observable-output",
+            "target.console".to_owned(),
+        ),
+        (release(), "relative-delay", "target.timer".to_owned()),
+        (
+            Who::Task {
+                system: "app.rt".to_owned(),
+                task: "sensor".to_owned(),
+            },
+            "counter-width",
+            extender.provider.name.clone(),
+        ),
+        (release(), "alarm-kind", "target.timer".to_owned()),
+    ] {
+        bindings.insert((who, fact.to_owned()), provider);
+    }
+    let resolution = Resolution {
+        system: "app.rt".to_owned(),
+        placement: Some(("target.riscv-virt-up".to_owned(), "target.ram".to_owned())),
+        bindings,
+        obligations: Vec::new(),
+        steps: 1,
+        instances: vec![extender],
+    };
+    let golden = std::fs::read_to_string(root().join(GOLDEN_3)).expect("the golden");
+    let written = plan::write_on_target(
+        &resolution,
+        RT_STATIC_UP_V1.id,
+        "f116a4715daf8b404d559b210f6f0d09c060158b1c1493fb133bf50197545620",
+        (
+            "target.riscv-virt-up",
+            "0f1e2d3c4b5a69788796a5b4c3d2e1f00f1e2d3c4b5a69788796a5b4c3d2e1f0",
+        ),
+    );
+    assert_eq!(written, golden);
+    // And the generator's reader reads it back as it was written.
+    let record = plan::read(&golden).expect("it reads");
+    assert_eq!(record.text(), golden);
+    assert_eq!(
+        record.target,
+        Some((
+            "target.riscv-virt-up".to_owned(),
+            "0f1e2d3c4b5a69788796a5b4c3d2e1f00f1e2d3c4b5a69788796a5b4c3d2e1f0".to_owned()
+        ))
+    );
+    assert!(golden.starts_with(&format!("(format \"{FORMAT_3}\")")));
+}
+
+/// A `/3` record says what `/3` alone says: a release requester in `/2`, a `/3` with no target line, or one whose target is no
+/// digest, is no record.
+#[test]
+fn the_reader_reads_a_release_requester_and_a_target_in_the_target_format_alone() {
+    let golden = std::fs::read_to_string(root().join(GOLDEN_3)).expect("the golden");
+    let as_second = golden.replacen(FORMAT_3, FORMAT, 1).replacen(
+        "(target target.riscv-virt-up \"0f1e2d3c4b5a69788796a5b4c3d2e1f00f1e2d3c4b5a69788796a5b4c3d2e1f0\")\n",
+        "",
+        1,
+    );
+    assert!(
+        plan::read(&as_second).is_err(),
+        "a `/2` binding a release requester"
+    );
+    let no_target = golden.replacen(
+        "(target target.riscv-virt-up \"0f1e2d3c4b5a69788796a5b4c3d2e1f00f1e2d3c4b5a69788796a5b4c3d2e1f0\")\n",
+        "",
+        1,
+    );
+    assert!(plan::read(&no_target).is_err(), "a `/3` naming no target");
+    let short = golden.replacen(
+        "\"0f1e2d3c4b5a69788796a5b4c3d2e1f00f1e2d3c4b5a69788796a5b4c3d2e1f0\"",
+        "\"0f1e\"",
+        1,
+    );
+    assert!(plan::read(&short).is_err(), "a target that is no digest");
+}
+
+/// `/2` §1: a record of the other kind, or of another target, belongs to another run, `stale-input`, "resolve again".
+#[test]
+fn a_record_of_another_run_is_stale() {
+    let golden = std::fs::read_to_string(root().join(GOLDEN_3)).expect("the golden");
+    let third = plan::read(&golden).expect("it reads");
+    let digest = "0f1e2d3c4b5a69788796a5b4c3d2e1f00f1e2d3c4b5a69788796a5b4c3d2e1f0";
+    assert_eq!(
+        third.stale_for(Some(("target.riscv-virt-up", digest))),
+        None
+    );
+    let none = third.stale_for(None).expect("given no target");
+    assert!(
+        none.contains(FORMAT_3) && none.contains("no target is given"),
+        "{none}"
+    );
+    let other = third
+        .stale_for(Some(("target.riscv-virt-up", &"a".repeat(64))))
+        .expect("another target");
+    assert!(other.contains("resolve again"), "{other}");
+    let (hosted, _) = heartbeat_record();
+    let second = plan::read(&hosted).expect("it reads");
+    assert_eq!(second.stale_for(None), None);
+    let given = second
+        .stale_for(Some(("target.riscv-virt-up", digest)))
+        .expect("given a target");
+    assert!(
+        given.contains(FORMAT) && given.contains("resolved on no target"),
+        "{given}"
+    );
+}
+
+/// The target's digest is of its forms, as a program's is: a comment moves it not, a fact does.
+#[test]
+fn a_target_s_digest_is_of_its_forms() {
+    let file = std::fs::read_to_string(root().join("targets/riscv-virt-up.eadl")).expect("read");
+    let digest = |text: &str| {
+        let mut sources = SourceMap::new();
+        let id = sources.add("t.eadl", text).expect("small");
+        let (document, diagnostics) = eadl_front::read(&sources, id);
+        assert!(!diagnostics.has_errors());
+        let forms: Vec<Form> = document
+            .forms
+            .into_iter()
+            .filter(|f| f.head() != Some("eadl-version"))
+            .collect();
+        let start = eadl_front::Span::at(id, 0);
+        plan::target_digest(&eadl_resolve::target::Target::read(&forms, start).expect("a target"))
+    };
+    let shipped = digest(&file);
+    assert_eq!(shipped.len(), 64);
+    assert_eq!(digest(&format!("; a comment\n{file}")), shipped);
+    assert_ne!(
+        digest(&file.replacen("(firmware-traps 0)", "(firmware-traps 1)", 1)),
+        shipped
+    );
+}
+
+/// A plan of a system on the shipped target, written as `/3`, read back and rebuilt over what `on_target` gives, its release
+/// requester among the bindings.
+#[test]
+fn a_plan_on_a_target_is_written_read_back_and_rebuilt() {
+    let v = vocabulary();
+    let catalog = eadl_resolve::adapter::Catalog::shipped(&mut SourceMap::new(), &v)
+        .expect("the shipped catalog reads");
+    let text =
+        std::fs::read_to_string(root().join("examples/s0-heartbeat/system.eadl")).expect("read");
+    let parsed = |text: &str| {
+        let mut sources = SourceMap::new();
+        let id = sources.add("t.eadl", text).expect("small");
+        let (document, _) = eadl_front::read(&sources, id);
+        (
+            document
+                .forms
+                .into_iter()
+                .filter(|f| f.head() != Some("eadl-version"))
+                .collect::<Vec<Form>>(),
+            eadl_front::Span::at(id, 0),
+        )
+    };
+    let (declarations, _) = parsed(&text);
+    let (target_forms, start) =
+        parsed(&std::fs::read_to_string(root().join("targets/riscv-virt-up.eadl")).expect("read"));
+    let target = eadl_resolve::target::Target::read(&target_forms, start).expect("a target");
+    let system = declarations
+        .iter()
+        .find(|f| f.head() == Some("defsystem"))
+        .expect("a system");
+    let there =
+        eadl_resolve::target::on_target(system, &declarations, &target).expect("read there");
+    let policy = Policy {
+        adapters: catalog.clone(),
+        ..Policy::default()
+    };
+    let Search::Resolved(resolution) = eadl_resolve::search::search_on_target(
+        &there,
+        RT_STATIC_UP_V1.caller_level,
+        &v,
+        &policy,
+        Limits::DEFAULT,
+    ) else {
+        panic!("no plan on the target");
+    };
+    let digest = plan::target_digest(&target);
+    let written = plan::write_on_target(
+        &resolution,
+        RT_STATIC_UP_V1.id,
+        &plan::program_digest(&plan::plain(declarations.clone())),
+        (&target.platform, &digest),
+    );
+    assert!(
+        written.contains("(bind (release heartbeat) relative-delay target.timer)"),
+        "{written}"
+    );
+    let record = plan::read(&written).expect("it reads back");
+    assert_eq!(record.text(), written);
+    assert_eq!(record.stale_for(Some((&target.platform, &digest))), None);
+    let rebuilt = plan::rebuild(
+        &record,
+        &there.declarations,
+        RT_STATIC_UP_V1.caller_level,
+        &v,
+        &catalog,
+    )
+    .expect("it rebuilds over what on_target gives");
+    assert!(
+        rebuilt
+            .bindings
+            .iter()
+            .any(|b| b.requester == "(release heartbeat)" && b.provider == "target.timer"),
+        "{:?}",
+        rebuilt.bindings
     );
 }

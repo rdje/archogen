@@ -450,7 +450,7 @@ adapter's instance, since what releases tasks is the catalog's timer service ove
 state the step its compare matches on and how it reads a value as due, a `compare-window` or `(compare-magnitude
 true)`, or the search refuses `missing-fact`, naming the device. None is added on the playground, where the
 simulator's own clock releases tasks, nor for a system with no periodic task. `crates/eadl-resolve/tests/target.rs`
-holds each of these. Which format writes it, and which command asks for it, are the next leaves: `M4.1.7.5.2`, then
+holds each of these. `archogen-assignment/3` writes it ([below](#the-searchs-rules), leaf `M4.1.7.5.2`); which command asks for it is
 `M4.1.7.5.3`.
 
 The search can also say what it did with one requirement (`eadl_resolve::search::explain`, leaf `M3.4.13.1`), the
@@ -557,6 +557,15 @@ What it chose is written by `crates/eadl-resolve/src/plan.rs` (`M3.4.3`) as `arc
 configuration checker judges: the generator's own writer and its own digest of the elaborated program, sharing no code
 with the checker's reader, both held to one golden and to each other by `crates/eadl-resolve/tests/plan.rs`. A
 requester is a declaration or a task of a system, written `(task SYSTEM TASK)`, so a task never reads as a service.
+
+A plan of a system on a target is `archogen-assignment/3` (leaf `M4.1.7.5.2`; `docs/decisions/decision_runtime-plan-format-2.md`
+§1): the same clauses, and after the program the target, `(target NAME "SHA256")`, its one platform and the digest of
+its forms' program text, so a comment in the target's file moves it not and a fact does; its bindings name the system's
+release requester, `(release SYSTEM)`, last, after every name, task and instance (`plan::write_on_target`). `/2` stays the
+plan on the description's own hardware. A record belongs to one run: a `/3` given no target, a `/2` given one, or a `/3`
+naming another target than the one given was resolved for another run, and the reader says so for its consumer to refuse
+it `stale-input`, "resolve again" (`plan::Record::stale_for`). Its golden, written apart from the writer, is
+`crates/archogen-plan-check/tests/goldens/archogen-assignment-3.golden`.
 
 The generator reads the record back with a reader of its own, `plan::read`, which accepts only the text its writer
 writes, and `plan::rebuild` gives the joint rules the record's bindings over the description as the search held them
