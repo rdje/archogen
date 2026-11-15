@@ -1582,7 +1582,7 @@ fn every_fact_the_realization_owes_is_handed_to_its_format() {
 /// RP36-1, RP36-2).
 #[test]
 fn section_7_places_every_refusal_in_one_order() {
-    const ORDER: [&str; 22] = [
+    const ORDER: [&str; 23] = [
         "a target's own refusals",
         "`check`'s judgement of the target's file alone as `DC-H3` runs it",
         "the file not reading",
@@ -1593,6 +1593,7 @@ fn section_7_places_every_refusal_in_one_order() {
         "the realization's file not reading",
         "the application's file not reading",
         "`/1`'s list in its order",
+        "an assignment of the other kind",
         "the assignment's `(target …)` other than the file's",
         "a finding of the generator's joint rules over the target's hardware",
         "an application's unmet",
@@ -2520,7 +2521,12 @@ fn the_holds_this_record_adds_are_those_rpf_h4_hands_the_checker() {
 /// class).
 #[test]
 fn every_refusal_the_record_states_has_its_stage() {
-    const STAGES: [(&str, &str); 32] = [
+    const STAGES: [(&str, &str); 37] = [
+        ("An assignment of the other kind, a `/3` lowered or checked with no `--target` or a `/2` with one, is `stale-input`", "lowering: an assignment of the other kind"),
+        ("A record whose target differs, or of the other kind as above, is `stale-input`", "the checker"),
+        ("`(compare-magnitude true)` beside a window is `invalid-description`, naming the device", "lowering: a target's own refusals"),
+        ("**No room** is `infeasible-configuration`", "lowering: no room while placing"),
+        ("as it holds `SHORTEST + 2ρ`, failing `unsupported-profile` and naming it", "the checker"),
         ("a machine the profile refuses as the profile says", "lowering: a target's own refusals"),
         (
             "and the build generates no code of a plan whose epoch line writes `(epoch after-read (lead owed))`",
@@ -2585,11 +2591,21 @@ fn every_refusal_the_record_states_has_its_stage() {
     }
     pieces.push(&flat[start..]);
     // A sentence that withholds what a stage makes, code or an image, is a stage's outcome as a refusal is: before, the stage row read "refus" alone, and
-    // "generates no code" and "links no image" stood with no verdict and no place (round 35, RP35-6).
+    // "generates no code" and "links no image" stood with no verdict and no place (round 35, RP35-6). So is one that names a status as what happens, each
+    // of the vocabulary's own statuses but `ok`: before, "`(compare-magnitude true)` beside a window is `invalid-description`" said no "refus" and had no
+    // stage, where it decides whether a system on that target lands (round 38, RP38-2).
+    let statuses: Vec<String> = archogen_outcome::Status::ALL
+        .iter()
+        .filter(|status| status.slug() != "ok")
+        .map(|status| format!("`{}`", status.slug()))
+        .collect();
     for piece in pieces.iter().filter(|piece| {
-        ["refus", "generates no", "links no"]
+        (["refus", "generates no", "links no"]
             .iter()
             .any(|word| piece.contains(word))
+            || statuses
+                .iter()
+                .any(|status| piece.contains(status.as_str())))
             && !piece.contains(order)
     }) {
         assert!(
@@ -4241,9 +4257,10 @@ fn the_catalog_digest_has_one_preimage() {
 #[test]
 fn every_refusal_names_its_code() {
     // Each refusal of inputs that do not belong together, as the record says it, and whether a person writes the input it refuses.
-    const MISMATCHED: [(&str, bool); 6] = [
+    const MISMATCHED: [(&str, bool); 7] = [
+        ("An assignment of the other kind, a `/3` lowered or checked with no `--target` or a `/2` with one, is `stale-input`", false),
         ("the assignment's `(target …)` other than the file's taken with its program digest, `stale-input`", false),
-        ("A record whose target differs is `stale-input`", false),
+        ("A record whose target differs, or of the other kind as above, is `stale-input`", false),
         ("a lowering given one of another code refuses it `stale-input`, \"measure again\", naming both identities", false),
         ("then a realization of another code identity, `stale-input`", false),
         ("A bound or a list of counts whose `binary` names another image is refused `stale-input`", false),
@@ -4265,10 +4282,37 @@ fn every_refusal_names_its_code() {
     ] {
         assert!(!flat.contains(false_said), "{false_said}");
     }
+    // The reader's case of round 38: resolved on a target and built with no `--target`, the assignment is a target's `/3` read as the hosted `/2`. The two
+    // kinds are of other runs, not of a failure, so `stale-input`; any other format stays `/1`'s `tool-failure` (RP38-1).
+    let refusal = |format: &str, target: bool| match (format, target) {
+        ("archogen-assignment/3", true) | ("archogen-assignment/2", false) => None,
+        ("archogen-assignment/3", false) | ("archogen-assignment/2", true) => Some("stale-input"),
+        _ => Some("tool-failure"),
+    };
+    assert_eq!(refusal("archogen-assignment/3", false), Some("stale-input"));
+    assert_eq!(refusal("archogen-assignment/2", true), Some("stale-input"));
+    assert_eq!(refusal("archogen-assignment/1", true), Some("tool-failure"));
+    assert_eq!(refusal("archogen-assignment/3", true), None);
+    let assignment = include_str!("../../eadl-resolve/src/plan.rs");
+    assert!(
+        assignment.contains("pub const FORMAT: &str = \"archogen-assignment/2\";"),
+        "today's reader, the hosted one"
+    );
+    assert!(flat.contains("An assignment on a target is `archogen-assignment/3`"));
+    assert!(flat.contains("any other format stays `/1`'s `tool-failure`"));
     // The vocabulary's own word for it, which a script branches on.
     let status = include_str!("../../archogen-outcome/src/status.rs");
     assert!(status.contains("/// The inputs of the invocation do not belong together — a plan resolved from another description, a build made"));
     // `/1`'s refusal of placement memory, kept, tells its reader to wait for `/2`: a `/2` lowering names a target instead.
+    let semantics = include_str!("../../../docs/semantics/model.md");
+    assert!(semantics
+        .split_whitespace()
+        .collect::<Vec<_>>()
+        .join(" ")
+        .contains("refused when it is read, whether or not anything binds it"));
+    assert!(
+        flat.contains("refused when the file is read, whether or not anything binds the device")
+    );
     let lowering = include_str!("../src/lib.rs");
     assert!(lowering.contains("describe a hosted platform, or wait for `/2`"));
     assert!(flat.contains(
