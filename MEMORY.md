@@ -19,7 +19,7 @@
 - **Next action:** reader out: `M4.1.7.2.38` (`target/m4381/`); each answer closes its finding's class by a check, the director's
   call left to the engineer `2026-11-14`, and each premise is read in the code that acts on it. Closed reviews: the application
   inputs' (`M4.12.1`, round 20) and the host guard's (`PROGRAM.127`, round 49). Daily artifact cleanup next due after
-  `2026-11-15T00:00` UTC.
+  `2026-11-16T00:09` UTC.
 - **⏳ Blockers (the director's):** `PROGRAM.34` — a yes to restore nine nested vendored checkouts; `M1.29.4` — §7 of
   `decision_findings-for-director-review.md`; `M5` — no board procured; `M2.7.4.5` — the catalog records; `M2.7.6.4` — the director's review round;
   `TEMPLATE-REFS` — postponed. **The 17 template files archogen has not changed are never edited** (findings §10,

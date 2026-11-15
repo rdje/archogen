@@ -1043,6 +1043,18 @@ mdBook that is the director's window into the project.
   Verification: the seal's own proof, the gate.
   Commit: `ARCHOGEN-PROGRAM-1324 (leaf PROGRAM.144)`
 
+- ID: `PROGRAM.145`
+  Status: `done` — the twenty-eighth daily artifact cleanup; the record's last run `2026-11-14T00:00:06+00:00`, over 24 h old at `2026-11-15T00:06Z`.
+  Goal: remove from `target/` what is regenerable and idle, as `PROGRAM.138` did, every nested cargo target directory in a leaf's or a reader's folder and every directory a test run left in the scratch `TMPDIR` and the trust tests' scratch, each open by no process, a reader still at work skipped whole; keep the main build, every store, the guard's state and every report, brief, rig and log the trees cite as evidence. A light run under doctrine 22.
+  Acceptance:
+    - [x] ROOT CAUSE — WHY: the cleanup record was over 24 hours old, and each reader since built in a cargo target directory of its own and each test run left its scratch; WHERE, `docs/ARTIFACT_CLEANUP.md` at `068510ef`, its entry `2026-11-14T00:00:06+00:00`; `du -sk target` → 46.1 GB.
+    - [x] FIX — `python3 -I -B target/artifact-cleanup/2026-11-15/cleanup.py --delete`, `PROGRAM.138`'s second pass with its date: every nested cargo target directory, by `CACHEDIR.TAG` or `.rustc_info.json`, and every directory in `target/tmp` and `target/trust-tests`, each checked open by no process of this user (`lsof`), its links unlinked and never followed; no reader at work, so none skipped.
+    - [x] ADDRESSED — `7473` directories, `195399` files, `29325811712` bytes, each `gone: true`, none refused, none given back (`target/artifact-cleanup/2026-11-15/removed.json`); `du -sk target` → 20.2 GB, 46.1 before; the volume's free space 2461.0 GB, 2435.9 before; `bash scripts/handoff_census.sh` → `handoff: OK` before (`census-before.log`).
+    - [x] NO REGRESSION — build output and test scratch alone, each made again by the next build or test; no tracked file but the record, the leaf and the resume pointer. The 13 logs removed lay in the trust tests' scratch; every reader's and leaf's log beside its folders stays.
+    - [x] LOCKSTEP — the record, `MEMORY.md` and the tree.
+  Verification: the census, the removal report, the sizes before and after.
+  Commit: `ARCHOGEN-PROGRAM-1340 (leaf PROGRAM.145)`
+
 ## Roadmap coverage map
 
 Every roadmap unit has exactly one owning tree. This table is the answer to "where does
@@ -1202,6 +1214,7 @@ leaf's outcome is its row in the Commit Log below, and a sealed leaf's full reco
 | `PROGRAM.127.48` | `ARCHOGEN-PROGRAM-1316 (leaf PROGRAM.127.48)` | **the host guard's review, round 48**: the self-test reading the host's line in `run`'s "not started" line alone and an exit 75 as the host's only on a host lately unclear; two sentences said as they are; two gaps stated. |
 | `PROGRAM.143` | `ARCHOGEN-PROGRAM-1318 (leaf PROGRAM.143)` | **the M3 tree sealed again**: `M3.4.17.3` and `M3.4.17.4`, so `docs/tasks/M3.md` is under its line ceiling |
 | `PROGRAM.144` | `ARCHOGEN-PROGRAM-1324 (leaf PROGRAM.144)` | **the M3 tree sealed again**: `M3.4.17` with its six leaves, so `docs/tasks/M3.md` keeps room under its line ceiling |
+| `PROGRAM.145` | `ARCHOGEN-PROGRAM-1340 (leaf PROGRAM.145)` | **the twenty-eighth artifact cleanup**: 29.3 GB of nested cargo target directories and test scratch, `target/` from 46.1 GB to 20.2 GB |
 | `PROGRAM.127.49` | `ARCHOGEN-PROGRAM-1320 (leaf PROGRAM.127.49)` | **the host guard's review, round 49**: no defect, so the review closes; arithmetic's end said as a rule; `job_bashes`' docstring. |
 
 ## Changelog
@@ -1331,3 +1344,4 @@ leaf's outcome is its row in the Commit Log below, and a sealed leaf's full reco
 - `2026-11-14`: `PROGRAM.143` done: two closed leaves of `M3` sealed, the tree under its line ceiling for `M3.4.17.5`.
 - `2026-11-14`: `PROGRAM.127.49` done: the guard's round 49 found no defect, so its review closes.
 - `2026-11-14`: `PROGRAM.144` done: `M3.4.17` sealed with its six leaves, `docs/tasks/M3.md` at 2,974 lines.
+- `2026-11-15`: `PROGRAM.145` done: the twenty-eighth artifact cleanup, `target/` from 46.1 GB to 20.2 GB, build output and test scratch alone.
