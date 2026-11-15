@@ -74,7 +74,7 @@ pub fn run(
     let resolution = match ask_with(
         path,
         parsed.value("profile"),
-        // A system on a target is searched by `M4.1.7.5`, which gives this command `--target`.
+        // A build on a target lowers format `/2`, leaf `M4.1.7.6` and after, which gives this command `--target`.
         None,
         refuse_locked,
         err,

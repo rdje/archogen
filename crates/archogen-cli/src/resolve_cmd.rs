@@ -48,7 +48,24 @@ pub fn run(
     let out_name = parsed
         .value("out")
         .expect("the parser guarantees `--out` is required");
+    let target = parsed.value("target");
     let refuse_locked = |err: &mut dyn Write| -> Option<Status> {
+        // The configuration checker reads a plan on a target with leaf `M4.1.7.5.4`; until then a plan on one is written
+        // unchecked alone, which the user says, never checked by a checker that cannot read it.
+        if target.is_some() && !parsed.flag("unchecked") {
+            let _ = writeln!(
+                err,
+                "archogen: {}: checking a plan on a target is not built yet",
+                Status::Unimplemented.slug()
+            );
+            let _ = writeln!(
+                err,
+                "  hint: the configuration checker reads `archogen-assignment/3` with task-tree leaf M4.1.7.5.4 \
+                 (docs/TASK_TREE.md); until then ask with `--unchecked` for the search's plan on the target, which \
+                 nothing independent has judged"
+            );
+            return Some(Status::Unimplemented);
+        }
         if !parsed.flag("locked") {
             return None;
         }
@@ -73,8 +90,7 @@ pub fn run(
     let resolution = match ask_with(
         path,
         parsed.value("profile"),
-        // A system on a target is searched by `M4.1.7.5`, which gives this command `--target`.
-        None,
+        target,
         refuse_locked,
         err,
         |request| archogen_api::resolve_with(request, &resolve, Limits::NONE),

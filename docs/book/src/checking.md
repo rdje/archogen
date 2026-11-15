@@ -293,8 +293,10 @@ archogen: missing-fact: 2 diagnostic(s) in examples/high-interference/system.ead
 
 The verdict of every tracked description on the shipped target is frozen beside the one without, in
 `crates/archogen-cli/tests/verdicts-on-riscv-virt-up.txt`, and the command says on each what the engine API says with
-the target in its request (`crates/archogen-cli/tests/api_parity.rs`). `resolve`, `explain` and `build` on a target are
-leaf `M4.1.7.5`'s and after: until then `--target` is `check`'s alone.
+the target in its request (`crates/archogen-cli/tests/api_parity.rs`). `resolve --target` and
+`explain --target` search the system on the target (leaf `M4.1.7.5.3`), `resolve` writing the plan
+`archogen-assignment/3`; the configuration checker reads that format with `M4.1.7.5.4`, so until then the plan on a
+target is asked `--unchecked`. `build` on a target lowers format `/2`, `M4.1.7.6` and after.
 
 ### The semantic corpus
 

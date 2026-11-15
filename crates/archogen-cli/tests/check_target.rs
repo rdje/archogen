@@ -121,20 +121,83 @@ fn the_report_names_the_target_a_description_was_judged_on() {
     assert!(err.contains("a target's file"), "{err}");
 }
 
-/// A system on a target is searched by `M4.1.7.5`, which gives `resolve` its `--target`: until then the option is `check`'s alone.
+/// A fresh scratch directory under the target directory, one per case.
+fn scratch(case: &str) -> PathBuf {
+    let dir = Path::new(env!("CARGO_TARGET_TMPDIR"))
+        .join(format!("check-target-{case}-{}", std::process::id()));
+    let _ = std::fs::remove_dir_all(&dir);
+    std::fs::create_dir_all(&dir).expect("a scratch directory");
+    dir
+}
+
+/// `resolve --target` writes the search's plan on the target, `archogen-assignment/3`, its release requester bound to the machine's
+/// timer (leaf `M4.1.7.5.3`); the checker reads that format with `M4.1.7.5.4`, so until then it is asked `--unchecked`, and refused
+/// without, naming that leaf.
 #[test]
-fn only_check_takes_a_target_yet() {
-    for command in ["resolve", "explain"] {
-        let (status, _, err) = invoke(&[
-            command,
-            &at_root("examples/s0-heartbeat/system.eadl"),
-            "--target",
-            &at_root(TARGET),
-        ]);
-        assert_eq!(status, Status::Usage, "{command}: {err}");
-        assert!(
-            err.contains("unknown option `--target`"),
-            "{command}: {err}"
-        );
-    }
+fn resolve_on_a_target_writes_the_plan_there() {
+    let dir = scratch("resolve");
+    let plan = dir.join("plan.eadl");
+    let (status, _, err) = invoke(&[
+        "resolve",
+        &at_root("examples/s0-heartbeat/system.eadl"),
+        "--target",
+        &at_root(TARGET),
+        "--out",
+        &plan.display().to_string(),
+        "--unchecked",
+    ]);
+    assert_eq!(status, Status::Ok, "{err}");
+    let written = std::fs::read_to_string(&plan).expect("the plan is written");
+    assert!(
+        written.starts_with("(format \"archogen-assignment/3\")"),
+        "{written}"
+    );
+    assert!(
+        written.contains("(bind (release heartbeat) relative-delay target.timer)"),
+        "{written}"
+    );
+    let checked = dir.join("checked.eadl");
+    let (status, _, err) = invoke(&[
+        "resolve",
+        &at_root("examples/s0-heartbeat/system.eadl"),
+        "--target",
+        &at_root(TARGET),
+        "--out",
+        &checked.display().to_string(),
+    ]);
+    assert_eq!(status, Status::Unimplemented, "{err}");
+    assert!(err.contains("M4.1.7.5.4"), "{err}");
+    assert!(
+        !checked.exists(),
+        "nothing is written for a plan nothing could check"
+    );
+}
+
+/// `explain --target` accounts for a requirement as the search judged it on the target, the release requester's among them.
+#[test]
+fn explain_on_a_target_accounts_for_the_release_requester() {
+    let (status, out, err) = invoke(&[
+        "explain",
+        &at_root("examples/s0-heartbeat/system.eadl"),
+        "--target",
+        &at_root(TARGET),
+        "--requirement",
+        "relative-delay",
+    ]);
+    assert_eq!(status, Status::Ok, "{err}");
+    assert!(out.contains("(release heartbeat)"), "{out}");
+    assert!(out.contains("target.timer"), "{out}");
+}
+
+/// A build on a target lowers format `/2`, leaf `M4.1.7.6` and after: until then `build` takes no target.
+#[test]
+fn build_takes_no_target_yet() {
+    let (status, _, err) = invoke(&[
+        "build",
+        &at_root("examples/s0-heartbeat/system.eadl"),
+        "--target",
+        &at_root(TARGET),
+    ]);
+    assert_eq!(status, Status::Usage, "{err}");
+    assert!(err.contains("unknown option `--target`"), "{err}");
 }

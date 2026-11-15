@@ -108,8 +108,9 @@ contrast with `check` on the description's own hardware.
 The command line carries it as `archogen check --target FILE` ([On a target](checking.md#on-a-target), leaf
 `M4.1.7.4.2.1`), the agent's server as the `check` tool's `target` (leaf `M4.1.7.4.2.2`), and the page as its Target
 box, the binding's request `/2` (leaf `M4.1.7.4.2.3`). `resolve` and `explain`
-on a target are leaf `M4.1.7.5`'s: until then a request naming one is answered `unimplemented`, saying so, since a
-plan of the description's own hardware is no plan on the machine.
+search the system on the target, where `check` judged it (API `1.11`, leaf `M4.1.7.5.3`): its release requester among
+its requesters ([Matching](matching.md)), the plan `archogen-assignment/3`, naming the target. A description `check`
+refuses there is answered by the check, with no search.
 
 ### The second operation: resolve, the search alone
 
@@ -181,16 +182,16 @@ when the machine states an interrupt source no mask stops.
 
 ```console
 $ cargo run -q -p archogen-api --example in_memory
-api 1.10 · engine 0.1.0 · status ok
+api 1.11 · engine 0.1.0 · status ok
   judged under eadl/1, profile rt-static-up-v1: 1 declaration(s)
-api 1.10 · engine 0.1.0 · status invalid-description
+api 1.11 · engine 0.1.0 · status invalid-description
   judged under eadl/1, profile rt-static-up-v1: 1 declaration(s)
   quantity-unknown-unit: `parsec` is not a known unit
-api 1.10 · engine 0.1.0 · status unsupported-profile
+api 1.11 · engine 0.1.0 · status unsupported-profile
   not judged: `rt-dynamic-mp` is not a supported profile
-api 1.10 · engine 0.1.0 · status ok
+api 1.11 · engine 0.1.0 · status ok
   judged under eadl/1, profile rt-static-up-v1: 2 declaration(s)
-api 1.10 · engine 0.1.0 · status unsupported-profile
+api 1.11 · engine 0.1.0 · status unsupported-profile
   judged under eadl/1, profile rt-static-up-v1: 2 declaration(s)
   unsupported-profile: `board.soc` states `(non-maskable-interrupts 1)`, interrupt sources no mask stops, and profile `rt-static-up-v1` admits none
 ```

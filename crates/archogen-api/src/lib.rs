@@ -82,11 +82,12 @@ pub use status::verdict_status;
 /// [`Plan::obligations`], what a plan binding an engine adapter owes (leaf `M3.2.6.1`); `1.8` added
 /// [`Resolution::elaborated`], what a plan was written from, for the command line's build (leaf `M4.2.3.1`); `1.9` added
 /// [`is_a_plan`], which the command line asks before a plan replaces what stands at its name (leaf `M4.2.3.3.10`); `1.10` added
-/// [`Request::target`], the machine a description's systems are judged on (leaf `M4.1.7.4.1`).
+/// [`Request::target`], the machine a description's systems are judged on (leaf `M4.1.7.4.1`); `1.11` answers it in
+/// [`resolve_with`] and [`explain_with`], the search on the target, a plan `archogen-assignment/3` (leaf `M4.1.7.5.3`).
 /// `docs/book/src/versions.md` registers it.
 pub const VERSION: Version = Version {
     major: 1,
-    minor: 10,
+    minor: 11,
 };
 
 /// The engine version: the one the workspace's members share, which `archogen --version` reports and
@@ -234,8 +235,8 @@ pub struct Request<'a> {
     /// Where an import resolves. [`NoModules`] for a description that imports nothing.
     pub modules: &'a dyn ModuleSource,
     /// The target its systems are judged on, its hardware alone; `None` judges them on the description's own hardware (API `1.10`,
-    /// `docs/decisions/decision_runtime-plan-format-2.md` §1). [`check`] alone takes one yet: [`resolve_with`] and [`explain_with`] answer a
-    /// request naming one `unimplemented`, the search on a target being leaf `M4.1.7.5`'s.
+    /// `docs/decisions/decision_runtime-plan-format-2.md` §1). [`resolve_with`] and [`explain_with`] search the system there, its
+    /// release requester among its requesters, and write `archogen-assignment/3` (API `1.11`).
     pub target: Option<TargetFile<'a>>,
 }
 

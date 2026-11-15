@@ -22,7 +22,8 @@ use eadl_model::profile::{self, Profile};
 use eadl_resolve::adapter::Catalog;
 use eadl_resolve::plan;
 use eadl_resolve::requirement::program_declarations_named_like_facts;
-use eadl_resolve::search::{search, Limits as Budget, Policy, Search};
+use eadl_resolve::search::{search, search_on_target, Limits as Budget, Policy, Search};
+use eadl_resolve::target::{on_target, OnTarget, Target};
 use eadl_resolve::vocabulary::Vocabulary;
 
 use crate::{checked, kind_modules, verdict_status, Limits, Request, Response, Status};
@@ -134,14 +135,23 @@ pub fn resolve_with(request: &Request<'_>, resolve: &Resolve<'_>, limits: Limits
         ));
     }
     let searched = prepare(request, resolve.system, limits, |ready| {
-        let found = search(
-            ready.declarations,
-            ready.system,
-            ready.active.caller_level,
-            ready.vocabulary,
-            ready.policy,
-            Budget::DEFAULT,
-        );
+        let found = match ready.on {
+            Some(on) => search_on_target(
+                on.there,
+                ready.active.caller_level,
+                ready.vocabulary,
+                ready.policy,
+                Budget::DEFAULT,
+            ),
+            None => search(
+                ready.declarations,
+                ready.system,
+                ready.active.caller_level,
+                ready.vocabulary,
+                ready.policy,
+                Budget::DEFAULT,
+            ),
+        };
         concluded(request, ready, found)
     });
     match searched {
@@ -168,6 +178,19 @@ pub(crate) struct Ready<'a> {
     pub(crate) policy: &'a Policy,
     /// The profile the description was judged under.
     pub(crate) active: &'static Profile,
+    /// The target the system is put on, where the request names one: `declarations` and `system` are then what it reads there.
+    pub(crate) on: Option<On<'a>>,
+}
+
+/// A system put on a target, as [`prepare`] hands it on (leaf `M4.1.7.5.3`).
+#[derive(Clone, Copy)]
+pub(crate) struct On<'a> {
+    /// What `on_target` gave: the system with the target's platform, and what it reads there.
+    pub(crate) there: &'a OnTarget,
+    /// The target's one platform, which `archogen-assignment/3`'s `(target …)` names.
+    pub(crate) platform: &'a str,
+    /// The target's digest, `plan::target_digest`'s.
+    pub(crate) digest: &'a str,
 }
 
 /// Check `request` within `limits` and choose its system — the only one, or the one `system` names — then answer
@@ -179,25 +202,8 @@ pub(crate) fn prepare<T>(
     limits: Limits,
     then: impl FnOnce(Ready<'_>) -> T,
 ) -> Result<T, Box<Response>> {
-    // A plan of the description's own hardware is no plan on a target, so a request naming one is not searched (API `1.10`).
-    if let Some(target) = request.target {
-        return Err(Box::new(Response::not_judged(
-            Status::Unimplemented,
-            SourceMap::new(),
-            vec![format!(
-                "{} names a target, {}, and searching a system on a target is not built yet",
-                request.name, target.name
-            )],
-            Some(
-                "ask `check` with the target, which judges the systems there; the search on a target is task-tree leaf \
-                 M4.1.7.5 (docs/TASK_TREE.md)"
-                    .to_owned(),
-            ),
-            Vec::new(),
-        )));
-    }
     let mut elaborated = None;
-    let response = checked(request, limits, &mut elaborated);
+    let mut response = checked(request, limits, &mut elaborated);
     let Some(judged) = response.judged.as_ref().filter(|_| response.is_ok()) else {
         return Err(Box::new(response));
     };
@@ -311,6 +317,51 @@ pub(crate) fn prepare<T>(
         adapters,
         ..Policy::default()
     };
+    // On a target, the system is searched where `check` judged it: on the target's platform, reading what `on_target` gives
+    // (leaf `M4.1.7.5.3`). `check` accepted both files and put the system there, so neither step can refuse here; one that
+    // did would be the engine contradicting itself. The target is read into the response's sources, so its spans render.
+    let mut put = None;
+    if let Some(file) = request.target {
+        let inconsistent = |sources: SourceMap, what: &str| {
+            Err(Box::new(Response::not_judged(
+                Status::ToolFailure,
+                sources,
+                vec![format!(
+                    "{} was accepted on {}, and {what}",
+                    request.name, file.name
+                )],
+                Some("report it: the engine contradicts itself".to_owned()),
+                Vec::new(),
+            )))
+        };
+        let Ok(id) = response
+            .sources
+            .add(file.name.to_owned(), file.text.to_owned())
+        else {
+            return inconsistent(response.sources, "the target is too large to address");
+        };
+        let (document, _) = eadl_front::read(&response.sources, id);
+        let forms: Vec<Form> = eadl_front::language_version::declarations(&document.forms)
+            .cloned()
+            .collect();
+        let Ok(target) = Target::read(&forms, eadl_front::Span::at(id, 0)) else {
+            return inconsistent(response.sources, "its target does not read as one");
+        };
+        let Ok(there) = on_target(system, declarations, &target) else {
+            return inconsistent(response.sources, "the system cannot be put on it");
+        };
+        let digest = plan::target_digest(&target);
+        put = Some((target.platform, digest, there));
+    }
+    let on = put.as_ref().map(|(platform, digest, there)| On {
+        there,
+        platform,
+        digest,
+    });
+    let (declarations, system) = match on {
+        Some(on) => (on.there.declarations.as_slice(), &on.there.system),
+        None => (declarations, system),
+    };
     Ok(then(Ready {
         response,
         program: &program,
@@ -320,6 +371,7 @@ pub(crate) fn prepare<T>(
         vocabulary: &vocabulary,
         policy: &policy,
         active,
+        on,
     }))
 }
 
@@ -377,7 +429,15 @@ pub(crate) fn concluded(request: &Request<'_>, ready: Ready<'_>, found: Search) 
     match found {
         Search::Resolved(resolution) => {
             let digest = plan::program_digest(ready.program);
-            let text = plan::write(&resolution, ready.active.id, &digest);
+            let text = match ready.on {
+                Some(on) => plan::write_on_target(
+                    &resolution,
+                    ready.active.id,
+                    &digest,
+                    (on.platform, on.digest),
+                ),
+                None => plan::write(&resolution, ready.active.id, &digest),
+            };
             let obligations = owed(&resolution, &ready.policy.adapters);
             Resolution {
                 plan: Some(Plan {

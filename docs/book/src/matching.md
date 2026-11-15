@@ -450,8 +450,9 @@ adapter's instance, since what releases tasks is the catalog's timer service ove
 state the step its compare matches on and how it reads a value as due, a `compare-window` or `(compare-magnitude
 true)`, or the search refuses `missing-fact`, naming the device. None is added on the playground, where the
 simulator's own clock releases tasks, nor for a system with no periodic task. `crates/eadl-resolve/tests/target.rs`
-holds each of these. `archogen-assignment/3` writes it ([below](#the-searchs-rules), leaf `M4.1.7.5.2`); which command asks for it is
-`M4.1.7.5.3`.
+holds each of these. `archogen-assignment/3` writes it ([below](#the-searchs-rules), leaf `M4.1.7.5.2`), and `archogen resolve --target` and
+`archogen explain --target` ask for it, as the engine API's `resolve` and `explain` do with a target in their request
+(leaf `M4.1.7.5.3`).
 
 The search can also say what it did with one requirement (`eadl_resolve::search::explain`, leaf `M3.4.13.1`), the
 account `archogen explain` prints. It runs the same search and, for the requirement asked, lists each provider of the

@@ -28,7 +28,8 @@ judge a description any other way.
    text, or none: the machine the description's systems are judged on, which `check` judges as `DC-H3` and `DC-H4` say
    (`decision_device-correspondence.md`, `decision_runtime-plan-format-2.md` §1), and which `resolve` and `explain`
    answer `unimplemented` until the search on a target is built (`M4.1.7.5`). The budget counts its text with the
-   description's.*
+   description's. *Amended `2026-11-15` (leaf `M4.1.7.5.3`, API `1.11`): `resolve` and `explain` take it, searching the
+   system there and writing `archogen-assignment/3`.*
 3. **The response carries one outcome vocabulary: the exit contract's `Status`, moved into the API.** Its
    verdict variants are §5.5's. Its process-level variants, `usage` and `unimplemented`, cover a request
    the API did not judge. Every response has one, and a response cannot be built without one. Beside it
@@ -63,7 +64,8 @@ judge a description any other way.
    `1.6` added the definition `defadapter` (leaf `M3.2.2`), the definitions growing as `1.3`'s statuses did, so a
    minor. `1.7` added the plan's field `obligations` (leaf `M3.2.6.1`), what a plan binding an engine adapter owes,
    so a minor. `1.8` added the resolution's `elaborated` (leaf `M4.2.3.1`) and `1.9` `is_a_plan` (leaf `M4.2.3.3.10`),
-   each a field or an operation. `1.10` added the request's `target` (leaf `M4.1.7.4.1`), a field, so a minor.*
+   each a field or an operation. `1.10` added the request's `target` (leaf `M4.1.7.4.1`), a field, so a minor. `1.11` answered it in `resolve` and
+   `explain` (leaf `M4.1.7.5.3`), which had answered `unimplemented`, an operation's capability added, so a minor.*
 6. **Parity, both ways, gated** (`ROADMAP.md` §10.4: "a capability that exists only behind the CLI does not
    exist programmatically, and the reverse"):
    - *structurally:* the CLI's source calls no judging entry point of the engine (`check`,

@@ -50,12 +50,12 @@ COMMANDS:
 | Command | Does | Built by |
 | --- | --- | --- |
 | `archogen check <DESCRIPTION> [--profile <PROFILE>] [--target <FILE>]` | elaborate and type-check a description against a profile | **built** — a description is one file or a module tree; `--target` judges its systems on a machine (leaf `M4.1.7.4.2.1`); see [Checking a description](checking.md#on-a-target) and [Modules and composition](modules.md) |
-| `archogen resolve <DESCRIPTION> [--profile <P>] [--locked] --out <PLAN> [--unchecked] [--system <NAME>]` | resolve providers and resources into an independently checked build plan | **experimental** — one system of a description, a module tree among them, over its own blocks and platforms, the plan checked by `archogen-plan-check`; `--locked` refused until `M4.7`; `M3.7` adds the catalog's providers, completing it |
+| `archogen resolve <DESCRIPTION> [--profile <P>] [--locked] --out <PLAN> [--unchecked] [--system <NAME>] [--target <FILE>]` | resolve providers and resources into an independently checked build plan | **experimental** — one system of a description, a module tree among them, over its own blocks and platforms, the plan checked by `archogen-plan-check`; `--locked` refused until `M4.7`; `M3.7` adds the catalog's providers, completing it |
 | `archogen plan-check <DESCRIPTION> <PLAN>` | check a resolved plan against its description, by the independent configuration checker | **built** — runs the configuration checker's own executable, `archogen-plan-check`, from an install, its arguments handed over unparsed; see [Checking a plan](plan-check.md) |
 | `archogen build <DESCRIPTION> [--profile <P>] --out <DIR> [--system <NAME>]` | generate, assemble and build a complete system and its simulator | **experimental** — the hosted playground, see [Building a system](building.md); leaf `M4.13` completes it |
 | `archogen analyze <BUILD> --property <PROPERTY>` | run an analysis for one named property | leaf `M2.21.2` |
 | `archogen verify <BUILD> --tier <TIER>` | run a verification tier | leaf `M4.11` |
-| `archogen explain <DESCRIPTION> [--profile <P>] --requirement <FACT> [--requester <NAME>] [--task <NAME>] [--system <NAME>]` | explain how one requirement was realized, or why it could not be | **experimental** — one system of a description, over its own blocks and platforms, the search's own account, its plan unchecked (leaf `M3.4.13.2`); §10.2's form reads a build, which `M4.2` completes |
+| `archogen explain <DESCRIPTION> [--profile <P>] --requirement <FACT> [--requester <NAME>] [--task <NAME>] [--system <NAME>] [--target <FILE>]` | explain how one requirement was realized, or why it could not be | **experimental** — one system of a description, over its own blocks and platforms, the search's own account, its plan unchecked (leaf `M3.4.13.2`); §10.2's form reads a build, which `M4.2` completes |
 | `archogen replay <MANIFEST>` | replay a recorded failure manifest and check its identity | leaf `M4.7` |
 | `archogen mcp` | serve the engine API to an agent over [MCP](ledger.md#mcp-specification), on standard input and output — §10.4's server, not one of §10.2's seven | **built** — leaf `API.6.4`; the tools it offers are this table's, `build` and `verify` excluded |
 
@@ -342,7 +342,7 @@ repair direction on every diagnostic:
 ```console
 $ archogen resolve system.eadl
 archogen: usage: `archogen resolve` requires `--out`
-  hint: archogen resolve <DESCRIPTION> [--profile <PROFILE>] [--locked] --out <PLAN> [--unchecked] [--system <NAME>] — where to write the resolved plan
+  hint: archogen resolve <DESCRIPTION> [--profile <PROFILE>] [--locked] --out <PLAN> [--unchecked] [--system <NAME>] [--target <FILE>] — where to write the resolved plan
 
 $ archogen check system.eadl --strict
 archogen: usage: unknown option `--strict` for `archogen check`

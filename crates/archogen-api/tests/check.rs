@@ -244,7 +244,7 @@ fn a_description_that_does_not_read_gets_the_read_pass_verdict() {
 
 #[test]
 fn the_version_and_the_operations_are_declared() {
-    assert_eq!(VERSION.to_string(), "1.10");
+    assert_eq!(VERSION.to_string(), "1.11");
     assert_eq!(OPERATIONS, ["check", "resolve", "explain"]);
 }
 

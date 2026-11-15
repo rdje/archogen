@@ -156,18 +156,29 @@ pub fn explain_with(request: &Request<'_>, explain: &Explain<'_>, limits: Limits
         (None, None) => Select::Every,
     };
     let explained = prepare(request, explain.system, limits, |ready| {
-        let found = search::explain(
-            ready.declarations,
-            ready.system,
-            ready.active.caller_level,
-            ready.vocabulary,
-            ready.policy,
-            Budget::DEFAULT,
-            Asked {
-                fact: explain.fact,
-                select,
-            },
-        );
+        let asked = Asked {
+            fact: explain.fact,
+            select,
+        };
+        let found = match ready.on {
+            Some(on) => search::explain_on_target(
+                on.there,
+                ready.active.caller_level,
+                ready.vocabulary,
+                ready.policy,
+                Budget::DEFAULT,
+                asked,
+            ),
+            None => search::explain(
+                ready.declarations,
+                ready.system,
+                ready.active.caller_level,
+                ready.vocabulary,
+                ready.policy,
+                Budget::DEFAULT,
+                asked,
+            ),
+        };
         if found.judged && found.accounts.is_empty() {
             let whose = match select {
                 Select::Every => String::new(),

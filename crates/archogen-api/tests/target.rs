@@ -506,9 +506,10 @@ fn a_module_tree_is_put_on_the_target() {
     );
 }
 
-/// The search on a target is `M4.1.7.5`'s: until then a request naming one is not searched, and says so.
+/// `resolve` and `explain` on a target (API `1.11`, leaf `M4.1.7.5.3`): the system searched where `check` judged it, its release
+/// requester among its requesters, the plan `archogen-assignment/3` naming the target.
 #[test]
-fn resolve_and_explain_on_a_target_are_not_built_yet() {
+fn resolve_and_explain_search_the_system_on_the_target() {
     let target = shipped();
     let asked = request(HEARTBEAT, &NoModules, Some(&target));
     let resolved = resolve_with(
@@ -519,36 +520,97 @@ fn resolve_and_explain_on_a_target_are_not_built_yet() {
         },
         Limits::DEFAULT,
     );
+    assert_eq!(
+        resolved.response.status,
+        Status::Ok,
+        "{}",
+        resolved.response.render_diagnostics()
+    );
+    let plan = resolved.plan.expect("a plan on the target");
+    assert!(
+        plan.text.starts_with("(format \"archogen-assignment/3\")"),
+        "{}",
+        plan.text
+    );
+    assert!(
+        plan.text.contains("(target target.riscv-virt-up \""),
+        "{}",
+        plan.text
+    );
+    assert!(
+        plan.text
+            .contains("(bind (release heartbeat) relative-delay target.timer)"),
+        "{}",
+        plan.text
+    );
+    assert!(
+        plan.text
+            .contains("(bind console.write observable-output target.console)"),
+        "{}",
+        plan.text
+    );
     let explained = explain_with(
         &asked,
         &Explain {
-            fact: "observable-output",
+            fact: "relative-delay",
             requester: None,
             task: None,
             system: None,
         },
         Limits::DEFAULT,
     );
-    for (what, response) in [
-        ("resolve", &resolved.response),
-        ("explain", &explained.response),
-    ] {
-        assert_eq!(response.status, Status::Unimplemented, "{what}");
-        assert!(response.judged.is_none(), "{what}");
-        assert!(
-            response.notes.iter().any(|note| note.contains(TARGET)),
-            "{what}: {:?}",
-            response.notes
-        );
-        assert!(
-            response
-                .hint
-                .as_deref()
-                .is_some_and(|hint| hint.contains("M4.1.7.5")),
-            "{what}"
-        );
-    }
-    assert!(resolved.plan.is_none());
+    assert_eq!(
+        explained.response.status,
+        Status::Ok,
+        "{}",
+        explained.response.render_diagnostics()
+    );
+    let account = explained
+        .accounts
+        .iter()
+        .find(|account| account.requester == "(release heartbeat)")
+        .expect("the release requester's account");
+    assert_eq!(account.bound.as_deref(), Some("target.timer"));
+    // Without the target, the same description is searched on its own hardware: no release requester, a `/2` plan.
+    let own = resolve_with(
+        &request(HEARTBEAT, &NoModules, None),
+        &Resolve {
+            system: None,
+            unchecked: true,
+        },
+        Limits::DEFAULT,
+    );
+    let own = own.plan.expect("a plan of its own");
+    assert!(
+        own.text.starts_with("(format \"archogen-assignment/2\")"),
+        "{}",
+        own.text
+    );
+    assert!(!own.text.contains("(release "), "{}", own.text);
+}
+
+/// A description the check refuses on the target is answered by the check: no search, no plan.
+#[test]
+fn resolve_on_a_target_answers_the_check_s_refusal() {
+    let refused = resolve_with(
+        &request(
+            HEARTBEAT,
+            &NoModules,
+            Some(&edited(
+                &shipped(),
+                "(firmware-traps 0)",
+                "(firmware-traps 1)",
+            )),
+        ),
+        &Resolve {
+            system: None,
+            unchecked: true,
+        },
+        Limits::DEFAULT,
+    );
+    assert_eq!(refused.response.status, Status::UnsupportedProfile);
+    assert!(refused.response.judged.is_some());
+    assert!(refused.plan.is_none());
 }
 
 /// The budget counts what a request brings: the target's file with the description.

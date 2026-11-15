@@ -436,6 +436,29 @@ pub fn explain(
     )
 }
 
+/// [`explain`] of a system put on a target, as [`search_on_target`] searches it: its release requester among its requesters
+/// (leaf `M4.1.7.5.3`).
+#[must_use]
+pub fn explain_on_target(
+    there: &crate::target::OnTarget,
+    level: &str,
+    vocabulary: &Vocabulary,
+    policy: &Policy,
+    limits: Limits,
+    asked: Asked<'_>,
+) -> Explanation {
+    run(
+        &there.declarations,
+        &there.system,
+        level,
+        vocabulary,
+        policy,
+        limits,
+        Some(asked),
+        true,
+    )
+}
+
 /// The search, and with `asked` the account [`explain`] gives; `on_a_target` where `system` is one `on_target` gives, its
 /// release requester then among its requesters.
 #[allow(clippy::too_many_arguments)]

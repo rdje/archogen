@@ -224,6 +224,7 @@ pub const COMMANDS: &[CommandSpec] = &[
                 help: "the system to resolve, when the description declares several",
                 required: false,
             },
+            TARGET,
         ],
         sibling: None,
         // The search over the description's own blocks and platforms (leaf `M3.4.4`), offered by the engine API and the
@@ -370,6 +371,7 @@ pub const COMMANDS: &[CommandSpec] = &[
                 help: "the system to explain, when the description declares several",
                 required: false,
             },
+            TARGET,
         ],
         sibling: None,
         // The search's own account over a description (leaf `M3.4.13.2`), offered by the engine API and the MCP server;

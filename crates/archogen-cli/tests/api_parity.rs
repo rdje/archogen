@@ -388,21 +388,22 @@ fn api_owed_lines(plan: &archogen_api::Plan) -> Vec<String> {
         .collect()
 }
 
-fn cli_resolves(path: &Path, plan: &Path) -> (Said, Option<String>) {
+fn cli_resolves(path: &Path, plan: &Path, target: Option<&Path>) -> (Said, Option<String>) {
     let _ = fs::remove_file(plan);
     let mut out: Vec<u8> = Vec::new();
     let mut err: Vec<u8> = Vec::new();
-    let status = run(
-        [
-            "resolve".to_string(),
-            path.display().to_string(),
-            "--out".to_string(),
-            plan.display().to_string(),
-            "--unchecked".to_string(),
-        ],
-        &mut out,
-        &mut err,
-    );
+    let mut args = vec![
+        "resolve".to_string(),
+        path.display().to_string(),
+        "--out".to_string(),
+        plan.display().to_string(),
+        "--unchecked".to_string(),
+    ];
+    if let Some(target) = target {
+        args.push("--target".to_string());
+        args.push(target.display().to_string());
+    }
+    let status = run(args, &mut out, &mut err);
     let err = String::from_utf8_lossy(&err);
     let prefix = format!("archogen: {}: ", status.slug());
     let said = Said {
@@ -426,18 +427,22 @@ fn cli_resolves(path: &Path, plan: &Path) -> (Said, Option<String>) {
     (said, written)
 }
 
-/// The engine API's `resolve` on `path`, unchecked, with the module path the CLI uses: what it said, and its plan.
-fn api_resolves(path: &Path) -> (Said, Option<String>) {
+/// The engine API's `resolve` on `path`, unchecked, on `target` when one is named, with the module path the CLI uses: what it
+/// said, and its plan.
+fn api_resolves(path: &Path, target: Option<&Path>) -> (Said, Option<String>) {
     let text = fs::read_to_string(path).expect("readable");
     let name = path.display().to_string();
     let modules = DirectoryModules::new(path.parent().expect("a file has a directory"));
+    let machine = machine(target);
     let resolution = archogen_api::resolve_with(
         &Request {
             name: &name,
             text: &text,
             profile: None,
             modules: &modules,
-            target: None,
+            target: machine
+                .as_ref()
+                .map(|(name, text)| archogen_api::TargetFile { name, text }),
         },
         &archogen_api::Resolve {
             system: None,
@@ -462,6 +467,16 @@ fn api_resolves(path: &Path) -> (Said, Option<String>) {
     )
 }
 
+/// A target's file named for a request: its path as its name, and its text.
+fn machine(target: Option<&Path>) -> Option<(String, String)> {
+    target.map(|target| {
+        (
+            target.display().to_string(),
+            fs::read_to_string(target).expect("the target is readable"),
+        )
+    })
+}
+
 #[test]
 fn over_every_description_resolve_says_what_the_api_says_and_writes_its_plan() {
     // The record's §6, amended `2026-10-23`: `resolve`'s behaviour leg compares the API's, unchecked, with
@@ -474,8 +489,8 @@ fn over_every_description_resolve_says_what_the_api_says_and_writes_its_plan() {
     let mut owing = 0;
     let mut wrong = Vec::new();
     for path in descriptions(&root) {
-        let (cli, cli_plan) = cli_resolves(&path, &plan);
-        let (api, api_plan) = api_resolves(&path);
+        let (cli, cli_plan) = cli_resolves(&path, &plan, None);
+        let (api, api_plan) = api_resolves(&path, None);
         statuses.insert(cli.status.code());
         plans += usize::from(cli_plan.is_some());
         owing += usize::from(
@@ -499,6 +514,44 @@ fn over_every_description_resolve_says_what_the_api_says_and_writes_its_plan() {
     assert!(statuses.len() > 2, "{statuses:?}");
     // And a plan that owes something for an engine adapter, or the obligations compared are empty lists alone.
     assert!(owing > 0, "no plan bound an engine adapter");
+}
+
+/// The same leg on the shipped target (leaf `M4.1.7.5.3`): `archogen resolve --unchecked --target` says and writes what the API's
+/// `resolve` does with the target in its request, `archogen-assignment/3`, a release requester among the plans.
+#[test]
+fn over_every_description_on_the_shipped_target_resolve_says_what_the_api_says() {
+    let root = repo_root();
+    let target = root.join("targets/riscv-virt-up.eadl");
+    let plan = Path::new(env!("CARGO_TARGET_TMPDIR")).join(format!(
+        "api-parity-plan-on-target-{}.eadl",
+        std::process::id()
+    ));
+    let mut statuses = std::collections::BTreeSet::new();
+    let mut releasing = 0;
+    let mut wrong = Vec::new();
+    for path in descriptions(&root) {
+        let (cli, cli_plan) = cli_resolves(&path, &plan, Some(&target));
+        let (api, api_plan) = api_resolves(&path, Some(&target));
+        statuses.insert(cli.status.code());
+        releasing += usize::from(cli_plan.as_deref().is_some_and(|p| {
+            p.starts_with("(format \"archogen-assignment/3\")") && p.contains("(bind (release ")
+        }));
+        if cli != api || cli_plan != api_plan {
+            wrong.push(format!(
+                "{}:\n  cli {cli:?} {}\n  api {api:?} {}",
+                path.display(),
+                cli_plan.is_some(),
+                api_plan.is_some()
+            ));
+        }
+    }
+    let _ = fs::remove_file(&plan);
+    assert!(wrong.is_empty(), "{}", wrong.join("\n"));
+    assert!(
+        releasing > 0,
+        "no plan on the target bound a release requester"
+    );
+    assert!(statuses.len() > 2, "{statuses:?}");
 }
 
 /// The facts the `explain` leg asks, each description one in turn: one a console requires, one a comparator's, one a
@@ -533,19 +586,20 @@ fn account_lines(account: &archogen_api::Account) -> Vec<String> {
 }
 
 /// What `archogen explain` said about `fact` in `path`, in-process, and its accounts' lines.
-fn cli_explains(path: &Path, fact: &str) -> (Said, Vec<String>) {
+fn cli_explains(path: &Path, fact: &str, target: Option<&Path>) -> (Said, Vec<String>) {
     let mut out: Vec<u8> = Vec::new();
     let mut err: Vec<u8> = Vec::new();
-    let status = run(
-        [
-            "explain".to_string(),
-            path.display().to_string(),
-            "--requirement".to_string(),
-            fact.to_string(),
-        ],
-        &mut out,
-        &mut err,
-    );
+    let mut args = vec![
+        "explain".to_string(),
+        path.display().to_string(),
+        "--requirement".to_string(),
+        fact.to_string(),
+    ];
+    if let Some(target) = target {
+        args.push("--target".to_string());
+        args.push(target.display().to_string());
+    }
+    let status = run(args, &mut out, &mut err);
     let out = String::from_utf8_lossy(&out);
     let err = String::from_utf8_lossy(&err);
     let prefix = format!("archogen: {}: ", status.slug());
@@ -575,18 +629,22 @@ fn cli_explains(path: &Path, fact: &str) -> (Said, Vec<String>) {
     (said, lines)
 }
 
-/// The engine API's `explain` of `fact` in `path`, with the module path the CLI uses: what it said, and its accounts'.
-fn api_explains(path: &Path, fact: &str) -> (Said, Vec<String>) {
+/// The engine API's `explain` of `fact` in `path`, on `target` when one is named, with the module path the CLI uses: what it said,
+/// and its accounts'.
+fn api_explains(path: &Path, fact: &str, target: Option<&Path>) -> (Said, Vec<String>) {
     let text = fs::read_to_string(path).expect("readable");
     let name = path.display().to_string();
     let modules = DirectoryModules::new(path.parent().expect("a file has a directory"));
+    let machine = machine(target);
     let explanation = archogen_api::explain_with(
         &Request {
             name: &name,
             text: &text,
             profile: None,
             modules: &modules,
-            target: None,
+            target: machine
+                .as_ref()
+                .map(|(name, text)| archogen_api::TargetFile { name, text }),
         },
         &archogen_api::Explain {
             fact,
@@ -625,8 +683,8 @@ fn over_every_description_explain_says_what_the_api_says() {
     let mut wrong = Vec::new();
     for (at, path) in descriptions(&root).iter().enumerate() {
         let fact = EXPLAINED[at % EXPLAINED.len()];
-        let (cli, cli_lines) = cli_explains(path, fact);
-        let (api, api_lines) = api_explains(path, fact);
+        let (cli, cli_lines) = cli_explains(path, fact, None);
+        let (api, api_lines) = api_explains(path, fact, None);
         statuses.insert(cli.status.code());
         accounts += cli_lines
             .iter()
@@ -642,6 +700,43 @@ fn over_every_description_explain_says_what_the_api_says() {
     assert!(wrong.is_empty(), "{}", wrong.join("\n"));
     // Accounts given and refusals of several kinds, or the leg compares one outcome and calls it parity.
     assert!(accounts > 0, "no account given");
+    assert!(statuses.len() > 2, "{statuses:?}");
+}
+
+/// The facts the on-target `explain` leg asks, in turn: the release requester's delay first, then the leg's own.
+const EXPLAINED_ON_TARGET: &[&str] = &[
+    "relative-delay",
+    "observable-output",
+    "counter-width",
+    "release-accuracy",
+];
+
+/// The same leg on the shipped target (leaf `M4.1.7.5.3`): an account of the release requester among those given.
+#[test]
+fn over_every_description_on_the_shipped_target_explain_says_what_the_api_says() {
+    let root = repo_root();
+    let target = root.join("targets/riscv-virt-up.eadl");
+    let mut statuses = std::collections::BTreeSet::new();
+    let mut releasing = 0;
+    let mut wrong = Vec::new();
+    for (at, path) in descriptions(&root).iter().enumerate() {
+        let fact = EXPLAINED_ON_TARGET[at % EXPLAINED_ON_TARGET.len()];
+        let (cli, cli_lines) = cli_explains(path, fact, Some(&target));
+        let (api, api_lines) = api_explains(path, fact, Some(&target));
+        statuses.insert(cli.status.code());
+        releasing += cli_lines
+            .iter()
+            .filter(|l| l.contains("required by `(release "))
+            .count();
+        if cli != api || cli_lines != api_lines {
+            wrong.push(format!(
+                "{} `{fact}`:\n  cli {cli:?} {cli_lines:?}\n  api {api:?} {api_lines:?}",
+                path.display()
+            ));
+        }
+    }
+    assert!(wrong.is_empty(), "{}", wrong.join("\n"));
+    assert!(releasing > 0, "no account of a release requester given");
     assert!(statuses.len() > 2, "{statuses:?}");
 }
 

@@ -681,10 +681,11 @@ a change that leaves it stale, so it is never edited by hand.
   [What the scheduling checker establishes](analysis.md), [Where the engine's knowledge comes from: the
   catalog](catalog.md), [Checks that must not share a mistake: the trust gate](trust.md), [The runtime plan: what the
   generated system is told](runtime-plan.md), [The runtime: decisions, not actions](runtime.md), [Building a
-  system](building.md), [The S0 early generation path](s0.md), [Where generated systems run](targets.md), [Verifying the
-  toolchain](verification.md), [What this project relies on from outside](ledger.md), [What is versioned, and what
-  changing it costs](versions.md), [Annex A: The runtime's rules in detail](annex-runtime.md), [Annex B: The checks that
-  keep the repository honest](annex-repository.md), [Annex C: Trust proof records](annex-trust-proofs.md)
+  system](building.md), [The S0 early generation path](s0.md), [Where generated systems run](targets.md), [The engine
+  API](engine-api.md), [Verifying the toolchain](verification.md), [What this project relies on from
+  outside](ledger.md), [What is versioned, and what changing it costs](versions.md), [Annex A: The runtime's rules in
+  detail](annex-runtime.md), [Annex B: The checks that keep the repository honest](annex-repository.md), [Annex C: Trust
+  proof records](annex-trust-proofs.md)
 - Relevance decides whether an unknown matters — [Presence, absence, and
   relevance](presence.md#relevance-decides-whether-an-unknown-matters)
 - Remaining diagnostic-producer assessment — [Annex C: Trust proof
