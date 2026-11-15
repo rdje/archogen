@@ -418,8 +418,8 @@ pub fn lower(
     lowered(program, record, None, vocabulary, catalog).map(|(plan, _)| plan)
 }
 
-/// The lowering, with the result record taken where §1 writes its refusals, when there is one.
-#[allow(clippy::too_many_lines)]
+/// The lowering, with the result record taken where §1 writes its refusals, when there is one: the body computed, then
+/// written as `/1` and read back by the format's own reader, so the writer and the reader of §3 cannot part.
 fn lowered(
     program: &Program,
     record: &str,
@@ -427,6 +427,102 @@ fn lowered(
     vocabulary: &Vocabulary,
     catalog: &Catalog,
 ) -> Result<(Plan, Option<ResultRecord>), Refusal> {
+    let (body, accepted) = body(program, record, result, vocabulary, catalog)?;
+    let text = body.write_one();
+    let plan = Plan::read(&text).map_err(|why| {
+        refuse(
+            "tool-failure",
+            format!("the lowering wrote a plan its own reader refuses: {why}"),
+        )
+    })?;
+    Ok((plan, accepted))
+}
+
+/// What a lowering computes of a record, each of §3's groups of lines as `/1` writes them, in the format's order within
+/// each group (leaf `M4.1.7.6.3`): what `/1`'s writer joins, and what `/2`'s writes from, so the two formats share one
+/// body and `/1`'s bytes stay its own.
+#[derive(Debug, Clone, PartialEq, Eq)]
+struct Body {
+    /// `PROFILE` of `(profile …)`.
+    profile: String,
+    /// `NAME` of `(system …)`.
+    system: String,
+    /// The program's digest, `(program …)`'s `HEX`.
+    program: String,
+    /// The assignment record's digest, `(assignment …)`'s `HEX`.
+    assignment: String,
+    /// `(adapters …)`'s version.
+    adapters: String,
+    /// The `(task …)` lines.
+    tasks: Vec<String>,
+    /// The `(bind …)` lines.
+    binds: Vec<String>,
+    /// The `(instance …)` lines.
+    instances: Vec<String>,
+    /// The release timer's `(releases …)` items.
+    releases: Vec<String>,
+    /// The `(route …)` lines.
+    routes: Vec<String>,
+    /// The `(enabled …)` items.
+    enabled: Vec<String>,
+    /// The `(node …)` lines, by their text.
+    nodes: Vec<String>,
+    /// The `(context …)` lines.
+    contexts: Vec<String>,
+    /// The `(depends …)` lines.
+    depends: Vec<String>,
+    /// The `(step …)` lines.
+    steps: Vec<String>,
+    /// The `(obligation …)` lines.
+    obligations: Vec<String>,
+    /// The `(owed …)` lines, sorted.
+    owed: Vec<String>,
+}
+
+impl Body {
+    /// `archogen-runtime-plan/1`'s text (§3): the lines, in the format's order, each ending in a line feed.
+    fn write_one(&self) -> String {
+        let mut lines = vec![
+            format!("(format \"{FORMAT}\")"),
+            format!("(profile {})", self.profile),
+            format!("(system {})", self.system),
+            format!("(program \"{}\")", self.program),
+            format!("(assignment \"{}\")", self.assignment),
+            format!("(adapters {})", self.adapters),
+        ];
+        lines.extend(self.tasks.iter().cloned());
+        lines.extend(self.binds.iter().cloned());
+        lines.extend(self.instances.iter().cloned());
+        lines.push(format!(
+            "(timer simulator {})",
+            list("releases", &self.releases)
+        ));
+        lines.extend(self.routes.iter().cloned());
+        lines.push(list("enabled", &self.enabled));
+        lines.push("(interrupt-model (nesting no) (masking all))".to_string());
+        lines.extend(self.nodes.iter().cloned());
+        lines.extend(self.contexts.iter().cloned());
+        lines.extend(self.depends.iter().cloned());
+        lines.extend(self.steps.iter().cloned());
+        lines.extend(self.obligations.iter().cloned());
+        lines.extend(self.owed.iter().cloned());
+        lines.push("(complete no)".to_string());
+        let mut text = lines.join("\n");
+        text.push('\n');
+        text
+    }
+}
+
+/// A lowering's body (§1 to §2.10): the record refused as §1 refuses it, or what `/1` writes of it, beside the result
+/// record taken where there is one.
+#[allow(clippy::too_many_lines)]
+fn body(
+    program: &Program,
+    record: &str,
+    result: Option<&str>,
+    vocabulary: &Vocabulary,
+    catalog: &Catalog,
+) -> Result<(Body, Option<ResultRecord>), Refusal> {
     // §1, input 1: the declarations and the digest are the program's own, never its caller's; a module tree is read as
     // the language checks it, its names qualified.
     let flattened;
@@ -1333,22 +1429,6 @@ fn lowered(
     owed.sort();
     owed.dedup();
 
-    // §3: the lines, in the format's order.
-    let mut lines = vec![
-        format!("(format \"{FORMAT}\")"),
-        format!("(profile {})", record.profile),
-        format!("(system {system})"),
-        format!("(program \"{digest}\")"),
-        format!("(assignment \"{}\")", sha256(record_text)),
-        format!("(adapters {})", record.adapters),
-    ];
-    lines.extend(task_lines);
-    lines.extend(bind_lines);
-    lines.extend(instance_lines);
-    lines.push(format!("(timer simulator {})", list("releases", &releases)));
-    lines.extend(route_lines);
-    lines.push(list("enabled", &enabled));
-    lines.push("(interrupt-model (nesting no) (masking all))".to_string());
     // Each node with its kind, by its text (§3, R24-D2): the simulator and the emitter read which nodes are devices here.
     let kind_of = |n: &str| -> &'static str {
         if names.instances.contains_key(n) {
@@ -1370,23 +1450,28 @@ fn lowered(
         .map(|n| format!("(node {} {})", names.text(n), kind_of(n)))
         .collect();
     node_lines.sort();
-    lines.extend(node_lines);
-    lines.extend(context_lines);
-    lines.extend(depends_lines);
-    lines.extend(step_lines);
-    lines.extend(obligation_lines);
-    lines.extend(owed);
-    lines.push("(complete no)".to_string());
-    let mut text = lines.join("\n");
-    text.push('\n');
-    // Every plan written goes through its own reader, so the writer and the reader of §3 cannot part.
-    let plan = Plan::read(&text).map_err(|why| {
-        refuse(
-            "tool-failure",
-            format!("the lowering wrote a plan its own reader refuses: {why}"),
-        )
-    })?;
-    Ok((plan, accepted))
+    Ok((
+        Body {
+            profile: record.profile.clone(),
+            system: system.clone(),
+            program: digest.clone(),
+            assignment: sha256(record_text),
+            adapters: record.adapters.clone(),
+            tasks: task_lines,
+            binds: bind_lines,
+            instances: instance_lines,
+            releases,
+            routes: route_lines,
+            enabled,
+            nodes: node_lines,
+            contexts: context_lines,
+            depends: depends_lines,
+            steps: step_lines,
+            obligations: obligation_lines,
+            owed,
+        },
+        accepted,
+    ))
 }
 
 /// The assignment record's sha256, its identity in the plan (§2.1).
