@@ -105,7 +105,8 @@ heartbeat's writes, and `examples/periodic-three/system.eadl` and `examples/alte
 timer answering what their time services ask of a counter, its width among it (leaf `M4.1.7.3.5`). `crates/archogen-api/tests/target.rs` holds each row above, each stage, and the
 contrast with `check` on the description's own hardware.
 
-The command line, the page and the agent's server carry the target with leaf `M4.1.7.4.2`. `resolve` and `explain`
+The command line carries it as `archogen check --target FILE` ([On a target](checking.md#on-a-target), leaf
+`M4.1.7.4.2.1`); the agent's server and the page carry it with leaves `M4.1.7.4.2.2` and `M4.1.7.4.2.3`. `resolve` and `explain`
 on a target are leaf `M4.1.7.5`'s: until then a request naming one is answered `unimplemented`, saying so, since a
 plan of the description's own hardware is no plan on the machine.
 
@@ -441,8 +442,8 @@ the language and the MCP surface are not Rust items, and stay the book's alone.
 
 ## Today and ahead
 
-- **Today:** `check` on a target through the library alone (API `1.10`, `M4.1.7.4.1`), the other doors carrying it with
-  `M4.1.7.4.2`; `check` through four doors — the command line, the library, the page and the MCP server — each held to
+- **Today:** `check` on a target through the library and the command line (API `1.10`, `M4.1.7.4.1`, `M4.1.7.4.2.1`),
+  the server and the page carrying it with `M4.1.7.4.2.2` and `.3`; `check` through four doors — the command line, the library, the page and the MCP server — each held to
   the same answers by tests: the command line's parity legs, the integration tier's `wasm-binding` step, and the MCP
   server's stdio test over the conformance cases in both protocol eras; and `resolve`, the search alone, through the
   command line, the library and the MCP server (`M3.4.4`, `M3.4.6`), the first two held to one answer by its parity

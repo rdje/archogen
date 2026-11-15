@@ -223,8 +223,9 @@ A target's file holds what its agreement with the machine checks, so what it doe
 
 ⚠️ Two devices no requirement tells apart are not told apart: the policy's order chooses. And this says what is judged, not that two runs match, which is
 `M4.9`'s. The engine API's `check` names a target and judges a description's systems there, the target's own file first
-([Checking on a target](engine-api.md#checking-on-a-target), leaf `M4.1.7.4.1`); the command line's `--target` is leaf `M4.1.7.4.2`, and the
-search on a target, with the plan format that reads this rule, `M4.1.7.5` and after.
+([Checking on a target](engine-api.md#checking-on-a-target), leaf `M4.1.7.4.1`), and so does `archogen check --target`
+([On a target](checking.md#on-a-target), leaf `M4.1.7.4.2.1`); the search on a target, with the plan format that reads this rule, is `M4.1.7.5` and
+after.
 
 ### What releases a task on a target
 

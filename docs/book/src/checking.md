@@ -246,6 +246,56 @@ A module file is classified first, as always: a `deffact` inside a module is `sc
 its `defmodule` is `module-multiple-forms`, both exit `10`. The engine reads the vocabulary itself, validating
 each entry against `deffact`, as the matching chapter will describe (leaf `M3.1.3`).
 
+### On a target
+
+`--target FILE` judges the description's systems on a real machine, described in a file of its own that declares its
+hardware and nothing else, such as `targets/riscv-virt-up.eadl` ([Where generated systems run](targets.md)). Each
+system is given the target's platform in place of its own, so the machine answers what the system asks; the
+description's own hardware is one platform it could run on, and need not answer it. The target's own file is judged
+first, alone: what keeps it from being a target, and what the profile asks of any machine, one active core, no
+interrupt source no mask stops, and memory to place an image in. Then every pass on the description but presence, what
+the search refuses of what it writes, and presence on each system put on the machine
+([Checking on a target](engine-api.md#checking-on-a-target) gives every rule; leaf `M4.1.7.4.2.1`).
+
+`periodic-three` asks a console and a counter of its timer service, and the emulated machine has both:
+
+```console
+$ archogen check examples/periodic-three/system.eadl --target targets/riscv-virt-up.eadl ; echo $?
+examples/periodic-three/system.eadl: accepted against profile `rt-static-up-v1` on target targets/riscv-virt-up.eadl (8 declaration(s))
+  closure: console.write (requested), counter-width (needed by time.monotonic), observable-output (needed by console.write), observation-coherent (needed by time.monotonic), scheduling.fixed-priority (requested), target.console (needed by console.write), target.riscv-virt-up (requested), target.timer (needed by time.monotonic), tick-rate (needed by time.monotonic), time.monotonic (requested), time.periodic-release (requested)
+  outside the closure, needed by nothing requested: alarm-kind, alarm-wiring, available-in-state, catalog-target, channels, compare-magnitude, compare-step, console.uart, core-count, counter-modulus, firmware-traps, non-maskable-interrupts, periodic-three, reachable-at-privilege, region, relative-delay, soc.playground, supported-horizon, timer.counter, wrap-behavior
+  this checks the description, not a system: no resolution, generation or analysis has run
+0
+```
+
+The closure is the machine's now: `target.console` and `target.timer` answer, and the description's own `console.uart`
+and `timer.counter` lie outside it. `high-interference` asks an interrupt source with its separation, which the
+machine does not describe:
+
+```console
+$ archogen check examples/high-interference/system.eadl --target targets/riscv-virt-up.eadl ; echo $?
+error[missing-fact]: `interrupt-source` is required by this system and nothing describes it
+  --> examples/high-interference/system.eadl:51:12
+   |
+51 |     (needs interrupt-source min-arrival-separation)))
+   |            ^^^^^^^^^^^^^^^^ required through this request
+  = hint: declare `interrupt-source` as offered or absent on the platform — it is inside the dependency closure of what this system requests, so no decision that depends on it can be made
+
+error[missing-fact]: `min-arrival-separation` is required by this system and nothing describes it
+  --> examples/high-interference/system.eadl:51:29
+   |
+51 |     (needs interrupt-source min-arrival-separation)))
+   |                             ^^^^^^^^^^^^^^^^^^^^^^ required through this request
+  = hint: declare `min-arrival-separation` as offered or absent on the platform — it is inside the dependency closure of what this system requests, so no decision that depends on it can be made
+archogen: missing-fact: 2 diagnostic(s) in examples/high-interference/system.eadl on target targets/riscv-virt-up.eadl
+11
+```
+
+The verdict of every tracked description on the shipped target is frozen beside the one without, in
+`crates/archogen-cli/tests/verdicts-on-riscv-virt-up.txt`, and the command says on each what the engine API says with
+the target in its request (`crates/archogen-cli/tests/api_parity.rs`). `resolve`, `explain` and `build` on a target are
+leaf `M4.1.7.5`'s and after: until then `--target` is `check`'s alone.
+
 ### The semantic corpus
 
 `docs/semantics/cases/` holds 36 worked cases — §12 M1 asks for twenty — each declaring the

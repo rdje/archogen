@@ -217,15 +217,16 @@ struct Said {
     notes: Vec<String>,
 }
 
-/// `archogen check` on `path`, in-process.
-fn cli_says(path: &Path) -> Said {
+/// `archogen check` on `path`, on `target` when one is named, in-process.
+fn cli_says(path: &Path, target: Option<&Path>) -> Said {
     let mut out: Vec<u8> = Vec::new();
     let mut err: Vec<u8> = Vec::new();
-    let status = run(
-        ["check".to_string(), path.display().to_string()],
-        &mut out,
-        &mut err,
-    );
+    let mut args = vec!["check".to_string(), path.display().to_string()];
+    if let Some(target) = target {
+        args.push("--target".to_string());
+        args.push(target.display().to_string());
+    }
+    let status = run(args, &mut out, &mut err);
     let err = String::from_utf8_lossy(&err);
     let prefix = format!("archogen: {}: ", status.slug());
     Said {
@@ -245,17 +246,25 @@ fn cli_says(path: &Path) -> Said {
     }
 }
 
-/// The engine API on `path`, with the module path the CLI uses.
-fn api_says(path: &Path) -> Said {
+/// The engine API on `path`, on `target` when one is named, with the module path the CLI uses.
+fn api_says(path: &Path, target: Option<&Path>) -> Said {
     let text = fs::read_to_string(path).expect("readable");
     let name = path.display().to_string();
     let modules = DirectoryModules::new(path.parent().expect("a file has a directory"));
+    let machine = target.map(|target| {
+        (
+            target.display().to_string(),
+            fs::read_to_string(target).expect("the target is readable"),
+        )
+    });
     let response = archogen_api::check(&Request {
         name: &name,
         text: &text,
         profile: None,
         modules: &modules,
-        target: None,
+        target: machine
+            .as_ref()
+            .map(|(name, text)| archogen_api::TargetFile { name, text }),
     });
     Said {
         status: response.status,
@@ -316,9 +325,38 @@ fn over_every_description_the_cli_says_what_the_api_says() {
     );
     let pairs: Vec<(String, Said, Said)> = population
         .iter()
-        .map(|path| (path.display().to_string(), cli_says(path), api_says(path)))
+        .map(|path| {
+            (
+                path.display().to_string(),
+                cli_says(path, None),
+                api_says(path, None),
+            )
+        })
         .collect();
     // More than one status, or the leg compares one outcome and calls it parity.
+    let statuses: std::collections::BTreeSet<i32> =
+        pairs.iter().map(|(_, cli, _)| cli.status.code()).collect();
+    assert!(statuses.len() > 2, "{statuses:?}");
+    let wrong = behaviour_mismatches(&pairs);
+    assert!(wrong.is_empty(), "{}", wrong.join("\n"));
+}
+
+/// The same leg on the shipped target: `archogen check --target` says what the API's `check` says with the target in its request (leaf
+/// `M4.1.7.4.2.1`).
+#[test]
+fn over_every_description_on_the_shipped_target_the_cli_says_what_the_api_says() {
+    let root = repo_root();
+    let target = root.join("targets/riscv-virt-up.eadl");
+    let pairs: Vec<(String, Said, Said)> = descriptions(&root)
+        .iter()
+        .map(|path| {
+            (
+                path.display().to_string(),
+                cli_says(path, Some(&target)),
+                api_says(path, Some(&target)),
+            )
+        })
+        .collect();
     let statuses: std::collections::BTreeSet<i32> =
         pairs.iter().map(|(_, cli, _)| cli.status.code()).collect();
     assert!(statuses.len() > 2, "{statuses:?}");

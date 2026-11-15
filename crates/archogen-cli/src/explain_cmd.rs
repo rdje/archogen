@@ -210,6 +210,8 @@ pub fn run(parsed: &Parsed, out: &mut dyn Write, err: &mut dyn Write) -> Status 
     let explanation = match ask_with(
         path,
         parsed.value("profile"),
+        // A system on a target is searched by `M4.1.7.5`, which gives this command `--target`.
+        None,
         |_| None,
         err,
         |request| archogen_api::explain_with(request, &explain, Limits::NONE),

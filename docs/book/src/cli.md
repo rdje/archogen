@@ -49,7 +49,7 @@ COMMANDS:
 
 | Command | Does | Built by |
 | --- | --- | --- |
-| `archogen check <DESCRIPTION> [--profile <PROFILE>]` | elaborate and type-check a description against a profile | **built** — a description is one file or a module tree; see [Checking a description](checking.md) and [Modules and composition](modules.md) |
+| `archogen check <DESCRIPTION> [--profile <PROFILE>] [--target <FILE>]` | elaborate and type-check a description against a profile | **built** — a description is one file or a module tree; `--target` judges its systems on a machine (leaf `M4.1.7.4.2.1`); see [Checking a description](checking.md#on-a-target) and [Modules and composition](modules.md) |
 | `archogen resolve <DESCRIPTION> [--profile <P>] [--locked] --out <PLAN> [--unchecked] [--system <NAME>]` | resolve providers and resources into an independently checked build plan | **experimental** — one system of a description, a module tree among them, over its own blocks and platforms, the plan checked by `archogen-plan-check`; `--locked` refused until `M4.7`; `M3.7` adds the catalog's providers, completing it |
 | `archogen plan-check <DESCRIPTION> <PLAN>` | check a resolved plan against its description, by the independent configuration checker | **built** — runs the configuration checker's own executable, `archogen-plan-check`, from an install, its arguments handed over unparsed; see [Checking a plan](plan-check.md) |
 | `archogen build <DESCRIPTION> [--profile <P>] --out <DIR> [--system <NAME>]` | generate, assemble and build a complete system and its simulator | **experimental** — the hosted playground, see [Building a system](building.md); leaf `M4.13` completes it |
@@ -346,7 +346,7 @@ archogen: usage: `archogen resolve` requires `--out`
 
 $ archogen check system.eadl --strict
 archogen: usage: unknown option `--strict` for `archogen check`
-  hint: `archogen check` accepts: --profile
+  hint: `archogen check` accepts: --profile, --target
 ```
 
 Asking a command what it needs never requires satisfying it first — `archogen resolve --help`

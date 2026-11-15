@@ -156,6 +156,14 @@ const PROFILE: OptionSpec = OptionSpec {
     required: false,
 };
 
+/// The machine a description's systems are judged on (`docs/decisions/decision_runtime-plan-format-2.md` §1; leaf `M4.1.7.4.2.1`).
+const TARGET: OptionSpec = OptionSpec {
+    long: "target",
+    value: Some("FILE"),
+    help: "a target's file, its hardware alone: judge the description's systems on that machine, e.g. targets/riscv-virt-up.eadl",
+    required: false,
+};
+
 /// Refuse to acquire or re-resolve anything: fail on a missing or mismatched input (§10.3).
 const LOCKED: OptionSpec = OptionSpec {
     long: "locked",
@@ -178,7 +186,7 @@ pub const COMMANDS: &[CommandSpec] = &[
             name: "DESCRIPTION",
             help: "path to the eADL system description",
         }],
-        options: &[PROFILE],
+        options: &[PROFILE, TARGET],
         // Built by leaf M1.8. Changing this row is what removes the command's tag from
         // `archogen --help`, in the same change that makes it real — the help text is rendered
         // from this table, so the two cannot disagree.

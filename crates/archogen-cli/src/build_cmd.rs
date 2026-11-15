@@ -74,6 +74,8 @@ pub fn run(
     let resolution = match ask_with(
         path,
         parsed.value("profile"),
+        // A system on a target is searched by `M4.1.7.5`, which gives this command `--target`.
+        None,
         refuse_locked,
         err,
         |request| archogen_api::resolve_with(request, &resolve, Limits::NONE),

@@ -7,7 +7,8 @@
 //!
 //! **The rule.** A block holding an `error[` line is a transcript.
 //! - Opened by `$ archogen check <file>` (optionally `; echo $?`): the lines under the command must **equal** the
-//!   command's output — the exit code appended when the command echoes it. Nothing abridged, nothing re-wrapped.
+//!   command's output — the exit code appended when the command echoes it. Nothing abridged, nothing re-wrapped. The
+//!   command's options are run with it, `--target` among them (leaf `M4.1.7.4.2.1`).
 //! - With no command line, keyed by its first `-->`: an **excerpt**, which must appear verbatim in the output of
 //!   `archogen check` on that file.
 //! - A transcript over an input no reader can rebuild — a file that is not in the repository, or none named at all —
@@ -52,15 +53,14 @@ fn reproducible(root: &Path, relative: &str) -> bool {
         && root.join(relative).is_file()
 }
 
-/// `archogen check <file>` run in-process from the repository root: everything it prints, and its exit code.
-fn check(relative: &str) -> (String, i32) {
+/// `archogen check <file> <options>` run in-process from the repository root: everything it prints, and its exit code.
+fn check(relative: &str, options: &[String]) -> (String, i32) {
     let mut out: Vec<u8> = Vec::new();
     let mut err: Vec<u8> = Vec::new();
-    let status = run(
-        ["check".to_string(), relative.to_string()],
-        &mut out,
-        &mut err,
-    );
+    let args = ["check".to_string(), relative.to_string()]
+        .into_iter()
+        .chain(options.iter().cloned());
+    let status = run(args, &mut out, &mut err);
     let mut text = String::from_utf8(err).expect("utf-8");
     text.push_str(&String::from_utf8(out).expect("utf-8"));
     (text.trim_end_matches('\n').to_string(), status.code())
@@ -71,6 +71,8 @@ struct Transcript {
     /// What the block is, independent of where it sits: its chapter, first `error[` line and first `-->` location.
     key: String,
     command: Option<(String, bool)>,
+    /// What the command writes after its file, before `; echo $?`.
+    options: Vec<String>,
     location: Option<String>,
     body: Vec<String>,
 }
@@ -113,12 +115,24 @@ fn transcripts_in(name: &str, text: &str) -> Vec<Transcript> {
         }
         let block = &lines[i + 1..j];
         if let Some(error) = block.iter().find(|l| l.starts_with("error[")) {
-            let command = block.iter().find_map(|l| {
-                let rest = l.strip_prefix("$ archogen check ")?;
+            let command_line = block
+                .iter()
+                .find_map(|l| l.strip_prefix("$ archogen check "));
+            let command = command_line.and_then(|rest| {
                 let echoes = rest.contains("; echo $?");
                 let file = rest.split_whitespace().next()?.to_string();
                 Some((file, echoes))
             });
+            let options = command_line
+                .and_then(|rest| rest.split(';').next())
+                .map(|words| {
+                    words
+                        .split_whitespace()
+                        .skip(1)
+                        .map(str::to_string)
+                        .collect()
+                })
+                .unwrap_or_default();
             let first_location = block
                 .iter()
                 .find_map(|l| l.trim_start().strip_prefix("--> "));
@@ -137,6 +151,7 @@ fn transcripts_in(name: &str, text: &str) -> Vec<Transcript> {
                 at: format!("{name}:{}", i + 1),
                 key,
                 command,
+                options,
                 location,
                 body,
             });
@@ -200,7 +215,7 @@ fn every_rendered_diagnostic_in_the_book_is_what_the_command_prints() {
             continue;
         };
         checked += 1;
-        let (printed, code) = check(&input);
+        let (printed, code) = check(&input, &t.options);
         match &t.command {
             Some((_, echoes)) => {
                 let want = if *echoes {
@@ -211,8 +226,9 @@ fn every_rendered_diagnostic_in_the_book_is_what_the_command_prints() {
                 let got = t.body.join("\n");
                 if got != want {
                     problems.push(format!(
-                        "{}: `archogen check {input}` prints something else — re-render the block from a run\n--- book\n{got}\n--- run\n{want}",
-                        t.at
+                        "{}: `archogen check {input}{}` prints something else — re-render the block from a run\n--- book\n{got}\n--- run\n{want}",
+                        t.at,
+                        t.options.iter().map(|o| format!(" {o}")).collect::<String>()
                     ));
                 }
             }

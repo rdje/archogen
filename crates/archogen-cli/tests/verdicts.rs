@@ -13,6 +13,10 @@
 //! The population is every `*.eadl` under the repository root except the directories given to generated output
 //! and to other repositories — `target/`, `build/`, `vendor/` and hidden ones — found by walking, so a description
 //! added tomorrow is in scope the day it is added.
+//!
+//! A second table, `tests/verdicts-on-riscv-virt-up.txt`, freezes the same population checked on the shipped target,
+//! `archogen check <file> --target targets/riscv-virt-up.eadl` (leaf `M4.1.7.4.2.1`): what a change to the target's file,
+//! its agreement or `DC-H3`'s judgement moves is in its diff too.
 
 use std::collections::BTreeMap;
 use std::fs;
@@ -29,6 +33,11 @@ fn repo_root() -> PathBuf {
 }
 
 const TABLE: &str = "crates/archogen-cli/tests/verdicts.txt";
+/// The table of every description on the shipped target, and the target.
+const ON_TARGET: (&str, &str) = (
+    "crates/archogen-cli/tests/verdicts-on-riscv-virt-up.txt",
+    "targets/riscv-virt-up.eadl",
+);
 const SKIPPED: &[&str] = &["target", "build", "vendor"];
 
 /// Every description, as a repository-relative path, sorted.
@@ -58,16 +67,18 @@ fn descriptions(root: &Path) -> Vec<String> {
     out
 }
 
-/// `archogen check` on one description, in-process: its exit code and its diagnostic codes, sorted and deduplicated.
-fn verdict(root: &Path, relative: &str) -> String {
+/// `archogen check` on one description, on `target` when one is named, in-process: its exit code and its diagnostic codes,
+/// sorted and deduplicated.
+fn verdict(root: &Path, relative: &str, target: Option<&str>) -> String {
     let path = root.join(relative);
     let mut out: Vec<u8> = Vec::new();
     let mut err: Vec<u8> = Vec::new();
-    let status = run(
-        ["check".to_string(), path.display().to_string()],
-        &mut out,
-        &mut err,
-    );
+    let mut args = vec!["check".to_string(), path.display().to_string()];
+    if let Some(target) = target {
+        args.push("--target".to_string());
+        args.push(root.join(target).display().to_string());
+    }
+    let status = run(args, &mut out, &mut err);
     let err = String::from_utf8_lossy(&err);
     let mut codes: Vec<&str> = err
         .lines()
@@ -106,11 +117,39 @@ fn parse(table: &str) -> BTreeMap<String, String> {
     ignore = "walks every tracked description; the corpus walks are left out of Miri on measured cost"
 )]
 fn every_description_keeps_its_frozen_verdict() {
+    keeps_its_frozen_verdict(
+        TABLE,
+        None,
+        "# The frozen verdict of every description in this repository (leaf `PROGRAM.6.2`).\n\
+         # <exit code of `archogen check`> <its diagnostic codes, sorted, or -> <path>\n\
+         # Regenerated deliberately: ARCHOGEN_BLESS_VERDICTS=1 cargo test -p archogen-cli --test verdicts\n",
+    );
+}
+
+#[test]
+#[cfg_attr(
+    miri,
+    ignore = "walks every tracked description; the corpus walks are left out of Miri on measured cost"
+)]
+fn every_description_keeps_its_frozen_verdict_on_the_shipped_target() {
+    let (table, target) = ON_TARGET;
+    keeps_its_frozen_verdict(
+        table,
+        Some(target),
+        "# The frozen verdict of every description in this repository on the shipped target (leaf `M4.1.7.4.2.1`).\n\
+         # <exit code of `archogen check <path> --target targets/riscv-virt-up.eadl`> <its diagnostic codes, sorted, or -> <path>\n\
+         # Regenerated deliberately: ARCHOGEN_BLESS_VERDICTS=1 cargo test -p archogen-cli --test verdicts\n",
+    );
+}
+
+/// Every description's verdict, on `target` when one is named, against the table at `table`, or the table written afresh, `header` first,
+/// when `ARCHOGEN_BLESS_VERDICTS` is set.
+fn keeps_its_frozen_verdict(table: &str, target: Option<&str>, header: &str) {
     let root = repo_root();
     let found: BTreeMap<String, String> = descriptions(&root)
         .into_iter()
         .map(|relative| {
-            let v = verdict(&root, &relative);
+            let v = verdict(&root, &relative, target);
             (relative, v)
         })
         .collect();
@@ -119,13 +158,9 @@ fn every_description_keeps_its_frozen_verdict() {
         "the walk found only {} descriptions — the population is broken, not the engine",
         found.len()
     );
-    let table_path = root.join(TABLE);
+    let table_path = root.join(table);
     if std::env::var_os("ARCHOGEN_BLESS_VERDICTS").is_some() {
-        let mut text = String::from(
-            "# The frozen verdict of every description in this repository (leaf `PROGRAM.6.2`).\n\
-             # <exit code of `archogen check`> <its diagnostic codes, sorted, or -> <path>\n\
-             # Regenerated deliberately: ARCHOGEN_BLESS_VERDICTS=1 cargo test -p archogen-cli --test verdicts\n",
-        );
+        let mut text = String::from(header);
         for (path, v) in &found {
             text.push_str(&format!("{v} {path}\n"));
         }
@@ -148,7 +183,7 @@ fn every_description_keeps_its_frozen_verdict() {
     }
     assert!(
         problems.is_empty(),
-        "{} of {} description(s) differ from {TABLE}:\n  {}\n\nIf the engine meant to change these verdicts, \
+        "{} of {} description(s) differ from {table}:\n  {}\n\nIf the engine meant to change these verdicts, \
          regenerate the table in the same change — ARCHOGEN_BLESS_VERDICTS=1 cargo test -p archogen-cli --test \
          verdicts — so the moved verdicts are in its diff.",
         problems.len(),

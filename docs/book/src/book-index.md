@@ -52,13 +52,13 @@ a change that leaves it stale, so it is never edited by hand.
 - **AI** — [definition](glossary.md), [The engine API](engine-api.md)
 - An example that runs — [The engine API](engine-api.md#an-example-that-runs)
 - analysis-model — [What is versioned, and what changing it costs](versions.md#analysis-model)
-- **API** — [definition](glossary.md), [Matching an offer to a requirement](matching.md), [Generated-sources test
-  adequacy](trust-adequacy.md), [The runtime plan: what the generated system is told](runtime-plan.md), [The runtime:
-  decisions, not actions](runtime.md), [Building a system](building.md), [Where generated systems run](targets.md), [The
-  archogen command line](cli.md), [The engine API](engine-api.md), [Verifying the toolchain](verification.md), [What
-  this project relies on from outside](ledger.md), [What is versioned, and what changing it costs](versions.md), [Annex
-  B: The checks that keep the repository honest](annex-repository.md), [Annex C: Trust proof
-  records](annex-trust-proofs.md)
+- **API** — [definition](glossary.md), [Checking a description](checking.md), [Matching an offer to a
+  requirement](matching.md), [Generated-sources test adequacy](trust-adequacy.md), [The runtime plan: what the generated
+  system is told](runtime-plan.md), [The runtime: decisions, not actions](runtime.md), [Building a system](building.md),
+  [Where generated systems run](targets.md), [The archogen command line](cli.md), [The engine API](engine-api.md),
+  [Verifying the toolchain](verification.md), [What this project relies on from outside](ledger.md), [What is versioned,
+  and what changing it costs](versions.md), [Annex B: The checks that keep the repository honest](annex-repository.md),
+  [Annex C: Trust proof records](annex-trust-proofs.md)
 - application-inputs-format — [What is versioned, and what changing it costs](versions.md#application-inputs-format)
 - Approved disposable fixture verification — [Annex C: Trust proof
   records](annex-trust-proofs.md#approved-disposable-fixture-verification)
@@ -437,11 +437,11 @@ a change that leaves it stale, so it is never edited by hand.
 - Internal NUL argument validation — [Annex C: Trust proof
   records](annex-trust-proofs.md#internal-nul-argument-validation)
 - **interrupt** — [definition](glossary.md), [Introduction](introduction.md), [A tour: from a description to a
-  board](tour.md), [The supported profile](profile.md), [Matching an offer to a requirement](matching.md), [What the
-  scheduling checker establishes](analysis.md), [Where the engine's knowledge comes from: the catalog](catalog.md), [The
-  runtime plan: what the generated system is told](runtime-plan.md), [The runtime: decisions, not actions](runtime.md),
-  [Where generated systems run](targets.md), [The engine API](engine-api.md), [What this project relies on from
-  outside](ledger.md), [Annex A: The runtime's rules in detail](annex-runtime.md)
+  board](tour.md), [The supported profile](profile.md), [Checking a description](checking.md), [Matching an offer to a
+  requirement](matching.md), [What the scheduling checker establishes](analysis.md), [Where the engine's knowledge comes
+  from: the catalog](catalog.md), [The runtime plan: what the generated system is told](runtime-plan.md), [The runtime:
+  decisions, not actions](runtime.md), [Where generated systems run](targets.md), [The engine API](engine-api.md), [What
+  this project relies on from outside](ledger.md), [Annex A: The runtime's rules in detail](annex-runtime.md)
 - **IPC** — [definition](glossary.md), [The supported profile](profile.md)
 - **ISA** — [definition](glossary.md), [What this project relies on from outside](ledger.md)
 - **ISR** — [definition](glossary.md), [The use cases](usecases.md), [What the scheduling checker
@@ -540,6 +540,7 @@ a change that leaves it stale, so it is never edited by hand.
 - Offers — [Matching an offer to a requirement](matching.md#offers)
 - On a real machine: format /2 — [The runtime plan: what the generated system is
   told](runtime-plan.md#on-a-real-machine-format-2)
+- On a target — [Checking a description](checking.md#on-a-target)
 - One device's facts: functions — [Matching an offer to a requirement](matching.md#one-devices-facts-functions)
 - One host — [Checks that must not share a mistake: the trust gate](trust.md#one-host)
 - One operation: check — [The engine API](engine-api.md#one-operation-check)
