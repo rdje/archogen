@@ -5,9 +5,14 @@
 //! when the record and the exit code agree.
 //!
 //! ```text
-//! archogen-plan-check [--profile ID] [--result PATH] [--] DESCRIPTION PLAN
+//! archogen-plan-check [--profile ID] [--target FILE] [--result PATH] [--] DESCRIPTION PLAN
 //! archogen-plan-check --mcp
 //! ```
+//!
+//! `--target FILE` (leaf `M4.1.7.5.4.4`; `DC-H2`) judges a plan of a system on a target, `archogen-assignment/3`, with
+//! the system put on the target the file describes ([`archogen_plan_check::check::plan_file_on_target`]): a file the
+//! system cannot read is a usage error, as an unreadable description is, and the record is the same format, its subject
+//! the program and the plan's bytes, whose `(target …)` check (1) holds to the file. Without it, nothing changes.
 //!
 //! `archogen plan-check` hands its arguments here unparsed, as git hands a command to its sibling, so this is also the
 //! form `ROADMAP.md` §10.2 writes, `archogen plan-check DESCRIPTION PLAN` (leaf `M3.5.1.4.1`); the front, when it runs
@@ -32,25 +37,28 @@ use std::process::ExitCode;
 use archogen_digest::Digest;
 use archogen_outcome::record::{Finding, Producer, Record, Severity};
 use archogen_outcome::Status;
-use archogen_plan_check::judgement::{self, Inputs, Unjudged};
+use archogen_plan_check::judgement::{self, Inputs, TargetFile, Unjudged};
 use archogen_plan_check::mcp::{self, Checker};
 use archogen_plan_check::NAME;
 use eadl_front::module::{DirectoryModules, ModuleSource};
 
 /// How it is called.
 const USAGE: &str =
-    "usage: archogen-plan-check [--profile ID] [--result PATH] [--] DESCRIPTION PLAN
+    "usage: archogen-plan-check [--profile ID] [--target FILE] [--result PATH] [--] DESCRIPTION PLAN
        archogen-plan-check --mcp";
 
 /// What `--help` prints.
 const HELP: &str = "archogen-plan-check — check a resolved plan against its description, apart from the search that \
 wrote it
 
-usage: archogen-plan-check [--profile ID] [--result PATH] [--] DESCRIPTION PLAN
+usage: archogen-plan-check [--profile ID] [--target FILE] [--result PATH] [--] DESCRIPTION PLAN
        archogen-plan-check --mcp
 
   DESCRIPTION      the eADL description, a module or a plain description
-  PLAN             the assignment record the search wrote for it, archogen-assignment/2
+  PLAN             the assignment record the search wrote for it: archogen-assignment/2, or archogen-assignment/3 of a
+                   system on a target, judged with `--target`
+  --target FILE    the target's eADL file the plan was resolved on: its system is put on the target and the plan judged
+                   there. A plan of another target, or of none, is stale-input, as a plan on a target is without it
   --result PATH    where the result record, archogen-result/1, is written; without it, on standard output. It replaces
                    only an empty file or a record this engine reads, and keeps its mode
   --               every argument after it is a path, even one that begins with `-`
@@ -116,13 +124,14 @@ enum Asked {
     Check {
         profile: Option<String>,
         result: Option<PathBuf>,
+        target: Option<PathBuf>,
         description: PathBuf,
         plan: PathBuf,
     },
 }
 
 fn parse(args: &[String]) -> Result<Asked, String> {
-    let (mut profile, mut result, mut serve) = (None, None, false);
+    let (mut profile, mut result, mut target, mut serve) = (None, None, None, false);
     let mut rest = args.iter();
     let mut paths: Vec<&String> = Vec::new();
     while let Some(arg) = rest.next() {
@@ -140,6 +149,7 @@ fn parse(args: &[String]) -> Result<Asked, String> {
             "--mcp" => serve = true,
             "--profile" => value("--profile", &mut profile)?,
             "--result" => value("--result", &mut result)?,
+            "--target" => value("--target", &mut target)?,
             "--" => {
                 paths.extend(rest.by_ref());
                 break;
@@ -153,7 +163,7 @@ fn parse(args: &[String]) -> Result<Asked, String> {
         }
     }
     if serve {
-        return if profile.is_none() && result.is_none() && paths.is_empty() {
+        return if profile.is_none() && result.is_none() && target.is_none() && paths.is_empty() {
             Ok(Asked::Serve)
         } else {
             Err("`--mcp` takes no other argument: the tool's calls carry the texts".to_owned())
@@ -163,6 +173,7 @@ fn parse(args: &[String]) -> Result<Asked, String> {
         [description, plan] => Ok(Asked::Check {
             profile,
             result: result.map(PathBuf::from),
+            target: target.map(PathBuf::from),
             description: PathBuf::from(description),
             plan: PathBuf::from(plan),
         }),
@@ -209,7 +220,7 @@ fn run(
     out: &mut dyn Write,
     err: &mut dyn Write,
 ) -> Status {
-    let (profile, result, description, plan) = match parse(args) {
+    let (profile, result, target, description, plan) = match parse(args) {
         Ok(Asked::Help) => {
             let _ = writeln!(out, "{HELP}");
             return Status::Ok;
@@ -218,8 +229,9 @@ fn run(
             // The formats it reads and writes, and no value compiled in through `env!`, a channel the trust gate refuses.
             let _ = writeln!(
                 out,
-                "{NAME}: reads {}, writes {}",
+                "{NAME}: reads {}, and {} with --target, writes {}",
                 archogen_plan_check::assignment::FORMAT,
+                archogen_plan_check::assignment::FORMAT_3,
                 archogen_outcome::record::FORMAT
             );
             return Status::Ok;
@@ -241,9 +253,10 @@ fn run(
         Ok(Asked::Check {
             profile,
             result,
+            target,
             description,
             plan,
-        }) => (profile, result, description, plan),
+        }) => (profile, result, target, description, plan),
         Err(why) => return refuse(err, Status::Usage, &why),
     };
     let profile = match judgement::profile(profile.as_deref()) {
@@ -286,11 +299,33 @@ fn run(
             )
         }
     };
+    // A target's file, where one is named: one the system cannot read is the invocation's, as an unreadable description is.
+    let target_text = match &target {
+        None => None,
+        Some(file) => match std::fs::read_to_string(file) {
+            Ok(text) => Some(text),
+            Err(error) => {
+                return refuse_with(
+                    err,
+                    Status::Usage,
+                    &format!("cannot read the target {}: {error}", file.display()),
+                    "name a target's file that exists, is UTF-8 text and this user can read",
+                )
+            }
+        },
+    };
     // A stream that read as nothing was given nothing: `archogen plan-check` starts this with no input, so `/dev/stdin` is empty there, which says nothing of what the plan was written from.
+    let target_given = target
+        .as_ref()
+        .zip(target_text.as_deref())
+        .map(|(file, text)| ("target", file, text.is_empty()));
     for (what, given, empty) in [
         ("description", &description, text.is_empty()),
         ("plan", &plan, plan_bytes.is_empty()),
-    ] {
+    ]
+    .into_iter()
+    .chain(target_given)
+    {
         if empty && !std::fs::metadata(given).is_ok_and(|meta| meta.is_file()) {
             return refuse_with(
                 err,
@@ -308,7 +343,8 @@ fn run(
         description.display().to_string(),
         plan.display().to_string(),
     );
-    let judged = judgement::judge(
+    let target_name = target.as_ref().map(|file| file.display().to_string());
+    let judged = judgement::judge_on(
         producer,
         &Inputs {
             description_name: &description_name,
@@ -318,6 +354,10 @@ fn run(
             plan_name: &plan_name,
             plan: &plan_bytes,
         },
+        target_name
+            .as_deref()
+            .zip(target_text.as_deref())
+            .map(|(name, text)| TargetFile { name, text }),
     );
     if let Some((file, error)) = modules.unreadable().first() {
         return refuse_with(
@@ -329,14 +369,11 @@ fn run(
     }
     let record = match judged {
         Ok(record) => record,
-        Err(Unjudged::TooLarge(_)) => {
+        Err(Unjudged::TooLarge(error)) => {
             return refuse(
                 err,
                 Status::Usage,
-                &format!(
-                    "the description {} is too large to address",
-                    description.display()
-                ),
+                &format!("a file is too large to address: {error}"),
             )
         }
         Err(Unjudged::Record(refusal)) => {
@@ -379,9 +416,13 @@ fn run(
         );
         return refused;
     }
+    let on = target
+        .as_ref()
+        .map(|file| format!(" on {}", file.display()))
+        .unwrap_or_default();
     let _ = writeln!(
         err,
-        "{NAME}: {}: {} judged against {}",
+        "{NAME}: {}: {} judged against {}{on}",
         status.slug(),
         plan.display(),
         description.display()

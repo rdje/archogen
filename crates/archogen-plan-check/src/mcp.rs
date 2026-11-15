@@ -3,8 +3,10 @@
 //! shares — one JSON-RPC message per line, both protocol eras, the envelopes. The executable serves it as
 //! `archogen-plan-check --mcp`.
 //!
-//! `plan-check` takes texts, never paths: the description's, each module's it imports and the plan's, under this
-//! checker's own byte budget, [`judgement::BYTES`], which the browser module counts alike. It answers the
+//! `plan-check` takes texts, never paths: the description's, each module's it imports and the plan's, and optionally the
+//! target's file the plan was resolved on, `target`, `{ "text", "name" }` as the generator's server takes it (leaf
+//! `M4.1.7.5.4.4`), judged on it as the executable's `--target` is — all under this checker's own byte budget,
+//! [`judgement::BYTES`], which the browser module counts alike. It answers the
 //! result record the executable writes for the same texts ([`judgement::judge`]): the record's bytes as the one text
 //! block, the same JSON as `structuredContent`, and `isError` unless its status is `ok`, so a client that reads nothing
 //! but `isError` never takes a refusal for a pass. An argument it cannot use, a profile it does not have and texts past
@@ -21,7 +23,7 @@ use archogen_transport::{object, string, text_block, tool_error, Failure, Tools}
 use eadl_front::module::MemoryModules;
 use eadl_model::profile::Profile;
 
-use crate::judgement::{self, Inputs, Unjudged, BYTES, PLAN_NAME};
+use crate::judgement::{self, Inputs, TargetFile, Unjudged, BYTES, PLAN_NAME};
 
 /// The tool's name.
 pub const TOOL: &str = "plan-check";
@@ -33,6 +35,9 @@ pub const LINE_LIMIT: usize = 6 * BYTES + 64 * 1024;
 
 /// How findings name the description when the call names it not.
 const DESCRIPTION_NAME: &str = "description.eadl";
+
+/// How findings name a target's file when the call names it not.
+const TARGET_NAME: &str = "target.eadl";
 
 /// One sentence for a client to hand its model, in `server/discover` and `initialize`.
 const INSTRUCTIONS: &str = "archogen-plan-check checks a resolved plan against its eADL description, apart from the \
@@ -81,8 +86,9 @@ impl Tools for Checker {
         match request(arguments) {
             Ok(request) => self.judge(&request),
             Err(problem) => Ok(tool_error(&format!(
-                "{problem}; `{TOOL}` takes `description` and `plan` (the texts), and optionally `name`, `profile` \
-                 and `modules`, each module's name mapped to its text"
+                "{problem}; `{TOOL}` takes `description` and `plan` (the texts), and optionally `name`, `profile`, \
+                 `modules`, each module's name mapped to its text, and `target`, the target's file the plan was \
+                 resolved on, `{{\"text\": …, \"name\": …}}`, its name optional"
             ))),
         }
     }
@@ -99,12 +105,10 @@ impl Checker {
             plan_name: PLAN_NAME,
             plan: request.plan.as_bytes(),
         };
-        let record = match judgement::judge(self.producer.clone(), &inputs) {
+        let record = match judgement::judge_on(self.producer.clone(), &inputs, request.target) {
             Ok(record) => record,
             Err(Unjudged::TooLarge(error)) => {
-                return Ok(tool_error(&format!(
-                    "the description is too large to read: {error}"
-                )))
+                return Ok(tool_error(&format!("a text is too large to read: {error}")))
             }
             Err(Unjudged::Record(refusal)) => {
                 return Err(Failure::Internal(format!(
@@ -142,6 +146,36 @@ struct Request<'a> {
     plan: &'a str,
     profile: &'static Profile,
     modules: MemoryModules,
+    target: Option<TargetFile<'a>>,
+}
+
+/// The `target` argument (leaf `M4.1.7.5.4.4`; `DC-H2`), the target's file the plan was resolved on — `{ "text", "name" }`,
+/// as the generator's server takes it, its name optional — read, or what is wrong with it.
+fn target(argument: Option<&Value>) -> Result<Option<TargetFile<'_>>, String> {
+    let Some(argument) = argument else {
+        return Ok(None);
+    };
+    let Value::Object(members) = argument else {
+        return Err("`target` is not an object".to_owned());
+    };
+    if let Some((key, _)) = members
+        .iter()
+        .find(|(key, _)| !matches!(key.as_str(), "text" | "name"))
+    {
+        return Err(format!("`target` has no member `{key}`"));
+    }
+    let text = argument
+        .get("text")
+        .and_then(Value::as_str)
+        .ok_or_else(|| {
+            "`target`'s `text`, the target's file, is missing or not a string".to_owned()
+        })?;
+    let name = match argument.get("name") {
+        None => TARGET_NAME,
+        Some(Value::String(name)) => name.as_str(),
+        Some(_) => return Err("`target`'s `name` is not a string".to_owned()),
+    };
+    Ok(Some(TargetFile { name, text }))
 }
 
 /// `plan-check`'s arguments, read, or what is wrong with them.
@@ -152,7 +186,7 @@ fn request(arguments: &Value) -> Result<Request<'_>, String> {
     for (key, _) in members {
         if !matches!(
             key.as_str(),
-            "description" | "plan" | "name" | "profile" | "modules"
+            "description" | "plan" | "name" | "profile" | "modules" | "target"
         ) {
             return Err(format!("there is no argument `{key}`"));
         }
@@ -187,6 +221,8 @@ fn request(arguments: &Value) -> Result<Request<'_>, String> {
         }
         Some(_) => return Err("`modules` is not an object".to_owned()),
     }
+    let target = target(arguments.get("target"))?;
+    texts.extend(target.map(|target| target.text));
     judgement::budget(texts)?;
     Ok(Request {
         name,
@@ -194,6 +230,7 @@ fn request(arguments: &Value) -> Result<Request<'_>, String> {
         plan,
         profile,
         modules,
+        target,
     })
 }
 
@@ -262,6 +299,32 @@ fn schema() -> Value {
                             "additionalProperties",
                             object(vec![("type", string("string"))]),
                         ),
+                    ]),
+                ),
+                (
+                    "target",
+                    object(vec![
+                        ("type", string("object")),
+                        (
+                            "description",
+                            string(
+                                "the target's eADL file the plan was resolved on, archogen-assignment/3: the system is \
+                                 put on it and the plan judged there; a plan of another target, or of none, is \
+                                 stale-input",
+                            ),
+                        ),
+                        (
+                            "properties",
+                            object(vec![
+                                ("text", text("the target's file's text")),
+                                (
+                                    "name",
+                                    text("how findings name the target's file; `target.eadl` when absent"),
+                                ),
+                            ]),
+                        ),
+                        ("required", Value::Array(vec![string("text")])),
+                        ("additionalProperties", Value::Bool(false)),
                     ]),
                 ),
             ]),

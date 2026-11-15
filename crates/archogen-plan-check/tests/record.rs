@@ -662,4 +662,11 @@ fn a_plan_on_a_target_checked_with_no_target_is_stale() {
         "{}",
         verdict.findings[0].message
     );
+    // Its repair offers the way the plan is judged where it was resolved: the target named, `--target FILE` or the MCP
+    // tool's `target`, `record` serving both; and no leaf, the judgement on a target being built.
+    let repair = &verdict.findings[0].repair;
+    assert!(
+        repair.contains("--target FILE") && repair.contains("`target`") && !repair.contains("leaf"),
+        "{repair}"
+    );
 }

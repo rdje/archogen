@@ -86,18 +86,18 @@ pub fn record(
     };
     let assignment = read_record(name, text)?;
     // A plan of a system on a target was resolved for another run than one given no target, and nothing failed
-    // (`docs/decisions/decision_runtime-plan-format-2.md` §1): a record of other inputs, before any judgement. The checker
-    // judges a plan on its target with leaf `M4.1.7.5.4.4`.
+    // (`docs/decisions/decision_runtime-plan-format-2.md` §1): a record of other inputs, before any judgement. A plan on
+    // its target is judged with the target named, by `plan_file_on_target` and `plan_on_target`.
     if let Some((platform, _)) = &assignment.target {
         return Err(refused(
             Status::StaleInput,
             "target",
             format!(
-                "the plan is `{FORMAT_3}`, resolved on the target `{platform}`, and no target is given: resolve again on no \
-                 target"
+                "the plan is `{FORMAT_3}`, resolved on the target `{platform}`, and no target is given: name that target, \
+                 or resolve again on none"
             ),
-            "resolve again without `--target`: this checker judges a plan on a target with the target named, task-tree \
-             leaf M4.1.7.5.4.4 (docs/TASK_TREE.md)",
+            "name the target the plan was resolved on, `--target FILE` to the executable or the MCP tool's `target` \
+             argument, to judge it there; or resolve again without a target",
         ));
     }
     of_these_inputs(program, profile, name, text, assignment)
@@ -122,6 +122,29 @@ pub fn record_on_target(
     name: &str,
     text: &str,
 ) -> Result<Assignment, Verdict> {
+    let assignment = read_record(name, text)?;
+    of_the_target(
+        name,
+        text,
+        &assignment,
+        Some(&target.platform),
+        &target.digest(),
+        &target.platform,
+    )?;
+    of_these_inputs(program, profile, name, text, assignment)
+}
+
+/// Check (1)'s target (`docs/decisions/decision_runtime-plan-format-2.md` §1): the record is `archogen-assignment/3`, of
+/// the platform `platform` where one is given, and its digest is `digest`, else a record of other inputs, `stale-input`
+/// and [`PLAN_STALE`]. `shown` names the target given in the message.
+fn of_the_target(
+    name: &str,
+    text: &str,
+    assignment: &Assignment,
+    platform: Option<&str>,
+    digest: &str,
+    shown: &str,
+) -> Result<(), Verdict> {
     let refused = |line_of: &str, message: String| {
         refused(
             name,
@@ -132,40 +155,29 @@ pub fn record_on_target(
             "resolve again: the plan was resolved for another run, and nothing failed",
         )
     };
-    let assignment = read_record(name, text)?;
-    let given = &target.platform;
-    let digest = target.digest();
     match &assignment.target {
-        None => {
-            return Err(refused(
-                "format",
-                format!(
-                    "the plan is `{FORMAT}`, resolved on no target, and the target `{given}` is given: resolve again on \
-                     it"
-                ),
-            ))
-        }
-        Some((platform, _)) if platform != given => {
-            return Err(refused(
-                "target",
-                format!(
-                    "the plan was resolved on the target `{platform}`, and the target given is `{given}`: resolve again \
-                     on it"
-                ),
-            ))
-        }
-        Some((_, written)) if *written != digest => {
-            return Err(refused(
-                "target",
-                format!(
-                    "the plan was resolved on another file of the target `{given}`: its digest is {written}, the given \
-                     file's is {digest}"
-                ),
-            ))
-        }
-        Some(_) => {}
+        None => Err(refused(
+            "format",
+            format!(
+                "the plan is `{FORMAT}`, resolved on no target, and the target `{shown}` is given: resolve again on it"
+            ),
+        )),
+        Some((written, _)) if platform.is_some_and(|given| given != written) => Err(refused(
+            "target",
+            format!(
+                "the plan was resolved on the target `{written}`, and the target given is `{shown}`: resolve again on \
+                 it"
+            ),
+        )),
+        Some((_, written)) if written != digest => Err(refused(
+            "target",
+            format!(
+                "the plan was resolved on another file of a target than `{shown}`: its digest is {written}, the given \
+                 file's is {digest}"
+            ),
+        )),
+        Some(_) => Ok(()),
     }
-    of_these_inputs(program, profile, name, text, assignment)
 }
 
 /// A refusal of check (1), one finding at the record's clause `line_of`: [`PLAN_STALE`] for `stale-input`, else
@@ -405,6 +417,102 @@ pub fn plan_file(
         let assignment = record(&program, profile, name, text)?;
         judged(sources, &program, &all, &outcome)?;
         bound(sources, &program, profile, name, text, &assignment)
+    })();
+    (program, verdict)
+}
+
+/// Every check over one plan of a system on a target, as the executable and the MCP tool read one given a target (leaf
+/// `M4.1.7.5.4.4`; `DC-H2`): the description the file `id` of `sources` holds, read as [`plan_file`] reads it, and the
+/// target's file `target`, both in `sources`. The refusals come in the order
+/// `docs/decisions/decision_runtime-plan-format-2.md` §1's "The checker" gives: a file that does not read — the
+/// description's, which does not read or does not elaborate, then the target's, which does not read as forms — each
+/// under its own status; then a record of other inputs, `stale-input` ([`record_on_target`]'s, the target compared by its
+/// digest alone, which its forms decide, so before the file is read as a target); then, in the judgement, the target's
+/// own refusals ([`Target::of`]), a record naming another platform than the file whose digest it writes being a corrupted
+/// plan, the system put on the target ([`on_target`]), and checks (2) to (5) as [`plan_on_target`] runs them. `text` is
+/// the record `name` names. Returns the program the description became, as far as it did — the result record's subject
+/// — with the verdict.
+pub fn plan_file_on_target(
+    sources: &mut SourceMap,
+    id: SourceId,
+    target: SourceId,
+    modules: &dyn ModuleSource,
+    profile: &Profile,
+    name: &str,
+    text: &str,
+) -> (Program, Result<(), Verdict>) {
+    let refused_by = |sources: &SourceMap, diagnostics: &eadl_front::Diagnostics| {
+        let verdict = diagnostics
+            .items()
+            .iter()
+            .map(|d| Concluded::of_code(d.code))
+            .max_by_key(|v| v.precedence())
+            .unwrap_or(Concluded::InvalidDescription);
+        Verdict {
+            status: status_of(verdict),
+            findings: diagnostics
+                .items()
+                .iter()
+                .map(|d| finding(sources, d))
+                .collect(),
+        }
+    };
+    let (document, read) = eadl_front::read(sources, id);
+    let program = if document
+        .forms
+        .iter()
+        .any(|form| form.head() == Some("defmodule"))
+    {
+        let (program, diagnostics) = elaborate_source(sources, modules, id);
+        if diagnostics.has_errors() {
+            let refused = refused_by(sources, &diagnostics);
+            return (program, Err(refused));
+        }
+        program
+    } else {
+        let program = plain(document.declarations().cloned().collect());
+        if read.has_errors() {
+            return (program, Err(refused_by(sources, &read)));
+        }
+        program
+    };
+    let sources: &SourceMap = sources;
+    let verdict = (|| {
+        let forms = crate::target::forms(sources, target)?;
+        let shown = sources
+            .get(target)
+            .map_or_else(String::new, |source| eadl_front::fit_name(&source.name));
+        let assignment = read_record(name, text)?;
+        of_the_target(
+            name,
+            text,
+            &assignment,
+            None,
+            &crate::target::digest(&forms),
+            &shown,
+        )?;
+        let assignment = of_these_inputs(&program, profile, name, text, assignment)?;
+        let target = Target::of(sources, target, forms)?;
+        if let Some((platform, _)) = assignment
+            .target
+            .as_ref()
+            .filter(|(platform, _)| *platform != target.platform)
+        {
+            return Err(refused(
+                name,
+                text,
+                Status::ToolFailure,
+                "target",
+                format!(
+                    "the plan names the target `{platform}` beside the digest of a file whose one platform is `{}`",
+                    target.platform
+                ),
+                "write the plan again with `archogen resolve`: this record is not one it writes",
+            ));
+        }
+        let on = on_target(sources, &program, &assignment.system, &target)?;
+        description(sources, &on.program, profile)?;
+        bound(sources, &on.program, profile, name, text, &assignment)
     })();
     (program, verdict)
 }

@@ -130,9 +130,8 @@ fn scratch(case: &str) -> PathBuf {
     dir
 }
 
-/// `resolve --target` writes the search's plan on the target, `archogen-assignment/3`, its release requester bound to the machine's
-/// timer (leaf `M4.1.7.5.3`); the checker reads that format with `M4.1.7.5.4`, so until then it is asked `--unchecked`, and refused
-/// without, naming that leaf.
+/// `resolve --target --unchecked` writes the search's plan on the target, `archogen-assignment/3`, its release requester bound to the
+/// machine's timer (leaf `M4.1.7.5.3`); checked, the checker reads it on the target (`M4.1.7.5.4.4`, `tests/resolve.rs`).
 #[test]
 fn resolve_on_a_target_writes_the_plan_there() {
     let dir = scratch("resolve");
@@ -155,21 +154,6 @@ fn resolve_on_a_target_writes_the_plan_there() {
     assert!(
         written.contains("(bind (release heartbeat) relative-delay target.timer)"),
         "{written}"
-    );
-    let checked = dir.join("checked.eadl");
-    let (status, _, err) = invoke(&[
-        "resolve",
-        &at_root("examples/s0-heartbeat/system.eadl"),
-        "--target",
-        &at_root(TARGET),
-        "--out",
-        &checked.display().to_string(),
-    ]);
-    assert_eq!(status, Status::Unimplemented, "{err}");
-    assert!(err.contains("M4.1.7.5.4"), "{err}");
-    assert!(
-        !checked.exists(),
-        "nothing is written for a plan nothing could check"
     );
 }
 

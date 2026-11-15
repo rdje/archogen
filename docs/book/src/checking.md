@@ -295,8 +295,8 @@ The verdict of every tracked description on the shipped target is frozen beside 
 `crates/archogen-cli/tests/verdicts-on-riscv-virt-up.txt`, and the command says on each what the engine API says with
 the target in its request (`crates/archogen-cli/tests/api_parity.rs`). `resolve --target` and
 `explain --target` search the system on the target (leaf `M4.1.7.5.3`), `resolve` writing the plan
-`archogen-assignment/3`; the configuration checker reads that format with `M4.1.7.5.4`, so until then the plan on a
-target is asked `--unchecked`. `build` on a target lowers format `/2`, `M4.1.7.6` and after.
+`archogen-assignment/3`, which the configuration checker judges on the same target, handed it with `--target`
+(leaf `M4.1.7.5.4.4`). `build` on a target lowers format `/2`, `M4.1.7.6` and after.
 
 ### The semantic corpus
 

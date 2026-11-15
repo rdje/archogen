@@ -86,8 +86,10 @@ the step its compare matches on and how it reads a value as due. Every plan the 
 over every tracked description `check` admits there, is one this accepts, which `crates/eadl-resolve/tests/target_parity.rs`
 holds — and its first run found a second sentence read two ways: "another system, but for one it names", which the
 checker took for one the system names itself, so a system its services name was dropped and their `uses` dangled.
-The record now says "itself or through a service or a policy it reaches". `--target` offers all of it with
-`M4.1.7.5.4.4`.
+The record now says "itself or through a service or a policy it reaches". `--target FILE` offers all of it, leaf
+`M4.1.7.5.4.4` (`archogen_plan_check::check::plan_file_on_target`): the checker reads the target itself, judges the plan
+on it, and writes the same result record — which names the description and the plan it judged, never the target,
+since the plan names the target's fingerprint and that is checked first.
 
 ### The checks, in order
 
@@ -95,8 +97,8 @@ The record now says "itself or through a service or a policy it reaches". `--tar
    twice, or naming a profile or system that is not this one, is refused. A fingerprint that is not this
    description's is a **stale plan**: the description changed after the plan was made. That is not a mistake of the
    toolchain, so it gets a status of its own, `stale-input`, and the advice is to resolve again. So is a plan made on a
-   target and checked with none: it was resolved for another run. The checker judges a plan on its target with the
-   target named, leaf `M4.1.7.5.4.4`; until then every plan on a target is refused so.
+   target and checked with none: it was resolved for another run, and so is one checked on a target whose fingerprint
+   is not the one it names. A plan on a target is judged with that target named, `--target FILE`.
 2. **The description is checked again.** The checker runs the language's own checks over the description, with the
    language definition compiled into the checker, and adds a few rules about providers that only a planner meets: a
    timer offering a channel-taking function while declaring no channel, a memory region that does not read, memory
@@ -159,7 +161,7 @@ which `archogen plan-check` runs, handing over its arguments as they are and giv
 
 ```text
 archogen plan-check examples/periodic-three/system.eadl build/plan.json
-archogen-plan-check [--profile ID] [--result PATH] [--] DESCRIPTION PLAN
+archogen-plan-check [--profile ID] [--result PATH] [--target FILE] [--] DESCRIPTION PLAN
 ```
 
 It reads the description — a module, whose imports it finds in the module's directory, or a plain description — and
@@ -169,7 +171,9 @@ keeping its mode: anything else there, the description or the plan among them, i
 a dash. The record names the program that ran, by its name and the fingerprint of its own file, and what
 it judged: the fingerprint of the program the description became and of the plan. So whoever started it — `archogen`,
 a script, a CI job — accepts a result only when the record and the exit code agree. A call it cannot take, or a file it
-cannot read, writes no record and exits `2`: nothing was judged.
+cannot read, writes no record and exits `2`: nothing was judged. `--target FILE` names the target a plan of
+`archogen-assignment/3` was resolved on; it is a file of the description's language, read as the target and nothing
+else, and named once.
 
 A plain description, a file of declarations with no `defmodule`, is read as one module of its own for the plan's
 fingerprint; so a plan names it as surely as a module.
@@ -186,8 +190,8 @@ archogen-plan-check --mcp
 ```
 
 The tool takes **texts, never paths**: `description` and `plan`, and optionally `name` (how findings name the
-description, `description.eadl` when absent), `profile`, and `modules`, each module the description imports mapped to
-its text. Findings name the plan `plan.json`. It answers the **result record** itself: the record's bytes as the one
+description, `description.eadl` when absent), `profile`, `modules`, each module the description imports mapped to
+its text, and `target`, a target's `text` and the `name` its findings give it, for a plan resolved on that target. Findings name the plan `plan.json`. It answers the **result record** itself: the record's bytes as the one
 text block, the same JSON as the structured content, and `isError` unless the status is `ok` — so a client that reads
 nothing but `isError` never takes a refusal for a pass. It is the record the executable writes for files holding the
 same texts, byte for byte, naming the same program, the file that runs.

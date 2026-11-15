@@ -442,7 +442,8 @@ fn help_and_version_answer_and_exit_zero() {
     assert_eq!(version.status.code(), Some(0));
     assert_eq!(
         String::from_utf8_lossy(&version.stdout),
-        "archogen-plan-check: reads archogen-assignment/2, writes archogen-result/1\n"
+        "archogen-plan-check: reads archogen-assignment/2, and archogen-assignment/3 with --target, writes \
+         archogen-result/1\n"
     );
 }
 

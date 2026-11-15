@@ -659,6 +659,7 @@ impl Build<'_> {
             program,
             plan_sha256: Digest::of(self.plan.text.as_bytes()),
             profile,
+            target: None,
         };
         let ran = &self.written.checker_ran;
         let checked =

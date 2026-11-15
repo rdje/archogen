@@ -33,7 +33,7 @@ USAGE:
 
 COMMANDS:
     check       elaborate and type-check a description against a profile
-    resolve     resolve providers and resources into an independently checked build plan   [experimental — one system of a description, over its own blocks and platforms; completed by leaf M3.7]
+    resolve     resolve providers and resources into an independently checked build plan   [experimental — one system of a description, over its own blocks and platforms or a target's; completed by leaf M3.7]
     plan-check  check a resolved plan against its description, by the independent configuration checker
     build       generate, assemble and build a complete system and its simulator   [experimental — the hosted playground: the plan's releases run, and no job holds application code; completed by leaf M4.13]
     analyze     run an analysis for one named property over a build   [unimplemented — tracked by leaf M2.21.2]
@@ -50,8 +50,8 @@ COMMANDS:
 | Command | Does | Built by |
 | --- | --- | --- |
 | `archogen check <DESCRIPTION> [--profile <PROFILE>] [--target <FILE>]` | elaborate and type-check a description against a profile | **built** — a description is one file or a module tree; `--target` judges its systems on a machine (leaf `M4.1.7.4.2.1`); see [Checking a description](checking.md#on-a-target) and [Modules and composition](modules.md) |
-| `archogen resolve <DESCRIPTION> [--profile <P>] [--locked] --out <PLAN> [--unchecked] [--system <NAME>] [--target <FILE>]` | resolve providers and resources into an independently checked build plan | **experimental** — one system of a description, a module tree among them, over its own blocks and platforms, the plan checked by `archogen-plan-check`; `--locked` refused until `M4.7`; `M3.7` adds the catalog's providers, completing it |
-| `archogen plan-check <DESCRIPTION> <PLAN>` | check a resolved plan against its description, by the independent configuration checker | **built** — runs the configuration checker's own executable, `archogen-plan-check`, from an install, its arguments handed over unparsed; see [Checking a plan](plan-check.md) |
+| `archogen resolve <DESCRIPTION> [--profile <P>] [--locked] --out <PLAN> [--unchecked] [--system <NAME>] [--target <FILE>]` | resolve providers and resources into an independently checked build plan | **experimental** — one system of a description, a module tree among them, over its own blocks and platforms or a target's, the plan checked by `archogen-plan-check` — on a target with that target, `--target` (leaf `M4.1.7.5.4.4`); `--locked` refused until `M4.7`; `M3.7` adds the catalog's providers, completing it |
+| `archogen plan-check <DESCRIPTION> <PLAN> [--target <FILE>]` | check a resolved plan against its description, by the independent configuration checker | **built** — runs the configuration checker's own executable, `archogen-plan-check`, from an install, its arguments handed over unparsed; see [Checking a plan](plan-check.md) |
 | `archogen build <DESCRIPTION> [--profile <P>] --out <DIR> [--system <NAME>]` | generate, assemble and build a complete system and its simulator | **experimental** — the hosted playground, see [Building a system](building.md); leaf `M4.13` completes it |
 | `archogen analyze <BUILD> --property <PROPERTY>` | run an analysis for one named property | leaf `M2.21.2` |
 | `archogen verify <BUILD> --tier <TIER>` | run a verification tier | leaf `M4.11` |
@@ -108,7 +108,7 @@ by a program that shares none of its code; with `--unchecked` it writes the plan
 ```console
 $ archogen resolve system.eadl --out plan.json --unchecked
 system.eadl: resolved system `heartbeat` against profile `rt-static-up-v1` into plan.json (1 binding(s))
-  experimental: one system of a description, over its own blocks and platforms; completed by M3.7
+  experimental: one system of a description, over its own blocks and platforms or a target's; completed by M3.7
 archogen: unchecked: `--unchecked` — the plan was not checked by `archogen-plan-check`; nothing independent judged it
 $ cat plan.json
 (format "archogen-assignment/2")

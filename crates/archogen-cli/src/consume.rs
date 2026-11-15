@@ -61,6 +61,9 @@ pub struct Expected<'a> {
     pub plan_sha256: Digest,
     /// The profile the plan was resolved under.
     pub profile: &'a str,
+    /// The target the plan was resolved on, which the checker reads itself (`DC-H2`; leaf `M4.1.7.5.4.4`); none for a plan on
+    /// the description's own hardware.
+    pub target: Option<&'a Path>,
 }
 
 /// What the front believes of one run of the checker.
@@ -119,15 +122,24 @@ pub fn check_plan(
         reads_again(sources)?;
     }
     let plan = absolute(expected.plan, "the plan")?;
-    let args: Vec<String> = vec![
+    let mut args: Vec<String> = vec![
         "--profile".to_owned(),
         expected.profile.to_owned(),
         "--result".to_owned(),
         record_file.to_string_lossy().into_owned(),
-        "--".to_owned(),
-        description.to_string_lossy().into_owned(),
-        plan.to_string_lossy().into_owned(),
     ];
+    // The checker reads the target itself, by a reader of its own (`DC-H2`), from the file the front was given.
+    if let Some(target) = expected.target {
+        args.push("--target".to_owned());
+        args.push(
+            absolute(target, "the target")?
+                .to_string_lossy()
+                .into_owned(),
+        );
+    }
+    args.push("--".to_owned());
+    args.push(description.to_string_lossy().into_owned());
+    args.push(plan.to_string_lossy().into_owned());
     let launched = launcher
         .launch(PLAN_CHECKER, &args, &mut std::io::sink(), err)
         .map_err(|unlaunched| failure(unlaunched.message, unlaunched.repair))?;
@@ -572,6 +584,7 @@ mod tests {
                 program: Digest::of(b"another"),
                 plan_sha256: Digest::of(b"another"),
                 profile: "rt-static-up-v1",
+                target: None,
             },
             &dir,
             &ran,

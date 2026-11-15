@@ -50,22 +50,6 @@ pub fn run(
         .expect("the parser guarantees `--out` is required");
     let target = parsed.value("target");
     let refuse_locked = |err: &mut dyn Write| -> Option<Status> {
-        // The configuration checker reads a plan on a target with leaf `M4.1.7.5.4`; until then a plan on one is written
-        // unchecked alone, which the user says, never checked by a checker that cannot read it.
-        if target.is_some() && !parsed.flag("unchecked") {
-            let _ = writeln!(
-                err,
-                "archogen: {}: checking a plan on a target is not built yet",
-                Status::Unimplemented.slug()
-            );
-            let _ = writeln!(
-                err,
-                "  hint: the configuration checker reads `archogen-assignment/3` with task-tree leaf M4.1.7.5.4 \
-                 (docs/TASK_TREE.md); until then ask with `--unchecked` for the search's plan on the target, which \
-                 nothing independent has judged"
-            );
-            return Some(Status::Unimplemented);
-        }
         if !parsed.flag("locked") {
             return None;
         }
@@ -207,6 +191,7 @@ pub fn run(
         program,
         plan_sha256: Digest::of(plan.text.as_bytes()),
         profile,
+        target: target.map(Path::new),
     };
     let record_file = landing.check.join(consume::RECORD);
     let record_in_stage = landing.stage.join(consume::RECORD);

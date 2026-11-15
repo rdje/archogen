@@ -148,6 +148,7 @@ impl Case {
             program: self.program,
             plan_sha256: self.plan,
             profile: "rt-static-up-v1",
+            target: None,
         };
         let mut err = Vec::new();
         let ran = std::cell::Cell::new(false);

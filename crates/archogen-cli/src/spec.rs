@@ -231,7 +231,7 @@ pub const COMMANDS: &[CommandSpec] = &[
         // MCP server unchecked (`M3.4.6`), a module tree's among them (`M3.4.10`); the catalog's providers, `M3.7`'s,
         // complete it.
         maturity: Maturity::Experimental {
-            scope: "one system of a description, over its own blocks and platforms",
+            scope: "one system of a description, over its own blocks and platforms or a target's",
             completed_by: "M3.7",
         },
         exposure: Exposure::Tool,

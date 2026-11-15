@@ -164,8 +164,8 @@ impl Launch for Checker {
                 })
             }
         };
-        // `--profile P --result R -- DESCRIPTION PLAN`, as the front hands them over.
-        let (profile, result, plan) = (&args[1], &args[3], &args[6]);
+        // `--profile P --result R [--target T] -- DESCRIPTION PLAN`, as the front hands them over: the plan last.
+        let (profile, result, plan) = (&args[1], &args[3], args.last().expect("the plan"));
         let text = std::fs::read_to_string(plan).expect("the plan the front wrote");
         let program = text
             .lines()
@@ -307,6 +307,58 @@ fn a_resolved_plan_is_checked_and_the_checker_s_verdict_is_the_status() {
     assert_eq!(asked[0][0..2], ["--profile", "rt-static-up-v1"]);
     assert!(
         asked[0][3].ends_with("plan.json.part/plan-check.json"),
+        "{:?}",
+        asked[0]
+    );
+}
+
+/// A plan on a target is checked on it (leaf `M4.1.7.5.4.4`): the front hands the checker `--target` and the target's file, before
+/// the description and the plan, and writes `archogen-assignment/3`, which lands on the checker's acceptance.
+#[test]
+fn a_plan_on_a_target_is_checked_with_the_target() {
+    let dir = scratch();
+    let plan = dir.join("plan.eadl");
+    let target = root().join("targets/riscv-virt-up.eadl");
+    let checker = Checker::answering(Answer::Record(Status::Ok));
+    let (status, out, err) = resolve(
+        &[
+            &heartbeat(),
+            "--out",
+            plan.to_str().unwrap(),
+            "--target",
+            target.to_str().unwrap(),
+        ],
+        &checker,
+    );
+    assert_eq!(status, Status::Ok, "{err}");
+    let text = std::fs::read_to_string(&plan).expect("the plan lands");
+    assert!(
+        text.starts_with("(format \"archogen-assignment/3\")"),
+        "{text}"
+    );
+    assert!(
+        text.contains("(bind (release heartbeat) relative-delay target.timer)"),
+        "{text}"
+    );
+    assert!(
+        out.contains("checked by `archogen-plan-check`: accepted"),
+        "{out}"
+    );
+    let asked = checker.asked.borrow();
+    assert_eq!(asked.len(), 1);
+    let at = asked[0]
+        .iter()
+        .position(|a| a == "--target")
+        .expect("the target handed over");
+    assert_eq!(
+        Path::new(&asked[0][at + 1]),
+        target.canonicalize().expect("the target").as_path()
+    );
+    assert!(
+        at < asked[0]
+            .iter()
+            .position(|a| a == "--")
+            .expect("the separator"),
         "{:?}",
         asked[0]
     );

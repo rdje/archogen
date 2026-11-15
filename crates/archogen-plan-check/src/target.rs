@@ -125,24 +125,17 @@ impl Target {
     /// declaration; `schema-missing-name` for a declaration with no name; `schema-duplicate-name` for a name declared
     /// twice.
     pub fn read(sources: &SourceMap, id: SourceId) -> Result<Self, Verdict> {
-        let (document, diagnostics) = eadl_front::read(sources, id);
-        if diagnostics.has_errors() {
-            let verdict = diagnostics
-                .items()
-                .iter()
-                .map(|d| Concluded::of_code(d.code))
-                .max_by_key(|v| v.precedence())
-                .unwrap_or(Concluded::InvalidDescription);
-            return Err(Verdict {
-                status: status_of(verdict),
-                findings: diagnostics
-                    .items()
-                    .iter()
-                    .map(|d| finding(sources, d))
-                    .collect(),
-            });
-        }
-        let declarations: Vec<Form> = document.declarations().cloned().collect();
+        Self::of(sources, id, forms(sources, id)?)
+    }
+
+    /// The target the forms `declarations` of the file `id` of `sources` are — its forms as [`forms`] reads them, the
+    /// language-version identifier aside — by the record's *What a target's file is* and the rows of its table a target's
+    /// own file answers, as [`Target::read`] judges them once the file reads.
+    ///
+    /// # Errors
+    ///
+    /// As [`Target::read`]'s, a file that does not read apart.
+    pub fn of(sources: &SourceMap, id: SourceId, declarations: Vec<Form>) -> Result<Self, Verdict> {
         let mut refusals = Vec::new();
         let platform = judge(id, &declarations, &mut refusals);
         match platform {
@@ -185,8 +178,44 @@ impl Target {
     /// §1, "The target in the identity"), the language-version identifier aside, so a comment moves it not.
     #[must_use]
     pub fn digest(&self) -> String {
-        program_digest(&plain(self.declarations.clone()))
+        digest(&self.declarations)
     }
+}
+
+/// The forms of a target's file `id` of `sources`, the language-version identifier aside: what its digest is of, read
+/// before anything of the record's is asked of them.
+///
+/// # Errors
+///
+/// A file that does not read, refused by the reader's own diagnostics under the most severe verdict they carry.
+pub fn forms(sources: &SourceMap, id: SourceId) -> Result<Vec<Form>, Verdict> {
+    let (document, diagnostics) = eadl_front::read(sources, id);
+    if diagnostics.has_errors() {
+        let verdict = diagnostics
+            .items()
+            .iter()
+            .map(|d| Concluded::of_code(d.code))
+            .max_by_key(|v| v.precedence())
+            .unwrap_or(Concluded::InvalidDescription);
+        return Err(Verdict {
+            status: status_of(verdict),
+            findings: diagnostics
+                .items()
+                .iter()
+                .map(|d| finding(sources, d))
+                .collect(),
+        });
+    }
+    Ok(document.declarations().cloned().collect())
+}
+
+/// The digest a plan on a target writes in `(target NAME "HEX")`, of a target's file's forms `declarations` — the
+/// language-version identifier aside: the sha256 of their program text, as [`crate::assignment::program_text`] writes a
+/// plain program's (`docs/decisions/decision_runtime-plan-format-2.md` §1, "The target in the identity"). So a comment
+/// moves it not, and a file's forms alone decide it — its one platform among them, where it reads as a target.
+#[must_use]
+pub fn digest(declarations: &[Form]) -> String {
+    program_digest(&plain(declarations.to_vec()))
 }
 
 /// One system of a description put on a target (the record's rule 1): the system with the target's platform in its

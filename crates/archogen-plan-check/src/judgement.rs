@@ -78,10 +78,20 @@ pub struct Inputs<'a> {
 /// Why a judgement made no record.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum Unjudged {
-    /// The description is larger than a span can address: nothing was judged.
+    /// The description, or a target's file given beside it, is larger than a span can address, the error naming which:
+    /// nothing was judged.
     TooLarge(SourceError),
     /// The verdict does not make a record: the checker's own failure.
     Record(Refusal),
+}
+
+/// A target's file given beside a judgement (leaf `M4.1.7.5.4.4`; `DC-H2`): how findings name it, and its text.
+#[derive(Clone, Copy)]
+pub struct TargetFile<'a> {
+    /// How findings name the target's file.
+    pub name: &'a str,
+    /// Its text.
+    pub text: &'a str,
 }
 
 /// Judge `inputs`, the record naming `producer` as the program that ran.
@@ -90,19 +100,52 @@ pub enum Unjudged {
 ///
 /// [`Unjudged`]: a description too large to read, or a verdict that does not make a record.
 pub fn judge(producer: Producer, inputs: &Inputs<'_>) -> Result<Record, Unjudged> {
+    judge_on(producer, inputs, None)
+}
+
+/// Judge `inputs` on `target` where one is given ([`check::plan_file_on_target`]), else as [`judge`] does
+/// ([`check::plan_file`]), the record naming `producer` as the program that ran. The record's format is the same either
+/// way: its subject is the program the description became and the plan's bytes, whose `(target NAME "SHA256")` check (1)
+/// holds to the target's file.
+///
+/// # Errors
+///
+/// [`Unjudged`]: a description or a target's file too large to read, the error naming which, or a verdict that does not
+/// make a record.
+pub fn judge_on(
+    producer: Producer,
+    inputs: &Inputs<'_>,
+    target: Option<TargetFile<'_>>,
+) -> Result<Record, Unjudged> {
     let mut sources = SourceMap::new();
     let id = sources
         .add(inputs.description_name, inputs.description)
         .map_err(Unjudged::TooLarge)?;
     let plan_text = String::from_utf8_lossy(inputs.plan);
-    let (program, verdict) = check::plan_file(
-        &mut sources,
-        id,
-        inputs.modules,
-        inputs.profile,
-        inputs.plan_name,
-        &plan_text,
-    );
+    let (program, verdict) = match target {
+        None => check::plan_file(
+            &mut sources,
+            id,
+            inputs.modules,
+            inputs.profile,
+            inputs.plan_name,
+            &plan_text,
+        ),
+        Some(target) => {
+            let target = sources
+                .add(target.name, target.text)
+                .map_err(Unjudged::TooLarge)?;
+            check::plan_file_on_target(
+                &mut sources,
+                id,
+                target,
+                inputs.modules,
+                inputs.profile,
+                inputs.plan_name,
+                &plan_text,
+            )
+        }
+    };
     let (status, findings) = match verdict {
         Ok(()) => (Status::Ok, Vec::new()),
         Err(refused) => (refused.status, refused.findings),

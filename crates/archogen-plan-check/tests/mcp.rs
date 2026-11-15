@@ -192,7 +192,17 @@ fn the_one_tool_takes_texts_and_is_read_only() {
         panic!("properties");
     };
     let names: Vec<&str> = properties.iter().map(|(name, _)| name.as_str()).collect();
-    assert_eq!(names, ["description", "plan", "name", "profile", "modules"]);
+    assert_eq!(
+        names,
+        [
+            "description",
+            "plan",
+            "name",
+            "profile",
+            "modules",
+            "target"
+        ]
+    );
     assert_eq!(
         schema.get("additionalProperties"),
         Some(&Value::Bool(false))
@@ -316,6 +326,148 @@ fn a_stale_and_a_corrupted_plan_are_errors_carrying_their_records() {
         (record.status(), record.findings()[0].code.as_str()),
         (Status::ToolFailure, PLAN_UNSATISFIED)
     );
+}
+
+/// A file of the repository, read from its root.
+fn repository(file: &str) -> String {
+    std::fs::read_to_string(
+        Path::new(env!("CARGO_MANIFEST_DIR"))
+            .join("../..")
+            .join(file),
+    )
+    .unwrap_or_else(|e| panic!("{file} reads: {e}"))
+}
+
+/// The S0 heartbeat's `/3` plan on the target `target`, written by hand from the format and the rules: the console, and
+/// the release requester's eight facts at the timer (leaf `M4.1.7.5.4.3`).
+fn plan_on(description: &str, target: &str) -> String {
+    let mut sources = SourceMap::new();
+    let id = sources.add("description.eadl", description).unwrap();
+    let program = plan_file(
+        &mut sources,
+        id,
+        &MemoryModules::new(),
+        &RT_STATIC_UP_V1,
+        "plan.json",
+        "",
+    )
+    .0;
+    let id = sources.add("target.eadl", target).unwrap();
+    let (document, _) = eadl_front::read(&sources, id);
+    let digest =
+        archogen_plan_check::target::digest(&document.declarations().cloned().collect::<Vec<_>>());
+    let mut text = format!(
+        "(format \"archogen-assignment/3\")\n(profile rt-static-up-v1)\n(system heartbeat)\n(program \"{}\")\n\
+         (target target.riscv-virt-up \"{digest}\")\n(adapters adapters/1)\n(placement target.riscv-virt-up target.ram)\n\
+         (bind console.write observable-output target.console)\n",
+        program_digest(&program)
+    );
+    for fact in [
+        "alarm-kind",
+        "alarm-wiring",
+        "counter-modulus",
+        "observation-coherent",
+        "relative-delay",
+        "supported-horizon",
+        "tick-rate",
+        "unambiguous-horizon",
+    ] {
+        text.push_str(&format!("(bind (release heartbeat) {fact} target.timer)\n"));
+    }
+    text
+}
+
+/// The `target` argument: an object of the file's text, and its name where one is given.
+fn target(text: &str, name: Option<&str>) -> Value {
+    let mut members = vec![("text".to_owned(), Value::String(text.to_owned()))];
+    if let Some(name) = name {
+        members.push(("name".to_owned(), Value::String(name.to_owned())));
+    }
+    Value::Object(members)
+}
+
+#[test]
+fn a_plan_on_a_target_is_judged_with_the_target_given() {
+    let description = repository("examples/s0-heartbeat/system.eadl");
+    let shipped = repository("targets/riscv-virt-up.eadl");
+    let plan_text = plan_on(&description, &shipped);
+    for name in [None, Some("riscv-virt-up.eadl")] {
+        let record = record_of(&call(&arguments(
+            &description,
+            &plan_text,
+            vec![("target", target(&shipped, name))],
+        )));
+        assert!(record.accepts(), "{name:?}: {:?}", record.findings());
+        assert_eq!(
+            record.subject().judged,
+            Judged::Plan(Digest::of(plan_text.as_bytes()))
+        );
+    }
+    // With no target, the same plan is a record of other inputs.
+    let record = record_of(&call(&arguments(&description, &plan_text, vec![])));
+    assert_eq!(record.status(), Status::StaleInput);
+    assert_eq!(record.findings()[0].code, PLAN_STALE);
+    // A target file that does not read is refused under its own status, naming the file.
+    let record = record_of(&call(&arguments(
+        &description,
+        &plan_text,
+        vec![("target", target("(defblock t", Some("broken.eadl")))],
+    )));
+    assert_eq!(record.status(), Status::InvalidDescription);
+    assert!(
+        record
+            .findings()
+            .iter()
+            .any(|f| f.code == "read-unclosed-list" && f.primary.source == "broken.eadl"),
+        "{:?}",
+        record.findings()
+    );
+}
+
+#[test]
+fn a_malformed_target_argument_is_a_tool_error_and_judges_nothing() {
+    let description = repository("examples/s0-heartbeat/system.eadl");
+    let shipped = repository("targets/riscv-virt-up.eadl");
+    let plan_text = plan_on(&description, &shipped);
+    for (case, value, says) in [
+        (
+            "a string for the object",
+            Value::String(shipped.clone()),
+            "`target` is not an object",
+        ),
+        (
+            "no text",
+            Value::Object(vec![(
+                "name".to_owned(),
+                Value::String("t.eadl".to_owned()),
+            )]),
+            "`target`'s `text`, the target's file, is missing or not a string",
+        ),
+        (
+            "a name that is no string",
+            Value::Object(vec![
+                ("text".to_owned(), Value::String(shipped.clone())),
+                ("name".to_owned(), Value::Bool(true)),
+            ]),
+            "`target`'s `name` is not a string",
+        ),
+        (
+            "a member it has not",
+            Value::Object(vec![
+                ("text".to_owned(), Value::String(shipped.clone())),
+                ("file".to_owned(), Value::String("t.eadl".to_owned())),
+            ]),
+            "`target` has no member `file`",
+        ),
+    ] {
+        let message = tool_error(&call(&arguments(
+            &description,
+            &plan_text,
+            vec![("target", value)],
+        )));
+        assert!(message.contains(says), "{case}: {message}");
+        assert!(message.contains("`target`"), "{case}: {message}");
+    }
 }
 
 #[test]
