@@ -406,7 +406,7 @@ pub const fn status_of(verdict: Concluded) -> Status {
 }
 
 /// A diagnostic of the language's check as a finding of the result record, each span by its file, line and column.
-fn finding(sources: &SourceMap, diagnostic: &Diagnostic) -> Finding {
+pub(crate) fn finding(sources: &SourceMap, diagnostic: &Diagnostic) -> Finding {
     let label = |label: &eadl_front::Label| {
         let source = sources.get(label.span.source);
         let position = source.map(|s| s.position(label.span.start));

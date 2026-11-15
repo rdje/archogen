@@ -14,7 +14,9 @@
 //! `M3.5.6`. Of the joint rules' module, [`joint`], one reading alone is public: [`joint::system`], a system's
 //! hardware, the declarations it reaches and the requesters it serves as check (5) reads them, for a comparison test
 //! another crate holds (`M3.5.5.7.1`). [`judgement`] makes one judgement the result record, which the executable writes
-//! and [`mcp`]'s tool answers inline (`M3.5.1.6.4`).
+//! and [`mcp`]'s tool answers inline (`M3.5.1.6.4`). [`target`] is the checker's own reading of a target and of a system
+//! put on it (`DC-H2`, `docs/decisions/decision_device-correspondence.md` rule 1; leaf `M4.1.7.5.4.2`), every refusal
+//! the record's table names said by its code before any judgement.
 
 pub mod adapters;
 pub mod assignment;
@@ -27,6 +29,7 @@ pub mod mcp;
 pub mod model;
 pub mod providers;
 pub mod requesters;
+pub mod target;
 
 /// The executable's name: the result record's producer, and its MCP server's.
 pub const NAME: &str = "archogen-plan-check";

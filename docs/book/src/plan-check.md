@@ -67,6 +67,16 @@ among its bindings the system's release requester, `(release heartbeat)`, last (
 reads it with a reader of its own, held with the search's writer to one golden
 (`crates/archogen-plan-check/tests/goldens/archogen-assignment-3.golden`, leaf `M4.1.7.5.4.1`).
 
+It reads the target too, and puts the system on it, with readers of its own (`crates/archogen-plan-check/src/target.rs`,
+leaf `M4.1.7.5.4.2`), written from `docs/decisions/decision_device-correspondence.md` by a context that never read the
+generator's, as check 5's rules were: a target's file is hardware alone under one platform, and each row of the record's
+table of what keeps a system from being read there is refused by the code the table gives. A test holds the two
+readings equal — what each accepts, the codes of what each refuses, and the hardware each reads for the system there —
+over the shipped target, the examples and a case for each row (`crates/eadl-resolve/tests/target_parity.rs`). Its first
+run found one sentence read two ways, the row exempting a `platform` clause's own `uses`: the checker took "its" for the
+system's alone, the generator for the namer's, so another system named had its clause refused by the one and put on
+the target by the other. The record now says the namer's. `--target` offers it with `M4.1.7.5.4.4`.
+
 ### The checks, in order
 
 1. **The record reads, and belongs to this description.** A record in another format, out of order, binding one need
