@@ -730,8 +730,10 @@ a change that leaves it stale, so it is never edited by hand.
 - rust-reference — [What this project relies on from outside](ledger.md#rust-reference)
 - rust-toolchain — [What this project relies on from outside](ledger.md#rust-toolchain)
 - **RUSTC** — [definition](glossary.md), [Annex C: Trust proof records](annex-trust-proofs.md)
+- **RV32** — [definition](glossary.md), [What this project relies on from outside](ledger.md)
 - **RV32IMAC** — [definition](glossary.md), [What this project relies on from outside](ledger.md)
-- **RV64** — [definition](glossary.md), [Reading a description](reading.md)
+- **RV64** — [definition](glossary.md), [Reading a description](reading.md), [Where generated systems run](targets.md),
+  [What this project relies on from outside](ledger.md)
 
 ## S
 

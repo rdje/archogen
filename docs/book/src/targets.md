@@ -146,13 +146,16 @@ only words the language already has, and states one fact for each thing the prof
 
 ```text
 (defblock target.timer
-  (offers (tick-rate 10 MHz) (reachable-at-privilege machine)
+  (offers (tick-rate 10 MHz) (relative-delay true) (channels 1 tick) (alarm-wiring core)
+    (alarm-kind level-compare) (counter-modulus (pow2 64)) (compare-step 1 tick) (compare-magnitude true)
+    (observation-coherent true) (available-in-state run idle) (supported-horizon 1844674407370 s)
+    (reachable-at-privilege machine)
     (region target.timer (base 0x0200_0000) (size 64 KiB))))
 (defblock target.console
   (offers (observable-output true) (reachable-at-privilege machine)
     (region target.console (base 0x1000_0000) (size 256 byte))))
 (defplatform target.riscv-virt-up
-  (offers (core-count 1 tick) (reachable-at-privilege machine)
+  (offers (core-count 1 tick) (catalog-target riscv-virt-up) (firmware-traps 0) (reachable-at-privilege machine)
     (region target.ram (base 0x8000_0000) (size 128 MiB) (executable true)))
   (requires (uses target.timer target.console)))
 ```
@@ -162,6 +165,12 @@ what it is, not by address alone:
 - the core count with the harts under `/cpus`;
 - the executable region with the `memory` node;
 - the timer's region with the CLINT, and its tick rate with the timebase;
+- what the release requester asks of the timer, for format `/2` (leaf `M4.1.7.3.3`): its delay, its one line and its
+  wiring to the hart from the CLINT's `interrupts-extended`; its 64-bit modulus, its level compare on whole numbers at a
+  step of one tick, counting in idle as in run, and a coherent read on RV64, from the privileged specification's
+  machine timer; and its horizon no farther than one compare reaches;
+- the platform's name for its catalog records with the `.env`'s target, and no trap taken by firmware with the `.env`'s
+  `-bios none`;
 - the console's region with the node `/chosen`'s `stdout-path` names;
 - each block's and the platform's level with the `.env`'s `REQUIRES_PRIVILEGE=machine`, which no node carries: a hart
   starts in M at reset, an M-mode access that no locked PMP entry matches succeeds
@@ -179,8 +188,10 @@ target-emulator: the platform presented matches docs/targets/riscv-virt-up.dtb.s
 target-emulator: the §3.2 agreement holds: targets/riscv-virt-up.eadl agrees with the platform presented
 ```
 
-The description claims no instruction set, no interrupt route and no other device. Those would be facts
-nothing checks, and the interrupt timings the runtime analysis needs are the catalog's, with their evidence.
+The description claims no instruction set and no other device, and of the interrupt route only the timer's wiring,
+which the device tree shows. Those would be facts nothing checks, and the interrupt timings the runtime analysis needs
+are the catalog's, with their evidence. Nor does it state how many interrupts no mask stops: nothing yet checks what
+the emulated machine raises, so a system on it is refused for that fact until something does.
 
 ### A system on a target: which device is which
 
