@@ -156,6 +156,45 @@ fn every_provider_in_the_universe_is_read_as_the_model_reads_it() {
     );
 }
 
+/// `(compare-magnitude true)` beside a `compare-window` reads one compare two ways, `invalid-description` when the declaration is read, whether
+/// or not anything binds it, in the checker's model as in the generator's reader; `false` beside a window says nothing, and either alone reads
+/// (relation record §4, `docs/decisions/decision_runtime-plan-format-2.md` §2, leaf `M4.1.7.3.2`). And a `compare-step` that is no whole
+/// number of its counter's ticks is refused by its domain, a count, as `decision_release-alarm.md`'s `RA-H8` asks.
+#[test]
+fn a_magnitude_beside_a_window_is_refused_by_both() {
+    let v = vocabulary();
+    for decl in [
+        "(defblock t (offers (compare-window 16 tick) (compare-magnitude true)))",
+        "(defblock t (offers (compare-window 16 tick) compare-magnitude))",
+        "(defblock t (offers (compare-magnitude (exactly true)) (compare-window 16)))",
+    ] {
+        let form = &forms(decl)[0];
+        assert!(model::read_provider(form).is_err(), "{decl}");
+        let refused = offer::read(form, &v).expect_err(decl);
+        assert_eq!(
+            refused[0].cause,
+            eadl_resolve::refusal::Cause::MagnitudeBesideWindow,
+            "{decl}"
+        );
+    }
+    let service =
+        &forms("(defservice s (offers (compare-window 16 tick) (compare-magnitude true)))")[0];
+    assert!(model::read_service(service).is_err());
+    assert!(offer::read_service(service, &v).is_err());
+    let fractional = &forms("(defblock t (offers (compare-step 1.5 tick)))")[0];
+    assert!(model::read_provider(fractional).is_err());
+    assert!(offer::read(fractional, &v).is_err());
+    for decl in [
+        "(defblock t (offers (compare-window 16 tick) (compare-magnitude false)))",
+        "(defblock t (offers (compare-window 16 tick)))",
+        "(defblock t (offers (compare-magnitude true) (compare-step 1 tick)))",
+    ] {
+        let form = &forms(decl)[0];
+        assert!(model::read_provider(form).is_ok(), "{decl}");
+        assert!(offer::read(form, &v).is_ok(), "{decl}");
+    }
+}
+
 #[test]
 fn a_declaration_named_like_a_fact_is_refused_by_both() {
     let v = vocabulary();

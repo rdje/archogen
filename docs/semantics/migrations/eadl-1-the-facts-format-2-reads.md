@@ -3,7 +3,7 @@
 - version: eadl/1
 - date: 2026-11-15
 - leaf: M4.1.7.3.1 (`docs/tasks/M4.md`)
-- status: pending
+- status: applied
 - constructs: suite/docs/semantics/vocabulary/vocabulary.eadl
 - invalidates: none, measured — no tracked description writes any of the seven, `git grep -l -F "(<fact>" -- '*.eadl'` naming none outside the vocabulary, so no verdict reads them; model §8 rule 14 reads five of them as no reader of a time base, which no tracked description binds
 

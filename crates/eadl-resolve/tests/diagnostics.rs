@@ -29,6 +29,7 @@ fn every_cause() -> Vec<Cause> {
         DerivedAbsentBesideInput,
         ModulusAboveWidth,
         ModulusBesideSaturating,
+        MagnitudeBesideWindow,
         NotAConstraint,
         BareNameInRequires,
         NoConstraintWritten,
@@ -65,6 +66,7 @@ fn every_cause() -> Vec<Cause> {
             | DerivedAbsentBesideInput
             | ModulusAboveWidth
             | ModulusBesideSaturating
+            | MagnitudeBesideWindow
             | NotAConstraint
             | BareNameInRequires
             | NoConstraintWritten

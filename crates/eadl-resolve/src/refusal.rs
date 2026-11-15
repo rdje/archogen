@@ -76,6 +76,9 @@ pub enum Cause {
     ModulusAboveWidth,
     /// A `counter-modulus` beside `(wrap-behavior saturating)` (§4, R1 A14).
     ModulusBesideSaturating,
+    /// A `compare-magnitude` offered `true` beside an offered `compare-window`: one compare read two ways (§4,
+    /// `decision_runtime-plan-format-2.md` §2, leaf `M4.1.7.3.2`).
+    MagnitudeBesideWindow,
     /// An item of `requires` that is not a list headed by a name: a number, a string, `()`, a list headed by none
     /// (§1, R22 1).
     NotAConstraint,
@@ -153,6 +156,9 @@ impl Cause {
             Self::ModulusAboveWidth => "offer a modulus the register's width holds, or the width that holds it",
             Self::ModulusBesideSaturating => {
                 "remove one: a saturating counter wraps at no modulus, and a modulus is where a counter wraps"
+            }
+            Self::MagnitudeBesideWindow => {
+                "state one: a compare reads due by its window or as whole numbers, not both"
             }
             Self::NotAConstraint => "write a constraint: a list headed by a fact's name, such as `(tick-unit ns)`",
             Self::BareNameInRequires | Self::NoConstraintWritten => {

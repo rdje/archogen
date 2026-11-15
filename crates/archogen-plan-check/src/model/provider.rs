@@ -340,6 +340,19 @@ pub fn read(decl: &Form) -> Result<Provider, Refused> {
             "a `counter-modulus` beside `(wrap-behavior saturating)`",
         );
     }
+    // A compare reads due by its window or as whole numbers, not both: `true` beside an offered window is refused, `false`
+    // saying nothing (§4; `decision_runtime-plan-format-2.md` §2).
+    if matches!(stated.get("compare-magnitude"), Some(Stated::Valued(vs)) if vs.iter().any(|v| matches!(v, Value::Bool(true))))
+        && matches!(
+            stated.get("compare-window"),
+            Some(Stated::Valued(_) | Stated::Unvalued | Stated::Overflow)
+        )
+    {
+        return refuse(
+            "compare-magnitude",
+            "a `compare-magnitude` `true` beside a `compare-window`",
+        );
+    }
     Ok(Provider { name, stated })
 }
 

@@ -30,6 +30,9 @@ use crate::vocabulary::{Direction, Domain, Fact, Role, Vocabulary};
 const COUNTER_WIDTH: &str = "counter-width";
 const WRAP_BEHAVIOR: &str = "wrap-behavior";
 const SATURATING: &str = "saturating";
+/// The two facts a compare reads due by, one of which a device states (record §4, leaf `M4.1.7.3.2`).
+const COMPARE_WINDOW: &str = "compare-window";
+const COMPARE_MAGNITUDE: &str = "compare-magnitude";
 
 /// The widest counter whose `2^width` the modulus check compares: `(pow2 126)`, the largest writable modulus, is held
 /// by every width of 127 bits or more (record §4, R7 G8).
@@ -468,8 +471,8 @@ fn derived_beside_inputs(
     out
 }
 
-/// §4's cross-field rules of the counter: a modulus above `2^width`, and a modulus beside a saturating wrap. They only
-/// refuse; no requirement is met through them (record §4, R28 5).
+/// §4's cross-field rules of the counter: a modulus above `2^width`, a modulus beside a saturating wrap, and a magnitude
+/// beside a window. They only refuse; no requirement is met through them (record §4, R28 5).
 fn counter(facts: &BTreeMap<String, Statement>, whole: Span) -> Vec<Refusal> {
     let state = |name: &str| facts.get(name).map(|s| &s.state);
     let at = |name: &str| {
@@ -514,6 +517,17 @@ fn counter(facts: &BTreeMap<String, Statement>, whole: Span) -> Vec<Refusal> {
             value::COUNTER_MODULUS,
             at(value::COUNTER_MODULUS),
             "a modulus beside `(wrap-behavior saturating)`: a modulus is where a modular counter wraps",
+        ));
+    }
+    // A compare reads due by a window or as whole numbers: `true` beside a window reads it both ways, while `false`
+    // says nothing, as an absent fact does (record §4, `decision_runtime-plan-format-2.md` §2).
+    let magnitude = matches!(state(COMPARE_MAGNITUDE), Some(State::Valued(m)) if m.contains(&Value::Bool(true)));
+    if magnitude && offers_it(state(COMPARE_WINDOW)) {
+        out.push(refusal(
+            Cause::MagnitudeBesideWindow,
+            COMPARE_MAGNITUDE,
+            at(COMPARE_MAGNITUDE),
+            "`(compare-magnitude true)` beside a `compare-window`: one compare read by its window and as whole numbers",
         ));
     }
     out

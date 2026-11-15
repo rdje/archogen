@@ -463,7 +463,8 @@ nothing or holding a clause; a list inside `absent`; an offer or an absence of a
 domain; a direction's name, `includes`, `within` or `exact`, used as a wrapper; a boolean offered with a bound other
 than `exactly`; a bound against the fact's direction; one fact offered and absent, with two values, or with a bound
 beside a value; a derived fact offered or declared absent beside a fact its rule reads; a modulus above `2^width`,
-or beside `(wrap-behavior saturating)`. One value written in several spellings is one offer, kept in every spelling,
+or beside `(wrap-behavior saturating)`; and `(compare-magnitude true)` beside a `compare-window`, one compare read
+by its window and as whole numbers, whether or not anything binds the device. One value written in several spellings is one offer, kept in every spelling,
 and a comparison is decided by any spelling whose arithmetic does not overflow (§5).
 
 ### Requirements and sides
