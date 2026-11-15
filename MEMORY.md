@@ -16,9 +16,9 @@
 - **Active tree:** `M4` → frontier `M4.1`, the accepted runtime plan, the model's amendments done (`M4.1.2`): `/1` for
   the hosted playground; `PROGRAM` → `PROGRAM.34`, the director's.
 - **The host is shared:** every heavy job goes through `scripts/host_guard.py`, one at a time (`docs/decisions/decision_host-guard.md`). A reader's brief says so.
-- **Next action:** reader out: `M4.1.7.2.39` (`target/m4382/`); each answer closes its finding's class by a check, the director's
-  call left to the engineer `2026-11-14`, and each premise is read in the code that acts on it. Closed reviews: the application
-  inputs' (`M4.12.1`, round 20) and the host guard's (`PROGRAM.127`, round 49). Daily artifact cleanup next due after
+- **Next action:** `M4.1.7.3`, the first leaf building format `/2`, the vocabulary and each target's statements. Closed reviews:
+  format `/2`'s (`M4.1.7.2`, round 39), the application inputs' (`M4.12.1`, round 20) and the host guard's (`PROGRAM.127`,
+  round 49). Daily artifact cleanup next due after
   `2026-11-16T00:09` UTC.
 - **⏳ Blockers (the director's):** `PROGRAM.34` — a yes to restore nine nested vendored checkouts; `M1.29.4` — §7 of
   `decision_findings-for-director-review.md`; `M5` — no board procured; `M2.7.4.5` — the catalog records; `M2.7.6.4` — the director's review round;

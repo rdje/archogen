@@ -18,7 +18,7 @@ No bootstrap read includes this directory.
 
 | Review history | Design record | Rounds | Status |
 | --- | --- | --- | --- |
-| [`decision_runtime-plan-format-2-reviews.md`](decision_runtime-plan-format-2-reviews.md) | [`decision_runtime-plan-format-2.md`](../decisions/decision_runtime-plan-format-2.md) | 38 | open |
+| [`decision_runtime-plan-format-2-reviews.md`](decision_runtime-plan-format-2-reviews.md) | [`decision_runtime-plan-format-2.md`](../decisions/decision_runtime-plan-format-2.md) | 39 | closed: round 39 found no defect (`M4.1.7.2.39`) |
 | [`decision_application-inputs-reviews.md`](decision_application-inputs-reviews.md) | [`decision_application-inputs.md`](../decisions/decision_application-inputs.md) | 20 | closed: round 20 found no defect (`M4.12.1.20`) |
 | [`decision_host-guard-reviews.md`](decision_host-guard-reviews.md) | [`decision_host-guard.md`](../decisions/decision_host-guard.md) | 49 | closed: round 49 found no defect (`PROGRAM.127.49`) |
 | [`decision_release-alarm-reviews.md`](decision_release-alarm-reviews.md) | [`decision_release-alarm.md`](../decisions/decision_release-alarm.md) | 16 | closed: round 16 found no defect (`M4.1.6.16`) |
@@ -53,4 +53,3 @@ The reviews whose counts `scripts/check_review_counts.sh` judges against their h
 record keeps a summary table, from the commit that answers its first round; a review leaves the list in the commit
 that closes it. Each line names the history, then the record, both from this folder.
 
-- `decision_runtime-plan-format-2-reviews.md` with `../decisions/decision_runtime-plan-format-2.md`

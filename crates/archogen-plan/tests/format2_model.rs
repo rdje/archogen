@@ -2521,7 +2521,8 @@ fn the_holds_this_record_adds_are_those_rpf_h4_hands_the_checker() {
 /// class).
 #[test]
 fn every_refusal_the_record_states_has_its_stage() {
-    const STAGES: [(&str, &str); 37] = [
+    const STAGES: [(&str, &str); 38] = [
+        ("Its refusals come in the order it reads a plan in today (`DC-H2`)", "the checker"),
         ("An assignment of the other kind, a `/3` lowered or checked with no `--target` or a `/2` with one, is `stale-input`", "lowering: an assignment of the other kind"),
         ("A record whose target differs, or of the other kind as above, is `stale-input`", "the checker"),
         ("`(compare-magnitude true)` beside a window is `invalid-description`, naming the device", "lowering: a target's own refusals"),
