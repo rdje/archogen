@@ -443,7 +443,8 @@ a change that leaves it stale, so it is never edited by hand.
   requirement](matching.md), [What the scheduling checker establishes](analysis.md), [Where the engine's knowledge comes
   from: the catalog](catalog.md), [The runtime plan: what the generated system is told](runtime-plan.md), [The runtime:
   decisions, not actions](runtime.md), [Where generated systems run](targets.md), [The engine API](engine-api.md), [What
-  this project relies on from outside](ledger.md), [Annex A: The runtime's rules in detail](annex-runtime.md)
+  this project relies on from outside](ledger.md), [What is versioned, and what changing it costs](versions.md), [Annex
+  A: The runtime's rules in detail](annex-runtime.md)
 - **IPC** — [definition](glossary.md), [The supported profile](profile.md)
 - **ISA** — [definition](glossary.md), [What this project relies on from outside](ledger.md)
 - **ISR** — [definition](glossary.md), [The use cases](usecases.md), [What the scheduling checker
@@ -734,6 +735,7 @@ a change that leaves it stale, so it is never edited by hand.
   honest](annex-repository.md), [Annex C: Trust proof records](annex-trust-proofs.md)
 - runtime-analysis-model — [What is versioned, and what changing it costs](versions.md#runtime-analysis-model)
 - runtime-plan-format — [What is versioned, and what changing it costs](versions.md#runtime-plan-format)
+- runtime-plan-format-2 — [What is versioned, and what changing it costs](versions.md#runtime-plan-format-2)
 - rust-reference — [What this project relies on from outside](ledger.md#rust-reference)
 - rust-toolchain — [What this project relies on from outside](ledger.md#rust-toolchain)
 - **RUSTC** — [definition](glossary.md), [Annex C: Trust proof records](annex-trust-proofs.md)

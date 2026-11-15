@@ -233,7 +233,14 @@ each of its rounds' probes, runs through that code too, and the two must agree. 
 region ending at the top of a 64-bit address space is laid whole. The code identity and the catalog's digest are
 `identity.rs`; the routes' ranks, which reach the controller, the priority each takes and the `(enabled …)` line are
 `controller.rs`; an alarm's time base, what it owes, how its compare is read, a rate and the epoch's line are `alarm.rs`
-(leaf `M4.1.7.6.2`), each held to the model over every small input. No command writes a `/2` plan yet.
+(leaf `M4.1.7.6.2`), each held to the model over every small input.
+
+The first `/2` text is a hosted plan, written by `archogen_plan::lower_hosted` from the same record and body as `/1`
+(leaves `M4.1.7.6.3` and `.4`). It is `/1`'s text with the lines the record's table lists and no others: the hosted
+playground named as the target, the emitter and the catalog that generate its code, the epoch, each region of the
+hardware, and what §3 adds to what is owed. Over every system of the corpus it differs from `/1`'s by those lines
+alone (`crates/archogen-plan/tests/format2_hosted.rs`). A system with an alarm waits for that line, and placement memory
+is refused with a repair naming a target. No command writes a `/2` plan yet.
 
 ## From a plan to a generated system
 

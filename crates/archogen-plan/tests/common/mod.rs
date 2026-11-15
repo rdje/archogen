@@ -9,7 +9,7 @@
 
 use std::path::{Path, PathBuf};
 
-use archogen_plan::{lower, Refusal};
+use archogen_plan::{lower, lower_hosted, Generation, Refusal};
 use archogen_plan_check::check::plan_file;
 use eadl_front::module::DirectoryModules;
 use eadl_front::{Form, Program, SourceMap};
@@ -167,8 +167,38 @@ pub fn lowered_tree(path: &Path) -> Lowered {
     lowered_program(&program, None)
 }
 
+/// `text`, a plain description, its `system` (the first when `None`) searched, its record written, and lowered twice:
+/// as `/1`, and as `/2` on the hosted playground with `generation` (leaf `M4.1.7.6.4`). `None` where the language's check
+/// or the search refuses it, which no format changes.
+pub fn lowered_both(
+    text: &str,
+    system: Option<&str>,
+    generation: &Generation<'_>,
+) -> Option<(Result<String, Refusal>, Result<String, Refusal>)> {
+    let program = checked(text).ok()?;
+    let record = searched(&program, system).ok()?;
+    let (vocabulary, catalog) = (vocabulary(), catalog());
+    Some((
+        lower(&program, &record, &vocabulary, &catalog).map(|plan| plan.text().to_owned()),
+        lower_hosted(&program, &record, &vocabulary, &catalog, generation),
+    ))
+}
+
 /// `program`'s `system` (the first when `None`) searched, its record written, and lowered.
 fn lowered_program(program: &Program, system: Option<&str>) -> Lowered {
+    let record = match searched(program, system) {
+        Ok(record) => record,
+        Err(unresolved) => return unresolved,
+    };
+    match lower(program, &record, &vocabulary(), &catalog()) {
+        Ok(plan) => Lowered::Plan(plan.text().to_owned()),
+        Err(refusal) => Lowered::Refused(refusal),
+    }
+}
+
+/// `program`'s `system` (the first when `None`) searched and its `archogen-assignment/2` record written, or the
+/// search's verdict.
+fn searched(program: &Program, system: Option<&str>) -> Result<String, Lowered> {
     let vocabulary = vocabulary();
     let catalog = catalog();
     // A module tree is read as the language checks it, its names qualified.
@@ -200,18 +230,14 @@ fn lowered_program(program: &Program, system: Option<&str>) -> Lowered {
         Limits::DEFAULT,
     ) {
         Search::Resolved(resolution) => resolution,
-        Search::Refused { verdict, .. } => return Lowered::Unresolved(format!("{verdict:?}")),
-        Search::Inconclusive { .. } => return Lowered::Unresolved("inconclusive".to_string()),
+        Search::Refused { verdict, .. } => return Err(Lowered::Unresolved(format!("{verdict:?}"))),
+        Search::Inconclusive { .. } => return Err(Lowered::Unresolved("inconclusive".to_string())),
     };
-    let record = plan::write(
+    Ok(plan::write(
         &resolution,
         RT_STATIC_UP_V1.id,
         &plan::program_digest(program),
-    );
-    match lower(program, &record, &vocabulary, &catalog) {
-        Ok(plan) => Lowered::Plan(plan.text().to_owned()),
-        Err(refusal) => Lowered::Refused(refusal),
-    }
+    ))
 }
 
 /// A plan's text with its two digests written `…`, as the record's worked texts write them.

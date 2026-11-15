@@ -49,6 +49,11 @@ pub mod layout;
 /// The format's identifier (§3).
 pub const FORMAT: &str = "archogen-runtime-plan/1";
 
+/// Format `/2`'s identifier (`docs/decisions/decision_runtime-plan-format-2.md` §3), a plan for a system on a target, or
+/// on the hosted playground with its application's inputs: written by [`lower_hosted`], which no command reaches yet
+/// (leaf `M4.1.7.6.4`).
+pub const FORMAT_2: &str = "archogen-runtime-plan/2";
+
 /// The executable a result record must name as its producer (§1).
 const CHECKER: &str = "archogen-plan-check";
 
@@ -427,7 +432,7 @@ fn lowered(
     vocabulary: &Vocabulary,
     catalog: &Catalog,
 ) -> Result<(Plan, Option<ResultRecord>), Refusal> {
-    let (body, accepted) = body(program, record, result, vocabulary, catalog)?;
+    let (body, accepted) = body(program, record, result, vocabulary, catalog, Format::One)?;
     let text = body.write_one();
     let plan = Plan::read(&text).map_err(|why| {
         refuse(
@@ -477,6 +482,36 @@ struct Body {
     obligations: Vec<String>,
     /// The `(owed …)` lines, sorted.
     owed: Vec<String>,
+    /// What `/2` adds to the owed lines of every plan, hosted or on a target (`decision_runtime-plan-format-2.md` §3,
+    /// "`(owed …)`, as `/2` writes it"): each task's `node-calls` and `node-calls-category` and the system's
+    /// `initialisation`, by the application, where no application's file is given, and each node a job calls owes its
+    /// `primitives-out-of-line` and `masking-balanced`, by the realization.
+    owed_by_two: Vec<String>,
+    /// `/2`'s `(region …)` lines (§5, "Which regions"), in §3's order: each region the system's hardware states.
+    regions: Vec<String>,
+    /// Whether a route is an alarm's, which `/2` writes as its own line (§3), leaf `M4.1.7.6.5`'s.
+    alarmed: bool,
+}
+
+/// Which format a body is lowered for: what differs before the lines are written is a refusal's repair (§1).
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+enum Format {
+    /// `archogen-runtime-plan/1`.
+    One,
+    /// `archogen-runtime-plan/2`.
+    Two,
+}
+
+/// What generates a `/2` plan's code, which its kept lines name (`decision_runtime-plan-format-2.md` §1): the emitter's
+/// version, `(emitter VERSION)`, and each record the tool's catalog holds, by its id and its code hash, which `(catalog
+/// "HEX" …)` digests. Both are the caller's: the emitter states its version (`RPF-H3`, `M4.2`) and `archogen_catalog`
+/// each record's code hash (`RPF-H9`, `M4.10`), neither of which this crate links.
+#[derive(Debug, Clone, Copy)]
+pub struct Generation<'a> {
+    /// `(emitter …)`'s version, `archogen-emit/N`.
+    pub emitter: &'a str,
+    /// Each record of the tool's catalog, by its id and its code hash.
+    pub records: &'a [(String, Digest)],
 }
 
 impl Body {
@@ -511,6 +546,122 @@ impl Body {
         text.push('\n');
         text
     }
+
+    /// `archogen-runtime-plan/2`'s text on the hosted playground (`decision_runtime-plan-format-2.md` §1, "The hosted
+    /// playground", and §3): `/1`'s lines in §3's order, with these and no others: `(target hosted-playground)`,
+    /// `(emitter …)`, `(catalog "HEX" none)`, `(epoch simulator)`, each `(region …)`, and §3's owed lines. A system with
+    /// an alarm is `.5`'s, and is refused before this is written.
+    fn write_two_hosted(&self, generation: &Generation<'_>) -> String {
+        let mut lines = vec![
+            format!("(format \"{FORMAT_2}\")"),
+            format!("(profile {})", self.profile),
+            format!("(system {})", self.system),
+            "(target hosted-playground)".to_string(),
+            format!("(program \"{}\")", self.program),
+            format!("(assignment \"{}\")", self.assignment),
+            format!("(adapters {})", self.adapters),
+            format!("(emitter {})", generation.emitter),
+            format!(
+                "(catalog \"{}\" none)",
+                identity::catalog_digest(generation.records).hex()
+            ),
+        ];
+        lines.extend(self.tasks.iter().cloned());
+        lines.extend(self.binds.iter().cloned());
+        lines.extend(self.instances.iter().cloned());
+        lines.push("(epoch simulator)".to_string());
+        lines.push(format!(
+            "(timer simulator {})",
+            list("releases", &self.releases)
+        ));
+        lines.extend(self.routes.iter().cloned());
+        lines.push(list("enabled", &self.enabled));
+        lines.push("(interrupt-model (nesting no) (masking all))".to_string());
+        lines.extend(self.regions.iter().cloned());
+        lines.extend(self.nodes.iter().cloned());
+        lines.extend(self.contexts.iter().cloned());
+        lines.extend(self.depends.iter().cloned());
+        lines.extend(self.steps.iter().cloned());
+        lines.extend(self.obligations.iter().cloned());
+        let mut owed: Vec<String> = self.owed.iter().chain(&self.owed_by_two).cloned().collect();
+        owed.sort();
+        owed.dedup();
+        lines.extend(owed);
+        lines.push("(complete no)".to_string());
+        let mut text = lines.join("\n");
+        text.push('\n');
+        text
+    }
+}
+
+/// Whether `text` is written as `/2`'s §3 writes a plan, as far as a lowering can tell of its own text before `/2`'s
+/// reader is built (`M4.1.7.7`): each line a form whose head §1's table classifies, the heads in §3's order, which
+/// [`identity::LINES`] follows, and the code identity's preimage taken.
+fn written_as_two(text: &str) -> Result<(), String> {
+    let order = |head: &str| identity::LINES.iter().position(|(name, _)| *name == head);
+    let mut last = 0;
+    for line in text.lines() {
+        if !(line.starts_with('(') && line.ends_with(')')) {
+            return Err(format!("`{line}` is no form"));
+        }
+        let head = identity::head(line);
+        let at = order(head).ok_or_else(|| format!("no line of `/2` begins `{head}`"))?;
+        if at < last {
+            return Err(format!("`{line}` stands out of §3's order"));
+        }
+        last = at;
+    }
+    identity::preimage(text)
+        .map(|_| ())
+        .map_err(|why| why.to_string())
+}
+
+/// The executable form's hosted `/2` lowering (`decision_runtime-plan-format-2.md` §1, "The hosted playground"; leaf
+/// `M4.1.7.6.4`): [`lower`]'s record and body, written as `archogen-runtime-plan/2` with no application's file and no
+/// realization's, `generation` naming what generates its code. No command reaches it: nothing but a test may call it,
+/// as for [`lower`], and a system with an alarm is refused until its line is written (`M4.1.7.6.5`).
+///
+/// # Errors
+///
+/// [`lower`]'s refusals, a system with placement memory's repair naming a target (RP37-3); and `tool-failure` for an
+/// emitter's version that is no single atom, for a system with an alarm, and for a text that is not written as `/2`'s
+/// §3 writes a plan.
+pub fn lower_hosted(
+    program: &Program,
+    record: &str,
+    vocabulary: &Vocabulary,
+    catalog: &Catalog,
+    generation: &Generation<'_>,
+) -> Result<String, Refusal> {
+    if generation.emitter.is_empty()
+        || !generation
+            .emitter
+            .chars()
+            .all(|c| c.is_ascii_alphanumeric() || matches!(c, '-' | '/' | '.' | '_'))
+    {
+        return Err(refuse(
+            "tool-failure",
+            format!(
+                "the emitter's version `{}` is no single atom, as `(emitter …)` writes one",
+                generation.emitter
+            ),
+        ));
+    }
+    let (body, _) = body(program, record, None, vocabulary, catalog, Format::Two)?;
+    if body.alarmed {
+        return Err(refuse(
+            "tool-failure",
+            "an alarm's line in `/2` is written by task-tree leaf M4.1.7.6.5, not built yet",
+        ));
+    }
+    let text = body.write_two_hosted(generation);
+    written_as_two(&text).map_err(|why| {
+        refuse(
+            "tool-failure",
+            format!("the lowering wrote a `/2` plan not written as §3 writes one: {why}"),
+        )
+    })?;
+    Ok(text)
 }
 
 /// A lowering's body (§1 to §2.10): the record refused as §1 refuses it, or what `/1` writes of it, beside the result
@@ -522,6 +673,7 @@ fn body(
     result: Option<&str>,
     vocabulary: &Vocabulary,
     catalog: &Catalog,
+    format: Format,
 ) -> Result<(Body, Option<ResultRecord>), Refusal> {
     // §1, input 1: the declarations and the digest are the program's own, never its caller's; a module tree is read as
     // the language checks it, its names qualified.
@@ -897,7 +1049,11 @@ fn body(
     {
         return Err(refuse(
             "unsupported-profile",
-            "the system has placement memory, and laying an image out in memory is `/2`'s (`M4.1.7`): describe a hosted platform, or wait for `/2`",
+            match format {
+                Format::One => "the system has placement memory, and laying an image out in memory is `/2`'s (`M4.1.7`): describe a hosted platform, or wait for `/2`",
+                // `/2` §1: a hosted plan lays out no memory, so placement memory stays refused, its repair naming a target (RP37-3).
+                Format::Two => "the system has placement memory, and a hosted plan lays no image out in memory: describe a hosted platform, or name the target the system runs on, where `/2` lays the image out",
+            },
         ));
     }
     if tasks.is_empty() {
@@ -1450,6 +1606,78 @@ fn body(
         .map(|n| format!("(node {} {})", names.text(n), kind_of(n)))
         .collect();
     node_lines.sort();
+    // `/2`'s additions to what is owed (§3), whatever `/1` owes beside them.
+    let mut owed_by_two = Vec::new();
+    for task in &tasks {
+        let text = names.text(&joint::task_name(&system, &task.name));
+        owe(&mut owed_by_two, &text, "node-calls", "application");
+        owe(
+            &mut owed_by_two,
+            &text,
+            "node-calls-category",
+            "application",
+        );
+    }
+    owe(&mut owed_by_two, &system, "initialisation", "application");
+    for n in nodes
+        .iter()
+        .filter(|n| contexts.get(*n).is_some_and(|c| c.contains("job")))
+    {
+        let text = names.text(n);
+        owe(
+            &mut owed_by_two,
+            &text,
+            "primitives-out-of-line",
+            "realization",
+        );
+        owe(&mut owed_by_two, &text, "masking-balanced", "realization");
+    }
+    // `/2`'s regions (§5, "Which regions"): each region of the system's hardware, its use as §3 gives one and the
+    // requesters bound to its provider, in the assignment's order, by base, then name, then provider.
+    let mut regions: Vec<(u128, String, String, String)> = rebuilt
+        .joint
+        .regions(&rebuilt.system)
+        .into_iter()
+        .map(|(provider, region)| {
+            let provider_text = names.text(provider);
+            let mut requesters: Vec<String> = Vec::new();
+            for bind in record.binds.iter().filter(|b| b.provider == provider_text) {
+                if !requesters.contains(&bind.requester) {
+                    requesters.push(bind.requester.clone());
+                }
+            }
+            let chosen = record
+                .placement
+                .as_ref()
+                .is_some_and(|(p, r)| *p == provider_text && *r == region.name);
+            let usage = match (region.reserved, region.executable, chosen) {
+                (true, _, _) => "reserved",
+                (false, true, true) => "placement",
+                (false, true, false) => "executable",
+                (false, false, _) => "device",
+            };
+            let size = region
+                .bytes
+                .map_or_else(|| "unsized".to_string(), |bytes| bytes.to_string());
+            let line = format!(
+                "(region {} {provider_text} (base {}) (size {size}) (use {usage}) {})",
+                region.name,
+                region.base,
+                list("requesters", &requesters)
+            );
+            (
+                u128::try_from(region.base).unwrap_or(0),
+                region.name.clone(),
+                provider_text,
+                line,
+            )
+        })
+        .collect();
+    regions.sort();
+    let region_lines: Vec<String> = regions.into_iter().map(|(_, _, _, line)| line).collect();
+    let alarmed = route_lines
+        .iter()
+        .any(|line| line.contains("(timer-route "));
     Ok((
         Body {
             profile: record.profile.clone(),
@@ -1469,6 +1697,9 @@ fn body(
             steps: step_lines,
             obligations: obligation_lines,
             owed,
+            owed_by_two,
+            regions: region_lines,
+            alarmed,
         },
         accepted,
     ))

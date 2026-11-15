@@ -177,6 +177,17 @@ their versioned readers and permanent refusal controls enforce their local contr
 | Pinned by | three goldens, lowered by the production entry from frozen inputs and a fixed result record, each held to its sha256 and never rewritten (`crates/archogen-plan/tests/goldens.rs`); the record's three worked texts, compared with what the code writes by `crates/archogen-plan/tests/worked.rs`, and the review's probe systems with their outcomes, `crates/archogen-plan/tests/corpus.rs`; the frozen goldens come with `M4.1.4`'s production half |
 | Keeps | a plan labelled `archogen-runtime-plan/1` has one text for one record and one description |
 
+## `runtime-plan-format-2`
+
+| Field | Value |
+| --- | --- |
+| Surface | the runtime plan of a system on a target, or on the hosted playground with its application's inputs: what `/1` holds, the machine by its digest, the code identity and what generates the code, each alarm and the epoch, each region and allocation, the interrupt controller, the application's and the realization's lines (`docs/decisions/decision_runtime-plan-format-2.md`, `M4.1.7`) |
+| Version | `archogen-runtime-plan/2`, its design accepted `2026-11-15` (`M4.1.7.2`, round 39), built a part at a time by `M4.1.7.6`: today written by the executable form's hosted lowering alone, `archogen_plan::lower_hosted`, which no command reaches, for a system with no alarm (`M4.1.7.6.4`) |
+| Declared at | `const:crates/archogen-plan/src/lib.rs:FORMAT_2` |
+| Changes when | a line of the record's §3 is added, removed, renamed, reordered or reinterpreted, a procedure of its §4 to §7 changes, or what its code identity keeps or leaves out changes |
+| Pinned by | pending its goldens, `M4.1.7.6.9`, frozen and never rewritten as `/1`'s are; until then `crates/archogen-plan/tests/format2_hosted.rs` holds every hosted plan to `/1`'s text over the corpus, the hosted table's lines alone added, and `crates/archogen-plan/tests/format2_model.rs` holds each procedure built to the record's executable model |
+| Keeps | once pinned, a plan labelled `archogen-runtime-plan/2` has one text for one record, one description, one target and one set of inputs |
+
 ## `application-inputs-format`
 
 | Field | Value |

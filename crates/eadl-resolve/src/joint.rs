@@ -2095,6 +2095,14 @@ impl<'v> Joint<'v> {
         }
     }
 
+    /// The regions of `system`'s hardware, each with its provider, in the order the providers are named: what a runtime
+    /// plan of format `/2` writes a `(region …)` line of (`docs/decisions/decision_runtime-plan-format-2.md` §5, "Which
+    /// regions"; leaf `M4.1.7.6.4`).
+    #[must_use]
+    pub fn regions<'s>(&'s self, system: &System) -> Vec<(&'s str, &'s Region)> {
+        self.hardware_regions(system)
+    }
+
     /// The regions of `system`'s hardware, each with its provider, in the order the providers are named.
     fn hardware_regions<'s>(&'s self, system: &System) -> Vec<(&'s str, &'s Region)> {
         system
