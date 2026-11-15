@@ -53,15 +53,17 @@ fn head(line: &str) -> &str {
     archogen_plan::identity::head(line)
 }
 
-/// The facts §3 adds to what a hosted plan owes of a system with no alarm and no application's file: each task's
-/// `node-calls` and `node-calls-category` and the system's `initialisation`, the application's, and a node a job calls
-/// its `primitives-out-of-line` and `masking-balanced`, the realization's.
-const OWED_BY_TWO: [(&str, &str); 5] = [
+/// The facts §3 adds to what a hosted plan owes, beside its alarms' and clocks', where no application's file is given:
+/// each task's `node-calls` and `node-calls-category` and the system's `initialisation`, the application's, a node a job
+/// calls its `primitives-out-of-line` and `masking-balanced`, the realization's, and `RA-H7`'s `deadlines-within-reach`.
+const OWED_BY_TWO: [(&str, &str); 6] = [
     ("node-calls", "application"),
     ("node-calls-category", "application"),
     ("initialisation", "application"),
     ("primitives-out-of-line", "realization"),
     ("masking-balanced", "realization"),
+    // `RA-H7`: of a task writing an alarm on the counter itself that is no wake, no file naming it (leaf `M4.1.7.6.6`).
+    ("deadlines-within-reach", "application"),
 ];
 
 /// The items of the clause `(name …)` in `line`, each an atom or a list as written.

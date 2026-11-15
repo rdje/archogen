@@ -9,7 +9,7 @@
 
 use std::path::{Path, PathBuf};
 
-use archogen_plan::{lower, lower_hosted, Generation, Refusal};
+use archogen_plan::{lower, lower_hosted, ApplicationFile, Generation, Refusal};
 use archogen_plan_check::check::plan_file;
 use eadl_front::module::DirectoryModules;
 use eadl_front::{Form, Program, SourceMap};
@@ -180,7 +180,27 @@ pub fn lowered_both(
     let (vocabulary, catalog) = (vocabulary(), catalog());
     Some((
         lower(&program, &record, &vocabulary, &catalog).map(|plan| plan.text().to_owned()),
-        lower_hosted(&program, &record, &vocabulary, &catalog, generation),
+        lower_hosted(&program, &record, &vocabulary, &catalog, generation, None),
+    ))
+}
+
+/// `text`, a plain description, its first system searched and its record written, then lowered as `/2` on the hosted
+/// playground with `generation` and `application`, its application's file where one is given (leaf `M4.1.7.6.6`).
+/// `None` where the language's check or the search refuses it.
+pub fn lowered_hosted(
+    text: &str,
+    generation: &Generation<'_>,
+    application: Option<&ApplicationFile<'_>>,
+) -> Option<Result<String, Refusal>> {
+    let program = checked(text).ok()?;
+    let record = searched(&program, None).ok()?;
+    Some(lower_hosted(
+        &program,
+        &record,
+        &vocabulary(),
+        &catalog(),
+        generation,
+        application,
     ))
 }
 

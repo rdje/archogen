@@ -44,6 +44,7 @@ pub mod application;
 pub mod contents;
 pub mod controller;
 pub mod identity;
+mod inputs;
 pub mod layout;
 
 /// The format's identifier (§3).
@@ -492,6 +493,9 @@ struct Body {
     /// `/2`'s groups where an alarm makes them differ from `/1`'s (§3, "An alarm's identity is its node"; leaf
     /// `M4.1.7.6.5`); with no alarm, `/1`'s own.
     two: Two,
+    /// Each task by its name in its system and its text, `(task SYSTEM NAME)`, in runtime index order: what an
+    /// application's file is said of, and the order its `(task-inputs …)` lines stand in (§3, "Orders").
+    task_order: Vec<(String, String)>,
 }
 
 /// What `/2` writes of a body's alarms (`decision_runtime-plan-format-2.md` §3; `decision_release-alarm.md` §2 and §3):
@@ -511,6 +515,10 @@ struct Two {
     contexts: Vec<String>,
     /// The `(obligation …)` lines.
     obligations: Vec<String>,
+    /// Each task that writes an alarm `RA-H7` asks the application's word of, by its text, and that alarm's text: one on
+    /// the counter itself that is no wake ([`alarm::asks_application`]), which a task writes where it reaches its node
+    /// (§3, `RA-H7`).
+    asked: Vec<(String, String)>,
 }
 
 /// One alarm of `/2` (§3): what takes a channel of a device for a compare, its node.
@@ -596,7 +604,11 @@ impl Body {
     /// `(emitter …)`, `(catalog "HEX" none)`, `(epoch simulator)`, each alarm's and clock's line, a route for each alarm
     /// and what an alarm changes of the enabled line, the contexts and the obligations (leaf `M4.1.7.6.5`), each
     /// `(region …)`, and §3's owed lines.
-    fn write_two_hosted(&self, generation: &Generation<'_>) -> String {
+    fn write_two_hosted(
+        &self,
+        generation: &Generation<'_>,
+        application: Option<&inputs::Lines>,
+    ) -> String {
         let mut lines = vec![
             format!("(format \"{FORMAT_2}\")"),
             format!("(profile {})", self.profile),
@@ -611,7 +623,22 @@ impl Body {
                 identity::catalog_digest(generation.records).hex()
             ),
         ];
+        if let Some(application) = application {
+            lines.push(application.application.clone());
+            lines.push(application.code.clone());
+        }
         lines.extend(self.tasks.iter().cloned());
+        if let Some(application) = application {
+            // Each task's inputs by runtime index (§3, "Orders"); `Application::unmet` has held that the file says one
+            // of each task and of no other.
+            lines.extend(
+                self.task_order
+                    .iter()
+                    .filter_map(|(name, _)| application.tasks.get(name).cloned()),
+            );
+            lines.push(application.declared.clone());
+            lines.push(application.initialisation.clone());
+        }
         lines.extend(self.binds.iter().cloned());
         lines.extend(self.instances.iter().cloned());
         lines.push("(epoch simulator)".to_string());
@@ -631,13 +658,47 @@ impl Body {
         lines.extend(self.steps.iter().cloned());
         lines.extend(self.two.obligations.iter().cloned());
         // An alarm's line stands in place of `/1`'s timer route, so what `/1` owes of that route is owed of none (§3).
+        // What the application's file states is owed of none: each task's facts it holds and the system's (§3, "Only what
+        // no input states is written").
+        let stated: BTreeSet<String> = application.map_or_else(BTreeSet::new, |_| {
+            self.task_order
+                .iter()
+                .flat_map(|(_, text)| {
+                    application::HELD_OF_A_TASK
+                        .iter()
+                        .map(move |fact| format!("(owed {text} {fact} (by application))"))
+                })
+                .chain(
+                    application::HELD_OF_THE_SYSTEM
+                        .iter()
+                        .map(|fact| format!("(owed {} {fact} (by application))", self.system)),
+                )
+                .collect()
+        });
         let mut owed: Vec<String> = self
             .owed
             .iter()
             .filter(|line| !line.starts_with("(owed (timer-route "))
             .chain(&self.owed_by_two)
+            .filter(|line| !stated.contains(*line))
             .cloned()
             .collect();
+        // `RA-H7`: a task writing an alarm on the counter itself that is no wake owes `deadlines-within-reach` where its
+        // file does not name that alarm, or where no file is given.
+        for (text, alarm) in &self.two.asked {
+            let named = application.is_some_and(|application| {
+                self.task_order
+                    .iter()
+                    .find(|(_, said)| said == text)
+                    .and_then(|(name, _)| application.named.get(name))
+                    .is_some_and(|named| named.contains(alarm))
+            });
+            if !named {
+                owed.push(format!(
+                    "(owed {text} deadlines-within-reach (by application))"
+                ));
+            }
+        }
         owed.sort();
         owed.dedup();
         lines.extend(owed);
@@ -670,22 +731,36 @@ fn written_as_two(text: &str) -> Result<(), String> {
         .map_err(|why| why.to_string())
 }
 
+/// An application's file given to a lowering (`decision_runtime-plan-format-2.md` §1, "Where inputs are given"; leaf
+/// `M4.1.7.6.6`): how a refusal names it, and its text.
+#[derive(Debug, Clone, Copy)]
+pub struct ApplicationFile<'a> {
+    /// How a refusal names the file: its path as given.
+    pub name: &'a str,
+    /// Its text.
+    pub text: &'a str,
+}
+
 /// The executable form's hosted `/2` lowering (`decision_runtime-plan-format-2.md` §1, "The hosted playground"; leaf
-/// `M4.1.7.6.4`): [`lower`]'s record and body, written as `archogen-runtime-plan/2` with no application's file and no
-/// realization's, `generation` naming what generates its code. No command reaches it: nothing but a test may call it,
-/// as for [`lower`]. Each alarm is written as `/2` writes one (leaf `M4.1.7.6.5`).
+/// `M4.1.7.6.4`): [`lower`]'s record and body, written as `archogen-runtime-plan/2` with no realization's file and the
+/// application's where one is given (leaf `M4.1.7.6.6`), `generation` naming what generates its code. No command reaches
+/// it: nothing but a test may call it, as for [`lower`]. Each alarm is written as `/2` writes one (leaf `M4.1.7.6.5`).
 ///
 /// # Errors
 ///
-/// [`lower`]'s refusals, a system with placement memory's repair naming a target (RP37-3); and `tool-failure` for an
-/// emitter's version that is no single atom, for a timer route with no alarm, for a count or a rate the format cannot
-/// write, and for a text that is not written as `/2`'s §3 writes a plan.
+/// In §7's order: the application's file not reading, or naming another format, `invalid-description`, naming the file;
+/// then [`lower`]'s refusals, a system with placement memory's repair naming a target (RP37-3); then the file's `(target
+/// …)` other than the plan's, `invalid-description`, naming both, and each other thing [`application::Application::unmet`]
+/// reports, `invalid-description`. And `tool-failure` for an emitter's version that is no single atom, for a timer route
+/// with no alarm, for a count or a rate the format cannot write, and for a text that is not written as `/2`'s §3 writes
+/// a plan.
 pub fn lower_hosted(
     program: &Program,
     record: &str,
     vocabulary: &Vocabulary,
     catalog: &Catalog,
     generation: &Generation<'_>,
+    application: Option<&ApplicationFile<'_>>,
 ) -> Result<String, Refusal> {
     if generation.emitter.is_empty()
         || !generation
@@ -701,8 +776,61 @@ pub fn lower_hosted(
             ),
         ));
     }
+    // §7: the application's file not reading, or naming another format, before anything of the record (RP34-3, RP35-4).
+    let application = match application {
+        None => None,
+        Some(file) => Some((
+            file,
+            application::read(file.text).map_err(|why| {
+                refuse(
+                    "invalid-description",
+                    format!(
+                        "the application's file `{}` is not `{}`'s inputs: {why}",
+                        file.name,
+                        application::FORMAT
+                    ),
+                )
+            })?,
+        )),
+    };
     let (body, _) = body(program, record, None, vocabulary, catalog, Format::Two)?;
-    let text = body.write_two_hosted(generation);
+    // §7, in an application's unmet's place: its own `(target …)` against the plan's, naming both, then each other thing
+    // `unmet` reports of the plan's lines it reads, held over `/1`'s contents of the same body (`AI-H2`). The catalog
+    // costs no primitive yet, its first record waiting on `M2.7.4.5`.
+    if let Some((file, inputs)) = &application {
+        if inputs.target != application::HOSTED_PLAYGROUND {
+            return Err(refuse(
+                "invalid-description",
+                format!(
+                    "the application's file `{}` is of the target `{}`, and the plan is of `{}`",
+                    file.name,
+                    inputs.target,
+                    application::HOSTED_PLAYGROUND
+                ),
+            ));
+        }
+        let one = Plan::read(&body.write_one()).map_err(|why| {
+            refuse(
+                "tool-failure",
+                format!("the lowering wrote a plan its own reader refuses: {why}"),
+            )
+        })?;
+        let unmet = inputs.unmet(one.contents(), &[]);
+        if !unmet.is_empty() {
+            return Err(refuse(
+                "invalid-description",
+                format!(
+                    "the application's file `{}` does not meet the plan: {}",
+                    file.name,
+                    unmet.join("; ")
+                ),
+            ));
+        }
+    }
+    let lines = application
+        .as_ref()
+        .map(|(file, inputs)| inputs::lines(file.text, inputs));
+    let text = body.write_two_hosted(generation, lines.as_ref());
     written_as_two(&text).map_err(|why| {
         refuse(
             "tool-failure",
@@ -1723,6 +1851,10 @@ fn body(
         .collect();
     regions.sort();
     let region_lines: Vec<String> = regions.into_iter().map(|(_, _, _, line)| line).collect();
+    let task_names: Vec<String> = tasks
+        .iter()
+        .map(|task| joint::task_name(&system, &task.name))
+        .collect();
     let (two, owed_by_alarms) = alarms_of(
         &routes,
         &contexts,
@@ -1733,7 +1865,17 @@ fn body(
         declarations,
         vocabulary,
         catalog,
+        &task_names,
     )?;
+    let task_order: Vec<(String, String)> = tasks
+        .iter()
+        .map(|task| {
+            (
+                task.name.clone(),
+                names.text(&joint::task_name(&system, &task.name)),
+            )
+        })
+        .collect();
     owed_by_two.extend(owed_by_alarms);
     Ok((
         Body {
@@ -1757,6 +1899,7 @@ fn body(
             owed_by_two,
             regions: region_lines,
             two,
+            task_order,
         },
         accepted,
     ))
@@ -1846,6 +1989,7 @@ fn alarms_of(
     declarations: &[Form],
     vocabulary: &Vocabulary,
     catalog: &Catalog,
+    tasks: &[String],
 ) -> Result<(Two, Vec<String>), Refusal> {
     const COMPARES: [&str; 2] = ["relative-delay", "absolute-deadline"];
     let instance = |name: &str| rebuilt.instances.iter().find(|i| i.provider.name == name);
@@ -2155,6 +2299,19 @@ fn alarms_of(
         }
     }
     two.alarms = alarms.iter().map(|a| a.line.clone()).collect();
+    // `RA-H7`: each task that writes an alarm on the counter itself that is no wake, where it reaches the alarm's node.
+    for alarm in alarms
+        .iter()
+        .filter(|a| alarm::asks_application(a.wake, a.base == alarm::Base::Counter))
+    {
+        for task in tasks {
+            if reach(task).contains(&alarm.node) {
+                two.asked.push((names.text(task), alarm.text.clone()));
+            }
+        }
+    }
+    two.asked.sort();
+    two.asked.dedup();
 
     // Each counter a hosted time base reads that no alarm's line names: a `(clock …)` line of its own (§3).
     let named_devices: BTreeSet<&str> = alarms.iter().map(|a| a.device.as_str()).collect();

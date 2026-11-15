@@ -248,7 +248,17 @@ among the sources: a source by its separation, an expiry by the delivery bound i
 states none last. Every context names each alarm whose code can reach it, every route obligation is an alarm's, and each
 alarm owes what the checker asks of a source. A counter a time base reads that no alarm names gets a clock line of its
 own. Over the corpus, each `/1` timer route stands as the routes of its alarms, their requesters and costs together
-`/1`'s. No command writes a `/2` plan yet.
+`/1`'s.
+
+An application's file, given, is written into the plan as it states it (leaf `M4.1.7.6.6`): the digest of its
+canonical text, what holds its code, each task's inputs in the record's order, by runtime index, its declaration and
+its initialisation. What the file states is owed of no one. A task that writes an alarm on the counter itself, other
+than a wake, still owes its word that the alarm's deadlines stand within reach, until its file names that alarm. The
+plan's code identity keeps each entry point and the code's digest and leaves the figures out, so a bound measured again
+moves the file's digest and not the code. A file that does not read, or is another format, is refused before anything
+of the plan; one of another target, or one the plan leaves unmet, after the plan's own refusals, each
+`invalid-description` and naming the file (`crates/archogen-plan/tests/format2_application.rs`). No command writes a
+`/2` plan yet.
 
 ## From a plan to a generated system
 
