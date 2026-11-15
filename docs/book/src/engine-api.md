@@ -82,7 +82,7 @@ one ([A system on a target](targets.md#a-system-on-a-target-which-device-is-whic
    | more than one active core | `unsupported-profile`, as `check` refuses `core-count` above one |
    | a count of `non-maskable-interrupts` or `firmware-traps` above zero: a source no mask stops | `unsupported-profile`, naming it |
    | no region of placement memory, `(executable true)` and not reserved, to lay an image out in | `infeasible-configuration` |
-   | either count stated by no device | `missing-fact`, naming it: silence gives no value |
+   | either count, or `core-count`, stated by no device | `missing-fact`, naming it: silence gives no value |
 
 2. **Every pass on the description itself but presence**: reading, the boundary, the schema, the profile's
    admission, the workload and refinement, as `check` runs them, and a module tree's composition.

@@ -240,6 +240,19 @@ fn a_machine_of_two_cores_is_out_of_profile() {
     );
 }
 
+/// One active core reads the target's `core-count`, and silence gives no value: a machine of several cores, unstated, would otherwise be
+/// judged as one (leaf `M4.1.7.4.3`, `/2` §1 and §2).
+#[test]
+fn a_machine_silent_on_its_cores_is_missing_the_fact() {
+    let silent = on(HEARTBEAT, &edited(&shipped(), "(core-count 1 tick)", ""));
+    assert_status("no core count", &silent, Status::MissingFact);
+    assert!(
+        says(&silent, "missing-fact", "core-count"),
+        "{}",
+        silent.render_diagnostics()
+    );
+}
+
 /// `/2` §7: the three stand as `check`'s precedence ranks them, and each is said.
 #[test]
 fn the_machines_refusals_stand_by_checks_precedence() {

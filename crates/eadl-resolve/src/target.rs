@@ -29,6 +29,9 @@ const SOURCES_NO_MASK_STOPS: [(&str, &str); 2] = [
     ("firmware-traps", "traps firmware beneath the image takes"),
 ];
 
+/// How many cores a machine has, which the profile's one active core reads (`docs/decisions/decision_runtime-plan-format-2.md` §1).
+const CORE_COUNT: &str = "core-count";
+
 /// The name a declaration gives itself, if it is one.
 fn declared_name(form: &Form) -> Option<&str> {
     form.items().get(1).and_then(Form::as_symbol)
@@ -179,12 +182,13 @@ impl Target {
         })
     }
 
-    /// What `rt-static-up-v1`, the one profile, asks of a machine beyond what `check` judges of the target's file, its one active core among that
-    /// (`docs/decisions/decision_device-correspondence.md`, `DC-H4`; `docs/decisions/decision_runtime-plan-format-2.md` §2): no source no mask stops,
-    /// since the variant's condition 5 masks every interrupt in a masked section, so a count of non-maskable interrupts or of firmware traps above zero
-    /// is `unsupported-profile`, naming it, and one no device states as a count is `missing-fact`, since silence gives no value and a machine with
-    /// such a source would otherwise be admitted; and memory to place an image in, since no playground provides it there, so a target with no
-    /// placement memory is `infeasible-configuration`.
+    /// What `rt-static-up-v1`, the one profile, asks of a machine beyond what `check` judges of the target's file
+    /// (`docs/decisions/decision_device-correspondence.md`, `DC-H4`; `docs/decisions/decision_runtime-plan-format-2.md` §1 and §2): no source no mask
+    /// stops, since the variant's condition 5 masks every interrupt in a masked section, so a count of non-maskable interrupts or of firmware traps above
+    /// zero is `unsupported-profile`, naming it, and one no device states as a count is `missing-fact`, since silence gives no value and a machine with
+    /// such a source would otherwise be admitted; one active core, which reads the machine's `core-count`, so a count no device states is `missing-fact`
+    /// for the same reason, a count above one being `check`'s own refusal (leaf `M4.1.7.4.3`); and memory to place an image in, since no playground
+    /// provides it there, so a target with no placement memory is `infeasible-configuration`.
     ///
     /// Read off every device of the file, since the platform composes each: a count stated above zero anywhere is a source on the machine. What a
     /// device's offers or regions refuse is the readings', which a check of the file asks (`search::refusals_of_what_is_written`): a device that does not
@@ -200,34 +204,35 @@ impl Target {
                     .map(|provider| (provider, form))
             })
             .collect();
+        // Each device stating `fact` as a count, with the count and where it is stated.
+        let counts = |fact: &str| -> Vec<(&str, i128, Span)> {
+            read.iter()
+                .filter_map(|(provider, _)| {
+                    let statement = provider.facts.get(fact)?;
+                    let State::Valued(values) = &statement.state else {
+                        return None;
+                    };
+                    let Some(Value::Count(count)) = values.first() else {
+                        return None;
+                    };
+                    let at = statement.spans.first().copied().unwrap_or(provider.span);
+                    Some((provider.name.as_str(), *count, at))
+                })
+                .collect()
+        };
         let mut refused = Vec::new();
         for (fact, what) in SOURCES_NO_MASK_STOPS {
-            let mut stated = false;
-            for (provider, _) in &read {
-                let Some(statement) = provider.facts.get(fact) else {
-                    continue;
-                };
-                let State::Valued(values) = &statement.state else {
-                    continue;
-                };
-                let Some(Value::Count(count)) = values.first() else {
-                    continue;
-                };
-                stated = true;
-                if *count > 0 {
-                    refused.push(Diagnostic::error(
-                        "unsupported-profile",
-                        format!(
-                            "`{}` states `({fact} {count})`, {what}, and profile `rt-static-up-v1` admits none",
-                            provider.name
-                        ),
-                        Label::new(statement.spans.first().copied().unwrap_or(provider.span), "stated here"),
-                        "the profile masks every interrupt in a masked section, and a source no mask stops breaks that: run on a machine with none, \
-                         or wait for a profile whose analysis charges one",
-                    ));
-                }
+            let stated = counts(fact);
+            for (device, count, at) in stated.iter().filter(|(_, count, _)| *count > 0) {
+                refused.push(Diagnostic::error(
+                    "unsupported-profile",
+                    format!("`{device}` states `({fact} {count})`, {what}, and profile `rt-static-up-v1` admits none"),
+                    Label::new(*at, "stated here"),
+                    "the profile masks every interrupt in a masked section, and a source no mask stops breaks that: run on a machine with none, \
+                     or wait for a profile whose analysis charges one",
+                ));
             }
-            if !stated {
+            if stated.is_empty() {
                 refused.push(Diagnostic::error(
                     "missing-fact",
                     format!("no device of `{}` states a count of `{fact}`, {what}", self.platform),
@@ -238,6 +243,18 @@ impl Target {
                     ),
                 ));
             }
+        }
+        if counts(CORE_COUNT).is_empty() {
+            refused.push(Diagnostic::error(
+                "missing-fact",
+                format!("no device of `{}` states `{CORE_COUNT}`, how many cores it has", self.platform),
+                Label::new(self.span, "the machine"),
+                format!(
+                    "state `({CORE_COUNT} N)` on `{}` with what checks it: silence gives no value, and profile `rt-static-up-v1` admits a machine \
+                     of one active core only",
+                    self.platform
+                ),
+            ));
         }
         if let Ok(joint) = Joint::new(&read, &[], vocabulary) {
             if joint.placement_memory().is_empty() {
