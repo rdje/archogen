@@ -84,6 +84,9 @@ one ([A system on a target](targets.md#a-system-on-a-target-which-device-is-whic
    | no region of placement memory, `(executable true)` and not reserved, to lay an image out in | `infeasible-configuration` |
    | either count, or `core-count`, stated by no device | `missing-fact`, naming it: silence gives no value |
 
+   This stage is one function, `eadl_resolve::target::judge_alone`, which the runtime plan's lowering on a target
+   calls too as its own first refusals (leaf `M4.1.7.6.7.1`), so `check` and the lowering give one file one code.
+
 2. **Every pass on the description itself but presence**: reading, the boundary, the schema, the profile's
    admission, the workload and refinement, as `check` runs them, and a module tree's composition.
 3. **What the search refuses of what the description writes**, each reading asked alone: a provider offering one

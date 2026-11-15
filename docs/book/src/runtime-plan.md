@@ -257,8 +257,20 @@ than a wake, still owes its word that the alarm's deadlines stand within reach, 
 plan's code identity keeps each entry point and the code's digest and leaves the figures out, so a bound measured again
 moves the file's digest and not the code. A file that does not read, or is another format, is refused before anything
 of the plan; one of another target, or one the plan leaves unmet, after the plan's own refusals, each
-`invalid-description` and naming the file (`crates/archogen-plan/tests/format2_application.rs`). No command writes a
-`/2` plan yet.
+`invalid-description` and naming the file (`crates/archogen-plan/tests/format2_application.rs`).
+
+On a target, `archogen_plan::lower_on_target` takes the plan the search resolved there and the target's file (leaf
+`M4.1.7.6.7.1`). The target is judged first, alone, by the same judgement `archogen check --target` and the engine API
+give it, `eadl_resolve::target::judge_alone`, and refused with the code `check` gives: two cores or a source no mask
+stops, a machine with no memory to place a system in, a count it leaves silent. Then the application's file, then the
+plan itself: one resolved on another file of the target, or on none, is of another run; one naming another platform
+beside the file's own digest is no plan a run writes. The joint rules' findings over the target's hardware follow, and
+then the application's file, which names its target by the platform's name, as the plan's `(target …)` line does. What
+it writes of the target is `(target NAME "HEX")`, the platform and the digest of the file's forms, and
+`(catalog "HEX" NAME)`, the catalog's digest and the name its records go by for the machine
+(`crates/archogen-plan/tests/format2_target.rs`). The rest of a plan on a target is leaves `M4.1.7.6.7.2` and `.3`, so
+until then the lowering refuses after every refusal that comes before them, rather than return a plan short of them.
+No command writes a `/2` plan yet.
 
 ## From a plan to a generated system
 

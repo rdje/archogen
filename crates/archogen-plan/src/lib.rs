@@ -36,6 +36,7 @@ use eadl_resolve::joint::{
 use eadl_resolve::offer::{self, State};
 use eadl_resolve::plan as assignment;
 use eadl_resolve::requirement::Requirement;
+use eadl_resolve::target::{judge_alone, on_target, OnTarget, Target};
 use eadl_resolve::value::Value;
 use eadl_resolve::vocabulary::{Usage, Vocabulary};
 
@@ -433,7 +434,15 @@ fn lowered(
     vocabulary: &Vocabulary,
     catalog: &Catalog,
 ) -> Result<(Plan, Option<ResultRecord>), Refusal> {
-    let (body, accepted) = body(program, record, result, vocabulary, catalog, Format::One)?;
+    let (body, accepted) = body(
+        program,
+        record,
+        result,
+        vocabulary,
+        catalog,
+        Format::One,
+        None,
+    )?;
     let text = body.write_one();
     let plan = Plan::read(&text).map_err(|why| {
         refuse(
@@ -550,8 +559,10 @@ struct AlarmOf {
 enum Format {
     /// `archogen-runtime-plan/1`.
     One,
-    /// `archogen-runtime-plan/2`.
+    /// `archogen-runtime-plan/2` on the hosted playground.
     Two,
+    /// `archogen-runtime-plan/2` on a target, whose placement memory it lays out (leaf `M4.1.7.6.7.1`).
+    OnTarget,
 }
 
 /// What generates a `/2` plan's code, which its kept lines name (`decision_runtime-plan-format-2.md` §1): the emitter's
@@ -793,7 +804,22 @@ pub fn lower_hosted(
             })?,
         )),
     };
-    let (body, _) = body(program, record, None, vocabulary, catalog, Format::Two)?;
+    // §1, in `/1`'s first bullet's place: a `/3`, resolved on a target, lowered with none was resolved for another run (RP38-1).
+    if let Some(why) = assignment::read(record)
+        .ok()
+        .and_then(|read| read.stale_for(None))
+    {
+        return Err(refuse("stale-input", why));
+    }
+    let (body, _) = body(
+        program,
+        record,
+        None,
+        vocabulary,
+        catalog,
+        Format::Two,
+        None,
+    )?;
     // §7, in an application's unmet's place: its own `(target …)` against the plan's, naming both, then each other thing
     // `unmet` reports of the plan's lines it reads, held over `/1`'s contents of the same body (`AI-H2`). The catalog
     // costs no primitive yet, its first record waiting on `M2.7.4.5`.
@@ -840,6 +866,268 @@ pub fn lower_hosted(
     Ok(text)
 }
 
+/// A target's file as a lowering on it is handed one (`decision_runtime-plan-format-2.md` §1; leaf `M4.1.7.6.7.1`).
+#[derive(Debug, Clone, Copy)]
+pub struct TargetFile<'a> {
+    /// How a refusal names the file: its path as given.
+    pub name: &'a str,
+    /// Its text.
+    pub text: &'a str,
+}
+
+/// A target's lines in a `/2` plan's identity (`decision_runtime-plan-format-2.md` §1, "The target in the identity" and
+/// "The catalog in the identity"; leaf `M4.1.7.6.7.1`).
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct TargetLines {
+    /// `(target NAME "HEX")`: `NAME` the file's one platform, `HEX` the digest of its forms' program text.
+    pub target: String,
+    /// `(catalog "HEX" NAME)`: the digest of the tool's catalog and the platform's `catalog-target`.
+    pub catalog: String,
+    /// The platform's name, which a `/3` record and an application's file name the target by.
+    pub platform: String,
+    /// The digest, as `(target …)` writes it.
+    pub digest: String,
+}
+
+/// The target's file judged alone, §7's first stage, and the target it is.
+fn a_target(
+    file: &TargetFile<'_>,
+    kinds: &Registry,
+    vocabulary: &Vocabulary,
+) -> Result<Target, Refusal> {
+    let mut sources = SourceMap::new();
+    let id = sources
+        .add(file.name, file.text.to_owned())
+        .map_err(|why| {
+            refuse(
+                "invalid-description",
+                format!("the target's file `{}` does not read: {why}", file.name),
+            )
+        })?;
+    // §7, first: a target's own refusals before anything is lowered, `check`'s judgement of the target's file alone as `DC-H3` runs it, with
+    // the code `check` gives, so one input gives the code `check` gives it (RP34-4, RP35-4, RP36-1).
+    let alone = judge_alone(&sources, id, kinds, &RT_STATIC_UP_V1, vocabulary);
+    let (verdict, diagnostics) = alone.concluded();
+    if verdict != eadl_front::Verdict::Ok {
+        let said: Vec<String> = diagnostics
+            .iter()
+            .map(|d| format!("{}: {}", d.code, d.message))
+            .collect();
+        return Err(refuse(
+            verdict.slug(),
+            format!(
+                "the target's file `{}` is no machine this profile admits: {}",
+                file.name,
+                said.join("; ")
+            ),
+        ));
+    }
+    alone.target.ok_or_else(|| {
+        refuse(
+            "tool-failure",
+            format!(
+                "the target's file `{}` was judged a target and read as none",
+                file.name
+            ),
+        )
+    })
+}
+
+/// [`TargetLines`] of `target`, `generation` naming what generates the code.
+fn lines_of(target: &Target, generation: &Generation<'_>) -> Result<TargetLines, Refusal> {
+    let platform = target
+        .declarations
+        .iter()
+        .find(|d| d.items().get(1).and_then(Form::as_symbol) == Some(target.platform.as_str()))
+        .ok_or_else(|| {
+            refuse(
+                "tool-failure",
+                format!(
+                    "the target's platform `{}` has no declaration",
+                    target.platform
+                ),
+            )
+        })?;
+    // The platform's `catalog-target`, the name a catalog record's `(target …)` goes by for this machine (§2's table; §5, "What the catalog is
+    // read by"), as its offers write it.
+    let catalog_target = platform
+        .items()
+        .iter()
+        .filter(|item| item.head() == Some("offers"))
+        .flat_map(|offers| offers.items().iter().skip(1))
+        .find(|offer| offer.head() == Some("catalog-target"))
+        .and_then(|offer| offer.items().get(1).and_then(Form::as_symbol))
+        .ok_or_else(|| {
+            refuse(
+                "missing-fact",
+                format!(
+                    "the target's platform `{}` states no `catalog-target`, the name its catalog records go by",
+                    target.platform
+                ),
+            )
+        })?;
+    let digest = assignment::target_digest(target);
+    Ok(TargetLines {
+        target: format!("(target {} \"{digest}\")", target.platform),
+        catalog: format!(
+            "(catalog \"{}\" {catalog_target})",
+            identity::catalog_digest(generation.records).hex()
+        ),
+        platform: target.platform.clone(),
+        digest,
+    })
+}
+
+/// A target's lines in a plan's identity, the file judged first as §7's first stage judges it (leaf `M4.1.7.6.7.1`): what a lowering on the
+/// target writes of it, for a reader to hold before the rest of a plan on a target is written (`M4.1.7.6.7.2`).
+///
+/// # Errors
+///
+/// The target's own refusals, by the code `check` gives them; `missing-fact` for a platform stating no `catalog-target`.
+pub fn target_lines(
+    file: &TargetFile<'_>,
+    kinds: &Registry,
+    vocabulary: &Vocabulary,
+    generation: &Generation<'_>,
+) -> Result<TargetLines, Refusal> {
+    lines_of(&a_target(file, kinds, vocabulary)?, generation)
+}
+
+/// The executable form's `/2` lowering on a target (`decision_runtime-plan-format-2.md` §1 and §7; leaf `M4.1.7.6.7.1`): an
+/// `archogen-assignment/3` record resolved on `target`, lowered over `program` with the target's platform in the system's own's place, as
+/// `on_target` gives it. No command reaches it: nothing but a test may call it, as for [`lower`].
+///
+/// ⚠️ **It writes no plan yet.** A plan on a target's timer, epoch and alarms' lines, its regions and what it owes are leaves
+/// `M4.1.7.6.7.2` and `.3`'s, so after every refusal §7 places before them it refuses `tool-failure`, naming the leaf, rather than return a
+/// plan short of them as if whole. [`target_lines`] gives what it writes of the target meanwhile.
+///
+/// # Errors
+///
+/// In §7's order: the target's own refusals, by `check`'s code; the application's file not reading, or naming another format,
+/// `invalid-description`; then `/1`'s list, the record not reading `tool-failure`, a record of the other kind or of another target's digest
+/// `stale-input` with the program's digest, another platform beside the file's own digest `tool-failure`, the rest of `/1`'s list with the
+/// joint rules' findings over the target's hardware `tool-failure`; then the application's `(target …)` other than the plan's and each thing
+/// `unmet` reports, `invalid-description`; then `tool-failure`, the rest of the plan being unwritten.
+#[allow(clippy::too_many_arguments)]
+pub fn lower_on_target(
+    program: &Program,
+    record: &str,
+    target: &TargetFile<'_>,
+    kinds: &Registry,
+    vocabulary: &Vocabulary,
+    catalog: &Catalog,
+    generation: &Generation<'_>,
+    application: Option<&ApplicationFile<'_>>,
+) -> Result<String, Refusal> {
+    let read_target = a_target(target, kinds, vocabulary)?;
+    // §7: then the application's file not reading, or naming another format, the realization's being none (RP34-3, RP35-4).
+    let application = match application {
+        None => None,
+        Some(file) => Some((
+            file,
+            application::read(file.text).map_err(|why| {
+                refuse(
+                    "invalid-description",
+                    format!(
+                        "the application's file `{}` is not `{}`'s inputs: {why}",
+                        file.name,
+                        application::FORMAT
+                    ),
+                )
+            })?,
+        )),
+    };
+    let lines = lines_of(&read_target, generation)?;
+    // §1, "The target in the identity", in `/1`'s first bullet's place: the record read, of the kind and the target given, the digest
+    // deciding which run it is of, and a platform against that digest no record a run writes (leaf `M4.1.7.5.6`).
+    let read = assignment::read(record).map_err(|e| {
+        refuse(
+            "tool-failure",
+            format!("the assignment record does not read: {e}"),
+        )
+    })?;
+    if let Some(why) = read.stale_for(Some((&lines.platform, &lines.digest))) {
+        return Err(refuse("stale-input", why));
+    }
+    if let Some(why) = read.misnames(&lines.platform) {
+        return Err(refuse("tool-failure", why));
+    }
+    // The system on the target, as the search and the checker read it there.
+    let flattened;
+    let declarations: &[Form] = if program.instances.len() == 1 {
+        &program.root().declarations
+    } else {
+        flattened = resolved_declarations(program).0;
+        &flattened
+    };
+    let system = declarations
+        .iter()
+        .find(|d| d.head() == Some("defsystem") && d.items().get(1).and_then(Form::as_symbol) == Some(read.system.as_str()))
+        .ok_or_else(|| {
+            refuse(
+                "stale-input",
+                format!(
+                    "the assignment record names the system `{}`, which the program does not declare: resolve again",
+                    read.system
+                ),
+            )
+        })?;
+    let there = on_target(system, declarations, &read_target).map_err(|refused| {
+        let said: Vec<String> = refused.iter().map(|d| format!("{}: {}", d.code, d.message)).collect();
+        refuse(
+            "tool-failure",
+            format!(
+                "the configuration checker accepted the record, and the system `{}` does not stand on the target `{}`: {}",
+                read.system,
+                target.name,
+                said.join("; ")
+            ),
+        )
+    })?;
+    let (body, _) = body(
+        program,
+        record,
+        None,
+        vocabulary,
+        catalog,
+        Format::OnTarget,
+        Some(&there),
+    )?;
+    // §7, in an application's unmet's place: its own `(target …)` against the plan's, the platform's name, then each thing `unmet` reports.
+    if let Some((file, inputs)) = &application {
+        if inputs.target != lines.platform {
+            return Err(refuse(
+                "invalid-description",
+                format!(
+                    "the application's file `{}` is of the target `{}`, and the plan is of `{}`",
+                    file.name, inputs.target, lines.platform
+                ),
+            ));
+        }
+        let one = Plan::read(&body.write_one()).map_err(|why| {
+            refuse(
+                "tool-failure",
+                format!("the lowering wrote a plan its own reader refuses: {why}"),
+            )
+        })?;
+        let unmet = inputs.unmet_on(one.contents(), &lines.platform, &[]);
+        if !unmet.is_empty() {
+            return Err(refuse(
+                "invalid-description",
+                format!(
+                    "the application's file `{}` does not meet the plan: {}",
+                    file.name,
+                    unmet.join("; ")
+                ),
+            ));
+        }
+    }
+    Err(refuse(
+        "tool-failure",
+        "a plan on a target's timer, epoch and alarms' lines, its regions and what it owes are written by task-tree leaves M4.1.7.6.7.2 and M4.1.7.6.7.3, not built yet",
+    ))
+}
+
 /// A lowering's body (§1 to §2.10): the record refused as §1 refuses it, or what `/1` writes of it, beside the result
 /// record taken where there is one.
 #[allow(clippy::too_many_lines)]
@@ -850,6 +1138,7 @@ fn body(
     vocabulary: &Vocabulary,
     catalog: &Catalog,
     format: Format,
+    there: Option<&OnTarget>,
 ) -> Result<(Body, Option<ResultRecord>), Refusal> {
     // §1, input 1: the declarations and the digest are the program's own, never its caller's; a module tree is read as
     // the language checks it, its names qualified.
@@ -914,6 +1203,11 @@ fn body(
             ),
         ));
     }
+    // On a target the system reads what `on_target` gives it, the target's platform in its own's place (leaf `M4.1.7.6.7.1`).
+    let (declarations, decl): (&[Form], &Form) = match there {
+        Some(there) => (&there.declarations, &there.system),
+        None => (declarations, decl),
+    };
     let rebuilt = assignment::rebuild(
         &record,
         declarations,
@@ -1216,21 +1510,21 @@ fn body(
             ),
         ));
     }
-    if record.placement.is_some()
+    let placed = record.placement.is_some()
         || rebuilt
             .map
             .obligations
             .iter()
-            .any(|o| matches!(o, Obligation::Placement { .. }))
-    {
-        return Err(refuse(
-            "unsupported-profile",
-            match format {
-                Format::One => "the system has placement memory, and laying an image out in memory is `/2`'s (`M4.1.7`): describe a hosted platform, or wait for `/2`",
-                // `/2` §1: a hosted plan lays out no memory, so placement memory stays refused, its repair naming a target (RP37-3).
-                Format::Two => "the system has placement memory, and a hosted plan lays no image out in memory: describe a hosted platform, or name the target the system runs on, where `/2` lays the image out",
-            },
-        ));
+            .any(|o| matches!(o, Obligation::Placement { .. }));
+    // A plan on a target lays its placement memory out (§5); `/1` and a hosted `/2` refuse it.
+    let refused_placement = match format {
+        Format::One => Some("the system has placement memory, and laying an image out in memory is `/2`'s (`M4.1.7`): describe a hosted platform, or wait for `/2`"),
+        // `/2` §1: a hosted plan lays out no memory, so placement memory stays refused, its repair naming a target (RP37-3).
+        Format::Two => Some("the system has placement memory, and a hosted plan lays no image out in memory: describe a hosted platform, or name the target the system runs on, where `/2` lays the image out"),
+        Format::OnTarget => None,
+    };
+    if let (true, Some(why)) = (placed, refused_placement) {
+        return Err(refuse("unsupported-profile", why));
     }
     if tasks.is_empty() {
         return Err(refuse(

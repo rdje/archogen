@@ -135,14 +135,7 @@ fn vocabulary_facts(
 fn facts_of(
     vocabulary: &eadl_resolve::vocabulary::Vocabulary,
 ) -> eadl_model::check::VocabularyFacts {
-    eadl_model::check::VocabularyFacts {
-        declared: vocabulary.facts().map(|fact| fact.name.clone()).collect(),
-        derived: vocabulary
-            .facts()
-            .filter(|fact| !fact.derived_from.is_empty())
-            .map(|fact| (fact.name.clone(), fact.derived_from.clone()))
-            .collect(),
-    }
+    eadl_resolve::target::check_facts(vocabulary)
 }
 
 /// The shipped kind modules, owned so a [`SourceMap`] can take them.

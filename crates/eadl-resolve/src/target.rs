@@ -10,15 +10,19 @@
 
 use std::collections::{BTreeMap, BTreeSet};
 
-use eadl_front::{Diagnostic, Form, Label, Span};
-use eadl_model::check::{default_profile, out_of_profile};
+use eadl_front::{read, Diagnostic, Diagnostics, Form, Label, SourceId, SourceMap, Span, Verdict};
+use eadl_model::check::{
+    check_with_vocabulary, default_profile, out_of_profile, Outcome, VocabularyFacts,
+};
+use eadl_model::kind::Registry;
 use eadl_model::presence::{composition, FactMap, PresenceReport};
+use eadl_model::profile::Profile;
 use eadl_model::refinement::{loops_refused, Facets};
 
 use crate::joint::{Joint, System};
 use crate::offer::{self, State};
 use crate::requirement::side_name_lists;
-use crate::search::{Resolution, Who};
+use crate::search::{refusals_of_what_is_written, Resolution, Who};
 use crate::value::Value;
 use crate::vocabulary::Vocabulary;
 
@@ -31,6 +35,95 @@ const SOURCES_NO_MASK_STOPS: [(&str, &str); 2] = [
 
 /// How many cores a machine has, which the profile's one active core reads (`docs/decisions/decision_runtime-plan-format-2.md` §1).
 const CORE_COUNT: &str = "core-count";
+
+/// What `check` is told of the capability vocabulary: each fact it declares, and each it derives with the facts its rule
+/// requires (leaf `M3.4.16`, `M3.4.17.1`).
+#[must_use]
+pub fn check_facts(vocabulary: &Vocabulary) -> VocabularyFacts {
+    VocabularyFacts {
+        declared: vocabulary.facts().map(|fact| fact.name.clone()).collect(),
+        derived: vocabulary
+            .facts()
+            .filter(|fact| !fact.derived_from.is_empty())
+            .map(|fact| (fact.name.clone(), fact.derived_from.clone()))
+            .collect(),
+    }
+}
+
+/// A target's file judged alone (`docs/decisions/decision_device-correspondence.md`'s `DC-H3`, its first stage, with `DC-H4`'s admission of the
+/// machine; `docs/decisions/decision_runtime-plan-format-2.md` §1 and §7's first stage; leaf `M4.1.7.6.7.1`): what `archogen check --target`
+/// and the engine API judge of it before any description, and what a lowering on it refuses before anything is lowered, one judgement for both.
+#[derive(Debug, Clone)]
+pub struct Alone {
+    /// `check`'s judgement of the file, each verdict where `check` places it.
+    pub outcome: Outcome,
+    /// Where the file reads: what the search's readings refuse of what it writes, then what keeps it from being a target, `Target::read`'s, or
+    /// what the profile asks of a machine, `Target::admission`'s; each under the verdict its own code carries, in that order.
+    pub refusals: Vec<Diagnostic>,
+    /// The target, where the file reads as one.
+    pub target: Option<Target>,
+}
+
+impl Alone {
+    /// The highest verdict of what was found, by `check`'s precedence, and every diagnostic, a diagnostic said twice said once: `ok`
+    /// and nothing where the file stands as a target the profile admits.
+    #[must_use]
+    pub fn concluded(&self) -> (Verdict, Vec<Diagnostic>) {
+        let mut said: Vec<Diagnostic> = Vec::new();
+        let mut verdicts: Vec<Verdict> = Vec::new();
+        if !self.outcome.diagnostics.is_empty() {
+            verdicts.push(self.outcome.verdict);
+            said.extend(self.outcome.diagnostics.iter().cloned());
+        }
+        for diagnostic in &self.refusals {
+            if !said.contains(diagnostic) {
+                verdicts.push(Verdict::of_code(diagnostic.code));
+                said.push(diagnostic.clone());
+            }
+        }
+        let diagnostics = Diagnostics::held(said);
+        let verdict = verdicts
+            .into_iter()
+            .max_by_key(|verdict| verdict.precedence())
+            .filter(|_| !diagnostics.is_empty())
+            .unwrap_or(Verdict::Ok);
+        (verdict, diagnostics)
+    }
+}
+
+/// The target's file at `file`, judged alone under `active` ([`Alone`]): `check`'s judgement of it, told `vocabulary`'s facts; and where it
+/// reads, what the search's readings refuse of what it writes, then [`Target::read`]'s refusals, or the target's [`Target::admission`].
+#[must_use]
+pub fn judge_alone(
+    sources: &SourceMap,
+    file: SourceId,
+    registry: &Registry,
+    active: &Profile,
+    vocabulary: &Vocabulary,
+) -> Alone {
+    let outcome = check_with_vocabulary(sources, file, registry, active, &check_facts(vocabulary));
+    let (document, diagnostics) = read(sources, file);
+    let mut refusals = Vec::new();
+    let mut target = None;
+    if !diagnostics.has_errors() {
+        let forms: Vec<Form> = eadl_front::language_version::declarations(&document.forms)
+            .cloned()
+            .collect();
+        refusals.extend(refusals_of_what_is_written(&forms, vocabulary));
+        match Target::read(&forms, Span::at(file, 0)) {
+            Ok(read) => {
+                refusals.extend(read.admission(vocabulary));
+                target = Some(read);
+            }
+            Err(refused) => refusals.extend(refused),
+        }
+    }
+    Alone {
+        outcome,
+        refusals,
+        target,
+    }
+}
 
 /// The name a declaration gives itself, if it is one.
 fn declared_name(form: &Form) -> Option<&str> {

@@ -204,6 +204,58 @@ pub fn lowered_hosted(
     ))
 }
 
+/// `text`, a plain description, its first system's `archogen-assignment/2` record as the search writes it on its own
+/// hardware: the program and the record, or `None` where the check or the search refuses it.
+pub fn hosted_record(text: &str) -> Option<(Program, String)> {
+    let program = checked(text).ok()?;
+    let record = searched(&program, None).ok()?;
+    Some((program, record))
+}
+
+/// `text`, a plain description, its first system put on the target whose file is `target`, searched there, and its
+/// `archogen-assignment/3` record written (leaf `M4.1.7.5.2`): the program and the record, or `None` where the check, the
+/// target's reading or the search refuses it.
+pub fn searched_on_target(text: &str, target: &str) -> Option<(Program, String)> {
+    let program = checked(text).ok()?;
+    let mut sources = SourceMap::new();
+    let id = sources.add("target.eadl", target.to_owned()).ok()?;
+    let (document, read) = eadl_front::read(&sources, id);
+    if read.has_errors() {
+        return None;
+    }
+    let forms: Vec<Form> = eadl_front::language_version::declarations(&document.forms)
+        .cloned()
+        .collect();
+    let target = eadl_resolve::target::Target::read(&forms, eadl_front::Span::at(id, 0)).ok()?;
+    let declarations = &program.root().declarations;
+    let system = declarations
+        .iter()
+        .find(|form| form.head() == Some("defsystem"))?
+        .clone();
+    let there = eadl_resolve::target::on_target(&system, declarations, &target).ok()?;
+    let (vocabulary, catalog) = (vocabulary(), catalog());
+    let policy = Policy {
+        adapters: catalog.clone(),
+        ..Policy::default()
+    };
+    let Search::Resolved(resolution) = eadl_resolve::search::search_on_target(
+        &there,
+        RT_STATIC_UP_V1.caller_level,
+        &vocabulary,
+        &policy,
+        Limits::DEFAULT,
+    ) else {
+        return None;
+    };
+    let record = plan::write_on_target(
+        &resolution,
+        RT_STATIC_UP_V1.id,
+        &plan::program_digest(&program),
+        (&target.platform, &plan::target_digest(&target)),
+    );
+    Some((program, record))
+}
+
 /// `program`'s `system` (the first when `None`) searched, its record written, and lowered.
 fn lowered_program(program: &Program, system: Option<&str>) -> Lowered {
     let record = match searched(program, system) {

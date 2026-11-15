@@ -22,21 +22,17 @@
 
 use std::collections::BTreeSet;
 
-use eadl_front::{
-    read, Diagnostic, Diagnostics, Form, Program, SourceId, SourceMap, Span, Verdict,
-};
-use eadl_model::check::{
-    check_but_presence, check_program_but_presence, check_with_vocabulary, Closure, Outcome,
-};
+use eadl_front::{read, Diagnostic, Diagnostics, Form, Program, SourceId, SourceMap, Verdict};
+use eadl_model::check::{check_but_presence, check_program_but_presence, Closure, Outcome};
 use eadl_model::kind::Registry;
 use eadl_model::profile::Profile;
 use eadl_resolve::plan;
 use eadl_resolve::requirement::program_declarations_named_like_facts;
 use eadl_resolve::search::refusals_of_what_is_written;
-use eadl_resolve::target::{on_target, Target};
+use eadl_resolve::target::{judge_alone, on_target};
 use eadl_resolve::vocabulary::Vocabulary;
 
-use crate::{composition_verdict, facts_of, instances_of, Response, Status};
+use crate::{composition_verdict, instances_of, Response, Status};
 
 /// The description a request names, as [`judge`] is handed it.
 pub(crate) enum Described<'p> {
@@ -132,30 +128,11 @@ pub(crate) fn judge(
     };
     let mut findings = Findings::default();
 
-    // 1. The target's file alone.
-    findings.push_outcome(&check_with_vocabulary(
-        &sources,
-        file,
-        registry,
-        active,
-        &facts_of(&vocabulary),
-    ));
-    let (target_forms, target_read) = declarations_of(&sources, file);
-    let target = if target_read {
-        findings.push_each(refusals_of_what_is_written(&target_forms, &vocabulary));
-        match Target::read(&target_forms, Span::at(file, 0)) {
-            Ok(target) => {
-                findings.push_each(target.admission(&vocabulary));
-                Some(target)
-            }
-            Err(refused) => {
-                findings.push_each(refused);
-                None
-            }
-        }
-    } else {
-        None
-    };
+    // 1. The target's file alone, as the lowering on it judges it too (`eadl_resolve::target::judge_alone`).
+    let alone = judge_alone(&sources, file, registry, active, &vocabulary);
+    findings.push_outcome(&alone.outcome);
+    findings.push_each(alone.refusals);
+    let target = alone.target;
 
     // 2. Every pass on the description itself but presence, and 3. the search's readings of what it writes, each asked alone.
     let plain;

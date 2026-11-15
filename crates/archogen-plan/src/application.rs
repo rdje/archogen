@@ -1301,6 +1301,15 @@ impl Application {
     /// What the application's initialisation calls is held too: each a node of the plan's.
     #[must_use]
     pub fn unmet(&self, plan: &Contents, primitives: &[&str]) -> Vec<String> {
+        self.unmet_on(plan, HOSTED_PLAYGROUND, primitives)
+    }
+
+    /// [`Application::unmet`] of a plan whose target is `target`: the hosted playground's for a `/1` plan or a hosted `/2`, and on a
+    /// target the platform's name its `(target NAME "HEX")` writes, which a file names as it is held against the plan's
+    /// (`docs/decisions/decision_runtime-plan-format-2.md` §1, "The application and the realization in the identity"; leaf
+    /// `M4.1.7.6.7.1`).
+    #[must_use]
+    pub fn unmet_on(&self, plan: &Contents, target: &str, primitives: &[&str]) -> Vec<String> {
         // Each list of the plan's is looked up by a set or a map, so this is in step with the file's lengths and the plan's, and never their product.
         let planned: BTreeSet<&str> = plan.tasks.iter().map(|task| task.name.as_str()).collect();
         let identities: BTreeSet<&str> = plan
@@ -1327,9 +1336,9 @@ impl Application {
                 self.system, plan.system
             ));
         }
-        if self.target != HOSTED_PLAYGROUND {
+        if self.target != target {
             unmet.push(format!(
-                "these are of the target `{}`, and this plan is of `{HOSTED_PLAYGROUND}`",
+                "these are of the target `{}`, and this plan is of `{target}`",
                 self.target
             ));
         }
