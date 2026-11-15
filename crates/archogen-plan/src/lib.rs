@@ -41,6 +41,7 @@ use eadl_resolve::vocabulary::{Usage, Vocabulary};
 
 pub mod application;
 pub mod contents;
+pub mod layout;
 
 /// The format's identifier (§3).
 pub const FORMAT: &str = "archogen-runtime-plan/1";

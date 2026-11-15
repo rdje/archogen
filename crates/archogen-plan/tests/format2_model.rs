@@ -1,10 +1,15 @@
 //! Format `/2`'s decision procedures as an executable model (`docs/decisions/decision_runtime-plan-format-2.md`;
-//! `docs/decisions/decision_executable-design-reviews.md`). Nothing of `/2` is code yet. Three rounds of its review worked its formulas by hand, and each
+//! `docs/decisions/decision_executable-design-reviews.md`). `/2` becomes code leaf by leaf (`M4.1.7.6`). Three rounds of its review worked its formulas by hand, and each
 //! found one wrong, the record's own worked example among them. So each procedure the record states is transcribed here, rule by rule and citing its
 //! section, optimised for nothing and on `std` alone; a bounded exhaustive checker holds what the record claims of each over every small input; and each
 //! probe of a round is a row of a corpus with the outcome the record gives it. `M4.1.7`'s lowering is to be held against this over the same universe.
 //! Where the record takes a rule from code that exists, the joint rules' reading of a memory map, the model is held to that code and not to a reading of it
 //! (round 4, RP4-5): `the_model_refuses_a_map_as_the_joint_rules_do`, the one test here that calls another crate.
+//!
+//! ⭐ **The lowering held to the model** (leaf `M4.1.7.6.1` on): each procedure the library builds is held to its transcription here by an agreement check
+//! over the model's own inputs — each small region, unit and set of figures it enumerates, and each probe of a round — written beside the model's own
+//! assertion so that every case the model runs is one the library runs too. The model stays on `std` and its own rules; only those checks call
+//! `archogen_plan`, and a check that disagrees is the library's defect or the model's, settled against the record.
 //!
 //! What is modelled: §1's code identity, by the record's own table of lines; §4's epoch and the reach it asks of one write; §5's floor, limit and
 //! cursor, and each stack's sum; §6's priorities. What is not: the text of a plan's lines, which the lowering's goldens will hold (`M4.1.7`).
@@ -18,6 +23,111 @@ use eadl_resolve::offer::{self, Provider};
 use eadl_resolve::vocabulary::Vocabulary;
 
 const RECORD: &str = include_str!("../../../docs/decisions/decision_runtime-plan-format-2.md");
+
+// ---- the library beside the model (leaf `M4.1.7.6.1`)
+
+/// A model region as the library's span.
+fn span(region: Region) -> archogen_plan::layout::Span {
+    archogen_plan::layout::Span {
+        base: u128::from(region.base),
+        end: u128::from(region.end),
+    }
+}
+
+/// A model map's reserved ranges as the library's.
+fn reserved(raw: &[(u64, Option<u64>)]) -> Vec<archogen_plan::layout::Reserved> {
+    raw.iter()
+        .map(|&(base, bytes)| archogen_plan::layout::Reserved {
+            base: u128::from(base),
+            bytes: bytes.map(u128::from),
+        })
+        .collect()
+}
+
+/// A model unit as the library's: a stack or a table, its alignment never zero.
+fn unit_of(unit: Unit) -> archogen_plan::layout::Unit {
+    let align = std::num::NonZeroU128::new(u128::from(unit.align)).expect("an alignment");
+    if unit.stack {
+        archogen_plan::layout::Unit::stack(u128::from(unit.bytes), u128::from(unit.guard), align)
+    } else {
+        assert_eq!(unit.guard, 0, "a table carries no guard");
+        archogen_plan::layout::Unit::table(u128::from(unit.bytes), align)
+    }
+}
+
+/// §5's floor, the library's held to the model's wherever rule 10 refuses nothing of the map.
+fn floor_held(region: Region, raw: &[(u64, Option<u64>)]) -> Result<u64, BTreeSet<Refused>> {
+    let model = floor(region, raw);
+    if let Ok(at) = model {
+        let holes = archogen_plan::layout::holes(span(region), &reserved(raw));
+        assert_eq!(
+            holes
+                .iter()
+                .map(|hole| (hole.span.base, hole.span.end, hole.sized))
+                .collect::<Vec<_>>(),
+            holes_in(region, raw)
+                .into_iter()
+                .map(|(base, end, sized)| (u128::from(base), u128::from(end), sized))
+                .collect::<Vec<_>>(),
+            "the holes of {region:?} {raw:?}"
+        );
+        assert_eq!(
+            archogen_plan::layout::floor(span(region), &holes),
+            u128::from(at),
+            "the floor of {region:?} {raw:?}"
+        );
+    }
+    model
+}
+
+/// §5's formula and limit, the library's held to the model's: the same units laid or the same one refused, and where all fit, the same limit and the
+/// same holes truncating it.
+fn lay_held(
+    region: Region,
+    raw: &[(u64, Option<u64>)],
+    units: &[Option<Unit>],
+    floor: u64,
+    want: &Result<Vec<(u64, u64)>, Refused>,
+) {
+    let holes = archogen_plan::layout::holes(span(region), &reserved(raw));
+    let library: Vec<Option<archogen_plan::layout::Unit>> =
+        units.iter().map(|unit| unit.map(unit_of)).collect();
+    let got = archogen_plan::layout::lay(span(region), &holes, &library, u128::from(floor));
+    let as_model = got
+        .as_ref()
+        .map(|laid| {
+            laid.iter()
+                .map(|at| {
+                    (
+                        u64::try_from(at.base).expect("a base"),
+                        u64::try_from(at.end).expect("a top"),
+                    )
+                })
+                .collect::<Vec<_>>()
+        })
+        .map_err(|refused| Refused::NoRoom(refused.unit));
+    assert_eq!(&as_model, want, "{region:?} {raw:?} {units:?}");
+    if let (Ok(laid), Ok(spans)) = (want, &got) {
+        let owed = units.iter().any(Option::is_none);
+        let (limit_at, names) = limit(region, &holes_in(region, raw), floor, laid, owed);
+        let library =
+            archogen_plan::layout::limit(span(region), &holes, u128::from(floor), spans, owed);
+        assert_eq!(
+            library.limit,
+            limit_at.map(u128::from),
+            "{region:?} {raw:?} {units:?}"
+        );
+        assert_eq!(
+            library
+                .truncated_by
+                .iter()
+                .map(|hole| hole.span.base)
+                .collect::<Vec<_>>(),
+            names.into_iter().map(u128::from).collect::<Vec<_>>(),
+            "{region:?} {raw:?} {units:?}"
+        );
+    }
+}
 
 // ---- §5: memory
 
@@ -347,7 +457,7 @@ fn every_small_region_is_laid_as_the_reference_lays_it() {
                 sets.extend(each[place..].iter().map(|second| vec![*first, *second]));
             }
             for raw in &sets {
-                let Ok(floor) = floor(region, raw) else {
+                let Ok(floor) = floor_held(region, raw) else {
                     continue;
                 };
                 let holes = holes_in(region, raw);
@@ -360,6 +470,7 @@ fn every_small_region_is_laid_as_the_reference_lays_it() {
                             "{region:?} {raw:?} {units:?}"
                         );
                     }
+                    lay_held(region, raw, units, floor, &want);
                     regions += 1;
                     unsized_holes += u64::from(raw.iter().any(|(_, size)| size.is_none()));
                     match &want {
@@ -385,7 +496,7 @@ fn the_reviews_probes_of_memory_come_out_as_the_record_says() {
         base: 0x8000_0000,
         end: 0x8000_0000 + 128 * MIB,
     };
-    let floor_of = |holes: &[(u64, Option<u64>)]| floor(ram, holes);
+    let floor_of = |holes: &[(u64, Option<u64>)]| floor_held(ram, holes);
     let refused = |kinds: &[Refused]| Err(kinds.iter().copied().collect::<BTreeSet<Refused>>());
     // RP2-1: two holes at the base, touching and overlapping. RP3-11: the second from `0x8000_8000`, of 64 KiB and of 96.
     assert_eq!(
@@ -898,6 +1009,62 @@ const UNITS: &[Stack] = &[
     ),
 ];
 
+/// A unit's `bytes` as the library sums it from the same figures (leaf `M4.1.7.6.1`): a name of several figures the largest of them, the boot's
+/// `stack-bound` none where the application states no initialisation.
+fn library_bytes(unit: &str, figures: &Figures) -> u128 {
+    let one = |name: &str| {
+        figures
+            .get(name)
+            .and_then(|values| values.first())
+            .map_or(0, |&value| u128::from(value))
+    };
+    let all = |name: &str| -> Vec<u128> {
+        figures.get(name).map_or_else(Vec::new, |values| {
+            values.iter().map(|&value| u128::from(value)).collect()
+        })
+    };
+    let fault = archogen_plan::layout::Fault {
+        entry: one("fault-entry-stack"),
+        path: one("fault-path-stack"),
+        check: one("fault-check-stack"),
+    };
+    match unit {
+        "a task's" => archogen_plan::layout::TaskStack {
+            call_frame: one("call-frame"),
+            stack_bound: one("stack-bound"),
+            node_stack: all("node-stack"),
+            primitive_stack: all("primitive-stack"),
+            completion_stack: one("completion-stack"),
+            fault,
+            trap_frame: one("trap-frame"),
+        }
+        .bytes(),
+        "the interrupt's" => archogen_plan::layout::InterruptStack {
+            trap_path_stack: one("trap-path-stack"),
+            call_frame: one("call-frame"),
+            service_stack: all("service-stack"),
+            timer_service_stack: Some(one("timer-service-stack")),
+            fault,
+            trap_frame: one("trap-frame"),
+        }
+        .bytes(),
+        "the boot's" => archogen_plan::layout::BootStack {
+            call_frame: one("call-frame"),
+            initialisation_stack: all("initialisation-stack"),
+            initialisation_path_stack: one("initialisation-path-stack"),
+            stack_bound: all("stack-bound").first().copied(),
+            node_stack: all("node-stack"),
+            last_act_stack: one("last-act-stack"),
+            transition_stack: one("transition-stack"),
+            idle_stack: one("idle-stack"),
+            fault,
+            trap_frame: one("trap-frame"),
+        }
+        .bytes(),
+        other => panic!("no stack is {other}"),
+    }
+}
+
 /// Each stack's sum, as the record's cell writes it, is the most that can stand on that stack and no more, over every small set of figures.
 #[test]
 fn each_stack_s_sum_is_the_most_that_can_stand_on_it() {
@@ -914,6 +1081,11 @@ fn each_stack_s_sum_is_the_most_that_can_stand_on_it() {
                 bytes(unit, &figures).0,
                 standing(unit, &figures),
                 "{unit}: {figures:?}"
+            );
+            assert_eq!(
+                library_bytes(unit, &figures),
+                u128::from(bytes(unit, &figures).0),
+                "the library's sum of {unit}: {figures:?}"
             );
             run += 1;
         }
@@ -4088,11 +4260,42 @@ fn owed_needs<'a>(units: &[(&'a str, &[&'a str])]) -> Vec<(&'a str, Vec<String>)
     out
 }
 
+/// [`owed_needs`], the library's held to it: each lack a record's fact, as the model writes one (leaf `M4.1.7.6.1`).
+fn owed_held<'a>(units: &[(&'a str, &[&'a str])]) -> Vec<(&'a str, Vec<String>)> {
+    let model = owed_needs(units);
+    let library = archogen_plan::layout::owed_needs(
+        &units
+            .iter()
+            .map(|(name, lacks)| {
+                (
+                    (*name).to_owned(),
+                    lacks
+                        .iter()
+                        .map(|fact| archogen_plan::layout::Need {
+                            owner: archogen_plan::layout::Owner::Record,
+                            fact: (*fact).to_owned(),
+                        })
+                        .collect(),
+                )
+            })
+            .collect::<Vec<_>>(),
+    );
+    assert_eq!(
+        library,
+        model
+            .iter()
+            .map(|(name, needs)| ((*name).to_owned(), needs.clone()))
+            .collect::<Vec<_>>(),
+        "the library's needs of {units:?}"
+    );
+    model
+}
+
 /// A unit owed only because an earlier one is names that unit: round 10's words allowed `(needs)` or a copy of the earlier unit's needs (round 11, RP11-3).
 #[test]
 fn an_owed_unit_names_what_it_waits_on() {
     // RP11-3's case: every figure stated but `idle-stack`, which the boot's stack lacks; the interrupt stack lacks nothing of its own.
-    let owed = owed_needs(&[("boot", &["idle-stack"]), ("interrupt", &[])]);
+    let owed = owed_held(&[("boot", &["idle-stack"]), ("interrupt", &[])]);
     assert_eq!(
         owed,
         [
@@ -4101,7 +4304,7 @@ fn an_owed_unit_names_what_it_waits_on() {
         ]
     );
     assert!(
-        owed_needs(&[("boot", &[]), ("interrupt", &[])]).is_empty(),
+        owed_held(&[("boot", &[]), ("interrupt", &[])]).is_empty(),
         "nothing lacking, nothing owed"
     );
     assert!(RECORD.contains("`(unit UNIT)` naming the last such before it"));
@@ -4431,10 +4634,53 @@ fn origin_items(figures: &[(&str, &str, &str, u64)]) -> (Vec<String>, &'static s
     (items, weakest)
 }
 
+/// [`origin_items`], the library's held to it (leaf `M4.1.7.6.1`): each figure's `of` read as its subject, a record's id or whom the application's
+/// file says it of, then its fact.
+fn origin_held(figures: &[(&str, &str, &str, u64)]) -> (Vec<String>, &'static str) {
+    let model = origin_items(figures);
+    let library: Vec<archogen_plan::layout::Origin> = figures
+        .iter()
+        .map(|(owner, of, category, _)| {
+            let (whom, fact) = of.rsplit_once(' ').expect("whom and the fact");
+            archogen_plan::layout::Origin {
+                source: match *owner {
+                    "application" => archogen_plan::layout::Source::Application {
+                        of: whom.to_owned(),
+                    },
+                    "record" => archogen_plan::layout::Source::Record {
+                        id: whom.to_owned(),
+                    },
+                    "realization" => archogen_plan::layout::Source::Realization {
+                        subject: whom.to_owned(),
+                    },
+                    other => panic!("no owner is {other}"),
+                },
+                fact: fact.to_owned(),
+                category: match *category {
+                    "assumed" => archogen_plan::layout::Category::Assumed,
+                    "observed-maximum" => archogen_plan::layout::Category::ObservedMaximum,
+                    "externally-supplied" => archogen_plan::layout::Category::ExternallySupplied,
+                    "analytically-established" => {
+                        archogen_plan::layout::Category::AnalyticallyEstablished
+                    }
+                    other => panic!("no category is {other}"),
+                },
+            }
+        })
+        .collect();
+    let (items, weakest) = archogen_plan::layout::origin(&library);
+    assert_eq!(items, model.0, "the library's origin of {figures:?}");
+    assert_eq!(
+        weakest.map(archogen_plan::layout::Category::as_str),
+        Some(model.1)
+    );
+    model
+}
+
 #[test]
 fn an_origin_lists_every_figure_its_sum_reads_once() {
     // RP14-1's case: `console.write` 380 observed, `timer.read` 200 assumed, `mask` and `unmask` 96 each from one API record.
-    let (items, weakest) = origin_items(&[
+    let (items, weakest) = origin_held(&[
         ("realization", "console node-stack", "observed-maximum", 380),
         ("realization", "timer node-stack", "assumed", 200),
         (
@@ -4468,7 +4714,7 @@ fn an_origin_lists_every_figure_its_sum_reads_once() {
 /// "every figure the sum reads" left them out where the catalog's numbers put them in, and `/1` §4 `.7` asks their category in the plan (round 15, RP15-1).
 #[test]
 fn an_origin_names_what_sizes_and_places_its_unit() {
-    let (items, weakest) = origin_items(&[
+    let (items, weakest) = origin_held(&[
         (
             "realization",
             "console node-stack",
@@ -4499,7 +4745,7 @@ fn an_origin_names_what_sizes_and_places_its_unit() {
 #[test]
 fn an_origin_names_the_lists_its_largest_is_taken_over() {
     // RP16-1's case: a stack bound and its figures established, the node calls assumed.
-    let (items, weakest) = origin_items(&[
+    let (items, weakest) = origin_held(&[
         (
             "application",
             "(task s t) stack-bound",

@@ -224,6 +224,14 @@ where each stack is laid, against a reference that tries every address in turn, 
 against what can stand on that stack at once; and the read that time is counted from, at every phase of the counter's tick. Where a rule is already
 code, what the joint rules refuse of a memory map, the model is held to that code and not to a reading of it.
 
+## Format `/2` as it becomes code
+
+`/2` becomes code a part at a time (`M4.1.7.6`), and each part is held to the model the same way. Where the image may
+lie, where each allocation lies, what an owed one waits on, each stack's sum and what its figures rest on are
+`crates/archogen-plan/src/layout.rs` (leaf `M4.1.7.6.1`). Every small region, unit and set of figures the model runs, and
+each of its rounds' probes, runs through that code too, and the two must agree. It counts addresses past 64 bits, so a
+region ending at the top of a 64-bit address space is laid whole. No command writes a `/2` plan yet.
+
 ## From a plan to a generated system
 
 `crates/archogen-emit` turns a plan into the files of a package that builds and runs by itself, and `archogen build` is the

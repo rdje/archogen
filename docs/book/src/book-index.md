@@ -353,6 +353,8 @@ a change that leaves it stale, so it is never edited by hand.
 - Finite Cargo path iterator proofs — [Annex C: Trust proof
   records](annex-trust-proofs.md#finite-cargo-path-iterator-proofs)
 - First reported output failure — [Annex C: Trust proof records](annex-trust-proofs.md#first-reported-output-failure)
+- Format /2 as it becomes code — [The runtime plan: what the generated system is
+  told](runtime-plan.md#format-2-as-it-becomes-code)
 - **FP-NP** — [definition](glossary.md), [What this project relies on from outside](ledger.md)
 - freertos-kernel — [What this project relies on from outside](ledger.md#freertos-kernel)
 - From a plan to a generated system — [The runtime plan: what the generated system is
