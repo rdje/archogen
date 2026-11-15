@@ -360,44 +360,11 @@ Which routes reach it is each one's `external` (§3), which the realization stat
 
 ## Review
 
-| Round | Findings | Defects | Verdict |
-| --- | --- | --- | --- |
-| 1 | 17 | 15, beside 1 gap and 1 of wording | `2026-11-07`, not acceptable; the review history's round 1 |
-| 2 | 13 | 10, beside 2 gaps and 1 of wording | `2026-11-10`, not acceptable; the review history's round 2 |
-| 3 | 11 | 9, beside 1 gap and 1 of wording | `2026-11-10`, not acceptable; the review history's round 3 |
-| 4 | 8 | 7, beside 1 of wording | `2026-11-10`, not acceptable; the review history's round 4 |
-| 5 | 6 | 3, beside 2 gaps and 1 of wording | `2026-11-10`, not acceptable; the review history's round 5 |
-| 6 | 7 | 3, beside 3 gaps and 1 of wording | `2026-11-10`, not acceptable; the review history's round 6 |
-| 7 | 7 | 5, beside 1 gap and 1 of wording | `2026-11-10`, not acceptable; the review history's round 7 |
-| 8 | 7 | 6, beside 1 of wording | `2026-11-13`, not acceptable; the review history's round 8 |
-| 9 | 4 | 3, beside 1 of wording | `2026-11-14`, not acceptable; the review history's round 9 |
-| 10 | 4 | 2, beside 1 gap and 1 of wording | `2026-11-14`, not acceptable; the review history's round 10 |
-| 11 | 6 | 4, beside 1 gap and 1 of wording | `2026-11-14`, not acceptable; the review history's round 11 |
-| 12 | 6 | 3, beside 2 gaps and 1 of wording | `2026-11-14`, not acceptable; the review history's round 12 |
-| 13 | 6 | 4, beside 1 gap and 1 of wording | `2026-11-14`, not acceptable; the review history's round 13 |
-| 14 | 4 | 1, beside 1 gap and 2 of wording | `2026-11-14`, not acceptable; the review history's round 14 |
-| 15 | 4 | 2, beside 2 of wording | `2026-11-14`, not acceptable; the review history's round 15 |
-| 16 | 3 | 1, beside 2 of wording | `2026-11-14`, not acceptable; the review history's round 16 |
-| 17 | 4 | 1, beside 1 gap and 2 of wording | `2026-11-14`, not acceptable; the review history's round 17 |
-| 18 | 4 | 2, beside 2 of wording | `2026-11-14`, not acceptable; the review history's round 18 |
-| 19 | 4 | 2, beside 2 of wording | `2026-11-14`, not acceptable; the review history's round 19 |
-| 20 | 2 | 1, beside 1 of wording | `2026-11-14`, not acceptable; the review history's round 20 |
-| 21 | 3 | 1, beside 2 of wording | `2026-11-14`, not acceptable; the review history's round 21 |
-| 22 | 2 | 2 | `2026-11-14`, not acceptable; the review history's round 22 |
-| 23 | 5 | 3, beside 2 of wording | `2026-11-14`, not acceptable; the review history's round 23 |
-| 24 | 5 | 2, beside 1 gap and 2 of wording | `2026-11-14`, not acceptable; the review history's round 24 |
-| 25 | 4 | 1, beside 1 gap and 2 of wording | `2026-11-14`, not acceptable; the review history's round 25 |
-| 26 | 2 | 2 | `2026-11-14`, not acceptable; the review history's round 26 |
-| 27 | 3 | 2, beside 1 of wording | `2026-11-14`, not acceptable; the review history's round 27 |
-| 28 | 4 | 2, beside 2 of wording | `2026-11-14`, not acceptable; the review history's round 28 |
-| 29 | 2 | 1, beside 1 of wording | `2026-11-14`, not acceptable; the review history's round 29 |
-| 30 | 3 | 1, beside 2 of wording | `2026-11-14`, not acceptable; the review history's round 30 |
-| 31 | 4 | 1, beside 3 of wording | `2026-11-14`, not acceptable; the review history's round 31 |
-| 32 | 6 | 3, beside 3 of wording | `2026-11-14`, not acceptable; the review history's round 32 |
-| 33 | 5 | 2, beside 3 of wording | `2026-11-14`, not acceptable; the review history's round 33 |
-| 34 | 6 | 3, beside 3 of wording | `2026-11-14`, not acceptable; the review history's round 34 |
-| 35 | 6 | 3, beside 3 of wording | `2026-11-14`, not acceptable; the review history's round 35 |
-| 36 | 3 | 1, beside 2 of wording | `2026-11-15`, not acceptable; the review history's round 36 |
-| 37 | 3 | 1, beside 2 of wording | `2026-11-15`, not acceptable; the review history's round 37 |
-| 38 | 2 | 2 | `2026-11-15`, not acceptable; the review history's round 38 |
-| 39 | 2 | 0, beside 2 of wording | `2026-11-15`, **acceptable, no defect, so the review closes**, after 2, 1, 1, 3, 3, 2, 3, 1, 1, 1, 2, 2, 2, 1, 2, 3, 2, 1, 1, 2, 2, 1, 1, 2, 1, 4, 3, 4, 2, 3, 6, 5, 3, 3, 7, 9, 10 and 15; its two points of wording answered: `/1`'s frozen lowering keeps its own refusal, and the checker's refusals come in the order it reads a plan in today. |
+`M4.1.7.2`'s acceptance is a review, by a context that did not write this record; every finding answered here. The
+history is [`decision_runtime-plan-format-2-reviews.md`](../reviews/decision_runtime-plan-format-2-reviews.md).
+
+Defects per round, oldest first, from `2026-11-07` to `2026-11-15`: 15, 10, 9, 7, 3, 3, 5, 6, 3, 2, 4, 3, 4, 1, 2, 1, 1, 2, 2, 1, 1, 2, 3, 2, 1, 2, 2, 2, 1, 1, 1, 3, 2, 3, 3, 1, 1, 2, 0. Round 39 was acceptable, no defect, so
+the review closed; its two points of wording were answered: `/1`'s frozen lowering keeps its own refusal, and the
+checker's refusals come in the order it reads a plan in today. Each round's findings, gaps and points of wording, its
+verdict and every answer are in the review history linked above, which holds them whole; this record keeps only the
+count (`M4.1.7.8`, the folder's ceiling, as `PROGRAM.52.2` did for two records before it).
