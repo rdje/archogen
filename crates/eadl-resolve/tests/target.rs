@@ -59,7 +59,8 @@ fn real_target() -> Target {
     target_of(&std::fs::read_to_string(root().join("targets/riscv-virt-up.eadl")).expect("read"))
 }
 
-/// A target with what a timer's requirements ask stated, which the real target's file does not yet state: its hand-off is `DC-H1`.
+/// A target with what a timer's requirements ask stated and nothing the release requester asks, written before the real target's file stated
+/// its counter (`DC-H1`, leaf `M4.1.7.3.5`): a machine of its own, for the rule's cases.
 const A_WHOLE_TARGET: &str = "
 (defblock target.timer
   (offers
@@ -237,7 +238,8 @@ fn a_device_is_the_target_s_device_bound_for_the_same_requirement() {
 
 #[test]
 fn what_the_real_target_does_not_state_is_said_and_no_plan_guessed() {
-    // `periodic-three` asks of a counter what `targets/riscv-virt-up.eadl` states nothing of: `DC-H1`.
+    // `periodic-three` asks of its counter what `targets/riscv-virt-up.eadl` states with what checks it since `M4.1.7.3.5` (`DC-H1`), its width
+    // among it, and of its policy what no target states, `release-accuracy` and `priorities` among it, which a realization gives (`M3.7`).
     let declarations = forms(&example("periodic-three"));
     let system = system_of(&declarations);
     let moved = on_target(system, &declarations, &real_target()).expect("it can be read there");
@@ -246,7 +248,11 @@ fn what_the_real_target_does_not_state_is_said_and_no_plan_guessed() {
     };
     let said: String = diagnostics.iter().map(|d| d.message.as_str()).collect();
     assert!(
-        said.contains("counter-width") || said.contains("unambiguous-horizon"),
+        !said.contains("counter-width") && !said.contains("unambiguous-horizon"),
+        "the target states its counter: {said}"
+    );
+    assert!(
+        said.contains("`release-accuracy`") && said.contains("`priorities`"),
         "{said}"
     );
 }

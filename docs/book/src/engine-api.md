@@ -101,8 +101,8 @@ description](checking.md)), and the closure is what presence read on the machine
 system puts nothing on the target: presence judges nothing there, and the closure is empty.
 
 For example, `targets/riscv-virt-up.eadl` admits `examples/s0-heartbeat/system.eadl`, its console answering the
-heartbeat's writes, and refuses the examples that ask the timer for `counter-width` `missing-fact`, the target not
-stating it yet (leaf `M4.1.7.3.5`). `crates/archogen-api/tests/target.rs` holds each row above, each stage, and the
+heartbeat's writes, and `examples/periodic-three/system.eadl` and `examples/alternative-timer/system.eadl`, its machine
+timer answering what their time services ask of a counter, its width among it (leaf `M4.1.7.3.5`). `crates/archogen-api/tests/target.rs` holds each row above, each stage, and the
 contrast with `check` on the description's own hardware.
 
 The command line, the page and the agent's server carry the target with leaf `M4.1.7.4.2`. `resolve` and `explain`

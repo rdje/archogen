@@ -147,9 +147,9 @@ only words the language already has, and states one fact for each thing the prof
 ```text
 (defblock target.timer
   (offers (tick-rate 10 MHz) (relative-delay true) (channels 1 tick) (alarm-wiring core)
-    (alarm-kind level-compare) (counter-modulus (pow2 64)) (compare-step 1 tick) (compare-magnitude true)
-    (observation-coherent true) (available-in-state run idle) (supported-horizon 1844674407370 s)
-    (reachable-at-privilege machine)
+    (alarm-kind level-compare) (counter-modulus (pow2 64)) (counter-width 64 bit) (wrap-behavior modular)
+    (compare-step 1 tick) (compare-magnitude true) (observation-coherent true) (available-in-state run idle)
+    (supported-horizon 1844674407370 s) (reachable-at-privilege machine)
     (region target.timer (base 0x0200_0000) (size 64 KiB))))
 (defblock target.console
   (offers (observable-output true) (reachable-at-privilege machine)
@@ -170,6 +170,8 @@ what it is, not by address alone:
   wiring to the hart from the CLINT's `interrupts-extended`; its 64-bit modulus, its level compare on whole numbers at a
   step of one tick, counting in idle as in run, and a coherent read on RV64, from the privileged specification's
   machine timer; and its horizon no farther than one compare reaches;
+- what a system reads of the counter beside that, from the same machine timer (leaf `M4.1.7.3.5`): its width of 64 bits,
+  "a 64-bit precision on all RV32 and RV64 systems", and its modular wrap, it "will wrap around if the count overflows";
 - the platform's name for its catalog records with the `.env`'s target, and no trap taken by firmware with the `.env`'s
   `-bios none`;
 - no interrupt no mask stops, with each hart's extensions and the release whose source was read;

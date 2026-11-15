@@ -130,6 +130,21 @@ fn a_system_runs_on_the_shipped_target_and_carries_the_closure_presence_read_the
     );
 }
 
+/// The tracked examples whose systems ask the timer for its width run on the shipped target, which states it with what checks it
+/// (`DC-H1`, leaf `M4.1.7.3.5`); before, each was refused `missing-fact`, `counter-width`.
+#[test]
+fn the_shipped_target_admits_the_examples_that_ask_its_counter() {
+    for example in [
+        "examples/periodic-three/system.eadl",
+        "examples/alternative-timer/system.eadl",
+    ] {
+        let text =
+            std::fs::read_to_string(repo_root().join(example)).expect("the example is readable");
+        let response = on(&text, &shipped());
+        assert_status(example, &response, Status::Ok);
+    }
+}
+
 /// `DC-H3`: "a description need not pass presence over hardware of its own" (round 2's DC2-2).
 #[test]
 fn a_description_need_not_pass_presence_over_hardware_of_its_own() {

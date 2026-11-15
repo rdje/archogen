@@ -64,8 +64,9 @@ struct Described {
 /// `M4.1.7.3.4`): its RISC-V hart takes no non-maskable interrupt but Smrnmi's, and no device connects one.
 const NON_MASKABLE_READ_AT: &str = "11.1.1";
 
-/// The facts the release requester asks of the timer and its compare, which the release timer's block states.
-const RELEASE: [&str; 10] = [
+/// The facts the release requester asks of the timer and its compare, which the release timer's block states, and what a system reads of
+/// its counter beside them, its width and its wrap (`decision_device-correspondence.md`, `DC-H1`; leaf `M4.1.7.3.5`).
+const RELEASE: [&str; 12] = [
     "relative-delay",
     "channels",
     "alarm-wiring",
@@ -76,6 +77,8 @@ const RELEASE: [&str; 10] = [
     "observation-coherent",
     "available-in-state",
     "supported-horizon",
+    "counter-width",
+    "wrap-behavior",
 ];
 
 /// The words of `forms`: an integer by its digits, a symbol by its name, a list by its own words.
@@ -598,7 +601,8 @@ pub fn disagreements(
     // has a 64-bit precision on all RV32 and RV64 systems", "will wrap around if the count overflows", "A machine timer
     // interrupt becomes pending whenever `mtime` contains a value greater than or equal to `mtimecmp`, treating the values
     // as unsigned integers", "`mtime` must increment at constant frequency", and on RV64 64-bit accesses "are atomic"; its
-    // horizon, a capacity, at most what one compare reaches, `(2^64 − 1)` ticks of `/cpus`'s timebase (leaf `M4.1.7.3.3`).
+    // horizon, a capacity, at most what one compare reaches, `(2^64 − 1)` ticks of `/cpus`'s timebase (leaf `M4.1.7.3.3`). The same two
+    // sentences give what a system reads of the counter, `DC-H1`'s: its width, 64 bits, and its wrap, modular (leaf `M4.1.7.3.5`).
     if requires("REQUIRES_RELEASE_TIMER") {
         let owner = described.tick_rate.as_ref().map(|(_, o)| o.clone());
         for (o, f, _) in &described.release {
@@ -622,7 +626,7 @@ pub fn disagreements(
         let rv64 = find(&|n: &Node| n.path.starts_with("/cpus/cpu@"))
             .is_some_and(|(n, _)| strings(n, "riscv,isa-base") == ["rv64i"]);
         let gives = |word: &str| vec![word.to_string()];
-        let expected: [(&str, &str, Vec<String>); 9] = [
+        let expected: [(&str, &str, Vec<String>); 11] = [
             (
                 "relative-delay",
                 "the CLINT",
@@ -663,6 +667,16 @@ pub fn disagreements(
                 "available-in-state",
                 "the privileged specification",
                 vec!["idle".to_string(), "run".to_string()],
+            ),
+            (
+                "counter-width",
+                "the privileged specification",
+                vec!["64".to_string(), "bit".to_string()],
+            ),
+            (
+                "wrap-behavior",
+                "the privileged specification",
+                gives("modular"),
             ),
         ];
         match (&owner, clint) {
@@ -927,6 +941,16 @@ mod tests {
                 "(supported-horizon 1844674407370 s)",
                 "(supported-horizon 1844674407371 s)",
                 "beyond what one compare reaches",
+            ),
+            (
+                "(counter-width 64 bit)",
+                "(counter-width 32 bit)",
+                "`(counter-width 32 bit)`, and the privileged specification gives `64 bit`",
+            ),
+            (
+                "(wrap-behavior modular)",
+                "(wrap-behavior saturating)",
+                "`(wrap-behavior saturating)`, and the privileged specification gives `modular`",
             ),
             (
                 "(catalog-target riscv-virt-up)",

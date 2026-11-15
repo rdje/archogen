@@ -14,7 +14,8 @@
 ; REQUIRES_RELEASE_TIMER: what the release requester asks of it (leaf `M4.1.7.3.3`): its delay, its one line and its
 ; wiring to the hart from the CLINT's `interrupts-extended`; its modulus, its compare's kind, step and magnitude, the
 ; states it counts in and a coherent read on RV64 from the privileged specification's machine timer; and a horizon at
-; most what one compare reaches, 2^64 − 1 ticks at 10 MHz, 1 844 674 407 370.955 s, written to the second below.
+; most what one compare reaches, 2^64 − 1 ticks at 10 MHz, 1 844 674 407 370.955 s, written to the second below. And what a
+; system reads of the counter, from the same timer: its 64-bit width and its modular wrap (leaf `M4.1.7.3.5`).
 (defblock target.timer
   (offers
     (tick-rate 10 MHz)
@@ -23,6 +24,8 @@
     (alarm-wiring core)
     (alarm-kind level-compare)
     (counter-modulus (pow2 64))
+    (counter-width 64 bit)
+    (wrap-behavior modular)
     (compare-step 1 tick)
     (compare-magnitude true)
     (observation-coherent true)
