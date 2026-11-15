@@ -14,7 +14,8 @@
 //! The tools are the command table's ([`crate::spec::tools`]). `check` takes the engine API's request — the
 //! description's text, its profile and its modules' texts — and answers the engine API's response in the wasm
 //! binding's encoding, as `structuredContent` and as the one text block; `isError` is `false` only when the
-//! description is accepted. A tool that is not built answers with the leaf that owns it. A call naming no tool, an
+//! description is accepted. `check`, `resolve` and `explain` each take `target`, a target's file, the engine API's
+//! `TargetFile` (leaves `M4.1.7.4.2.2` and `M4.1.7.5.5`). A tool that is not built answers with the leaf that owns it. A call naming no tool, an
 //! unknown tool or arguments that are no object is `-32602`; arguments `check` cannot use are a tool error,
 //! `isError: true`, as both revisions' tools pages ask of "input validation errors", so a model can correct itself.
 //!
@@ -162,9 +163,12 @@ fn tool(spec: &CommandSpec) -> Value {
         (
             "inputSchema",
             match spec.name {
-                "check" => check_tool_schema(),
-                "resolve" => resolve_schema(),
-                "explain" => explain_schema(),
+                "check" => with_target(check_schema(), "the target its systems are judged on"),
+                "resolve" => with_target(
+                    resolve_schema(),
+                    "the target the system is searched on, the plan `archogen-assignment/3` naming it",
+                ),
+                "explain" => with_target(explain_schema(), "the target the system is searched on"),
                 _ => object(vec![("type", string("object"))]),
             },
         ),
@@ -224,10 +228,10 @@ fn check_schema() -> Value {
     ])
 }
 
-/// What the `check` tool takes: the request every tool reads, and `target`, the machine the description's systems are judged on (leaf
-/// `M4.1.7.4.2.2`). The search on a target is `M4.1.7.5`'s, so no other tool takes one yet.
-fn check_tool_schema() -> Value {
-    let mut schema = check_schema();
+/// `schema` and `target`, the machine the description is read on, `what` saying how: the engine API's `TargetFile`, its
+/// `text` and its `name`, which every tool reading a description takes — `check` judging its systems there (leaf
+/// `M4.1.7.4.2.2`, API `1.10`), `resolve` and `explain` searching the system there (leaf `M4.1.7.5.5`, API `1.11`).
+fn with_target(mut schema: Value, what: &str) -> Value {
     if let Value::Object(members) = &mut schema {
         for (key, value) in members.iter_mut() {
             if let ("properties", Value::Object(properties)) = (key.as_str(), value) {
@@ -237,10 +241,10 @@ fn check_tool_schema() -> Value {
                         ("type", string("object")),
                         (
                             "description",
-                            string(
-                                "the target its systems are judged on, a file declaring a machine's hardware alone: its `text`, and \
-                                 how diagnostics name it, `name`, `target.eadl` when absent",
-                            ),
+                            Value::String(format!(
+                                "{what}, a file declaring a machine's hardware alone: its `text`, and how diagnostics \
+                                 name it, `name`, `target.eadl` when absent"
+                            )),
                         ),
                         (
                             "properties",
@@ -287,7 +291,8 @@ fn check(arguments: &Value) -> Result<Value, Failure> {
     }
 }
 
-/// `check`'s `target` argument: none, or the target's file, named `target.eadl` when it names itself nothing.
+/// The `target` argument of `check`, `resolve` and `explain`: none, or the target's file, named `target.eadl` when it
+/// names itself nothing.
 fn target_of(arguments: &Value) -> Result<Option<TargetFile<'_>>, String> {
     let Some(target) = arguments.get("target") else {
         return Ok(None);
@@ -401,7 +406,7 @@ fn resolve_schema() -> Value {
 /// in the wasm binding's encoding, the plan its system, text, program digest and bindings, or `null` — that JSON the one
 /// text block, and `isError` unless the response is `ok`. Without `unchecked` the API refuses, with its reason and repair.
 fn resolve(arguments: &Value) -> Result<Value, Failure> {
-    let read = check_request(arguments, &["system", "unchecked"]).and_then(
+    let read = check_request(arguments, &["system", "unchecked", "target"]).and_then(
         |(name, text, profile, modules)| {
             let system = match arguments.get("system") {
                 None => None,
@@ -413,15 +418,24 @@ fn resolve(arguments: &Value) -> Result<Value, Failure> {
                 Some(Value::Bool(unchecked)) => *unchecked,
                 Some(_) => return Err("`unchecked` is not a boolean".to_owned()),
             };
-            Ok((name, text, profile, modules, system, unchecked))
+            Ok((
+                name,
+                text,
+                profile,
+                modules,
+                system,
+                unchecked,
+                target_of(arguments)?,
+            ))
         },
     );
-    let (name, text, profile, modules, system, unchecked) = match read {
+    let (name, text, profile, modules, system, unchecked, target) = match read {
         Ok(read) => read,
         Err(problem) => {
             return Ok(tool_error(&format!(
                 "{problem}; `resolve` takes `description` (the text) and `unchecked`, and optionally `name`, \
-                 `profile`, `system` and `modules`, each module's name mapped to its text"
+                 `profile`, `system`, `modules`, each module's name mapped to its text, and `target`, an object of a \
+                 target's `text` and its `name`"
             )))
         }
     };
@@ -431,7 +445,7 @@ fn resolve(arguments: &Value) -> Result<Value, Failure> {
             text,
             profile,
             modules: &modules,
-            target: None,
+            target,
         },
         &Resolve { system, unchecked },
         Limits::DEFAULT,
@@ -498,38 +512,42 @@ fn explain_schema() -> Value {
 /// each account its requester, fact, clauses, each provider's answer, why none meets it, the provider bound and each
 /// other one's refusal in its place — that JSON the one text block, and `isError` unless the response is `ok`.
 fn explain(arguments: &Value) -> Result<Value, Failure> {
-    let read = check_request(arguments, &["requirement", "requester", "task", "system"]).and_then(
-        |(name, text, profile, modules)| {
-            let optional = |key: &str| match arguments.get(key) {
-                None => Ok(None),
-                Some(Value::String(value)) => Ok(Some(value.as_str())),
-                Some(_) => Err(format!("`{key}` is not a string")),
-            };
-            let Some(fact) = optional("requirement")? else {
-                return Err(
-                    "`requirement`, the fact whose requirements to explain, is missing".to_owned(),
-                );
-            };
-            Ok((
-                name,
-                text,
-                profile,
-                modules,
-                Explain {
-                    system: optional("system")?,
-                    fact,
-                    requester: optional("requester")?,
-                    task: optional("task")?,
-                },
-            ))
-        },
-    );
-    let (name, text, profile, modules, asked) = match read {
+    let read = check_request(
+        arguments,
+        &["requirement", "requester", "task", "system", "target"],
+    )
+    .and_then(|(name, text, profile, modules)| {
+        let optional = |key: &str| match arguments.get(key) {
+            None => Ok(None),
+            Some(Value::String(value)) => Ok(Some(value.as_str())),
+            Some(_) => Err(format!("`{key}` is not a string")),
+        };
+        let Some(fact) = optional("requirement")? else {
+            return Err(
+                "`requirement`, the fact whose requirements to explain, is missing".to_owned(),
+            );
+        };
+        Ok((
+            name,
+            text,
+            profile,
+            modules,
+            Explain {
+                system: optional("system")?,
+                fact,
+                requester: optional("requester")?,
+                task: optional("task")?,
+            },
+            target_of(arguments)?,
+        ))
+    });
+    let (name, text, profile, modules, asked, target) = match read {
         Ok(read) => read,
         Err(problem) => {
             return Ok(tool_error(&format!(
                 "{problem}; `explain` takes `description` (the text) and `requirement` (a fact), and optionally \
-                 `requester` or `task`, `system`, `name`, `profile` and `modules`, each module's name mapped to its text"
+                 `requester` or `task`, `system`, `name`, `profile`, `modules`, each module's name mapped to its text, \
+                 and `target`, an object of a target's `text` and its `name`"
             )))
         }
     };
@@ -539,7 +557,7 @@ fn explain(arguments: &Value) -> Result<Value, Failure> {
             text,
             profile,
             modules: &modules,
-            target: None,
+            target,
         },
         &asked,
         Limits::DEFAULT,
@@ -1279,40 +1297,201 @@ mod tests {
         }
     }
 
-    /// The search on a target is `M4.1.7.5`'s, so `target` is `check`'s argument alone: offered by its schema, and by no other tool's.
+    /// Every tool that reads a description takes `target` (leaf `M4.1.7.5.5`): `check` judging its systems there,
+    /// `resolve` and `explain` searching the system there, by one schema in both eras, `text` required and nothing else
+    /// admitted; a tool that is not built takes none.
     #[test]
-    fn only_check_takes_a_target() {
-        let mut server = Server::default();
-        let listed = answer(&mut server, &modern("tools/list", "")).unwrap();
-        let tools = match listed.get("result").and_then(|r| r.get("tools")) {
-            Some(Value::Array(tools)) => tools.clone(),
-            other => panic!("no tools: {other:?}"),
+    fn every_tool_that_reads_a_description_takes_a_target_in_both_eras() {
+        let targets = |listed: &Value| -> Vec<(String, Option<Value>)> {
+            match listed.get("result").and_then(|r| r.get("tools")) {
+                Some(Value::Array(tools)) => tools
+                    .iter()
+                    .map(|tool| {
+                        (
+                            tool.get("name")
+                                .and_then(Value::as_str)
+                                .unwrap_or("?")
+                                .to_owned(),
+                            tool.get("inputSchema")
+                                .and_then(|schema| schema.get("properties"))
+                                .and_then(|properties| properties.get("target"))
+                                .cloned(),
+                        )
+                    })
+                    .collect(),
+                other => panic!("no tools: {other:?}"),
+            }
         };
-        for tool in &tools {
-            let name = tool.get("name").and_then(Value::as_str).unwrap_or("?");
-            let takes = tool
-                .get("inputSchema")
-                .and_then(|schema| schema.get("properties"))
-                .and_then(|properties| properties.get("target"))
-                .is_some();
-            assert_eq!(takes, name == "check", "{name}");
-        }
-        let resolved = answer(
-            &mut server,
-            &modern(
-                "tools/call",
-                &format!(
-                    r#","name":"resolve","arguments":{{"description":{},"unchecked":true,"target":{{"text":"t"}}}}"#,
-                    json::write(&string(BEAT))
-                ),
+        let modern_list = answer(&mut Server::default(), &modern("tools/list", "")).unwrap();
+        let mut legacy = Server::default();
+        let init = r#"{"jsonrpc":"2.0","id":1,"method":"initialize","params":{"protocolVersion":"2025-11-25","capabilities":{},"clientInfo":{"name":"c","version":"1"}}}"#;
+        answer(&mut legacy, init).unwrap();
+        assert_eq!(
+            answer(
+                &mut legacy,
+                r#"{"jsonrpc":"2.0","method":"notifications/initialized"}"#
             ),
+            None
+        );
+        let legacy_list = answer(
+            &mut legacy,
+            r#"{"jsonrpc":"2.0","id":2,"method":"tools/list"}"#,
         )
         .unwrap();
-        assert!(
-            json::write(&resolved).contains("no argument `target`"),
-            "{}",
-            json::write(&resolved)
+        let listed = targets(&modern_list);
+        assert_eq!(listed, targets(&legacy_list), "one schema in both eras");
+        for (name, target) in &listed {
+            assert_eq!(
+                target.is_some(),
+                matches!(name.as_str(), "check" | "resolve" | "explain"),
+                "{name}"
+            );
+            if let Some(target) = target {
+                assert_eq!(
+                    target.get("required"),
+                    Some(&Value::Array(vec![string("text")])),
+                    "{name}"
+                );
+                assert_eq!(
+                    target.get("additionalProperties"),
+                    Some(&Value::Bool(false)),
+                    "{name}"
+                );
+            }
+        }
+    }
+
+    /// A file of the repository, read as the test runs, as `resolve_gives_what_a_plan_binding_an_engine_adapter_owes`
+    /// reads its fixture.
+    fn repository(file: &str) -> String {
+        std::fs::read_to_string(
+            std::path::Path::new(env!("CARGO_MANIFEST_DIR"))
+                .join("../..")
+                .join(file),
+        )
+        .expect("a file of the repository")
+    }
+
+    /// `resolve` and `explain` search the system on the target their arguments hold (leaf `M4.1.7.5.5`): each answer is
+    /// the engine API's to the same request, the plan `archogen-assignment/3` naming the target, the console the
+    /// target's own; and a `target` that is no target's object is a tool error, as `check`'s is.
+    #[test]
+    fn resolve_and_explain_search_on_the_target_their_arguments_hold() {
+        let heartbeat = repository("examples/s0-heartbeat/system.eadl");
+        let riscv_virt_up = repository("targets/riscv-virt-up.eadl");
+        let modules = MemoryModules::new();
+        let request = Request {
+            name: "system.eadl",
+            text: &heartbeat,
+            profile: None,
+            modules: &modules,
+            target: Some(TargetFile {
+                name: "riscv-virt-up.eadl",
+                text: &riscv_virt_up,
+            }),
+        };
+        let description = json::write(&string(&heartbeat));
+        let target = format!(
+            r#"{{"name":"riscv-virt-up.eadl","text":{}}}"#,
+            json::write(&string(&riscv_virt_up))
         );
+        let ok = |value: &Value| -> Value {
+            let result = value.get("result").expect("a result");
+            assert_eq!(
+                result.get("isError"),
+                Some(&Value::Bool(false)),
+                "{}",
+                json::write(value)
+            );
+            result
+                .get("structuredContent")
+                .cloned()
+                .expect("structured content")
+        };
+        let encoded = |response: &archogen_api::Response| {
+            json::read(archogen_wasm::json::encode(response).as_bytes(), usize::MAX).ok()
+        };
+
+        let resolved = ok(&answer(
+            &mut Server::default(),
+            &resolve_call(&format!(
+                r#"{{"description":{description},"name":"system.eadl","unchecked":true,"target":{target}}}"#
+            )),
+        )
+        .unwrap());
+        let api = archogen_api::resolve_with(
+            &request,
+            &Resolve {
+                system: None,
+                unchecked: true,
+            },
+            Limits::DEFAULT,
+        );
+        assert_eq!(resolved.get("response").cloned(), encoded(&api.response));
+        assert_eq!(resolved.get("plan"), Some(&plan_value(api.plan.as_ref())));
+        let text = resolved
+            .get("plan")
+            .and_then(|plan| plan.get("text"))
+            .and_then(Value::as_str)
+            .expect("a plan");
+        assert!(
+            text.starts_with("(format \"archogen-assignment/3\")")
+                && text.contains("(target target.riscv-virt-up \"")
+                && text.contains("(bind console.write observable-output target.console)"),
+            "{text}"
+        );
+
+        let explained = ok(&answer(
+            &mut Server::default(),
+            &explain_call(&format!(
+                r#"{{"description":{description},"name":"system.eadl","requirement":"observable-output","target":{target}}}"#
+            )),
+        )
+        .unwrap());
+        let api = archogen_api::explain_with(
+            &request,
+            &Explain {
+                system: None,
+                fact: "observable-output",
+                requester: None,
+                task: None,
+            },
+            Limits::DEFAULT,
+        );
+        assert_eq!(explained.get("response").cloned(), encoded(&api.response));
+        assert_eq!(explained.get("plan"), Some(&plan_value(api.plan.as_ref())));
+        let Some(Value::Array(accounts)) = explained.get("accounts") else {
+            panic!("accounts");
+        };
+        assert!(
+            accounts.iter().any(|account| {
+                account.get("bound").and_then(Value::as_str) == Some("target.console")
+            }),
+            "{}",
+            json::write(&explained)
+        );
+
+        for call in [
+            resolve_call(&format!(
+                r#"{{"description":{description},"unchecked":true,"target":"t"}}"#
+            )),
+            explain_call(&format!(
+                r#"{{"description":{description},"requirement":"observable-output","target":{{"text":"t","path":"p"}}}}"#
+            )),
+        ] {
+            let refused = answer(&mut Server::default(), &call).unwrap();
+            let written = json::write(&refused);
+            assert_eq!(
+                refused.get("result").and_then(|r| r.get("isError")),
+                Some(&Value::Bool(true)),
+                "{written}"
+            );
+            assert!(
+                written.contains("`target` is not an object")
+                    || written.contains("`target` holds no `path`"),
+                "{written}"
+            );
+        }
     }
 
     #[test]

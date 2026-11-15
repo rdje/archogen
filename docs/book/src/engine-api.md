@@ -106,7 +106,8 @@ timer answering what their time services ask of a counter, its width among it (l
 contrast with `check` on the description's own hardware.
 
 The command line carries it as `archogen check --target FILE` ([On a target](checking.md#on-a-target), leaf
-`M4.1.7.4.2.1`), the agent's server as the `check` tool's `target` (leaf `M4.1.7.4.2.2`), and the page as its Target
+`M4.1.7.4.2.1`), the agent's server as the `target` of its `check` tool (leaf `M4.1.7.4.2.2`) and of its `resolve` and `explain` (leaf
+`M4.1.7.5.5`), and the page as its Target
 box, the binding's request `/2` (leaf `M4.1.7.4.2.3`). `resolve` and `explain`
 search the system on the target, where `check` judged it (API `1.11`, leaf `M4.1.7.5.3`): its release requester among
 its requesters ([Matching](matching.md)), the plan `archogen-assignment/3`, naming the target. A description `check`
@@ -350,8 +351,10 @@ no `unchecked`, handing over no plan to build on (leaf `M3.4.13.2`). `check`
 takes the API's request — the description's text, its profile and its modules' texts, never a path, and optionally
 `target`, an object holding a target's file as `text` and how diagnostics name it as `name`, `target.eadl` when absent
 (leaf `M4.1.7.4.2.2`, [Checking on a target](#checking-on-a-target)) — and answers the API's response in the wasm
-binding's encoding above, the same bytes, both as structured content and as text. No other tool takes a target until
-the search on one is built (`M4.1.7.5`), so `resolve` and `explain` refuse it as an argument they do not have. Its
+binding's encoding above, the same bytes, both as structured content and as text. `resolve` and `explain` take the
+same `target` and search the system there, as the API's `resolve_with` and `explain_with` do (leaf `M4.1.7.5.5`):
+`resolve`'s plan is then `archogen-assignment/3`, naming the target, and still unchecked, for `archogen-plan-check`'s
+own tool to judge on the same target. `check`'s
 result is an error whenever the description is not accepted, so a client that reads one flag never mistakes a
 refusal for a pass. An argument `check` cannot use is answered the same way, saying what to change, so a model can
 correct its call. A tool that is not built answers with its leaf, and a version the server does not speak is refused
@@ -394,7 +397,7 @@ consumers reach the engine today, and all four reach the same operation:
 | a person | `archogen check` (`crates/archogen-cli`) | check a description, its imports read from a directory | the status as the exit code, and the diagnostics rendered as text |
 | a Rust program | `archogen_api::check` (`crates/archogen-api`) | check text it holds, its imports from memory or none, on a target it holds or on the description's own hardware | a `Response`: the status, the diagnostics and their sources, and, when judged, the verdict and what was read |
 | a web page | the wasm binding (`crates/archogen-wasm`, `docs/decisions/decision_wasm-binding.md`) | check text, its imports and a target framed into the request | the same response, encoded as JSON |
-| an agent | `archogen mcp` (`crates/archogen-cli/src/mcp.rs`, `docs/decisions/decision_mcp-server.md`) | call the `check` tool, on a target it holds or none, and discover the others with their maturity and the leaf that owns each | the binding's JSON as the tool's structured result, marked an error unless the description was accepted |
+| an agent | `archogen mcp` (`crates/archogen-cli/src/mcp.rs`, `docs/decisions/decision_mcp-server.md`) | call the `check`, `resolve` and `explain` tools, on a target it holds or none, and discover the others with their maturity and the leaf that owns each | the binding's JSON as the tool's structured result, marked an error unless the description was accepted |
 
 `resolve` reaches the person, through `archogen resolve`; the Rust program, through
 `archogen_api::resolve_with`; and the agent, through the MCP tool `resolve` (leaf `M3.4.6`). `explain` reaches the same
