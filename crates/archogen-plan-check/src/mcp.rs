@@ -309,8 +309,8 @@ fn schema() -> Value {
                             "description",
                             string(
                                 "the target's eADL file the plan was resolved on, archogen-assignment/3: the system is \
-                                 put on it and the plan judged there; a plan of another target, or of none, is \
-                                 stale-input",
+                                 put on it and the plan judged there; a plan of another target's file, by its digest, \
+                                 or of none, is stale-input",
                             ),
                         ),
                         (

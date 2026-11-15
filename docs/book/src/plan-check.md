@@ -98,7 +98,9 @@ since the plan names the target's fingerprint and that is checked first.
    description's is a **stale plan**: the description changed after the plan was made. That is not a mistake of the
    toolchain, so it gets a status of its own, `stale-input`, and the advice is to resolve again. So is a plan made on a
    target and checked with none: it was resolved for another run, and so is one checked on a target whose fingerprint
-   is not the one it names. A plan on a target is judged with that target named, `--target FILE`.
+   is not the one it names. A plan on a target is judged with that target named, `--target FILE`. The fingerprint
+   decides the run: a plan naming another platform beside the fingerprint of the target given is no plan any run
+   writes, and is refused as one naming another profile is, once the target has read (leaf `M4.1.7.5.6`).
 2. **The description is checked again.** The checker runs the language's own checks over the description, with the
    language definition compiled into the checker, and adds a few rules about providers that only a planner meets: a
    timer offering a channel-taking function while declaring no channel, a memory region that does not read, memory
@@ -161,7 +163,7 @@ which `archogen plan-check` runs, handing over its arguments as they are and giv
 
 ```text
 archogen plan-check examples/periodic-three/system.eadl build/plan.json
-archogen-plan-check [--profile ID] [--result PATH] [--target FILE] [--] DESCRIPTION PLAN
+archogen-plan-check [--profile ID] [--target FILE] [--result PATH] [--] DESCRIPTION PLAN
 ```
 
 It reads the description — a module, whose imports it finds in the module's directory, or a plain description — and

@@ -301,8 +301,10 @@ impl Record {
 
     /// Why this record belongs to another run than one given `target`, its platform and its [`target_digest`], or none:
     /// `None` when it does belong (`docs/decisions/decision_runtime-plan-format-2.md` §1). A `/3` record given no target, a
-    /// `/2` given one, or a `/3` naming another target than the one given was resolved for another run and nothing failed:
-    /// the consumer refuses it `stale-input`, "resolve again", with this sentence.
+    /// `/2` given one, or a `/3` naming another digest than the given file's was resolved for another run and nothing
+    /// failed: the consumer refuses it `stale-input`, "resolve again", with this sentence. The digest decides which run it
+    /// is of (leaf `M4.1.7.5.6`), so a `/3` naming another platform beside the given file's digest belongs, and
+    /// [`Record::misnames`] judges its name once the file has read as a target.
     #[must_use]
     pub fn stale_for(&self, target: Option<(&str, &str)>) -> Option<String> {
         let format = if self.target.is_some() {
@@ -312,11 +314,7 @@ impl Record {
         };
         match (&self.target, target) {
             (None, None) => None,
-            (Some((platform, digest)), Some((given, given_digest)))
-                if platform == given && digest == given_digest =>
-            {
-                None
-            }
+            (Some((_, digest)), Some((_, given_digest))) if digest == given_digest => None,
             (Some((platform, digest)), Some((given, given_digest))) => Some(format!(
                 "the plan was resolved on the target `{platform}` (sha256 {digest}), and the target given is `{given}` \
                  (sha256 {given_digest}): resolve again"
@@ -328,6 +326,22 @@ impl Record {
             (None, Some((given, _))) => Some(format!(
                 "the plan is `{format}`, resolved on no target, and the target `{given}` is given: resolve again on it"
             )),
+        }
+    }
+
+    /// Why this record, of the run given a target ([`Record::stale_for`] none), names another platform than `platform`,
+    /// the one platform of the file whose digest it writes, or none (`docs/decisions/decision_runtime-plan-format-2.md`
+    /// §1; leaf `M4.1.7.5.6`): a file's forms name one platform, so no run writes that pair, and the consumer refuses it
+    /// `tool-failure` with this sentence, as a record naming another profile or system, once the file has read as a
+    /// target.
+    #[must_use]
+    pub fn misnames(&self, platform: &str) -> Option<String> {
+        match &self.target {
+            Some((written, _)) if written != platform => Some(format!(
+                "the plan names the target `{written}` beside the digest of a file whose one platform is `{platform}`: \
+                 write the plan again with `archogen resolve`, which never writes this record"
+            )),
+            _ => None,
         }
     }
 }

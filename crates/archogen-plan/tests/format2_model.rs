@@ -1582,7 +1582,7 @@ fn every_fact_the_realization_owes_is_handed_to_its_format() {
 /// RP36-1, RP36-2).
 #[test]
 fn section_7_places_every_refusal_in_one_order() {
-    const ORDER: [&str; 23] = [
+    const ORDER: [&str; 24] = [
         "a target's own refusals",
         "`check`'s judgement of the target's file alone as `DC-H3` runs it",
         "the file not reading",
@@ -1594,7 +1594,8 @@ fn section_7_places_every_refusal_in_one_order() {
         "the application's file not reading",
         "`/1`'s list in its order",
         "an assignment of the other kind",
-        "the assignment's `(target …)` other than the file's",
+        "the assignment's `(target …)` digest other than the file's",
+        "its platform other than the file's beside the file's digest",
         "a finding of the generator's joint rules over the target's hardware",
         "an application's unmet",
         "too few levels while lowering the plan's code",
@@ -2521,10 +2522,13 @@ fn the_holds_this_record_adds_are_those_rpf_h4_hands_the_checker() {
 /// class).
 #[test]
 fn every_refusal_the_record_states_has_its_stage() {
-    const STAGES: [(&str, &str); 38] = [
+    const STAGES: [(&str, &str); 41] = [
         ("Its refusals come in the order it reads a plan in today (`DC-H2`)", "the checker"),
         ("An assignment of the other kind, a `/3` lowered or checked with no `--target` or a `/2` with one, is `stale-input`", "lowering: an assignment of the other kind"),
-        ("A record whose target differs, or of the other kind as above, is `stale-input`", "the checker"),
+        ("A record whose target's digest differs, or of the other kind as above, is `stale-input`", "the checker"),
+        ("one naming another platform beside the given file's digest is `tool-failure`, in the judgement", "the checker"),
+        ("its `HEX` decides: one other than the given file's is another run's, `stale-input`", "lowering: the assignment's `(target …)` digest other than the file's"),
+        ("A `NAME` other than the one platform of the file whose `HEX` it writes is a record no run writes", "lowering: its platform other than the file's beside the file's digest"),
         ("`(compare-magnitude true)` beside a window is `invalid-description`, naming the device", "lowering: a target's own refusals"),
         ("**No room** is `infeasible-configuration`", "lowering: no room while placing"),
         ("as it holds `SHORTEST + 2ρ`, failing `unsupported-profile` and naming it", "the checker"),
@@ -4268,10 +4272,11 @@ fn the_catalog_digest_has_one_preimage() {
 #[test]
 fn every_refusal_names_its_code() {
     // Each refusal of inputs that do not belong together, as the record says it, and whether a person writes the input it refuses.
-    const MISMATCHED: [(&str, bool); 7] = [
+    const MISMATCHED: [(&str, bool); 8] = [
         ("An assignment of the other kind, a `/3` lowered or checked with no `--target` or a `/2` with one, is `stale-input`", false),
-        ("the assignment's `(target …)` other than the file's taken with its program digest, `stale-input`", false),
-        ("A record whose target differs, or of the other kind as above, is `stale-input`", false),
+        ("the assignment's `(target …)` digest other than the file's taken with its program digest, `stale-input`", false),
+        ("A record whose target's digest differs, or of the other kind as above, is `stale-input`", false),
+        ("its `HEX` decides: one other than the given file's is another run's, `stale-input`", false),
         ("a lowering given one of another code refuses it `stale-input`, \"measure again\", naming both identities", false),
         ("then a realization of another code identity, `stale-input`", false),
         ("A bound or a list of counts whose `binary` names another image is refused `stale-input`", false),
@@ -4292,6 +4297,16 @@ fn every_refusal_names_its_code() {
         "then a realization of another code identity, `invalid-description`",
     ] {
         assert!(!flat.contains(false_said), "{false_said}");
+    }
+    // A `/3` naming another platform beside the given file's own digest is of this run, the digest deciding, and no run writes it: `tool-failure`, as a
+    // record naming another profile or system, in §1, the checker's bullet and §7 alike. Before, the record said "a record whose target differs" is
+    // `stale-input`, which read two ways, and the checker's two paths gave the two answers (leaf `M4.1.7.5.6`).
+    for misnamed in [
+        "A `NAME` other than the one platform of the file whose `HEX` it writes is a record no run writes, since that file's forms name one platform: `tool-failure`",
+        "one naming another platform beside the given file's digest is `tool-failure`",
+        "its platform other than the file's beside the file's digest `tool-failure`",
+    ] {
+        assert!(flat.contains(misnamed), "the record says: {misnamed}");
     }
     // The reader's case of round 38: resolved on a target and built with no `--target`, the assignment is a target's `/3` read as the hosted `/2`. The two
     // kinds are of other runs, not of a failure, so `stale-input`; any other format stays `/1`'s `tool-failure` (RP38-1).

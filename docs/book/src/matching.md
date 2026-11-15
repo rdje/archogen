@@ -564,8 +564,11 @@ A plan of a system on a target is `archogen-assignment/3` (leaf `M4.1.7.5.2`; `d
 its forms' program text, so a comment in the target's file moves it not and a fact does; its bindings name the system's
 release requester, `(release SYSTEM)`, last, after every name, task and instance (`plan::write_on_target`). `/2` stays the
 plan on the description's own hardware. A record belongs to one run: a `/3` given no target, a `/2` given one, or a `/3`
-naming another target than the one given was resolved for another run, and the reader says so for its consumer to refuse
-it `stale-input`, "resolve again" (`plan::Record::stale_for`). Its golden, written apart from the writer, is
+naming another target's digest than the given file's was resolved for another run, and the reader says so for its
+consumer to refuse it `stale-input`, "resolve again" (`plan::Record::stale_for`). The digest decides the run: a `/3`
+naming another platform beside the given file's own digest is no record any run writes, since a file's forms name one
+platform, and its consumer refuses it `tool-failure`, as one naming another profile or system, once the file has read
+as a target (`plan::Record::misnames`, leaf `M4.1.7.5.6`). Its golden, written apart from the writer, is
 `crates/archogen-plan-check/tests/goldens/archogen-assignment-3.golden`.
 
 The generator reads the record back with a reader of its own, `plan::read`, which accepts only the text its writer

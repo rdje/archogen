@@ -10,7 +10,7 @@ use std::sync::atomic::{AtomicUsize, Ordering};
 use archogen_outcome::record::Record;
 use archogen_outcome::Status;
 use archogen_plan_check::assignment::program_digest;
-use archogen_plan_check::check::{plan_file, PLAN_STALE};
+use archogen_plan_check::check::{plan_file, PLAN_RECORD, PLAN_STALE};
 use archogen_plan_check::target::digest;
 use eadl_front::module::DirectoryModules;
 use eadl_front::SourceMap;
@@ -204,6 +204,22 @@ fn the_same_plan_on_another_target_file_is_a_record_of_other_inputs() {
     assert_eq!(
         (code, record.status(), record.findings()[0].code.as_str()),
         (3, Status::StaleInput, PLAN_STALE)
+    );
+}
+
+#[test]
+fn a_plan_naming_another_platform_beside_the_target_file_s_digest_is_a_corrupted_plan() {
+    // `docs/decisions/decision_runtime-plan-format-2.md` §1, amended `2026-11-15` (leaf `M4.1.7.5.6`): its digest says
+    // it is of this file's run, whose forms name one platform, so another `NAME` is a record no run writes.
+    let files = Files::new();
+    let misnamed = std::fs::read_to_string(&files.plan)
+        .unwrap()
+        .replace("(target target.riscv-virt-up ", "(target target.elsewhere ");
+    std::fs::write(&files.plan, misnamed).unwrap();
+    let (code, record, _) = check(&files, Some(&files.target));
+    assert_eq!(
+        (code, record.status(), record.findings()[0].code.as_str()),
+        (70, Status::ToolFailure, PLAN_RECORD)
     );
 }
 

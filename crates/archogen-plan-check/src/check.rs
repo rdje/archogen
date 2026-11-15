@@ -104,17 +104,19 @@ pub fn record(
 }
 
 /// Check (1) of a plan of a system on `target` (`docs/decisions/decision_runtime-plan-format-2.md` §1, "The target in
-/// the identity" and "The checker"; leaf `M4.1.7.5.4.3`): the record reads and is `archogen-assignment/3`; it was
-/// resolved for these inputs — its `(program …)` the description's elaborated program's digest, as with no target, and
-/// its `(target NAME "HEX")` the target given, `NAME` its one platform and `HEX` [`Target::digest`] — else a record of
-/// other inputs, refused before any judgement; and it names the profile the check runs under and a system the
-/// description declares. `name` names the record in each finding's span.
+/// the identity" and "The checker", as amended `2026-11-15` by leaf `M4.1.7.5.6`; leaf `M4.1.7.5.4.3`): the record reads
+/// and is `archogen-assignment/3`; it was resolved for these inputs — its `(program …)` the description's elaborated
+/// program's digest, as with no target, and the `HEX` of its `(target NAME "HEX")` [`Target::digest`], which decides
+/// which run it is of — else a record of other inputs, refused before any judgement; and it names the profile the check
+/// runs under, a system the description declares and, as its `NAME`, the one platform of the file whose digest it writes
+/// ([`misnamed`]). `name` names the record in each finding's span.
 ///
 /// # Errors
 ///
 /// The [`Verdict`] refusing it: `stale-input` and [`PLAN_STALE`] for a `/2` record, of no target, for a record of
-/// another target and for a stale program, "resolve again"; `tool-failure` and [`PLAN_RECORD`] for a record that does
-/// not read or names what the description and the check do not.
+/// another target's digest — whatever platform it names — and for a stale program, "resolve again"; `tool-failure` and
+/// [`PLAN_RECORD`] for a record that does not read or names what the description, the check and the target do not,
+/// another platform beside the given file's digest among them.
 pub fn record_on_target(
     program: &Program,
     target: &Target,
@@ -123,25 +125,47 @@ pub fn record_on_target(
     text: &str,
 ) -> Result<Assignment, Verdict> {
     let assignment = read_record(name, text)?;
-    of_the_target(
-        name,
-        text,
-        &assignment,
-        Some(&target.platform),
-        &target.digest(),
-        &target.platform,
-    )?;
-    of_these_inputs(program, profile, name, text, assignment)
+    of_the_target(name, text, &assignment, &target.digest(), &target.platform)?;
+    let assignment = of_these_inputs(program, profile, name, text, assignment)?;
+    misnamed(name, text, &assignment, target)?;
+    Ok(assignment)
 }
 
-/// Check (1)'s target (`docs/decisions/decision_runtime-plan-format-2.md` §1): the record is `archogen-assignment/3`, of
-/// the platform `platform` where one is given, and its digest is `digest`, else a record of other inputs, `stale-input`
-/// and [`PLAN_STALE`]. `shown` names the target given in the message.
+/// A `/3` record naming as its `NAME` another platform than `target`'s, the file whose digest it writes
+/// (`docs/decisions/decision_runtime-plan-format-2.md` §1, amended `2026-11-15`, leaf `M4.1.7.5.6`): since that file's
+/// forms name one platform, a record no run writes — `tool-failure` and [`PLAN_RECORD`], as a record naming another
+/// profile or system is, judged once the file has read as a target. The one statement of the refusal, for
+/// [`record_on_target`] and [`plan_file_on_target`] alike.
+fn misnamed(
+    name: &str,
+    text: &str,
+    assignment: &Assignment,
+    target: &Target,
+) -> Result<(), Verdict> {
+    match &assignment.target {
+        Some((platform, _)) if *platform != target.platform => Err(refused(
+            name,
+            text,
+            Status::ToolFailure,
+            "target",
+            format!(
+                "the plan names the target `{platform}` beside the digest of a file whose one platform is `{}`",
+                target.platform
+            ),
+            "write the plan again with `archogen resolve`: this record is not one it writes",
+        )),
+        _ => Ok(()),
+    }
+}
+
+/// Check (1)'s target (`docs/decisions/decision_runtime-plan-format-2.md` §1, amended `2026-11-15`, leaf `M4.1.7.5.6`):
+/// the record is `archogen-assignment/3` and its digest is `digest`, the given file's — the digest deciding which run it
+/// is of, whatever platform it names — else a record of other inputs, `stale-input` and [`PLAN_STALE`]. `shown` names the
+/// target given in the message.
 fn of_the_target(
     name: &str,
     text: &str,
     assignment: &Assignment,
-    platform: Option<&str>,
     digest: &str,
     shown: &str,
 ) -> Result<(), Verdict> {
@@ -160,13 +184,6 @@ fn of_the_target(
             "format",
             format!(
                 "the plan is `{FORMAT}`, resolved on no target, and the target `{shown}` is given: resolve again on it"
-            ),
-        )),
-        Some((written, _)) if platform.is_some_and(|given| given != written) => Err(refused(
-            "target",
-            format!(
-                "the plan was resolved on the target `{written}`, and the target given is `{shown}`: resolve again on \
-                 it"
             ),
         )),
         Some((_, written)) if written != digest => Err(refused(
@@ -427,9 +444,11 @@ pub fn plan_file(
 /// `docs/decisions/decision_runtime-plan-format-2.md` §1's "The checker" gives: a file that does not read — the
 /// description's, which does not read or does not elaborate, then the target's, which does not read as forms — each
 /// under its own status; then a record of other inputs, `stale-input` ([`record_on_target`]'s, the target compared by its
-/// digest alone, which its forms decide, so before the file is read as a target); then, in the judgement, the target's
-/// own refusals ([`Target::of`]), a record naming another platform than the file whose digest it writes being a corrupted
-/// plan, the system put on the target ([`on_target`]), and checks (2) to (5) as [`plan_on_target`] runs them. `text` is
+/// digest alone, which its forms decide and which decides which run the record is of, so before the file is read as a
+/// target); then, in the judgement, the target's own refusals ([`Target::of`]), a record naming another platform beside
+/// the file's own digest — a record no run writes, `tool-failure`, as [`record_on_target`] refuses it too (amended
+/// `2026-11-15`, leaf `M4.1.7.5.6`) — the system put on the target ([`on_target`]), and checks (2) to (5) as
+/// [`plan_on_target`] runs them. `text` is
 /// the record `name` names. Returns the program the description became, as far as it did — the result record's subject
 /// — with the verdict.
 pub fn plan_file_on_target(
@@ -487,29 +506,12 @@ pub fn plan_file_on_target(
             name,
             text,
             &assignment,
-            None,
             &crate::target::digest(&forms),
             &shown,
         )?;
         let assignment = of_these_inputs(&program, profile, name, text, assignment)?;
         let target = Target::of(sources, target, forms)?;
-        if let Some((platform, _)) = assignment
-            .target
-            .as_ref()
-            .filter(|(platform, _)| *platform != target.platform)
-        {
-            return Err(refused(
-                name,
-                text,
-                Status::ToolFailure,
-                "target",
-                format!(
-                    "the plan names the target `{platform}` beside the digest of a file whose one platform is `{}`",
-                    target.platform
-                ),
-                "write the plan again with `archogen resolve`: this record is not one it writes",
-            ));
-        }
+        misnamed(name, text, &assignment, &target)?;
         let on = on_target(sources, &program, &assignment.system, &target)?;
         description(sources, &on.program, profile)?;
         bound(sources, &on.program, profile, name, text, &assignment)

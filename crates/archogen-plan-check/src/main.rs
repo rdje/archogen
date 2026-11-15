@@ -58,7 +58,8 @@ usage: archogen-plan-check [--profile ID] [--target FILE] [--result PATH] [--] D
   PLAN             the assignment record the search wrote for it: archogen-assignment/2, or archogen-assignment/3 of a
                    system on a target, judged with `--target`
   --target FILE    the target's eADL file the plan was resolved on: its system is put on the target and the plan judged
-                   there. A plan of another target, or of none, is stale-input, as a plan on a target is without it
+                   there. A plan of another target's file, by its digest, or of none, is stale-input, as a plan on a
+                   target is without it
   --result PATH    where the result record, archogen-result/1, is written; without it, on standard output. It replaces
                    only an empty file or a record this engine reads, and keeps its mode
   --               every argument after it is a path, even one that begins with `-`

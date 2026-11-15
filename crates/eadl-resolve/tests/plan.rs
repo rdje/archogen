@@ -1217,6 +1217,33 @@ fn a_record_of_another_run_is_stale() {
     );
 }
 
+/// `/2` §1 as `M4.1.7.5.6` amends it: the digest decides which run a `/3` is of, so another platform beside the given
+/// file's digest is no other run's, and another platform beside another digest is; a `NAME` other than the platform of
+/// the file whose digest it writes is a record no run writes, `tool-failure`, which [`plan::Record::misnames`] says.
+#[test]
+fn the_digest_decides_the_run_and_a_name_against_it_is_no_record_a_run_writes() {
+    let golden = std::fs::read_to_string(root().join(GOLDEN_3)).expect("the golden");
+    let third = plan::read(&golden).expect("it reads");
+    let digest = "0f1e2d3c4b5a69788796a5b4c3d2e1f00f1e2d3c4b5a69788796a5b4c3d2e1f0";
+    assert_eq!(third.stale_for(Some(("target.elsewhere", digest))), None);
+    assert!(third
+        .stale_for(Some(("target.elsewhere", &"a".repeat(64))))
+        .is_some_and(|stale| stale.contains("resolve again")));
+    assert_eq!(third.misnames("target.riscv-virt-up"), None);
+    let misnamed = third
+        .misnames("target.elsewhere")
+        .expect("another platform");
+    assert!(
+        misnamed.contains("`target.riscv-virt-up`")
+            && misnamed.contains("`target.elsewhere`")
+            && misnamed.contains("archogen resolve"),
+        "{misnamed}"
+    );
+    let (hosted, _) = heartbeat_record();
+    let second = plan::read(&hosted).expect("it reads");
+    assert_eq!(second.misnames("target.riscv-virt-up"), None);
+}
+
 /// The target's digest is of its forms, as a program's is: a comment moves it not, a fact does.
 #[test]
 fn a_target_s_digest_is_of_its_forms() {

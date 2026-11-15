@@ -8,7 +8,9 @@ use std::path::Path;
 
 use archogen_outcome::Status;
 use archogen_plan_check::assignment::program_digest;
-use archogen_plan_check::check::{plan_on_target, Verdict, PLAN_BINDING, PLAN_JOINT, PLAN_STALE};
+use archogen_plan_check::check::{
+    plan_on_target, record_on_target, Verdict, PLAN_BINDING, PLAN_JOINT, PLAN_RECORD, PLAN_STALE,
+};
 use archogen_plan_check::release;
 use archogen_plan_check::target::Target;
 use eadl_front::{Program, SourceMap};
@@ -300,11 +302,11 @@ fn a_plan_resolved_on_another_target_is_stale() {
             ),
         ),
         (
-            "another platform",
+            "another platform beside another file's digest: the digest decides first",
             record(
                 &digest,
                 "target.elsewhere",
-                &inputs.target.digest(),
+                &other.target.digest(),
                 "heartbeat",
                 &HEARTBEAT,
             ),
@@ -324,6 +326,48 @@ fn a_plan_resolved_on_another_target_is_stale() {
             "{case}"
         );
     }
+}
+
+#[test]
+fn a_record_naming_another_platform_beside_the_given_file_s_digest_is_one_no_run_writes() {
+    // `docs/decisions/decision_runtime-plan-format-2.md` §1, amended `2026-11-15` (leaf `M4.1.7.5.6`): the digest says
+    // the record is of this file's run, and this file's forms name one platform, so a record naming another is a record
+    // no run writes, `tool-failure`, as one naming another profile or system is — never `stale-input`.
+    let inputs = Inputs::shipped();
+    let text = record(
+        &program_digest(&inputs.program),
+        "target.elsewhere",
+        &inputs.target.digest(),
+        "heartbeat",
+        &HEARTBEAT,
+    );
+    let verdict = inputs.judge(&text).expect_err("refused");
+    assert_eq!(
+        (verdict.status, verdict.findings.len()),
+        (Status::ToolFailure, 1),
+        "{verdict:?}"
+    );
+    let finding = &verdict.findings[0];
+    assert_eq!(finding.code, PLAN_RECORD);
+    assert!(
+        finding.message.contains("`target.elsewhere`")
+            && finding.message.contains("`target.riscv-virt-up`"),
+        "{}",
+        finding.message
+    );
+    // The library's check (1) on a target says the same.
+    let refusal = record_on_target(
+        &inputs.program,
+        &inputs.target,
+        &RT_STATIC_UP_V1,
+        "plan.eadl",
+        &text,
+    )
+    .expect_err("refused");
+    assert_eq!(
+        (refusal.status, refusal.findings[0].code.as_str()),
+        (Status::ToolFailure, PLAN_RECORD)
+    );
 }
 
 #[test]
