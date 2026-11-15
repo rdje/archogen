@@ -423,6 +423,36 @@ refused and the budget runs out before the search could show it: `analysis-incon
 search writes for a tracked description is one the configuration checker accepts, which a test holds over all of them
 (`crates/eadl-resolve/tests/plan.rs`).
 
+#### On a target: the release requester
+
+On a real machine, something must release the tasks the timer releases: a device that counts, raises its interrupt at
+a time it is told, and keeps counting while the processor idles. Nothing in the description names that device, and
+nothing should — the search chooses it as it chooses every other, by what it offers. So when a system is put on a
+target (`eadl_resolve::search::search_on_target`, leaf `M4.1.7.5.1`) and one of its tasks writes a `period`, the engine
+adds one more requester, the system's **release requester**, written `(release SYSTEM)`
+(`docs/decisions/decision_release-alarm.md` §1, model §8 rule 1). It asks:
+
+```text
+(needs relative-delay counter-modulus tick-rate observation-coherent)
+(available-in-state idle)
+(alarm-wiring core)
+(alarm-kind level-compare)
+(unambiguous-horizon (at-least SHORTEST))
+(supported-horizon (at-least SHORTEST))
+```
+
+`SHORTEST` is the shortest period of a task the timer releases, as that task writes it: the next release is never
+farther away than that, so one compare must reach at least so far. On `targets/riscv-virt-up.eadl` the machine's
+timer, `target.timer`, meets every line. Its binding is the release timer and no route, so the joint rules give it
+no timer route; it is a caller at the system's level, so the timer must be reachable there; the device bound is
+initialised as any provider bound is, and the requester itself is no node. It binds a device itself, never an
+adapter's instance, since what releases tasks is the catalog's timer service over that device; and that device must
+state the step its compare matches on and how it reads a value as due, a `compare-window` or `(compare-magnitude
+true)`, or the search refuses `missing-fact`, naming the device. None is added on the playground, where the
+simulator's own clock releases tasks, nor for a system with no periodic task. `crates/eadl-resolve/tests/target.rs`
+holds each of these. Which format writes it, and which command asks for it, are the next leaves: `M4.1.7.5.2`, then
+`M4.1.7.5.3`.
+
 The search can also say what it did with one requirement (`eadl_resolve::search::explain`, leaf `M3.4.13.1`), the
 account `archogen explain` prints. It runs the same search and, for the requirement asked, lists each provider of the
 hardware with its answer — meets it, offers a value it refuses, declares it absent, leaves it undescribed. Then it

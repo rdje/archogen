@@ -201,6 +201,16 @@ fn named(f: &Finding) -> String {
         Finding::ChannelsContradicted { provider, .. } => {
             format!("{} channels of {provider}", f.code())
         }
+        Finding::ReleaseCompareUnstated {
+            system,
+            provider,
+            missing,
+            ..
+        } => format!(
+            "{} compare of {provider} releasing {system}: {}",
+            f.code(),
+            missing.join(" ")
+        ),
         Finding::RegionMalformed {
             provider, detail, ..
         } => format!("{} {provider}: {detail}", f.code()),

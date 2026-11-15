@@ -571,10 +571,10 @@ a change that leaves it stale, so it is never edited by hand.
 - **PATH** — [definition](glossary.md), [Annex C: Trust proof records](annex-trust-proofs.md)
 - **PDF** — [definition](glossary.md), [What this project relies on from outside](ledger.md)
 - **period** — [definition](glossary.md), [A tour: from a description to a board](tour.md), [Reading a
-  description](reading.md), [Kinds and schemas](kinds.md), [Quantities and units](quantities.md), [The runtime plan:
-  what the generated system is told](runtime-plan.md), [Building a system](building.md), [The S0 early generation
-  path](s0.md), [Verifying the toolchain](verification.md), [What this project relies on from outside](ledger.md), [What
-  is versioned, and what changing it costs](versions.md)
+  description](reading.md), [Kinds and schemas](kinds.md), [Quantities and units](quantities.md), [Matching an offer to
+  a requirement](matching.md), [The runtime plan: what the generated system is told](runtime-plan.md), [Building a
+  system](building.md), [The S0 early generation path](s0.md), [Verifying the toolchain](verification.md), [What this
+  project relies on from outside](ledger.md), [What is versioned, and what changing it costs](versions.md)
 - Permanent environment-tail controls — [Annex C: Trust proof
   records](annex-trust-proofs.md#permanent-environment-tail-controls)
 - **PGEN** — [definition](glossary.md), [What this project relies on from outside](ledger.md)

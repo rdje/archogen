@@ -119,14 +119,22 @@ pub enum Who {
         /// The task's name within it.
         task: String,
     },
+    /// The release requester of a system on a target (`docs/decisions/decision_release-alarm.md` §1), last among
+    /// requesters (`docs/decisions/decision_runtime-plan-format-2.md` §3).
+    Release {
+        /// The system's name.
+        system: String,
+    },
 }
 
 impl std::fmt::Display for Who {
-    /// As the assignment record writes a requester: a declaration by its name, a task `(task SYSTEM TASK)`.
+    /// As the assignment record writes a requester: a declaration by its name, a task `(task SYSTEM TASK)`, a release
+    /// requester `(release SYSTEM)`.
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
             Self::Named(name) => f.write_str(name),
             Self::Task { system, task } => write!(f, "(task {system} {task})"),
+            Self::Release { system } => write!(f, "(release {system})"),
         }
     }
 }
@@ -139,6 +147,11 @@ impl Who {
                 system: system.to_owned(),
                 task: task.to_owned(),
             },
+            (Kind::Release, _) if crate::joint::release_of(&requester.name) == Some(system) => {
+                Self::Release {
+                    system: system.to_owned(),
+                }
+            }
             _ => Self::Named(requester.name.clone()),
         }
     }
@@ -230,6 +243,31 @@ pub fn search(
         policy,
         limits,
         None,
+        false,
+    )
+    .search
+}
+
+/// [`search`] of a system put on a target (`crate::target::on_target`): the system and what it reads there, and the release
+/// requester the engine adds where a task of it is released by the timer (`docs/decisions/decision_release-alarm.md` §1,
+/// model §8 rule 1), so the device that releases its tasks is chosen as every other is, by what it offers.
+#[must_use]
+pub fn search_on_target(
+    there: &crate::target::OnTarget,
+    level: &str,
+    vocabulary: &Vocabulary,
+    policy: &Policy,
+    limits: Limits,
+) -> Search {
+    run(
+        &there.declarations,
+        &there.system,
+        level,
+        vocabulary,
+        policy,
+        limits,
+        None,
+        true,
     )
     .search
 }
@@ -394,10 +432,13 @@ pub fn explain(
         policy,
         limits,
         Some(asked),
+        false,
     )
 }
 
-/// The search, and with `asked` the account [`explain`] gives.
+/// The search, and with `asked` the account [`explain`] gives; `on_a_target` where `system` is one `on_target` gives, its
+/// release requester then among its requesters.
+#[allow(clippy::too_many_arguments)]
 fn run(
     declarations: &[Form],
     system: &Form,
@@ -406,6 +447,7 @@ fn run(
     policy: &Policy,
     limits: Limits,
     asked: Option<Asked<'_>>,
+    on_a_target: bool,
 ) -> Explanation {
     let stopped = |search: Search| Explanation {
         search,
@@ -432,6 +474,15 @@ fn run(
     } = written(declarations, vocabulary);
     if !refusals.is_empty() {
         return stopped(refused(refusals));
+    }
+    if on_a_target {
+        match crate::joint::release_requester(system, vocabulary) {
+            Ok(Some(release)) => all.push(release),
+            Ok(None) => {}
+            Err(refusals) => {
+                return stopped(refused(refusals.iter().map(|r| r.diagnostic()).collect()))
+            }
+        }
     }
     // A part's needs are the search's to bind as the part may be bound, as presence reads them (model §2 rule 3, §8 rule 5; leaf `M3.4.17.6`).
     let counted = crate::joint::counted_parts(
@@ -670,11 +721,15 @@ fn trials(
                     && entry.derived_from.iter().all(|g| kind.offer(g).is_some())
             })
     };
+    // The release requester binds a device itself: what releases tasks is the catalog's timer service over the device it is
+    // bound to, whose compare the analysis reads (`docs/decisions/decision_release-alarm.md` §1), and no adapter's code
+    // stands between them.
+    let device_alone = pair.requester.kind == Kind::Release;
     let mut out = Vec::new();
     for kind in catalog
         .kinds
         .iter()
-        .filter(|kind| (!kind.mediates || mediation) && derivable(kind))
+        .filter(|kind| !device_alone && (!kind.mediates || mediation) && derivable(kind))
     {
         let beneath: Vec<&Requirement> = kind.beneath.iter().collect();
         let serves = kind.exclusive().then_some(pair.requester.name.as_str());

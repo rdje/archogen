@@ -310,7 +310,15 @@ written from this section alone (`crates/archogen-plan-check/src/joint.rs`, `M3.
 1. **Requesters.** A requester is a task, for what the task itself writes; a service; or any other declaration, for
    what it writes at its own level outside its tasks, a block or a platform only as it may be bound (rule 5). Two tasks
    of one system are two requesters, though §7 reads them as one side. A platform's or a block's `uses` is
-   composition, never a binding.
+   composition, never a binding. On a target, a system with a task the timer releases — one writing a `period` — has
+   one more, its **release requester**, `(release SYSTEM)`, which the engine adds and the system names
+   (`docs/decisions/decision_release-alarm.md` §1, `RA-H1`; leaf `M4.1.7.5.1`): `(needs relative-delay counter-modulus
+   tick-rate observation-coherent)`, `(available-in-state idle)`, `(alarm-wiring core)`, `(alarm-kind level-compare)`,
+   and `unambiguous-horizon` and `supported-horizon` each at least the shortest such period, as its task writes it. None
+   is added on the playground, where the simulator's clock releases tasks, nor with no such task. It binds a block or a
+   platform itself, never an adapter's instance, since what releases tasks is the catalog's timer service over the device
+   it is bound to; and that device states its `compare-step` and a `compare-window` or `(compare-magnitude true)`, each a
+   value, or what the analysis reads of it is unknown, `missing-fact`.
 2. **Consumed facts.** A vocabulary entry marked `use consumed` — `relative-delay` and `absolute-deadline` in `/1` —
    is a function a requester programs. A binding takes a channel when its requirement is on a consumed fact and is met
    by the value `true`: `(needs f)`, `(f true)` or the group whose head it is. `(f false)` takes none, and a shared
@@ -377,8 +385,8 @@ written from this section alone (`crates/archogen-plan-check/src/joint.rs`, `M3.
    platform those blocks and platforms name in turn through `uses` or `needs` — a clause of their own, or inside
    `requires` — at any depth. A declaration of another kind ends the path: a block that only a service names is not
    hardware. `refines` is no edge: a refinement keeps the abstract platform's obligations (§3), not its blocks. A
-   requester the system serves — its own level, one of its tasks, or a declaration its closure reaches through `uses`
-   and `needs` — bound to a block or platform outside that hardware is a conflict naming the requester, the provider and
+   requester the system serves — its own level, one of its tasks, its release requester (rule 1), or a declaration its
+   closure reaches through `uses` and `needs` — bound to a block or platform outside that hardware is a conflict naming the requester, the provider and
    the system: `SR-H15`'s "a provider on a platform the system does not use never satisfying", the joint check's. What
    the description's code then is, is `SR-H18`'s, `M3.4`'s to decide. A service or a policy the system serves that names,
    by `uses` or `needs`, a block or platform outside that hardware is no path into it. That is the description's own
@@ -390,7 +398,7 @@ written from this section alone (`crates/archogen-plan-check/src/joint.rs`, `M3.
 8. **Routes** (`M3.3.3`). Under one active core, an assignment reports a **route obligation** for each provider its
    system's requesters rely on for an interrupt, one for each provider and kind: a *source*, bound through
    `interrupt-source` at `true`, with what it states of its own `min-arrival-separation`; and a *timer*, bound through a
-   consumed fact at `true`. The description's half of a route is rule 7; the controller between source and core, its
+   consumed fact at `true`, but for the release requester's (rule 1): the release timer is no route. The description's half of a route is rule 7; the controller between source and core, its
    line and contexts, and the latency are the catalog's, a source's `external.<source>` being stated with its service by that service's supplier, the
    generated code's for a generated one (`docs/decisions/decision_runtime-plan-format-2.md` §3), and the plan enables the release timer, where a system has one (`(timer none)` has none), and every route's
    interrupt, timer routes included, and on a target the platform's non-maskable interrupts and traps, and no other
@@ -401,8 +409,8 @@ written from this section alone (`crates/archogen-plan-check/src/joint.rs`, `M3.
 9. **Privilege** (`M3.3.4.1`; `SR-H11`, `SR-H12`). Given the level a plan binds one system's callers to — a level of
    `reachable-at-privilege`'s domain, the profile's — `rt-static-up-v1`'s Privilege row states `machine`
    (`crates/eadl-model/src/profile.rs`), which `M3.4` gives every system it resolves; a level outside the domain is the engine's
-   input error, never a description's code — these rules judge **callers**: the system's own level, its tasks, and the
-   services and policies its closure reaches, never a block or platform needing another's fact, which has no level. A
+   input error, never a description's code — these rules judge **callers**: the system's own level, its tasks, its release
+   requester (rule 1), and the services and policies its closure reaches, never a block or platform needing another's fact, which has no level. A
    caller stating it calls from levels that do not hold the system's is `unsupported-profile`, judged first, since no
    context at those levels exists under this profile. Then each provider bound for a caller — any provider, an adapter or
    a record as a block — is reachable at the level: a set without it is a conflict; a level undescribed or offered bare
@@ -443,7 +451,8 @@ written from this section alone (`crates/archogen-plan-check/src/joint.rs`, `M3.
    the system serves — closed over bindings, so an adapter's or a block's own bindings count — the services and policies
    it serves, each block or platform it serves that is bound for requirements of its own (`M4.1.15`), and each block or
    platform a served task, service or policy names by `uses` or `needs`, a call (`M4.1.18`); the system's own level,
-   which initialises nothing, and its tasks, which start after all initialisation, are none. An edge runs from a
+   which initialises nothing, its release requester (rule 1), whose device is a node as any provider bound is, and its
+   tasks, which start after all initialisation, are none. An edge runs from a
    provider to each requester bound to it, whatever composes what, but to itself — composition alone giving none
    (`M4.1.16`) — and from each node a service or a policy names by `uses` or `needs`, a block or a platform included
    (`M4.1.17`), to that namer but to itself — a block's or a platform's own names giving none; each carries its reason.

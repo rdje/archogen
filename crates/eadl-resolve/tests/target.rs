@@ -4,13 +4,17 @@
 use std::collections::BTreeMap;
 use std::path::PathBuf;
 
+use eadl_front::Verdict;
 use eadl_front::{read, Diagnostic, Form, SourceMap, Span};
 use eadl_model::check::shipped_registry;
 use eadl_model::profile::RT_STATIC_UP_V1;
 use eadl_resolve::adapter::Catalog;
-use eadl_resolve::joint::System;
-use eadl_resolve::search::{search, Limits, Policy, Resolution, Search};
-use eadl_resolve::target::{correspond, on_target, Correspondence, Target};
+use eadl_resolve::joint::{
+    release_requester, requesters, Binding, Interrupt, Joint, Node, Obligation, System,
+};
+use eadl_resolve::offer;
+use eadl_resolve::search::{search, search_on_target, Limits, Policy, Resolution, Search, Who};
+use eadl_resolve::target::{correspond, on_target, Correspondence, OnTarget, Target};
 use eadl_resolve::vocabulary::Vocabulary;
 
 fn root() -> PathBuf {
@@ -1516,4 +1520,251 @@ fn what_refines_what_leads_back_to_it_is_refused() {
          (defsystem s (platform (uses down)))",
     );
     assert!(on_target(system_of(&declarations), &declarations, &real_target()).is_ok());
+}
+
+// ── the release requester (leaf `M4.1.7.5.1`, `docs/decisions/decision_release-alarm.md` §1) ─────────────────────────────
+
+/// Two tasks the timer releases, every 10 ms and every 30 ms, writing to a console, on a playground of their own.
+const HEARTBEAT: &str = "
+(defblock console.uart (offers (observable-output true) (reachable-at-privilege machine)))
+(defplatform host.playground (offers (core-count 1 tick) (reachable-at-privilege machine)) (requires (uses console.uart)))
+(defservice console.write (requires (needs observable-output)))
+(defsystem heartbeat
+  (task beat (period 10 ms) (deadline 10 ms) (deadline-from release) (priority 1) (uses console.write) (on-overrun fault))
+  (task chime (period 30 ms) (deadline 30 ms) (deadline-from release) (priority 2) (uses console.write) (on-overrun fault))
+  (requires (uses console.write))
+  (platform (uses host.playground)))
+";
+
+/// The shipped target's file, with its one `from` replaced by `to`.
+fn the_target_with(from: &str, to: &str) -> Target {
+    let text = std::fs::read_to_string(root().join("targets/riscv-virt-up.eadl")).expect("read");
+    assert_eq!(text.matches(from).count(), 1, "`{from}` once in the target");
+    target_of(&text.replacen(from, to, 1))
+}
+
+/// `text`'s one system put on `target`.
+fn put_on(text: &str, target: &Target) -> OnTarget {
+    let declarations = forms(text);
+    on_target(system_of(&declarations), &declarations, target).expect("it can be read there")
+}
+
+/// The search of a system put on a target.
+fn run_there(there: &OnTarget) -> Search {
+    let v = vocabulary();
+    let policy = Policy {
+        adapters: Catalog::shipped(&mut SourceMap::new(), &v).expect("the shipped catalog reads"),
+        ..Policy::default()
+    };
+    search_on_target(
+        there,
+        RT_STATIC_UP_V1.caller_level,
+        &v,
+        &policy,
+        Limits::DEFAULT,
+    )
+}
+
+/// What a plan binds for `system`'s release requester, fact to provider.
+fn release_bindings<'r>(plan: &'r Resolution, system: &str) -> BTreeMap<&'r str, &'r str> {
+    plan.bindings
+        .iter()
+        .filter(|((who, _), _)| matches!(who, Who::Release { system: of } if of == system))
+        .map(|((_, fact), provider)| (fact.as_str(), provider.as_str()))
+        .collect()
+}
+
+fn refused_with(search: Search) -> (Verdict, String) {
+    match search {
+        Search::Refused {
+            verdict,
+            diagnostics,
+        } => (
+            verdict,
+            diagnostics
+                .iter()
+                .map(|d| d.message.as_str())
+                .collect::<Vec<_>>()
+                .join("\n"),
+        ),
+        other => panic!("a plan: {other:?}"),
+    }
+}
+
+#[test]
+fn a_system_on_a_target_whose_timer_releases_its_tasks_has_a_release_requester_bound_to_the_machine_s_timer(
+) {
+    let plan = resolved(run_there(&put_on(HEARTBEAT, &real_target())));
+    let release = release_bindings(&plan, "heartbeat");
+    for fact in [
+        "relative-delay",
+        "counter-modulus",
+        "tick-rate",
+        "supported-horizon",
+        "unambiguous-horizon",
+    ] {
+        assert_eq!(
+            release.get(fact),
+            Some(&"target.timer"),
+            "{fact}: {release:?}"
+        );
+    }
+    assert!(
+        release.values().all(|provider| *provider == "target.timer"),
+        "{release:?}"
+    );
+    // Last among requesters, as the record orders them.
+    assert!(
+        matches!(plan.bindings.keys().last(), Some((Who::Release { .. }, _))),
+        "{:?}",
+        plan.bindings.keys()
+    );
+    // Rule 8: the release timer is no route, so the device it is bound to carries no timer route.
+    assert!(
+        !plan.obligations.iter().any(|o| matches!(
+            o,
+            Obligation::Route {
+                interrupt: Interrupt::Timer,
+                ..
+            }
+        )),
+        "{:?}",
+        plan.obligations
+    );
+}
+
+#[test]
+fn a_system_with_no_timer_released_task_and_one_on_its_own_hardware_have_none() {
+    let no_task = "
+(defblock console.uart (offers (observable-output true) (reachable-at-privilege machine)))
+(defplatform host.playground (offers (core-count 1 tick) (reachable-at-privilege machine)) (requires (uses console.uart)))
+(defservice console.write (requires (needs observable-output)))
+(defsystem quiet (requires (uses console.write)) (platform (uses host.playground)))
+";
+    let plan = resolved(run_there(&put_on(no_task, &real_target())));
+    assert!(
+        release_bindings(&plan, "quiet").is_empty(),
+        "{:?}",
+        plan.bindings
+    );
+    let declarations = forms(HEARTBEAT);
+    let own = resolved(run(&declarations, system_of(&declarations)));
+    assert!(
+        release_bindings(&own, "heartbeat").is_empty(),
+        "{:?}",
+        own.bindings
+    );
+}
+
+/// `SHORTEST`, the shortest period of a timer-released task, is how far the device's horizons must reach.
+#[test]
+fn the_shortest_period_is_how_far_the_release_timer_must_reach() {
+    let reaching = the_target_with(
+        "(supported-horizon 1844674407370 s)",
+        "(supported-horizon 20 ms)",
+    );
+    let plan = resolved(run_there(&put_on(HEARTBEAT, &reaching)));
+    assert_eq!(
+        release_bindings(&plan, "heartbeat").get("supported-horizon"),
+        Some(&"target.timer")
+    );
+    let short = the_target_with(
+        "(supported-horizon 1844674407370 s)",
+        "(supported-horizon 5 ms)",
+    );
+    let (verdict, said) = refused_with(run_there(&put_on(HEARTBEAT, &short)));
+    assert_eq!(verdict, Verdict::InfeasibleConfiguration, "{said}");
+    assert!(said.contains("supported-horizon"), "{said}");
+    // The release requester binds a device itself: no adapter over the timer stands in for the horizon it lacks.
+    assert!(!said.contains("(adapter "), "{said}");
+}
+
+/// The joint rules ask the release requester's device for its compare's step and its reading, `missing-fact` where unstated.
+#[test]
+fn a_release_timer_silent_on_its_compare_is_missing_the_fact() {
+    let no_step = the_target_with("    (compare-step 1 tick)\n", "");
+    let (verdict, said) = refused_with(run_there(&put_on(HEARTBEAT, &no_step)));
+    assert_eq!(verdict, Verdict::MissingFact, "{said}");
+    assert!(
+        said.contains("`target.timer` releases `heartbeat`'s tasks and states no `compare-step`"),
+        "{said}"
+    );
+    let no_reading = the_target_with("    (compare-magnitude true)\n", "");
+    let (verdict, said) = refused_with(run_there(&put_on(HEARTBEAT, &no_reading)));
+    assert_eq!(verdict, Verdict::MissingFact, "{said}");
+    assert!(
+        said.contains("`compare-window` or `(compare-magnitude true)`"),
+        "{said}"
+    );
+}
+
+/// Rule 9 reads the release requester as a caller at the system's level: a release timer reachable from no stated level leaves it
+/// unknown.
+#[test]
+fn the_release_requester_is_a_caller_at_the_system_s_level() {
+    let text = std::fs::read_to_string(root().join("targets/riscv-virt-up.eadl")).expect("read");
+    let timer_level = "    (reachable-at-privilege machine)\n    (region target.timer";
+    assert_eq!(text.matches(timer_level).count(), 1);
+    let unreachable = target_of(&text.replacen(timer_level, "    (region target.timer", 1));
+    let (verdict, said) = refused_with(run_there(&put_on(HEARTBEAT, &unreachable)));
+    assert_eq!(verdict, Verdict::MissingFact, "{said}");
+    assert!(said.contains("target.timer"), "{said}");
+}
+
+/// Rule 12: the device bound for the release requester is a node, initialised as any provider bound is, and the requester none.
+#[test]
+fn the_release_timer_is_a_node_and_the_release_requester_none() {
+    let v = vocabulary();
+    let there = put_on(HEARTBEAT, &real_target());
+    let plan = resolved(run_there(&there));
+    let providers: Vec<(offer::Provider, &Form)> = there
+        .declarations
+        .iter()
+        .filter(|f| matches!(f.head(), Some("defblock" | "defplatform")))
+        .map(|f| (offer::read(f, &v).expect("reads"), f))
+        .collect();
+    let mut all: Vec<_> = there
+        .declarations
+        .iter()
+        .filter(|f| f.head().is_some_and(|h| h.starts_with("def")))
+        .flat_map(|f| requesters(f, &v).expect("reads"))
+        .collect();
+    all.push(
+        release_requester(&there.system, &v)
+            .expect("reads")
+            .expect("a timer-released task"),
+    );
+    let system = System::read(&there.system, &there.declarations)
+        .at(RT_STATIC_UP_V1.caller_level, &v)
+        .expect("the level");
+    let joint = Joint::new(&providers, &all, &v)
+        .expect("the joint rules read")
+        .for_system(system.clone());
+    let assignment: Vec<Binding> = plan
+        .bindings
+        .iter()
+        .map(|((who, fact), provider)| {
+            let name = who.to_string();
+            let requirement = all
+                .iter()
+                .find(|r| r.name == name)
+                .and_then(|r| r.requirements.iter().find(|q| q.fact() == fact))
+                .expect("the requirement bound")
+                .clone();
+            Binding {
+                requester: name,
+                requirement,
+                provider: provider.clone(),
+            }
+        })
+        .collect();
+    assert!(joint.check(&assignment).holds());
+    let graph = joint.initialization(&system, &assignment);
+    let nodes: BTreeMap<&str, &Node> = graph.nodes.iter().map(|(n, k)| (n.as_str(), k)).collect();
+    assert_eq!(
+        nodes.get("target.timer"),
+        Some(&&Node::Provider),
+        "{nodes:?}"
+    );
+    assert!(!nodes.contains_key("(release heartbeat)"), "{nodes:?}");
 }

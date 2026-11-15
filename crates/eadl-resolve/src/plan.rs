@@ -133,7 +133,8 @@ pub fn write(resolution: &Resolution, profile: &str, program: &str) -> String {
             |instance| instance_text(instance, &resolution.system),
         )
     };
-    // (class, requester, fact, provider): a name 0, a task 1, an instance 2.
+    // (class, requester, fact, provider): a name 0, a task 1, an instance 2, the release requester 3, last
+    // (`docs/decisions/decision_runtime-plan-format-2.md` §3; the format that names it is leaf `M4.1.7.5.2`'s).
     let mut lines: Vec<(u8, String, &str, String)> = resolution
         .bindings
         .iter()
@@ -141,6 +142,7 @@ pub fn write(resolution: &Resolution, profile: &str, program: &str) -> String {
             let class = match who {
                 Who::Named(_) => 0,
                 Who::Task { .. } => 1,
+                Who::Release { .. } => 3,
             };
             (class, who.to_string(), fact.as_str(), written(provider))
         })

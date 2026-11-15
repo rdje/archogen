@@ -93,6 +93,7 @@ fn bound(resolution: &Resolution) -> Vec<String> {
             let who = match requester {
                 Who::Named(name) => name.clone(),
                 Who::Task { system, task } => format!("(task {system} {task})"),
+                Who::Release { system } => format!("(release {system})"),
             };
             format!("{who} {fact} {provider}")
         })

@@ -64,6 +64,9 @@ pub enum Kind {
     /// An engine adapter's instance, for what its kind requires of the provider it programs: a caller at its kind's
     /// level (`docs/specs/adapters/decision_engine-adapters.md` §4, rules 1 and 9).
     Adapter,
+    /// The release requester the engine adds to a system on a target with a task released by the timer, named by the
+    /// system (`docs/decisions/decision_release-alarm.md` §1, model §8 rule 1): what the device releasing tasks must offer.
+    Release,
 }
 
 /// One requester, its requirements and the declarations its `uses` names.
@@ -132,6 +135,118 @@ pub fn requesters(
 #[must_use]
 pub fn task_name(system: &str, task: &str) -> String {
     format!("(task {system} {task})")
+}
+
+/// The release requester's name for `system`: `(release SYSTEM)`, as the assignment record writes it, which no declaration's
+/// name can be (`docs/decisions/decision_runtime-plan-format-2.md` §3).
+#[must_use]
+pub fn release_name(system: &str) -> String {
+    format!("(release {system})")
+}
+
+/// The system whose release requester `name` is, where it is one ([`release_name`]).
+#[must_use]
+pub fn release_of(name: &str) -> Option<&str> {
+    name.strip_prefix("(release ")?
+        .strip_suffix(')')
+        .filter(|system| !system.is_empty() && !system.contains(' '))
+}
+
+/// What the release requester asks of the device releasing tasks, beside the horizons the shortest period sets
+/// (`docs/decisions/decision_release-alarm.md` §1): a delay programmed on a counter whose modulus, rate and coherent reads
+/// are known, a counter running while the idle context waits, wired to the core, compared by level.
+const RELEASE_NEEDS: [&str; 4] = [
+    "relative-delay",
+    "counter-modulus",
+    "tick-rate",
+    "observation-coherent",
+];
+
+/// The release requester the engine adds to `system`, a system on a target (`docs/decisions/decision_release-alarm.md` §1,
+/// model §8 rule 1), or `None` where no task of it is released by the timer: one task writing a `period` that reads as a
+/// duration. Its requirements are the record's, `SHORTEST` the shortest such period as its task writes it; it is
+/// written where the system is, and each horizon where that period is.
+///
+/// # Errors
+///
+/// The refusals the relation's reading of its side gives: none of a system the language admitted.
+pub fn release_requester(
+    system: &Form,
+    vocabulary: &Vocabulary,
+) -> Result<Option<Requester>, requirement::Refusals> {
+    let mut shortest: Option<(Quantity, &Form)> = None;
+    for task in system
+        .items()
+        .iter()
+        .filter(|item| item.head() == Some("task"))
+    {
+        let Some(clause) = task
+            .items()
+            .iter()
+            .find(|item| item.head() == Some("period"))
+        else {
+            continue;
+        };
+        let items = clause.items();
+        let Some(period) = Quantity::read(items.get(1), items.get(2), clause.span())
+            .ok()
+            .filter(|q| q.unit.dimension == Dimension::Time)
+        else {
+            continue;
+        };
+        let shorter = match &shortest {
+            None => true,
+            Some((least, _)) => period
+                .compare(*least)
+                .is_ok_and(|order| order == Ordering::Less),
+        };
+        if shorter {
+            shortest = Some((period, clause));
+        }
+    }
+    let Some((_, clause)) = shortest else {
+        return Ok(None);
+    };
+    let at = system.span();
+    let symbol = |name: &str| Form::Symbol {
+        name: name.to_owned(),
+        span: at,
+    };
+    let list = |items: Vec<Form>| Form::List { items, span: at };
+    let fact = |name: &str, value: &str| list(vec![symbol(name), symbol(value)]);
+    let horizon = |name: &str| {
+        list(vec![
+            symbol(name),
+            Form::List {
+                items: std::iter::once(Form::Symbol {
+                    name: "at-least".to_owned(),
+                    span: clause.span(),
+                })
+                .chain(clause.items()[1..].iter().cloned())
+                .collect(),
+                span: clause.span(),
+            },
+        ])
+    };
+    let name = name_of(system);
+    let side = list(vec![
+        symbol("release"),
+        symbol(name),
+        list(vec![
+            symbol("requires"),
+            list(
+                std::iter::once(symbol("needs"))
+                    .chain(RELEASE_NEEDS.iter().map(|fact| symbol(fact)))
+                    .collect(),
+            ),
+            fact("available-in-state", "idle"),
+            fact("alarm-wiring", "core"),
+            fact("alarm-kind", "level-compare"),
+            horizon("unambiguous-horizon"),
+            horizon("supported-horizon"),
+        ]),
+    ]);
+    requester(&side, release_name(name), Kind::Release, vocabulary).map(Some)
 }
 
 /// A task's system and name, where `name` is one ([`task_name`]).
@@ -321,11 +436,13 @@ impl System {
         }
     }
 
-    /// Whether the system's closure reaches `requester`: its own level, one of its tasks, or a declaration it reaches.
+    /// Whether the system's closure reaches `requester`: its own level, one of its tasks, its release requester on a target
+    /// (model §8 rule 7), or a declaration it reaches.
     #[must_use]
     pub fn serves(&self, requester: &str) -> bool {
         requester == self.name
             || task_of(requester).is_some_and(|(system, _)| system == self.name)
+            || release_of(requester) == Some(self.name.as_str())
             || self.reached.contains(requester)
     }
 }
@@ -654,6 +771,19 @@ pub enum Finding {
         /// The system.
         system: String,
     },
+    /// The device bound for a system's release requester stating no `compare-step`, or neither a `compare-window` nor
+    /// `(compare-magnitude true)`: how far apart two values its compare matches, and how it reads one as due, which the
+    /// analysis reads of it (`docs/decisions/decision_release-alarm.md` §1, model §8 rule 1).
+    ReleaseCompareUnstated {
+        /// The system.
+        system: String,
+        /// The device.
+        provider: String,
+        /// Where the device is declared.
+        declared: Span,
+        /// What it leaves unstated: `compare-step`, `compare-window or compare-magnitude`, or both.
+        missing: Vec<&'static str>,
+    },
     /// A deadline programmed at one device and a time read from another, by requesters the deadline's reaches (model
     /// §8 rule 14, `docs/specs/adapters/decision_engine-adapters.md` §4).
     TwoTimeBases {
@@ -704,6 +834,7 @@ impl Finding {
             | Self::PlacementIllegal { .. }
             | Self::LevelUnstated { absent: true, .. } => "infeasible-configuration",
             Self::ChannelsUnknown { .. }
+            | Self::ReleaseCompareUnstated { .. }
             | Self::RegionUnsized { .. }
             | Self::PlacementUnsized { .. }
             | Self::MemoryUnsized { .. }
@@ -885,6 +1016,25 @@ impl Finding {
                 ),
             )
             .with_secondary(Label::new(*read, "the time read here")),
+            Self::ReleaseCompareUnstated {
+                system,
+                provider,
+                declared,
+                missing,
+            } => Diagnostic::error(
+                "missing-fact",
+                format!(
+                    "`{provider}` releases `{system}`'s tasks and states no {}, which the analysis reads of the device that \
+                     releases them",
+                    missing.join(" nor ")
+                ),
+                Label::new(*declared, "the release timer, declared here"),
+                format!(
+                    "state them at `{provider}` with what checks them: `compare-step`, the step its compare matches on, and \
+                     `compare-window`, how far past a value it still reads it due, or `(compare-magnitude true)` where it reads \
+                     the two as whole numbers"
+                ),
+            ),
             Self::MapContradiction {
                 system,
                 memory,
@@ -1769,6 +1919,7 @@ impl<'v> Joint<'v> {
             let system = &self.serving(system, assignment);
             self.connectivity(system, assignment, &mut report);
             self.routes(system, assignment, &mut report);
+            self.release_compare(system, assignment, &mut report);
             self.time_base(system, assignment, &mut report);
             if let Some(level) = &system.level {
                 self.privilege(system, level, assignment, &mut report);
@@ -2034,9 +2185,11 @@ impl<'v> Joint<'v> {
         let kind = |name: &str| self.requesters.get(name).copied();
         // Hardware is a node as a requester only where it is bound for requirements of its own (leaf `M4.1.15`).
         let bound_for_its_own = |name: &str| assignment.iter().any(|b| b.requester == name);
+        // The release requester is no node, as the system's own level is not: nothing it does is code the plan places
+        // (`docs/decisions/decision_runtime-plan-format-2.md` §3); the device bound for it is one.
         let is_node_requester = |name: &str| {
             name != system.name
-                && !matches!(kind(name), Some(Kind::Task))
+                && !matches!(kind(name), Some(Kind::Task | Kind::Release))
                 && system.serves(name)
                 && (!self.is_hardware(name) || bound_for_its_own(name))
         };
@@ -2554,10 +2707,13 @@ impl<'v> Joint<'v> {
         assignment: &'a [Binding],
     ) -> BTreeMap<(&'a str, bool), BTreeSet<&'a str>> {
         let mut routes: BTreeMap<(&str, bool), BTreeSet<&str>> = BTreeMap::new();
-        for b in assignment
-            .iter()
-            .filter(|b| system.serves(&b.requester) && !self.instances.contains_key(&b.provider))
-        {
+        // The release timer is no route (`docs/decisions/decision_release-alarm.md` §1): the plan enables it, and the
+        // analysis charges it as the timer it is, so its binding reports none.
+        for b in assignment.iter().filter(|b| {
+            system.serves(&b.requester)
+                && !self.instances.contains_key(&b.provider)
+                && self.requesters.get(&b.requester) != Some(&Kind::Release)
+        }) {
             let source = b.requirement.fact() == INTERRUPT_SOURCE && met_by_true(&b.requirement);
             let timer = takes_a_channel(&b.requirement, self.vocabulary).is_some();
             for (is_source, relied) in [(true, source), (false, timer)] {
@@ -2588,6 +2744,46 @@ impl<'v> Joint<'v> {
                 .collect()
         } else {
             vec![requester]
+        }
+    }
+
+    /// Model §8 rule 1, the release requester's device (`docs/decisions/decision_release-alarm.md` §1, `RA-H1`): each
+    /// provider bound for it states its `compare-step` and a `compare-window` or `(compare-magnitude true)`, each a value, a
+    /// fact stated bare, absent or as a bound having none; one that does not leaves the analysis what it reads of the
+    /// device unknown, `missing-fact`.
+    fn release_compare(&self, system: &System, assignment: &[Binding], report: &mut Report) {
+        let devices: BTreeSet<&str> = assignment
+            .iter()
+            .filter(|b| {
+                self.requesters.get(&b.requester) == Some(&Kind::Release)
+                    && system.serves(&b.requester)
+            })
+            .map(|b| b.provider.as_str())
+            .collect();
+        for device in devices {
+            let Some(provider) = self.providers.get(device) else {
+                continue;
+            };
+            let valued = |fact: &str| matches!(provider.state(fact), Some(State::Valued(_)));
+            let magnitude = matches!(
+                provider.state("compare-magnitude"),
+                Some(State::Valued(values)) if values.first() == Some(&Value::Bool(true))
+            );
+            let mut missing = Vec::new();
+            if !valued("compare-step") {
+                missing.push("`compare-step`");
+            }
+            if !valued("compare-window") && !magnitude {
+                missing.push("`compare-window` or `(compare-magnitude true)`");
+            }
+            if !missing.is_empty() {
+                report.unknowns.push(Finding::ReleaseCompareUnstated {
+                    system: system.name.clone(),
+                    provider: device.to_owned(),
+                    declared: provider.span,
+                    missing,
+                });
+            }
         }
     }
 
