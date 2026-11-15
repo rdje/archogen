@@ -20,8 +20,8 @@ The target is described in **`targets/riscv-virt-up.eadl`**, beside `targets/ris
 
 `targets/riscv-virt-up.env` names what `rt-static-up-v1` requires of a target (§3.1): `REQUIRES_CORES`,
 `REQUIRES_TIMER`, `REQUIRES_OBSERVABLE_OUTPUT`, `REQUIRES_EXECUTABLE_RAM` and `REQUIRES_PRIVILEGE`, and what format `/2` reads of
-a target, `REQUIRES_RELEASE_TIMER`, `REQUIRES_CATALOG_TARGET` and `REQUIRES_FIRMWARE_TRAPS` (`decision_runtime-plan-format-2.md`
-§2, `M4.1.7.3.3`). The description states each, and nothing it cannot check.
+a target, `REQUIRES_RELEASE_TIMER`, `REQUIRES_CATALOG_TARGET`, `REQUIRES_FIRMWARE_TRAPS` and `REQUIRES_NON_MASKABLE_INTERRUPTS`
+(`decision_runtime-plan-format-2.md` §2, `M4.1.7.3.3`, `M4.1.7.3.4`). The description states each, and nothing it cannot check.
 
 | Requirement | In the description | Compared with (device tree) |
 | --- | --- | --- |
@@ -33,6 +33,7 @@ a target, `REQUIRES_RELEASE_TIMER`, `REQUIRES_CATALOG_TARGET` and `REQUIRES_FIRM
 | `REQUIRES_RELEASE_TIMER=yes` | the tick-rate's block offers what the release requester asks of it (`decision_release-alarm.md` §1, `RA-H8`): `(relative-delay true)`, `(channels 1 tick)`, `(alarm-wiring core)`, `(alarm-kind level-compare)`, `(counter-modulus (pow2 64))`, `(compare-step 1 tick)`, `(compare-magnitude true)`, `(observation-coherent true)`, `(available-in-state run idle)` and `(supported-horizon …)` | the CLINT's `interrupts-extended`: its machine-timer lines, cause 7, their count and whether each reaches a hart's `riscv,cpu-intc`; the [privileged specification](../book/src/ledger.md#riscv-privileged)'s machine timer, which the node compatible with `riscv,clint0` is, for the modulus, the compare's kind, step and magnitude and the states, and on a hart whose `riscv,isa-base` is `rv64i` for the coherent read; and the horizon at most what one compare reaches, `2^64 − 1` ticks of `/cpus`'s `timebase-frequency` |
 | `REQUIRES_CATALOG_TARGET=yes` | the platform offers `(catalog-target NAME)` | no node: the `.env`'s `TARGET_ID`, its stem |
 | `REQUIRES_FIRMWARE_TRAPS=yes` | the platform offers `(firmware-traps 0)` | no node: the `.env`'s `QEMU_BIOS=none`, which starts the image with no firmware beneath it; any other count nothing here checks |
+| `REQUIRES_NON_MASKABLE_INTERRUPTS=yes` | the platform offers `(non-maskable-interrupts 0)` | each hart's `riscv,isa-extensions` and `riscv,isa`, naming no `smrnmi`; and the `.env`'s `QEMU_VERSION_PINNED`, the release whose source was read: its hart takes no non-maskable interrupt but Smrnmi's, and no device connects one ([`qemu`](../book/src/ledger.md#qemu)); any other count nothing here checks |
 
 A region names **its device by what it is**, not by address alone. The RAM region must match a `memory` node, the
 timer's the CLINT, the console's the node `stdout-path` names. So a region that happened to share an address with
@@ -46,10 +47,9 @@ another device still disagrees.
   (`interrupts-extended`), which the description states as `(alarm-wiring core)` and its line, `RA-H8` giving way here
   for the wiring; the runtime analysis needs delivery bounds (`decision_runtime-analysis-variant.md`), and those are the
   catalog's (`M2.7`), with their evidence, not a description's.
-- **The count of non-maskable interrupts.** The profile asks it of every target, and nothing yet checks what the
-  emulated machine raises: a `riscv,isa` without `smrnmi` says only that none resumes (`decision_runtime-plan-format-2.md`
-  §2, RP13-1). So the description states none, and a system on the target is refused `missing-fact` by the profile's
-  admission until `M4.1.7.3.4`'s check lets it.
+- **A count of non-maskable interrupts on another release.** A `riscv,isa` without `smrnmi` says only that none
+  resumes (`decision_runtime-plan-format-2.md` §2, RP13-1); the count of none rests too on the pinned release's own
+  source (`M4.1.7.3.4`), so a moved pin refuses it until the new release is read.
 - **Every other device.** The PLIC, the RTC, `virtio` and the rest are present, and nothing relies on them. Claiming
   them would be facts nothing checks.
 

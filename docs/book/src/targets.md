@@ -155,7 +155,8 @@ only words the language already has, and states one fact for each thing the prof
   (offers (observable-output true) (reachable-at-privilege machine)
     (region target.console (base 0x1000_0000) (size 256 byte))))
 (defplatform target.riscv-virt-up
-  (offers (core-count 1 tick) (catalog-target riscv-virt-up) (firmware-traps 0) (reachable-at-privilege machine)
+  (offers (core-count 1 tick) (catalog-target riscv-virt-up) (firmware-traps 0) (non-maskable-interrupts 0)
+    (reachable-at-privilege machine)
     (region target.ram (base 0x8000_0000) (size 128 MiB) (executable true)))
   (requires (uses target.timer target.console)))
 ```
@@ -171,6 +172,7 @@ what it is, not by address alone:
   machine timer; and its horizon no farther than one compare reaches;
 - the platform's name for its catalog records with the `.env`'s target, and no trap taken by firmware with the `.env`'s
   `-bios none`;
+- no interrupt no mask stops, with each hart's extensions and the release whose source was read;
 - the console's region with the node `/chosen`'s `stdout-path` names;
 - each block's and the platform's level with the `.env`'s `REQUIRES_PRIVILEGE=machine`, which no node carries: a hart
   starts in M at reset, an M-mode access that no locked PMP entry matches succeeds
@@ -190,8 +192,9 @@ target-emulator: the §3.2 agreement holds: targets/riscv-virt-up.eadl agrees wi
 
 The description claims no instruction set and no other device, and of the interrupt route only the timer's wiring,
 which the device tree shows. Those would be facts nothing checks, and the interrupt timings the runtime analysis needs
-are the catalog's, with their evidence. Nor does it state how many interrupts no mask stops: nothing yet checks what
-the emulated machine raises, so a system on it is refused for that fact until something does.
+are the catalog's, with their evidence. It states that no interrupt escapes every mask: the hart offers no `smrnmi`,
+and QEMU 11.1.1's own source takes no other non-maskable interrupt and connects none, so a moved pin refuses the count
+until the new release is read (leaf `M4.1.7.3.4`).
 
 ### A system on a target: which device is which
 

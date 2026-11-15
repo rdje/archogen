@@ -4178,8 +4178,9 @@ fn a_compare_is_read_one_way() {
     );
 }
 
-/// §2: what checks `riscv-virt-up`'s `non-maskable-interrupts`. Not `riscv,isa` holding no `smrnmi`: the privileged specification gives every hart unresumable
-/// non-maskable interrupts, and Smrnmi adds only resumable ones, so the device tree says that none resumes and no more (round 13, RP13-1).
+/// §2: what checks `riscv-virt-up`'s `non-maskable-interrupts`. Not `riscv,isa` holding no `smrnmi` alone: the privileged specification gives every hart
+/// unresumable non-maskable interrupts, and Smrnmi adds only resumable ones, so the device tree says that none resumes and no more (round 13, RP13-1). The
+/// pinned QEMU's own source says the rest, that its hart takes none but Smrnmi's and no device connects one, and the agreement holds both (leaf `M4.1.7.3.4`).
 #[test]
 fn no_count_is_said_checked_that_nothing_checks() {
     let row = RECORD
@@ -4190,7 +4191,16 @@ fn no_count_is_said_checked_that_nothing_checks() {
         !row.contains("which says so of the emulated hart alone"),
         "{row}"
     );
-    assert!(row.contains("none yet"), "{row}");
+    assert!(
+        row.contains("no `smrnmi` on the dump")
+            && row.contains("'s source, which takes none but Smrnmi's"),
+        "{row}"
+    );
+    let agreement = include_str!("../../../xtask/src/target.rs");
+    assert!(
+        agreement.contains("REQUIRES_NON_MASKABLE_INTERRUPTS")
+            && agreement.contains("const NON_MASKABLE_READ_AT: &str")
+    );
     assert!(RECORD.contains(
         "The base machine-level architecture supports only unresumable non-maskable interrupts (UNMIs)"
     ));

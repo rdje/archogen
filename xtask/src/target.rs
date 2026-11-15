@@ -56,7 +56,13 @@ struct Described {
     catalog_target: Option<String>,
     /// The platform's `firmware-traps`, how many traps firmware beneath the image takes.
     firmware_traps: Option<u64>,
+    /// The platform's `non-maskable-interrupts`, how many sources no mask stops.
+    non_maskable: Option<u64>,
 }
+
+/// The QEMU release whose source was read for what it raises that no mask stops (`docs/book/src/ledger.md`'s `qemu`, leaf
+/// `M4.1.7.3.4`): its RISC-V hart takes no non-maskable interrupt but Smrnmi's, and no device connects one.
+const NON_MASKABLE_READ_AT: &str = "11.1.1";
 
 /// The facts the release requester asks of the timer and its compare, which the release timer's block states.
 const RELEASE: [&str; 10] = [
@@ -227,6 +233,9 @@ fn describe(text: &str, name: &str) -> Result<Described, Vec<String>> {
                             }
                             Some("firmware-traps") if platform => {
                                 found.firmware_traps = parts.get(1).and_then(integer);
+                            }
+                            Some("non-maskable-interrupts") if platform => {
+                                found.non_maskable = parts.get(1).and_then(integer);
                             }
                             Some("reachable-at-privilege") => {
                                 found.levels.insert(
@@ -743,6 +752,44 @@ pub fn disagreements(
         );
     }
 
+    // REQUIRES_NON_MASKABLE_INTERRUPTS: the platform's `non-maskable-interrupts`, 0 only where no hart of the dump offers
+    // `smrnmi` and the pinned release is the one whose source was read: in QEMU 11.1.1 a RISC-V hart marks pending and takes a
+    // non-maskable interrupt only under Smrnmi (`target/riscv/tcg/cpu_helper.c`, lines 339-348 and 2082), aborts the emulator
+    // on an M-mode double trap without it (line 2317), and no device in `hw/` connects its `riscv.cpu.rnmi` input
+    // (`target/riscv/tcg/tcg-cpu.c`, lines 1682-1683); a hart offers Smrnmi exactly where its ISA string names it
+    // (`target/riscv/cpu.c`, line 267). A count other than 0 nothing here checks (`decision_runtime-plan-format-2.md` §2).
+    if requires("REQUIRES_NON_MASKABLE_INTERRUPTS") {
+        let rnmi = nodes.iter().any(|(n, _)| {
+            n.path.starts_with("/cpus/cpu@")
+                && (strings(n, "riscv,isa-extensions")
+                    .iter()
+                    .any(|e| e == "smrnmi")
+                    || strings(n, "riscv,isa")
+                        .iter()
+                        .any(|isa| isa.split('_').any(|e| e == "smrnmi")))
+        });
+        let pinned = env
+            .get("QEMU_VERSION_PINNED")
+            .map_or("unset", String::as_str);
+        match described.non_maskable {
+            None => wrong.push(
+                "REQUIRES_NON_MASKABLE_INTERRUPTS: the platform offers no `non-maskable-interrupts`".into(),
+            ),
+            Some(0) if rnmi => wrong.push(
+                "REQUIRES_NON_MASKABLE_INTERRUPTS: the platform offers non-maskable-interrupts 0, and a hart of the device tree offers `smrnmi`".into(),
+            ),
+            Some(0) if pinned != NON_MASKABLE_READ_AT => wrong.push(format!(
+                "REQUIRES_NON_MASKABLE_INTERRUPTS: the platform offers non-maskable-interrupts 0, and the .env pins QEMU {pinned} where the release whose source was read is {NON_MASKABLE_READ_AT}: read the new release's for what it raises"
+            )),
+            Some(0) => {}
+            Some(n) => wrong.push(format!(
+                "REQUIRES_NON_MASKABLE_INTERRUPTS: the platform offers non-maskable-interrupts {n}, a count nothing here checks"
+            )),
+        }
+    } else if described.non_maskable.is_some() {
+        wrong.push("the platform states `non-maskable-interrupts`, and the .env requires none to compare it with".into());
+    }
+
     // A region no rule compared is an assertion nothing checks.
     for (_, r) in &described.regions {
         if !covered.contains(&r.name.as_str()) {
@@ -813,6 +860,7 @@ mod tests {
             "REQUIRES_RELEASE_TIMER",
             "REQUIRES_CATALOG_TARGET",
             "REQUIRES_FIRMWARE_TRAPS",
+            "REQUIRES_NON_MASKABLE_INTERRUPTS",
         ] {
             assert!(
                 env.contains_key(key),
@@ -958,6 +1006,40 @@ mod tests {
                 "(defplatfrom target.riscv-virt-up",
             ),
             "archogen check does not admit",
+        );
+    }
+
+    /// Leaf `M4.1.7.3.4`: the count of non-maskable interrupts, 0 only where the dump's harts offer no `smrnmi` and the pin is
+    /// the release whose source was read, which takes no non-maskable interrupt but Smrnmi's and connects none.
+    #[test]
+    fn the_non_maskable_count_is_held_to_the_dump_and_the_reading() {
+        reported(
+            &with("(non-maskable-interrupts 0)", "(non-maskable-interrupts 1)"),
+            "non-maskable-interrupts 1",
+        );
+        let (env, description, mut tree) = kept();
+        fn hart(node: &mut Node) -> Option<&mut Node> {
+            if node.path.starts_with("/cpus/cpu@") {
+                return Some(node);
+            }
+            node.children.iter_mut().find_map(hart)
+        }
+        let extensions = hart(&mut tree)
+            .expect("the kept dump's hart")
+            .properties
+            .iter_mut()
+            .find(|(n, _)| n == "riscv,isa-extensions")
+            .expect("its extensions");
+        extensions.1.extend_from_slice(b"smrnmi\0");
+        reported(
+            &disagreements(&env, &description, "targets/riscv-virt-up.eadl", &tree),
+            "offers `smrnmi`",
+        );
+        let (mut moved, description, tree) = kept();
+        moved.insert("QEMU_VERSION_PINNED".to_string(), "11.2.0".to_string());
+        reported(
+            &disagreements(&moved, &description, "targets/riscv-virt-up.eadl", &tree),
+            "whose source was read is 11.1.1",
         );
     }
 

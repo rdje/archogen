@@ -40,13 +40,15 @@
 
 ; REQUIRES_CORES and REQUIRES_EXECUTABLE_RAM: one hart, and the RAM `-bios none` starts the image in.
 ; REQUIRES_CATALOG_TARGET and REQUIRES_FIRMWARE_TRAPS: the name its catalog records go by, the `.env`'s target, and no trap
-; firmware takes, `-bios none` starting the image with none beneath it. No count of non-maskable interrupts: nothing yet
-; checks what the emulated machine raises (`decision_runtime-plan-format-2.md` §2).
+; firmware takes, `-bios none` starting the image with none beneath it.
+; REQUIRES_NON_MASKABLE_INTERRUPTS: no source no mask stops: the hart offers no `smrnmi`, and QEMU 11.1.1's own source takes
+; no non-maskable interrupt but Smrnmi's and connects none (leaf `M4.1.7.3.4`).
 (defplatform target.riscv-virt-up
   (offers
     (core-count 1 tick)
     (catalog-target riscv-virt-up)
     (firmware-traps 0)
+    (non-maskable-interrupts 0)
     (reachable-at-privilege machine)
     (region target.ram (base 0x8000_0000) (size 128 MiB) (executable true)))
   (requires (uses target.timer target.console)))
