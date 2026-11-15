@@ -61,12 +61,20 @@ catalog of engine adapters the plan was resolved with, and an adapter's instance
 a requester binding what its kind needs beneath to the device it programs
 (`docs/specs/adapters/decision_engine-adapters.md` §5).
 
+A plan of a system on a target is `archogen-assignment/3`: the same clauses, and after the program the target the system
+was put on, `(target target.riscv-virt-up "…64 hexadecimal digits…")`, its platform and a fingerprint of its file, and
+among its bindings the system's release requester, `(release heartbeat)`, last ([Matching](matching.md)). The checker
+reads it with a reader of its own, held with the search's writer to one golden
+(`crates/archogen-plan-check/tests/goldens/archogen-assignment-3.golden`, leaf `M4.1.7.5.4.1`).
+
 ### The checks, in order
 
 1. **The record reads, and belongs to this description.** A record in another format, out of order, binding one need
    twice, or naming a profile or system that is not this one, is refused. A fingerprint that is not this
    description's is a **stale plan**: the description changed after the plan was made. That is not a mistake of the
-   toolchain, so it gets a status of its own, `stale-input`, and the advice is to resolve again.
+   toolchain, so it gets a status of its own, `stale-input`, and the advice is to resolve again. So is a plan made on a
+   target and checked with none: it was resolved for another run. The checker judges a plan on its target with the
+   target named, leaf `M4.1.7.5.4.4`; until then every plan on a target is refused so.
 2. **The description is checked again.** The checker runs the language's own checks over the description, with the
    language definition compiled into the checker, and adds a few rules about providers that only a planner meets: a
    timer offering a channel-taking function while declaring no channel, a memory region that does not read, memory

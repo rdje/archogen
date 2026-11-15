@@ -88,6 +88,7 @@ fn plan(program: &Program) -> Assignment {
         profile: RT_STATIC_UP_V1.id.to_owned(),
         system: "s".to_owned(),
         program: program_digest(program),
+        target: None,
         placement: None,
         bindings,
     }
@@ -491,6 +492,7 @@ fn adapted(program: &Program, deadline: &str, extended: &str) -> Assignment {
         profile: RT_STATIC_UP_V1.id.to_owned(),
         system: "s".to_owned(),
         program: program_digest(program),
+        target: None,
         placement: None,
         bindings,
     }

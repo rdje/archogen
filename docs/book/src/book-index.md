@@ -678,11 +678,11 @@ a change that leaves it stale, so it is never edited by hand.
 - **release** — [definition](glossary.md), [Introduction](introduction.md), [A tour: from a description to a
   board](tour.md), [The supported profile](profile.md), [Quantities and units](quantities.md), [Describing a
   workload](workload.md), [Checking a description](checking.md), [Matching an offer to a requirement](matching.md),
-  [What the scheduling checker establishes](analysis.md), [Where the engine's knowledge comes from: the
-  catalog](catalog.md), [Checks that must not share a mistake: the trust gate](trust.md), [The runtime plan: what the
-  generated system is told](runtime-plan.md), [The runtime: decisions, not actions](runtime.md), [Building a
-  system](building.md), [The S0 early generation path](s0.md), [Where generated systems run](targets.md), [The engine
-  API](engine-api.md), [Verifying the toolchain](verification.md), [What this project relies on from
+  [Checking a plan](plan-check.md), [What the scheduling checker establishes](analysis.md), [Where the engine's
+  knowledge comes from: the catalog](catalog.md), [Checks that must not share a mistake: the trust gate](trust.md), [The
+  runtime plan: what the generated system is told](runtime-plan.md), [The runtime: decisions, not actions](runtime.md),
+  [Building a system](building.md), [The S0 early generation path](s0.md), [Where generated systems run](targets.md),
+  [The engine API](engine-api.md), [Verifying the toolchain](verification.md), [What this project relies on from
   outside](ledger.md), [What is versioned, and what changing it costs](versions.md), [Annex A: The runtime's rules in
   detail](annex-runtime.md), [Annex B: The checks that keep the repository honest](annex-repository.md), [Annex C: Trust
   proof records](annex-trust-proofs.md)

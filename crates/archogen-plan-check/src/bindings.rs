@@ -76,6 +76,7 @@ fn who(requester: &Requester) -> String {
         Requester::Named(name) => format!("`{name}`"),
         Requester::Task { system, task } => format!("the task `{task}` of `{system}`"),
         Requester::Instance(instance) => format!("the instance `{}`", instance.canonical()),
+        Requester::Release { system } => format!("the release requester of `{system}`"),
     }
 }
 

@@ -88,6 +88,7 @@ impl Description {
             profile: RT_STATIC_UP_V1.id.to_owned(),
             system: system.to_owned(),
             program: program_digest(&self.program),
+            target: None,
             placement: placement.map(|(p, r)| (p.to_owned(), r.to_owned())),
             bindings: binds
                 .iter()

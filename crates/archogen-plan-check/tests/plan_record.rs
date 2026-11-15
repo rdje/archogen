@@ -47,6 +47,7 @@ fn written(program: &Program) -> Assignment {
         profile: RT_STATIC_UP_V1.id.to_owned(),
         system: "app.rt".to_owned(),
         program: program_digest(program),
+        target: None,
         placement: None,
         bindings,
     }

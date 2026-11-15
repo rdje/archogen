@@ -74,6 +74,7 @@ fn written(program: &Program) -> Assignment {
         profile: RT_STATIC_UP_V1.id.to_owned(),
         system: "s".to_owned(),
         program: program_digest(program),
+        target: None,
         placement: None,
         bindings,
     }
@@ -267,6 +268,7 @@ fn joint_plan() -> Assignment {
         profile: RT_STATIC_UP_V1.id.to_owned(),
         system: "s".to_owned(),
         program: program_digest(&elaborated(JOINT).1),
+        target: None,
         placement: Some(("soc".to_owned(), "ram".to_owned())),
         bindings,
     }

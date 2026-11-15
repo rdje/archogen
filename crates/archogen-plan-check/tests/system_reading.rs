@@ -231,6 +231,7 @@ fn check_5_judges_a_binding_against_the_hardware_the_reading_gives() {
             profile: RT_STATIC_UP_V1.id.to_owned(),
             system: "s".to_owned(),
             program: program_digest(&program),
+            target: None,
             placement: None,
             bindings: BTreeMap::from([(
                 (named("console.write"), "observable-output".to_owned()),

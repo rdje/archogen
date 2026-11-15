@@ -90,6 +90,7 @@ fn plan(
         profile: RT_STATIC_UP_V1.id.to_owned(),
         system: system.to_owned(),
         program: digest_of(name, description, modules),
+        target: None,
         placement: None,
         bindings: bindings
             .iter()

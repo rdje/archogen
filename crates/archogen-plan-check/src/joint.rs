@@ -530,8 +530,9 @@ impl<'p> World<'p> {
                 })?;
                 Some((clauses(form, |_| false), declaration.instance))
             }
-            // An instance writes nothing in the description: what it requires is its kind's.
-            Requester::Instance(_) => None,
+            // An instance writes nothing in the description: what it requires is its kind's. Nor does the release requester,
+            // whose requirements the engine adds (`decision_release-alarm.md` §1; this model's of it is `M4.1.7.5.4.3`'s).
+            Requester::Instance(_) | Requester::Release { .. } => None,
         }
     }
 }
@@ -1131,6 +1132,8 @@ impl<'a, 'p> Judgement<'a, 'p> {
                             .is_some_and(|d| matches!(d.kind, Kind::Service | Kind::Policy)))
             }
             Requester::Instance(_) => false,
+            // A caller at the system's level (model §8 rule 9, `decision_release-alarm.md` §1).
+            Requester::Release { system } => *system == self.assignment.system,
         }
     }
 

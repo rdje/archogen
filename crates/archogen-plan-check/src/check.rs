@@ -16,7 +16,7 @@ use eadl_model::check::{check, check_program, shipped_registry};
 use eadl_model::kind::Registry;
 use eadl_model::profile::Profile;
 
-use crate::assignment::{program_digest, Assignment};
+use crate::assignment::{program_digest, Assignment, FORMAT_3};
 
 /// Check (1)'s code: the record does not read — another format, `archogen-assignment/1` among them, another adapter
 /// catalog, a kind the checker's table does not hold, an instance of another shape — or names another profile or a
@@ -104,6 +104,21 @@ pub fn record(
             "write the plan again with `archogen resolve`: this record is not one it writes",
         )
     })?;
+    // A plan of a system on a target was resolved for another run than one given no target, and nothing failed
+    // (`docs/decisions/decision_runtime-plan-format-2.md` §1): a record of other inputs, before any judgement. The checker
+    // judges a plan on its target with leaf `M4.1.7.5.4.4`.
+    if let Some((platform, _)) = &assignment.target {
+        return Err(refused(
+            Status::StaleInput,
+            "target",
+            format!(
+                "the plan is `{FORMAT_3}`, resolved on the target `{platform}`, and no target is given: resolve again on no \
+                 target"
+            ),
+            "resolve again without `--target`: this checker judges a plan on a target with the target named, task-tree \
+             leaf M4.1.7.5.4.4 (docs/TASK_TREE.md)",
+        ));
+    }
     let digest = program_digest(program);
     if assignment.program != digest {
         return Err(refused(

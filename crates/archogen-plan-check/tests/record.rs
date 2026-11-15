@@ -12,6 +12,7 @@ use std::path::{Path, PathBuf};
 use archogen_plan_check::adapters::VERSION;
 use archogen_plan_check::assignment::{
     program_digest, program_text, Assignment, Instance, Provider, Refusal, Requester, FORMAT,
+    FORMAT_3,
 };
 use eadl_front::module::{elaborate, MemoryModules};
 use eadl_front::{Program, SourceMap};
@@ -79,6 +80,7 @@ fn record(bindings: BTreeMap<(Requester, String), Provider>) -> Assignment {
         profile: "rt-static-up-v1".to_owned(),
         system: "app.rt".to_owned(),
         program: program_digest(&program(&library(32, "1 0", ""))),
+        target: None,
         placement: Some(("platform.soc.bus".to_owned(), "soc.ram".to_owned())),
         bindings,
     }
@@ -314,12 +316,20 @@ fn every_record_reads_back_as_itself() {
 fn every_text_that_is_no_record_of_the_format_is_refused() {
     let text = reference_2().to_canonical();
     // Another format, `/1` among them.
-    for other in ["archogen-assignment/1", "archogen-assignment/3"] {
+    for other in ["archogen-assignment/1", "archogen-assignment/4"] {
         assert_eq!(
             Assignment::read(&text.replace(FORMAT, other)),
             Err(Refusal::Format(Some(other.to_owned())))
         );
     }
+    // `/3` is read, and a `/2` text labelled so lacks the target `/3` writes after its program (leaf `M4.1.7.5.4.1`).
+    assert!(matches!(
+        Assignment::read(&text.replace(FORMAT, FORMAT_3)),
+        Err(Refusal::Clause {
+            expected: "target",
+            ..
+        })
+    ));
     // Another adapter catalog, or none.
     assert_eq!(
         Assignment::read(&text.replace("(adapters adapters/1)", "(adapters adapters/2)")),
@@ -503,4 +513,153 @@ fn the_program_digest_moves_with_a_module_its_with_and_its_version_and_with_noth
              (uses clock.time.monotonic))))",
         );
     assert_eq!(program_digest(&program(&respaced)), base);
+}
+
+// ── `archogen-assignment/3`, a plan of a system on a target (leaf `M4.1.7.5.4.1`) ──────────────────────────────────────
+
+/// `/3`'s record as its golden writes it, built here apart from the reader: a target after the program, and the release
+/// requester last among requesters, after a name, a task and an instance.
+fn reference_3() -> Assignment {
+    let mut bindings = BTreeMap::new();
+    let extender = Instance {
+        kind: "epoch-extender".to_owned(),
+        over: "target.timer".to_owned(),
+        serves: None,
+    };
+    let release = || Requester::Release {
+        system: "app.rt".to_owned(),
+    };
+    for (requester, fact, provider) in [
+        (
+            Requester::Named("console.write".to_owned()),
+            "observable-output",
+            Provider::Named("target.console".to_owned()),
+        ),
+        (
+            Requester::Task {
+                system: "app.rt".to_owned(),
+                task: "sensor".to_owned(),
+            },
+            "counter-width",
+            Provider::Instance(extender.clone()),
+        ),
+        (
+            Requester::Instance(extender.clone()),
+            "counter-modulus",
+            Provider::Named("target.timer".to_owned()),
+        ),
+        (
+            release(),
+            "alarm-kind",
+            Provider::Named("target.timer".to_owned()),
+        ),
+        (
+            release(),
+            "relative-delay",
+            Provider::Named("target.timer".to_owned()),
+        ),
+        (
+            release(),
+            "supported-horizon",
+            Provider::Named("target.timer".to_owned()),
+        ),
+    ] {
+        bindings.insert((requester, fact.to_owned()), provider);
+    }
+    Assignment {
+        profile: "rt-static-up-v1".to_owned(),
+        system: "app.rt".to_owned(),
+        program: "f116a4715daf8b404d559b210f6f0d09c060158b1c1493fb133bf50197545620".to_owned(),
+        target: Some((
+            "target.riscv-virt-up".to_owned(),
+            "0f1e2d3c4b5a69788796a5b4c3d2e1f00f1e2d3c4b5a69788796a5b4c3d2e1f0".to_owned(),
+        )),
+        placement: Some(("target.riscv-virt-up".to_owned(), "target.ram".to_owned())),
+        bindings,
+    }
+}
+
+/// `/3`'s golden, written apart from both writers: the checker's writes it byte for byte, and its reader reads it back as
+/// itself, as `/2`'s are held to their own (the search's writer is held to it in `crates/eadl-resolve/tests/plan.rs`).
+#[test]
+fn the_target_format_s_canonical_text_is_its_golden() {
+    let golden =
+        fs::read_to_string(goldens().join(format!("{}.golden", FORMAT_3.replace('/', "-"))))
+            .expect("`/3`'s golden");
+    assert_eq!(reference_3().to_canonical(), golden);
+    assert_eq!(Assignment::read(&golden), Ok(reference_3()));
+}
+
+/// What `/3` alone says: a release requester in `/2`, and a `/3` naming no target or no digest, are no record.
+#[test]
+fn a_release_requester_and_a_target_read_in_the_target_format_alone() {
+    let golden = reference_3().to_canonical();
+    let line = "(target target.riscv-virt-up \"0f1e2d3c4b5a69788796a5b4c3d2e1f00f1e2d3c4b5a69788796a5b4c3d2e1f0\")\n";
+    let as_second = golden.replacen(FORMAT_3, FORMAT, 1).replacen(line, "", 1);
+    assert!(
+        matches!(Assignment::read(&as_second), Err(Refusal::RequesterKind(found)) if found == "(release app.rt)"),
+        "{:?}",
+        Assignment::read(&as_second)
+    );
+    assert!(
+        matches!(
+            Assignment::read(&golden.replacen(line, "", 1)),
+            Err(Refusal::Clause {
+                expected: "target",
+                ..
+            })
+        ),
+        "a `/3` naming no target"
+    );
+    assert!(
+        matches!(
+            Assignment::read(&golden.replacen(
+                "\"0f1e2d3c4b5a69788796a5b4c3d2e1f00f1e2d3c4b5a69788796a5b4c3d2e1f0\"",
+                "\"0f1e\"",
+                1
+            )),
+            Err(Refusal::Value {
+                clause: "target",
+                ..
+            })
+        ),
+        "a target that is no digest"
+    );
+}
+
+/// `/2` §1: a plan resolved on a target, checked with no target, is a record of other inputs, `stale-input`, "resolve again",
+/// before any judgement.
+#[test]
+fn a_plan_on_a_target_checked_with_no_target_is_stale() {
+    let text = fs::read_to_string(
+        Path::new(env!("CARGO_MANIFEST_DIR")).join("../../examples/s0-heartbeat/system.eadl"),
+    )
+    .expect("the example");
+    let judge = |plan: &str| {
+        let mut sources = SourceMap::new();
+        let id = sources.add("system.eadl", text.clone()).expect("small");
+        archogen_plan_check::check::plan_file(
+            &mut sources,
+            id,
+            &MemoryModules::new(),
+            &eadl_model::profile::RT_STATIC_UP_V1,
+            "plan.eadl",
+            plan,
+        )
+    };
+    let program = judge("").0;
+    let mut record = reference_3();
+    record.system = "heartbeat".to_owned();
+    record.program = program_digest(&program);
+    record.placement = None;
+    record.bindings = BTreeMap::new();
+    let verdict = judge(&record.to_canonical()).1.expect_err("refused");
+    assert_eq!(verdict.status, archogen_outcome::Status::StaleInput);
+    assert_eq!(verdict.findings[0].code, "plan-stale");
+    assert!(
+        verdict.findings[0].message.contains(FORMAT_3)
+            && verdict.findings[0].message.contains("no target is given"),
+        "{}",
+        verdict.findings[0].message
+    );
 }

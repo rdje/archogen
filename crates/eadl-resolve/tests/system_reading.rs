@@ -99,6 +99,8 @@ fn generator_name(requester: &Requester) -> String {
             &instance.over,
             instance.serves.as_deref().map(generator_name).as_deref(),
         ),
+        // A system's release requester on a target, as the joint rules name it (leaf `M4.1.7.5.1`); no description writes one.
+        Requester::Release { system } => eadl_resolve::joint::release_name(system),
     }
 }
 

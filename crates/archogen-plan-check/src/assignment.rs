@@ -48,6 +48,11 @@ use crate::adapters;
 /// The format's identifier: the checker's own constant, held with the search's to one golden.
 pub const FORMAT: &str = "archogen-assignment/2";
 
+/// The format of a plan of a system on a target (`docs/decisions/decision_runtime-plan-format-2.md` §1; leaf `M4.1.7.5.4.1`):
+/// `/2`'s clauses, `(target NAME "SHA256")` after the program, and the release requester among its requesters, the checker's own
+/// constant, held with the search's to `/3`'s golden.
+pub const FORMAT_3: &str = "archogen-assignment/3";
+
 /// Who requires: a declaration by its qualified name, a task of a system, `(task SYSTEM TASK)`, or an engine adapter's
 /// instance, for what its kind requires beneath.
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -63,6 +68,12 @@ pub enum Requester {
     },
     /// An engine adapter's instance, a requester for what its kind requires beneath (record §4 rule 1).
     Instance(Instance),
+    /// A system's release requester on a target, `(release SYSTEM)`, last among requesters, a `/3` record's alone
+    /// (`docs/decisions/decision_release-alarm.md` §1).
+    Release {
+        /// The system's qualified name.
+        system: String,
+    },
 }
 
 impl Requester {
@@ -73,15 +84,18 @@ impl Requester {
             Self::Named(name) => name.clone(),
             Self::Task { system, task } => format!("(task {system} {task})"),
             Self::Instance(instance) => instance.canonical(),
+            Self::Release { system } => format!("(release {system})"),
         }
     }
 
-    /// Its place among the record's kinds of requester: every name, then every task, then every instance.
+    /// Its place among the record's kinds of requester: every name, then every task, then every instance, then the release
+    /// requester.
     const fn rank(&self) -> u8 {
         match self {
             Self::Named(_) => 0,
             Self::Task { .. } => 1,
             Self::Instance(_) => 2,
+            Self::Release { .. } => 3,
         }
     }
 
@@ -230,6 +244,8 @@ pub struct Assignment {
     pub system: String,
     /// The elaborated program's digest, [`program_digest`]: 64 lowercase hexadecimal digits.
     pub program: String,
+    /// The target the system was put on, a `/3` record's: its platform and its digest; none for `/2`.
+    pub target: Option<(String, String)>,
     /// The placement memory chosen, where the system has placement memory: the provider offering the region, by its
     /// qualified name, and the region's name within it.
     pub placement: Option<(String, String)>,
@@ -242,13 +258,19 @@ impl Assignment {
     /// The record's canonical text: one clause per line, in the format's order, the bindings sorted.
     #[must_use]
     pub fn to_canonical(&self) -> String {
+        let format = if self.target.is_some() {
+            FORMAT_3
+        } else {
+            FORMAT
+        };
         let mut out = format!(
-            "(format \"{FORMAT}\")\n(profile {})\n(system {})\n(program \"{}\")\n(adapters {})\n",
-            self.profile,
-            self.system,
-            self.program,
-            adapters::VERSION
+            "(format \"{format}\")\n(profile {})\n(system {})\n(program \"{}\")\n",
+            self.profile, self.system, self.program,
         );
+        if let Some((platform, digest)) = &self.target {
+            out.push_str(&format!("(target {platform} \"{digest}\")\n"));
+        }
+        out.push_str(&format!("(adapters {})\n", adapters::VERSION));
         if let Some((provider, region)) = &self.placement {
             out.push_str(&format!("(placement {provider} {region})\n"));
         }
@@ -279,11 +301,12 @@ impl Assignment {
         }
         let mut clauses = document.declarations().peekable();
         let format = clause(clauses.next(), "format")?;
-        match format {
-            [Form::Str { value, .. }] if value == FORMAT => {}
+        let on_a_target = match format {
+            [Form::Str { value, .. }] if value == FORMAT => false,
+            [Form::Str { value, .. }] if value == FORMAT_3 => true,
             [Form::Str { value, .. }] => return Err(Refusal::Format(Some(value.clone()))),
             _ => return Err(Refusal::Format(None)),
-        }
+        };
         let profile = symbol("profile", clause(clauses.next(), "profile")?)?;
         let system = symbol("system", clause(clauses.next(), "system")?)?;
         let program = match clause(clauses.next(), "program")? {
@@ -301,6 +324,27 @@ impl Assignment {
                     found: canonical(other),
                 })
             }
+        };
+        let digest = |value: &str| {
+            value.len() == 64
+                && value
+                    .bytes()
+                    .all(|b| b.is_ascii_digit() || (b'a'..=b'f').contains(&b))
+        };
+        let target = if on_a_target {
+            match clause(clauses.next(), "target")? {
+                [Form::Symbol { name: platform, .. }, Form::Str { value, .. }] if digest(value) => {
+                    Some((platform.clone(), value.clone()))
+                }
+                other => {
+                    return Err(Refusal::Value {
+                        clause: "target",
+                        found: canonical(other),
+                    })
+                }
+            }
+        } else {
+            None
         };
         let catalog = symbol("adapters", clause(clauses.next(), "adapters")?)?;
         if catalog != adapters::VERSION {
@@ -331,6 +375,10 @@ impl Assignment {
                 });
             };
             let requester = read_requester(requester)?;
+            // The release requester is a system's on a target, so a record of no target names none.
+            if matches!(requester, Requester::Release { .. }) && !on_a_target {
+                return Err(Refusal::RequesterKind(requester.canonical()));
+            }
             let Form::Symbol { name: fact, .. } = fact else {
                 return Err(Refusal::Value {
                     clause: "bind",
@@ -354,6 +402,7 @@ impl Assignment {
             profile,
             system,
             program,
+            target,
             placement,
             bindings,
         })
@@ -411,10 +460,13 @@ impl fmt::Display for Refusal {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
             Self::Unreadable(why) => write!(f, "the record is no eADL document: {why}"),
-            Self::Format(None) => write!(f, "the record names no format; `{FORMAT}` reads one that does"),
+            Self::Format(None) => write!(
+                f,
+                "the record names no format; `{FORMAT}` and `{FORMAT_3}` read one that does"
+            ),
             Self::Format(Some(other)) => write!(
                 f,
-                "the record is `{other}`, which this checker does not read; it reads `{FORMAT}`"
+                "the record is `{other}`, which this checker does not read; it reads `{FORMAT}` and `{FORMAT_3}`"
             ),
             Self::Clause {
                 expected,
@@ -488,6 +540,13 @@ pub(crate) fn read_requester(form: &Form) -> Result<Requester, Refusal> {
                 })
             }
             _ if form.head() == Some("adapter") => read_instance(form).map(Requester::Instance),
+            [Form::Symbol { name: head, .. }, Form::Symbol { name: system, .. }]
+                if head == "release" =>
+            {
+                Ok(Requester::Release {
+                    system: system.clone(),
+                })
+            }
             _ => Err(Refusal::RequesterKind(form.to_canonical())),
         },
         _ => Err(Refusal::RequesterKind(form.to_canonical())),
