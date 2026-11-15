@@ -1724,6 +1724,10 @@ fn section_7_places_every_refusal_in_one_order() {
     assert!(playground.contains(
         "a plan holding a task released by `(unknown CAUSE)` refused naming the task and its cause (`missing-fact`"
     ));
+    assert!(playground
+        .contains("`unsupported-profile` for `(own-faster ITEM)` and `(own-absent ITEM)`"));
+    assert!(sentence.contains("first a task released by `(unknown CAUSE)`, as `/1`'s does and by its codes, naming the task and its cause (`RTP-H1`)"));
+    assert!(!sentence.contains("each `missing-fact`, naming the task and its cause"));
     // A source's `external` is the realization's again, so its `no` is read where an alarm's is (round 30, RP30-1).
     assert!(!RECORD.contains("a source whose `external` its controller's record states `no`"));
     assert!(RECORD.contains("refuses the system `unsupported-profile`, naming its source"));
@@ -2526,7 +2530,7 @@ fn every_refusal_the_record_states_has_its_stage() {
         ("which is no refusal, the figures being what such a build makes", "none"),
         ("The build refuses a plan before anything of the application's crate", "the build"),
         ("a system with placement memory staying refused as `/1` refuses it", "lowering: `/1`'s list in its order"),
-        ("a lowering given one of another code refuses it `invalid-description`", "lowering: a realization of another code identity"),
+        ("a lowering given one of another code refuses it `stale-input`", "lowering: a realization of another code identity"),
         ("a file of the one is refused by a lowering of the other", "lowering: a realization of another code identity"),
         ("each other thing `unmet` reports refused `invalid-description`", "lowering: an application's unmet"),
         ("being the lowering's to judge on a target and no refusal there", "none"),
@@ -2548,7 +2552,7 @@ fn every_refusal_the_record_states_has_its_stage() {
         ("a route whose `external` the file states `no` refuses the system `unsupported-profile`", "lowering: a route whose `external` the realization's file states `no`"),
         ("Where the routes outnumber the levels the system is refused `unsupported-profile`", "lowering: too few levels while lowering the plan's code"),
         ("**A refusal `/1` makes that `/2` does not:**", "none"),
-        ("A bound or a list of counts whose `binary` names another image is refused after all of these, by the build", "the build"),
+        ("A bound or a list of counts whose `binary` names another image is refused `stale-input`", "the build"),
         ("is refused naming the size it would need where a hole truncates it", "M4.4"),
         ("is refused by a lowering of another's", "lowering: a realization of another code identity"),
         ("it refuses a window or a step past `2^64 − 1` ticks", "the checker"),
@@ -4229,16 +4233,46 @@ fn the_catalog_digest_has_one_preimage() {
     assert!(digest.contains("write!(f, \"sha256:{}\", self.hex())"));
 }
 
-/// §1 and §7: a realization of another code identity, and an application whose `(target …)` is not the plan's, are each `invalid-description`, naming both, in
-/// §7's order: every other refusal named its code, and these two named none (round 13, RP13-4).
+/// §1, §5 and §7: every refusal names its code (round 13, RP13-4), and each of inputs that do not belong together is the status vocabulary's `stale-input`, a
+/// step's output from other inputs, whose repair is to run that step again: the assignment's target, a record's, a realization of another code identity
+/// and a bound measured on another image. Only a file a person writes, the application's, is `invalid-description` where it is not the plan's. Before, a
+/// realization of another code identity was `invalid-description`, which says the description is malformed, and a bound of another image named no code
+/// (round 37, RP37-1). A refusal kept from `/1` gives `/2`'s repair: a hosted system with placement memory names a target, not `/1`'s wait (RP37-3).
 #[test]
 fn every_refusal_names_its_code() {
-    assert!(RECORD.contains(
-        "a lowering given one of another code refuses it `invalid-description`, naming both identities"
-    ));
-    assert!(RECORD.contains("then a realization of another code identity, `invalid-description`"));
-    assert!(RECORD.contains(
-        "its own `(target …)` against the plan's by the lowering, `invalid-description` where they differ"
+    // Each refusal of inputs that do not belong together, as the record says it, and whether a person writes the input it refuses.
+    const MISMATCHED: [(&str, bool); 6] = [
+        ("the assignment's `(target …)` other than the file's taken with its program digest, `stale-input`", false),
+        ("A record whose target differs is `stale-input`", false),
+        ("a lowering given one of another code refuses it `stale-input`, \"measure again\", naming both identities", false),
+        ("then a realization of another code identity, `stale-input`", false),
+        ("A bound or a list of counts whose `binary` names another image is refused `stale-input`", false),
+        ("its own `(target …)` against the plan's by the lowering, `invalid-description` where they differ", true),
+    ];
+    let flat = RECORD.split_whitespace().collect::<Vec<_>>().join(" ");
+    for (said, by_a_person) in MISMATCHED {
+        assert!(flat.contains(said), "the record says: {said}");
+        let code = if by_a_person {
+            "`invalid-description`"
+        } else {
+            "`stale-input`"
+        };
+        assert!(said.contains(code), "{said} is {code}");
+    }
+    for false_said in [
+        "a lowering given one of another code refuses it `invalid-description`",
+        "then a realization of another code identity, `invalid-description`",
+    ] {
+        assert!(!flat.contains(false_said), "{false_said}");
+    }
+    // The vocabulary's own word for it, which a script branches on.
+    let status = include_str!("../../archogen-outcome/src/status.rs");
+    assert!(status.contains("/// The inputs of the invocation do not belong together — a plan resolved from another description, a build made"));
+    // `/1`'s refusal of placement memory, kept, tells its reader to wait for `/2`: a `/2` lowering names a target instead.
+    let lowering = include_str!("../src/lib.rs");
+    assert!(lowering.contains("describe a hosted platform, or wait for `/2`"));
+    assert!(flat.contains(
+        "a system with placement memory staying refused as `/1` refuses it, `unsupported-profile`, its repair naming a target in place of `/1`'s wait for `/2`"
     ));
 }
 

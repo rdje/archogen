@@ -445,3 +445,13 @@ Said, and left as it stands: no `/2` lowering, emitter, controller record, reali
 | RP36-3 | wording, older | §4 said this record adds one hold to the checker, where `RPF-H4` hands four | Four, each named as `RPF-H4` hands it; `the_holds_this_record_adds_are_those_rpf_h4_hands_the_checker` |
 
 Said, and left as it stands: no `/2` lowering, `--target` for `check`, port or controller record, or `non-maskable-interrupts` fact exists.
+
+**Round 37** — `2026-11-15`, leaf `M4.1.7.2.37`: not acceptable, 3 findings, 1 defect, after 1, on `50aaa964`. Round 36's answers held otherwise: `format2_model` `74 passed`, `alarm_model` `25 passed`, each alone; a target's file's refusals all `invalid-description`, above the profile's three, as `diagnostic.rs` ranks them; the map's findings the system's on the target and not the file's alone, so §5 and §7 do not overlap; every row of the inputs table on its line, `E` read once, nothing else the code reads owed; the hand-offs quoted; the worked epoch, stacks, guard and `PRIORITY` at every edge; the book's nineteen sentences; a heartbeat on `riscv-virt-up` written from the record; the two-channel lines, the placement tie-break and the order of `needs`, worked by hand. Each premise was read in the records and the code before it was answered.
+
+| # | Kind | Finding | Answer |
+| --- | --- | --- | --- |
+| RP37-1 | defect, since round 13 (RP13-4's answer) | a realization of another code identity was refused `invalid-description`, which says the description is malformed, where the status vocabulary's `stale-input` is inputs that do not belong together, as `/1` and this record's own target refusal use it (`crates/archogen-outcome/src/status.rs`) | `stale-input`, "measure again", naming both identities, the file a build's of other code; and its class: a bound measured on another image, which named no code, is `stale-input` too, while the application's file, which a person writes, stays `invalid-description`; `every_refusal_names_its_code` holds each, with the vocabulary's own sentence |
+| RP37-2 | wording, in round 36's answer | §7 gave the build's refusal of a task released by `(unknown CAUSE)` `missing-fact`, where `RTP-H1` gives two unreachable causes `unsupported-profile` | `/1`'s refusal by `/1`'s codes, naming the task and its cause; the owed line `missing-fact`; the row reads `RTP-H1`'s two codes |
+| RP37-3 | wording | a hosted system with placement memory "staying refused as `/1` refuses it", whose repair tells the reader to wait for `/2` | `unsupported-profile`, its repair naming a target in place of `/1`'s wait, the row holding `/1`'s message as its code writes it |
+
+Said, and left as it stands: what the simulator does with a hosted `SIMULATED` line written `unstated` is `M4.3.6`'s.
