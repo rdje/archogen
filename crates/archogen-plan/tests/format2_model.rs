@@ -4063,6 +4063,71 @@ fn contexts<'a>(reaches: &[(&'a str, &[&'a str])]) -> BTreeMap<&'a str, Vec<&'a 
     named
 }
 
+/// [`alarm_reach`], the library's held to it (leaf `M4.1.7.6.5`): its `reaches` the edges' closure, what a name reaches at any depth.
+fn reach_held<'a>(
+    device: &'a str,
+    node: &'a str,
+    delivers_to: &[&'a str],
+    edges: &[(&'a str, &'a str)],
+) -> Vec<&'a str> {
+    let model = alarm_reach(device, node, delivers_to, edges);
+    let closure = |from: &str| -> BTreeSet<String> {
+        let mut all: BTreeSet<String> = BTreeSet::new();
+        let mut todo = vec![from.to_owned()];
+        while let Some(at) = todo.pop() {
+            for (_, to) in edges.iter().filter(|(f, _)| *f == at) {
+                if all.insert((*to).to_owned()) {
+                    todo.push((*to).to_owned());
+                }
+            }
+        }
+        all
+    };
+    let library = archogen_plan::alarm::reach(
+        device,
+        node,
+        &delivers_to
+            .iter()
+            .map(|d| (*d).to_owned())
+            .collect::<Vec<_>>(),
+        closure,
+    );
+    assert_eq!(
+        library.iter().map(String::as_str).collect::<Vec<_>>(),
+        model,
+        "the library's reach of {node}"
+    );
+    model
+}
+
+/// [`contexts`], the library's held to it (leaf `M4.1.7.6.5`).
+fn contexts_held<'a>(reaches: &[(&'a str, &[&'a str])]) -> BTreeMap<&'a str, Vec<&'a str>> {
+    let model = contexts(reaches);
+    let library = archogen_plan::alarm::contexts(
+        &reaches
+            .iter()
+            .map(|(alarm, reach)| {
+                (
+                    (*alarm).to_owned(),
+                    reach.iter().map(|r| (*r).to_owned()).collect(),
+                )
+            })
+            .collect::<Vec<_>>(),
+    );
+    assert_eq!(
+        library
+            .iter()
+            .map(|(subject, alarms)| (
+                subject.as_str(),
+                alarms.iter().map(String::as_str).collect::<Vec<_>>()
+            ))
+            .collect::<BTreeMap<_, _>>(),
+        model,
+        "the library's contexts"
+    );
+    model
+}
+
 /// An instance one alarm's code reaches names that alarm too, the device among them, and one no alarm's reaches names none: round 8 had each instance name its own
 /// alarm alone, false where an expiry's delivery reaches the wake's instance (round 9, RP9-2).
 #[test]
@@ -4080,9 +4145,9 @@ fn a_context_names_each_alarm_whose_reach_holds_it() {
         (wake, "timer.delay"),
         (expiry, "timer.delay"),
     ];
-    let wake_reach = alarm_reach("timer.delay", wake, &[], &edges);
-    let expiry_reach = alarm_reach("timer.delay", expiry, &["time.deadline"], &edges);
-    let named = contexts(&[(wake, &wake_reach), (expiry, &expiry_reach)]);
+    let wake_reach = reach_held("timer.delay", wake, &[], &edges);
+    let expiry_reach = reach_held("timer.delay", expiry, &["time.deadline"], &edges);
+    let named = contexts_held(&[(wake, &wake_reach), (expiry, &expiry_reach)]);
     assert_eq!(
         named[wake],
         [wake, expiry],
@@ -4173,8 +4238,8 @@ fn alarm_reach<'a>(
 fn an_expiry_s_interrupt_names_the_requester_it_delivers_to() {
     let expiry = "(adapter deadline-over-delay timer.delay)";
     let edges = [("time.deadline", expiry), (expiry, "timer.delay")];
-    let reach = alarm_reach("timer.delay", expiry, &["time.deadline"], &edges);
-    let named = contexts(&[(expiry, &reach)]);
+    let reach = reach_held("timer.delay", expiry, &["time.deadline"], &edges);
+    let named = contexts_held(&[(expiry, &reach)]);
     assert_eq!(
         named["time.deadline"],
         [expiry],

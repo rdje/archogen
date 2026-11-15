@@ -33,7 +33,7 @@ use eadl_resolve::adapter::{self, Catalog, Instance, Offered};
 use eadl_resolve::joint::{
     self, Because, Binding, Context, Interrupt, Kind, Node, Obligation, Routine,
 };
-use eadl_resolve::offer::State;
+use eadl_resolve::offer::{self, State};
 use eadl_resolve::plan as assignment;
 use eadl_resolve::requirement::Requirement;
 use eadl_resolve::value::Value;
@@ -489,8 +489,52 @@ struct Body {
     owed_by_two: Vec<String>,
     /// `/2`'s `(region …)` lines (§5, "Which regions"), in §3's order: each region the system's hardware states.
     regions: Vec<String>,
-    /// Whether a route is an alarm's, which `/2` writes as its own line (§3), leaf `M4.1.7.6.5`'s.
-    alarmed: bool,
+    /// `/2`'s groups where an alarm makes them differ from `/1`'s (§3, "An alarm's identity is its node"; leaf
+    /// `M4.1.7.6.5`); with no alarm, `/1`'s own.
+    two: Two,
+}
+
+/// What `/2` writes of a body's alarms (`decision_runtime-plan-format-2.md` §3; `decision_release-alarm.md` §2 and §3):
+/// each alarm's line, each clock's, and the routes, the enabled line, the contexts and the obligations, one route for each
+/// alarm where `/1` writes one for its device, ranked by the release alarm's order.
+#[derive(Debug, Clone, PartialEq, Eq, Default)]
+struct Two {
+    /// The `(alarm …)` lines, by `NODE`'s text.
+    alarms: Vec<String>,
+    /// The `(clock …)` lines, by `PROVIDER`'s text.
+    clocks: Vec<String>,
+    /// The `(route …)` lines, by rank.
+    routes: Vec<String>,
+    /// The `(enabled …)` items.
+    enabled: Vec<String>,
+    /// The `(context …)` lines.
+    contexts: Vec<String>,
+    /// The `(obligation …)` lines.
+    obligations: Vec<String>,
+}
+
+/// One alarm of `/2` (§3): what takes a channel of a device for a compare, its node.
+struct AlarmOf {
+    /// Its node, by the joint rules' name.
+    node: String,
+    /// Its node's text, `NODE`.
+    text: String,
+    /// Its device, by the joint rules' name.
+    device: String,
+    /// A wake, an instance whose kind's cost is `wake`; otherwise an expiry, or an alarm bound directly.
+    wake: bool,
+    /// What its interrupt's code may run (§3; [`alarm::reach`]).
+    reach: BTreeSet<String>,
+    /// Its rank's value (`decision_release-alarm.md` §3): a wake's horizon, any other's delivery bound.
+    rank: Option<Rational>,
+    /// Whether its device states `(tick-rate …)` and `(counter-modulus …)`, for what it owes.
+    stated: (bool, bool),
+    /// Whether it asks a delivery bound, for what an expiry owes.
+    delivery: bool,
+    /// Its time base.
+    base: alarm::Base,
+    /// Its `(alarm …)` line.
+    line: String,
 }
 
 /// Which format a body is lowered for: what differs before the lines are written is a refusal's repair (§1).
@@ -549,8 +593,9 @@ impl Body {
 
     /// `archogen-runtime-plan/2`'s text on the hosted playground (`decision_runtime-plan-format-2.md` §1, "The hosted
     /// playground", and §3): `/1`'s lines in §3's order, with these and no others: `(target hosted-playground)`,
-    /// `(emitter …)`, `(catalog "HEX" none)`, `(epoch simulator)`, each `(region …)`, and §3's owed lines. A system with
-    /// an alarm is `.5`'s, and is refused before this is written.
+    /// `(emitter …)`, `(catalog "HEX" none)`, `(epoch simulator)`, each alarm's and clock's line, a route for each alarm
+    /// and what an alarm changes of the enabled line, the contexts and the obligations (leaf `M4.1.7.6.5`), each
+    /// `(region …)`, and §3's owed lines.
     fn write_two_hosted(&self, generation: &Generation<'_>) -> String {
         let mut lines = vec![
             format!("(format \"{FORMAT_2}\")"),
@@ -574,16 +619,25 @@ impl Body {
             "(timer simulator {})",
             list("releases", &self.releases)
         ));
-        lines.extend(self.routes.iter().cloned());
-        lines.push(list("enabled", &self.enabled));
+        lines.extend(self.two.alarms.iter().cloned());
+        lines.extend(self.two.clocks.iter().cloned());
+        lines.extend(self.two.routes.iter().cloned());
+        lines.push(list("enabled", &self.two.enabled));
         lines.push("(interrupt-model (nesting no) (masking all))".to_string());
         lines.extend(self.regions.iter().cloned());
         lines.extend(self.nodes.iter().cloned());
-        lines.extend(self.contexts.iter().cloned());
+        lines.extend(self.two.contexts.iter().cloned());
         lines.extend(self.depends.iter().cloned());
         lines.extend(self.steps.iter().cloned());
-        lines.extend(self.obligations.iter().cloned());
-        let mut owed: Vec<String> = self.owed.iter().chain(&self.owed_by_two).cloned().collect();
+        lines.extend(self.two.obligations.iter().cloned());
+        // An alarm's line stands in place of `/1`'s timer route, so what `/1` owes of that route is owed of none (§3).
+        let mut owed: Vec<String> = self
+            .owed
+            .iter()
+            .filter(|line| !line.starts_with("(owed (timer-route "))
+            .chain(&self.owed_by_two)
+            .cloned()
+            .collect();
         owed.sort();
         owed.dedup();
         lines.extend(owed);
@@ -619,13 +673,13 @@ fn written_as_two(text: &str) -> Result<(), String> {
 /// The executable form's hosted `/2` lowering (`decision_runtime-plan-format-2.md` §1, "The hosted playground"; leaf
 /// `M4.1.7.6.4`): [`lower`]'s record and body, written as `archogen-runtime-plan/2` with no application's file and no
 /// realization's, `generation` naming what generates its code. No command reaches it: nothing but a test may call it,
-/// as for [`lower`], and a system with an alarm is refused until its line is written (`M4.1.7.6.5`).
+/// as for [`lower`]. Each alarm is written as `/2` writes one (leaf `M4.1.7.6.5`).
 ///
 /// # Errors
 ///
 /// [`lower`]'s refusals, a system with placement memory's repair naming a target (RP37-3); and `tool-failure` for an
-/// emitter's version that is no single atom, for a system with an alarm, and for a text that is not written as `/2`'s
-/// §3 writes a plan.
+/// emitter's version that is no single atom, for a timer route with no alarm, for a count or a rate the format cannot
+/// write, and for a text that is not written as `/2`'s §3 writes a plan.
 pub fn lower_hosted(
     program: &Program,
     record: &str,
@@ -648,12 +702,6 @@ pub fn lower_hosted(
         ));
     }
     let (body, _) = body(program, record, None, vocabulary, catalog, Format::Two)?;
-    if body.alarmed {
-        return Err(refuse(
-            "tool-failure",
-            "an alarm's line in `/2` is written by task-tree leaf M4.1.7.6.5, not built yet",
-        ));
-    }
     let text = body.write_two_hosted(generation);
     written_as_two(&text).map_err(|why| {
         refuse(
@@ -1675,9 +1723,18 @@ fn body(
         .collect();
     regions.sort();
     let region_lines: Vec<String> = regions.into_iter().map(|(_, _, _, line)| line).collect();
-    let alarmed = route_lines
-        .iter()
-        .any(|line| line.contains("(timer-route "));
+    let (two, owed_by_alarms) = alarms_of(
+        &routes,
+        &contexts,
+        &nodes,
+        &obligation_lines,
+        &names,
+        &rebuilt,
+        declarations,
+        vocabulary,
+        catalog,
+    )?;
+    owed_by_two.extend(owed_by_alarms);
     Ok((
         Body {
             profile: record.profile.clone(),
@@ -1699,10 +1756,436 @@ fn body(
             owed,
             owed_by_two,
             regions: region_lines,
-            alarmed,
+            two,
         },
         accepted,
     ))
+}
+
+/// The facts a source owes as a source, which `/2` owes of each alarm too, each being a source of its own
+/// (`decision_runtime-plan-format-2.md` §3; `decision_release-alarm.md` §2's last row); its `service-cost` is
+/// [`alarm::owes`]'s.
+const AS_A_SOURCE: [&str; 4] = [
+    "acknowledge-point",
+    "deferred-work",
+    "no-application-code",
+    "one-request-per-arrival",
+];
+
+/// A device's counter as the description states it: its rate, in hertz, its quantity, and its modulus, each where it
+/// has a value (`decision_runtime-plan-format-2.md` §3, `SIMULATED`).
+fn counter_of(
+    device: &str,
+    declarations: &[Form],
+    vocabulary: &Vocabulary,
+) -> (Option<Quantity>, Option<i128>) {
+    let provider = declarations
+        .iter()
+        .find(|d| d.items().get(1).and_then(Form::as_symbol) == Some(device))
+        .and_then(|d| offer::read(d, vocabulary).ok());
+    let valued = |fact: &str| match provider.as_ref().and_then(|p| p.state(fact)) {
+        Some(State::Valued(values)) => values.first().cloned(),
+        _ => None,
+    };
+    let rate = match valued("tick-rate") {
+        Some(Value::Quantity(q)) => Some(q),
+        _ => None,
+    };
+    let modulus = match valued("counter-modulus") {
+        Some(Value::Count(m)) => Some(m),
+        _ => None,
+    };
+    (rate, modulus)
+}
+
+/// `(simulated (tick-rate R|unstated) (modulus M|unstated))` (§3, `SIMULATED`): a rate exact, in lowest terms, and a
+/// count as the language holds one.
+fn simulated(rate: Option<Quantity>, modulus: Option<i128>) -> Result<String, Refusal> {
+    let unwritable = |what: &str| {
+        refuse(
+            "tool-failure",
+            format!("the device's {what} is no value `/2` writes (§3)"),
+        )
+    };
+    let rate = match rate {
+        None => "unstated".to_string(),
+        Some(q) => {
+            let hertz = q.in_base().map_err(|_| unwritable("tick-rate"))?;
+            let numerator =
+                u128::try_from(hertz.numerator()).map_err(|_| unwritable("tick-rate"))?;
+            let denominator = u128::try_from(hertz.denominator())
+                .ok()
+                .and_then(std::num::NonZeroU128::new)
+                .ok_or_else(|| unwritable("tick-rate"))?;
+            alarm::rate(numerator, denominator)
+        }
+    };
+    let modulus = match modulus {
+        None => "unstated".to_string(),
+        Some(m) => alarm::count(u128::try_from(m).map_err(|_| unwritable("counter-modulus"))?),
+    };
+    Ok(format!(
+        "(simulated (tick-rate {rate}) (modulus {modulus}))"
+    ))
+}
+
+/// `/2`'s alarms and what they change (`decision_runtime-plan-format-2.md` §3, "An alarm's identity is its node", the
+/// paragraph after it, `SIMULATED`, `KIND`, `BASE`, the horizon, the delivery bound and the asked reach, `(clock …)` and
+/// what is owed; `decision_release-alarm.md` §2 and §3; leaf `M4.1.7.6.5`). Each requester bound directly to a timer
+/// route's device for a compare, `relative-delay` or `absolute-deadline`, is an alarm, its node; a wake where it is an
+/// instance whose kind's cost is `wake`, and otherwise an expiry or an alarm bound directly. With no alarm, every group
+/// is `/1`'s. Also what each alarm and clock owes, which `/2` adds.
+#[allow(clippy::too_many_arguments, clippy::too_many_lines)]
+fn alarms_of(
+    routes: &[Route],
+    contexts: &BTreeMap<String, BTreeSet<String>>,
+    nodes: &BTreeSet<String>,
+    obligation_lines: &[String],
+    names: &Names<'_>,
+    rebuilt: &assignment::Rebuilt<'_>,
+    declarations: &[Form],
+    vocabulary: &Vocabulary,
+    catalog: &Catalog,
+) -> Result<(Two, Vec<String>), Refusal> {
+    const COMPARES: [&str; 2] = ["relative-delay", "absolute-deadline"];
+    let instance = |name: &str| rebuilt.instances.iter().find(|i| i.provider.name == name);
+    let reach = |from: &str| rebuilt.joint.reaches(from, &rebuilt.bindings);
+    let seconds = |q: &Requirement| match q {
+        Requirement::Constraint { value, .. } => match value_seconds(value) {
+            Seconds::Of(s) => Some(s),
+            _ => None,
+        },
+        _ => None,
+    };
+    // What an alarm's requirement asks by `fact`: its node's own at its device, or, an instance's, what is bound to it.
+    let asked = |node: &str, device: &str, fact: &str| -> Vec<Rational> {
+        let mut values = Vec::new();
+        for b in rebuilt
+            .bindings
+            .iter()
+            .filter(|b| (b.requester == node && b.provider == device) || b.provider == node)
+        {
+            let parts: Vec<&Requirement> = match &b.requirement {
+                Requirement::Group { parts, .. } => parts.iter().collect(),
+                other => vec![other],
+            };
+            values.extend(
+                parts
+                    .into_iter()
+                    .filter(|q| q.fact() == fact)
+                    .filter_map(&seconds),
+            );
+        }
+        values
+    };
+    let mut owed = Vec::new();
+    let owe = |owed: &mut Vec<String>, subject: &str, fact: &str, owner: &str| {
+        owed.push(format!("(owed {subject} {fact} (by {owner}))"));
+    };
+    let mut alarms: Vec<AlarmOf> = Vec::new();
+    for route in routes.iter().filter(|r| r.timer) {
+        let device = route.provider.as_str();
+        let mut takers: Vec<&str> = rebuilt
+            .bindings
+            .iter()
+            .filter(|b| b.provider == device && COMPARES.contains(&b.requirement.fact()))
+            .map(|b| b.requester.as_str())
+            .collect();
+        takers.sort_unstable();
+        takers.dedup();
+        if takers.is_empty() {
+            return Err(refuse(
+                "tool-failure",
+                format!("the timer route of `{device}` has no alarm, no requester binding a compare there (§3)"),
+            ));
+        }
+        let (rate, modulus) = counter_of(device, declarations, vocabulary);
+        for node in takers {
+            let of = instance(node);
+            let wake = of.is_some_and(|i| {
+                catalog
+                    .kind(&i.kind)
+                    .is_some_and(|k| k.costs.iter().any(|c| c.name == "wake"))
+            });
+            let bound_to = |facts: &[&str]| -> Vec<String> {
+                let mut to: Vec<String> = rebuilt
+                    .bindings
+                    .iter()
+                    .filter(|b| {
+                        b.provider == node
+                            && (facts.is_empty() || facts.contains(&b.requirement.fact()))
+                    })
+                    .map(|b| b.requester.clone())
+                    .collect();
+                to.sort();
+                to.dedup();
+                to
+            };
+            let delivers_to = if of.is_some_and(|i| i.delivers) {
+                bound_to(&[])
+            } else {
+                Vec::new()
+            };
+            let reach_of = alarm::reach(device, node, &delivers_to, reach);
+            // `BASE`: a wake's is the counter; any other's is read of the readers of time its deadline's requester reaches,
+            // itself not among them (rule 14), each by where it is bound.
+            let base = if wake {
+                alarm::Base::Counter
+            } else {
+                let deadline_requesters = if of.is_some() {
+                    bound_to(&COMPARES)
+                } else {
+                    vec![node.to_string()]
+                };
+                let readers: Vec<alarm::Reader> = deadline_requesters
+                    .iter()
+                    .flat_map(|from| rebuilt.joint.readers_of_time(from, &rebuilt.bindings))
+                    .map(|(_, provider)| match instance(&provider) {
+                        Some(i) if i.kind == "epoch-extender" && i.over == device => {
+                            alarm::Reader::ExtendedOverIt
+                        }
+                        Some(i) if i.kind == "epoch-extender" => alarm::Reader::ExtendedOverAnother,
+                        Some(i) if i.over == device => alarm::Reader::AtTheDevice,
+                        Some(_) => alarm::Reader::OnAnother,
+                        None if provider == device => alarm::Reader::AtTheDevice,
+                        None => alarm::Reader::OnAnother,
+                    })
+                    .collect();
+                alarm::base(false, &readers)
+            };
+            let delivery_bound = if wake {
+                None
+            } else {
+                asked(node, device, "delivery-bound").into_iter().min()
+            };
+            let asked_reach = if wake {
+                None
+            } else {
+                asked(node, device, "supported-horizon").into_iter().max()
+            };
+            // A wake's horizon is its device's `unambiguous-horizon`, derived from its modulus and rate (§3).
+            let horizon = match (wake, modulus, rate) {
+                (true, Some(m), Some(q)) => eadl_resolve::value::horizon(m, q)
+                    .ok()
+                    .and_then(|h| h.in_base().ok()),
+                _ => None,
+            };
+            let text = names.text(node);
+            let at_most =
+                |value: Option<Rational>| value.map_or_else(|| "none".to_string(), duration);
+            let line = format!(
+                "(alarm {text} (device {}) {} (kind level-compare) (time-base {}) (horizon {}) (delivery-bound {}) (asked-reach {}))",
+                names.text(device),
+                simulated(rate, modulus)?,
+                base.as_str(),
+                at_most(horizon),
+                at_most(delivery_bound),
+                at_most(asked_reach),
+            );
+            alarms.push(AlarmOf {
+                node: node.to_string(),
+                text,
+                device: device.to_string(),
+                wake,
+                reach: reach_of,
+                rank: if wake { horizon } else { delivery_bound },
+                stated: (rate.is_some(), modulus.is_some()),
+                delivery: delivery_bound.is_some(),
+                base,
+                line,
+            });
+        }
+    }
+    alarms.sort_by(|a, b| a.text.cmp(&b.text));
+
+    // The routes, by the release alarm's order (§3): a source by its separation, an expiry or an alarm bound directly by
+    // its delivery bound, a wake by its horizon, what states no value last, ties by the item's text. A source's line is
+    // `/1`'s but for its rank; an alarm's carries the requesters of its device's route that reach its node, or are it, and
+    // the costs `/1` writes of its node.
+    struct Ranked {
+        item: String,
+        separation: String,
+        requesters: Vec<String>,
+        costs: Vec<String>,
+    }
+    let mut ranked: Vec<(Option<Rational>, (String, usize))> = Vec::new();
+    let mut described: Vec<Ranked> = Vec::new();
+    for route in routes.iter().filter(|r| !r.timer) {
+        let mut requesters: Vec<String> = route.requesters.iter().map(|r| names.text(r)).collect();
+        requesters.sort();
+        ranked.push((route.separation.ok(), (route.item(), described.len())));
+        described.push(Ranked {
+            item: route.item(),
+            separation: match &route.separation {
+                Ok(s) => duration(*s),
+                Err(word) => (*word).to_string(),
+            },
+            requesters,
+            costs: Vec::new(),
+        });
+    }
+    for alarm in &alarms {
+        let route = routes
+            .iter()
+            .find(|r| r.timer && r.provider == alarm.device)
+            .expect("an alarm is of a timer route");
+        let mut requesters: Vec<String> = route
+            .requesters
+            .iter()
+            .filter(|r| **r == alarm.node || reach(r).contains(&alarm.node))
+            .map(|r| names.text(r))
+            .collect();
+        requesters.sort();
+        requesters.dedup();
+        let mut costs: Vec<String> = instance(&alarm.node)
+            .and_then(|i| catalog.kind(&i.kind))
+            .map(|kind| {
+                kind.costs
+                    .iter()
+                    .map(|c| format!("({} {})", alarm.text, c.name))
+                    .collect()
+            })
+            .unwrap_or_default();
+        costs.sort();
+        costs.dedup();
+        let item = format!("(alarm {})", alarm.text);
+        ranked.push((alarm.rank, (item.clone(), described.len())));
+        described.push(Ranked {
+            item,
+            separation: "programmed".to_string(),
+            requesters,
+            costs,
+        });
+    }
+    let order = controller::ranked(ranked);
+    let mut two = Two::default();
+    for (at, (_, index)) in order.iter().enumerate() {
+        let route = &described[*index];
+        two.routes.push(format!(
+            "(route {} {} (separation {}) (level {}) (deliverable yes) {} {})",
+            at + 1,
+            route.item,
+            route.separation,
+            RT_STATIC_UP_V1.caller_level,
+            list("requesters", &route.requesters),
+            list("costs", &route.costs)
+        ));
+    }
+    two.enabled = std::iter::once("timer".to_string())
+        .chain(
+            order
+                .iter()
+                .map(|(_, index)| described[*index].item.clone()),
+        )
+        .collect();
+
+    // The contexts: `/1`'s, a timer route's interrupt replaced by each alarm whose reach holds the subject (§3).
+    let named = alarm::contexts(
+        &alarms
+            .iter()
+            .map(|a| (a.text.clone(), a.reach.clone()))
+            .collect::<Vec<_>>(),
+    );
+    let mut subjects: BTreeMap<String, BTreeSet<String>> = contexts
+        .iter()
+        .map(|(subject, words)| {
+            (
+                subject.clone(),
+                words
+                    .iter()
+                    .filter(|w| !w.starts_with("(interrupt (timer-route "))
+                    .cloned()
+                    .collect(),
+            )
+        })
+        .collect();
+    for (subject, by) in &named {
+        if contexts.contains_key(subject) || nodes.contains(subject) {
+            let words = subjects.entry(subject.clone()).or_default();
+            words.extend(by.iter().map(|text| format!("(interrupt (alarm {text}))")));
+        }
+    }
+    two.contexts = subjects
+        .iter()
+        .filter(|(_, words)| !words.is_empty())
+        .map(|(subject, set)| {
+            let mut ordered: Vec<&String> = Vec::new();
+            ordered.extend(set.get("job"));
+            ordered.extend(set.iter().filter(|c| c.starts_with("(interrupt ")));
+            ordered.extend(set.get("initialisation"));
+            let words: Vec<String> = ordered.into_iter().cloned().collect();
+            format!("(context {} {})", names.text(subject), words.join(" "))
+        })
+        .collect();
+    two.contexts.sort();
+
+    // The obligations: one route obligation for each alarm, where `/1` writes one for its device (`RA-H1`).
+    two.obligations = obligation_lines
+        .iter()
+        .filter(|line| !line.starts_with("(obligation route (timer-route "))
+        .cloned()
+        .chain(alarms.iter().map(|a| {
+            format!(
+                "(obligation route (alarm {}) (discharged-by M4.2 M4.3))",
+                a.text
+            )
+        }))
+        .collect();
+    two.obligations.sort();
+    two.obligations.dedup();
+
+    // What each alarm owes: as the checker asks of it, as a source, and of the description what its line leaves
+    // unstated or an expiry asks no bound of (§3).
+    for alarm in &alarms {
+        let subject = format!("(alarm {})", alarm.text);
+        for fact in alarm::owes(alarm.wake, alarm.base == alarm::Base::Counter, true)
+            .into_iter()
+            .chain(AS_A_SOURCE)
+        {
+            owe(&mut owed, &subject, fact, "realization");
+        }
+        if !alarm.stated.0 {
+            owe(&mut owed, &subject, "tick-rate", "description");
+        }
+        if !alarm.stated.1 {
+            owe(&mut owed, &subject, "counter-modulus", "description");
+        }
+        if !alarm.wake && !alarm.delivery {
+            owe(&mut owed, &subject, "delivery-bound", "description");
+        }
+    }
+    two.alarms = alarms.iter().map(|a| a.line.clone()).collect();
+
+    // Each counter a hosted time base reads that no alarm's line names: a `(clock …)` line of its own (§3).
+    let named_devices: BTreeSet<&str> = alarms.iter().map(|a| a.device.as_str()).collect();
+    let mut clocks: BTreeSet<&str> = BTreeSet::new();
+    for b in &rebuilt.bindings {
+        if rebuilt.joint.reads_a_counter(b.requirement.fact())
+            && instance(&b.provider).is_none()
+            && !named_devices.contains(b.provider.as_str())
+        {
+            clocks.insert(b.provider.as_str());
+        }
+    }
+    let mut clock_lines: Vec<(String, String)> = Vec::new();
+    for device in clocks {
+        let (rate, modulus) = counter_of(device, declarations, vocabulary);
+        let text = names.text(device);
+        clock_lines.push((
+            text.clone(),
+            format!("(clock {text} {})", simulated(rate, modulus)?),
+        ));
+        let subject = format!("(clock {text})");
+        if rate.is_none() {
+            owe(&mut owed, &subject, "tick-rate", "description");
+        }
+        if modulus.is_none() {
+            owe(&mut owed, &subject, "counter-modulus", "description");
+        }
+    }
+    clock_lines.sort();
+    two.clocks = clock_lines.into_iter().map(|(_, line)| line).collect();
+    Ok((two, owed))
 }
 
 /// The assignment record's sha256, its identity in the plan (§2.1).

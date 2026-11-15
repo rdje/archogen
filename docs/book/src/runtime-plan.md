@@ -239,8 +239,16 @@ The first `/2` text is a hosted plan, written by `archogen_plan::lower_hosted` f
 (leaves `M4.1.7.6.3` and `.4`). It is `/1`'s text with the lines the record's table lists and no others: the hosted
 playground named as the target, the emitter and the catalog that generate its code, the epoch, each region of the
 hardware, and what §3 adds to what is owed. Over every system of the corpus it differs from `/1`'s by those lines
-alone (`crates/archogen-plan/tests/format2_hosted.rs`). A system with an alarm waits for that line, and placement memory
-is refused with a repair naming a target. No command writes a `/2` plan yet.
+alone (`crates/archogen-plan/tests/format2_hosted.rs`). Placement memory is refused with a repair naming a target.
+
+Each alarm is a line of its own (leaf `M4.1.7.6.5`): its node, the requester that programs its device's compare, and the
+device's counter as the description states it, with its time base, the horizon of a wake and the bounds an expiry asks.
+Where `/1` writes one route for a device, `/2` writes one for each alarm on it, ranked by the deadline each must meet
+among the sources: a source by its separation, an expiry by the delivery bound it asks, a wake by its horizon, what
+states none last. Every context names each alarm whose code can reach it, every route obligation is an alarm's, and each
+alarm owes what the checker asks of a source. A counter a time base reads that no alarm names gets a clock line of its
+own. Over the corpus, each `/1` timer route stands as the routes of its alarms, their requesters and costs together
+`/1`'s. No command writes a `/2` plan yet.
 
 ## From a plan to a generated system
 

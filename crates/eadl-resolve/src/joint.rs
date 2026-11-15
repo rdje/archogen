@@ -2795,6 +2795,46 @@ impl<'v> Joint<'v> {
         }
     }
 
+    /// Whether a binding for `fact` reads a counter's time, as model §8 rule 14 counts one: a fact of the function
+    /// `counter` that is not consumed and describes no compare ([`DESCRIBES_A_COMPARE`]).
+    #[must_use]
+    pub fn reads_a_counter(&self, fact: &str) -> bool {
+        !DESCRIBES_A_COMPARE.contains(&fact)
+            && self.vocabulary.fact(fact).is_some_and(|f| {
+                f.usage == Usage::Shared && f.function == Some(Function::Of("counter".to_string()))
+            })
+    }
+
+    /// The readers of a time base that `from`, a requester bound for a deadline, reaches, as model §8 rule 14 counts them
+    /// (`docs/decisions/decision_runtime-plan-format-2.md` §3, `BASE`; leaf `M4.1.7.6.5`): every other requester it reaches
+    /// through `needs` and `uses`, itself not among them, each with the provider of each binding it holds for a fact that
+    /// [`Joint::reads_a_counter`]. Each is `(requester, provider)`, by the providers' and requesters' own names, once.
+    #[must_use]
+    pub fn readers_of_time(&self, from: &str, assignment: &[Binding]) -> Vec<(String, String)> {
+        let mut reached = BTreeSet::new();
+        let mut todo = vec![from];
+        while let Some(at) = todo.pop() {
+            for next in self.names.get(at).into_iter().flatten() {
+                if self.requesters.contains_key(next)
+                    && next != from
+                    && reached.insert(next.as_str())
+                {
+                    todo.push(next.as_str());
+                }
+            }
+        }
+        let mut readers: Vec<(String, String)> = assignment
+            .iter()
+            .filter(|b| {
+                reached.contains(b.requester.as_str()) && self.reads_a_counter(b.requirement.fact())
+            })
+            .map(|b| (b.requester.clone(), b.provider.clone()))
+            .collect();
+        readers.sort();
+        readers.dedup();
+        readers
+    }
+
     /// Model §8 rule 14, one time base (`docs/specs/adapters/decision_engine-adapters.md` §4): where a requester is bound
     /// for `absolute-deadline`, every other requester it reaches through `needs` and `uses`, bound for a fact of the
     /// function `counter` that is not consumed and describes no compare (`DESCRIBES_A_COMPARE`), is bound at the same device — an
