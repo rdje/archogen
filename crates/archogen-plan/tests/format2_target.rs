@@ -3,7 +3,10 @@
 //! "The application and the realization in the identity", and §7's order; leaf `M4.1.7.6.7.1`), over `targets/riscv-virt-up.eadl`
 //! and the S0 heartbeat: the target's own refusals first, by the code `check` gives them; then the application's file; then
 //! the record, of the kind and the target given, the digest deciding the run; then the application's target, the platform's
-//! name. The rest of a plan on a target is `M4.1.7.6.7.2`'s, and the lowering says so rather than write it short.
+//! name. Its time (leaf `M4.1.7.6.7.2`) is held through `on_target_so_far`: the release timer's line, the epoch's, each
+//! alarm's `COUNTER` line, the release timer's device's `(interrupt timer)`, and what each owes, over the shipped target
+//! and `TWO_CHANNELS`, a test target with an alarm's room and a source, written in this file. The rest of a plan on a target
+//! is `M4.1.7.6.7.3` and `M4.1.7.6.8`'s, and the lowering says so rather than write it short.
 
 mod common;
 
@@ -12,7 +15,8 @@ use std::fs;
 use archogen_digest::Digest;
 use archogen_plan::application::{CLAUSE_CUT, CLAUSE_PARTS, FORMAT};
 use archogen_plan::{
-    lower_hosted, lower_on_target, target_lines, ApplicationFile, Generation, Refusal, TargetFile,
+    lower_hosted, lower_on_target, on_target_so_far, target_lines, ApplicationFile, Generation,
+    Refusal, TargetFile,
 };
 use common::{catalog, hosted_record, registry, root, searched_on_target, vocabulary};
 use eadl_resolve::plan;
@@ -72,8 +76,8 @@ fn refused(outcome: Result<String, Refusal>, said: &str) -> &'static str {
     refusal.code
 }
 
-/// Past every stage this leaf builds: the rest of the plan is `M4.1.7.6.7.2`'s.
-const UNBUILT: &str = "M4.1.7.6.7.2";
+/// Past every stage built: the rest of the plan is `M4.1.7.6.7.3` and `M4.1.7.6.8`'s.
+const UNBUILT: &str = "M4.1.7.6.7.3";
 
 /// A whole application's file for the heartbeat, of `target`.
 fn an_application(target: &str) -> String {
@@ -393,5 +397,228 @@ fn each_pair_of_section_7_s_places_gives_the_earlier() {
             "joint rules"
         ),
         "tool-failure"
+    );
+}
+
+// ---- a target's time (leaf `M4.1.7.6.7.2`)
+
+/// A test target: the shipped target's timer with two channels and a device raising interrupts. It is written here and
+/// not as a file of the tree, since every `.eadl` file the tree holds is a description whose verdict
+/// `crates/archogen-cli/tests/verdicts.rs` freezes and whose third opinion `docs/semantics/third-opinion.txt` records.
+const TWO_CHANNELS: &str = r#"(eadl-version eadl/1)
+; A test target, no machine (leaf `M4.1.7.6.7.2`): `targets/riscv-virt-up.eadl`'s timer with two channels, so an alarm can
+; stand beside the release timer on its device, and a device raising interrupts, so a sporadic task can be released on it.
+; Its statements are this test's, checked by no agreement.
+
+(defblock target.timer
+  (offers
+    (tick-rate 10 MHz)
+    (relative-delay true)
+    (channels 2 tick)
+    (alarm-wiring core)
+    (alarm-kind level-compare)
+    (counter-modulus (pow2 64))
+    (counter-width 64 bit)
+    (wrap-behavior modular)
+    (compare-step 1 tick)
+    (compare-magnitude true)
+    (observation-coherent true)
+    (available-in-state run idle)
+    (supported-horizon 1844674407370 s)
+    (reachable-at-privilege machine)
+    (region target.timer (base 0x0200_0000) (size 64 KiB))))
+
+(defblock target.console
+  (offers
+    (observable-output true)
+    (reachable-at-privilege machine)
+    (region target.console (base 0x1000_0000) (size 256 byte))))
+
+(defblock target.button
+  (offers
+    (interrupt-source true)
+    (min-arrival-separation 20 ms)
+    (reachable-at-privilege machine)
+    (region target.button (base 0x1000_1000) (size 256 byte))))
+
+(defplatform target.fixture
+  (offers
+    (core-count 1 tick)
+    (catalog-target fixture)
+    (firmware-traps 0)
+    (non-maskable-interrupts 0)
+    (reachable-at-privilege machine)
+    (region target.ram (base 0x8000_0000) (size 128 MiB) (executable true)))
+  (requires (uses target.timer target.console target.button)))
+"#;
+
+/// [`TWO_CHANNELS`]'s text.
+fn two_channels() -> String {
+    TWO_CHANNELS.to_owned()
+}
+
+/// A system whose task waits on a deadline service bound directly to a timer: on a target, an alarm beside the release
+/// timer on its device.
+const WAITER: &str = "(eadl-version eadl/1)
+(defblock console.uart (offers (observable-output true) (reachable-at-privilege machine)))
+(defblock timer.d (offers (relative-delay true) (counter-modulus 65536) (tick-rate 10 MHz) (observation-coherent true) (channels 1 tick) (reachable-at-privilege machine)))
+(defplatform host.p (offers (core-count 1 tick) (reachable-at-privilege machine)) (requires (uses console.uart timer.d)))
+(defservice console.write (requires (needs observable-output)))
+(defservice wait (requires (needs relative-delay)))
+(defsystem waiter
+  (task beat (period 10 ms) (deadline 10 ms) (deadline-from release) (priority 1) (uses console.write wait) (on-overrun fault))
+  (requires (uses console.write wait))
+  (platform (uses host.p)))
+";
+
+/// A system of one sporadic task released by a device's interrupt, and no periodic one: no release timer.
+const SPORADIC: &str = "(eadl-version eadl/1)
+(defblock dev.e (offers (interrupt-source true) (min-arrival-separation 20 ms) (reachable-at-privilege machine)))
+(defblock console.uart (offers (observable-output true) (reachable-at-privilege machine)))
+(defplatform soc.e (offers (core-count 1 tick) (reachable-at-privilege machine)) (requires (uses dev.e console.uart)))
+(defservice log (requires (needs observable-output)))
+(defservice evt (requires (needs interrupt-source) (uses log)))
+(defsystem sp
+  (task s (min-separation 10 ms) (deadline 10 ms) (deadline-from release) (priority 1) (uses evt))
+  (platform (uses soc.e)))
+";
+
+/// `description`'s first system on `target`, searched there and lowered as far as built: its lines.
+fn so_far(description: &str, target: &str) -> Vec<String> {
+    let (program, record) =
+        searched_on_target(description, target).expect("it resolves on the target");
+    on_target_so_far(
+        &program,
+        &record,
+        &TargetFile {
+            name: "target.eadl",
+            text: target,
+        },
+        &registry(),
+        &vocabulary(),
+        &catalog(),
+        &generation(),
+        None,
+    )
+    .expect("it lowers as far as built")
+    .text()
+    .lines()
+    .map(str::to_owned)
+    .collect()
+}
+
+/// The lines of `lines` whose head is `head`.
+fn headed<'l>(lines: &'l [String], head: &str) -> Vec<&'l str> {
+    lines
+        .iter()
+        .filter(|line| archogen_plan::identity::head(line) == head)
+        .map(String::as_str)
+        .collect()
+}
+
+/// The S0 heartbeat on the shipped target: the release timer's line, its device's counter as `COUNTER` writes it,
+/// unconverted, its horizon derived of that counter and its rounding owed; the epoch after a read, its lead owed; the
+/// timer enabled; the release timer's device a node with its step, its context `(interrupt timer)`; no alarm, so no
+/// `last-act-lead`; no clock line and nothing simulated (§3, §4; `decision_release-alarm.md` §1).
+#[test]
+fn the_heartbeat_s_time_on_the_shipped_target() {
+    let lines = so_far(&heartbeat(), &riscv_virt_up());
+    assert_eq!(
+        headed(&lines, "timer"),
+        ["(timer (device target.timer) (tick-rate 10000000) (modulus (pow2 64)) (reach 1844674407370 s) (step 1) (window magnitude) (horizon 3689348814741910323/2000000 s) (rounding owed) (first-compare transition) (releases (task heartbeat beat) (task heartbeat chime)))"]
+    );
+    assert_eq!(headed(&lines, "epoch"), ["(epoch after-read (lead owed))"]);
+    assert_eq!(headed(&lines, "enabled"), ["(enabled timer)"]);
+    assert!(lines.contains(&"(node target.timer block)".to_owned()));
+    assert!(lines
+        .iter()
+        .any(|line| line.starts_with("(step ") && line.ends_with(" target.timer)")));
+    assert_eq!(
+        headed(&lines, "context")
+            .into_iter()
+            .filter(|line| line.starts_with("(context target.timer "))
+            .collect::<Vec<_>>(),
+        ["(context target.timer (interrupt timer) initialisation)"]
+    );
+    for owed in [
+        "(owed (timer) compare-rounding (by catalog))",
+        "(owed (epoch) epoch-lead (by catalog))",
+    ] {
+        assert!(lines.contains(&owed.to_owned()), "{owed}");
+    }
+    assert!(!lines.iter().any(|line| line.contains("last-act-lead")));
+    assert!(headed(&lines, "clock").is_empty() && headed(&lines, "alarm").is_empty());
+    assert!(!lines.iter().any(|line| line.contains("simulat")));
+    // The epoch stands before the timer, as §3's forms order them.
+    let at = |head: &str| {
+        lines
+            .iter()
+            .position(|line| archogen_plan::identity::head(line) == head)
+    };
+    assert!(at("epoch") < at("timer") && at("timer") < at("enabled"));
+}
+
+/// A system no task of which the timer releases: `(timer none)`, `(epoch none)` with no alarm, no `timer` enabled, and
+/// neither the rounding nor the lead owed (§4; RP11-1, RP35-1).
+#[test]
+fn a_system_with_no_timed_task_has_no_timer_and_no_epoch() {
+    let lines = so_far(SPORADIC, &two_channels());
+    assert_eq!(headed(&lines, "timer"), ["(timer none)"]);
+    assert_eq!(headed(&lines, "epoch"), ["(epoch none)"]);
+    assert_eq!(
+        headed(&lines, "enabled"),
+        ["(enabled (source target.button))"]
+    );
+    assert!(!lines
+        .iter()
+        .any(|line| line.contains("compare-rounding") || line.contains("epoch-lead")));
+}
+
+/// An alarm on a target: its device's counter as `COUNTER` writes it in place of `SIMULATED`, its kind the device's; its
+/// `lag` owed, as `alarm::owes` asks of an alarm on a target; the release timer's device naming both interrupts; and
+/// `last-act-lead` owed of the epoch with any alarm (§3, §4).
+#[test]
+fn an_alarm_on_a_target_writes_its_counter_and_owes_its_lag() {
+    let lines = so_far(WAITER, &two_channels());
+    assert_eq!(
+        headed(&lines, "alarm"),
+        ["(alarm wait (device target.timer) (tick-rate 10000000) (modulus (pow2 64)) (reach 1844674407370 s) (step 1) (window magnitude) (kind level-compare) (time-base counter) (horizon none) (delivery-bound none) (asked-reach none))"]
+    );
+    assert_eq!(
+        headed(&lines, "route"),
+        ["(route 1 (alarm wait) (separation programmed) (level machine) (deliverable yes) (requesters wait) (costs))"]
+    );
+    assert_eq!(headed(&lines, "enabled"), ["(enabled timer (alarm wait))"]);
+    assert!(lines.contains(
+        &"(context target.timer job (interrupt (alarm wait)) (interrupt timer) initialisation)"
+            .to_owned()
+    ));
+    for owed in [
+        "(owed (alarm wait) lag (by realization))",
+        "(owed (epoch) last-act-lead (by realization))",
+        "(owed (epoch) epoch-lead (by catalog))",
+        "(owed (timer) compare-rounding (by catalog))",
+    ] {
+        assert!(lines.contains(&owed.to_owned()), "{owed}");
+    }
+    // A target's device states its rate and modulus, so the description owes neither, and no clock line is written.
+    assert!(!lines
+        .iter()
+        .any(|line| line.contains(" tick-rate (by description)")
+            || line.contains(" counter-modulus (by description)")));
+    assert!(headed(&lines, "clock").is_empty());
+    // The release requester is no node and takes no alarm.
+    assert!(!lines.iter().any(|line| line.contains("(alarm (release ")));
+}
+
+/// The plan on a target is still refused past every stage built, now naming the leaves left: no plan short of its regions,
+/// memory and controller is returned as whole.
+#[test]
+fn a_plan_on_a_target_names_the_leaves_it_waits_on() {
+    let refusal = on(&riscv_virt_up(), None, None).expect_err("refused");
+    assert_eq!(refusal.code, "tool-failure");
+    assert!(
+        refusal.message.contains("M4.1.7.6.7.3") && refusal.message.contains("M4.1.7.6.8"),
+        "{refusal}"
     );
 }

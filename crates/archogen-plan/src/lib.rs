@@ -505,6 +505,8 @@ struct Body {
     /// Each task by its name in its system and its text, `(task SYSTEM NAME)`, in runtime index order: what an
     /// application's file is said of, and the order its `(task-inputs …)` lines stand in (§3, "Orders").
     task_order: Vec<(String, String)>,
+    /// On a target, its time (leaf `M4.1.7.6.7.2`); none on the playground.
+    time: Option<Time>,
 }
 
 /// What `/2` writes of a body's alarms (`decision_runtime-plan-format-2.md` §3; `decision_release-alarm.md` §2 and §3):
@@ -577,6 +579,23 @@ pub struct Generation<'a> {
     pub records: &'a [(String, Digest)],
 }
 
+/// Where a `/2` plan stands, and the lines that place writes (`decision_runtime-plan-format-2.md` §1 and §3): the hosted
+/// playground's, or a target's.
+struct Place {
+    /// The `(target …)` line.
+    target: String,
+    /// The `(catalog …)` line.
+    catalog: String,
+    /// The `(epoch …)` line.
+    epoch: String,
+    /// The `(timer …)` line.
+    timer: String,
+    /// Whether its `(region …)` lines are written yet: a hosted plan's are; a target's are `M4.1.7.6.7.3`'s.
+    regions: bool,
+    /// What the place owes beside the rest: a target's time.
+    owed: Vec<String>,
+}
+
 impl Body {
     /// `archogen-runtime-plan/1`'s text (§3): the lines, in the format's order, each ending in a line feed.
     fn write_one(&self) -> String {
@@ -620,19 +639,72 @@ impl Body {
         generation: &Generation<'_>,
         application: Option<&inputs::Lines>,
     ) -> String {
+        self.write_two(
+            &Place {
+                target: "(target hosted-playground)".to_string(),
+                catalog: format!(
+                    "(catalog \"{}\" none)",
+                    identity::catalog_digest(generation.records).hex()
+                ),
+                epoch: "(epoch simulator)".to_string(),
+                timer: format!("(timer simulator {})", list("releases", &self.releases)),
+                regions: true,
+                owed: Vec::new(),
+            },
+            generation,
+            application,
+        )
+    }
+
+    /// `archogen-runtime-plan/2`'s text on a target as far as it is built (`decision_runtime-plan-format-2.md` §1 and §3;
+    /// leaves `M4.1.7.6.7.1` and `.2`): the target's and the catalog's lines, its time, and every line it shares with a
+    /// hosted plan, an alarm's `COUNTER` and its `lag` among them; its regions, placement, memory and controller are
+    /// `M4.1.7.6.7.3` and `M4.1.7.6.8`'s.
+    fn write_two_on_target(
+        &self,
+        target: &TargetLines,
+        generation: &Generation<'_>,
+        application: Option<&inputs::Lines>,
+    ) -> Result<String, Refusal> {
+        let time = self.time.as_ref().ok_or_else(|| {
+            refuse(
+                "tool-failure",
+                "a body lowered on a target holds no time (§4)",
+            )
+        })?;
+        Ok(self.write_two(
+            &Place {
+                target: target.target.clone(),
+                catalog: target.catalog.clone(),
+                epoch: time.epoch.clone(),
+                timer: time.timer.clone(),
+                regions: false,
+                owed: time.owed.clone(),
+            },
+            generation,
+            application,
+        ))
+    }
+
+    /// `archogen-runtime-plan/2`'s text (§3), `place` saying where it stands: `/1`'s lines in §3's order, with the place's
+    /// own, each alarm's and clock's line, a route for each alarm and what an alarm changes of the enabled line, the
+    /// contexts and the obligations (leaf `M4.1.7.6.5`), the application's lines (`.6`), and §3's owed lines.
+    fn write_two(
+        &self,
+        place: &Place,
+        generation: &Generation<'_>,
+        application: Option<&inputs::Lines>,
+    ) -> String {
         let mut lines = vec![
             format!("(format \"{FORMAT_2}\")"),
             format!("(profile {})", self.profile),
             format!("(system {})", self.system),
-            "(target hosted-playground)".to_string(),
+            place.target.clone(),
             format!("(program \"{}\")", self.program),
             format!("(assignment \"{}\")", self.assignment),
             format!("(adapters {})", self.adapters),
             format!("(emitter {})", generation.emitter),
-            format!(
-                "(catalog \"{}\" none)",
-                identity::catalog_digest(generation.records).hex()
-            ),
+            place.catalog.clone(),
         ];
         if let Some(application) = application {
             lines.push(application.application.clone());
@@ -652,17 +724,16 @@ impl Body {
         }
         lines.extend(self.binds.iter().cloned());
         lines.extend(self.instances.iter().cloned());
-        lines.push("(epoch simulator)".to_string());
-        lines.push(format!(
-            "(timer simulator {})",
-            list("releases", &self.releases)
-        ));
+        lines.push(place.epoch.clone());
+        lines.push(place.timer.clone());
         lines.extend(self.two.alarms.iter().cloned());
         lines.extend(self.two.clocks.iter().cloned());
         lines.extend(self.two.routes.iter().cloned());
         lines.push(list("enabled", &self.two.enabled));
         lines.push("(interrupt-model (nesting no) (masking all))".to_string());
-        lines.extend(self.regions.iter().cloned());
+        if place.regions {
+            lines.extend(self.regions.iter().cloned());
+        }
         lines.extend(self.nodes.iter().cloned());
         lines.extend(self.two.contexts.iter().cloned());
         lines.extend(self.depends.iter().cloned());
@@ -691,6 +762,7 @@ impl Body {
             .iter()
             .filter(|line| !line.starts_with("(owed (timer-route "))
             .chain(&self.owed_by_two)
+            .chain(&place.owed)
             .filter(|line| !stated.contains(*line))
             .cloned()
             .collect();
@@ -773,20 +845,7 @@ pub fn lower_hosted(
     generation: &Generation<'_>,
     application: Option<&ApplicationFile<'_>>,
 ) -> Result<String, Refusal> {
-    if generation.emitter.is_empty()
-        || !generation
-            .emitter
-            .chars()
-            .all(|c| c.is_ascii_alphanumeric() || matches!(c, '-' | '/' | '.' | '_'))
-    {
-        return Err(refuse(
-            "tool-failure",
-            format!(
-                "the emitter's version `{}` is no single atom, as `(emitter …)` writes one",
-                generation.emitter
-            ),
-        ));
-    }
+    emitter_checked(generation)?;
     // §7: the application's file not reading, or naming another format, before anything of the record (RP34-3, RP35-4).
     let application = match application {
         None => None,
@@ -864,6 +923,25 @@ pub fn lower_hosted(
         )
     })?;
     Ok(text)
+}
+
+/// The emitter's version, which `(emitter …)` writes as one atom, or `tool-failure`.
+fn emitter_checked(generation: &Generation<'_>) -> Result<(), Refusal> {
+    if generation.emitter.is_empty()
+        || !generation
+            .emitter
+            .chars()
+            .all(|c| c.is_ascii_alphanumeric() || matches!(c, '-' | '/' | '.' | '_'))
+    {
+        return Err(refuse(
+            "tool-failure",
+            format!(
+                "the emitter's version `{}` is no single atom, as `(emitter …)` writes one",
+                generation.emitter
+            ),
+        ));
+    }
+    Ok(())
 }
 
 /// A target's file as a lowering on it is handed one (`decision_runtime-plan-format-2.md` §1; leaf `M4.1.7.6.7.1`).
@@ -993,13 +1071,14 @@ pub fn target_lines(
     lines_of(&a_target(file, kinds, vocabulary)?, generation)
 }
 
-/// The executable form's `/2` lowering on a target (`decision_runtime-plan-format-2.md` §1 and §7; leaf `M4.1.7.6.7.1`): an
-/// `archogen-assignment/3` record resolved on `target`, lowered over `program` with the target's platform in the system's own's place, as
-/// `on_target` gives it. No command reaches it: nothing but a test may call it, as for [`lower`].
+/// The executable form's `/2` lowering on a target (`decision_runtime-plan-format-2.md` §1 and §7; leaves `M4.1.7.6.7.1` and
+/// `.2`): an `archogen-assignment/3` record resolved on `target`, lowered over `program` with the target's platform in the
+/// system's own's place, as `on_target` gives it. No command reaches it: nothing but a test may call it, as for [`lower`].
 ///
-/// ⚠️ **It writes no plan yet.** A plan on a target's timer, epoch and alarms' lines, its regions and what it owes are leaves
-/// `M4.1.7.6.7.2` and `.3`'s, so after every refusal §7 places before them it refuses `tool-failure`, naming the leaf, rather than return a
-/// plan short of them as if whole. [`target_lines`] gives what it writes of the target meanwhile.
+/// ⚠️ **It writes no plan yet.** A plan on a target's regions and placement, its memory and its controller, and what a
+/// target adds to what it owes, are leaves `M4.1.7.6.7.3` and `M4.1.7.6.8`'s, so after every refusal §7 places before them
+/// it refuses `tool-failure`, naming the leaves, rather than return a plan short of them as if whole.
+/// [`on_target_so_far`] gives what is written meanwhile, and [`target_lines`] the target's own lines.
 ///
 /// # Errors
 ///
@@ -1007,7 +1086,8 @@ pub fn target_lines(
 /// `invalid-description`; then `/1`'s list, the record not reading `tool-failure`, a record of the other kind or of another target's digest
 /// `stale-input` with the program's digest, another platform beside the file's own digest `tool-failure`, the rest of `/1`'s list with the
 /// joint rules' findings over the target's hardware `tool-failure`; then the application's `(target …)` other than the plan's and each thing
-/// `unmet` reports, `invalid-description`; then `tool-failure`, the rest of the plan being unwritten.
+/// `unmet` reports, `invalid-description`; and `tool-failure` for an emitter's version that is no single atom, a count the
+/// format cannot write, and the rest of the plan being unwritten.
 #[allow(clippy::too_many_arguments)]
 pub fn lower_on_target(
     program: &Program,
@@ -1019,6 +1099,89 @@ pub fn lower_on_target(
     generation: &Generation<'_>,
     application: Option<&ApplicationFile<'_>>,
 ) -> Result<String, Refusal> {
+    on_target_body(
+        program,
+        record,
+        target,
+        kinds,
+        vocabulary,
+        catalog,
+        generation,
+        application,
+    )?;
+    Err(refuse(
+        "tool-failure",
+        "a plan on a target's regions and placement, its memory and its controller, and what a target adds to what it owes are written by task-tree leaves M4.1.7.6.7.3 and M4.1.7.6.8, not built yet",
+    ))
+}
+
+/// What a plan on a target holds so far: its text as the leaves built write it, which is not yet a whole plan
+/// ([`on_target_so_far`]).
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct OnTargetSoFar {
+    text: String,
+}
+
+impl OnTargetSoFar {
+    /// The text written so far, each line a form, in §3's order, and short of the lines `M4.1.7.6.7.3` and `M4.1.7.6.8`
+    /// write.
+    #[must_use]
+    pub fn text(&self) -> &str {
+        &self.text
+    }
+}
+
+/// A plan on a target as far as it is built (leaf `M4.1.7.6.7.2`): every refusal [`lower_on_target`] makes, then the text
+/// those leaves write, the target's lines, its time, and what it shares with a hosted plan, for a reader to hold before
+/// the rest is written. Not a plan: its regions, placement, memory, controller and a target's owed lines are missing.
+///
+/// # Errors
+///
+/// [`lower_on_target`]'s refusals but the last, and `tool-failure` for a text not written as `/2`'s §3 writes one.
+#[allow(clippy::too_many_arguments)]
+pub fn on_target_so_far(
+    program: &Program,
+    record: &str,
+    target: &TargetFile<'_>,
+    kinds: &Registry,
+    vocabulary: &Vocabulary,
+    catalog: &Catalog,
+    generation: &Generation<'_>,
+    application: Option<&ApplicationFile<'_>>,
+) -> Result<OnTargetSoFar, Refusal> {
+    let (body, lines, application) = on_target_body(
+        program,
+        record,
+        target,
+        kinds,
+        vocabulary,
+        catalog,
+        generation,
+        application,
+    )?;
+    let text = body.write_two_on_target(&lines, generation, application.as_ref())?;
+    written_as_two(&text).map_err(|why| {
+        refuse(
+            "tool-failure",
+            format!("the lowering wrote a `/2` plan not written as §3 writes one: {why}"),
+        )
+    })?;
+    Ok(OnTargetSoFar { text })
+}
+
+/// [`lower_on_target`]'s stages, in §7's order, and what they give: the body, the target's lines and the application's.
+#[allow(clippy::too_many_arguments)]
+fn on_target_body(
+    program: &Program,
+    record: &str,
+    target: &TargetFile<'_>,
+    kinds: &Registry,
+    vocabulary: &Vocabulary,
+    catalog: &Catalog,
+    generation: &Generation<'_>,
+    application: Option<&ApplicationFile<'_>>,
+) -> Result<(Body, TargetLines, Option<inputs::Lines>), Refusal> {
+    emitter_checked(generation)?;
     let read_target = a_target(target, kinds, vocabulary)?;
     // §7: then the application's file not reading, or naming another format, the realization's being none (RP34-3, RP35-4).
     let application = match application {
@@ -1122,10 +1285,10 @@ pub fn lower_on_target(
             ));
         }
     }
-    Err(refuse(
-        "tool-failure",
-        "a plan on a target's timer, epoch and alarms' lines, its regions and what it owes are written by task-tree leaves M4.1.7.6.7.2 and M4.1.7.6.7.3, not built yet",
-    ))
+    let written = application
+        .as_ref()
+        .map(|(file, inputs)| inputs::lines(file.text, inputs));
+    Ok((body, lines, written))
 }
 
 /// A lowering's body (§1 to §2.10): the record refused as §1 refuses it, or what `/1` writes of it, beside the result
@@ -2149,6 +2312,27 @@ fn body(
         .iter()
         .map(|task| joint::task_name(&system, &task.name))
         .collect();
+    // On a target, the device the release requester is bound to, the release timer's (`decision_release-alarm.md` §1),
+    // every binding of it at one device, rule 13 holding its facts of the function `counter` to one block.
+    let release_name = joint::release_name(&system);
+    let release_devices: BTreeSet<&str> = rebuilt
+        .bindings
+        .iter()
+        .filter(|b| there.is_some() && b.requester == release_name)
+        .map(|b| b.provider.as_str())
+        .collect();
+    if release_devices.len() > 1 {
+        return Err(refuse(
+            "tool-failure",
+            format!(
+                "the release requester of `{system}` is bound at more than one device (rule 13)"
+            ),
+        ));
+    }
+    let release_device = release_devices.into_iter().next();
+    let release = there.map(|_| Release {
+        device: release_device,
+    });
     let (two, owed_by_alarms) = alarms_of(
         &routes,
         &contexts,
@@ -2160,7 +2344,61 @@ fn body(
         vocabulary,
         catalog,
         &task_names,
+        release.as_ref(),
     )?;
+    // On a target, its time (§3's `(timer …)` and `(epoch …)`, §4; leaf `M4.1.7.6.7.2`): the release timer's line, its
+    // device's counter as `COUNTER` writes it, its `unambiguous-horizon` derived of that counter, its rounding owed until a
+    // catalog record states it; or `(timer none)` where no task is released by the timer; then the epoch's line, and what
+    // each owes.
+    let time = match there {
+        None => None,
+        Some(_) => {
+            let timer = match release_device {
+                None if !releases.is_empty() => {
+                    return Err(refuse(
+                        "tool-failure",
+                        format!("a task of `{system}` is released by the timer, and no release requester is bound (§3)"),
+                    ))
+                }
+                None => "(timer none)".to_string(),
+                Some(device) => {
+                    let (counted, _) = counter_line(device, declarations, vocabulary)?;
+                    let (rate, modulus) = counter_of(device, declarations, vocabulary);
+                    let horizon = rate
+                        .zip(modulus)
+                        .and_then(|(rate, modulus)| eadl_resolve::value::horizon(modulus, rate).ok())
+                        .and_then(|horizon| horizon.in_base().ok())
+                        .ok_or_else(|| {
+                            refuse(
+                                "tool-failure",
+                                format!(
+                                    "the release timer's device `{device}` has no `unambiguous-horizon` its counter derives (§3)"
+                                ),
+                            )
+                        })?;
+                    format!(
+                        "(timer (device {}) {counted} (horizon {}) (rounding owed) (first-compare transition) {})",
+                        names.text(device),
+                        duration(horizon),
+                        list("releases", &releases)
+                    )
+                }
+            };
+            let alarmed = !two.alarms.is_empty();
+            let epoch = alarm::epoch_line(false, release_device.is_some(), alarmed, "owed");
+            let mut owed = Vec::new();
+            if release_device.is_some() {
+                owed.push("(owed (timer) compare-rounding (by catalog))".to_string());
+            }
+            if epoch.contains("(lead owed)") {
+                owed.push("(owed (epoch) epoch-lead (by catalog))".to_string());
+            }
+            if alarmed {
+                owed.push("(owed (epoch) last-act-lead (by realization))".to_string());
+            }
+            Some(Time { timer, epoch, owed })
+        }
+    };
     let task_order: Vec<(String, String)> = tasks
         .iter()
         .map(|task| {
@@ -2194,6 +2432,7 @@ fn body(
             regions: region_lines,
             two,
             task_order,
+            time,
         },
         accepted,
     ))
@@ -2235,6 +2474,146 @@ fn counter_of(
     (rate, modulus)
 }
 
+/// What `device`, as `declarations` hold it, states of `fact`, where it states a value.
+fn stated(
+    device: &str,
+    declarations: &[Form],
+    vocabulary: &Vocabulary,
+    fact: &str,
+) -> Option<Value> {
+    declarations
+        .iter()
+        .find(|d| d.items().get(1).and_then(Form::as_symbol) == Some(device))
+        .and_then(|d| offer::read(d, vocabulary).ok())
+        .and_then(|provider| match provider.state(fact) {
+            Some(State::Valued(values)) => values.first().cloned(),
+            _ => None,
+        })
+}
+
+/// A rate in hertz as §3's `R` writes one, exact, a whole number or `N/D` in lowest terms; nothing where it is none the
+/// format writes.
+fn rate_text(rate: Quantity) -> Option<String> {
+    let hertz = rate.in_base().ok()?;
+    let numerator = u128::try_from(hertz.numerator()).ok()?;
+    let denominator = u128::try_from(hertz.denominator())
+        .ok()
+        .and_then(std::num::NonZeroU128::new)?;
+    Some(alarm::rate(numerator, denominator))
+}
+
+/// A target device's counter as §3's `COUNTER` writes it, `(tick-rate R) (modulus M) (reach DUR) (step S) (window W)`,
+/// and its `KIND`, its `alarm-kind` (`decision_runtime-plan-format-2.md` §3, `COUNTER` and `KIND`; leaf `M4.1.7.6.7.2`):
+/// each as the device states it, unconverted, `W` `magnitude` where it states `(compare-magnitude true)` and no window
+/// written on a delay; `reach` its `supported-horizon`. The search asks each of a device it binds for a compare
+/// (`decision_release-alarm.md` §1 and §2), so a device stating none of one, which no checked plan holds, is a toolchain
+/// failure here.
+fn counter_line(
+    device: &str,
+    declarations: &[Form],
+    vocabulary: &Vocabulary,
+) -> Result<(String, String), Refusal> {
+    let unstated = |fact: &str| {
+        refuse(
+            "tool-failure",
+            format!(
+                "the target's device `{device}` states no `{fact}`, which the search asks of a device it binds (§3)"
+            ),
+        )
+    };
+    let unwritable = |fact: &str| {
+        refuse(
+            "tool-failure",
+            format!("the target's device `{device}` states a `{fact}` that is no value `/2` writes (§3)"),
+        )
+    };
+    let value = |fact: &str| stated(device, declarations, vocabulary, fact);
+    let count = |fact: &str| -> Result<Option<String>, Refusal> {
+        match value(fact) {
+            None => Ok(None),
+            Some(Value::Count(c)) => u128::try_from(c)
+                .map(|c| Some(alarm::count(c)))
+                .map_err(|_| unwritable(fact)),
+            Some(_) => Err(unwritable(fact)),
+        }
+    };
+    let rate = match value("tick-rate") {
+        Some(Value::Quantity(q)) => rate_text(q).ok_or_else(|| unwritable("tick-rate"))?,
+        Some(_) => return Err(unwritable("tick-rate")),
+        None => return Err(unstated("tick-rate")),
+    };
+    let modulus = count("counter-modulus")?.ok_or_else(|| unstated("counter-modulus"))?;
+    let reach = match value("supported-horizon") {
+        Some(Value::Quantity(q)) => {
+            duration(q.in_base().map_err(|_| unwritable("supported-horizon"))?)
+        }
+        Some(_) => return Err(unwritable("supported-horizon")),
+        None => return Err(unstated("supported-horizon")),
+    };
+    let step = count("compare-step")?.ok_or_else(|| unstated("compare-step"))?;
+    let kind = match value("alarm-kind") {
+        Some(Value::Enum(kind)) => kind,
+        Some(_) => return Err(unwritable("alarm-kind")),
+        None => return Err(unstated("alarm-kind")),
+    };
+    // §3: an alarm on a delay writes no `(window …)`; a compare is read by its window, or as whole numbers (§2).
+    let window = if kind == "delay" {
+        String::new()
+    } else {
+        let window = match value("compare-window") {
+            None => None,
+            Some(Value::Count(c)) => {
+                Some(u128::try_from(c).map_err(|_| unwritable("compare-window"))?)
+            }
+            Some(_) => return Err(unwritable("compare-window")),
+        };
+        let magnitude = match value("compare-magnitude") {
+            None => None,
+            Some(Value::Bool(said)) => Some(said),
+            Some(_) => return Err(unwritable("compare-magnitude")),
+        };
+        match alarm::compare_reading(window, magnitude) {
+            alarm::Reading::Window(window) => format!(" (window {})", alarm::count(window)),
+            alarm::Reading::WholeNumbers => " (window magnitude)".to_string(),
+            alarm::Reading::Unstated => return Err(unstated("compare-window")),
+            alarm::Reading::Refused => {
+                return Err(refuse(
+                    "tool-failure",
+                    format!(
+                        "the target's device `{device}` states `(compare-magnitude true)` beside a window, which `check` refuses of the file (§2)"
+                    ),
+                ))
+            }
+        }
+    };
+    Ok((
+        format!("(tick-rate {rate}) (modulus {modulus}) (reach {reach}) (step {step}){window}"),
+        kind,
+    ))
+}
+
+/// A plan on a target's release timer (`decision_release-alarm.md` §1; `decision_runtime-plan-format-2.md` §3 and §4;
+/// leaf `M4.1.7.6.7.2`): the device the system's release requester is bound to, by the joint rules' name, or none where
+/// no task is released by the timer, `(timer none)`.
+struct Release<'a> {
+    /// The release timer's device.
+    device: Option<&'a str>,
+}
+
+/// A plan on a target's time (`decision_runtime-plan-format-2.md` §3's `(timer …)` and `(epoch …)`, §4; leaf
+/// `M4.1.7.6.7.2`): its timer's line, its epoch's, and what they owe.
+#[derive(Debug, Clone, PartialEq, Eq)]
+struct Time {
+    /// `(timer (device NODE) COUNTER (horizon DUR) (rounding FIGURE) (first-compare transition) (releases …))` or
+    /// `(timer none)`.
+    timer: String,
+    /// `(epoch after-read (lead FIGURE))`, `(epoch none (lead FIGURE))` or `(epoch none)`.
+    epoch: String,
+    /// `compare-rounding` of `(timer)` and `epoch-lead` of `(epoch)` by the catalog, where its line writes the figure
+    /// owed, and `last-act-lead` of `(epoch)` by the realization with any alarm.
+    owed: Vec<String>,
+}
+
 /// `(simulated (tick-rate R|unstated) (modulus M|unstated))` (§3, `SIMULATED`): a rate exact, in lowest terms, and a
 /// count as the language holds one.
 fn simulated(rate: Option<Quantity>, modulus: Option<i128>) -> Result<String, Refusal> {
@@ -2246,16 +2625,7 @@ fn simulated(rate: Option<Quantity>, modulus: Option<i128>) -> Result<String, Re
     };
     let rate = match rate {
         None => "unstated".to_string(),
-        Some(q) => {
-            let hertz = q.in_base().map_err(|_| unwritable("tick-rate"))?;
-            let numerator =
-                u128::try_from(hertz.numerator()).map_err(|_| unwritable("tick-rate"))?;
-            let denominator = u128::try_from(hertz.denominator())
-                .ok()
-                .and_then(std::num::NonZeroU128::new)
-                .ok_or_else(|| unwritable("tick-rate"))?;
-            alarm::rate(numerator, denominator)
-        }
+        Some(q) => rate_text(q).ok_or_else(|| unwritable("tick-rate"))?,
     };
     let modulus = match modulus {
         None => "unstated".to_string(),
@@ -2284,6 +2654,7 @@ fn alarms_of(
     vocabulary: &Vocabulary,
     catalog: &Catalog,
     tasks: &[String],
+    target: Option<&Release<'_>>,
 ) -> Result<(Two, Vec<String>), Refusal> {
     const COMPARES: [&str; 2] = ["relative-delay", "absolute-deadline"];
     let instance = |name: &str| rebuilt.instances.iter().find(|i| i.provider.name == name);
@@ -2326,7 +2697,12 @@ fn alarms_of(
         let mut takers: Vec<&str> = rebuilt
             .bindings
             .iter()
-            .filter(|b| b.provider == device && COMPARES.contains(&b.requirement.fact()))
+            .filter(|b| {
+                b.provider == device
+                    && COMPARES.contains(&b.requirement.fact())
+                    // The release requester is no node and takes no alarm: its channel is the release timer's (§3).
+                    && joint::release_of(&b.requester).is_none()
+            })
             .map(|b| b.requester.as_str())
             .collect();
         takers.sort_unstable();
@@ -2411,10 +2787,15 @@ fn alarms_of(
             let text = names.text(node);
             let at_most =
                 |value: Option<Rational>| value.map_or_else(|| "none".to_string(), duration);
+            // On a target, its device's counter as `COUNTER` writes it and its kind as the device states it; on the playground,
+            // `SIMULATED` and the simulator's level compare (§3, `COUNTER`, `SIMULATED` and `KIND`).
+            let (counted, kind) = match target {
+                Some(_) => counter_line(device, declarations, vocabulary)?,
+                None => (simulated(rate, modulus)?, "level-compare".to_string()),
+            };
             let line = format!(
-                "(alarm {text} (device {}) {} (kind level-compare) (time-base {}) (horizon {}) (delivery-bound {}) (asked-reach {}))",
+                "(alarm {text} (device {}) {counted} (kind {kind}) (time-base {}) (horizon {}) (delivery-bound {}) (asked-reach {}))",
                 names.text(device),
-                simulated(rate, modulus)?,
                 base.as_str(),
                 at_most(horizon),
                 at_most(delivery_bound),
@@ -2470,6 +2851,7 @@ fn alarms_of(
         let mut requesters: Vec<String> = route
             .requesters
             .iter()
+            .filter(|r| joint::release_of(r).is_none())
             .filter(|r| **r == alarm.node || reach(r).contains(&alarm.node))
             .map(|r| names.text(r))
             .collect();
@@ -2509,7 +2891,11 @@ fn alarms_of(
             list("costs", &route.costs)
         ));
     }
-    two.enabled = std::iter::once("timer".to_string())
+    // `timer` first, but under `(timer none)` on a target, whose release timer's interrupt is never enabled (§4; RP11-1).
+    let timer_enabled = target.is_none_or(|release| release.device.is_some());
+    two.enabled = timer_enabled
+        .then(|| "timer".to_string())
+        .into_iter()
         .chain(
             order
                 .iter()
@@ -2542,6 +2928,14 @@ fn alarms_of(
             let words = subjects.entry(subject.clone()).or_default();
             words.extend(by.iter().map(|text| format!("(interrupt (alarm {text}))")));
         }
+    }
+    // On a target the release timer's device is a node whose context holds `(interrupt timer)`, the catalog's timer service
+    // running there (§3, the paragraph on `(release SYSTEM)`; model §8 rule 12).
+    if let Some(device) = target.and_then(|release| release.device) {
+        subjects
+            .entry(device.to_string())
+            .or_default()
+            .insert("(interrupt timer)".to_string());
     }
     two.contexts = subjects
         .iter()
@@ -2576,16 +2970,21 @@ fn alarms_of(
     // unstated or an expiry asks no bound of (§3).
     for alarm in &alarms {
         let subject = format!("(alarm {})", alarm.text);
-        for fact in alarm::owes(alarm.wake, alarm.base == alarm::Base::Counter, true)
-            .into_iter()
-            .chain(AS_A_SOURCE)
+        for fact in alarm::owes(
+            alarm.wake,
+            alarm.base == alarm::Base::Counter,
+            target.is_none(),
+        )
+        .into_iter()
+        .chain(AS_A_SOURCE)
         {
             owe(&mut owed, &subject, fact, "realization");
         }
-        if !alarm.stated.0 {
+        // A `SIMULATED` line's `unstated`; a target's device states each, the search having asked it (§3).
+        if target.is_none() && !alarm.stated.0 {
             owe(&mut owed, &subject, "tick-rate", "description");
         }
-        if !alarm.stated.1 {
+        if target.is_none() && !alarm.stated.1 {
             owe(&mut owed, &subject, "counter-modulus", "description");
         }
         if !alarm.wake && !alarm.delivery {
@@ -2607,10 +3006,11 @@ fn alarms_of(
     two.asked.sort();
     two.asked.dedup();
 
-    // Each counter a hosted time base reads that no alarm's line names: a `(clock …)` line of its own (§3).
+    // Each counter a hosted time base reads that no alarm's line names: a `(clock …)` line of its own (§3), a hosted plan's
+    // alone, a target's time bases reading the target's own devices.
     let named_devices: BTreeSet<&str> = alarms.iter().map(|a| a.device.as_str()).collect();
     let mut clocks: BTreeSet<&str> = BTreeSet::new();
-    for b in &rebuilt.bindings {
+    for b in rebuilt.bindings.iter().filter(|_| target.is_none()) {
         if rebuilt.joint.reads_a_counter(b.requirement.fact())
             && instance(&b.provider).is_none()
             && !named_devices.contains(b.provider.as_str())

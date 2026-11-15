@@ -268,8 +268,17 @@ beside the file's own digest is no plan a run writes. The joint rules' findings 
 then the application's file, which names its target by the platform's name, as the plan's `(target …)` line does. What
 it writes of the target is `(target NAME "HEX")`, the platform and the digest of the file's forms, and
 `(catalog "HEX" NAME)`, the catalog's digest and the name its records go by for the machine
-(`crates/archogen-plan/tests/format2_target.rs`). The rest of a plan on a target is leaves `M4.1.7.6.7.2` and `.3`, so
-until then the lowering refuses after every refusal that comes before them, rather than return a plan short of them.
+(`crates/archogen-plan/tests/format2_target.rs`).
+
+A target's time comes next (leaf `M4.1.7.6.7.2`). The release timer's line names the device the system's release
+requester is bound to and writes its counter as the device states it, unconverted: the rate, the modulus, the farthest
+one write reaches, the compare's step and how it is read. Then come the horizon its counter gives, and the rounding,
+owed until a catalog record states it. A system no task of which the timer releases writes `(timer none)`. The epoch is
+counted from a read, its lead owed too, and `last-act-lead` is owed wherever the system has an alarm. An alarm writes
+its device's counter the same way, and owes its `lag`. The release timer's device is a node of the plan, initialised in
+its step, where the catalog's timer service runs. Until its regions, its memory and its controller are written (leaves
+`M4.1.7.6.7.3` and `M4.1.7.6.8`), the lowering on a target refuses after every refusal that comes before them, rather
+than return a plan short of them; `archogen_plan::on_target_so_far` gives what is written meanwhile, for the tests.
 No command writes a `/2` plan yet.
 
 ## From a plan to a generated system
