@@ -43,7 +43,7 @@ pub fn read(sources: &SourceMap, source: SourceId) -> (Document, Diagnostics) {
 }
 
 /// Read a record this engine writes, a plan among them. Each symbol there is a name as elaboration qualified it, the
-/// path of the modules it came through and then its own, so a tree whose every written symbol is within [`MAX_NAME`]
+/// path of the modules it came through and then its own, so a tree whose every written symbol is within `MAX_NAME`
 /// can write one past it, and what the language limits is what a person writes.
 ///
 /// # Panics

@@ -1067,6 +1067,21 @@ mdBook that is the director's window into the project.
   Verification: the seal's own proof, the gate.
   Commit: `ARCHOGEN-PROGRAM-1361 (leaf PROGRAM.146)`
 
+- ID: `PROGRAM.147`
+  Status: `done` — `2026-11-16`: the 400-commit batch's integration tier, read before the push as `scripts/push_cadence.sh` asks: `make integration` at `6525de54` → `tier integration: failed — 11 passed, 3 failed`, `book`, `plan-check-wasm` and `resolve-installed`. Each was drift inside the batch from a leaf whose per-slice checks (doctrine 22) never ran this tier, and fixing `book`'s first error showed two more behind it.
+  Goal: each failure fixed at its root before the batch is offered to the director.
+  Acceptance:
+    - [x] ROOT CAUSE — WHY and WHERE, each at `6525de54`:
+      - `git grep -n -F 'the one way [\`write\`] writes a string' 6525de54 -- crates/archogen-json/src/lib.rs` → `536`, a link the pinned rustdoc reads as both the function and the macro (`M3.5.1.6.2`, `2026-10-26`);
+      - `git ls-tree 6525de54 scripts/plan_check_wasm.sh` → `100644`, committed without its execute bit, which the tier runs it by (`M3.5.7.2`), the one script of the tiers' twelve so;
+      - `git grep -n -F 'archogen-playground-trace/3' 6525de54 -- scripts/resolve_installed.sh` → `71` and `115`, beside `crates/sim-playground/src/lib.rs:21`'s `TRACE_FORMAT` of `/4` since `M4.3.5` (`cc7e6ffe`, `2026-11-07`): the script waited for a trace no package prints;
+      - `git grep -n -F 'within [\`MAX_NAME\`]' 6525de54 -- crates/eadl-front/src/reader.rs` → `46`, and `git grep -n -F '(Self::brought_by)' 6525de54 -- crates/eadl-model/src/presence.rs` → `514`: public documentation linking private items, rustdoc having stopped at `archogen-json` before them.
+    - [x] FIX — `crates/archogen-json/src/lib.rs` ``[`write()`]``; the execute bit of `scripts/plan_check_wasm.sh`; `scripts/resolve_installed.sh` reads `TRACE_FORMAT` from the simulator's own constant and exports it to its self-test's stub, so the next move of the format moves it too; `crates/eadl-front/src/reader.rs` and `crates/eadl-model/src/presence.rs` name their private items as code, not links.
+    - [x] ADDRESSED — `RUSTDOCFLAGS="-D warnings" cargo doc --offline --no-deps --keep-going` over `docs/book/api.crates`'s seven crates → exit 0 (`target/batch400/apidoc.log`); `bash scripts/build_book.sh` → exit 0, `HTML book written` (`book.log`); `bash scripts/resolve_installed.sh --self-test` → `resolve-installed self-test: 9 pass / 0 fail (9 arms)`; `make integration` after the first three fixes → `plan-check-wasm` and `resolve-installed` passed, `book` meeting the two links fixed since (`target/batch400/integration-run2.log`).
+    - [x] NO REGRESSION — `make focused` on the committed tree, the commit's gate; `cargo fmt --all -- --check` → exit 0. ⚠️ The second `make integration` gave `self-tests: incomplete — 57 passed, and 1 could not all be run`. That was `scripts/check_host_guard.sh`'s `547 passed, 0 failed, 49 not run`, "the host stayed over the start line" while another project's rustdoc ran, which is no defect and no pass. The tier is run whole again before the batch is opened, and its result goes to the director with the push question.
+    - [x] LOCKSTEP — this leaf and the Commit Log; no chapter describes these lines.
+  Commit: `ARCHOGEN-PROGRAM-1380 (leaf PROGRAM.147)`
+
 ## Roadmap coverage map
 
 Every roadmap unit has exactly one owning tree. This table is the answer to "where does
@@ -1229,6 +1244,7 @@ leaf's outcome is its row in the Commit Log below, and a sealed leaf's full reco
 | `PROGRAM.145` | `ARCHOGEN-PROGRAM-1340 (leaf PROGRAM.145)` | **the twenty-eighth artifact cleanup**: 29.3 GB of nested cargo target directories and test scratch, `target/` from 46.1 GB to 20.2 GB |
 | `PROGRAM.127.49` | `ARCHOGEN-PROGRAM-1320 (leaf PROGRAM.127.49)` | **the host guard's review, round 49**: no defect, so the review closes; arithmetic's end said as a rule; `job_bashes`' docstring. |
 | `PROGRAM.146` | `ARCHOGEN-PROGRAM-1361 (leaf PROGRAM.146)` | **the M4 tree sealed again**, `M4.1.7.3` and `M4.1.7.4` with their leaves, so `docs/tasks/` is under its ceiling. |
+| `PROGRAM.147` | `ARCHOGEN-PROGRAM-1380 (leaf PROGRAM.147)` | **the 400-commit batch's integration tier**: five drifts inside the batch fixed, three failures and two links behind the first. |
 
 ## Changelog
 
@@ -1358,3 +1374,4 @@ leaf's outcome is its row in the Commit Log below, and a sealed leaf's full reco
 - `2026-11-14`: `PROGRAM.127.49` done: the guard's round 49 found no defect, so its review closes.
 - `2026-11-14`: `PROGRAM.144` done: `M3.4.17` sealed with its six leaves, `docs/tasks/M3.md` at 2,974 lines.
 - `2026-11-15`: `PROGRAM.145` done: the twenty-eighth artifact cleanup, `target/` from 46.1 GB to 20.2 GB, build output and test scratch alone.
+- `2026-11-16`: `PROGRAM.147` done: the batch's integration failures fixed, `book`, `plan-check-wasm` and `resolve-installed`.

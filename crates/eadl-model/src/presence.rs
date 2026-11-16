@@ -511,7 +511,7 @@ impl FactMap {
 
     /// The transitive closure of everything the requested services depend on.
     ///
-    /// Breadth-first from the requests, following `needs` edges and each part that may be bound ([`brought_by`](Self::brought_by)). A name
+    /// Breadth-first from the requests, following `needs` edges and each part that may be bound (`brought_by`). A name
     /// that needs nothing is a leaf fact; a name that needs others is a service.
     #[must_use]
     pub fn closure(&self) -> BTreeSet<String> {

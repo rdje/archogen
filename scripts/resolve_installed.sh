@@ -24,6 +24,12 @@ SELF="$0"
 case "$SELF" in /*) ;; *) SELF="$PWD/$SELF" ;; esac
 ROOT="$(git rev-parse --show-toplevel)"; cd "$ROOT"
 
+# The trace format the simulator prints, read from its own constant rather than restated here: the script waited for
+# `/3` after leaf `M4.3.5` moved it to `/4`, and passed no generated package for that (leaf `PROGRAM.147`).
+TRACE_FORMAT="$(sed -n 's/^pub const TRACE_FORMAT: &str = "\(.*\)";$/\1/p' "$(dirname "$SELF")/../crates/sim-playground/src/lib.rs")"
+[ -n "$TRACE_FORMAT" ] || { echo "resolve-installed: cannot read the simulator's TRACE_FORMAT" >&2; exit 2; }
+export TRACE_FORMAT # the self-test's stub install prints it
+
 SCRATCH="$ROOT/target/doctrine_scratch/resolve_installed"
 CASES=(
   "examples/s0-heartbeat/system.eadl|own"
@@ -68,7 +74,7 @@ run_cases() {
         note "$path: the package the install generated did not build and run"; printf '%s\n' "$trace" | sed -n '1,6p' | sed 's/^/    /' >&2
         fail=1; continue
       fi
-      if ! grep -qF '; archogen-playground-trace/3' <<< "$trace" || ! grep -qF ' release ' <<< "$trace"; then
+      if ! grep -qF "; $TRACE_FORMAT" <<< "$trace" || ! grep -qF ' release ' <<< "$trace"; then
         note "$path: the package ran, and printed no trace of a release"; fail=1; continue
       fi
       echo "  ✅ $path: built by the install, and the package it generated ran"
@@ -112,7 +118,7 @@ if [ "$1" = build ]; then
   case "${MODE:-}" in
     no-compile) echo 'not rust' > "$plan/src/main.rs" ;;
     no-trace) echo 'fn main() {}' > "$plan/src/main.rs" ;;
-    *) printf 'fn main() {\n    println!("; archogen-playground-trace/3");\n    println!("0 s release t");\n}\n' > "$plan/src/main.rs" ;;
+    *) printf 'fn main() {\n    println!("; %s");\n    println!("0 s release t");\n}\n' "$TRACE_FORMAT" > "$plan/src/main.rs" ;;
   esac
   exit 0
 fi
