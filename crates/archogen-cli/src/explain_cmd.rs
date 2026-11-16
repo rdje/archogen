@@ -17,7 +17,8 @@
 //! and no account is printed: the search can only speak for the plan it writes. Reading a directory is the command
 //! line's alone: the engine API and the MCP server take a description as text (`ROADMAP.md` §10.4).
 //!
-//! ⚠️ **Experimental.** It explains the search over a description's own blocks and platforms, as `archogen resolve` does.
+//! ⚠️ **Experimental.** It explains the search over a description's own blocks and platforms or a target's, as
+//! `archogen resolve` does.
 
 use std::io::Write;
 use std::path::Path;

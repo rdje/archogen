@@ -2240,7 +2240,7 @@ def case_what_counts_as_heavy() -> None:
     for light in (
         "ls", "cargo fmt -p x", "git commit -F m", "grep -n 'make ' Makefile", "git commit -m 'make cargo build'", "echo cargo build", "echo archogen-plan-check",
         "grep -rn archogen-plan-check docs/", "git commit -m 'x (make sure it holds)'", "git commit -F - <<'M'\nmake sure it holds\nM\n",
-        "R=/Volumes/SSD/Documents/github/archogen; mkdir -p x", "X=/y/archogen ls", "cargo --version", "rustc -V", "cargo tree", "cargo metadata", "make help", "make hooks", "make -n focused",
+        "R=/srv/work/archogen; mkdir -p x", "X=/y/archogen ls", "cargo --version", "rustc -V", "cargo tree", "cargo metadata", "make help", "make hooks", "make -n focused",
         "make focused", "mdbook --version", "python3 -c \"print('make')\"", "rg -c 'cargo' Cargo.toml", "scripts/foo.sh make", "file target/m/install/archogen", "ls # first; make sure of it",
         "cargo clean", "cargo clean -p x", "make focused>log 2>&1", "make focused;echo done", "make -j4 focused", "make -j 4 focused", "make focused integration", "command -v cargo",
         "python3 scripts/host_guard.py run --wait 1800 -- bash -c 'cd x && cargo test'", "python3 scripts/host_guard.py run --wait 1800 -- env RUST_BACKTRACE=1 cargo test",

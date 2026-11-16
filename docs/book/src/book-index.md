@@ -129,6 +129,7 @@ a change that leaves it stale, so it is never edited by hand.
   repository honest](annex-repository.md), [Annex C: Trust proof records](annex-trust-proofs.md)
 - Claims cite what they read — [Where the engine's knowledge comes from: the
   catalog](catalog.md#claims-cite-what-they-read)
+- claude-code-hooks — [What this project relies on from outside](ledger.md#claude-code-hooks)
 - **CLI** — [definition](glossary.md), [The archogen command line](cli.md), [The engine API](engine-api.md), [Verifying
   the toolchain](verification.md), [What this project relies on from outside](ledger.md), [What is versioned, and what
   changing it costs](versions.md), [Annex C: Trust proof records](annex-trust-proofs.md)

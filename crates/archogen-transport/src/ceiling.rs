@@ -77,17 +77,28 @@ fn holds(more: usize) {
 
 // SAFETY: each call is `System`'s, with what it was given; this only counts, and stops the process before a call
 // past the ceiling. It never unwinds: `holds` exits, and writes to standard error, which allocates nothing.
+//
+// A null answer gives nothing, and what was counted for it is given back, so a fallible allocation that fails holds
+// no part of the ceiling (leaf `PROGRAM.150`): an infallible one ends the process there, and `try_reserve` goes on.
 unsafe impl GlobalAlloc for Ceiling {
     unsafe fn alloc(&self, layout: Layout) -> *mut u8 {
         holds(layout.size());
         // SAFETY: as above.
-        unsafe { System.alloc(layout) }
+        let at = unsafe { System.alloc(layout) };
+        if at.is_null() {
+            HELD.fetch_sub(layout.size(), Ordering::Relaxed);
+        }
+        at
     }
 
     unsafe fn alloc_zeroed(&self, layout: Layout) -> *mut u8 {
         holds(layout.size());
         // SAFETY: as above.
-        unsafe { System.alloc_zeroed(layout) }
+        let at = unsafe { System.alloc_zeroed(layout) };
+        if at.is_null() {
+            HELD.fetch_sub(layout.size(), Ordering::Relaxed);
+        }
+        at
     }
 
     unsafe fn dealloc(&self, at: *mut u8, layout: Layout) {
@@ -97,12 +108,22 @@ unsafe impl GlobalAlloc for Ceiling {
     }
 
     unsafe fn realloc(&self, at: *mut u8, layout: Layout, new_size: usize) -> *mut u8 {
-        if new_size > layout.size() {
-            holds(new_size - layout.size());
+        let old = layout.size();
+        if new_size > old {
+            holds(new_size - old);
         } else {
-            HELD.fetch_sub(layout.size() - new_size, Ordering::Relaxed);
+            HELD.fetch_sub(old - new_size, Ordering::Relaxed);
         }
         // SAFETY: as above.
-        unsafe { System.realloc(at, layout, new_size) }
+        let moved = unsafe { System.realloc(at, layout, new_size) };
+        if moved.is_null() {
+            // The block stands where it was, at its old size.
+            if new_size > old {
+                HELD.fetch_sub(new_size - old, Ordering::Relaxed);
+            } else {
+                HELD.fetch_add(old - new_size, Ordering::Relaxed);
+            }
+        }
+        moved
     }
 }

@@ -522,6 +522,20 @@ Producer observations, normalization proofs, counterexamples and revalidation re
 | Revalidation trigger | the page documenting signatures on merges made otherwise, or the named commit's check finding a merge unsigned |
 | Named as | `About commit signature verification` |
 
+## `claude-code-hooks`
+
+| Field | Value |
+| --- | --- |
+| Source | Anthropic, Claude Code documentation, "Hooks reference" |
+| Version | the page as served on `2026-11-16`; the harness on this host `2.1.325 (Claude Code)` |
+| Pinned at | not pinned — read at `https://code.claude.com/docs/en/hooks`; no build or check reads it |
+| Retrieved | `2026-11-16` |
+| Hash | sha256 `ea5cce13a426de0fb905788fc91c910267b18df38145a38cca84d3d3ab7599a1` of the page read |
+| Scope | two sentences, for why the guard's hook in `.claude/settings.json` sets `onFailure`, which `docs/decisions/decision_host-guard.md` rests on: the field is "Whether the action that triggered the hook goes ahead when the hook fails: "continue" or "block" … Requires Claude Code v2.1.295 or later", and "Exit code 1 without valid JSON output is a non-blocking error unless the hook is one whose failure blocks the action" |
+| Known limitations | a harness older than v2.1.295 ignores the field, and a hook that raises then lets the command through; the page speaks for no other harness, which the record has `ensure` first |
+| Revalidation trigger | the harness on this host older than v2.1.295, the field renamed or its meaning changed on the page, or the hook's settings dropping it |
+| Named as | `Claude Code hooks reference` |
+
 ## `davis-burns-priority-assignment`
 
 | Field | Value |

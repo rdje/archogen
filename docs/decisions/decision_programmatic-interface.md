@@ -117,10 +117,12 @@ Both are exactly the things an API's types and its string encoding depend on.
   `mod sibling` anywhere but the executable's `main.rs`, and every `path` attribute and `include!` in production code,
   so no other module can compile it; the library's `run`, the engine API, the wasm module and the MCP server hold a
   launcher that runs nothing.
-- **The surface is thin today and must not be advertised otherwise.** Per `docs/book/src/cli.md`, only
-  `check` is built; `build` is experimental over the S0 path; `resolve`, `analyze`, `verify`, `explain`
-  and `replay` are unimplemented (`M3.4`, `M2.6`, `PROGRAM.3`, `M3.4`, `M4.7`). An MCP server shipping
-  now would expose one real capability, and the three-state maturity is what says so honestly.
+- **The surface is thin today and must not be advertised otherwise.** Per `docs/book/src/cli.md`, `check`
+  and `plan-check` are built; `resolve`, `build` and `explain` are experimental, each saying how far it reaches
+  (`M3.7`, `M4.13`); `analyze`, `verify` and `replay` are unimplemented (`M2.21.2`, `M4.11`, `M4.7`). The MCP
+  server offers `check`, `resolve`, `explain` and `replay`, the last saying it is unimplemented, and the
+  three-state maturity is what says so honestly. *Restated `2026-11-16` (leaf `PROGRAM.150`):* the paragraph had
+  stood since S0, before `M3.4.4`, `M3.4.13` and `M4.2.4` built `resolve` and `explain` and moved `build` off S0.
 - **`archogen verify` needs its own ruling before it is exposed.** It runs verification tiers, which
   invoke a toolchain and an emulator through `xtask` — side-effecting and subprocess-spawning, unlike
   everything else on this surface. It is recorded as an open question on the `API` tree rather than

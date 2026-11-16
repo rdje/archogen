@@ -377,7 +377,7 @@ pub const COMMANDS: &[CommandSpec] = &[
         // The search's own account over a description (leaf `M3.4.13.2`), offered by the engine API and the MCP server;
         // on the command line, of a build too (leaf `M4.2.3.2`).
         maturity: Maturity::Experimental {
-            scope: "one requirement of one system, over a description's own blocks and platforms",
+            scope: "one requirement of one system, over a description's own blocks and platforms or a target's",
             completed_by: "M3.7",
         },
         exposure: Exposure::Tool,

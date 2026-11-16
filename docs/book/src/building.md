@@ -271,7 +271,7 @@ $ archogen explain build/heartbeat --requirement observable-output
   `host.playground` leaves it undescribed
   bound to `console.uart` by the search's plan
 build/heartbeat: the search's plan for system `heartbeat` is the one this build holds, assignment sha256:e77556b645eea31dda156903d6ddf570d5f5fea1f7ad6e167a4eca7467bd6280, which `archogen-plan-check` accepted
-  experimental: one requirement of one system, over a description's own blocks and platforms; completed by M3.7
+  experimental: one requirement of one system, over a description's own blocks and platforms or a target's; completed by M3.7
 ```
 
 It holds the build to what `archogen build` holds an earlier one to first: every listed file and the provenance itself unchanged, and

@@ -3,7 +3,7 @@
 - **Type:** `decision`
 - **Date:** `2026-11-05`
 - **Status:** `active` — by the director's instruction, "that's critical"; written by leaf `PROGRAM.127`, reviewed in `docs/reviews/decision_host-guard-reviews.md`, closed on round 49, which found no defect
-- **External sources:** none: it reads macOS's own figures, each named below
+- **External sources:** the [Claude Code hooks reference](../book/src/ledger.md#claude-code-hooks), for the hook's `onFailure`; otherwise none: it reads macOS's own figures, each named below
 - **Owner / source:** leaf `PROGRAM.127` (`docs/tasks/PROGRAM.md`), the director's words of `2026-11-05`: the machine is shared with many other projects, it holds 24 GB, RAM use above 88% is the danger zone, and above 90% the host might crash.
 
 ## The fact / decision

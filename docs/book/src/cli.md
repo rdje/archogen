@@ -38,7 +38,7 @@ COMMANDS:
     build       generate, assemble and build a complete system and its simulator   [experimental — the hosted playground: the plan's releases run, and no job holds application code; completed by leaf M4.13]
     analyze     run an analysis for one named property over a build   [unimplemented — tracked by leaf M2.21.2]
     verify      run a verification tier over a build   [unimplemented — tracked by leaf M4.11]
-    explain     explain how one requirement was realized, or why it could not be   [experimental — one requirement of one system, over a description's own blocks and platforms; completed by leaf M3.7]
+    explain     explain how one requirement was realized, or why it could not be   [experimental — one requirement of one system, over a description's own blocks and platforms or a target's; completed by leaf M3.7]
     replay      replay a recorded failure manifest and check its identity   [unimplemented — tracked by leaf M4.7]
     mcp         serve the engine API to an agent over MCP, on standard input and output
 ```
@@ -241,7 +241,7 @@ $ archogen explain system.eadl --requirement observable-output
   `host.playground` leaves it undescribed
   bound to `console.uart` by the search's plan
 system.eadl: the plan of system `heartbeat` is the search's, unchecked: `archogen resolve` runs the configuration checker over the plan it writes
-  experimental: one requirement of one system, over a description's own blocks and platforms; completed by M3.7
+  experimental: one requirement of one system, over a description's own blocks and platforms or a target's; completed by M3.7
 ```
 
 When no plan is written it says why — `no provider meets it`, with the search's own diagnostic, or `met alone`, with

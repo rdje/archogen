@@ -1106,17 +1106,23 @@ mdBook that is the director's window into the project.
   Commit: `ARCHOGEN-PROGRAM-1388 (leaf PROGRAM.149)` filed it; `ARCHOGEN-PROGRAM-1389 (leaf PROGRAM.149)` closes it.
 
 - ID: `PROGRAM.150`
-  Status: `pending` — filed `2026-11-16` by `PROGRAM.149`, from the batch review's findings the lead confirmed (`target/batches/summary-10861334.md`, "From the lead").
-  Goal: each confirmed finding fixed at its root:
-    - `docs/decisions/decision_programmatic-interface.md:120-123` says only `check` is built, `build` over S0 and `resolve` and `explain` unimplemented, which `M4.2.4`, `M3.4.4` and `M3.4.13` made untrue;
-    - `explain`'s maturity, `crates/archogen-cli/src/spec.rs:380`, and `crates/archogen-cli/src/explain_cmd.rs:20` say it searches "a description's own blocks and platforms", where `--target` has added a target's since `M4.1.7.5.3`, and `docs/book/src/cli.md:41` and `:244` print it;
-    - `crates/archogen-transport/src/ceiling.rs`'s `alloc`, `alloc_zeroed` and `realloc` count before `System` answers, and keep the count when it answers null, so a fallible allocation that fails holds the ceiling lower than it is, erring safe;
-    - `scripts/selftest_host_guard.py:2243` holds this host's absolute path in a command string the classifier is tested on, where a neutral one tests the same;
-    - `docs/decisions/decision_host-guard.md:64` rests on Claude Code's `onFailure`, which its hooks reference documents from v2.1.295, and no ledger entry says so.
-  Acceptance: each item's root cause, fix and evidence in this leaf's checklist; `make focused`; the trust inventory where root code moves; the guard's self-test where it moves.
+  Status: `done` — `2026-11-16`: the batch review's findings the lead confirmed (`target/batches/summary-10861334.md`, "From the lead"), each fixed at its root. Filed for the next batch, it joins this one: pull request #1's checks failed (`PROGRAM.151`), so the batch takes local `main`'s commits by `update` before any approval.
+  Goal: each confirmed finding fixed at its root.
+  Acceptance:
+    - [x] ROOT CAUSE — WHY and WHERE, each at `a3041ab8`:
+      - `docs/decisions/decision_programmatic-interface.md:120-123` said only `check` built, `build` over S0, `resolve` and `explain` unimplemented: written in S0's time, and no leaf since (`M3.4.4`, `M3.4.13`, `M4.2.4`) read it again;
+      - `crates/archogen-cli/src/spec.rs:234` gave `resolve` "or a target's" in `M4.1.7.5.3` (`db95bdda`), and `:380` left `explain`'s scope as it was, `explain_cmd.rs:20`, `docs/book/src/cli.md:41` and `:244` and `docs/book/src/building.md:274` with it;
+      - `crates/archogen-transport/src/ceiling.rs`'s `alloc`, `alloc_zeroed` and `realloc` counted before `System` answered and kept the count when it answered null;
+      - `scripts/selftest_host_guard.py:2243` held this host's absolute path in a command string (`ff41eab2`);
+      - `docs/decisions/decision_host-guard.md` said "External sources: none" while its hook rests on Claude Code's `onFailure`, which `docs/book/src/ledger.md` held no entry for.
+    - [x] FIX — the record's paragraph restated as the surface stands, dated; `explain`'s scope "or a target's" in `spec.rs`, `explain_cmd.rs` and both chapters; the allocator gives back what a null answer counted, a block that `realloc` refuses standing at its old size; the self-test's string `R=/srv/work/archogen; mkdir -p x`; the ledger's entry `claude-code-hooks`, the page's sha256 `ea5cce13…` and its two sentences, cited from the record's header.
+    - [x] ADDRESSED — `cargo test -q -p archogen-transport --test ceiling_null` → `test result: ok. 1 passed`, and without the fix → `left: Some(14)`, `right: Some(0)`, the child stopped at its ceiling (`target/p150/red.log`, `green.log`); `bash scripts/check_source_ledger.sh` → `source-ledger: OK (37 entries; 11 pin(s), each carried by its entry; every naming document cites it)`; the guard's own classifier reads the old string, the new and a heavy control as `False`, `False`, `True`.
+    - [x] NO REGRESSION — `bash scripts/check_host_guard.sh --self-test` on the staged tree → `host-guard self-test: 1318 passed, 0 failed, 0 not run` (`target/p150/guard-selftest.log`); `cargo fmt --all -- --check` → exit 0; `make focused` on the staged tree, the commit's gate; the trust inventory on a commit of it.
+    - [x] LOCKSTEP — the record, the two chapters, the ledger, this leaf, the Commit Log, `MEMORY.md`.
+  Commit: `ARCHOGEN-PROGRAM-1390 (leaf PROGRAM.150)`
 
 - ID: `PROGRAM.151`
-  Status: `blocked` — on the director: pull request [#1](https://github.com/rdje/archogen/pull/1)'s checks, approval and merge. Filed `2026-11-16` by `PROGRAM.149`.
+  Status: `in_progress` — pull request [#1](https://github.com/rdje/archogen/pull/1)'s required checks failed on the runner, `focused`, `catalog-check` and `trust-gate` (`target/p151/ci/`); each is repaired on local `main` and added by `update` before the director's approval and merge. Filed `2026-11-16` by `PROGRAM.149`.
   Goal: once the batch merges, `bash scripts/open_batch.sh sync` brings local `main` back in step, its merge changing no file (`decision_main-protection.md` §3, step 6); a failing check fixed on local `main` and added by `bash scripts/open_batch.sh update --summary <file>` first.
   Acceptance: `bash scripts/open_batch.sh sync` → exit 0; `git merge-base --is-ancestor origin/main HEAD`; `bash scripts/push_cadence.sh` counting from the merge.
 
@@ -1185,9 +1191,8 @@ roadmap item X live?".
 
 | Order | Leaf | Status | Why next |
 | --- | --- | --- | --- |
-| 1 | `PROGRAM.150` | `pending` | the batch review's confirmed findings, for the next batch |
-| 2 | `PROGRAM.151` | `blocked` | the batch, pull request #1, waits on its checks and the director's approval and merge; then `sync` |
-| 3 | `PROGRAM.34` | `pending` | **low, awaiting the director** — nine repositories nested in `vendor/linkedspec` are off their recorded commits since the `2026-09-27` adoption, and `REPOSITORY-BOUNDARY` sees only the first level; the restore discards third-party working trees, so it waits for a yes |
+| 1 | `PROGRAM.151` | `in_progress` | pull request #1's required checks failed on the runner: the launcher on Linux, the catalog check's checkout, the trust gate's forms and baseline |
+| 2 | `PROGRAM.34` | `pending` | **low, awaiting the director** — nine repositories nested in `vendor/linkedspec` are off their recorded commits since the `2026-09-27` adoption, and `REPOSITORY-BOUNDARY` sees only the first level; the restore discards third-party working trees, so it waits for a yes |
 
 The PROGRAM.151 row is the batch's landing, and the PROGRAM.34 row waits on the director's yes. The other open leaf, `PROGRAM.78`, is blocked until the
 features are complete, by the ruling against mutation testing. Every closed
@@ -1288,6 +1293,7 @@ leaf's outcome is its row in the Commit Log below, and a sealed leaf's full reco
 | `PROGRAM.148` | `ARCHOGEN-PROGRAM-1381 (leaf PROGRAM.148)` | **the twenty-ninth artifact cleanup**: `target/` from 36.9 GB to 22.9 GB, build output and test scratch alone. |
 | `PROGRAM.149` | `ARCHOGEN-PROGRAM-1388 (leaf PROGRAM.149)` | **the batch filed**: the director's yes; the tier and a fresh review at its tip, then its pull request. |
 | `PROGRAM.149` | `ARCHOGEN-PROGRAM-1389 (leaf PROGRAM.149)` | **the batch opened**, pull request #1, 409 commits at `10861334`, the integration tier passed at its tip; the review's confirmed findings filed as `PROGRAM.150`, the landing as `PROGRAM.151`. |
+| `PROGRAM.150` | `ARCHOGEN-PROGRAM-1390 (leaf PROGRAM.150)` | **the batch review's findings fixed**: the surface's record, `explain`'s scope, the allocator's count after a null, a host path in a test string, the hook's ledger entry. |
 
 ## Changelog
 
@@ -1421,3 +1427,4 @@ leaf's outcome is its row in the Commit Log below, and a sealed leaf's full reco
 - `2026-11-16`: `PROGRAM.148` done: the twenty-ninth artifact cleanup, `target/` from 36.9 GB to 22.9 GB.
 - `2026-11-16`: `PROGRAM.149` filed: the director's yes to the batch; the tier and a fresh review at its tip, then its pull request.
 - `2026-11-16`: `PROGRAM.149` done: the batch is pull request #1; `PROGRAM.150` filed for the review's findings, `PROGRAM.151` for the landing.
+- `2026-11-16`: `PROGRAM.150` done: the review's findings fixed; it joins pull request #1, whose required checks failed on the runner.
