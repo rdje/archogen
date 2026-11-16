@@ -16,8 +16,8 @@
 - **Active tree:** `M4` → frontier `M4.1`, the accepted runtime plan, the model's amendments done (`M4.1.2`): `/1` for
   the hosted playground; `PROGRAM` → `PROGRAM.34`, the director's.
 - **The host is shared:** every heavy job goes through `scripts/host_guard.py`, one at a time (`docs/decisions/decision_host-guard.md`). A reader's brief says so.
-- **Next action:** `M4.1.7.7`, `/2`'s and the application's readers; `M4.1.7.6.10` waits on `M4.2` and `M4.10`;
-  the 400-commit batch awaits the director's yes (integration passed at `6e128b2b`). Closed reviews: format `/2`'s
+- **Next action:** `M4.13`, `build` reading `/2` hosted with an application's file, unblocked by `M4.1.7.6`/`.7`;
+  then `M4.3.6`; the batch awaits the director's yes (integration passed at `6e128b2b`). Closed reviews: format `/2`'s
   (`M4.1.7.2`, round 39), the application inputs' (`M4.12.1`, round 20) and the host guard's (`PROGRAM.127`, round 49).
   Daily artifact cleanup next due after `2026-11-17T01:21` UTC.
 - **⏳ Blockers (the director's):** `PROGRAM.34` — a yes to restore nine nested vendored checkouts; `M1.29.4` — §7 of

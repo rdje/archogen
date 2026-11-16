@@ -300,7 +300,19 @@ copy of `riscv-virt-up`; and a sporadic system and one with two alarms on a test
 its code identity, and each frozen plan the search wrote is one the configuration checker accepts
 (`crates/archogen-plan/tests/format2_goldens.rs`). §7's order is held end to end: each pair of its places that can fail
 together gives the earlier refusal. What a realization's file and the catalog's records state, and the places only they
-decide, wait for those inputs (`M4.1.7.6.10`), and the readers of `/2` for `M4.1.7.7`. No command writes a `/2` plan yet.
+decide, wait for those inputs (`M4.1.7.6.10`). No command writes a `/2` plan yet.
+
+A consumer reads `/2` as it reads `/1`, through a reader held to the goldens and never by matching text
+(`crates/archogen-plan/src/contents2.rs`, `archogen_plan::Plan2`, leaf `M4.1.7.7`). It reads exactly the text: a line is
+taken only if writing back what was read gives its bytes, the lines stand in §3's order, and each section's lines stand in
+the order §3 gives them, so a plan has one order of its lines as it has one spelling of each. It types what a consumer
+looks inside, the target, the epoch, the timer and each alarm's counter, each route and its controller, the regions,
+the placement, the allocations and the image, and keeps as text what a consumer compares whole, the application's lines
+and a name among them. It holds the lines together as the record does: a hosted plan lays out no memory and reads the
+simulator's counters, a plan on a target writes its placement, its image and each route's controller, and an
+application's lines come together. Both lowerings read back what they write through it. Every line of every golden is
+refused with a token dropped, with a value respelled where a consumer reads one, and swapped with the next
+(`crates/archogen-plan/tests/format2_reader.rs`). The realization's file has its own reader, with its format (`M4.2`).
 
 ## From a plan to a generated system
 

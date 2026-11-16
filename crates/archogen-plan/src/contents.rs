@@ -14,7 +14,7 @@ use eadl_model::rational::Rational;
 
 /// One form of a line: an atom, a quoted text, or a list.
 #[derive(Debug, Clone, PartialEq, Eq)]
-enum Tree {
+pub(crate) enum Tree {
     Atom(String),
     Quoted(String),
     List(Vec<Tree>),
@@ -22,7 +22,7 @@ enum Tree {
 
 impl Tree {
     /// The form as §3 writes it.
-    fn text(&self) -> String {
+    pub(crate) fn text(&self) -> String {
         match self {
             Self::Atom(atom) => atom.clone(),
             Self::Quoted(text) => format!("\"{text}\""),
@@ -34,7 +34,7 @@ impl Tree {
     }
 
     /// Its head, for a list opening with an atom.
-    fn head(&self) -> Option<&str> {
+    pub(crate) fn head(&self) -> Option<&str> {
         match self {
             Self::List(items) => match items.first() {
                 Some(Self::Atom(head)) => Some(head),
@@ -45,14 +45,15 @@ impl Tree {
     }
 
     /// A list's items after its head, for the list `head` opens.
-    fn under(&self, head: &str) -> Result<&[Self], String> {
+    pub(crate) fn under(&self, head: &str) -> Result<&[Self], String> {
         match self {
             Self::List(items) if self.head() == Some(head) => Ok(&items[1..]),
             _ => Err(format!("expected `({head} …)`, found `{}`", self.text())),
         }
     }
 
-    fn atom(&self) -> Result<&str, String> {
+    /// The atom it is.
+    pub(crate) fn atom(&self) -> Result<&str, String> {
         match self {
             Self::Atom(atom) => Ok(atom),
             _ => Err(format!("expected a name, found `{}`", self.text())),
@@ -61,7 +62,7 @@ impl Tree {
 }
 
 /// One line's form: its tokens read, with nothing left over. The caller holds the line's bytes to what this read.
-fn parse(line: &str) -> Result<Tree, String> {
+pub(crate) fn parse(line: &str) -> Result<Tree, String> {
     let bytes = line.as_bytes();
     let mut at = 0;
     let tree = parse_form(line, bytes, &mut at)?;
@@ -92,12 +93,21 @@ fn parse_form(line: &str, bytes: &[u8], at: &mut usize) -> Result<Tree, String> 
             }
         }
         Some(b'"') => {
+            // A backslash takes the character after it, as the language's canonical text escapes a quote or a backslash
+            // (`eadl_front`'s printer, which `/2`'s application lines are written by); the text is kept as written, so
+            // writing it back gives its bytes. `/1` writes no backslash in a text.
             let start = *at + 1;
-            let end = line[start..]
-                .find('"')
-                .ok_or_else(|| "a text is not closed".to_owned())?;
-            *at = start + end + 1;
-            Ok(Tree::Quoted(line[start..start + end].to_owned()))
+            let mut end = start;
+            loop {
+                match bytes.get(end) {
+                    None => return Err("a text is not closed".to_owned()),
+                    Some(b'\\') => end += 2,
+                    Some(b'"') => break,
+                    Some(_) => end += 1,
+                }
+            }
+            *at = end + 1;
+            Ok(Tree::Quoted(line[start..end].to_owned()))
         }
         Some(_) => {
             let start = *at;
@@ -140,7 +150,7 @@ fn item(tree: &Tree) -> Result<Item, String> {
 }
 
 /// `INT`: a decimal integer with no sign and no leading zero.
-fn int(tree: &Tree) -> Result<u64, String> {
+pub(crate) fn int(tree: &Tree) -> Result<u64, String> {
     let text = tree.atom()?;
     let value: u64 = text
         .parse()
@@ -153,7 +163,7 @@ fn int(tree: &Tree) -> Result<u64, String> {
 }
 
 /// §2.2's duration, `N s` or `N/D s`, reduced: the two atoms it is written as.
-fn duration(number: &Tree, unit: &Tree) -> Result<Rational, String> {
+pub(crate) fn duration(number: &Tree, unit: &Tree) -> Result<Rational, String> {
     if unit.atom()? != "s" {
         return Err(format!("`{}` is no duration's unit", unit.text()));
     }
@@ -175,7 +185,7 @@ fn duration(number: &Tree, unit: &Tree) -> Result<Rational, String> {
 }
 
 /// A duration's number, as §2.2 writes it.
-fn written(value: Rational) -> String {
+pub(crate) fn written(value: Rational) -> String {
     if value.denominator() == 1 {
         value.numerator().to_string()
     } else {
@@ -184,7 +194,7 @@ fn written(value: Rational) -> String {
 }
 
 /// `(HEAD DUR)`'s duration.
-fn duration_under(tree: &Tree, head: &str) -> Result<Rational, String> {
+pub(crate) fn duration_under(tree: &Tree, head: &str) -> Result<Rational, String> {
     match tree.under(head)? {
         [number, unit] => duration(number, unit),
         _ => Err(format!("`{}` holds no one duration", tree.text())),
@@ -192,12 +202,12 @@ fn duration_under(tree: &Tree, head: &str) -> Result<Rational, String> {
 }
 
 /// The names `(HEAD NAME …)` holds, each by its text.
-fn texts_under(tree: &Tree, head: &str) -> Result<Vec<String>, String> {
+pub(crate) fn texts_under(tree: &Tree, head: &str) -> Result<Vec<String>, String> {
     Ok(tree.under(head)?.iter().map(Tree::text).collect())
 }
 
 /// `(HEAD VALUE)`'s one value, by its text.
-fn one_under(tree: &Tree, head: &str) -> Result<String, String> {
+pub(crate) fn one_under(tree: &Tree, head: &str) -> Result<String, String> {
     match tree.under(head)? {
         [value] => Ok(value.text()),
         _ => Err(format!("`{}` holds no one value", tree.text())),
@@ -251,7 +261,7 @@ pub struct Task {
     pub uses: Vec<String>,
 }
 
-fn task(items: &[Tree]) -> Result<Task, String> {
+pub(crate) fn task(items: &[Tree]) -> Result<Task, String> {
     let [index, identity, rank, release, deadline, reference, jitter, overrun, released_by, uses] =
         items
     else {
@@ -336,7 +346,7 @@ pub struct Instance {
     pub costs: Vec<String>,
 }
 
-fn instance(items: &[Tree]) -> Result<Instance, String> {
+pub(crate) fn instance(items: &[Tree]) -> Result<Instance, String> {
     let [text, obliged @ .., obligations, costs] = items else {
         return Err("an instance line holds its text, its obligations and its costs".to_owned());
     };
@@ -541,7 +551,7 @@ pub struct Contents {
 /// `(format …)`'s text and the digests' spelling (§3).
 const HEX_DIGITS: usize = 64;
 
-fn hex_under(tree: &Tree, head: &str) -> Result<String, String> {
+pub(crate) fn hex_under(tree: &Tree, head: &str) -> Result<String, String> {
     match tree.under(head)? {
         [Tree::Quoted(hex)]
             if hex.len() == HEX_DIGITS

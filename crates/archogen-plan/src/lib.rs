@@ -43,6 +43,7 @@ use eadl_resolve::vocabulary::{Usage, Vocabulary};
 pub mod alarm;
 pub mod application;
 pub mod contents;
+pub mod contents2;
 pub mod controller;
 pub mod identity;
 mod inputs;
@@ -123,6 +124,57 @@ impl Plan {
     #[must_use]
     pub fn sha256(&self) -> Digest {
         Digest::of(self.text.as_bytes())
+    }
+}
+
+/// A runtime plan of format `/2` (`docs/decisions/decision_runtime-plan-format-2.md` §3; leaf `M4.1.7.7`): its canonical
+/// text, what that text holds, read back from it by [`contents2::read`], and its code identity (§1).
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct Plan2 {
+    text: String,
+    contents: contents2::Contents,
+    code_identity: Digest,
+}
+
+impl Plan2 {
+    /// `text`, a `/2` plan's canonical text, read.
+    ///
+    /// # Errors
+    ///
+    /// Why it is not one: the line that does not read, is not written as §3 writes it, or stands out of §3's order, and
+    /// lines that do not stand together as §1 and §3 say.
+    pub fn read(text: &str) -> Result<Self, String> {
+        let contents = contents2::read(text)?;
+        let code_identity = identity::code_identity(text).map_err(|why| why.to_string())?;
+        Ok(Self {
+            text: text.to_owned(),
+            contents,
+            code_identity,
+        })
+    }
+
+    /// The plan's canonical text.
+    #[must_use]
+    pub fn text(&self) -> &str {
+        &self.text
+    }
+
+    /// What it holds.
+    #[must_use]
+    pub const fn contents(&self) -> &contents2::Contents {
+        &self.contents
+    }
+
+    /// The sha256 of its canonical text.
+    #[must_use]
+    pub fn sha256(&self) -> Digest {
+        Digest::of(self.text.as_bytes())
+    }
+
+    /// Its code identity (§1): what two plans of one code share.
+    #[must_use]
+    pub const fn code_identity(&self) -> Digest {
+        self.code_identity
     }
 }
 
@@ -877,26 +929,15 @@ impl Body {
     }
 }
 
-/// Whether `text` is written as `/2`'s §3 writes a plan, as far as a lowering can tell of its own text before `/2`'s
-/// reader is built (`M4.1.7.7`): each line a form whose head §1's table classifies, the heads in §3's order, which
-/// [`identity::LINES`] follows, and the code identity's preimage taken.
-fn written_as_two(text: &str) -> Result<(), String> {
-    let order = |head: &str| identity::LINES.iter().position(|(name, _)| *name == head);
-    let mut last = 0;
-    for line in text.lines() {
-        if !(line.starts_with('(') && line.ends_with(')')) {
-            return Err(format!("`{line}` is no form"));
-        }
-        let head = identity::head(line);
-        let at = order(head).ok_or_else(|| format!("no line of `/2` begins `{head}`"))?;
-        if at < last {
-            return Err(format!("`{line}` stands out of §3's order"));
-        }
-        last = at;
-    }
-    identity::preimage(text)
-        .map(|_| ())
-        .map_err(|why| why.to_string())
+/// `text` read back by `/2`'s own reader (leaf `M4.1.7.7`), as `/1`'s lowering reads its plan back through
+/// [`Plan::read`]: so the writer and the reader of §3 cannot part.
+fn read_back_two(text: &str) -> Result<(), Refusal> {
+    Plan2::read(text).map(|_| ()).map_err(|why| {
+        refuse(
+            "tool-failure",
+            format!("the lowering wrote a `/2` plan its own reader refuses: {why}"),
+        )
+    })
 }
 
 /// An application's file given to a lowering (`decision_runtime-plan-format-2.md` §1, "Where inputs are given"; leaf
@@ -1001,12 +1042,7 @@ pub fn lower_hosted(
         .as_ref()
         .map(|(file, inputs)| inputs::lines(file.text, inputs));
     let text = body.write_two_hosted(generation, lines.as_ref());
-    written_as_two(&text).map_err(|why| {
-        refuse(
-            "tool-failure",
-            format!("the lowering wrote a `/2` plan not written as §3 writes one: {why}"),
-        )
-    })?;
+    read_back_two(&text)?;
     Ok(text)
 }
 
@@ -1192,12 +1228,7 @@ pub fn lower_on_target(
         application,
     )?;
     let text = body.write_two_on_target(&lines, generation, application.as_ref())?;
-    written_as_two(&text).map_err(|why| {
-        refuse(
-            "tool-failure",
-            format!("the lowering wrote a `/2` plan not written as §3 writes one: {why}"),
-        )
-    })?;
+    read_back_two(&text)?;
     Ok(text)
 }
 
