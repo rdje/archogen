@@ -1,0 +1,14 @@
+(eadl-version eadl/1)
+; A block whose `uses` names a service: refused, hardware naming only the hardware it composes (§1; round 13, D3), until
+; `M1.47` makes the check refuse it.
+(defblock dev.e
+  (offers (interrupt-source true) (min-arrival-separation 20 ms) (reachable-at-privilege machine))
+  (requires (uses alarm)))
+(defblock timer.d (offers (relative-delay true) (channels 2 tick) (reachable-at-privilege machine)))
+(defplatform soc (offers (core-count 1 tick) (reachable-at-privilege machine)) (requires (uses dev.e timer.d)))
+(defservice alarm (requires (needs relative-delay)))
+(defservice evt (requires (needs interrupt-source)))
+(defsystem bus
+  (task p (period 10 ms) (deadline 10 ms) (deadline-from release) (priority 1) (uses alarm))
+  (requires (uses evt))
+  (platform (uses soc)))

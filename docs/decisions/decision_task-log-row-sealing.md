@@ -17,7 +17,9 @@ A task tree's Verification Log and Commit Log rows that name a sealed leaf are h
   Commit Log's first cell, the Verification Log's second — names one leaf that stands in the tree as a stub, sealed
   by this run or by an earlier one, and that the tree as committed holds in the same log. A row naming an open
   leaf, a `done` leaf not yet sealed, no leaf or several stays live, and so does a row not yet committed, until the
-  next seal, as a leaf closed only in the working tree does; the tables' headings and headers stay.
+  next seal, as a leaf closed only in the working tree does; the tables' headings and headers stay. *Amended
+  `2026-11-03` (`PROGRAM.124`):* a note in parentheses after the leaf, `` `M3.1.1` (step 3) ``, is no second leaf, so such
+  a row moves; a note that holds a code span, like a cell with a second name, stays live, the seal not reading its prose.
 - **Where to.** `docs/task-history/<TREE>/rows-NNNN.md`, numbered from `0001` per tree in the order of its seals. A
   file holds, for each log it carries, the log's heading, a blank line, the tree's two header lines and the rows,
   byte for byte and in the tree's order, the Verification Log first, the logs parted by a blank line. One seal

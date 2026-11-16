@@ -1,0 +1,14 @@
+(eadl-version eadl/1)
+; A `deadline-over-delay` requester writing two bounds on its obliged fact: the instance offers the tightest, which
+; the plan writes (§2.4; round 8).
+(defblock timer.delay
+  (offers (relative-delay true) (counter-modulus 4294967296) (tick-rate 1 MHz) (observation-coherent true)
+    (channels 1 tick) (reachable-at-privilege machine)))
+(defplatform soc.d
+  (offers (core-count 1 tick) (reachable-at-privilege machine))
+  (requires (uses timer.delay)))
+(defservice dl
+  (requires (absolute-deadline (delivery-bound (at-most 50 us))) (delivery-bound (at-most 20 us))))
+(defsystem tb
+  (task x (period 25 ms) (deadline 25 ms) (deadline-from release) (priority 1) (uses dl))
+  (platform (uses soc.d)))

@@ -1,0 +1,6 @@
+(format "archogen-assignment/2")
+(profile rt-static-up-v1)
+(system sporadic)
+(program "a49f6fc59a343dd4a1be990cc994bc8704288d675a064f7a810c9ae09b92fc95")
+(adapters adapters/1)
+(bind evt interrupt-source dev.e)

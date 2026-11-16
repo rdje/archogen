@@ -18,6 +18,11 @@
 # THE POPULATION is derived from the root `Cargo.toml`'s `members` — globs expanded, each member's package name
 # read from its own manifest — never listed here, so a crate added tomorrow is in scope with nobody editing this.
 #
+# THE MAP (leaf `PROGRAM.125`): every member also has a row in the knowledge map's one hand-kept input, a line
+# beginning with a citation of its directory. That map is where a fresh session orients itself, and it said a crate's
+# row appears when the crate does while nothing asked for one: measured when this leg was written, 11 of the 23 members
+# had none, the search and the configuration checker among them.
+#
 # ⚠️ HONEST LIMIT: it proves a member is named beside a path into it, never that the chapter describes it well.
 # That residue is review, as it is for `BOOK-ANCHORS`.
 #
@@ -29,6 +34,7 @@ case "$SELF" in /*) ;; *) SELF="$PWD/$SELF" ;; esac
 ROOT="$(git rev-parse --show-toplevel)"; cd "$ROOT"
 
 BOOK="docs/book/src"
+MAP="knowledge-map/subsystems.md"
 # `BOOK-ANCHORS`' notion of a citation, for the directories a member can live in.
 CITED_RE='`(crates|xtask)(/[A-Za-z0-9_./-]*)?`'
 
@@ -48,6 +54,7 @@ members() {
 package_name() { grep -m1 -E '^name[[:space:]]*=' "$1/Cargo.toml" | sed 's/.*"\(.*\)".*/\1/'; }
 
 fail=0
+unmapped=0
 checked=0
 while IFS= read -r dir; do
   [ -n "$dir" ] || continue
@@ -70,12 +77,16 @@ while IFS= read -r dir; do
       printf 'BOOK-COVERAGE: `%s` (%s) is named in%s without a citation of a path inside %s\n' "$name" "$dir" "$naming" "$dir" >&2
     fi
   fi
+  if ! grep -qE "^- \`$dir/" "$MAP" 2>/dev/null; then
+    unmapped=$((unmapped + 1))
+    printf 'BOOK-COVERAGE: `%s` (%s) has no row in %s, a line beginning with a citation of `%s/`\n' "$name" "$dir" "$MAP" "$dir" >&2
+  fi
 done < <(members)
 
 self_test() {
   local arms=0 ok=0 work="$ROOT/target/doctrine_scratch/book_coverage/selftest"
   fresh() { # a workspace of two members, both described
-    rm -rf "$work"; mkdir -p "$work/crates/alpha/src" "$work/crates/beta/src" "$work/$BOOK"
+    rm -rf "$work"; mkdir -p "$work/crates/alpha/src" "$work/crates/beta/src" "$work/$BOOK" "$work/$(dirname "$MAP")"
     git -C "$work" init -q
     printf '[workspace]\nmembers = ["crates/*"]\n' > "$work/Cargo.toml"
     printf '[package]\nname = "alpha"\n' > "$work/crates/alpha/Cargo.toml"
@@ -83,6 +94,7 @@ self_test() {
     printf '# A\n\nThe `alpha` crate lives in `crates/alpha/src/lib.rs`.\n' > "$work/$BOOK/a.md"
     printf '# B\n\nThe `beta` crate is `crates/beta`.\n' > "$work/$BOOK/b.md"
     printf '# Summary\n\n- beta alpha\n' > "$work/$BOOK/SUMMARY.md"
+    printf -- '- `crates/alpha/` — the first.\n- `crates/beta/src/lib.rs` — the second.\n' > "$work/$MAP"
   }
   arm() { # $1 = name, $2 = expected rc, $3 = text a refusal must carry ("" for a pass)
     local name="$1" want="$2" must="$3" out rc
@@ -91,7 +103,7 @@ self_test() {
     if [ "$rc" -ne "$want" ]; then
       echo "SELF-TEST: $name — expected exit $want, got $rc" >&2; printf '%s\n' "$out" | sed -n '1,3p' | sed 's/^/    /' >&2; return
     fi
-    if [ -n "$must" ] && ! printf '%s' "$out" | grep -qF -- "$must"; then
+    if [ -n "$must" ] && ! grep -qF -- "$must" <<< "$out"; then
       echo "SELF-TEST: $name — refused, but not about \`$must\`:" >&2; printf '%s\n' "$out" | sed -n '1,3p' | sed 's/^/    /' >&2; return
     fi
     ok=$((ok + 1)); echo "  ✅ $name"
@@ -114,6 +126,14 @@ self_test() {
   arm "a path into a member with a longer name is not a path into this one" 1 '`beta` (crates/beta) is named in b.md without a citation'
   fresh; printf '# Summary\n\n- beta `crates/beta`\n' > "$work/$BOOK/SUMMARY.md"; printf '# B\n\nNothing.\n' > "$work/$BOOK/b.md"
   arm "the table of contents does not describe anything" 1 '`beta` (crates/beta) is named in no chapter'
+  fresh; printf -- '- `crates/alpha/` — the first.\n' > "$work/$MAP"
+  arm "a member with no row in the map is refused" 1 '`beta` (crates/beta) has no row in knowledge-map/subsystems.md'
+  fresh; printf -- '- `crates/alpha/` — the first, beside `crates/beta/`.\nThen `crates/beta/`.\n' > "$work/$MAP"
+  arm "a member cited anywhere but at a row's head has no row" 1 '`beta` (crates/beta) has no row'
+  fresh; printf -- '- `crates/alpha/` — the first.\n- `crates/betamax/` — another.\n' > "$work/$MAP"
+  arm "a row for a member with a longer name is no row for this one" 1 '`beta` (crates/beta) has no row'
+  fresh; rm "$work/$MAP"
+  arm "a workspace with no map has a row for nothing" 1 '`alpha` (crates/alpha) has no row'
   rm -rf "$work"
   arms=$((arms + 1))
   if bash "$SELF" >/dev/null 2>&1; then ok=$((ok + 1)); echo "  ✅ the real book describes every workspace member"
@@ -132,7 +152,10 @@ if [ "$checked" -eq 0 ]; then
 fi
 if [ "$fail" -ne 0 ]; then
   echo "BOOK-COVERAGE: $fail of $checked workspace member(s) described by no chapter — name each beside a path into it" >&2
-  exit 1
 fi
-echo "book-coverage: OK ($checked workspace member(s), each named in a chapter beside a path into it)"
+if [ "$unmapped" -ne 0 ]; then
+  echo "BOOK-COVERAGE: $unmapped of $checked workspace member(s) with no row in $MAP — give each one saying what it is for, then regenerate the map" >&2
+fi
+[ "$fail" -eq 0 ] && [ "$unmapped" -eq 0 ] || exit 1
+echo "book-coverage: OK ($checked workspace member(s), each named in a chapter beside a path into it, each with a row in the map)"
 exit 0

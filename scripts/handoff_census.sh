@@ -27,6 +27,9 @@ ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)" || exit 2
 CENSUS="$ROOT/scripts/check_no_background_jobs.sh"
 PAUSE="${HANDOFF_RESAMPLE_SECONDS:-8}"
 
+# The host guard's watcher names this checkout on its command line and would count. A handoff ends it: the next command starts another.
+[ "${1:-}" = --self-test ] || python3 -I -B "$ROOT/scripts/host_guard.py" stop >/dev/null 2>&1 || :
+
 # The processes a census run names: its indented lines, `<pid> <etime> <command>`, reduced to `<pid> <command>`.
 named() { printf '%s\n' "$1" | awk '/^  [0-9]+ / { pid = $1; $1 = ""; $2 = ""; sub(/^  */, ""); print pid " " $0 }'; }
 

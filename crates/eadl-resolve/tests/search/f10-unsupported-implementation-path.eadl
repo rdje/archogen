@@ -1,0 +1,32 @@
+; F10 — an unsupported implementation path (ROADMAP.md §13.1): missing engine support, not universal impossibility.
+; A deadline service programs absolute deadlines up to 10 s ahead, and the platform's one comparator can be programmed
+; only 1 s ahead. §5.2 names a path an engine could take — an adapter that extends the comparator's epochs, a provider
+; in its own right with its costs — and no adapter is built yet (leaf M3.2), so the search's answer must say that the
+; engine lacks the path, never that the deadline is impossible (leaf M3.4.5). The description itself is sound, and
+; `archogen check` accepts it: the comparator offers every fact the service needs; one value falls short.
+
+(eadl-version eadl/1)
+
+(defblock timer.compare
+  (offers
+    (absolute-deadline true)
+    (supported-horizon 1 s)
+    (delivery-bound 10 us)
+    (channels 1 tick)
+    (reachable-at-privilege machine)))
+
+(defplatform soc.short-comparator
+  (offers (core-count 1 tick) (reachable-at-privilege machine))
+  (requires (uses timer.compare)))
+
+(defservice time.deadline
+  (requires
+    (absolute-deadline true)
+    (supported-horizon (at-least 10 s))
+    (delivery-bound (at-most 50 us))
+    (needs absolute-deadline)))
+
+(defsystem deadline-far-ahead
+  (task watchdog (period 100 ms) (deadline 100 ms) (deadline-from release) (priority 1) (uses time.deadline))
+  (requires (uses time.deadline))
+  (platform (uses soc.short-comparator)))

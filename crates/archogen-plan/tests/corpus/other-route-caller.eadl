@@ -1,0 +1,16 @@
+(eadl-version eadl/1)
+; A service called from another service's alarm handler on another timer: that route is not its own, so it counts
+; (§2.9; round 9).
+(defblock timer.d
+  (offers (relative-delay true) (channels 1 tick) (reachable-at-privilege machine)))
+(defblock timer.e
+  (offers (relative-delay true) (channels 1 tick) (reachable-at-privilege machine)))
+(defplatform soc
+  (offers (core-count 1 tick) (reachable-at-privilege machine))
+  (requires (uses timer.d timer.e)))
+(defservice b (requires (needs relative-delay)))
+(defservice a (requires (needs relative-delay) (uses b)))
+(defsystem sh
+  (task t (period 10 ms) (deadline 10 ms) (deadline-from release) (priority 1) (uses b))
+  (requires (uses a))
+  (platform (uses soc)))

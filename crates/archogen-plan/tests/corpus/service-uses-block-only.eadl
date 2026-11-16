@@ -1,0 +1,15 @@
+(eadl-version eadl/1)
+; A service naming a block by `uses`, a call: the block initialised before it (§2.7; round 17, D1).
+(defblock console.uart
+  (offers (observable-output true) (reachable-at-privilege machine)))
+(defplatform host.p
+  (offers (core-count 1 tick) (reachable-at-privilege machine))
+  (requires (uses console.uart)))
+(defservice console.write
+  (requires (needs observable-output)))
+(defservice a.log
+  (requires (uses console.uart)))
+(defsystem sbo
+  (task t (period 10 ms) (deadline 10 ms) (deadline-from release) (priority 1) (uses a.log))
+  (requires (uses console.write))
+  (platform (uses host.p)))

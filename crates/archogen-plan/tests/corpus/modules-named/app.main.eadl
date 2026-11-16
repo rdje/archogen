@@ -1,0 +1,12 @@
+(eadl-version eadl/1)
+; Round 19: a module tree whose handler, in another module, names a block of a third by its qualified name, nothing
+; binding the block — a second instance's block, outside the system's hardware, so refused, model §8 rule 7 (`M1.49`;
+; round 20, D3, R1).
+(defmodule app.main
+  (version 1 0)
+  (import hw.dev (as hw) (version (at-least 1 0)))
+  (import os.log (as os) (version (at-least 1 0)))
+  (export app)
+  (defsystem app
+    (task s (min-separation 10 ms) (deadline 10 ms) (deadline-from release) (priority 1) (uses os.evt))
+    (platform (uses hw.soc))))

@@ -1,0 +1,2 @@
+== system sd
+refused unsupported-profile: `(adapter deadline-over-delay timer.delay sd)` delivers an expiry to `sd`: no context runs a job's code in an interrupt, and how a job receives an alarm it programs itself or an expiry, and what the system's own level's requirement for either means, are `M4.1.6`'s

@@ -18,36 +18,44 @@ help:
 	@echo "make bootstrap       - first-time project bootstrap"
 	@echo "make update-scaffold - pull the latest bedrock spine (set URL=<bedrock-repo>)"
 
+# Everything that compiles or tests goes through the host guard, because this machine is shared: it waits for room, runs at lower
+# priority on a third of the cores, and is stopped before it endangers the host (docs/decisions/decision_host-guard.md).
+GUARD := python3 -I -B scripts/host_guard.py run --wait 1800 --
+# A guard emptied or cut short exits 0 having run nothing, and a recipe through it would read as passed. One broken any other way exits with its error. So this looks at the file and runs nothing.
+ifneq ($(strip $(shell tail -n 1 scripts/host_guard.py)),sys.exit(main(sys.argv[1:])))
+$(error scripts/host_guard.py is not whole, so nothing here would be guarded or run: restore it)
+endif
+
 # ROADMAP.md §14.3, through the runner in xtask/. `incomplete` (exit 20) is NOT a pass: a
 # required tool that is unavailable is reported as unavailable.
 focused:
-	cargo xtask verify --tier focused
+	$(GUARD) cargo xtask verify --tier focused
 
 integration:
-	cargo xtask verify --tier integration
+	$(GUARD) cargo xtask verify --tier integration
 
 tiers:
-	cargo xtask verify --list
+	$(GUARD) cargo xtask verify --list
 
 gate:
-	scripts/check_doctrines.sh
+	$(GUARD) scripts/check_doctrines.sh
 
 check:
 	cargo fmt --all -- --check
-	cargo clippy --all-targets --all-features -- -D warnings
-	cargo test --all
+	$(GUARD) cargo clippy --all-targets --all-features -- -D warnings
+	$(GUARD) cargo test --all
 
 fmt:
 	cargo fmt --all
 
 clippy:
-	cargo clippy --all-targets --all-features -- -D warnings
+	$(GUARD) cargo clippy --all-targets --all-features -- -D warnings
 
 test:
-	cargo test --all
+	$(GUARD) cargo test --all
 
 book:
-	scripts/build_book.sh
+	$(GUARD) scripts/build_book.sh
 
 hooks:
 	git config core.hooksPath .githooks

@@ -1,0 +1,13 @@
+(eadl-version eadl/1)
+; A task of `outer` naming the system `inner` by `uses`: refused, a system being no thing to use (§1; round 11, D3)
+; until `M1.46` makes the check refuse it.
+(defblock console.uart (offers (observable-output true) (reachable-at-privilege machine)))
+(defplatform host.p (offers (core-count 1 tick) (reachable-at-privilege machine)) (requires (uses console.uart)))
+(defservice console.write (requires (needs observable-output)))
+(defsystem inner
+  (task i (period 10 ms) (deadline 10 ms) (deadline-from release) (priority 1) (uses console.write))
+  (requires (uses console.write))
+  (platform (uses host.p)))
+(defsystem outer
+  (task o (period 20 ms) (deadline 20 ms) (deadline-from release) (priority 1) (uses inner))
+  (platform (uses host.p)))

@@ -1,0 +1,10 @@
+(eadl-version eadl/1)
+; A task naming a block nothing binds: the block is a node, in the task's job (§2, §2.6; round 18, D1).
+(defblock console.uart
+  (offers (observable-output true) (reachable-at-privilege machine)))
+(defplatform host.p
+  (offers (core-count 1 tick) (reachable-at-privilege machine))
+  (requires (uses console.uart)))
+(defsystem tnb
+  (task t (period 10 ms) (deadline 10 ms) (deadline-from release) (priority 1) (uses console.uart))
+  (platform (uses host.p)))

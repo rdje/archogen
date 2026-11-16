@@ -503,7 +503,7 @@ Every pass has a typed input/output contract and validation rules. Retain interm
 The following commands are an interface target to implement, not commands that exist today:
 
 ```bash
-archogen check examples/periodic-three/system.eadl --profile rt-static-up-v1
+archogen check examples/periodic-three/system.eadl --profile rt-static-up-v1 --target targets/riscv-virt-up.eadl
 archogen resolve examples/periodic-three/system.eadl --locked --out build/plan.json
 archogen plan-check examples/periodic-three/system.eadl build/plan.json
 archogen build examples/periodic-three/system.eadl --locked --out build/periodic-three

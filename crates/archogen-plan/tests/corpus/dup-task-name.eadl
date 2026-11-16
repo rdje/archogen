@@ -1,0 +1,13 @@
+(eadl-version eadl/1)
+; Two tasks of one system with one name: refused by the language, never merged (reference §7 rule 6; `M1.50`; round 23, D1).
+(defblock timer.d
+  (offers (relative-delay true) (channels 1 tick) (reachable-at-privilege machine)))
+(defplatform soc
+  (offers (core-count 1 tick) (reachable-at-privilege machine))
+  (requires (uses timer.d)))
+(defservice alarm
+  (requires (needs relative-delay)))
+(defsystem dup
+  (task a (period 10 ms) (deadline 10 ms) (deadline-from release) (priority 1) (uses alarm))
+  (task a (min-separation 20 ms) (deadline 20 ms) (priority 2))
+  (platform (uses soc)))

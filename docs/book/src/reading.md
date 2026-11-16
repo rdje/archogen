@@ -185,6 +185,10 @@ no verdict at all. Now the first list past the limit is `read-nesting-too-deep`,
 without descending, and nothing after the reader meets the depth. The limit belongs to `eadl/1`, like the
 64-bit value domain, so every reader refuses the same descriptions.
 
+A symbol holds at most 256 characters (`read-name-too-long`), a limit of `eadl/1` as that one is. It is on what a person
+writes. A plan's names are qualified by the modules they came through, so they can pass it, and a record the engine
+writes is read without it.
+
 ### Comments survive
 
 They are semantically inert to the language and are kept anyway, with their spans, because the

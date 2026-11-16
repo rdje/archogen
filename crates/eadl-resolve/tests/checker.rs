@@ -1274,9 +1274,13 @@ fn the_clause_words_are_every_clause_a_kind_declares() {
     // the kind modules themselves, so a clause a kind gains is refused inside an offer without a word changed here.
     let dir = concat!(env!("CARGO_MANIFEST_DIR"), "/../../docs/semantics/kinds");
     fn clauses(form: &Form, out: &mut BTreeSet<String>) {
-        // `deffact`'s clauses describe the vocabulary, never a description (§1, §1.1; R31 2).
+        // `deffact`'s clauses describe the vocabulary, never a description (§1, §1.1; R31 2), and `defadapter`'s the
+        // engine's adapter catalog (`docs/specs/adapters/decision_engine-adapters.md` §1.1).
         if form.head() == Some("defkind")
-            && form.items().get(1).and_then(Form::as_symbol) == Some("deffact")
+            && matches!(
+                form.items().get(1).and_then(Form::as_symbol),
+                Some("deffact" | "defadapter")
+            )
         {
             return;
         }

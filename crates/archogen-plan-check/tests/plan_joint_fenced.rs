@@ -1,15 +1,20 @@
 //! Check (5), the joint rules, as the fenced context of `M3.5.5.8` reads them from `docs/semantics/model.md` §8: per
 //! rule, a plan accepted and its corruptions refused. Each plan goes through checks (1) to (4) first, which must
 //! accept it — a plan they refuse is no case of check (5) — then through [`joint_fenced`]; the few corruptions check
-//! (3) refuses first are run apart, to hold check (5)'s own reading of them.
+//! (3) refuses first are run apart, to hold check (5)'s own reading of them. An engine adapter's instance is judged by
+//! the rules as model §8 rule 15 and `docs/specs/adapters/decision_engine-adapters.md` §4 say, and one time base by rule
+//! 14, each from the record and the model alone; a task released by its own source by rule 16, written from its text
+//! alone by the fenced context of `M4.1.2.3`; and a service or a policy naming hardware outside its system by rule 7's
+//! amended text alone, its verdict the description's whatever the plan binds.
 
 use std::collections::BTreeMap;
 
 use archogen_outcome::record::{Finding, Severity};
 use archogen_outcome::Status;
-use archogen_plan_check::assignment::{program_digest, Assignment, Requester};
+use archogen_plan_check::assignment::{program_digest, Assignment, Instance, Provider, Requester};
 use archogen_plan_check::check::{
-    bindings, description, joint, record, Verdict, PLAN_DESCRIPTION, PLAN_JOINT,
+    bindings, description, joint, plan as every_check, record, Verdict, PLAN_BINDING,
+    PLAN_DESCRIPTION, PLAN_JOINT, PLAN_RECORD, PLAN_STALE, PLAN_UNSATISFIED,
 };
 use eadl_front::module::{elaborate, MemoryModules};
 use eadl_front::{Program, SourceMap};
@@ -53,20 +58,41 @@ fn task(system: &str, task: &str) -> Requester {
     }
 }
 
-/// One binding: requester, fact, provider.
+/// An engine adapter's instance as a requester, from its canonical text.
+fn instance(text: &str) -> Requester {
+    Requester::parse(text).unwrap_or_else(|refusal| panic!("{text}: {refusal}"))
+}
+
+/// A provider from its canonical text: a name, or an instance.
+fn provider(text: &str) -> Provider {
+    Provider::parse(text).unwrap_or_else(|refusal| panic!("{text}: {refusal}"))
+}
+
+/// One binding: requester, fact, provider — a name, or an instance's canonical text.
 type Bind = (Requester, &'static str, &'static str);
 
 impl Description {
     /// The record a search would write for the system `s`: `binds` its bindings, `placement` its placement.
     fn plan(&self, placement: Option<(&str, &str)>, binds: &[Bind]) -> Assignment {
+        self.plan_for("s", placement, binds)
+    }
+
+    /// The record a search would write for the system `system`: `binds` its bindings, `placement` its placement.
+    fn plan_for(
+        &self,
+        system: &str,
+        placement: Option<(&str, &str)>,
+        binds: &[Bind],
+    ) -> Assignment {
         Assignment {
             profile: RT_STATIC_UP_V1.id.to_owned(),
-            system: "s".to_owned(),
+            system: system.to_owned(),
             program: program_digest(&self.program),
+            target: None,
             placement: placement.map(|(p, r)| (p.to_owned(), r.to_owned())),
             bindings: binds
                 .iter()
-                .map(|(r, f, p)| ((r.clone(), (*f).to_owned()), (*p).to_owned()))
+                .map(|(r, f, p)| ((r.clone(), (*f).to_owned()), provider(p)))
                 .collect::<BTreeMap<_, _>>(),
         }
     }
@@ -100,6 +126,18 @@ impl Description {
     /// `binds` as a plan with no placement, judged.
     fn bound(&self, binds: &[Bind]) -> Result<(), Verdict> {
         self.joint(&self.plan(None, binds))
+    }
+
+    /// Every check over `assignment`, in order, as the executable runs them: whatever each says, none is required to
+    /// accept.
+    fn every_check(&self, assignment: &Assignment) -> Result<(), Verdict> {
+        every_check(
+            &self.sources,
+            &self.program,
+            &RT_STATIC_UP_V1,
+            RECORD,
+            &assignment.to_canonical(),
+        )
     }
 }
 
@@ -258,10 +296,87 @@ fn rule_7_hardware_is_composed_at_any_depth_and_never_through_refines() {
     assert!(message.contains("`spare.uart`"), "{message}");
 }
 
+/// A console on the platform `soc` and a spare one on the platform `board`, `declarations` beside them, and `system`.
+fn naming(declarations: &str, system: &str) -> Description {
+    describe(&format!(
+        "
+      (defblock console.uart (offers (observable-output true) (reachable-at-privilege machine)))
+      (defblock spare.uart (offers (observable-output true) (reachable-at-privilege machine)))
+      (defplatform soc (offers (core-count 1 tick) (reachable-at-privilege machine)) (requires (uses console.uart)))
+      (defplatform board (offers (core-count 1 tick) (reachable-at-privilege machine)) (requires (uses spare.uart)))
+      {declarations}
+      {system}"
+    ))
+}
+
+/// The console service, naming what `names` writes.
+fn writer(names: &str) -> String {
+    format!("(defservice console.write (requires (needs observable-output)) {names})")
+}
+
+/// The system on `soc`, serving the console service.
+const ON_SOC: &str = "(defsystem s (requires (uses console.write)) (platform (uses soc)))";
+
+/// Every position rule 7 reads a name at, for the name `name`: by `uses` and by `needs`, a clause of its own and inside
+/// `requires`.
+fn positions(name: &str) -> [String; 4] {
+    [
+        format!("(uses {name})"),
+        format!("(needs {name})"),
+        format!("(requires (uses {name}))"),
+        format!("(requires (needs {name}))"),
+    ]
+}
+
+/// The one finding of a system refused for `namer`, a `namer_kind`, naming `hardware`, a `hardware_kind` outside the
+/// hardware of `system` (rule 7): the description's `infeasible-configuration`, naming the three, with where the
+/// hardware is declared and where the system is, and the rule's repair.
+fn named_outside(
+    verdict: Result<(), Verdict>,
+    (namer, namer_kind): (&str, &str),
+    (hardware, hardware_kind): (&str, &str),
+    system: &str,
+) -> Finding {
+    refused_description(verdict.clone(), Status::InfeasibleConfiguration, 7);
+    let findings = verdict.expect_err("refused").findings;
+    assert_eq!(findings.len(), 1, "{findings:#?}");
+    let finding = findings[0].clone();
+    for words in [
+        format!("`{namer}`, a {namer_kind} `{system}` serves"),
+        format!("names `{hardware}`, a {hardware_kind} outside the hardware of `{system}`"),
+    ] {
+        assert!(finding.message.contains(&words), "{words}: {finding:#?}");
+    }
+    assert!(
+        finding.primary.message.contains(&format!("`{namer}`"))
+            && finding.primary.message.contains(&format!("`{hardware}`")),
+        "{finding:#?}"
+    );
+    assert_eq!(finding.secondary.len(), 2, "{finding:#?}");
+    assert!(finding.secondary.iter().all(|l| l.source == SOURCE));
+    assert!(
+        finding.secondary[0]
+            .message
+            .contains(&format!("`{hardware}`"))
+            && finding.secondary[1]
+                .message
+                .contains(&format!("`{system}`")),
+        "{finding:#?}"
+    );
+    for words in [
+        format!("compose `{hardware}` into the platform of `{system}`"),
+        format!("name in `{namer}` hardware the platform composes"),
+    ] {
+        assert!(finding.repair.contains(&words), "{words}: {finding:#?}");
+    }
+    finding
+}
+
 #[test]
-fn rule_7_a_block_a_service_names_is_reached_but_is_no_hardware() {
+fn rule_7_a_block_a_service_names_is_no_hardware_and_refuses_the_system_whatever_it_is_bound_to() {
     // `those` in rule 7 are the blocks and platforms found: a service's `needs` of a block makes it a requester the
-    // system serves, never hardware.
+    // system serves, never hardware — "no path into it", and the same conflict. A plan naming no binding to it is
+    // refused for it, and one bound to it for it first: the plan's own conflict is never the verdict.
     let d = describe(
         "
       (defblock console.uart (offers (observable-output true) (reachable-at-privilege machine)))
@@ -270,14 +385,547 @@ fn rule_7_a_block_a_service_names_is_reached_but_is_no_hardware() {
       (defservice console.write (requires (needs observable-output spare.uart)))
       (defsystem s (requires (uses console.write)) (platform (uses soc)))",
     );
+    for provider in ["console.uart", "spare.uart"] {
+        named_outside(
+            d.bound(&[(named("console.write"), "observable-output", provider)]),
+            ("console.write", "service"),
+            ("spare.uart", "block"),
+            "s",
+        );
+    }
+}
+
+#[test]
+fn rule_7_a_service_or_a_policy_naming_a_block_outside_the_hardware_is_infeasible_at_every_position(
+) {
+    for names in positions("spare.uart") {
+        let d = naming(&writer(&names), ON_SOC);
+        named_outside(
+            d.bound(&write()),
+            ("console.write", "service"),
+            ("spare.uart", "block"),
+            "s",
+        );
+        let d = naming(
+            &format!("{} (defpolicy fair.share (requires) {names})", writer("")),
+            "(defsystem s (requires (uses console.write fair.share)) (platform (uses soc)))",
+        );
+        named_outside(
+            d.bound(&write()),
+            ("fair.share", "policy"),
+            ("spare.uart", "block"),
+            "s",
+        );
+    }
+}
+
+#[test]
+fn rule_7_a_service_or_a_policy_naming_a_platform_outside_the_hardware_is_infeasible() {
+    // `board` composes `spare.uart`: one conflict, the namer's, since what the platform composes the namer does not name.
+    for names in positions("board") {
+        let d = naming(&writer(&names), ON_SOC);
+        named_outside(
+            d.bound(&write()),
+            ("console.write", "service"),
+            ("board", "platform"),
+            "s",
+        );
+        let d = naming(
+            &format!("{} (defpolicy fair.share (requires) {names})", writer("")),
+            "(defsystem s (requires (uses console.write fair.share)) (platform (uses soc)))",
+        );
+        named_outside(
+            d.bound(&write()),
+            ("fair.share", "policy"),
+            ("board", "platform"),
+            "s",
+        );
+    }
+}
+
+#[test]
+fn rule_7_a_name_s_refusal_points_at_the_name_the_hardware_and_the_system() {
+    // Derived from the text: the module's two lines, an empty line, then each declaration on its own line; the name
+    // eight spaces and `(uses ` into its line.
+    let d = describe(
+        "
+      (defblock console.uart (offers (observable-output true) (reachable-at-privilege machine)))
+      (defblock spare.uart (offers (observable-output true) (reachable-at-privilege machine)))
+      (defplatform soc (offers (core-count 1 tick) (reachable-at-privilege machine)) (requires (uses console.uart)))
+      (defservice console.write (requires (needs observable-output))
+        (uses spare.uart))
+      (defsystem s (requires (uses console.write)) (platform (uses soc)))",
+    );
+    let finding = named_outside(
+        d.bound(&write()),
+        ("console.write", "service"),
+        ("spare.uart", "block"),
+        "s",
+    );
     assert_eq!(
-        d.bound(&[(named("console.write"), "observable-output", "console.uart")]),
-        Ok(())
+        (
+            finding.primary.source.as_str(),
+            finding.primary.line,
+            finding.primary.column
+        ),
+        (SOURCE, 8, 15),
+        "{finding:#?}"
     );
-    refused(
-        d.bound(&[(named("console.write"), "observable-output", "spare.uart")]),
-        7,
+    assert_eq!(finding.secondary[0].line, 5, "{finding:#?}");
+    assert_eq!(finding.secondary[1].line, 9, "{finding:#?}");
+}
+
+#[test]
+fn rule_7_the_same_name_where_the_platform_composes_it_holds() {
+    // The block the platform composes, and the platform itself.
+    for name in ["console.uart", "soc"] {
+        for names in positions(name) {
+            assert_eq!(
+                naming(&writer(&names), ON_SOC).bound(&write()),
+                Ok(()),
+                "{names}"
+            );
+            let d = naming(
+                &format!("{} (defpolicy fair.share (requires) {names})", writer("")),
+                "(defsystem s (requires (uses console.write fair.share)) (platform (uses soc)))",
+            );
+            assert_eq!(d.bound(&write()), Ok(()), "a policy: {names}");
+        }
+    }
+    // The very name refused on `soc` holds where `spare.uart` is composed, at any depth: `soc.deep` composing `bus.bridge`
+    // inside `requires`, which composes it in a clause of its own.
+    let d = naming(
+        &format!(
+            "{}
+             (defblock bus.bridge (offers (bus-width 32 bit)) (uses spare.uart))
+             (defplatform soc.deep (offers (core-count 1 tick) (reachable-at-privilege machine))
+               (requires (uses console.uart bus.bridge)))",
+            writer("(uses spare.uart)")
+        ),
+        "(defsystem s (requires (uses console.write)) (platform (uses soc.deep)))",
     );
+    assert_eq!(d.bound(&write()), Ok(()));
+    // And where the system's own level or a task of it names it: rule 7's hardware is what those name too.
+    for system in [
+        "(defsystem s (requires (uses console.write spare.uart)) (platform (uses soc)))",
+        "(defsystem s (requires (uses console.write))
+           (task log (period 20 ms) (deadline 20 ms) (deadline-from release) (priority 1) (uses spare.uart))
+           (platform (uses soc)))",
+    ] {
+        let d = naming(&writer("(uses spare.uart)"), system);
+        assert_eq!(d.bound(&write()), Ok(()), "{system}");
+    }
+}
+
+#[test]
+fn rule_7_a_name_is_each_serving_system_s_and_never_another_s() {
+    // `s` runs on `soc` and `t` on `board`, each serving the console service; `u`, on `soc`, does not serve it. Check (2)
+    // accepts the description for all three: it is no description-wide refusal.
+    let systems = "
+      (defsystem s (requires (uses console.write)) (platform (uses soc)))
+      (defsystem t (requires (uses console.write)) (platform (uses board)))
+      (defsystem u
+        (task log (period 20 ms) (deadline 20 ms) (deadline-from release) (priority 1) (needs observable-output))
+        (platform (uses soc)))";
+    let serving = |provider: &'static str| -> [Bind; 1] {
+        [(named("console.write"), "observable-output", provider)]
+    };
+    let log: [Bind; 1] = [(task("u", "log"), "observable-output", "console.uart")];
+    for (name, refused, held, provider, other) in [
+        ("spare.uart", "s", "t", "spare.uart", "`t`"),
+        ("console.uart", "t", "s", "console.uart", "`s`"),
+    ] {
+        let d = naming(&writer(&format!("(uses {name})")), systems);
+        let inside = d.plan_for(held, None, &serving(provider));
+        assert_eq!(d.joint(&inside), Ok(()), "{held}");
+        assert_eq!(d.every_check(&inside), Ok(()), "{held}");
+        let bystander = d.plan_for("u", None, &log);
+        assert_eq!(d.joint(&bystander), Ok(()));
+        assert_eq!(d.every_check(&bystander), Ok(()));
+        // The refused system's plan binds what its own hardware offers, and the finding is its own alone.
+        let own = if refused == "s" {
+            "console.uart"
+        } else {
+            "spare.uart"
+        };
+        let outside = d.plan_for(refused, None, &serving(own));
+        let finding = named_outside(
+            d.joint(&outside),
+            ("console.write", "service"),
+            (name, "block"),
+            refused,
+        );
+        assert!(!finding.message.contains(other), "{finding:#?}");
+        named_outside(
+            d.every_check(&outside),
+            ("console.write", "service"),
+            (name, "block"),
+            refused,
+        );
+    }
+}
+
+#[test]
+fn rule_7_a_block_s_own_uses_is_composition_and_judged_by_no_such_conflict() {
+    // Inside the hardware, a block's and a platform's own names compose; nothing is refused.
+    let d = naming(
+        &format!(
+            "{}
+             (defblock bus.bridge (offers (bus-width 32 bit)) (uses spare.uart) (needs board))
+             (defplatform soc.deep (offers (core-count 1 tick) (reachable-at-privilege machine))
+               (requires (uses console.uart bus.bridge)))",
+            writer("")
+        ),
+        "(defsystem s (requires (uses console.write)) (platform (uses soc.deep)))",
+    );
+    assert_eq!(d.bound(&write()), Ok(()));
+    // Outside it too, a block's own names are judged by no conflict: `bus.bridge`, reached through the service alone,
+    // names a block and a platform outside the hardware, and the one conflict is the service's name of `bus.bridge`.
+    let d = naming(
+        &format!(
+            "{}
+             (defblock bus.bridge (offers (bus-width 32 bit)) (uses spare.uart) (needs board))",
+            writer("(uses bus.bridge)")
+        ),
+        ON_SOC,
+    );
+    let finding = named_outside(
+        d.bound(&write()),
+        ("console.write", "service"),
+        ("bus.bridge", "block"),
+        "s",
+    );
+    assert!(
+        !finding.message.contains("spare.uart") && !finding.message.contains("`board`"),
+        "{finding:#?}"
+    );
+    // And a block no served declaration reaches is said nothing of, whatever it names.
+    let d = naming(
+        &format!(
+            "{}
+             (defblock bus.bridge (offers (bus-width 32 bit)) (uses spare.uart))",
+            writer("")
+        ),
+        ON_SOC,
+    );
+    assert_eq!(d.bound(&write()), Ok(()));
+}
+
+#[test]
+fn rule_7_a_name_of_what_the_platform_only_refines_is_outside() {
+    // `refines` is no edge: `soc.next` keeps `soc.base`'s obligations, not its blocks, so `soc.base` and `spare.uart`
+    // are no hardware of `s`.
+    let declarations = |names: &str| {
+        format!(
+            "{}
+             (defplatform soc.base (offers (core-count 1 tick) (reachable-at-privilege machine))
+               (requires (uses spare.uart)))
+             (defplatform soc.next (refines soc.base) (offers (core-count 1 tick) (reachable-at-privilege machine))
+               (requires (uses console.uart)))",
+            writer(names)
+        )
+    };
+    let system = "(defsystem s (requires (uses console.write)) (platform (uses soc.next)))";
+    for (name, kind) in [("soc.base", "platform"), ("spare.uart", "block")] {
+        let d = naming(&declarations(&format!("(uses {name})")), system);
+        named_outside(
+            d.bound(&write()),
+            ("console.write", "service"),
+            (name, kind),
+            "s",
+        );
+    }
+    let d = naming(&declarations("(uses soc.next console.uart)"), system);
+    assert_eq!(d.bound(&write()), Ok(()));
+}
+
+#[test]
+fn rule_7_a_namer_is_any_service_or_policy_the_closure_reaches_and_no_other() {
+    let far = "(defservice console.base (requires) (uses spare.uart))";
+    // Through another service, which names no hardware itself; through a task alone; through a block of the hardware;
+    // through a policy.
+    for (declarations, system) in [
+        (
+            format!("{far} {}", writer("(uses console.base)")),
+            ON_SOC.to_owned(),
+        ),
+        (
+            format!("{far} {}", writer("")),
+            "(defsystem s (requires (uses console.write))
+               (task log (period 20 ms) (deadline 20 ms) (deadline-from release) (priority 1) (uses console.base))
+               (platform (uses soc)))"
+                .to_owned(),
+        ),
+        (
+            format!(
+                "{far} {}
+                 (defblock hook.pin (offers (bus-width 32 bit)) (uses console.base))
+                 (defplatform soc.hooked (offers (core-count 1 tick) (reachable-at-privilege machine))
+                   (requires (uses console.uart hook.pin)))",
+                writer("")
+            ),
+            "(defsystem s (requires (uses console.write)) (platform (uses soc.hooked)))".to_owned(),
+        ),
+        (
+            format!(
+                "{far} {} (defpolicy fair.share (requires) (uses console.base))",
+                writer("")
+            ),
+            "(defsystem s (requires (uses console.write fair.share)) (platform (uses soc)))"
+                .to_owned(),
+        ),
+    ] {
+        let d = naming(&declarations, &system);
+        named_outside(
+            d.bound(&write()),
+            ("console.base", "service"),
+            ("spare.uart", "block"),
+            "s",
+        );
+    }
+    // A service nothing the system serves reaches is another's or nobody's.
+    let d = naming(&format!("{far} {}", writer("")), ON_SOC);
+    assert_eq!(d.bound(&write()), Ok(()));
+}
+
+#[test]
+fn rule_7_judges_each_namer_and_each_name_once() {
+    // One name written at every position is one conflict.
+    let d = naming(&writer(&positions("spare.uart").join(" ")), ON_SOC);
+    named_outside(
+        d.bound(&write()),
+        ("console.write", "service"),
+        ("spare.uart", "block"),
+        "s",
+    );
+    // One namer two tasks and the system reach is one conflict.
+    let d = naming(
+        &writer("(uses spare.uart)"),
+        "(defsystem s (requires (uses console.write))
+           (task a (period 20 ms) (deadline 20 ms) (deadline-from release) (priority 1) (uses console.write))
+           (task b (period 40 ms) (deadline 40 ms) (deadline-from release) (priority 2) (uses console.write))
+           (platform (uses soc)))",
+    );
+    named_outside(
+        d.bound(&write()),
+        ("console.write", "service"),
+        ("spare.uart", "block"),
+        "s",
+    );
+    // Two names of one namer are two conflicts, and one name of two namers.
+    let d = naming(&writer("(uses spare.uart board)"), ON_SOC);
+    let message = refused_description(d.bound(&write()), Status::InfeasibleConfiguration, 7);
+    assert_eq!(message.lines().count(), 2, "{message}");
+    assert!(
+        message.contains("`spare.uart`") && message.contains("`board`"),
+        "{message}"
+    );
+    let d = naming(
+        &format!(
+            "{} (defservice console.flush (requires) (uses spare.uart))",
+            writer("(uses spare.uart)")
+        ),
+        "(defsystem s (requires (uses console.write console.flush)) (platform (uses soc)))",
+    );
+    let message = refused_description(d.bound(&write()), Status::InfeasibleConfiguration, 7);
+    assert_eq!(message.lines().count(), 2, "{message}");
+    assert!(
+        message.contains("`console.write`") && message.contains("`console.flush`"),
+        "{message}"
+    );
+}
+
+#[test]
+fn rule_7_a_name_is_the_verdict_whatever_the_assignment_and_no_check_of_the_bindings_stands_before_it(
+) {
+    let names = ("console.write", "service");
+    let spare = ("spare.uart", "block");
+    let d = naming(&writer("(uses spare.uart)"), ON_SOC);
+    // Two plans checks (3) and (4) accept, one of them bound to the very block: one verdict.
+    let clean = d.plan(None, &write());
+    let inside_out = d.plan(
+        None,
+        &[(named("console.write"), "observable-output", "spare.uart")],
+    );
+    assert_eq!(d.joint(&clean), d.joint(&inside_out));
+    named_outside(d.every_check(&clean), names, spare, "s");
+    named_outside(d.every_check(&inside_out), names, spare, "s");
+    // A plan check (3) refuses, binding nothing, and one check (4) refuses, bound where the fact is not offered: the
+    // description's status, never the plan's.
+    for corrupt in [
+        d.plan(None, &[]),
+        d.plan(
+            None,
+            &[(named("console.write"), "observable-output", "soc")],
+        ),
+    ] {
+        let text = corrupt.to_canonical();
+        assert!(
+            bindings(&d.sources, &d.program, RECORD, &text, &corrupt).is_err(),
+            "checks (3) and (4) refuse it alone:\n{text}"
+        );
+        named_outside(d.every_check(&corrupt), names, spare, "s");
+    }
+    // The block named asks something of its own: a plan leaving it unbound, for a block no binding can make hardware,
+    // is refused for the name too.
+    let d = naming(
+        &format!(
+            "{}
+             (defblock far.timer (offers (bus-width 32 bit)) (requires (counter-width 32 bit)))",
+            writer("(uses far.timer)")
+        ),
+        ON_SOC,
+    );
+    let plan = d.plan(None, &write());
+    let text = plan.to_canonical();
+    let unbound = bindings(&d.sources, &d.program, RECORD, &text, &plan)
+        .expect_err("check (3) refuses the block's unbound requirement alone");
+    assert_eq!(unbound.status, Status::ToolFailure, "{unbound:#?}");
+    assert_eq!(unbound.findings[0].code, PLAN_BINDING, "{unbound:#?}");
+    named_outside(d.every_check(&plan), names, ("far.timer", "block"), "s");
+    // Check (1) still comes first: a stale plan, and a plan for a system the description does not declare, say nothing
+    // of what the description holds.
+    let d = naming(&writer("(uses spare.uart)"), ON_SOC);
+    let mut stale = d.plan(None, &write());
+    stale.program = "0".repeat(64);
+    let verdict = d.every_check(&stale).expect_err("a stale plan");
+    assert_eq!(verdict.status, Status::StaleInput, "{verdict:#?}");
+    assert_eq!(verdict.findings[0].code, PLAN_STALE, "{verdict:#?}");
+    let verdict = d
+        .every_check(&d.plan_for("nowhere", None, &[]))
+        .expect_err("a plan for no system");
+    assert_eq!(verdict.status, Status::ToolFailure, "{verdict:#?}");
+    assert_eq!(verdict.findings[0].code, PLAN_RECORD, "{verdict:#?}");
+}
+
+#[test]
+fn rule_7_a_name_takes_its_place_by_precedence_among_the_description_s_verdicts() {
+    use eadl_front::Verdict as Concluded;
+    // Rule 6's "by precedence", the language's own order: the description's verdicts below rest on it.
+    assert!(
+        Concluded::InvalidDescription.precedence() > Concluded::UnsupportedProfile.precedence()
+    );
+    assert!(
+        Concluded::UnsupportedProfile.precedence()
+            > Concluded::InfeasibleConfiguration.precedence()
+    );
+    assert!(Concluded::InfeasibleConfiguration.precedence() > Concluded::MissingFact.precedence());
+    let kept = |verdict: &Verdict, rule: u32| {
+        assert!(
+            verdict.findings.iter().any(
+                |f| f.code == PLAN_DESCRIPTION && f.message.contains(&format!("(rule {rule})"))
+            ),
+            "{verdict:#?}"
+        );
+    };
+    // Rule 9's stated level, above it: both findings kept, whichever route the plan takes.
+    let d = naming(
+        &writer("(requires (reachable-at-privilege supervisor)) (uses spare.uart)"),
+        ON_SOC,
+    );
+    for verdict in [d.bound(&write()), d.every_check(&d.plan(None, &write()))] {
+        let verdict = verdict.expect_err("refused");
+        assert_eq!(verdict.status, Status::UnsupportedProfile, "{verdict:#?}");
+        kept(&verdict, 9);
+        kept(&verdict, 7);
+    }
+    // A side the relation does not read, above it.
+    let d = naming(
+        &writer("(requires (counter-width (at-least 16 bit)) (counter-width (exactly 8 bit))) (uses spare.uart)"),
+        ON_SOC,
+    );
+    let verdict = d.every_check(&d.plan(None, &write())).expect_err("refused");
+    assert_eq!(verdict.status, Status::InvalidDescription, "{verdict:#?}");
+    kept(&verdict, 7);
+    // Rule 10's unknown, below it where check (5) is called alone; description-wide, check (2) says it first.
+    let d = describe(&format!(
+        "
+      (defblock console.uart (offers (observable-output true) (reachable-at-privilege machine)))
+      (defblock spare.uart (offers (observable-output true) (reachable-at-privilege machine)))
+      (defplatform soc (offers (core-count 1 tick) (reachable-at-privilege machine)
+          (region ram (base 0x8000_0000) (executable true)))
+        (requires (uses console.uart)))
+      {}
+      {ON_SOC}",
+        writer("(uses spare.uart)")
+    ));
+    let plan = d.plan(Some(("soc", "ram")), &write());
+    let verdict = joint(
+        &d.sources,
+        &d.program,
+        &RT_STATIC_UP_V1,
+        RECORD,
+        &plan.to_canonical(),
+        &plan,
+    )
+    .expect_err("refused");
+    assert_eq!(
+        verdict.status,
+        Status::InfeasibleConfiguration,
+        "{verdict:#?}"
+    );
+    kept(&verdict, 10);
+    kept(&verdict, 7);
+    let verdict = d.every_check(&plan).expect_err("refused");
+    assert_eq!(verdict.status, Status::MissingFact, "{verdict:#?}");
+}
+
+#[test]
+fn rule_7_a_name_through_an_import_is_judged_by_its_qualified_name() {
+    let board = "(defmodule hw.board (version 1 0) (export soc console.uart spare.uart)
+  (defblock console.uart (offers (observable-output true) (reachable-at-privilege machine)))
+  (defblock spare.uart (offers (observable-output true) (reachable-at-privilege machine)))
+  (defplatform soc (offers (core-count 1 tick) (reachable-at-privilege machine)) (requires (uses console.uart))))";
+    let imported = |name: &str| {
+        let modules = MemoryModules::new().with("hw.board", board).with(
+            "app",
+            &format!(
+                "(defmodule app (version 1 0) (import hw.board (as hw))
+  (defservice console.write (requires (needs observable-output)) (uses {name}))
+  (defsystem s (requires (uses console.write)) (platform (uses hw.soc))))"
+            ),
+        );
+        let mut sources = SourceMap::new();
+        let (program, diagnostics) = elaborate(&mut sources, &modules, "app");
+        assert!(
+            !diagnostics.has_errors(),
+            "{}",
+            diagnostics.render(&sources)
+        );
+        Description { sources, program }
+    };
+    let bind: [Bind; 1] = [(
+        named("console.write"),
+        "observable-output",
+        "hw.console.uart",
+    )];
+    assert_eq!(imported("hw.console.uart").bound(&bind), Ok(()));
+    let d = imported("hw.spare.uart");
+    let verdict = d.bound(&bind).expect_err("refused");
+    assert_eq!(
+        verdict.status,
+        Status::InfeasibleConfiguration,
+        "{verdict:#?}"
+    );
+    assert_eq!(verdict.findings.len(), 1, "{verdict:#?}");
+    assert!(
+        verdict.findings[0]
+            .message
+            .contains("names `hw.spare.uart`, a block outside the hardware of `s`"),
+        "{verdict:#?}"
+    );
+}
+
+#[test]
+fn rule_7_reaches_a_service_or_a_policy_alone() {
+    // "A service or a policy": a task's and the system's own names are its hardware (above), a block's and a platform's
+    // composition; and a system a system reaches, which the rule's words do not reach, names nothing it is refused for.
+    let d = naming(
+        &writer(""),
+        "(defsystem peer (uses spare.uart) (platform (uses board)))
+         (defsystem s (requires (uses console.write peer)) (platform (uses soc)))",
+    );
+    assert_eq!(d.bound(&write()), Ok(()));
 }
 
 #[test]
@@ -349,10 +997,10 @@ fn rules_1_and_7_a_binding_check_three_refuses_first_is_refused_by_check_five_s_
 }
 
 // ------------------------------------------------------------------------------------------------------------------
-// Rules 2 to 4: consumed facts, channels, and a service several users reach.
+// Rules 2 to 4: consumed facts, channels, and a node several users reach.
 
 /// A counter offering both consumed functions with `channels` as `pool` writes it, a lazy one whose `relative-delay`
-/// is `false`, the services that use them, and the system `system`.
+/// is `false`, the services that use them — `time.wake` needing the deadline bare — and the system `system`.
 fn timers(pool: &str, system: &str) -> Description {
     describe(&format!(
         "
@@ -363,6 +1011,7 @@ fn timers(pool: &str, system: &str) -> Description {
       (defservice time.sleep (requires (needs relative-delay)))
       (defservice time.alarm (requires (relative-delay true)))
       (defservice time.deadline (requires (absolute-deadline (supported-horizon (at-least 10 s)))))
+      (defservice time.wake (requires (needs absolute-deadline)))
       (defservice time.both (requires (needs relative-delay) (absolute-deadline true)))
       (defservice time.never (requires (relative-delay false)))
       (defservice time.none (requires (relative-delay (exactly false))))
@@ -506,6 +1155,81 @@ fn rule_4_a_service_several_users_reach_is_one_requester() {
     );
 }
 
+/// Two tasks of the system using `time.wake`, its own level using nothing; each also needing the deadline itself where
+/// `own` writes `(needs absolute-deadline)`.
+fn wakers(own: &str) -> String {
+    format!(
+        "(defsystem s
+        (task a (period 10 ms) (deadline 10 ms) (deadline-from release) (priority 1) (uses time.wake) {own})
+        (task b (period 20 ms) (deadline 20 ms) (deadline-from release) (priority 2) (uses time.wake) {own})
+        (platform (uses soc)))"
+    )
+}
+
+#[test]
+fn rule_4_a_node_two_tasks_use_counts_once_at_its_provider_and_its_multiplexer_is_no_finding() {
+    // `time.wake` takes a channel through `(needs absolute-deadline)`. Its users are the two tasks — the system's own
+    // level is none — so it is the multiplexer, an obligation for the realization to discharge, never a finding; and
+    // it counts once at the counter however many reach it, rule 3's count.
+    let d = timers("(channels 1 tick)", &wakers(""));
+    assert_eq!(
+        d.bound(&[(named("time.wake"), "absolute-deadline", "timer.delay")]),
+        Ok(())
+    );
+}
+
+#[test]
+fn rule_4_a_user_bound_itself_at_the_node_s_provider_is_a_requester_of_its_own() {
+    // Each task needing the deadline itself too, bound to the counter: the node counts once and each task once more,
+    // no user again through the node — three requesters, rule 3's.
+    let own = wakers("(needs absolute-deadline)");
+    let binds = [
+        (named("time.wake"), "absolute-deadline", "timer.delay"),
+        (task("s", "a"), "absolute-deadline", "timer.delay"),
+        (task("s", "b"), "absolute-deadline", "timer.delay"),
+    ];
+    assert_eq!(timers("(channels 3 tick)", &own).bound(&binds), Ok(()));
+    for (pool, offered) in [
+        ("(channels 1 tick)", "offers 1 `channels`"),
+        ("(channels 2 tick)", "offers 2 `channels`"),
+    ] {
+        let d = timers(pool, &own);
+        let findings = refusal(d.joint(&d.plan(None, &binds)), 3, true);
+        assert_eq!(findings.len(), 1, "{pool}: {findings:#?}");
+        let message = &findings[0].message;
+        for named in [
+            "`timer.delay` gives 3 requesters a channel",
+            "`time.wake` through `absolute-deadline`",
+            "`(task s a)` through `absolute-deadline`",
+            "`(task s b)` through `absolute-deadline`",
+            offered,
+        ] {
+            assert!(message.contains(named), "{named}: {message}");
+        }
+    }
+}
+
+#[test]
+fn rule_4_a_block_bound_for_a_requirement_of_its_own_counts_once_however_many_tasks_reach_it() {
+    // `watchdog` is a node by its own `(needs absolute-deadline)`, and both tasks reach it through `uses`, a call: one
+    // requester of the counter's one channel.
+    let d = describe(
+        "
+      (defblock timer.delay (offers (absolute-deadline true) (supported-horizon 3600 s) (channels 1 tick)
+        (reachable-at-privilege machine)))
+      (defblock watchdog (offers (reachable-at-privilege machine)) (requires (needs absolute-deadline)))
+      (defplatform soc (offers (core-count 1 tick) (reachable-at-privilege machine)) (requires (uses timer.delay)))
+      (defsystem s
+        (task a (period 10 ms) (deadline 10 ms) (deadline-from release) (priority 1) (uses watchdog))
+        (task b (period 20 ms) (deadline 20 ms) (deadline-from release) (priority 2) (uses watchdog))
+        (platform (uses soc)))",
+    );
+    assert_eq!(
+        d.bound(&[(named("watchdog"), "absolute-deadline", "timer.delay")]),
+        Ok(())
+    );
+}
+
 // ------------------------------------------------------------------------------------------------------------------
 // Rule 5: ownership.
 
@@ -613,6 +1337,61 @@ fn rule_5_a_provider_composing_another_through_uses_owns_its_bytes_with_it() {
     let mut binds = two_devices().to_vec();
     binds.push((named("sched.core"), "core-count", "soc"));
     assert_eq!(d.bound(&binds), Ok(()));
+}
+
+/// A counter and a console whose regions overlap, each composed by the platform; the console names what `link` writes,
+/// beside the declaration `more`.
+fn linked(link: &str, more: &str) -> Description {
+    describe(&format!(
+        "
+      (defblock timer.a (offers (counter-width 32 bit) (reachable-at-privilege machine)
+        (region regs (base 0x1000_0000) (size 4 KiB))))
+      (defblock console.uart (offers (observable-output true) (reachable-at-privilege machine)
+        (region regs (base 0x1000_0800) (size 4 KiB))) {link})
+      {more}
+      (defplatform soc (offers (core-count 1 tick) (reachable-at-privilege machine)) (requires (uses timer.a console.uart)))
+      (defservice time.monotonic (requires (counter-width 32 bit)))
+      (defservice console.write (requires (needs observable-output)))
+      (defsystem s (requires (uses time.monotonic console.write)) (platform (uses soc)))"
+    ))
+}
+
+#[test]
+fn rule_5_composition_is_a_block_s_or_a_platform_s_uses_and_never_a_service_s() {
+    // Rule 5: one composes the other when it names it through `uses`, at any depth through blocks and platforms, whose
+    // `uses` alone is composition — directly, through a block, or through a platform; the two own the bytes together.
+    for (link, more) in [
+        ("(uses timer.a)", ""),
+        (
+            "(uses bus.bridge)",
+            "(defblock bus.bridge (offers (bus-width 32 bit)) (uses timer.a))",
+        ),
+        (
+            "(uses board)",
+            "(defplatform board (offers (core-count 1 tick)) (requires (uses timer.a)))",
+        ),
+    ] {
+        assert_eq!(linked(link, more).bound(&two_devices()), Ok(()), "{link}");
+    }
+    // A service's `uses` is a binding — here its own requirement bound to the counter — and composes nothing: the
+    // console reaching the counter only through one composes nothing, and their overlap is a conflict.
+    let d = linked(
+        "(uses time.source)",
+        "(defservice time.source (requires (counter-width 32 bit)) (uses timer.a))",
+    );
+    let mut binds = two_devices().to_vec();
+    binds.push((named("time.source"), "counter-width", "timer.a"));
+    let findings = refusal(d.bound(&binds), 5, true);
+    assert_eq!(findings.len(), 1, "{findings:#?}");
+    let message = &findings[0].message;
+    assert!(
+        message.contains("`console.uart`")
+            && message.contains("`timer.a`")
+            && message.contains("[0x10000000, 0x10001000)")
+            && message.contains("[0x10000800, 0x10001800)")
+            && message.contains("own the same bytes"),
+        "{message}"
+    );
 }
 
 // ------------------------------------------------------------------------------------------------------------------
@@ -847,7 +1626,7 @@ const MAP: &str = "(region ram (base 0x8000_0000) (size 128 MiB) (executable tru
   (region fw (base 0x8000_0000) (size 1 MiB) (reserved true))
   (region rom (base 0x2000_0000) (size 1 MiB) (executable true) (reserved true))
   (region regs (base 0x1000_0000) (size 4 KiB))
-  (region boot (base 0x0) (reserved true))";
+  (region boot (base 0x0) (size 64 KiB) (reserved true))";
 
 fn write() -> [Bind; 1] {
     [(named("console.write"), "observable-output", "console.uart")]
@@ -855,7 +1634,8 @@ fn write() -> [Bind; 1] {
 
 #[test]
 fn rule_10_a_plan_places_the_image_in_placement_memory_of_the_system_s_hardware() {
-    // A reserved region over placement memory is a hole, and one without size a hole too, claiming nothing.
+    // A reserved range over placement memory is a hole the plan avoids; ranges wholly below it, each with its size,
+    // overlap none of it. A region against placement memory with no size is the description's unknown (rule 10).
     let d = memory(MAP);
     assert_eq!(d.joint(&d.plan(Some(("soc", "ram")), &write())), Ok(()));
     // A system with no placement memory is said nothing of.
@@ -880,13 +1660,13 @@ fn rule_10_a_placement_that_is_not_placement_memory_of_the_hardware_is_refused()
         let findings = refusal(d.joint(&plan), 10, true);
         assert_eq!(findings.len(), 1, "{findings:#?}");
         assert!(findings[0].message.contains(why), "{findings:#?}");
-        // At the record's `placement` clause.
+        // At the record's `placement` clause, after `/2`'s `adapters` clause.
         assert_eq!(
             (
                 findings[0].primary.source.as_str(),
                 findings[0].primary.line
             ),
-            (RECORD, 5)
+            (RECORD, 6)
         );
     }
     // A plan placing the image nowhere, where the hardware has placement memory.
@@ -898,6 +1678,29 @@ fn rule_10_a_placement_that_is_not_placement_memory_of_the_hardware_is_refused()
     );
 }
 
+/// Check (5)'s verdict on a plan placing the image in `soc`'s `ram`, reached directly through `joint`: check (2) refuses
+/// the description first, description-wide, under `first`, and checks (1), (3) and (4) accept the plan.
+fn past_check_two(d: &Description, first: Status) -> Result<(), Verdict> {
+    let plan = d.plan(Some(("soc", "ram")), &write());
+    let text = plan.to_canonical();
+    assert!(record(&d.program, &RT_STATIC_UP_V1, RECORD, &text).is_ok());
+    let refused = description(&d.sources, &d.program, &RT_STATIC_UP_V1)
+        .expect_err("check (2) refuses it first");
+    assert_eq!(refused.status, first, "{refused:#?}");
+    assert_eq!(
+        bindings(&d.sources, &d.program, RECORD, &text, &plan),
+        Ok(())
+    );
+    joint(
+        &d.sources,
+        &d.program,
+        &RT_STATIC_UP_V1,
+        RECORD,
+        &text,
+        &plan,
+    )
+}
+
 #[test]
 fn rule_10_a_claim_without_size_below_placement_memory_is_the_description_s_missing_fact() {
     // Check (2) refuses it first, description-wide; check (5) judges it again over the system's hardware.
@@ -905,21 +1708,8 @@ fn rule_10_a_claim_without_size_below_placement_memory_is_the_description_s_miss
         "(region ram (base 0x8000_0000) (size 128 MiB) (executable true))
          (region regs (base 0x1000_0000))",
     );
-    let plan = d.plan(Some(("soc", "ram")), &write());
-    let text = plan.to_canonical();
-    assert!(record(&d.program, &RT_STATIC_UP_V1, RECORD, &text).is_ok());
-    let first = description(&d.sources, &d.program, &RT_STATIC_UP_V1)
-        .expect_err("check (2) refuses it first");
-    assert_eq!(first.status, Status::MissingFact);
     let message = refused_description(
-        joint(
-            &d.sources,
-            &d.program,
-            &RT_STATIC_UP_V1,
-            RECORD,
-            &text,
-            &plan,
-        ),
+        past_check_two(&d, Status::MissingFact),
         Status::MissingFact,
         10,
     );
@@ -927,6 +1717,217 @@ fn rule_10_a_claim_without_size_below_placement_memory_is_the_description_s_miss
         message.contains("`regs` has no size") && message.contains("`ram`"),
         "{message}"
     );
+}
+
+#[test]
+fn rule_10_a_reserved_range_against_placement_memory_with_no_size_is_the_description_s_missing_fact(
+) {
+    // Rule 10 names a reserved range, whose extent is the hole the plan avoids, among the regions against placement
+    // memory: where it has no size and the memory's bytes lie above its base, whether they overlap is `missing-fact`.
+    for (regions, open, against) in [
+        // A reserved range with no size below placement memory: whether it reaches into it is unknown.
+        (
+            "(region ram (base 0x8000_0000) (size 128 MiB) (executable true))
+             (region boot (base 0x7fff_0000) (reserved true))",
+            "`boot` has no size",
+            "`ram`",
+        ),
+        // So for an executable one: reserved, it is no placement memory, and a reserved range.
+        (
+            "(region ram (base 0x8000_0000) (size 128 MiB) (executable true))
+             (region rom (base 0x2000_0000) (executable true) (reserved true))",
+            "`rom` has no size",
+            "`ram`",
+        ),
+        // A hole in one placement region, below another: taken to the first's end, it is unknown against the second.
+        (
+            "(region ram (base 0x8000_0000) (size 128 MiB) (executable true))
+             (region more (base 0x9000_0000) (size 1 MiB) (executable true))
+             (region fw (base 0x8001_0000) (reserved true))",
+            "`fw` has no size",
+            "`more`",
+        ),
+    ] {
+        let d = memory(regions);
+        let message = refused_description(
+            past_check_two(&d, Status::MissingFact),
+            Status::MissingFact,
+            10,
+        );
+        assert_eq!(message.lines().count(), 1, "{regions}: {message}");
+        assert!(
+            message.contains(open) && message.contains(against) && message.contains("is unknown"),
+            "{regions}: {message}"
+        );
+    }
+    // Decided with no size: a reserved range above placement memory's last byte overlaps none of it, and one whose base
+    // lies inside it is a hole, taken to reach its end, that leaves free bytes below. Checks (1) to (4) accept, and check
+    // (5) too.
+    for regions in [
+        "(region ram (base 0x8000_0000) (size 128 MiB) (executable true))
+         (region top (base 0x9000_0000) (reserved true))",
+        "(region ram (base 0x8000_0000) (size 128 MiB) (executable true))
+         (region fw (base 0x8001_0000) (reserved true))",
+        "(region ram (base 0x8000_0000) (size 128 MiB) (executable true))
+         (region fw (base 0x87ff_ffff) (reserved true))",
+        "(region ram (base 0x8000_0000) (size 128 MiB) (executable true))
+         (region lo (base 0x8000_0000) (size 2 MiB) (reserved true))
+         (region hi (base 0x8030_0000) (reserved true))",
+    ] {
+        let d = memory(regions);
+        assert_eq!(
+            d.joint(&d.plan(Some(("soc", "ram")), &write())),
+            Ok(()),
+            "{regions}"
+        );
+    }
+}
+
+#[test]
+fn rule_10_placement_memory_with_no_size_is_the_description_s_missing_fact_naming_it() {
+    for (case, regions) in [
+        (
+            "nothing against it",
+            "(region ram (base 0x8000_0000) (executable true))",
+        ),
+        (
+            "a reserved range above it",
+            "(region ram (base 0x8000_0000) (executable true))
+             (region fw (base 0x9000_0000) (size 1 MiB) (reserved true))",
+        ),
+        (
+            "a device's registers above it",
+            "(region ram (base 0x8000_0000) (executable true))
+             (region regs (base 0x9000_0000) (size 4 KiB))",
+        ),
+        (
+            "a reserved range with no size at its base",
+            "(region ram (base 0x8000_0000) (executable true))
+             (region fw (base 0x8000_0000) (reserved true))",
+        ),
+    ] {
+        let d = memory(regions);
+        let message = refused_description(
+            past_check_two(&d, Status::MissingFact),
+            Status::MissingFact,
+            10,
+        );
+        assert_eq!(
+            message,
+            "`soc`'s placement memory `ram` has no size: nothing can be laid out in it, in the hardware of `s` \
+             (rule 10)",
+            "{case}"
+        );
+    }
+    // A region with no size below it is unknown against it besides: its bytes, at least its base, lie above that base.
+    let d = memory(
+        "(region ram (base 0x8000_0000) (executable true))
+         (region regs (base 0x1000_0000))",
+    );
+    let message = refused_description(
+        past_check_two(&d, Status::MissingFact),
+        Status::MissingFact,
+        10,
+    );
+    assert!(
+        message.contains("`regs` has no size") && message.contains("`ram` has no size:"),
+        "{message}"
+    );
+}
+
+#[test]
+fn rule_10_holes_of_no_size_leaving_no_free_byte_are_the_description_s_missing_fact() {
+    const RAM: &str = "`soc`'s region `ram` [0x80000000, 0x88000000)";
+    for (case, regions, named, labels) in [
+        (
+            "at the memory's base",
+            "(region ram (base 0x8000_0000) (size 128 MiB) (executable true))
+             (region fw (base 0x8000_0000) (reserved true))",
+            "`soc`'s region `fw` [0x80000000, …) with no size",
+            1,
+        ),
+        (
+            "a sized hole up to its base",
+            "(region ram (base 0x8000_0000) (size 128 MiB) (executable true))
+             (region lo (base 0x8000_0000) (size 2 MiB) (reserved true))
+             (region hi (base 0x8020_0000) (reserved true))",
+            "`soc`'s region `hi` [0x80200000, …) with no size",
+            1,
+        ),
+        (
+            "two of them, each named, the higher adding no byte",
+            "(region ram (base 0x8000_0000) (size 128 MiB) (executable true))
+             (region lo (base 0x8000_0000) (reserved true))
+             (region hi (base 0x8020_0000) (reserved true))",
+            "`soc`'s region `lo` [0x80000000, …) with no size, `soc`'s region `hi` [0x80200000, …) with no size",
+            2,
+        ),
+    ] {
+        let d = memory(regions);
+        let verdict = past_check_two(&d, Status::MissingFact).expect_err(case);
+        assert_eq!(verdict.status, Status::MissingFact, "{case}");
+        assert_eq!(verdict.findings.len(), 1, "{case}: {verdict:#?}");
+        let finding = &verdict.findings[0];
+        assert_eq!(finding.code, PLAN_DESCRIPTION, "{case}");
+        assert_eq!(
+            finding.message,
+            format!(
+                "{RAM} has no free byte with its holes of no size, {named}, taken to reach its end, and the bytes \
+                 surely reserved do not fill it, in the hardware of `s` (rule 10)"
+            ),
+            "{case}"
+        );
+        assert_eq!(finding.repair, "give each hole of no size its `(size S)`", "{case}");
+        assert_eq!(finding.primary.source, SOURCE, "{case}");
+        // Each hole of no size has its place, and so has the memory they leave nothing of.
+        assert_eq!(finding.secondary.len(), labels, "{case}: {finding:#?}");
+        assert!(
+            finding.secondary.iter().all(|l| l.source == SOURCE),
+            "{case}: {finding:#?}"
+        );
+    }
+}
+
+#[test]
+fn rule_10_memory_surely_reserved_in_every_byte_is_check_two_s_and_no_unknown_of_check_five() {
+    // The base of a hole of no size is a byte surely reserved, so these bytes fill the region: no size is asked for.
+    let d = memory(
+        "(region ram (base 0x8000_0000) (size 1 byte) (executable true))
+         (region fw (base 0x8000_0000) (reserved true))",
+    );
+    assert_eq!(past_check_two(&d, Status::InvalidDescription), Ok(()));
+}
+
+/// Placement memory beside a device's region of the size `size`.
+fn sized(size: &str) -> Description {
+    memory(&format!(
+        "(region ram (base 0x8000_0000) (size 128 MiB) (executable true))
+         (region regs (base 0x1000_0000) (size {size}))"
+    ))
+}
+
+#[test]
+fn rule_5_a_size_past_the_exact_arithmetic_is_unsupported_profile_with_check_five_called_alone() {
+    // Rule 5: "one past the exact arithmetic `unsupported-profile`". A decimal of 39 fractional digits is too precise to
+    // hold exactly (§1 rule 5): check (2) refuses it first under that status, and check (5) alone must say the same.
+    let d = sized("0.000000000000000000000000000000000000001 byte");
+    let message = refused_description(
+        past_check_two(&d, Status::UnsupportedProfile),
+        Status::UnsupportedProfile,
+        5,
+    );
+    assert!(
+        message.contains("a region `soc` offers does not read whole"),
+        "{message}"
+    );
+    // A size that does not read for any other cause stays `invalid-description` in both: `GiB` is no unit.
+    let d = sized("9223372036854775807 GiB");
+    let message = refused_description(
+        past_check_two(&d, Status::InvalidDescription),
+        Status::InvalidDescription,
+        5,
+    );
+    assert!(message.contains("`GiB` is not a known unit"), "{message}");
 }
 
 // ------------------------------------------------------------------------------------------------------------------
@@ -1084,4 +2085,898 @@ fn rule_13_never_repeats_rule_9_s_qualifier() {
         "",
     );
     assert_eq!(d.bound(&split("timer.a", "timer.a")), Ok(()));
+}
+
+// ------------------------------------------------------------------------------------------------------------------
+// Rule 15: an engine adapter's instance, judged by rules 1–3, 5, 7, 9 and 13; and rule 14, one time base.
+
+/// What `deadline-over-delay` requires beneath, as a plan binds it: each fact once, sorted.
+const BENEATH_DEADLINE: [&str; 4] = [
+    "counter-modulus",
+    "observation-coherent",
+    "relative-delay",
+    "tick-rate",
+];
+
+/// What `epoch-extender` requires beneath.
+const BENEATH_EXTENDER: [&str; 5] = [
+    "counter-modulus",
+    "observation-coherent",
+    "relative-delay",
+    "tick-rate",
+    "wrap-behavior",
+];
+
+/// Counters an engine adapter may program, and a deadline service: `timer.d`, a relative timer of 32 bits at 1 MHz
+/// offering what `d` adds, its channels among them; `timer.short`, a 16-bit modular counter of one channel; `timer.e`, a
+/// second counter, offering what `e` adds; `timer.u`, reachable from `user` alone; `timer.abs`, a comparator programmed
+/// with absolute times itself, of two channels; `timer.far`, on no platform the system uses. Then the services `more` declares, and the
+/// system `system`.
+fn adapted(d: &str, e: &str, more: &str, system: &str) -> Description {
+    describe(&format!(
+        "
+      (defblock timer.d (offers (relative-delay true) (counter-modulus 4294967296) (tick-rate 1 MHz)
+        (observation-coherent true) {d} (reachable-at-privilege machine)))
+      (defblock timer.short (offers (relative-delay true) (counter-modulus 65536) (counter-width 16 bit) (tick-rate 1 MHz)
+        (observation-coherent true) (wrap-behavior modular) (channels 1 tick) (reachable-at-privilege machine)))
+      (defblock timer.e (offers (counter-modulus 4294967296) (tick-rate 1 MHz) (observation-coherent true)
+        (reachable-at-privilege machine) {e}))
+      (defblock timer.u (offers (relative-delay true) (counter-modulus 4294967296) (tick-rate 1 MHz)
+        (observation-coherent true) (channels 1 tick) (reachable-at-privilege user)))
+      (defblock timer.abs (offers (absolute-deadline true) (supported-horizon 3600 s) (counter-modulus 4294967296)
+        (tick-rate 1 MHz) (channels 2 tick) (reachable-at-privilege machine)))
+      (defblock timer.far (offers (relative-delay true) (counter-modulus 4294967296) (tick-rate 1 MHz)
+        (observation-coherent true) (channels 1 tick) (reachable-at-privilege machine)))
+      (defplatform soc (offers (core-count 1 tick) (reachable-at-privilege machine))
+        (requires (uses timer.d timer.short timer.e timer.u timer.abs)))
+      (defservice alarm
+        (requires (absolute-deadline (supported-horizon (at-least 10 s)) (delivery-bound (at-most 100 us)))))
+      {more}
+      {system}"
+    ))
+}
+
+/// The system using the deadline service alone.
+const ALARMED: &str = "(defsystem s (requires (uses alarm)) (platform (uses soc)))";
+
+/// The deadline service's own translator over `timer.d`.
+const ALARM: &str = "(adapter deadline-over-delay timer.d alarm)";
+
+/// The bindings beneath of the instance `text`: each of `facts` to `over`.
+fn beneath(text: &'static str, over: &'static str, facts: &[&'static str]) -> Vec<Bind> {
+    facts
+        .iter()
+        .map(|fact| (instance(text), *fact, over))
+        .collect()
+}
+
+/// The deadline service bound through its translator over `timer.d`, with the translator's four bindings beneath.
+fn alarm() -> Vec<Bind> {
+    let mut binds = vec![(named("alarm"), "absolute-deadline", ALARM)];
+    binds.extend(beneath(ALARM, "timer.d", &BENEATH_DEADLINE));
+    binds
+}
+
+#[test]
+fn rule_15_a_deadline_service_bound_through_its_own_translator_holds() {
+    let d = adapted("(channels 1 tick)", "", "", ALARMED);
+    // Its supported horizon `timer.d`'s unambiguous one, `(2^32 − 1) / 1 MHz`; its delivery bound the obliged 100 us.
+    assert_eq!(d.bound(&alarm()), Ok(()));
+    // Bound to `timer.d` itself, which offers no absolute deadline, check (4) refuses it.
+    let direct = d.plan(None, &[(named("alarm"), "absolute-deadline", "timer.d")]);
+    let verdict = bindings(
+        &d.sources,
+        &d.program,
+        RECORD,
+        &direct.to_canonical(),
+        &direct,
+    )
+    .expect_err("`timer.d` offers no absolute deadline");
+    assert_eq!(verdict.status, Status::ToolFailure);
+    assert!(
+        verdict.findings.iter().all(|f| f.code == PLAN_UNSATISFIED),
+        "{verdict:#?}"
+    );
+}
+
+/// The epoch extender over the 16-bit counter.
+const EXTENDED: &str = "(adapter epoch-extender timer.short)";
+
+/// A monotonic time service needing a minute's horizon, beside the counter facts `more` requires.
+fn monotonic(more: &str) -> Description {
+    adapted(
+        "(channels 1 tick)",
+        "",
+        &format!(
+            "(defservice time.monotonic (requires (unambiguous-horizon (at-least 60 s)) {more}))"
+        ),
+        "(defsystem s (requires (uses time.monotonic)) (platform (uses soc)))",
+    )
+}
+
+#[test]
+fn rule_15_a_sixteen_bit_modular_counter_under_an_epoch_extender_meets_a_minute_s_horizon() {
+    let d = monotonic("");
+    let mut binds = vec![(named("time.monotonic"), "unambiguous-horizon", EXTENDED)];
+    binds.extend(beneath(EXTENDED, "timer.short", &BENEATH_EXTENDER));
+    // The horizon derived at the instance from its `(pow2 64)` modulus and the counter's rate.
+    assert_eq!(d.bound(&binds), Ok(()));
+    // Directly, the counter wraps after 65.535 ms: check (4) refuses it.
+    let direct = d.plan(
+        None,
+        &[(
+            named("time.monotonic"),
+            "unambiguous-horizon",
+            "timer.short",
+        )],
+    );
+    let verdict = bindings(
+        &d.sources,
+        &d.program,
+        RECORD,
+        &direct.to_canonical(),
+        &direct,
+    )
+    .expect_err("65.535 ms is no minute");
+    assert_eq!(verdict.findings.len(), 1, "{verdict:#?}");
+    assert_eq!(verdict.findings[0].code, PLAN_UNSATISFIED);
+    assert!(
+        verdict.findings[0].message.contains("lies outside it"),
+        "{verdict:#?}"
+    );
+}
+
+/// Two deadline services, each with its own translator over `timer.d`, whose channels `channels` writes.
+fn two_alarms(channels: &str) -> (Description, Vec<Bind>) {
+    const A: &str = "(adapter deadline-over-delay timer.d alarm.a)";
+    const B: &str = "(adapter deadline-over-delay timer.d alarm.b)";
+    let d = adapted(
+        channels,
+        "",
+        "(defservice alarm.a (requires (absolute-deadline (supported-horizon (at-least 10 s)))))
+         (defservice alarm.b (requires (absolute-deadline (supported-horizon (at-least 10 s)))))",
+        "(defsystem s (requires (uses alarm.a alarm.b)) (platform (uses soc)))",
+    );
+    let mut binds = vec![
+        (named("alarm.a"), "absolute-deadline", A),
+        (named("alarm.b"), "absolute-deadline", B),
+    ];
+    binds.extend(beneath(A, "timer.d", &BENEATH_DEADLINE));
+    binds.extend(beneath(B, "timer.d", &BENEATH_DEADLINE));
+    (d, binds)
+}
+
+#[test]
+fn rules_2_and_3_two_exclusive_instances_over_a_timer_of_one_channel_are_refused() {
+    // Each instance takes its own channel beneath, through `relative-delay`.
+    let (d, binds) = two_alarms("(channels 2 tick)");
+    assert_eq!(d.bound(&binds), Ok(()));
+    let (d, binds) = two_alarms("(channels 1 tick)");
+    let plan = d.plan(None, &binds);
+    let findings = refusal(d.joint(&plan), 3, true);
+    assert_eq!(findings.len(), 1, "{findings:#?}");
+    let message = &findings[0].message;
+    for named in [
+        "`timer.d` gives 2 requesters a channel",
+        "`(adapter deadline-over-delay timer.d alarm.a)` through `relative-delay`",
+        "`(adapter deadline-over-delay timer.d alarm.b)` through `relative-delay`",
+        "offers 1 `channels`",
+    ] {
+        assert!(message.contains(named), "{named}: {message}");
+    }
+    assert_eq!(findings[0].primary.source, RECORD);
+}
+
+#[test]
+fn rules_1_3_and_7_an_instance_binding_check_three_refuses_first_is_refused_by_check_five_s_own_reading_too(
+) {
+    let d = adapted("(channels 2 tick)", "", "", ALARMED);
+    const OTHER: &str = "(adapter deadline-over-delay timer.d alarm.other)";
+    const IDLE: &str = "(adapter epoch-extender timer.short)";
+    let cases: [(Vec<Bind>, u32, &str); 4] = [
+        // An exclusive instance bound for a requester it does not name: it offers one channel, its one requester's.
+        (
+            {
+                let mut binds = vec![(named("alarm"), "absolute-deadline", OTHER)];
+                binds.extend(beneath(OTHER, "timer.d", &BENEATH_DEADLINE));
+                binds
+            },
+            3,
+            "serves `alarm.other` alone",
+        ),
+        // An instance no requester the system serves is bound to.
+        (
+            {
+                let mut binds = alarm();
+                binds.extend(beneath(IDLE, "timer.short", &BENEATH_EXTENDER));
+                binds
+            },
+            7,
+            "no requester it serves is bound to it",
+        ),
+        // A fact its kind does not require beneath.
+        (
+            {
+                let mut binds = alarm();
+                binds.push((instance(ALARM), "wrap-behavior", "timer.d"));
+                binds
+            },
+            1,
+            "which its kind does not require beneath",
+        ),
+        // Its binding beneath to a provider other than the one it programs.
+        (
+            {
+                let mut binds = alarm();
+                binds.retain(|(r, f, _)| !(*r == instance(ALARM) && *f == "tick-rate"));
+                binds.push((instance(ALARM), "tick-rate", "timer.e"));
+                binds
+            },
+            1,
+            "to the device it programs, `timer.d`",
+        ),
+    ];
+    for (binds, rule, words) in cases {
+        let plan = d.plan(None, &binds);
+        let text = plan.to_canonical();
+        assert!(record(&d.program, &RT_STATIC_UP_V1, RECORD, &text).is_ok());
+        let verdict = bindings(&d.sources, &d.program, RECORD, &text, &plan)
+            .expect_err("check (3) refuses it first");
+        assert!(
+            verdict.findings.iter().all(|f| f.code == PLAN_BINDING),
+            "{verdict:#?}"
+        );
+        let findings = refusal(
+            joint(
+                &d.sources,
+                &d.program,
+                &RT_STATIC_UP_V1,
+                RECORD,
+                &text,
+                &plan,
+            ),
+            rule,
+            false,
+        );
+        assert!(
+            messages(&findings).contains(words),
+            "{words}: {findings:#?}"
+        );
+    }
+}
+
+#[test]
+fn rule_7_an_instance_s_device_is_of_the_system_s_hardware_and_the_instance_is_none() {
+    const FAR: &str = "(adapter deadline-over-delay timer.far alarm)";
+    let d = adapted("(channels 1 tick)", "", "", ALARMED);
+    assert_eq!(d.bound(&alarm()), Ok(()));
+    let mut binds = vec![(named("alarm"), "absolute-deadline", FAR)];
+    binds.extend(beneath(FAR, "timer.far", &BENEATH_DEADLINE));
+    let findings = refusal(d.bound(&binds), 7, true);
+    // The binding to the instance, and each of its own bindings beneath.
+    assert_eq!(findings.len(), 5, "{findings:#?}");
+    let message = messages(&findings);
+    assert!(
+        message.contains(
+            "`alarm` is bound for `absolute-deadline` to `timer.far`, the device \
+             `(adapter deadline-over-delay timer.far alarm)` programs, outside the hardware of `s`"
+        ) && message.contains(&format!(
+            "`{FAR}` is bound for `relative-delay` to `timer.far`, outside the hardware of `s`"
+        )),
+        "{message}"
+    );
+}
+
+#[test]
+fn rule_9_an_instance_is_a_caller_at_its_kind_s_level_and_states_it_for_its_callers() {
+    const LOW: &str = "(adapter deadline-over-delay timer.u alarm)";
+    let d = adapted("(channels 1 tick)", "", "", ALARMED);
+    let mut binds = vec![(named("alarm"), "absolute-deadline", LOW)];
+    binds.extend(beneath(LOW, "timer.u", &BENEATH_DEADLINE));
+    // Its device, reachable from `user` alone, is judged at the kind's level — whatever level the profile gives.
+    for profile in [RT_STATIC_UP_V1, at_level("")] {
+        let findings = refusal(d.joint_under(&profile, &d.plan(None, &binds)), 9, true);
+        assert_eq!(findings.len(), 1, "{findings:#?}");
+        let message = &findings[0].message;
+        assert!(
+            message.contains("`timer.u`, bound for")
+                && message.contains(&format!("`{LOW}` for `relative-delay`"))
+                && message.contains("is reachable from `user` alone")
+                && message.contains("its kind's level, `machine`"),
+            "{message}"
+        );
+    }
+    // A caller bound to an instance reads the instance's level: `machine`, never a profile's `supervisor`.
+    assert_eq!(d.bound(&alarm()), Ok(()));
+    let findings = refusal(
+        d.joint_under(&at_level("supervisor"), &d.plan(None, &alarm())),
+        9,
+        true,
+    );
+    assert_eq!(findings.len(), 1, "{findings:#?}");
+    assert!(
+        findings[0].message.contains(&format!(
+            "`{ALARM}`, bound for `alarm` for `absolute-deadline`"
+        )) && findings[0]
+            .message
+            .contains("is reachable from `machine` alone")
+            && findings[0]
+                .message
+                .contains("runs every caller at `supervisor`"),
+        "{findings:#?}"
+    );
+}
+
+#[test]
+fn rule_5_an_instance_owns_no_region_and_its_device_bound_beneath_owns_its_own() {
+    let time = "(defservice time.now (requires (tick-rate 1 MHz)))";
+    let system = "(defsystem s (requires (uses alarm time.now)) (platform (uses soc)))";
+    let mut binds = alarm();
+    binds.push((named("time.now"), "tick-rate", "timer.e"));
+    let d = adapted(
+        "(channels 1 tick) (region regs (base 0x1000_0000) (size 4 KiB))",
+        "(region regs (base 0x2000_0000) (size 4 KiB))",
+        time,
+        system,
+    );
+    assert_eq!(d.bound(&binds), Ok(()));
+    let d = adapted(
+        "(channels 1 tick) (region regs (base 0x1000_0000) (size 4 KiB))",
+        "(region regs (base 0x1000_0800) (size 4 KiB))",
+        time,
+        system,
+    );
+    let findings = refusal(d.bound(&binds), 5, true);
+    assert_eq!(findings.len(), 1, "{findings:#?}");
+    let message = &findings[0].message;
+    assert!(
+        message.contains("`timer.d` and `timer.e`, both bound in this assignment")
+            && !message.contains("(adapter"),
+        "{message}"
+    );
+}
+
+#[test]
+fn rule_13_an_instance_is_one_provider_of_its_function() {
+    let d = monotonic("(tick-rate 1 MHz)");
+    let mut whole = vec![
+        (named("time.monotonic"), "tick-rate", EXTENDED),
+        (named("time.monotonic"), "unambiguous-horizon", EXTENDED),
+    ];
+    whole.extend(beneath(EXTENDED, "timer.short", &BENEATH_EXTENDER));
+    // The rate passed through from the counter, the horizon derived at the instance: one provider meets both.
+    assert_eq!(d.bound(&whole), Ok(()));
+    let mut split = whole.clone();
+    split[0] = (named("time.monotonic"), "tick-rate", "timer.short");
+    let findings = refusal(d.bound(&split), 13, true);
+    assert_eq!(findings.len(), 1, "{findings:#?}");
+    let message = &findings[0].message;
+    assert!(
+        message.contains("`counter` function to 2 providers")
+            && message.contains(&format!("`{EXTENDED}` for `unambiguous-horizon`"))
+            && message.contains("`timer.short` for `tick-rate`")
+            && message.contains(&format!("`{EXTENDED}` meets every one")),
+        "{message}"
+    );
+}
+
+/// A deadline service reading time through `time.now`, and one reading its own rate, over a `timer.d` of `channels`.
+fn deadline_and_clock(channels: &str) -> Description {
+    adapted(
+        channels,
+        "",
+        "(defservice time.now (requires (tick-rate 1 MHz) (counter-modulus 4294967296)))
+         (defservice alarm.now (requires (absolute-deadline (supported-horizon (at-least 10 s))) (uses time.now)))
+         (defservice alarm.self (requires (absolute-deadline (supported-horizon (at-least 10 s))) (tick-rate 1 MHz)))",
+        "(defsystem s (requires (uses alarm.now alarm.self)) (platform (uses soc)))",
+    )
+}
+
+/// `alarm.now`'s deadline through its translator over `timer.d`.
+const NOW: &str = "(adapter deadline-over-delay timer.d alarm.now)";
+
+/// The deadline of `alarm.now`, bound to `deadline`, and the counter facts `time.now` reads, bound to `clock`; with
+/// `alarm.self`'s deadline and its own rate at the comparator `timer.abs`.
+fn time_base(deadline: &'static str, clock: &'static str) -> Vec<Bind> {
+    let mut binds = vec![
+        (named("alarm.now"), "absolute-deadline", deadline),
+        (named("time.now"), "counter-modulus", clock),
+        (named("time.now"), "tick-rate", clock),
+        (named("alarm.self"), "absolute-deadline", "timer.abs"),
+        (named("alarm.self"), "tick-rate", "timer.abs"),
+    ];
+    if deadline.starts_with('(') {
+        binds.extend(beneath(deadline, "timer.d", &BENEATH_DEADLINE));
+    }
+    binds
+}
+
+#[test]
+fn rule_14_a_deadline_and_the_counter_its_requester_reaches_are_bound_at_one_device() {
+    // Through a translator, its device the timer the clock reads.
+    let d = deadline_and_clock("(channels 1 tick)");
+    assert_eq!(d.bound(&time_base(NOW, "timer.d")), Ok(()));
+    let plan = d.plan(None, &time_base(NOW, "timer.e"));
+    let findings = refusal(d.joint(&plan), 14, true);
+    assert_eq!(findings.len(), 1, "{findings:#?}");
+    let message = &findings[0].message;
+    assert!(
+        message.contains(&format!(
+            "`alarm.now` is bound for `absolute-deadline` at the device `timer.d` through `{NOW}`, and `time.now`"
+        )) && message.contains("is bound for `counter-modulus`, `tick-rate` at the device `timer.e`")
+            && message.contains("in one counter's time and read in another's"),
+        "{message}"
+    );
+    assert_eq!(
+        findings[0].primary.line,
+        line_of(&plan, &named("alarm.now"), "absolute-deadline")
+    );
+    // The other requester's binding, and both devices.
+    assert_eq!(findings[0].secondary.len(), 3, "{findings:#?}");
+}
+
+/// Rule 14 reads none of the five facts that describe a counter's compare as a reader of a time base (`decision_release-alarm.md`'s `RA-H8`,
+/// `M4.1.7.3.1`): the requester the deadline's reaches, bound for each of them at another device, splits no time base, while `tick-rate`, a
+/// reading of the counter's time, bound there, does.
+#[test]
+fn rule_14_reads_no_fact_describing_a_compare_as_a_reader_of_time() {
+    const FIVE: [(&str, &str); 5] = [
+        ("alarm-kind", "(alarm-kind level-compare)"),
+        ("alarm-wiring", "(alarm-wiring core)"),
+        ("compare-step", "(compare-step (at-most 1 tick))"),
+        ("compare-window", "(compare-window (at-least 16 tick))"),
+        ("compare-magnitude", "(compare-magnitude false)"),
+    ];
+    let required: String = FIVE.iter().map(|(_, r)| *r).collect::<Vec<_>>().join(" ");
+    let describe = |more: &str| {
+        adapted(
+            "(channels 1 tick)",
+            "(alarm-kind level-compare) (alarm-wiring core) (compare-step 1 tick) (compare-window 16 tick) (compare-magnitude false)",
+            &format!(
+                "(defservice time.kind (requires {required} {more}))
+                 (defservice alarm.now (requires (absolute-deadline (supported-horizon (at-least 10 s))) (uses time.kind)))"
+            ),
+            "(defsystem s (requires (uses alarm.now)) (platform (uses soc)))",
+        )
+    };
+    let mut binds: Vec<Bind> = vec![(named("alarm.now"), "absolute-deadline", "timer.abs")];
+    binds.extend(
+        FIVE.iter()
+            .map(|(fact, _)| (named("time.kind"), *fact, "timer.e")),
+    );
+    assert_eq!(describe("").bound(&binds), Ok(()));
+    binds.push((named("time.kind"), "tick-rate", "timer.e"));
+    let message = refused(describe("(tick-rate 1 MHz)").bound(&binds), 14);
+    assert!(
+        message.contains("at the device `timer.abs`, and `time.kind`")
+            && message.contains("at the device `timer.e`"),
+        "{message}"
+    );
+}
+
+#[test]
+fn rule_14_judges_direct_bindings_too() {
+    // A comparator programmed with absolute times itself, of two channels, and the clock reading it, or another.
+    let d = adapted(
+        "(channels 1 tick)",
+        "",
+        "(defservice time.now (requires (tick-rate 1 MHz) (counter-modulus 4294967296)))
+         (defservice alarm.now (requires (absolute-deadline (supported-horizon (at-least 10 s))) (uses time.now)))",
+        "(defsystem s (requires (uses alarm.now)) (platform (uses soc)))",
+    );
+    let direct = |clock: &'static str| -> Vec<Bind> {
+        vec![
+            (named("alarm.now"), "absolute-deadline", "timer.abs"),
+            (named("time.now"), "counter-modulus", clock),
+            (named("time.now"), "tick-rate", clock),
+        ]
+    };
+    assert_eq!(d.bound(&direct("timer.abs")), Ok(()));
+    let message = refused(d.bound(&direct("timer.e")), 14);
+    assert!(
+        message.contains("at the device `timer.abs`, and `time.now`")
+            && message.contains("at the device `timer.e`"),
+        "{message}"
+    );
+}
+
+#[test]
+fn rule_14_judges_every_other_requester_and_leaves_the_deadline_s_own_counter_to_rule_13() {
+    const OWN: &str = "(adapter deadline-over-delay timer.d alarm.self)";
+    let d = deadline_and_clock("(channels 2 tick)");
+    // `alarm.self` reads its own rate at a device other than its deadline's: rule 13's unknown — describing what each
+    // leaves undescribed makes one whole — never rule 14's conflict.
+    let mut binds = time_base(NOW, "timer.d");
+    binds.retain(|(r, _, _)| *r != named("alarm.self"));
+    binds.push((named("alarm.self"), "absolute-deadline", OWN));
+    binds.push((named("alarm.self"), "tick-rate", "timer.e"));
+    binds.extend(beneath(OWN, "timer.d", &BENEATH_DEADLINE));
+    let message = refused(d.bound(&binds), 13);
+    assert!(
+        message.contains("`alarm.self` binds the facts of its `counter` function to 2 providers")
+            && message.contains("missing-fact")
+            && !message.contains("(rule 14)"),
+        "{message}"
+    );
+}
+
+#[test]
+fn rule_15_a_plan_naming_a_kind_the_checker_s_table_does_not_hold_is_refused() {
+    let d = adapted("(channels 1 tick)", "", "", ALARMED);
+    let plan = d.plan(None, &alarm());
+    assert!(record(&d.program, &RT_STATIC_UP_V1, RECORD, &plan.to_canonical()).is_ok());
+    // As the record reads it: check (1), a corrupted plan.
+    let text = plan
+        .to_canonical()
+        .replace("deadline-over-delay", "deadline-multiplexer");
+    let verdict = record(&d.program, &RT_STATIC_UP_V1, RECORD, &text).expect_err("no such kind");
+    assert_eq!(verdict.status, Status::ToolFailure);
+    assert_eq!(verdict.findings.len(), 1);
+    assert_eq!(verdict.findings[0].code, PLAN_RECORD);
+    assert!(
+        verdict.findings[0]
+            .message
+            .contains("`deadline-multiplexer`")
+            && verdict.findings[0].message.contains("does not hold"),
+        "{verdict:#?}"
+    );
+    // Built past the reader, checks (3) and (5) refuse it by their own readings.
+    let rename = |instance: &Instance| Instance {
+        kind: "deadline-multiplexer".to_owned(),
+        ..instance.clone()
+    };
+    let unknown = Assignment {
+        bindings: plan
+            .bindings
+            .iter()
+            .map(|((requester, fact), provider)| {
+                let requester = match requester {
+                    Requester::Instance(i) => Requester::Instance(rename(i)),
+                    other => other.clone(),
+                };
+                let provider = match provider {
+                    Provider::Instance(i) => Provider::Instance(rename(i)),
+                    other => other.clone(),
+                };
+                ((requester, fact.clone()), provider)
+            })
+            .collect(),
+        ..plan
+    };
+    let text = unknown.to_canonical();
+    let verdict = bindings(&d.sources, &d.program, RECORD, &text, &unknown)
+        .expect_err("check (3) refuses a kind it does not hold");
+    assert!(
+        verdict
+            .findings
+            .iter()
+            .all(|f| f.code == PLAN_BINDING && f.message.contains("does not hold")),
+        "{verdict:#?}"
+    );
+    let findings = refusal(
+        joint(
+            &d.sources,
+            &d.program,
+            &RT_STATIC_UP_V1,
+            RECORD,
+            &text,
+            &unknown,
+        ),
+        1,
+        false,
+    );
+    assert!(
+        messages(&findings).contains("does not hold"),
+        "{findings:#?}"
+    );
+}
+
+// ------------------------------------------------------------------------------------------------------------------
+// Rule 16: a task released by its own source.
+
+/// A source's clauses: it offers `interrupt-source` and the profile's level, and what `separation` writes inside its
+/// `offers` — an offer of `min-arrival-separation`, or nothing.
+fn offering(separation: &str) -> String {
+    format!("(offers (interrupt-source true) (reachable-at-privilege machine) {separation})")
+}
+
+/// A source declaring its separation absent: an unbounded one.
+const UNBOUNDED: &str =
+    "(offers (interrupt-source true) (reachable-at-privilege machine)) (absent min-arrival-separation)";
+
+/// The sporadic task `rx`, released at least 20 ms apart, bound itself to a source by `(needs interrupt-source)`.
+const RX: &str =
+    "(task rx (min-separation 20 ms) (deadline 20 ms) (deadline-from release) (priority 1) \
+     (needs interrupt-source))";
+
+/// Two sources of interrupts on the system's platform, `uart.rx` and `gpio.irq`, their clauses `uart` and `gpio`;
+/// `services` declared beside them, and `tasks` the system's.
+fn sourced(uart: &str, gpio: &str, services: &str, tasks: &str) -> Description {
+    describe(&format!(
+        "
+      (defblock uart.rx {uart})
+      (defblock gpio.irq {gpio})
+      (defplatform soc (offers (core-count 1 tick) (reachable-at-privilege machine)) (requires (uses uart.rx gpio.irq)))
+      {services}
+      (defsystem s
+        {tasks}
+        (platform (uses soc)))"
+    ))
+}
+
+/// `rx` beside the source `uart.rx`, whose clauses are `uart`, and a `gpio.irq` stating 20 ms.
+fn rx_beside(uart: &str) -> Description {
+    sourced(uart, &offering("(min-arrival-separation 20 ms)"), "", RX)
+}
+
+/// `requester`'s own binding of `interrupt-source` to `source`.
+fn own(requester: Requester, source: &'static str) -> [Bind; 1] {
+    [(requester, "interrupt-source", source)]
+}
+
+/// The one finding of a plan rule 16 refuses, binding `rx` to `uart.rx`: at that binding in the record, naming the
+/// task and the source, with where the task requires the fact, where it states its separation and where the source
+/// is declared.
+fn rx_refused(d: &Description) -> Finding {
+    let rx = task("s", "rx");
+    let plan = d.plan(None, &own(rx.clone(), "uart.rx"));
+    let findings = refusal(d.joint(&plan), 16, true);
+    assert_eq!(findings.len(), 1, "{findings:#?}");
+    let finding = findings[0].clone();
+    assert!(
+        finding.message.contains("`(task s rx)`") && finding.message.contains("`uart.rx`"),
+        "{finding:#?}"
+    );
+    assert_eq!(finding.primary.source, RECORD);
+    assert_eq!(
+        finding.primary.line,
+        line_of(&plan, &rx, "interrupt-source")
+    );
+    assert_eq!(finding.secondary.len(), 3, "{finding:#?}");
+    assert!(
+        finding.secondary.iter().all(|l| l.source == SOURCE),
+        "{finding:#?}"
+    );
+    finding
+}
+
+/// A conflict of rule 16's: `unsupported-profile`, never an unknown.
+fn conflict(finding: &Finding, why: &str) {
+    assert!(
+        finding.message.contains(why)
+            && finding
+                .message
+                .contains("a conflict, `unsupported-profile` (rule 16)")
+            && !finding.message.contains("missing-fact"),
+        "{why}: {finding:#?}"
+    );
+}
+
+/// An unknown of rule 16's: `missing-fact`, blocking the assignment.
+fn unknown(finding: &Finding, why: &str) {
+    assert!(
+        finding.message.contains(why)
+            && finding
+                .message
+                .contains("`missing-fact`, which blocks the assignment (rule 16)")
+            && finding.message.contains("`min-separation` of `20 ms`")
+            && !finding.message.contains("unsupported-profile"),
+        "{why}: {finding:#?}"
+    );
+}
+
+#[test]
+fn rule_16_a_task_s_own_source_as_far_apart_as_the_task_or_further_holds() {
+    for separation in [
+        "(min-arrival-separation 20 ms)",
+        "(min-arrival-separation 50 ms)",
+        "(min-arrival-separation 1 s)",
+    ] {
+        let d = rx_beside(&offering(separation));
+        assert_eq!(
+            d.bound(&own(task("s", "rx"), "uart.rx")),
+            Ok(()),
+            "{separation}"
+        );
+    }
+}
+
+#[test]
+fn rule_16_a_task_s_own_source_shorter_than_the_task_is_a_conflict_under_condition_5() {
+    let d = rx_beside(&offering("(min-arrival-separation 5 ms)"));
+    conflict(
+        &rx_refused(&d),
+        "states a `min-arrival-separation` of `5 ms`, shorter than the task's `min-separation` of `20 ms`, and the \
+         analysis admits a task released on every arrival of a source only where T ≤ T_s, its condition 5",
+    );
+}
+
+#[test]
+fn rule_16_a_task_s_own_source_declaring_its_separation_absent_is_a_conflict_under_condition_3() {
+    let d = rx_beside(UNBOUNDED);
+    conflict(
+        &rx_refused(&d),
+        "declares `min-arrival-separation` absent — an unbounded source, which the analysis refuses under its \
+         condition 3",
+    );
+}
+
+#[test]
+fn rule_16_a_comparison_past_the_exact_arithmetic_is_a_conflict() {
+    // 10^-31 ns is 10^-40 s: read exactly in its own unit, past the arithmetic in the base unit the task's `20 ms`
+    // compares in — though plainly shorter, nothing decides it (§7 rule 2).
+    let d = rx_beside(&offering(
+        "(min-arrival-separation 0.0000000000000000000000000000001 ns)",
+    ));
+    conflict(
+        &rx_refused(&d),
+        "states a `min-arrival-separation` of `0.0000000000000000000000000000001 ns` whose comparison with the \
+         task's `min-separation` of `20 ms` is past the exact arithmetic (§7 rule 2)",
+    );
+    // The same 10^-40 s in two spellings whose own comparison overflows: a separation past the arithmetic at the
+    // source (§7 rule 3), which no comparison with the task's decides either.
+    let d = rx_beside(&offering(
+        "(min-arrival-separation 0.0000000000000000000000000000001 ns) \
+         (min-arrival-separation 0.0000000000000000000000000000000001 us)",
+    ));
+    conflict(
+        &rx_refused(&d),
+        "states a `min-arrival-separation` whose comparison with the task's `min-separation` of `20 ms` is past the \
+         exact arithmetic (§7 rule 2)",
+    );
+}
+
+#[test]
+fn rule_16_a_task_s_own_source_stating_no_value_is_an_unknown() {
+    for (separation, why) in [
+        ("", "states no `min-arrival-separation`"),
+        (
+            "min-arrival-separation",
+            "offers `min-arrival-separation` without a value — bare",
+        ),
+        (
+            "(min-arrival-separation)",
+            "offers `min-arrival-separation` without a value — bare",
+        ),
+    ] {
+        let d = rx_beside(&offering(separation));
+        unknown(&rx_refused(&d), why);
+    }
+}
+
+#[test]
+fn rule_16_reads_exactly_as_a_value_and_a_bound_as_none() {
+    // `(exactly v)` is the value `v`: as far apart as the task holds, shorter is the conflict.
+    let d = rx_beside(&offering("(min-arrival-separation (exactly 20 ms))"));
+    assert_eq!(d.bound(&own(task("s", "rx"), "uart.rx")), Ok(()));
+    let d = rx_beside(&offering("(min-arrival-separation (exactly 5 ms))"));
+    conflict(&rx_refused(&d), "of `5 ms`, shorter than");
+    // A bound is no value, however far apart it writes: the unknown.
+    for bound in [
+        "(min-arrival-separation (at-least 20 ms))",
+        "(min-arrival-separation (at-least 50 ms))",
+    ] {
+        let d = rx_beside(&offering(bound));
+        unknown(
+            &rx_refused(&d),
+            "without a value — bare, or only a bound, which the relation reads as no value",
+        );
+    }
+}
+
+#[test]
+fn rule_16_compares_a_separation_written_in_another_unit_exactly() {
+    for separation in [
+        "(min-arrival-separation 20000 us)",
+        "(min-arrival-separation 20000000 ns)",
+        "(min-arrival-separation 0.02 s)",
+        "(min-arrival-separation 20001 us)",
+    ] {
+        let d = rx_beside(&offering(separation));
+        assert_eq!(
+            d.bound(&own(task("s", "rx"), "uart.rx")),
+            Ok(()),
+            "{separation}"
+        );
+    }
+    let d = rx_beside(&offering("(min-arrival-separation 19999 us)"));
+    conflict(
+        &rx_refused(&d),
+        "of `19999 us`, shorter than the task's `min-separation` of `20 ms`",
+    );
+}
+
+#[test]
+fn rule_16_leaves_a_periodic_task_bound_to_a_source_untouched() {
+    for uart in [
+        offering("(min-arrival-separation 5 ms)"),
+        UNBOUNDED.to_owned(),
+        offering(""),
+        offering("(min-arrival-separation (at-least 50 ms))"),
+    ] {
+        let d = sourced(
+            &uart,
+            &offering(""),
+            "",
+            "(task beat (period 20 ms) (deadline 20 ms) (deadline-from release) (priority 1) \
+             (needs interrupt-source))",
+        );
+        assert_eq!(
+            d.bound(&own(task("s", "beat"), "uart.rx")),
+            Ok(()),
+            "{uart}"
+        );
+    }
+}
+
+#[test]
+fn rule_16_leaves_a_task_a_source_reaches_through_a_handler_untouched() {
+    // The handler binds the source, never the task: only a task's own binding is the rule's.
+    for uart in [
+        offering("(min-arrival-separation 5 ms)"),
+        UNBOUNDED.to_owned(),
+        offering(""),
+    ] {
+        let d = sourced(
+            &uart,
+            &offering(""),
+            "(defservice rx.handler (requires (needs interrupt-source)))",
+            "(task rx (min-separation 20 ms) (deadline 20 ms) (deadline-from release) (priority 1) \
+             (uses rx.handler))",
+        );
+        assert_eq!(
+            d.bound(&own(named("rx.handler"), "uart.rx")),
+            Ok(()),
+            "{uart}"
+        );
+    }
+}
+
+#[test]
+fn rule_16_judges_each_task_bound_to_one_source_on_its_own() {
+    // `uart.rx`, 20 ms apart, is as far apart as `rx` and nearer than `burst`, 50 ms apart.
+    let d = sourced(
+        &offering("(min-arrival-separation 20 ms)"),
+        &offering(""),
+        "",
+        &format!(
+            "{RX}
+        (task burst (min-separation 50 ms) (deadline 50 ms) (deadline-from release) (priority 2) \
+             (needs interrupt-source))"
+        ),
+    );
+    let burst = task("s", "burst");
+    let plan = d.plan(
+        None,
+        &[
+            (task("s", "rx"), "interrupt-source", "uart.rx"),
+            (burst.clone(), "interrupt-source", "uart.rx"),
+        ],
+    );
+    let findings = refusal(d.joint(&plan), 16, true);
+    assert_eq!(findings.len(), 1, "{findings:#?}");
+    let message = &findings[0].message;
+    assert!(
+        message.contains("`(task s burst)`")
+            && !message.contains("`(task s rx)`")
+            && message.contains("of `20 ms`, shorter than the task's `min-separation` of `50 ms`"),
+        "{message}"
+    );
+    assert_eq!(
+        findings[0].primary.line,
+        line_of(&plan, &burst, "interrupt-source")
+    );
+}
+
+#[test]
+fn rule_16_judges_the_binding_so_a_source_far_enough_apart_holds_where_a_faster_one_is_refused() {
+    // The description offers both: the plan binding `gpio.irq`, 20 ms apart, is the one the search writes.
+    let d = sourced(
+        &offering("(min-arrival-separation 5 ms)"),
+        &offering("(min-arrival-separation 20 ms)"),
+        "",
+        RX,
+    );
+    assert_eq!(d.bound(&own(task("s", "rx"), "gpio.irq")), Ok(()));
+    conflict(&rx_refused(&d), "of `5 ms`, shorter than");
 }

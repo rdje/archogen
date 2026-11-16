@@ -12,7 +12,7 @@ tested against, and the systems the engine will eventually build.
 | --- | --- | --- |
 | [`periodic-three/`](periodic-three/) | `uc1` | builds |
 | [`high-interference/`](high-interference/) | `uc2` | builds; the timing property may return `not-established` |
-| [`alternative-timer/`](alternative-timer/) | `uc3` | refused before `M3.2`, builds after — `infeasible-configuration` today |
+| [`alternative-timer/`](alternative-timer/) | `uc3` | accepted by `archogen check`; resolves through the engine's adapter `deadline-over-delay` (`M3.2`), its timer stating its modulus (`M3.4.7.1`), and builds once `M3.7`'s records offer its policy |
 | [`bounded-queue/`](bounded-queue/) | `uc4` | **must stay refused** — `unsupported-profile` |
 
 All numbers are **synthetic** — not measurements, not attributed to any published task set, not
@@ -57,13 +57,17 @@ Every example runs through `archogen check`, and a test asserts the verdict each
 
 ```console
 $ archogen check examples/periodic-three/system.eadl  ; echo $?   # 0  accepted
-$ archogen check examples/alternative-timer/system.eadl ; echo $? # 13 infeasible-configuration
+$ archogen check examples/alternative-timer/system.eadl ; echo $? # 0  accepted
 $ archogen check examples/bounded-queue/system.eadl   ; echo $?   # 12 unsupported-profile
 ```
 
-`uc3` and `uc4` are refused for different reasons, and the difference matters. `uc3`'s refusal is
-**temporary**: the same description must build once `M3.2` supplies indirect realization, without
-changing. It changed once before then, moving no requirement: its hardware states the level it is
+`uc3` and `uc4` stop short for different reasons, and the difference matters. `uc3`'s is
+**temporary**: `M3.2` supplies the indirect realization, an engine adapter programming its relative
+timer, which needs the timer's modulus. The timer states it, `(counter-modulus 4294967296)`, since
+`2026-10-27`, under the director's delegation of `SR-H10`
+([`eadl-1-uc3-states-its-modulus.md`](../docs/semantics/migrations/eadl-1-uc3-states-its-modulus.md), leaf
+`M3.4.7.1`). So `archogen check` accepts it, and it builds once `M3.7`'s records offer its policy's
+constraints. No requirement of it changed, then or before: its hardware also states the level it is
 reachable from, `(reachable-at-privilege machine)`, as every example's does
 ([`eadl-1-uc3-states-its-level.md`](../docs/semantics/migrations/eadl-1-uc3-states-its-level.md)).
 From then on, any change to what it describes moves its digest in `docs/semantics/BASELINE.txt`,

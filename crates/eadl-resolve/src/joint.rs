@@ -8,16 +8,18 @@
 //! - **Channels** (F08). A requester bound to a consumed fact — `use consumed` in the vocabulary — at the value `true`
 //!   takes one of the provider's `channels`, and a provider serves no more requesters than it has.
 //! - **Ownership** (F09). A provider bound in the assignment owns every region it offers, and the regions of two such
-//!   providers do not overlap, unless one composes the other through `uses`.
+//!   providers do not overlap, unless one composes the other: names it through `uses`, at any depth through blocks and
+//!   platforms, whose `uses` alone is composition (model §8 rules 1 and 5).
 //! - **Connectivity** (leaf `M3.3.3`). An assignment is one [`System`]'s, and a block or platform it binds a requester
 //!   of that system to is part of the system's hardware — `SR-H15`'s "a provider on a platform the system does not use
-//!   never satisfying", in the checker's form.
+//!   never satisfying", the joint check's.
 //! - **Routes.** Each provider the assignment relies on for an interrupt — a source, or a timer's alarm — is reported
 //!   as an [`Obligation::Route`]: the description states that the provider is part of the system, and the path from
 //!   it to the core, with its latency, is the catalog's to state and the plan's to enable.
 //! - **Placement** (leaf `M3.3.5.1`). A system's memory map, once: placement memory — executable, unreserved regions —
 //!   holds no device's registers and no second placement region, and the reserved ranges in it are holes the plan avoids,
-//!   reported with it as an [`Obligation::Placement`]; a placement the plan is given is placement memory of the system.
+//!   reported with it as an [`Obligation::Placement`], one with no size reaching the region's end; a placement the plan
+//!   is given is placement memory of the system.
 //! - **Privilege** (leaf `M3.3.4.1`). Given the level a plan binds the system's callers to, a caller states no other
 //!   level, and every provider bound for a caller is reachable at that level and says so (`SR-H11`, `SR-H12`).
 //! - **Functions** (leaf `M3.3.6.2`, `SR-H14`). One requester's bindings for the facts of one function — the
@@ -29,20 +31,25 @@
 //! `M3.4`'s search to conclude. What a provider writes that cannot mean anything — a consumed function offered with no
 //! channel, a region with no base — is refused when the providers are read, whether or not anything binds them.
 //!
-//! A service several users reach — tasks or services that use it — is one requester of what it binds: its realization
-//! serves them, so it is the multiplexer, and an [`Obligation::Multiplex`] reports that it owes them the semantics and
-//! a bounded overhead.
+//! A node several users reach is one requester of the channel it takes (model §8 rule 4): its users are the jobs of the
+//! system's tasks that reach it and the interrupts whose routines run it, which [`Joint::contexts`] derives, so its
+//! realization is the multiplexer, and an [`Obligation::Multiplex`] reports that it owes them the semantics and a bounded
+//! overhead.
 
+use std::cell::RefCell;
+use std::cmp::Ordering;
 use std::collections::{BTreeMap, BTreeSet};
+use std::rc::Rc;
 
-use eadl_front::{Diagnostic, Form, Label, Span};
+use eadl_front::{Diagnostic, Form, Label, Span, MOST_ERRORS};
 use eadl_model::{Dimension, Quantity};
 
+use crate::adapter::{Catalog, Instance};
 use crate::offer::{Provider, State};
 use crate::relation::{judge, Verdict};
 use crate::requirement::side_name_lists;
 use crate::requirement::{self, Requirement};
-use crate::value::Value;
+use crate::value::{order, Value};
 use crate::vocabulary::{Domain, Function, Usage, Vocabulary};
 
 /// Who a requester is (the design's requester).
@@ -54,12 +61,18 @@ pub enum Kind {
     Service,
     /// Any other declaration, for what it writes at its own level, outside its tasks.
     Other,
+    /// An engine adapter's instance, for what its kind requires of the provider it programs: a caller at its kind's
+    /// level (`docs/specs/adapters/decision_engine-adapters.md` §4, rules 1 and 9).
+    Adapter,
+    /// The release requester the engine adds to a system on a target with a task released by the timer, named by the
+    /// system (`docs/decisions/decision_release-alarm.md` §1, model §8 rule 1): what the device releasing tasks must offer.
+    Release,
 }
 
 /// One requester, its requirements and the declarations its `uses` names.
 #[derive(Debug, Clone)]
 pub struct Requester {
-    /// Its name; a task's is `system/task`.
+    /// Its name; a task's is `(task SYSTEM TASK)` ([`task_name`]).
     pub name: String,
     /// Who it is.
     pub kind: Kind,
@@ -71,6 +84,8 @@ pub struct Requester {
     pub uses: Vec<String>,
     /// The declarations its `needs` lists name — a service another service needs, not a vocabulary fact.
     pub needs: Vec<String>,
+    /// A task's `min-separation`, where it writes one as a duration; no other requester's (model §8 rule 16).
+    pub separation: Option<Quantity>,
 }
 
 /// Every requester `decl` writes: a system's own level and each of its tasks apart, any other declaration whole.
@@ -91,6 +106,9 @@ pub fn requesters(
     if decl.head() != Some("defsystem") {
         return Ok(vec![requester(decl, name, kind, vocabulary)?]);
     }
+    // Two tasks of one system are two requesters, though §7 reads them as one side (model §8 rule 1): a contradiction
+    // between its own level and a task, or between two tasks, is one (§7 rule 4; `RTP-H20`).
+    requirement::read_side(decl, vocabulary)?;
     let (tasks, own): (Vec<&Form>, Vec<&Form>) = decl
         .items()
         .iter()
@@ -101,10 +119,144 @@ pub fn requesters(
     };
     let mut out = vec![requester(&own, name.clone(), Kind::Other, vocabulary)?];
     for task in tasks {
-        let task_name = format!("{name}/{}", name_of(task));
-        out.push(requester(task, task_name, Kind::Task, vocabulary)?);
+        out.push(requester(
+            task,
+            task_name(&name, name_of(task)),
+            Kind::Task,
+            vocabulary,
+        )?);
     }
     Ok(out)
+}
+
+/// A task's name as the joint rules hold it: `(task SYSTEM TASK)`, the form the assignment record writes, which no
+/// declaration's name can be — a symbol holds no space or parenthesis — as an instance's `(adapter …)` cannot (leaf
+/// `M4.1.11`: `SYSTEM/TASK` was a symbol a declaration could also be named).
+#[must_use]
+pub fn task_name(system: &str, task: &str) -> String {
+    format!("(task {system} {task})")
+}
+
+/// The release requester's name for `system`: `(release SYSTEM)`, as the assignment record writes it, which no declaration's
+/// name can be (`docs/decisions/decision_runtime-plan-format-2.md` §3).
+#[must_use]
+pub fn release_name(system: &str) -> String {
+    format!("(release {system})")
+}
+
+/// The system whose release requester `name` is, where it is one ([`release_name`]).
+#[must_use]
+pub fn release_of(name: &str) -> Option<&str> {
+    name.strip_prefix("(release ")?
+        .strip_suffix(')')
+        .filter(|system| !system.is_empty() && !system.contains(' '))
+}
+
+/// What the release requester asks of the device releasing tasks, beside the horizons the shortest period sets
+/// (`docs/decisions/decision_release-alarm.md` §1): a delay programmed on a counter whose modulus, rate and coherent reads
+/// are known, a counter running while the idle context waits, wired to the core, compared by level.
+const RELEASE_NEEDS: [&str; 4] = [
+    "relative-delay",
+    "counter-modulus",
+    "tick-rate",
+    "observation-coherent",
+];
+
+/// The release requester the engine adds to `system`, a system on a target (`docs/decisions/decision_release-alarm.md` §1,
+/// model §8 rule 1), or `None` where no task of it is released by the timer: one task writing a `period` that reads as a
+/// duration. Its requirements are the record's, `SHORTEST` the shortest such period as its task writes it; it is
+/// written where the system is, and each horizon where that period is.
+///
+/// # Errors
+///
+/// The refusals the relation's reading of its side gives: none of a system the language admitted.
+pub fn release_requester(
+    system: &Form,
+    vocabulary: &Vocabulary,
+) -> Result<Option<Requester>, requirement::Refusals> {
+    let mut shortest: Option<(Quantity, &Form)> = None;
+    for task in system
+        .items()
+        .iter()
+        .filter(|item| item.head() == Some("task"))
+    {
+        let Some(clause) = task
+            .items()
+            .iter()
+            .find(|item| item.head() == Some("period"))
+        else {
+            continue;
+        };
+        let items = clause.items();
+        let Some(period) = Quantity::read(items.get(1), items.get(2), clause.span())
+            .ok()
+            .filter(|q| q.unit.dimension == Dimension::Time)
+        else {
+            continue;
+        };
+        let shorter = match &shortest {
+            None => true,
+            Some((least, _)) => period
+                .compare(*least)
+                .is_ok_and(|order| order == Ordering::Less),
+        };
+        if shorter {
+            shortest = Some((period, clause));
+        }
+    }
+    let Some((_, clause)) = shortest else {
+        return Ok(None);
+    };
+    let at = system.span();
+    let symbol = |name: &str| Form::Symbol {
+        name: name.to_owned(),
+        span: at,
+    };
+    let list = |items: Vec<Form>| Form::List { items, span: at };
+    let fact = |name: &str, value: &str| list(vec![symbol(name), symbol(value)]);
+    let horizon = |name: &str| {
+        list(vec![
+            symbol(name),
+            Form::List {
+                items: std::iter::once(Form::Symbol {
+                    name: "at-least".to_owned(),
+                    span: clause.span(),
+                })
+                .chain(clause.items()[1..].iter().cloned())
+                .collect(),
+                span: clause.span(),
+            },
+        ])
+    };
+    let name = name_of(system);
+    let side = list(vec![
+        symbol("release"),
+        symbol(name),
+        list(vec![
+            symbol("requires"),
+            list(
+                std::iter::once(symbol("needs"))
+                    .chain(RELEASE_NEEDS.iter().map(|fact| symbol(fact)))
+                    .collect(),
+            ),
+            fact("available-in-state", "idle"),
+            fact("alarm-wiring", "core"),
+            fact("alarm-kind", "level-compare"),
+            horizon("unambiguous-horizon"),
+            horizon("supported-horizon"),
+        ]),
+    ]);
+    requester(&side, release_name(name), Kind::Release, vocabulary).map(Some)
+}
+
+/// A task's system and name, where `name` is one ([`task_name`]).
+#[must_use]
+pub fn task_of(name: &str) -> Option<(&str, &str)> {
+    let inner = name.strip_prefix("(task ")?.strip_suffix(')')?;
+    match inner.split(' ').collect::<Vec<_>>()[..] {
+        [system, task] => Some((system, task)),
+        _ => None,
+    }
 }
 
 fn requester(
@@ -125,7 +277,24 @@ fn requester(
             .flat_map(|list| list.items()[1..].iter().filter_map(Form::as_symbol))
             .map(str::to_string)
             .collect(),
+        separation: if kind == Kind::Task {
+            separation(form)
+        } else {
+            None
+        },
     })
+}
+
+/// A task's `(min-separation N UNIT)`, as a duration: one the language's check refuses reads as none.
+fn separation(task: &Form) -> Option<Quantity> {
+    let clause = task
+        .items()
+        .iter()
+        .find(|item| item.head() == Some("min-separation"))?;
+    let items = clause.items();
+    Quantity::read(items.get(1), items.get(2), clause.span())
+        .ok()
+        .filter(|q| q.unit.dimension == Dimension::Time)
 }
 
 /// The names `form`'s `uses` lists hold, at the positions the relation reads a side's.
@@ -171,6 +340,8 @@ pub struct System {
     pub hardware: BTreeSet<String>,
     /// Every declaration a `uses` or `needs` of the system, its tasks, or of what they reach names, at any depth.
     pub reached: BTreeSet<String>,
+    /// Those of `reached` that are another system, reached for its own level alone, which `M1.46` refuses.
+    pub other_systems: BTreeSet<String>,
     /// The privilege level a plan binds the system's callers to, when one is given (model §8 rule 9).
     pub level: Option<String>,
     /// The region a plan places the image in, when one is given (model §8 rule 10): M3 chooses it, `M4.1` the offsets.
@@ -184,13 +355,30 @@ impl System {
     pub fn read(decl: &Form, declarations: &[Form]) -> Self {
         let declared: BTreeMap<&str, &Form> =
             declarations.iter().map(|d| (name_of(d), d)).collect();
+        // Another system named is reached for its own level alone, never its tasks, which are that system's requesters
+        // (model §8 rule 7's "a declaration its closure reaches"; `M1.46` refuses the name).
+        let own_level = |system: &Form| Form::List {
+            items: system
+                .items()
+                .iter()
+                .filter(|item| item.head() != Some("task"))
+                .cloned()
+                .collect(),
+            span: system.span(),
+        };
         let mut reached = BTreeSet::new();
-        let mut todo = vec![decl];
+        let mut other_systems = BTreeSet::new();
+        let mut todo: Vec<Form> = vec![decl.clone()];
         while let Some(at) = todo.pop() {
-            for name in named_by(at) {
+            for name in named_by(&at) {
                 if let Some(next) = declared.get(name) {
                     if reached.insert(name.to_string()) {
-                        todo.push(next);
+                        todo.push(if next.head() == Some("defsystem") {
+                            other_systems.insert(name.to_string());
+                            own_level(next)
+                        } else {
+                            (*next).clone()
+                        });
                     }
                 }
             }
@@ -214,6 +402,7 @@ impl System {
             span: decl.span(),
             hardware,
             reached,
+            other_systems,
             level: None,
             placement: None,
         }
@@ -247,13 +436,13 @@ impl System {
         }
     }
 
-    /// Whether the system's closure reaches `requester`: its own level, one of its tasks, or a declaration it reaches.
+    /// Whether the system's closure reaches `requester`: its own level, one of its tasks, its release requester on a target
+    /// (model §8 rule 7), or a declaration it reaches.
     #[must_use]
     pub fn serves(&self, requester: &str) -> bool {
         requester == self.name
-            || requester
-                .strip_prefix(self.name.as_str())
-                .is_some_and(|task| task.starts_with('/'))
+            || task_of(requester).is_some_and(|(system, _)| system == self.name)
+            || release_of(requester) == Some(self.name.as_str())
             || self.reached.contains(requester)
     }
 }
@@ -271,6 +460,17 @@ pub struct Binding {
 
 /// The fact a requester released by an interrupt requires of its source.
 const INTERRUPT_SOURCE: &str = "interrupt-source";
+/// A deadline programmed at an absolute time, whose time base rule 14 holds to one device.
+const ABSOLUTE_DEADLINE: &str = "absolute-deadline";
+/// The facts of the function `counter` that describe its compare and read none of its time, so rule 14 reads none of them as a reader of a
+/// time base (`docs/decisions/decision_release-alarm.md`'s `RA-H8`, leaf `M4.1.7.3.1`).
+pub const DESCRIBES_A_COMPARE: [&str; 5] = [
+    "alarm-wiring",
+    "alarm-kind",
+    "compare-step",
+    "compare-window",
+    "compare-magnitude",
+];
 /// The source's own bound on how often it fires, which the analysis reads with the route.
 const MIN_ARRIVAL_SEPARATION: &str = "min-arrival-separation";
 /// The levels a function is reachable from, and the level a caller states it calls from.
@@ -439,6 +639,21 @@ pub enum Finding {
         /// Declared absent — reachable from no level — rather than undescribed or offered bare.
         absent: bool,
     },
+    /// A sporadic task bound itself for `interrupt-source` to a source the analysis does not admit for it: every arrival
+    /// releases it, so the source's stated `min-arrival-separation` must be at least the task's own `min-separation`
+    /// (model §8 rule 16; `RTP-H24`).
+    OwnSource {
+        /// The task.
+        requester: String,
+        /// Where it requires `interrupt-source`.
+        span: Span,
+        /// The source.
+        provider: String,
+        /// Where the source is declared.
+        declared: Span,
+        /// Why the analysis does not admit it.
+        why: Unadmitted,
+    },
     /// Two claims on the same bytes in a system's memory map: a region that is neither placement memory nor reserved —
     /// a device's registers — overlapping placement memory, or two placement regions overlapping (leaf `M3.3.5.1`).
     MapContradiction {
@@ -464,6 +679,22 @@ pub enum Finding {
         sizeless: (String, Region),
         /// The provider whose region lies at or above its base.
         against: String,
+    },
+    /// Placement memory with no size: nothing can be laid out in it.
+    MemoryUnsized {
+        /// The system.
+        system: String,
+        /// The placement region and its provider.
+        memory: (String, Region),
+    },
+    /// A hole of no size in placement memory the holes, each taken to reach the region's end, leave no free byte of.
+    HoleUnsized {
+        /// The system.
+        system: String,
+        /// The placement region and its provider.
+        memory: (String, Region),
+        /// The reserved range with no size and its provider.
+        hole: (String, Region),
     },
     /// A placement given to the plan that is not placement memory of the system's hardware.
     PlacementIllegal {
@@ -513,6 +744,20 @@ pub enum Finding {
         /// The relation's verdict there: refused or absent, unknown or undescribed, or past the arithmetic.
         verdict: Verdict,
     },
+    /// A service or a policy a system serves naming a block or platform outside the system's hardware, judged once for
+    /// the system (model §8 rule 7, leaf `M1.49`).
+    NamedOutside {
+        /// The service or policy.
+        namer: String,
+        /// Where it is declared.
+        span: Span,
+        /// The block or platform it names.
+        named: String,
+        /// Where that is declared.
+        declared: Span,
+        /// The system.
+        system: String,
+    },
     /// A requester of a system bound to a block or platform outside the system's hardware (leaf `M3.3.3`).
     Unconnected {
         /// The requester.
@@ -526,6 +771,53 @@ pub enum Finding {
         /// The system.
         system: String,
     },
+    /// The device bound for a system's release requester stating no `compare-step`, or neither a `compare-window` nor
+    /// `(compare-magnitude true)`: how far apart two values its compare matches, and how it reads one as due, which the
+    /// analysis reads of it (`docs/decisions/decision_release-alarm.md` §1, model §8 rule 1).
+    ReleaseCompareUnstated {
+        /// The system.
+        system: String,
+        /// The device.
+        provider: String,
+        /// Where the device is declared.
+        declared: Span,
+        /// What it leaves unstated: `compare-step`, `compare-window or compare-magnitude`, or both.
+        missing: Vec<&'static str>,
+    },
+    /// A deadline programmed at one device and a time read from another, by requesters the deadline's reaches (model
+    /// §8 rule 14, `docs/specs/adapters/decision_engine-adapters.md` §4).
+    TwoTimeBases {
+        /// The requester bound for the deadline.
+        requester: String,
+        /// Where it requires it.
+        span: Span,
+        /// The device the deadline is programmed at.
+        device: String,
+        /// The requester reading a time-base fact.
+        reader: String,
+        /// Where it requires that fact.
+        read: Span,
+        /// The device it reads it at.
+        read_device: String,
+    },
+}
+
+/// Why the analysis does not admit a task's own source (model §8 rule 16).
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub enum Unadmitted {
+    /// Its separation shorter than the task's, against the analysis's condition 5: `unsupported-profile`.
+    Faster {
+        /// The task's `min-separation`.
+        task: Quantity,
+        /// The source's `min-arrival-separation`.
+        source: Quantity,
+    },
+    /// Its separation declared absent, an unbounded source the analysis refuses (its condition 3): `unsupported-profile`.
+    Absent,
+    /// The comparison past the exact arithmetic (§7 rule 2): `unsupported-profile`.
+    PastArithmetic,
+    /// No value stated — none, bare, or a bound, which the relation reads as no value: `missing-fact`.
+    Unstated,
 }
 
 impl Finding {
@@ -536,15 +828,25 @@ impl Finding {
             Self::OverChannels { .. }
             | Self::Overlap { .. }
             | Self::Unconnected { .. }
+            | Self::NamedOutside { .. }
+            | Self::TwoTimeBases { .. }
             | Self::OutOfLevel { .. }
             | Self::PlacementIllegal { .. }
             | Self::LevelUnstated { absent: true, .. } => "infeasible-configuration",
             Self::ChannelsUnknown { .. }
+            | Self::ReleaseCompareUnstated { .. }
             | Self::RegionUnsized { .. }
             | Self::PlacementUnsized { .. }
+            | Self::MemoryUnsized { .. }
+            | Self::HoleUnsized { .. }
             | Self::LevelUnstated { absent: false, .. } => "missing-fact",
             Self::MapContradiction { .. } | Self::MemoryAllHoles { .. } => "invalid-description",
             Self::LevelUnsupported { .. } => "unsupported-profile",
+            Self::OwnSource {
+                why: Unadmitted::Unstated,
+                ..
+            } => "missing-fact",
+            Self::OwnSource { .. } => "unsupported-profile",
             Self::ChannelsContradicted { .. } | Self::RegionMalformed { .. } => {
                 "invalid-description"
             }
@@ -677,6 +979,62 @@ impl Finding {
                 ),
             )
             .with_secondary(Label::new(*declared, "declared here, outside it")),
+            Self::NamedOutside {
+                namer,
+                span,
+                named,
+                declared,
+                system,
+            } => Diagnostic::error(
+                "infeasible-configuration",
+                format!(
+                    "`{namer}` names `{named}`, which is not part of the hardware of `{system}`, which serves `{namer}`"
+                ),
+                Label::new(*span, "names it here"),
+                format!(
+                    "compose `{named}` into `{system}`'s platform, or have `{namer}` name hardware the platform composes"
+                ),
+            )
+            .with_secondary(Label::new(*declared, "declared here, outside it")),
+            Self::TwoTimeBases {
+                requester,
+                span,
+                device,
+                reader,
+                read,
+                read_device,
+            } => Diagnostic::error(
+                "infeasible-configuration",
+                format!(
+                    "`{requester}` programs a deadline in `{device}`'s time, and `{reader}`, which it reaches, reads \
+                     time from `{read_device}`: one deadline, two time bases"
+                ),
+                Label::new(*span, "the deadline required here"),
+                format!(
+                    "bind the deadline and the time it is read in at one device; a counter read for another purpose \
+                     belongs to a requester `{requester}` does not reach"
+                ),
+            )
+            .with_secondary(Label::new(*read, "the time read here")),
+            Self::ReleaseCompareUnstated {
+                system,
+                provider,
+                declared,
+                missing,
+            } => Diagnostic::error(
+                "missing-fact",
+                format!(
+                    "`{provider}` releases `{system}`'s tasks and states no {}, which the analysis reads of the device that \
+                     releases them",
+                    missing.join(" nor ")
+                ),
+                Label::new(*declared, "the release timer, declared here"),
+                format!(
+                    "state them at `{provider}` with what checks them: `compare-step`, the step its compare matches on, and \
+                     `compare-window`, how far past a value it still reads it due, or `(compare-magnitude true)` where it reads \
+                     the two as whole numbers"
+                ),
+            ),
             Self::MapContradiction {
                 system,
                 memory,
@@ -721,6 +1079,30 @@ impl Finding {
                 Label::new(sizeless.1.span, "no size"),
                 "write the region's `(size …)`",
             ),
+            Self::MemoryUnsized { system, memory } => Diagnostic::error(
+                "missing-fact",
+                format!(
+                    "`{}`'s placement memory `{}` has no size, so nothing can be laid out in it in `{system}`",
+                    memory.0, memory.1.name
+                ),
+                Label::new(memory.1.span, "no size"),
+                "write the region's `(size …)`",
+            ),
+            Self::HoleUnsized {
+                system,
+                memory,
+                hole,
+            } => Diagnostic::error(
+                "missing-fact",
+                format!(
+                    "`{}`'s reserved range `{}` has no size, and with each such range taken to reach the end of `{}`'s \
+                     placement memory `{}`, `{system}` has no free byte to place in",
+                    hole.0, hole.1.name, memory.0, memory.1.name
+                ),
+                Label::new(hole.1.span, "no size"),
+                "write the reserved range's `(size …)`",
+            )
+            .with_secondary(Label::new(memory.1.span, "placement memory")),
             Self::PlacementIllegal {
                 system,
                 span,
@@ -785,6 +1167,52 @@ impl Finding {
                 format!("describe `{provider}`'s `{REACHABLE_AT_PRIVILEGE}` with the levels it is reachable from"),
             )
             .with_secondary(Label::new(*declared, "declared here")),
+            Self::OwnSource {
+                requester,
+                span,
+                provider,
+                declared,
+                why,
+            } => {
+                let released = format!(
+                    "`{requester}` is bound itself to `{provider}` for `{INTERRUPT_SOURCE}`, so every arrival of \
+                     `{provider}` releases it"
+                );
+                Diagnostic::error(
+                    self.code(),
+                    match why {
+                        Unadmitted::Faster { task, source } => format!(
+                            "{released}, and `{provider}`'s `{MIN_ARRIVAL_SEPARATION}` {source} is shorter than its \
+                             `min-separation` {task}: the analysis admits a task released on every arrival of a \
+                             source only where T ≤ T_s (its condition 5)"
+                        ),
+                        Unadmitted::Absent => format!(
+                            "{released}, and `{provider}` declares its `{MIN_ARRIVAL_SEPARATION}` absent, a source \
+                             with no bound, which the analysis refuses (its condition 3)"
+                        ),
+                        Unadmitted::PastArithmetic => format!(
+                            "{released}, and comparing `{provider}`'s `{MIN_ARRIVAL_SEPARATION}` with its \
+                             `min-separation` lies past the exact arithmetic"
+                        ),
+                        Unadmitted::Unstated => format!(
+                            "{released}, and `{provider}` states no value for its `{MIN_ARRIVAL_SEPARATION}`, which \
+                             the analysis needs to admit the task"
+                        ),
+                    },
+                    Label::new(*span, "required here"),
+                    match why {
+                        Unadmitted::Unstated => format!(
+                            "state `{provider}`'s `{MIN_ARRIVAL_SEPARATION}` as a value, at least the task's \
+                             `min-separation`"
+                        ),
+                        _ => format!(
+                            "bind the task's `{INTERRUPT_SOURCE}` to a source whose `{MIN_ARRIVAL_SEPARATION}` is at \
+                             least its `min-separation`"
+                        ),
+                    },
+                )
+                .with_secondary(Label::new(*declared, "declared here"))
+            }
             Self::FunctionSplit {
                 requester,
                 function,
@@ -870,6 +1298,187 @@ fn function_of<'v>(vocabulary: &'v Vocabulary, fact: &str) -> Option<&'v Functio
     vocabulary.fact(fact).and_then(|f| f.function.as_ref())
 }
 
+/// Whether `requirement` binds no provider at all: `reachable-at-privilege`, which rule 9 judges against the level the
+/// system is given, never at a provider of its own (model §8 rules 9 and 13, leaf `M4.1.9`).
+#[must_use]
+pub fn is_level(requirement: &Requirement) -> bool {
+    requirement.fact() == REACHABLE_AT_PRIVILEGE
+}
+
+/// The blocks and platforms system `system` counts as requesters (model §2 rule 3, §8 rule 5; leaf `M3.4.17.6`): each one `decl`, the system, names in
+/// a `uses` or a `needs` it writes, its `platform` clause's and its tasks' among them, or a requester it serves that is no part names so; then each part
+/// that offers a fact a requester counted requires, a fact the vocabulary's rule derives such a fact of, or a fact the `beneath` of a kind of `catalog`
+/// adding such a fact names, an instance over it being its binding too, and each a part counted names by `needs`, an edge presence follows where a
+/// `uses` composes, to a fixed point. Which part the search binds is its
+/// own choice, so each that may be bound is counted, and a precondition of one it does not bind is refused all the same. A part named only by another's
+/// composition and offering nothing asked is not among them: its needs bind nothing, an unused device failing nothing (`ROADMAP.md` §5.3). The search and
+/// a record read back both read it.
+#[must_use]
+pub fn counted_parts(
+    decl: &Form,
+    system: &System,
+    providers: &[(Provider, &Form)],
+    requesters: &[Requester],
+    vocabulary: &Vocabulary,
+    catalog: &Catalog,
+) -> BTreeSet<String> {
+    fn named_by(form: &Form, out: &mut BTreeSet<String>) {
+        match form.head() {
+            Some("offers" | "absent" | "refines") => {}
+            Some("uses" | "needs") => out.extend(
+                form.items()
+                    .iter()
+                    .skip(1)
+                    .filter_map(Form::as_symbol)
+                    .map(str::to_owned),
+            ),
+            _ => {
+                for item in form.items().iter().skip(1) {
+                    if matches!(item, Form::List { .. }) {
+                        named_by(item, out);
+                    }
+                }
+            }
+        }
+    }
+    let parts: BTreeSet<&str> = providers
+        .iter()
+        .map(|(provider, _)| provider.name.as_str())
+        .collect();
+    let mut named = BTreeSet::new();
+    named_by(decl, &mut named);
+    for requester in requesters
+        .iter()
+        .filter(|r| !parts.contains(r.name.as_str()) && system.serves(&r.name))
+    {
+        named.extend(requester.uses.iter().chain(&requester.needs).cloned());
+    }
+    let mut counted: BTreeSet<String> = named
+        .into_iter()
+        .filter(|name| parts.contains(name.as_str()))
+        .collect();
+    loop {
+        let mut wanted: BTreeSet<String> = requesters
+            .iter()
+            .filter(|r| {
+                if parts.contains(r.name.as_str()) {
+                    counted.contains(&r.name)
+                } else {
+                    system.serves(&r.name)
+                }
+            })
+            .flat_map(|r| r.requirements.iter())
+            .filter(|requirement| !is_level(requirement))
+            .map(|requirement| requirement.fact().to_owned())
+            .collect();
+        let mut inputs: Vec<String> = wanted.iter().cloned().collect();
+        while let Some(fact) = inputs.pop() {
+            let derived = vocabulary
+                .fact(&fact)
+                .into_iter()
+                .flat_map(|told| told.derived_from.iter());
+            let beneath = catalog
+                .kinds
+                .iter()
+                .filter(|kind| kind.adds().contains(&fact.as_str()))
+                .flat_map(|kind| kind.beneath_names.iter());
+            let found: Vec<String> = derived.chain(beneath).cloned().collect();
+            for input in found {
+                if wanted.insert(input.clone()) {
+                    inputs.push(input);
+                }
+            }
+        }
+        let more: Vec<String> = providers
+            .iter()
+            .filter(|(provider, _)| {
+                !counted.contains(&provider.name)
+                    && wanted.iter().any(|fact| {
+                        matches!(
+                            provider.state(fact),
+                            Some(State::Valued(_) | State::Unvalued | State::Overflow)
+                        )
+                    })
+            })
+            .map(|(provider, _)| provider.name.clone())
+            .chain(
+                requesters
+                    .iter()
+                    .filter(|r| parts.contains(r.name.as_str()) && counted.contains(&r.name))
+                    .flat_map(|r| r.needs.iter())
+                    .filter(|name| parts.contains(name.as_str()) && !counted.contains(*name))
+                    .cloned(),
+            )
+            .collect();
+        if more.is_empty() {
+            break;
+        }
+        counted.extend(more);
+    }
+    counted
+}
+
+/// `requesters` without the parts [`counted_parts`] leaves out, which it returns: what such a part writes binds nothing, but the language's rules on what it
+/// names hold of it all the same.
+pub fn retain_counted(
+    requesters: &mut Vec<Requester>,
+    providers: &[(Provider, &Form)],
+    counted: &BTreeSet<String>,
+) -> Vec<Requester> {
+    let parts: BTreeSet<&str> = providers
+        .iter()
+        .map(|(provider, _)| provider.name.as_str())
+        .collect();
+    let (kept, left): (Vec<Requester>, Vec<Requester>) = std::mem::take(requesters)
+        .into_iter()
+        .partition(|requester| {
+            !parts.contains(requester.name.as_str()) || counted.contains(&requester.name)
+        });
+    *requesters = kept;
+    left
+}
+
+/// Whether `requirement` is one of rule 13's qualifiers: a requirement on an `each` fact, `reachable-at-privilege` apart,
+/// which is rule 9's.
+#[must_use]
+pub fn is_qualifier(requirement: &Requirement, vocabulary: &Vocabulary) -> bool {
+    requirement.fact() != REACHABLE_AT_PRIVILEGE
+        && function_of(vocabulary, requirement.fact()) == Some(&Function::Each)
+}
+
+/// Whether `requester` relies on a function: it, or a requester it reaches through `uses` and `needs` at any depth,
+/// requires a fact of a function. Every requirement of a complete assignment is bound, so such a fact is bound, and a
+/// qualifier of `requester` then "makes no binding of its own" (model §8 rule 13); a requester relying on no function
+/// binds its qualifier as any requirement. The search's pairs and a record read back both read it (leaf `M4.1.8`).
+#[must_use]
+pub fn relies_on_a_function(
+    requester: &str,
+    requesters: &[Requester],
+    vocabulary: &Vocabulary,
+) -> bool {
+    let by_name: BTreeMap<&str, &Requester> =
+        requesters.iter().map(|r| (r.name.as_str(), r)).collect();
+    let mut seen: BTreeSet<&str> = BTreeSet::from([requester]);
+    let mut todo = vec![requester];
+    while let Some(at) = todo.pop() {
+        let Some(r) = by_name.get(at) else {
+            continue;
+        };
+        if r.requirements.iter().any(|q| {
+            !matches!(q, Requirement::Statement { .. })
+                && matches!(function_of(vocabulary, q.fact()), Some(Function::Of(_)))
+        }) {
+            return true;
+        }
+        for named in r.uses.iter().chain(&r.needs) {
+            if seen.insert(named.as_str()) {
+                todo.push(named.as_str());
+            }
+        }
+    }
+    false
+}
+
 fn quoted(levels: &[String]) -> String {
     levels
         .iter()
@@ -889,15 +1498,15 @@ fn listed(requesters: &[(String, Span)]) -> String {
 /// What a realization owes because of an assignment.
 #[derive(Debug, Clone, PartialEq)]
 pub enum Obligation {
-    /// A service several requesters reach takes a channel: its realization serves them all through it, so it owes
-    /// them the shared semantics and a bounded overhead (`ROADMAP.md` §5.4).
+    /// A node with two or more users takes a channel (model §8 rule 4): its realization serves them all through it,
+    /// so it owes them the shared semantics and a bounded overhead (`ROADMAP.md` §5.4).
     Multiplex {
-        /// The service.
-        service: String,
-        /// The requesters that use it.
-        users: Vec<String>,
-        /// The provider whose channel it takes.
-        provider: String,
+        /// The node: a service, a policy, or a block or a platform bound for requirements of its own.
+        node: String,
+        /// Its users, two or more: the system's tasks that reach it, then the routines whose interrupts run it.
+        users: Vec<Caller>,
+        /// Each provider whose channel it takes, by name.
+        providers: Vec<String>,
     },
     /// A provider the assignment relies on for an interrupt: the path from it to the system's core, with its latency,
     /// is the catalog's to state and the plan's to enable (leaf `M3.3.3`; `decision_runtime-analysis-variant.md`'s
@@ -923,15 +1532,17 @@ pub enum Obligation {
         provider: String,
         /// The placement region.
         region: String,
-        /// Each hole in it: its provider and its region.
+        /// Each hole in it: its provider and its region, one with no size reaching the region's end.
         holes: Vec<(String, String)>,
     },
 }
 
-/// What one system's memory map says of placement, judged once for the system (model §8 rule 10).
+/// What one system's hardware says whatever the assignment, judged once for the system: its memory map (model §8 rule
+/// 10), and what it serves naming hardware outside it (rule 7).
 #[derive(Debug, Clone, Default, PartialEq)]
 pub struct Map {
-    /// Two claims on the same bytes, or memory all holes: `invalid-description`.
+    /// Two claims on the same bytes, or memory all holes, `invalid-description`; a name outside the hardware,
+    /// `infeasible-configuration`.
     pub refused: Vec<Finding>,
     /// A size the judgment cannot do without: `missing-fact`.
     pub unknowns: Vec<Finding>,
@@ -967,7 +1578,7 @@ pub struct Initialization {
     /// Each edge, earlier to later, with its reason, sorted.
     pub edges: Vec<(String, String, Because)>,
     /// Each strongly connected component of more than one node, its nodes by name: a unit the engine initialises
-    /// together, in two phases where it can.
+    /// together, in one phase, its members in their texts' order (model §8 rule 12; the runtime plan's §2.7).
     pub components: Vec<Vec<String>>,
 }
 
@@ -983,6 +1594,73 @@ pub enum Interrupt {
     },
     /// A timer, bound through a consumed fact at `true`: an alarm the requester programs.
     Timer,
+}
+
+/// One route's interrupt routine, by its provider and kind (model §8 rule 8): what an [`Obligation::Route`] names.
+#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord)]
+pub struct Routine {
+    /// The route's provider.
+    pub provider: String,
+    /// Whether the route is a timer route; a source otherwise.
+    pub timer: bool,
+}
+
+/// Who can call a node at run time (model §8 rule 4).
+#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord)]
+pub enum Caller {
+    /// The jobs of a task of the system that reaches the node, by the task's name.
+    Task(String),
+    /// The routine of a route of the system whose interrupt runs the node.
+    Routine(Routine),
+}
+
+/// A context a task's or a node's code runs in (model §8 rule 4; `docs/decisions/decision_runtime-plan.md` §2.6).
+#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord)]
+pub enum Context {
+    /// A job: a task's own, and every node a task reaches.
+    Job,
+    /// The routine of a route's interrupt, for everything that interrupt runs.
+    Routine(Routine),
+    /// Initialisation, every node's.
+    Initialisation,
+}
+
+/// The contexts one system's assignment runs its code in (model §8 rule 4; `docs/decisions/decision_runtime-plan.md`
+/// §2.6), derived for the multiplexer and for `M4.1`'s plan, refusing nothing.
+#[derive(Debug, Clone, Default, PartialEq, Eq)]
+pub struct Contexts {
+    /// Each task and each node, by name, with every context its code runs in.
+    pub of: BTreeMap<String, BTreeSet<Context>>,
+    /// Each route's routine, with what its interrupt runs: the code rule 4 names and every node that code reaches.
+    pub runs: BTreeMap<Routine, BTreeSet<String>>,
+}
+
+/// What a requester reaches over one assignment (model §8 rule 4): its direct names gathered once, and each closure
+/// computed once, since the search judges every assignment it tries.
+struct Reach<'a> {
+    direct: BTreeMap<&'a str, BTreeSet<&'a str>>,
+    closures: RefCell<BTreeMap<&'a str, Rc<BTreeSet<&'a str>>>>,
+}
+
+impl<'a> Reach<'a> {
+    /// Everything `from` reaches, at any depth; itself only where a path returns to it.
+    fn of(&self, from: &'a str) -> Rc<BTreeSet<&'a str>> {
+        if let Some(known) = self.closures.borrow().get(from) {
+            return Rc::clone(known);
+        }
+        let mut seen = BTreeSet::new();
+        let mut todo = vec![from];
+        while let Some(at) = todo.pop() {
+            for next in self.direct.get(at).into_iter().flatten() {
+                if seen.insert(*next) {
+                    todo.push(next);
+                }
+            }
+        }
+        let seen = Rc::new(seen);
+        self.closures.borrow_mut().insert(from, Rc::clone(&seen));
+        seen
+    }
 }
 
 /// What one assignment breaks, what it leaves unknown, and what it obliges.
@@ -1013,18 +1691,25 @@ pub struct Joint<'v> {
     /// The levels each requester states it calls from, and where.
     stated: BTreeMap<String, (BTreeSet<String>, Span)>,
     requesters: BTreeMap<String, Kind>,
-    users: BTreeMap<String, BTreeSet<String>>,
     /// The declarations each requester names by `uses` or `needs`.
     names: BTreeMap<String, BTreeSet<String>>,
+    /// Where each requester is written.
+    spans: BTreeMap<String, Span>,
     /// Each provider as read, which rule 13 judges requirements at.
     providers: BTreeMap<String, Provider>,
     /// Each requester's requirements on a qualifier but `reachable-at-privilege`, rule 9's (rule 13).
     qualified: BTreeMap<String, Vec<Requirement>>,
+    /// Each engine adapter's instance the rules may meet, by name, with the provider it programs (`M3.2.3.1`).
+    instances: BTreeMap<String, String>,
+    /// The instances whose kind's cost runs their requester's code (rule 4, the adapters record §9).
+    delivering: BTreeSet<String>,
+    /// Each sporadic task's `min-separation`, by its name (rule 16).
+    separations: BTreeMap<String, Quantity>,
 }
 
 impl<'v> Joint<'v> {
-    /// Read what the rules need of each provider — its channels, its regions, the providers it composes — and who
-    /// uses whom among the requesters.
+    /// Read what the rules need of each provider — its channels, its regions, the providers it composes — and what each
+    /// requester names.
     ///
     /// # Errors
     ///
@@ -1074,17 +1759,6 @@ impl<'v> Joint<'v> {
         if !findings.is_empty() {
             return Err(findings);
         }
-        // A service's users are what calls it at run time — tasks and other services. A system's own `uses` says what
-        // the system includes, not who calls it, so it is no second user beside the task that does.
-        let mut users: BTreeMap<String, BTreeSet<String>> = BTreeMap::new();
-        for r in requesters.iter().filter(|r| r.kind != Kind::Other) {
-            for used in &r.uses {
-                users
-                    .entry(used.clone())
-                    .or_default()
-                    .insert(r.name.clone());
-            }
-        }
         let stated = requesters
             .iter()
             .filter_map(|r| {
@@ -1130,7 +1804,10 @@ impl<'v> Joint<'v> {
                 .iter()
                 .map(|r| (r.name.clone(), r.kind))
                 .collect(),
-            users,
+            spans: requesters
+                .iter()
+                .map(|r| (r.name.clone(), r.span))
+                .collect(),
             names: requesters
                 .iter()
                 .map(|r| {
@@ -1140,7 +1817,85 @@ impl<'v> Joint<'v> {
                     )
                 })
                 .collect(),
+            instances: BTreeMap::new(),
+            delivering: BTreeSet::new(),
+            separations: requesters
+                .iter()
+                .filter_map(|r| r.separation.map(|q| (r.name.clone(), q)))
+                .collect(),
         })
+    }
+
+    /// The rules with the instances an assignment may bind (`docs/specs/adapters/decision_engine-adapters.md` §4): each
+    /// a provider for its offers — no hardware, owning no region and composing nothing, so ownership never compares it
+    /// and the initialization graph keeps its edges — and a requester for what its kind requires beneath, a caller at the
+    /// level it states.
+    #[must_use]
+    pub fn with_instances(mut self, instances: &[Instance]) -> Self {
+        for instance in instances {
+            let name = instance.provider.name.clone();
+            let channels = match instance.provider.state("channels") {
+                Some(State::Valued(values)) => match values.first() {
+                    Some(Value::Count(n)) => Channels::Count(*n),
+                    _ => Channels::Unknown,
+                },
+                None => Channels::Undescribed,
+                Some(_) => Channels::Unknown,
+            };
+            let level = instance.provider.state(REACHABLE_AT_PRIVILEGE).cloned();
+            if let Some(State::Valued(values)) = &level {
+                if let Some(Value::Set(levels)) = values.first() {
+                    self.stated
+                        .insert(name.clone(), (levels.clone(), instance.provider.span));
+                }
+            }
+            self.held.insert(
+                name.clone(),
+                Held {
+                    span: instance.provider.span,
+                    hardware: false,
+                    separation: None,
+                    level,
+                    channels,
+                    regions: Vec::new(),
+                    composes: BTreeSet::new(),
+                },
+            );
+            self.providers
+                .insert(name.clone(), instance.provider.clone());
+            self.requesters.insert(name.clone(), Kind::Adapter);
+            self.names.insert(name.clone(), BTreeSet::new());
+            if instance.delivers {
+                self.delivering.insert(name.clone());
+            }
+            self.instances.insert(name, instance.over.clone());
+        }
+        self
+    }
+
+    /// `system` as one assignment's rules read it: an instance is served when a requester it serves is, at any depth
+    /// (record §4, rule 7: it takes the system of the requesters bound to it).
+    fn serving(&self, system: &System, assignment: &[Binding]) -> System {
+        let mut system = system.clone();
+        loop {
+            let reached: Vec<String> = assignment
+                .iter()
+                .filter(|b| self.instances.contains_key(&b.provider) && system.serves(&b.requester))
+                .map(|b| b.provider.clone())
+                .filter(|p| !system.reached.contains(p))
+                .collect();
+            if reached.is_empty() {
+                return system;
+            }
+            system.reached.extend(reached);
+        }
+    }
+
+    /// The device `provider` stands for: itself, or the provider an instance programs.
+    fn device<'a>(&'a self, provider: &'a str) -> &'a str {
+        self.instances
+            .get(provider)
+            .map_or(provider, String::as_str)
     }
 
     /// The rules for one system's assignment: connectivity and routes judge the bindings of the requesters it serves.
@@ -1151,7 +1906,8 @@ impl<'v> Joint<'v> {
         self
     }
 
-    /// Judge one complete assignment.
+    /// Judge one complete assignment. Its routes are reported whatever else the rules find (rule 8); its multiplexers
+    /// (rule 4) only where it holds, since only an assignment that holds is realized.
     #[must_use]
     pub fn check(&self, assignment: &[Binding]) -> Report {
         let mut report = Report::default();
@@ -1160,13 +1916,39 @@ impl<'v> Joint<'v> {
         self.functions(assignment, &mut report);
         self.qualifiers(assignment, &mut report);
         if let Some(system) = &self.system {
+            let system = &self.serving(system, assignment);
             self.connectivity(system, assignment, &mut report);
             self.routes(system, assignment, &mut report);
+            self.release_compare(system, assignment, &mut report);
+            self.time_base(system, assignment, &mut report);
             if let Some(level) = &system.level {
                 self.privilege(system, level, assignment, &mut report);
+            } else {
+                // An instance is a caller at its kind's level, whether or not the plan gives its system one (record §4,
+                // rule 9): its own bindings are judged at that level.
+                for (instance, (levels, _)) in self
+                    .stated
+                    .iter()
+                    .filter(|(name, _)| self.instances.contains_key(*name) && system.serves(name))
+                {
+                    let own: Vec<Binding> = assignment
+                        .iter()
+                        .filter(|b| &b.requester == instance)
+                        .cloned()
+                        .collect();
+                    for level in levels {
+                        self.privilege(system, level, &own, &mut report);
+                    }
+                }
             }
+            self.own_sources(system, assignment, &mut report);
             if let Some(region) = &system.placement {
                 self.placed(system, region, &mut report);
+            }
+            // Only a realization discharges a multiplexer, and an assignment the rules refuse is realized by none; the
+            // search judges every assignment it tries and keeps the obligations of the one that holds.
+            if report.holds() {
+                self.multiplexing(system, assignment, &mut report);
             }
         }
         report
@@ -1313,6 +2095,14 @@ impl<'v> Joint<'v> {
         }
     }
 
+    /// The regions of `system`'s hardware, each with its provider, in the order the providers are named: what a runtime
+    /// plan of format `/2` writes a `(region …)` line of (`docs/decisions/decision_runtime-plan-format-2.md` §5, "Which
+    /// regions"; leaf `M4.1.7.6.4`).
+    #[must_use]
+    pub fn regions<'s>(&'s self, system: &System) -> Vec<(&'s str, &'s Region)> {
+        self.hardware_regions(system)
+    }
+
     /// The regions of `system`'s hardware, each with its provider, in the order the providers are named.
     fn hardware_regions<'s>(&'s self, system: &System) -> Vec<(&'s str, &'s Region)> {
         system
@@ -1345,66 +2135,26 @@ impl<'v> Joint<'v> {
     }
 
     /// Model §8 rule 12: the initialization graph of `system`'s assignment. Its nodes are the providers bound for the
-    /// requesters it serves — closed over bindings, so an adapter's or a block's own bindings count — and the services and
-    /// policies it serves; its edges run from a provider to each requester bound to it, except across composition or to
-    /// itself, and from a used service or policy to each that names it. Nothing is refused.
+    /// requesters it serves — closed over bindings, so an adapter's or a block's own bindings count — the services and
+    /// policies it serves, each block or platform it serves that is bound for requirements of its own (leaf `M4.1.15`:
+    /// a requester like any other, so its code may run in an interrupt, `docs/decisions/decision_runtime-plan.md` §2), and
+    /// each block or platform a served task, service or policy names by `uses` or `needs`, a call (leaf `M4.1.18`); its
+    /// edges run from
+    /// a provider to each requester bound to it, whatever composes what, but to itself, and from each node a service or
+    /// a policy names by `uses` or `needs`, a block or a platform included, to that namer — hardware's own names giving
+    /// none. Nothing is refused (composition alone gives no edge, leaf `M4.1.16`; a named block an edge, `M4.1.17`).
     #[must_use]
     pub fn initialization(&self, system: &System, assignment: &[Binding]) -> Initialization {
-        let kind = |name: &str| self.requesters.get(name).copied();
-        let is_node_requester = |name: &str| {
-            name != system.name
-                && !matches!(kind(name), Some(Kind::Task))
-                && system.serves(name)
-                && !self.is_hardware(name)
-        };
-        // Requesters whose bindings count: those the system serves, then each provider bound for one, at any depth.
-        let mut active: BTreeSet<&str> = assignment
-            .iter()
-            .map(|b| b.requester.as_str())
-            .filter(|r| system.serves(r))
-            .collect();
-        loop {
-            let reached: Vec<&str> = assignment
-                .iter()
-                .filter(|b| active.contains(b.requester.as_str()))
-                .map(|b| b.provider.as_str())
-                .filter(|p| !active.contains(p))
-                .collect();
-            if reached.is_empty() {
-                break;
-            }
-            active.extend(reached);
-        }
-        let mut nodes: BTreeMap<String, Node> = BTreeMap::new();
-        for b in assignment
-            .iter()
-            .filter(|b| active.contains(b.requester.as_str()))
-        {
-            nodes.insert(b.provider.clone(), Node::Provider);
-        }
-        for (name, k) in &self.requesters {
-            if is_node_requester(name) && !nodes.contains_key(name) {
-                nodes.insert(
-                    name.clone(),
-                    if *k == Kind::Service {
-                        Node::Service
-                    } else {
-                        Node::Other
-                    },
-                );
-            }
-        }
+        let system = &self.serving(system, assignment);
+        let active = active(system, assignment);
+        let nodes = self.nodes(system, assignment, &active);
         let mut edges: BTreeSet<(String, String, Because)> = BTreeSet::new();
         for b in assignment
             .iter()
             .filter(|b| active.contains(b.requester.as_str()))
         {
             let (from, to) = (b.provider.as_str(), b.requester.as_str());
-            if nodes.contains_key(to)
-                && from != to
-                && !self.composes(from, to)
-                && !self.composes(to, from)
-            {
+            if nodes.contains_key(to) && from != to {
                 edges.insert((
                     from.to_string(),
                     to.to_string(),
@@ -1418,7 +2168,7 @@ impl<'v> Joint<'v> {
             }
             for used in named
                 .iter()
-                .filter(|n| *n != user && nodes.contains_key(*n) && !self.is_hardware(n))
+                .filter(|n| *n != user && nodes.contains_key(*n))
             {
                 edges.insert((used.clone(), user.clone(), Because::Named));
             }
@@ -1431,14 +2181,306 @@ impl<'v> Joint<'v> {
         }
     }
 
-    /// Model §8 rule 10, once per system: its placement memory, the holes in it, and what contradicts or blocks it.
+    /// Rule 12's nodes of `system`, as [`Joint::serving`] reads it, each with what it is: the providers `active`'s
+    /// bindings name, the requesters the system serves but its own level, its tasks and hardware bound for nothing, and
+    /// the hardware a served task, service or policy names.
+    fn nodes(
+        &self,
+        system: &System,
+        assignment: &[Binding],
+        active: &BTreeSet<&str>,
+    ) -> BTreeMap<String, Node> {
+        let kind = |name: &str| self.requesters.get(name).copied();
+        // Hardware is a node as a requester only where it is bound for requirements of its own (leaf `M4.1.15`).
+        let bound_for_its_own = |name: &str| assignment.iter().any(|b| b.requester == name);
+        // The release requester is no node, as the system's own level is not: nothing it does is code the plan places
+        // (`docs/decisions/decision_runtime-plan-format-2.md` §3); the device bound for it is one.
+        let is_node_requester = |name: &str| {
+            name != system.name
+                && !matches!(kind(name), Some(Kind::Task | Kind::Release))
+                && system.serves(name)
+                && (!self.is_hardware(name) || bound_for_its_own(name))
+        };
+        let mut nodes: BTreeMap<String, Node> = BTreeMap::new();
+        for b in assignment
+            .iter()
+            .filter(|b| active.contains(b.requester.as_str()))
+        {
+            nodes.insert(b.provider.clone(), Node::Provider);
+        }
+        for (name, k) in &self.requesters {
+            if is_node_requester(name) && !nodes.contains_key(name) {
+                nodes.insert(
+                    name.clone(),
+                    if self.is_hardware(name) {
+                        Node::Provider
+                    } else if *k == Kind::Service {
+                        Node::Service
+                    } else {
+                        Node::Other
+                    },
+                );
+            }
+        }
+        // A block or a platform a served task, service or policy names by `uses` or `needs` is a node: the name is a call
+        // (`docs/decisions/decision_runtime-plan.md` §2, leaf `M4.1.18`).
+        for (user, named) in &self.names {
+            if *user == system.name || self.is_hardware(user) || !system.serves(user) {
+                continue;
+            }
+            for n in named {
+                if self.is_hardware(n) && system.serves(n) && !nodes.contains_key(n) {
+                    nodes.insert(n.clone(), Node::Provider);
+                }
+            }
+        }
+        nodes
+    }
+
+    /// What `from` reaches over `assignment` (model §8 rule 4): what it names by `uses` or `needs` and the provider each
+    /// of its bindings names, at any depth — but a block's or a platform's own names, which name only hardware and are
+    /// never a call (rules 1 and 7). It holds `from` itself only where a path returns to it.
+    #[must_use]
+    pub fn reaches(&self, from: &str, assignment: &[Binding]) -> BTreeSet<String> {
+        self.reach(assignment)
+            .of(from)
+            .iter()
+            .map(|n| (*n).to_string())
+            .collect()
+    }
+
+    /// Reaching over `assignment`, each requester's direct names gathered once.
+    fn reach<'a>(&'a self, assignment: &'a [Binding]) -> Reach<'a> {
+        let mut direct: BTreeMap<&str, BTreeSet<&str>> = BTreeMap::new();
+        for (requester, named) in self.names.iter().filter(|(r, _)| !self.is_hardware(r)) {
+            direct
+                .entry(requester.as_str())
+                .or_default()
+                .extend(named.iter().map(String::as_str));
+        }
+        for b in assignment {
+            direct
+                .entry(b.requester.as_str())
+                .or_default()
+                .insert(b.provider.as_str());
+        }
+        Reach {
+            direct,
+            closures: RefCell::default(),
+        }
+    }
+
+    /// The tasks of `system`, by name.
+    fn tasks<'a>(&'a self, system: &'a System) -> impl Iterator<Item = &'a str> + 'a {
+        self.requesters
+            .iter()
+            .filter(move |(name, kind)| {
+                **kind == Kind::Task && task_of(name).is_some_and(|(s, _)| s == system.name)
+            })
+            .map(|(name, _)| name.as_str())
+    }
+
+    /// Model §8 rule 4's contexts of one system's assignment (`docs/decisions/decision_runtime-plan.md` §2.6): a job for
+    /// each task and every node a task reaches; each route's routine for what its interrupt runs; initialisation for
+    /// every node.
+    #[must_use]
+    pub fn contexts(&self, system: &System, assignment: &[Binding]) -> Contexts {
+        let system = &self.serving(system, assignment);
+        let nodes = self.nodes(system, assignment, &active(system, assignment));
+        self.contexts_of(system, assignment, &nodes, &self.reach(assignment))
+    }
+
+    /// [`Joint::contexts`] over `system` as [`Joint::serving`] reads it, given its nodes and its reaching.
+    fn contexts_of<'a>(
+        &'a self,
+        system: &'a System,
+        assignment: &'a [Binding],
+        nodes: &BTreeMap<String, Node>,
+        reach: &Reach<'a>,
+    ) -> Contexts {
+        let mut of: BTreeMap<String, BTreeSet<Context>> = BTreeMap::new();
+        let mut put = |name: &str, context: Context| {
+            of.entry(name.to_string()).or_default().insert(context);
+        };
+        for task in self.tasks(system) {
+            put(task, Context::Job);
+            for n in reach.of(task).iter().filter(|n| nodes.contains_key(**n)) {
+                put(n, Context::Job);
+            }
+        }
+        let mut by_requester: BTreeMap<&str, Vec<&Binding>> = BTreeMap::new();
+        for b in assignment {
+            by_requester
+                .entry(b.requester.as_str())
+                .or_default()
+                .push(b);
+        }
+        let bound_to = |requester: &str, provider: &str, fact_ok: &dyn Fn(&Requirement) -> bool| {
+            by_requester.get(requester).is_some_and(|bound| {
+                bound
+                    .iter()
+                    .any(|b| b.provider == provider && fact_ok(&b.requirement))
+            })
+        };
+        let channel = |q: &Requirement| takes_a_channel(q, self.vocabulary).is_some();
+        let source = |q: &Requirement| q.fact() == INTERRUPT_SOURCE && met_by_true(q);
+        let mut runs: BTreeMap<Routine, BTreeSet<String>> = BTreeMap::new();
+        for ((x, is_source), requesters) in self.route_map(system, assignment) {
+            let timer = !is_source;
+            let fact_ok: &dyn Fn(&Requirement) -> bool = if timer { &channel } else { &source };
+            // The code the interrupt runs of its own: its provider's, and each node the route names bound to it itself.
+            let mut own: BTreeSet<&str> = BTreeSet::new();
+            if nodes.contains_key(x) {
+                own.insert(x);
+            }
+            for r in &requesters {
+                if nodes.contains_key(*r) && bound_to(r, x, fact_ok) {
+                    own.insert(r);
+                }
+            }
+            // A timer route's: each instance the system serves programming an alarm at `x`, which takes its cost there,
+            // and the requesters such an instance delivers to, where its kind's cost runs their code.
+            if timer {
+                for (instance, _) in self.instances.iter().filter(|(name, over)| {
+                    *over == x && system.serves(name) && bound_to(name, x, &channel)
+                }) {
+                    own.insert(instance);
+                    if self.delivering.contains(instance) {
+                        for r in &requesters {
+                            if nodes.contains_key(*r) && bound_to(r, instance, &|_| true) {
+                                own.insert(r);
+                            }
+                        }
+                    }
+                }
+            }
+            let mut all = own.clone();
+            for n in &own {
+                all.extend(reach.of(n).iter().filter(|m| nodes.contains_key(**m)));
+            }
+            let routine = Routine {
+                provider: x.to_string(),
+                timer,
+            };
+            for n in &all {
+                put(n, Context::Routine(routine.clone()));
+            }
+            runs.insert(routine, all.into_iter().map(str::to_string).collect());
+        }
+        for n in nodes.keys() {
+            put(n, Context::Initialisation);
+        }
+        Contexts { of, runs }
+    }
+
+    /// Model §8 rule 4: a node bound for a requirement that takes a channel, an instance aside, with two or more users —
+    /// the system's tasks that reach it, and the routines whose interrupts run it, its own timer route's only where
+    /// another node that route runs reaches it — is the multiplexer of the channels it takes, an obligation.
+    fn multiplexing(&self, system: &System, assignment: &[Binding], report: &mut Report) {
+        let taking: Vec<&Binding> = assignment
+            .iter()
+            .filter(|b| {
+                !self.instances.contains_key(&b.requester)
+                    && takes_a_channel(&b.requirement, self.vocabulary).is_some()
+            })
+            .collect();
+        if taking.is_empty() {
+            return; // nothing takes a channel, so nothing multiplexes one
+        }
+        let nodes = self.nodes(system, assignment, &active(system, assignment));
+        // Each node taking a channel: the providers whose channels it takes, and the providers of its own timer routes,
+        // where those are, or where the instance it binds programs.
+        let mut takers: BTreeMap<&str, (BTreeSet<&str>, BTreeSet<&str>)> = BTreeMap::new();
+        for b in taking
+            .into_iter()
+            .filter(|b| nodes.contains_key(&b.requester))
+        {
+            let (providers, own) = takers.entry(b.requester.as_str()).or_default();
+            providers.insert(b.provider.as_str());
+            own.insert(self.device(&b.provider));
+        }
+        if takers.is_empty() {
+            return;
+        }
+        let reach = self.reach(assignment);
+        let contexts = self.contexts_of(system, assignment, &nodes, &reach);
+        let tasks: Vec<(&str, Rc<BTreeSet<&str>>)> = self
+            .tasks(system)
+            .map(|task| (task, reach.of(task)))
+            .collect();
+        for (node, (providers, own)) in takers {
+            let mut users: Vec<Caller> = tasks
+                .iter()
+                .filter(|(_, reached)| reached.contains(node))
+                .map(|(task, _)| Caller::Task((*task).to_string()))
+                .collect();
+            for context in contexts.of.get(node).into_iter().flatten() {
+                let Context::Routine(routine) = context else {
+                    continue;
+                };
+                // Its own timer route's code delivering to it is no caller; another node's code there calling it is.
+                let own_route = routine.timer && own.contains(routine.provider.as_str());
+                let called_there = || {
+                    contexts.runs.get(routine).is_some_and(|runs| {
+                        runs.iter().any(|m| m != node && reach.of(m).contains(node))
+                    })
+                };
+                if !own_route || called_there() {
+                    users.push(Caller::Routine(routine.clone()));
+                }
+            }
+            if users.len() >= 2 {
+                report.obligations.push(Obligation::Multiplex {
+                    node: node.to_string(),
+                    users,
+                    providers: providers.into_iter().map(str::to_string).collect(),
+                });
+            }
+        }
+    }
+
+    /// Model §8 rules 7 and 10, once per system: what it serves naming hardware outside it; its placement memory, the
+    /// holes in it, and what contradicts or blocks it.
     #[must_use]
     pub fn map(&self, system: &System) -> Map {
         let regions = self.hardware_regions(system);
         let mut map = Map::default();
+        for (namer, named) in self
+            .names
+            .iter()
+            .flat_map(|(namer, named)| named.iter().map(move |named| (namer, named)))
+        {
+            // The system's own level and its tasks bring what they name in, a block's or a platform's names are
+            // composition, and another system named is `M1.46`'s: only a service or a policy names past the hardware.
+            let hardware = |name: &str| self.held.get(name).is_some_and(|h| h.hardware);
+            let (Some(held), Some(span)) = (self.held.get(named), self.spans.get(namer)) else {
+                continue;
+            };
+            if system.reached.contains(namer)
+                && !system.other_systems.contains(namer)
+                && !hardware(namer)
+                && held.hardware
+                && !system.hardware.contains(named)
+            {
+                map.refused.push(Finding::NamedOutside {
+                    namer: namer.clone(),
+                    span: *span,
+                    named: named.clone(),
+                    declared: held.span,
+                    system: system.name.clone(),
+                });
+            }
+        }
+        let mut contradictions = 0_usize;
         for (i, (owner, memory)) in regions.iter().enumerate() {
             if !memory.is_memory() {
                 continue;
+            }
+            if memory.bytes.is_none() {
+                map.unknowns.push(Finding::MemoryUnsized {
+                    system: system.name.clone(),
+                    memory: ((*owner).to_string(), (*memory).clone()),
+                });
             }
             let mut holes = Vec::new();
             for (j, (other_owner, other)) in regions.iter().enumerate() {
@@ -1450,7 +2492,10 @@ impl<'v> Joint<'v> {
                 if m0 < o1 && o0 < m1 {
                     if other.reserved {
                         holes.push(((*other_owner).to_string(), (*other).clone()));
-                    } else if !other.is_memory() || i < j {
+                    } else if (!other.is_memory() || i < j) && contradictions <= MOST_ERRORS {
+                        // One kind, one verdict: more of it moves none, and n regions at one base are n² of them.
+                        // Counted apart from the list, which holds another verdict's beside these.
+                        contradictions += 1;
                         map.refused.push(Finding::MapContradiction {
                             system: system.name.clone(),
                             memory: ((*owner).to_string(), (*memory).clone()),
@@ -1459,29 +2504,38 @@ impl<'v> Joint<'v> {
                     }
                     continue;
                 }
-                for (unsized_owner, sizeless, against, at_or_above) in [
-                    (owner, memory, other_owner, o0 >= m0),
-                    (other_owner, other, owner, m0 >= o0),
-                ] {
-                    if sizeless.bytes.is_none() && at_or_above {
-                        let finding = Finding::PlacementUnsized {
-                            system: system.name.clone(),
-                            sizeless: ((*unsized_owner).to_string(), (*sizeless).clone()),
-                            against: (*against).to_string(),
-                        };
-                        if !map.unknowns.contains(&finding) {
-                            map.unknowns.push(finding);
-                        }
+                // Memory with no size is said once, above, for itself: what lies below its base is what stays unknown.
+                if other.bytes.is_none() && !other.is_memory() && m0 >= o0 {
+                    let finding = Finding::PlacementUnsized {
+                        system: system.name.clone(),
+                        sizeless: ((*other_owner).to_string(), (*other).clone()),
+                        against: (*owner).to_string(),
+                    };
+                    if !map.unknowns.contains(&finding) {
+                        map.unknowns.push(finding);
                     }
                 }
             }
             if let Some(size) = memory.bytes {
-                let covered = covered_bytes(memory.base, size, &holes);
-                if covered == size {
+                // First the bytes surely reserved, which no size repairs; only then each hole to the region's end.
+                let end = memory.base + size;
+                let surely = holes.iter().map(|(_, r)| r.known());
+                let taken = holes
+                    .iter()
+                    .map(|(_, r)| (r.base, r.bytes.map_or(end, |b| r.base + b)));
+                if covered_bytes(memory.base, size, surely) == size {
                     map.refused.push(Finding::MemoryAllHoles {
                         system: system.name.clone(),
                         memory: ((*owner).to_string(), (*memory).clone()),
                     });
+                } else if covered_bytes(memory.base, size, taken) == size {
+                    for (hole_owner, hole) in holes.iter().filter(|(_, r)| r.bytes.is_none()) {
+                        map.unknowns.push(Finding::HoleUnsized {
+                            system: system.name.clone(),
+                            memory: ((*owner).to_string(), (*memory).clone()),
+                            hole: (hole_owner.clone(), hole.clone()),
+                        });
+                    }
                 }
             }
             map.obligations.push(Obligation::Placement {
@@ -1564,7 +2618,7 @@ impl<'v> Joint<'v> {
         }
     }
 
-    /// `SR-H15`'s last clause, in the checker's form: a block or platform bound for a requester the system serves is
+    /// `SR-H15`'s last clause, the joint check's: a block or platform bound for a requester the system serves is
     /// part of the system's hardware.
     fn connectivity(&self, system: &System, assignment: &[Binding], report: &mut Report) {
         for b in assignment.iter().filter(|b| system.serves(&b.requester)) {
@@ -1583,22 +2637,59 @@ impl<'v> Joint<'v> {
         }
     }
 
-    /// One route obligation per provider the system's requesters rely on for an interrupt, and per kind.
-    fn routes(&self, system: &System, assignment: &[Binding], report: &mut Report) {
-        let mut routes: BTreeMap<(&str, bool), BTreeSet<&str>> = BTreeMap::new();
-        for b in assignment.iter().filter(|b| system.serves(&b.requester)) {
-            let source = b.requirement.fact() == INTERRUPT_SOURCE && met_by_true(&b.requirement);
-            let timer = takes_a_channel(&b.requirement, self.vocabulary).is_some();
-            for (is_source, relied) in [(true, source), (false, timer)] {
-                if relied {
-                    routes
-                        .entry((b.provider.as_str(), is_source))
-                        .or_default()
-                        .insert(b.requester.as_str());
+    /// Model §8 rule 16 (`RTP-H24`): a sporadic task the system serves, bound itself for `interrupt-source` at `true`,
+    /// is released on every arrival of that source, which the analysis admits only where the source's stated
+    /// `min-arrival-separation` is at least the task's `min-separation` — its condition 5, "a task released on every
+    /// arrival of a source has T ≤ T_s". A shorter separation, one declared absent, or a comparison past the exact
+    /// arithmetic is a conflict; a source stating no value, an unknown. The route stays rule 8's obligation.
+    fn own_sources(&self, system: &System, assignment: &[Binding], report: &mut Report) {
+        for b in assignment.iter().filter(|b| {
+            b.requirement.fact() == INTERRUPT_SOURCE
+                && met_by_true(&b.requirement)
+                && system.serves(&b.requester)
+        }) {
+            let Some(&task) = self.separations.get(&b.requester) else {
+                continue;
+            };
+            let Some(held) = self.held.get(&b.provider) else {
+                continue;
+            };
+            let why = match &held.separation {
+                Some(State::Valued(values)) => match values.first() {
+                    Some(Value::Quantity(source)) => match order(*source, task) {
+                        Ok(Ordering::Less) => Some(Unadmitted::Faster {
+                            task,
+                            source: *source,
+                        }),
+                        Ok(_) => None,
+                        Err(_) => Some(Unadmitted::PastArithmetic),
+                    },
+                    _ => Some(Unadmitted::Unstated),
+                },
+                Some(State::Absent) => Some(Unadmitted::Absent),
+                Some(State::Overflow) => Some(Unadmitted::PastArithmetic),
+                Some(State::Unvalued) | None => Some(Unadmitted::Unstated),
+            };
+            if let Some(why) = why {
+                let finding = Finding::OwnSource {
+                    requester: b.requester.clone(),
+                    span: b.requirement.span(),
+                    provider: b.provider.clone(),
+                    declared: held.span,
+                    why,
+                };
+                if finding.code() == "missing-fact" {
+                    report.unknowns.push(finding);
+                } else {
+                    report.conflicts.push(finding);
                 }
             }
         }
-        for ((provider, is_source), requesters) in routes {
+    }
+
+    /// One route obligation per provider the system's requesters rely on for an interrupt, and per kind.
+    fn routes(&self, system: &System, assignment: &[Binding], report: &mut Report) {
+        for ((provider, is_source), requesters) in self.route_map(system, assignment) {
             let interrupt = if is_source {
                 Interrupt::Source {
                     separation: self.held.get(provider).and_then(|h| h.separation.clone()),
@@ -1613,6 +2704,191 @@ impl<'v> Joint<'v> {
                 requesters: requesters.into_iter().map(str::to_string).collect(),
                 level: system.level.clone(),
             });
+        }
+    }
+
+    /// Rule 8's routes of `system`, one for each provider and kind, keyed `(provider, is_source)`, each with the
+    /// requesters relying on it.
+    fn route_map<'a>(
+        &self,
+        system: &System,
+        assignment: &'a [Binding],
+    ) -> BTreeMap<(&'a str, bool), BTreeSet<&'a str>> {
+        let mut routes: BTreeMap<(&str, bool), BTreeSet<&str>> = BTreeMap::new();
+        // The release timer is no route (`docs/decisions/decision_release-alarm.md` §1): the plan enables it, and the
+        // analysis charges it as the timer it is, so its binding reports none.
+        for b in assignment.iter().filter(|b| {
+            system.serves(&b.requester)
+                && !self.instances.contains_key(&b.provider)
+                && self.requesters.get(&b.requester) != Some(&Kind::Release)
+        }) {
+            let source = b.requirement.fact() == INTERRUPT_SOURCE && met_by_true(&b.requirement);
+            let timer = takes_a_channel(&b.requirement, self.vocabulary).is_some();
+            for (is_source, relied) in [(true, source), (false, timer)] {
+                if relied {
+                    routes
+                        .entry((b.provider.as_str(), is_source))
+                        .or_default()
+                        .extend(self.relying(system, assignment, &b.requester));
+                }
+            }
+        }
+        routes
+    }
+
+    /// Who relies on a binding of `requester`'s for an interrupt: itself, or, for an instance, the requesters the system
+    /// serves that are bound to it (record §4, rule 8).
+    fn relying<'a>(
+        &self,
+        system: &System,
+        assignment: &'a [Binding],
+        requester: &'a str,
+    ) -> Vec<&'a str> {
+        if self.instances.contains_key(requester) {
+            assignment
+                .iter()
+                .filter(|b| b.provider == requester && system.serves(&b.requester))
+                .map(|b| b.requester.as_str())
+                .collect()
+        } else {
+            vec![requester]
+        }
+    }
+
+    /// Model §8 rule 1, the release requester's device (`docs/decisions/decision_release-alarm.md` §1, `RA-H1`): each
+    /// provider bound for it states its `compare-step` and a `compare-window` or `(compare-magnitude true)`, each a value, a
+    /// fact stated bare, absent or as a bound having none; one that does not leaves the analysis what it reads of the
+    /// device unknown, `missing-fact`.
+    fn release_compare(&self, system: &System, assignment: &[Binding], report: &mut Report) {
+        let devices: BTreeSet<&str> = assignment
+            .iter()
+            .filter(|b| {
+                self.requesters.get(&b.requester) == Some(&Kind::Release)
+                    && system.serves(&b.requester)
+            })
+            .map(|b| b.provider.as_str())
+            .collect();
+        for device in devices {
+            let Some(provider) = self.providers.get(device) else {
+                continue;
+            };
+            let valued = |fact: &str| matches!(provider.state(fact), Some(State::Valued(_)));
+            let magnitude = matches!(
+                provider.state("compare-magnitude"),
+                Some(State::Valued(values)) if values.first() == Some(&Value::Bool(true))
+            );
+            let mut missing = Vec::new();
+            if !valued("compare-step") {
+                missing.push("`compare-step`");
+            }
+            if !valued("compare-window") && !magnitude {
+                missing.push("`compare-window` or `(compare-magnitude true)`");
+            }
+            if !missing.is_empty() {
+                report.unknowns.push(Finding::ReleaseCompareUnstated {
+                    system: system.name.clone(),
+                    provider: device.to_owned(),
+                    declared: provider.span,
+                    missing,
+                });
+            }
+        }
+    }
+
+    /// Whether a binding for `fact` reads a counter's time, as model §8 rule 14 counts one: a fact of the function
+    /// `counter` that is not consumed and describes no compare ([`DESCRIBES_A_COMPARE`]).
+    #[must_use]
+    pub fn reads_a_counter(&self, fact: &str) -> bool {
+        !DESCRIBES_A_COMPARE.contains(&fact)
+            && self.vocabulary.fact(fact).is_some_and(|f| {
+                f.usage == Usage::Shared && f.function == Some(Function::Of("counter".to_string()))
+            })
+    }
+
+    /// The readers of a time base that `from`, a requester bound for a deadline, reaches, as model §8 rule 14 counts them
+    /// (`docs/decisions/decision_runtime-plan-format-2.md` §3, `BASE`; leaf `M4.1.7.6.5`): every other requester it reaches
+    /// through `needs` and `uses`, itself not among them, each with the provider of each binding it holds for a fact that
+    /// [`Joint::reads_a_counter`]. Each is `(requester, provider)`, by the providers' and requesters' own names, once.
+    #[must_use]
+    pub fn readers_of_time(&self, from: &str, assignment: &[Binding]) -> Vec<(String, String)> {
+        let mut reached = BTreeSet::new();
+        let mut todo = vec![from];
+        while let Some(at) = todo.pop() {
+            for next in self.names.get(at).into_iter().flatten() {
+                if self.requesters.contains_key(next)
+                    && next != from
+                    && reached.insert(next.as_str())
+                {
+                    todo.push(next.as_str());
+                }
+            }
+        }
+        let mut readers: Vec<(String, String)> = assignment
+            .iter()
+            .filter(|b| {
+                reached.contains(b.requester.as_str()) && self.reads_a_counter(b.requirement.fact())
+            })
+            .map(|b| (b.requester.clone(), b.provider.clone()))
+            .collect();
+        readers.sort();
+        readers.dedup();
+        readers
+    }
+
+    /// Model §8 rule 14, one time base (`docs/specs/adapters/decision_engine-adapters.md` §4): where a requester is bound
+    /// for `absolute-deadline`, every other requester it reaches through `needs` and `uses`, bound for a fact of the
+    /// function `counter` that is not consumed and describes no compare (`DESCRIBES_A_COMPARE`), is bound at the same device — an
+    /// instance's being its provider. A
+    /// deadline programmed in one counter's time and read in another's is a conflict. Its own facts of the function are
+    /// rule 13's, whose codes tell a split from one describing a fact would make whole (`SR-H17`).
+    fn time_base(&self, system: &System, assignment: &[Binding], report: &mut Report) {
+        let counter = |fact: &str| {
+            !DESCRIBES_A_COMPARE.contains(&fact)
+                && self.vocabulary.fact(fact).is_some_and(|f| {
+                    f.usage == Usage::Shared
+                        && f.function == Some(Function::Of("counter".to_string()))
+                })
+        };
+        let mut found = BTreeSet::new();
+        for deadline in assignment
+            .iter()
+            .filter(|b| system.serves(&b.requester) && b.requirement.fact() == ABSOLUTE_DEADLINE)
+        {
+            let device = self.device(&deadline.provider);
+            let mut reached = BTreeSet::new();
+            let mut todo = vec![deadline.requester.as_str()];
+            while let Some(at) = todo.pop() {
+                for next in self.names.get(at).into_iter().flatten() {
+                    if self.requesters.contains_key(next)
+                        && next != &deadline.requester
+                        && reached.insert(next.as_str())
+                    {
+                        todo.push(next.as_str());
+                    }
+                }
+            }
+            for read in assignment
+                .iter()
+                .filter(|b| reached.contains(b.requester.as_str()) && counter(b.requirement.fact()))
+            {
+                let read_device = self.device(&read.provider);
+                if read_device != device
+                    && found.insert((
+                        deadline.requester.clone(),
+                        read.requester.clone(),
+                        read_device.to_string(),
+                    ))
+                {
+                    report.conflicts.push(Finding::TwoTimeBases {
+                        requester: deadline.requester.clone(),
+                        span: deadline.requirement.span(),
+                        device: device.to_string(),
+                        reader: read.requester.clone(),
+                        read: read.requirement.span(),
+                        read_device: read_device.to_string(),
+                    });
+                }
+            }
         }
     }
 
@@ -1633,16 +2909,6 @@ impl<'v> Joint<'v> {
                 .iter()
                 .map(|(name, span)| ((*name).to_string(), *span))
                 .collect();
-            for (name, _) in &requesters {
-                let users = self.users.get(name).filter(|u| u.len() > 1);
-                if let (Some(Kind::Service), Some(users)) = (self.requesters.get(name), users) {
-                    report.obligations.push(Obligation::Multiplex {
-                        service: name.clone(),
-                        users: users.iter().cloned().collect(),
-                        provider: provider.to_string(),
-                    });
-                }
-            }
             if requesters.len() < 2 {
                 continue; // one requester needs no count: offering the function at all serves one
             }
@@ -1715,10 +2981,47 @@ impl<'v> Joint<'v> {
     pub fn span_of(&self, provider: &str) -> Option<Span> {
         self.held.get(provider).map(|h| h.span)
     }
+
+    /// Every region of placement memory a block or a platform offers (model §8 rule 10), with its provider, by provider name and in
+    /// written order: what a target lays an image out in (`docs/decisions/decision_device-correspondence.md`, `DC-H4`).
+    #[must_use]
+    pub fn placement_memory(&self) -> Vec<(&str, &Region)> {
+        self.held
+            .iter()
+            .filter(|(_, held)| held.hardware)
+            .flat_map(|(name, held)| {
+                held.regions
+                    .iter()
+                    .filter(|region| region.is_memory())
+                    .map(move |region| (name.as_str(), region))
+            })
+            .collect()
+    }
 }
 
 /// The strongly connected components of more than one node, each by name, in the order of their least names (Tarjan's
 /// algorithm, visiting nodes and successors by name, so the result is one for one graph).
+/// Rule 12's requesters whose bindings count: those `system` serves, then each provider bound for one, at any depth.
+fn active<'a>(system: &System, assignment: &'a [Binding]) -> BTreeSet<&'a str> {
+    let mut active: BTreeSet<&str> = assignment
+        .iter()
+        .map(|b| b.requester.as_str())
+        .filter(|r| system.serves(r))
+        .collect();
+    loop {
+        let reached: Vec<&str> = assignment
+            .iter()
+            .filter(|b| active.contains(b.requester.as_str()))
+            .map(|b| b.provider.as_str())
+            .filter(|p| !active.contains(p))
+            .collect();
+        if reached.is_empty() {
+            return active;
+        }
+        active.extend(reached);
+    }
+}
+
 fn components(
     nodes: &BTreeMap<String, Node>,
     edges: &BTreeSet<(String, String, Because)>,
@@ -1790,14 +3093,10 @@ fn components(
     walk.found
 }
 
-/// How many of the `size` bytes from `base` the holes cover, each counted once.
-fn covered_bytes(base: i128, size: i128, holes: &[(String, Region)]) -> i128 {
+/// How many of the `size` bytes from `base` the holes' spans cover, each counted once.
+fn covered_bytes(base: i128, size: i128, holes: impl Iterator<Item = (i128, i128)>) -> i128 {
     let mut spans: Vec<(i128, i128)> = holes
-        .iter()
-        .map(|(_, r)| {
-            let (lo, hi) = r.known();
-            (lo.max(base), hi.min(base + size))
-        })
+        .map(|(lo, hi)| (lo.max(base), hi.min(base + size)))
         .filter(|(lo, hi)| lo < hi)
         .collect();
     spans.sort_unstable();
@@ -1819,10 +3118,13 @@ fn judge_pair(a: (&str, &Region), b: (&str, &Region), report: &mut Report) {
     let (a0, a1) = ra.known();
     let (b0, b1) = rb.known();
     if a0 < b1 && b0 < a1 {
-        report.conflicts.push(Finding::Overlap {
-            first: (p.to_string(), ra.clone()),
-            second: (q.to_string(), rb.clone()),
-        });
+        // One kind, one verdict: more of it moves none, and n regions of each at one base are n² of them.
+        if report.conflicts.len() <= MOST_ERRORS {
+            report.conflicts.push(Finding::Overlap {
+                first: (p.to_string(), ra.clone()),
+                second: (q.to_string(), rb.clone()),
+            });
+        }
         return;
     }
     if ra.bytes.is_none() && b0 >= a0 {
@@ -1875,7 +3177,8 @@ fn regions(provider: &Provider, decl: &Form, findings: &mut Vec<Finding>) -> Vec
     let mut out = Vec::new();
     let offers = decl.items().iter().filter(|c| c.head() == Some("offers"));
     for item in offers.flat_map(|c| c.items()[1..].iter()) {
-        if item.head() != Some("region") {
+        // A bare `region` is an offer of one that names no byte range, which `region` refuses (model §8 rule 5).
+        if item.head() != Some("region") && item.as_symbol() != Some("region") {
             continue;
         }
         match region(item) {
@@ -1972,8 +3275,10 @@ fn size_in_bytes(clause: &Form, name: &str) -> Result<i128, Option<String>> {
         ))
     };
     let items = clause.items();
-    let quantity =
-        Quantity::read(items.get(1), items.get(2), clause.span()).map_err(|_| wrong())?;
+    let quantity = Quantity::read(items.get(1), items.get(2), clause.span()).map_err(|d| {
+        (d.code != "quantity-overflow")
+            .then(|| format!("region `{name}`'s size does not read: {}", d.message))
+    })?;
     if quantity.unit.dimension != Dimension::Information || items.len() != 3 {
         return Err(wrong());
     }

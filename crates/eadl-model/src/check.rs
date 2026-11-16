@@ -25,7 +25,7 @@
 //!
 //! # It does not stop at the first pass
 //!
-//! Every pass runs, and every diagnostic is collected. The **verdict** is the highest-precedence
+//! Every pass runs, and every diagnostic is collected, up to what [`MOST_ERRORS`] holds. The **verdict** is the highest-precedence
 //! one, where precedence means *what to fix first* rather than severity of consequence: a
 //! malformed description makes every later answer meaningless, and an unsupported request is
 //! reported before a missing fact because describing that fact would be wasted work on a system
@@ -34,15 +34,16 @@
 //! An author who has three problems gets three messages and one instruction about which to
 //! start with.
 
-use std::collections::BTreeSet;
+use std::collections::{BTreeMap, BTreeSet};
 
 use eadl_front::language_version::{declarations, is_identifier};
 use eadl_front::{
-    read, Diagnostic, Form, Instance, Label, Program, SourceId, SourceMap, Span, Verdict,
+    read, Diagnostic, Diagnostics, Form, Instance, Label, Program, SourceId, SourceMap, Span,
+    Verdict, MOST_ERRORS,
 };
 
 use crate::boundary;
-use crate::kind::{duplicate_names, read_kind, validate, Registry};
+use crate::kind::{duplicate_names, duplicate_task_names, read_kind, validate, Registry};
 use crate::presence::{FactMap, NAME_CLAUSES};
 use crate::profile::{self, Profile};
 use crate::refinement::{self, Facets};
@@ -57,7 +58,7 @@ use crate::workload;
 /// nothing. `docs/semantics/model.md` §2 rule 4 states the channel.
 #[derive(Debug, Clone, Default, PartialEq, Eq)]
 pub struct Closure {
-    /// Each fact inside, with the fact that needs it — `None` for one the description requests itself.
+    /// Each fact inside, with the fact that needs it — `None` for one the description requests itself — a part that may be bound with what needs the fact it offers.
     pub inside: Vec<(String, Option<String>)>,
     /// Each fact declared or needed that lies outside: nothing this description requests depends on it.
     pub outside: Vec<String>,
@@ -201,7 +202,57 @@ pub fn check(
             closure: Closure::default(),
         };
     }
-    passes(forms, registry, active_profile, Vec::new())
+    passes(
+        forms,
+        registry,
+        active_profile,
+        Vec::new(),
+        Presence::Judged(None),
+    )
+}
+
+/// What the capability vocabulary says that the check reads, handed down by a caller that has read it: the vocabulary is the search's to read, and this crate lies
+/// below the one that does.
+#[derive(Debug, Clone, Default, PartialEq, Eq)]
+pub struct VocabularyFacts {
+    /// Each fact it declares, by name: one it does not declare is read on each system's own hardware (leaf `M3.4.16`).
+    pub declared: BTreeSet<String>,
+    /// Each fact it derives, with the facts its rule requires: one is described where one block or platform offers each of those (leaf `M3.4.17.1`).
+    pub derived: BTreeMap<String, Vec<String>>,
+}
+
+/// [`check`], told each fact the capability vocabulary declares: a fact it does not declare is then read on each
+/// system's own hardware (model §2; leaf `M3.4.16`). The vocabulary is the search's to read and this crate lies below
+/// the search's, so what calls both hands the names down, and [`check`] alone reads every description whole.
+#[must_use]
+pub fn check_with_vocabulary(
+    sources: &SourceMap,
+    source: SourceId,
+    registry: &Registry,
+    active_profile: &Profile,
+    vocabulary: &VocabularyFacts,
+) -> Outcome {
+    let (document, read_diagnostics) = read(sources, source);
+    let forms: Vec<Form> = document
+        .forms
+        .into_iter()
+        .filter(|form| !is_identifier(form))
+        .collect();
+    if read_diagnostics.has_errors() {
+        return Outcome {
+            verdict: Verdict::InvalidDescription,
+            diagnostics: read_diagnostics.items().to_vec(),
+            declarations: forms,
+            closure: Closure::default(),
+        };
+    }
+    passes(
+        forms,
+        registry,
+        active_profile,
+        Vec::new(),
+        Presence::Judged(Some(vocabulary)),
+    )
 }
 
 /// Check an elaborated module tree, by `docs/semantics/reference.md` §6 rules 9 and 10.
@@ -212,6 +263,86 @@ pub fn check(
 /// judged by the same rules as a single description and cannot drift from it.
 #[must_use]
 pub fn check_program(program: &Program, registry: &Registry, active_profile: &Profile) -> Outcome {
+    let (forms, unresolved) = resolved_declarations(program);
+    let mut findings = Vec::new();
+    push(&mut findings, Verdict::InvalidDescription, unresolved);
+    passes(
+        forms,
+        registry,
+        active_profile,
+        findings,
+        Presence::Judged(None),
+    )
+}
+
+/// [`check_program`], told each fact the capability vocabulary declares, as [`check_with_vocabulary`] is.
+#[must_use]
+pub fn check_program_with_vocabulary(
+    program: &Program,
+    registry: &Registry,
+    active_profile: &Profile,
+    vocabulary: &VocabularyFacts,
+) -> Outcome {
+    let (forms, unresolved) = resolved_declarations(program);
+    let mut findings = Vec::new();
+    push(&mut findings, Verdict::InvalidDescription, unresolved);
+    passes(
+        forms,
+        registry,
+        active_profile,
+        findings,
+        Presence::Judged(Some(vocabulary)),
+    )
+}
+
+/// [`check`] with every pass but presence, for a description whose system is put on a target, where presence is judged
+/// of what it asks of the machine (`docs/decisions/decision_device-correspondence.md`, `DC-H3`): a description need not
+/// pass presence over hardware of its own. The [`Outcome::closure`] is empty, presence not having run; the caller's
+/// reading there carries one.
+#[must_use]
+pub fn check_but_presence(
+    sources: &SourceMap,
+    source: SourceId,
+    registry: &Registry,
+    active_profile: &Profile,
+) -> Outcome {
+    let (document, read_diagnostics) = read(sources, source);
+    let forms: Vec<Form> = document
+        .forms
+        .into_iter()
+        .filter(|form| !is_identifier(form))
+        .collect();
+    if read_diagnostics.has_errors() {
+        return Outcome {
+            verdict: Verdict::InvalidDescription,
+            diagnostics: read_diagnostics.items().to_vec(),
+            declarations: forms,
+            closure: Closure::default(),
+        };
+    }
+    passes(forms, registry, active_profile, Vec::new(), Presence::Left)
+}
+
+/// [`check_program`] with every pass but presence, as [`check_but_presence`] is.
+#[must_use]
+pub fn check_program_but_presence(
+    program: &Program,
+    registry: &Registry,
+    active_profile: &Profile,
+) -> Outcome {
+    let (forms, unresolved) = resolved_declarations(program);
+    let mut findings = Vec::new();
+    push(&mut findings, Verdict::InvalidDescription, unresolved);
+    passes(forms, registry, active_profile, findings, Presence::Left)
+}
+
+/// A module tree's declarations as one description, by `docs/semantics/reference.md` §6 rules 9 and 10: each renamed
+/// to the path of its instance, and every operand of a `uses`, `needs` or `refines` clause resolved in the scope of the
+/// instance that wrote it — what [`check_program`] judges, and what the search reads a program of several instances
+/// as (leaf `M3.4.10`), so the two read one tree one way. Returns the declarations, and a diagnostic for each operand
+/// that does not resolve.
+#[must_use]
+pub fn resolved_declarations(program: &Program) -> (Vec<Form>, Vec<Diagnostic>) {
     let mut unresolved = Vec::new();
     let forms: Vec<Form> = program
         .instances
@@ -226,9 +357,7 @@ pub fn check_program(program: &Program, registry: &Registry, active_profile: &Pr
                 .collect::<Vec<_>>()
         })
         .collect();
-    let mut findings = Vec::new();
-    push(&mut findings, Verdict::InvalidDescription, unresolved);
-    passes(forms, registry, active_profile, findings)
+    (forms, unresolved)
 }
 
 /// Rule 9 for the declaration's own name, and rule 10 for every name it writes.
@@ -318,6 +447,15 @@ fn resolve_name(
     }
 }
 
+/// Whether the passes judge presence, and with what the vocabulary says.
+#[derive(Debug, Clone, Copy)]
+enum Presence<'v> {
+    /// Judged, told each fact the capability vocabulary declares and derives where the caller has read it.
+    Judged(Option<&'v VocabularyFacts>),
+    /// Left to the caller, which judges each system put on a target there (`DC-H3`).
+    Left,
+}
+
 /// Every pass after reading, in the order in which a failure in one makes the next meaningless. `check` and
 /// `check_program` both end here; `findings` carries what the caller found before handing over.
 fn passes(
@@ -325,10 +463,15 @@ fn passes(
     registry: &Registry,
     active_profile: &Profile,
     mut findings: Vec<Finding>,
+    presence: Presence<'_>,
 ) -> Outcome {
     // ── boundary (F27) ───────────────────────────────────────────────────────────────────────
     let mut boundary_errors = Vec::new();
     for form in &forms {
+        // A pass stops gathering where nothing more would be said and nothing it holds back could move the verdict, every error of it carrying one: a file of junk that reads as forms costs a host what each error costs. A pass whose errors carry different verdicts gathers them all, the highest deciding.
+        if boundary_errors.len() > MOST_ERRORS {
+            break;
+        }
         if let Err(diagnostic) = boundary::check(form) {
             boundary_errors.push(*diagnostic);
         }
@@ -349,10 +492,14 @@ fn passes(
         .collect();
     let mut schema_errors = Vec::new();
     for form in &declared {
+        if schema_errors.len() > MOST_ERRORS {
+            break;
+        }
         schema_errors.extend(validate(registry, form));
     }
     // §7 rule 6: a name is declared once — across declarations, so after the per-declaration frame.
     schema_errors.extend(duplicate_names(registry, &declared));
+    schema_errors.extend(duplicate_task_names(&declared));
     push(&mut findings, Verdict::InvalidDescription, schema_errors);
 
     // ── profile admission ────────────────────────────────────────────────────────────────────
@@ -373,22 +520,14 @@ fn passes(
     }
 
     // ── presence and relevance ───────────────────────────────────────────────────────────────
-    let mut facts = FactMap::new();
-    for form in &forms {
-        facts.collect(form);
-    }
-    let presence = facts.check_excluding(&out_of_profile);
-    let closure = Closure {
-        inside: presence.pulled_in_by.clone(),
-        outside: presence.outside_closure.clone(),
+    // Left to the caller that judges a system put on a target there, where the machine answers in place of the description's own
+    // hardware, which a description need not pass presence over (`docs/decisions/decision_device-correspondence.md`, `DC-H3`).
+    let closure = match presence {
+        Presence::Judged(vocabulary) => {
+            judge_presence(&forms, &out_of_profile, vocabulary, &mut findings)
+        }
+        Presence::Left => Closure::default(),
     };
-    for diagnostic in presence.diagnostics {
-        push(
-            &mut findings,
-            Verdict::of_code(diagnostic.code),
-            vec![diagnostic],
-        );
-    }
 
     // ── refinement ───────────────────────────────────────────────────────────────────────────
     let found = refinements(&forms);
@@ -409,16 +548,32 @@ fn passes(
         Verdict::InfeasibleConfiguration,
         found.violated,
     );
+    // Hardware a system has that refines what leads back to it, through what they compose and refine, is refused on the description's own hardware as on a
+    // target: no machine stands on a loop (`decision_device-correspondence.md`). Asked of a target's alone, `check` passed it and the search bound it (leaf
+    // `M3.4.17.4`, from `M4.4.1.8`'s reader).
+    let named: BTreeMap<&str, &Form> = forms
+        .iter()
+        .filter_map(|form| Some((form.items().get(1)?.as_symbol()?, form)))
+        .collect();
+    let mut looped: Vec<Diagnostic> = Vec::new();
+    for system in forms.iter().filter(|form| form.head() == Some("defsystem")) {
+        for diagnostic in
+            crate::refinement::loops_refused(&crate::presence::hardware(system, &forms), &named)
+        {
+            if !looped.contains(&diagnostic) {
+                looped.push(diagnostic);
+            }
+        }
+    }
+    push(&mut findings, Verdict::InvalidDescription, looped);
 
     let verdict = findings
         .iter()
         .map(|finding| finding.verdict)
         .max_by_key(|verdict| verdict.precedence())
         .unwrap_or(Verdict::Ok);
-    let diagnostics: Vec<Diagnostic> = findings
-        .into_iter()
-        .flat_map(|finding| finding.diagnostics)
-        .collect();
+    let diagnostics =
+        Diagnostics::held(findings.into_iter().flat_map(|finding| finding.diagnostics));
 
     Outcome {
         verdict: if diagnostics.is_empty() {
@@ -441,17 +596,117 @@ fn push(findings: &mut Vec<Finding>, verdict: Verdict, diagnostics: Vec<Diagnost
     }
 }
 
+/// The presence pass (`M1.5`): what is offered, absent or undescribed of what is asked, and the closure it reads (model §2).
+fn judge_presence(
+    forms: &[Form],
+    out_of_profile: &BTreeSet<String>,
+    vocabulary: Option<&VocabularyFacts>,
+    findings: &mut Vec<Finding>,
+) -> Closure {
+    // A fact the vocabulary derives is stated by no declaration, and the search computes it: presence is told the rule's facts, and reads it as described where one
+    // block or platform offers each (leaf `M3.4.17.1`). A fact an engine's adapter adds is realized over a block or a platform offering what its `beneath`
+    // names: such a part may be bound for it, so its own needs are followed, as the search counts them. Each reading below is told both (leaf `M3.4.17.6`).
+    let paths = crate::presence::adapter_paths();
+    let tell = |map: &mut FactMap| {
+        for (fact, of) in vocabulary.iter().flat_map(|told| &told.derived) {
+            map.derive(fact, of);
+        }
+        for path in &paths {
+            for fact in &path.adds {
+                map.realize(fact, &path.beneath);
+            }
+        }
+    };
+    let mut facts = FactMap::new();
+    for form in forms {
+        facts.collect(form);
+    }
+    tell(&mut facts);
+    let presence = facts.check_excluding(out_of_profile);
+    let closure = Closure {
+        inside: presence.pulled_in_by.clone(),
+        outside: presence.outside_closure.clone(),
+    };
+    // A fact the vocabulary does not declare is judged by presence alone, the search binding nothing for it, so it is
+    // read as the search reads a system: on that system's own hardware (model §8 rule 7; leaf `M3.4.16`). A block or a
+    // platform outside it neither asks nor answers there, and another system asks in its own reading. What the
+    // description read whole says of such a fact gives way to that; a fact of the vocabulary is the search's to bind
+    // or refuse, and is read as before. A description of no system is read whole, as every one is where the caller
+    // names no vocabulary.
+    let systems: Vec<&Form> = forms
+        .iter()
+        .filter(|form| form.head() == Some("defsystem"))
+        .collect();
+    // One reading is held at a time: a map names its declaration beside each fact, so two of a deep module tree's would
+    // hold twice what one request may (`crates/archogen-api/tests/cost.rs`).
+    drop(facts);
+    let mut said: Vec<Diagnostic> = presence.diagnostics;
+    if let Some(vocabulary) = vocabulary.filter(|_| !systems.is_empty()) {
+        said.retain(|diagnostic| {
+            !presence
+                .judged
+                .iter()
+                .any(|(fact, of_it)| of_it == diagnostic && !vocabulary.declared.contains(fact))
+        });
+        for system in systems {
+            let has = crate::presence::hardware(system, forms);
+            let mut on_its_hardware = FactMap::new();
+            // Presence alone judges what this map is read for, so it reads what the search would: an offer's value, `false` offering nothing, and offers
+            // of blocks and platforms alone, the search binding nothing to a service, a policy or a system (leaf `M3.4.17.2`).
+            on_its_hardware.read_values();
+            tell(&mut on_its_hardware);
+            for form in forms {
+                let name = form.items().get(1).and_then(Form::as_symbol);
+                if form.head() == Some("defsystem") && !std::ptr::eq(system, form) {
+                    on_its_hardware.declare(form);
+                } else if !matches!(form.head(), Some("defblock" | "defplatform")) {
+                    on_its_hardware.collect_unanswering(form);
+                } else if !name.is_some_and(|name| has.contains(name)) {
+                    on_its_hardware.collect_silent(form);
+                } else {
+                    on_its_hardware.collect(form);
+                }
+            }
+            for (fact, diagnostic) in on_its_hardware.check_excluding(out_of_profile).judged {
+                if !vocabulary.declared.contains(&fact) && !said.contains(&diagnostic) {
+                    said.push(diagnostic);
+                }
+            }
+        }
+    }
+    for diagnostic in said {
+        push(
+            findings,
+            Verdict::of_code(diagnostic.code),
+            vec![diagnostic],
+        );
+    }
+    closure
+}
+
 /// Refuse anything the active profile excludes.
 ///
 /// §3.1: "A request for these features returns an unsupported-profile diagnostic **rather than
 /// silently reducing the requested guarantee**." The refusal names the capability and the
 /// obligation admitting it would add, so it reads as a statement about work rather than a wall.
+/// What `forms` ask that `active` excludes, which presence does not say again: another reading of a description's presence uses this to say what `check` says.
+#[must_use]
+pub fn out_of_profile(forms: &[Form], active: &Profile) -> BTreeSet<String> {
+    admission(forms, active).1
+}
+
 fn admission(forms: &[Form], active: &Profile) -> (Vec<Diagnostic>, BTreeSet<String>) {
     let mut errors = Vec::new();
     let mut refused: BTreeSet<String> = BTreeSet::new();
     for form in forms {
         walk(form, &mut |node| {
             let Some(name) = node_name(node) else { return };
+            // More than one active core says what the word says, by a count: a platform's `core-count` above one, or a requirement of one.
+            let name = if name == "core-count" && counts_more_than_one(node) {
+                "multicore"
+            } else {
+                name
+            };
             if let Some(exclusion) = active.exclusion(name) {
                 refused.insert(exclusion.slug.to_string());
                 errors.push(Diagnostic::error(
@@ -475,6 +730,16 @@ fn admission(forms: &[Form], active: &Profile) -> (Vec<Diagnostic>, BTreeSet<Str
         });
     }
     (errors, refused)
+}
+
+/// Whether a `core-count` clause states or asks more than one: `(core-count 4 tick)`, `(core-count (at-least 2 tick))`.
+fn counts_more_than_one(clause: &Form) -> bool {
+    let above_one =
+        |form: Option<&Form>| matches!(form, Some(Form::Integer { value, .. }) if *value > 1);
+    match clause.items().get(1) {
+        Some(Form::List { items, .. }) => above_one(items.get(1)),
+        count => above_one(count),
+    }
 }
 
 /// The name a node contributes to admission: a bare symbol, or a list's head.
@@ -501,6 +766,32 @@ struct Refinements {
     undeclared_targets: Vec<Diagnostic>,
     /// Obligations a concrete platform breaks: `infeasible-configuration`.
     violated: Vec<Diagnostic>,
+}
+
+/// Every block and platform `name` composes, at any composition depth, by [`crate::presence::composition`]'s reading —
+/// a block's or a platform's every `uses` (model §8 rules 1 and 5).
+fn composed(forms: &[Form], name: &str) -> Vec<String> {
+    let hardware = |form: &&Form| matches!(form.head(), Some("defblock" | "defplatform"));
+    let declared = |wanted: &str| {
+        forms
+            .iter()
+            .filter(hardware)
+            .find(|form| form.items().get(1).and_then(Form::as_symbol) == Some(wanted))
+    };
+    let mut seen: Vec<String> = Vec::new();
+    let mut next: Vec<String> = declared(name)
+        .map(crate::presence::composition)
+        .unwrap_or_default();
+    while let Some(part) = next.pop() {
+        if part == name || seen.contains(&part) {
+            continue;
+        }
+        if let Some(form) = declared(&part) {
+            next.extend(crate::presence::composition(form));
+            seen.push(part);
+        }
+    }
+    seen
 }
 
 /// Check every `(refines …)` claim in the description.
@@ -538,7 +829,31 @@ fn refinements(forms: &[Form]) -> Refinements {
             ));
             continue;
         };
+        // Every one of these is `infeasible-configuration`, so what is held back moves no verdict, and one offer refined a thousand ways multiplies.
+        if violated.len() > MOST_ERRORS {
+            break;
+        }
         violated.extend(refinement::check(abstract_, concrete).diagnostics());
+        // Model §3 rule 3 through the chain the abstract refines and what the concrete composes (leaf `M3.4.8`).
+        let named = |name: &str| facets.iter().find(|f| f.name == name);
+        let mut ancestors: Vec<&Facets> = Vec::new();
+        let mut link = abstract_;
+        while let Some(next) = link
+            .refines
+            .as_ref()
+            .and_then(|(target, _)| named(target))
+            .filter(|next| ancestors.len() < facets.len() && !std::ptr::eq(*next, concrete))
+        {
+            ancestors.push(next);
+            link = next;
+        }
+        let composes: Vec<&Facets> = composed(forms, &concrete.name)
+            .iter()
+            .filter_map(|name| named(name))
+            .collect();
+        violated.extend(refinement::exclusions_through(
+            abstract_, &ancestors, concrete, &composes,
+        ));
     }
     Refinements {
         unreadable,

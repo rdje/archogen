@@ -34,6 +34,49 @@ comes to believe it has hardware evidence.
 | `riscv-virt-up` | independent execution of real target binaries — startup, interrupt paths, MMIO contracts | it is a virtual platform, not a board and not a cycle-accurate timing reference |
 | `board-first` | the same profile on a named physical processor and device revision | only what its documented configuration and measurement procedure support |
 
+**The hosted playground is a simulator, not an emulator** (`crates/sim-playground`, `M4.3.1`). No target code runs on it. It is
+a small program that executes the runtime's real scheduling logic, `crates/rt-core`, against modeled time, and writes down
+every event as it happens: an interrupt becoming pending, its service, each release, each job starting, being preempted,
+resuming and completing. It has one rule for what happens first when several things fall on one instant, so one system has
+one trace, and two runs can be compared byte for byte:
+
+```text
+0 s pending timer
+0 s entry timer
+0 s release beat nominal 0 s
+0 s release chime nominal 0 s
+0 s timer-programmed 1/100 s
+0 s exit timer
+0 s start beat
+0 s complete beat
+0 s start chime
+0 s complete chime
+0 s idle
+1/100 s pending timer
+```
+
+Time is exact: `1/100 s` is 10 ms, with no rounding anywhere. In order: a job with nothing left that takes time finishes first, so
+one that ends exactly as its next release falls due has not overrun, unless an interrupt is pending with nothing masking it as it ends, whose service comes first; then an interrupt that has arrived is taken as soon as the
+hardware is unmasked, the routes in the plan's order and then the release timer, none nesting another; then the scheduler
+decides; then the running job goes on. While a job holds interrupts masked, an arrival stays pending, and its service runs at
+the unmask, before the job's next instruction, even if that is its last. Masks nest, so that unmask is the one that ends the outermost: one inside another lets nothing in,
+and a job that ends with one still standing ends masked, its completion letting in what is pending. A job's body is data, a list of *run this long*, *mask*, *unmask*, *read* or *write a device*, *program an alarm*. Until an application's own inputs exist, a
+generated system's bodies are empty, so its jobs start and complete at one instant, and only the releases are informative;
+the simulator's own tests run longer bodies, so preemption, masking and overrun are held today. A job an alarm releases could program
+that alarm for now, and time would never move, so a run takes at most `sim_playground::MOST_STEPS_AT_ONE_INSTANT` steps at one instant, and past that it stops, says so and exits 1, and so too past `sim_playground::MOST_ALARM_ARRIVALS` arrivals of its alarms.
+
+When something goes wrong the trace says so in the words the fault paths' record, `docs/profiles/rt-static-up-v1-faults-observation.md`,
+fixes, so a hosted run and a target's can be compared: `1/50 s fault overrun late skip-late-job nominal 1/50 s` is one late job abandoned,
+that release becoming the task's next job, with no separate `release` line. A task that leaves the schedule says `fault` once, and its
+later releases say nothing. A halt says its kind, its case and whom it was attributed to, and nothing follows it.
+
+**A timer and an interrupt controller, as contracts you can run** (`crates/sim-devices`, `M4.5`). The roadmap asks a timer's contract to say
+what happens when its counter wraps, when a deadline is too far ahead to tell apart, and when a deadline has already passed by the time it is
+programmed. These models make each of those something you can execute: a deadline past the counter's horizon is refused rather than quietly
+becoming a nearer one, a deadline already passed is raised at once and says how late, and an interrupt that arrives while masked waits and is
+delivered at the unmask. Their tests walk every case at small counter sizes. They do not run in a generated system yet: the playground's own
+release timer is an exact clock with no counter to wrap, so they wait for a plan that names a target's devices.
+
 ## The precise rules
 
 ### The emulator is pinned
@@ -103,13 +146,17 @@ only words the language already has, and states one fact for each thing the prof
 
 ```text
 (defblock target.timer
-  (offers (tick-rate 10 MHz) (reachable-at-privilege machine)
+  (offers (tick-rate 10 MHz) (relative-delay true) (channels 1 tick) (alarm-wiring core)
+    (alarm-kind level-compare) (counter-modulus (pow2 64)) (counter-width 64 bit) (wrap-behavior modular)
+    (compare-step 1 tick) (compare-magnitude true) (observation-coherent true) (available-in-state run idle)
+    (supported-horizon 1844674407370 s) (reachable-at-privilege machine)
     (region target.timer (base 0x0200_0000) (size 64 KiB))))
 (defblock target.console
   (offers (observable-output true) (reachable-at-privilege machine)
     (region target.console (base 0x1000_0000) (size 256 byte))))
 (defplatform target.riscv-virt-up
-  (offers (core-count 1 tick) (reachable-at-privilege machine)
+  (offers (core-count 1 tick) (catalog-target riscv-virt-up) (firmware-traps 0) (non-maskable-interrupts 0)
+    (reachable-at-privilege machine)
     (region target.ram (base 0x8000_0000) (size 128 MiB) (executable true)))
   (requires (uses target.timer target.console)))
 ```
@@ -119,6 +166,15 @@ what it is, not by address alone:
 - the core count with the harts under `/cpus`;
 - the executable region with the `memory` node;
 - the timer's region with the CLINT, and its tick rate with the timebase;
+- what the release requester asks of the timer, for format `/2` (leaf `M4.1.7.3.3`): its delay, its one line and its
+  wiring to the hart from the CLINT's `interrupts-extended`; its 64-bit modulus, its level compare on whole numbers at a
+  step of one tick, counting in idle as in run, and a coherent read on RV64, from the privileged specification's
+  machine timer; and its horizon no farther than one compare reaches;
+- what a system reads of the counter beside that, from the same machine timer (leaf `M4.1.7.3.5`): its width of 64 bits,
+  "a 64-bit precision on all RV32 and RV64 systems", and its modular wrap, it "will wrap around if the count overflows";
+- the platform's name for its catalog records with the `.env`'s target, and no trap taken by firmware with the `.env`'s
+  `-bios none`;
+- no interrupt no mask stops, with each hart's extensions and the release whose source was read;
 - the console's region with the node `/chosen`'s `stdout-path` names;
 - each block's and the platform's level with the `.env`'s `REQUIRES_PRIVILEGE=machine`, which no node carries: a hart
   starts in M at reset, an M-mode access that no locked PMP entry matches succeeds
@@ -136,8 +192,51 @@ target-emulator: the platform presented matches docs/targets/riscv-virt-up.dtb.s
 target-emulator: the §3.2 agreement holds: targets/riscv-virt-up.eadl agrees with the platform presented
 ```
 
-The description claims no instruction set, no interrupt route and no other device. Those would be facts
-nothing checks, and the interrupt timings the runtime analysis needs are the catalog's, with their evidence.
+The description claims no instruction set and no other device, and of the interrupt route only the timer's wiring,
+which the device tree shows. Those would be facts nothing checks, and the interrupt timings the runtime analysis needs
+are the catalog's, with their evidence. It states that no interrupt escapes every mask: the hart offers no `smrnmi`,
+and QEMU 11.1.1's own source takes no other non-maskable interrupt and connects none, so a moved pin refuses the count
+until the new release is read (leaf `M4.1.7.3.4`).
+
+### A system on a target: which device is which
+
+A description names devices of its own, and a target has others: `console.uart` on a playground, `target.console` on the emulator. Nothing says the two
+are one device, and nothing has to, because a description says what it asks for. The engine gives the system the target's platform in place of its own and
+searches again. The device then bound for "`console.write` needs observable output" is the device `console.uart` was
+(`docs/decisions/decision_device-correspondence.md`; `crates/eadl-resolve/src/target.rs`).
+
+The description's own hardware is then gone from what is read, so nothing the target replaces can answer for it. What the system does not reach neither asks nor answers, and a service's offer answers nothing there, since only a device can serve. So everything a target build says of a device is the target's. A description's rate, width and regions do not reach it, each requirement is judged again at
+the target's providers, what a system's `platform` clause asks beside its hardware among them, and the joint rules read the target's memory map. One device may become two, two may become one, and an adapter a better device no
+longer needs is gone. What no device can serve is the refusal any system gets.
+
+The engine refuses these before it searches, because no requirement can answer them:
+
+- a name both the description and the target declare;
+- a file naming what only the other declares, since each must say what it holds by itself: read together, the target's name would find the description's device and bind it;
+- a system, a task, another system it names, or a service or policy the system reaches, naming a block or a platform itself, where it could say what it asks of one — but in a system's own `platform` clause: another system it names, itself or through a service or policy it reaches, stands on the target as the system does, its clause put on the target's platform (leaves `M4.1.7.5.4.2` and `.3`);
+- a fact the one declaration a system's platform clause stands on declares absent that the target offers. Another's absence covers what it is made of, and says nothing of a device beside it;
+- two `platform` clauses on one system, which read as one would hide that it has two;
+- hardware, a target's as well, that refines what leads back to it, on which no machine stands;
+- a target's `uses` or `needs` holding a list, which a system would not read as hardware.
+
+A target's file holds what its agreement with the machine checks, so what it does not state it does not offer. A system that declares a fact absent lands on a target that is silent about it, even where the machine has the device.
+
+⚠️ Two devices no requirement tells apart are not told apart: the policy's order chooses. And this says what is judged, not that two runs match, which is
+`M4.9`'s. The engine API's `check` names a target and judges a description's systems there, the target's own file first
+([Checking on a target](engine-api.md#checking-on-a-target), leaf `M4.1.7.4.1`), and so does `archogen check --target`
+([On a target](checking.md#on-a-target), leaf `M4.1.7.4.2.1`); the search on a target, with the plan format that reads this rule, is `M4.1.7.5` and
+after.
+
+### What releases a task on a target
+
+On the playground the simulator's clock releases tasks. On a real machine a device has to raise that interrupt, so the kernel asks for an alarm as anything else asks, and the search binds it to a
+device that can serve, under the same rules and the same count of channels (`docs/decisions/decision_release-alarm.md`). It asks one that runs while the machine idles, and wired so that the core takes its
+interrupt with nothing to claim. A second alarm, an adapter's say, takes a channel of its own, and is wired through the interrupt controller. How late an alarm may be delivered, how long between two reads of its counter, how far ahead it may stand, how far one write may reach and how late a value may land and wait and still be taken are five sums in that record's table, which the model that holds them reads and runs. Neither this nor what follows is code yet: format `/2` and the
+scheduling checker build them.
+
+Each alarm's interrupt is charged as any other interrupt source is, by the analysis as it stands, so what has to be right is what it is told: how close two arrivals can come. Nobody can state that of what a job
+may program, so the code writing the alarm enforces it, holding each compare a least distance past the last arrival, as far as it can know that, which costs a deadline about that much lateness. `crates/rt-analysis/tests/alarm_model.rs` runs that design on a timeline against the analysis: with the floor no response passes its bound, and without it a set that holds on paper misses. Its rank among the others goes by the deadline it has to meet, so an alarm due soon stands ahead of a slow source. A call into generated code counts as a call of a primitive, whose cost holds
+what it calls in turn. And a job runs in no interrupt, so a job hears of an alarm when a task is released, which something else must have programmed for it, since a set of tasks that only release each other has no first job. A long wait written in several steps releases its job once, when the deadline it asked for comes, and not at each step.
 
 ### The first code on the target
 

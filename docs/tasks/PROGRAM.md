@@ -530,46 +530,13 @@ mdBook that is the director's window into the project.
   Status: `done` — sealed in [`PROGRAM/PROGRAM.70.md`](../task-history/PROGRAM/PROGRAM.70.md); commit `ARCHOGEN-PROGRAM-0524`
 
 - ID: `PROGRAM.71`
-  Status: `done` — filed `2026-10-10` by `PROGRAM.69`'s review round 7, its P1
-  Goal: the history's index is append-only in order as well as in presence, as its record says ("Rows are only ever
-  appended").
-  Reproduce / issue: `scripts/check_task_history.sh`'s leg 3 compares each committed index's rows with the current
-  index's as sets, so a row inserted above committed rows passes; measured by the round's own runner, `exp/e2`, untracked
-  and so not durable → *"OK"*, and a
-  mutation of `add_rows` that puts new rows first passes every arm. Present at `fea69ad`, before `PROGRAM.69`.
-  Direction: leg 3 also requires each committed index's rows to stand, in their order, as a prefix of the current
-  table's — or the record and the gate's line say "present and unchanged" rather than "append-only"; an arm either way.
-  Built: the first direction, so the record's "Rows are only ever appended" and the gate's "append-only" stay true:
-    leg 3 keeps each table's rows as a list, and refuses a committed table whose rows, all present and unchanged, no
-    longer stand first and in their order — a row inserted above them or moved — beside its refusal of a row gone or
-    changed; an arm moving a committed row above another.
-  Acceptance:
-    - [x] ROOT CAUSE — WHY: leg 3 compared rows as sets, so their order was not judged; WHERE, `git show b3266f25:scripts/check_task_history.sh`, `current = {t: set(r) for t, r in index.items()}`.
-    - [x] FIX — leg 3's `in_order`, lists for sets; the arm.
-    - [x] ADDRESSED — the arm before the fix: `bash scripts/check_task_history.sh --self-test`: `170 pass / 1 fail (171 arms)`, the moved row `expected exit 1, got 0`; after it: `171 pass / 0 fail (171 arms)`; the leaf's mutant, `add_rows` putting new rows first, `161 pass / 11 fail (172 arms)`, where it passed every arm before.
-    - [x] NO REGRESSION — `bash scripts/check_task_history.sh`: OK over the real history, every committed table a prefix in order; `make focused` on this staged tree: `tier focused: passed — 3 passed, 0 failed, 0 unavailable, 0 not built, 0 quarantined`, in 256 s.
-    - [x] LOCKSTEP — the gate and its arm; the record and the gate's line, already saying "append-only", now held to it.
-  Commit: `ARCHOGEN-PROGRAM-0971 (leaf PROGRAM.71)`
+  Status: `done` — sealed in [`PROGRAM/PROGRAM.71.md`](../task-history/PROGRAM/PROGRAM.71.md); commit `ARCHOGEN-PROGRAM-0971`
 
 - ID: `PROGRAM.72`
-  Status: `pending` — filed `2026-10-10` by `PROGRAM.69`'s review round 8, its P1
-  Goal: a tree file in a sub-folder of `docs/tasks/` is judged as any tree file is, or is no tree file.
-  Reproduce / issue: `scripts/check_task_history.sh`'s leg 6, its foreign-name and named-twice checks read
-  `docs/tasks/*.md` alone, while `TASK-ACCEPTANCE` takes an owning leaf from any staged `docs/tasks/**/*.md`
-  (`scripts/check_task_acceptance.sh`); the round's probe, its own untracked runner and so not durable: a live
-  `M1.12.1.9` in `docs/tasks/m1/M1.md` passes the gate, at `docs/tasks/M1x.md` refused. Present at `fea69ad`.
-  Direction: the gate walks `docs/tasks/` whole, `TEMPLATE.md` excepted — or `TASK-ACCEPTANCE` takes owners from
-  `docs/tasks/*.md` alone; an arm either way.
+  Status: `done` — sealed in [`PROGRAM/PROGRAM.72.md`](../task-history/PROGRAM/PROGRAM.72.md); commit `ARCHOGEN-PROGRAM-1040`
 
 - ID: `PROGRAM.73`
-  Status: `pending` — filed `2026-10-10` by `PROGRAM.69`'s review round 9, its P1
-  Goal: the history gate names every failure it meets as a breach, never a traceback.
-  Reproduce / issue: `scripts/check_task_history.sh`'s top level catches `Unreadable` and `OSError` alone, so any other
-  exception in the gate's own run ends in a traceback, exit 1 — git printing bytes that are not UTF-8 for
-  `rev-parse --is-shallow-repository`, a `UnicodeDecodeError` at `shallow.decode()`; the round's probe, a fake `git` on
-  the path, its own untracked runner and so not durable; the self-test's arm for a seal stopped that way (R9-2) expects
-  the traceback today. Present at `fea69ad`.
-  Direction: the top level names any exception as a breach, and that arm expects the named breach; an arm for the gate.
+  Status: `done` — sealed in [`PROGRAM/PROGRAM.73.md`](../task-history/PROGRAM/PROGRAM.73.md); commit `ARCHOGEN-PROGRAM-1039`
 
 - ID: `PROGRAM.74`
   Status: `done` — sealed in [`PROGRAM/PROGRAM.74.md`](../task-history/PROGRAM/PROGRAM.74.md); commit `ARCHOGEN-PROGRAM-0526`
@@ -584,7 +551,8 @@ mdBook that is the director's window into the project.
   Status: `done` — sealed in [`PROGRAM/PROGRAM.77.md`](../task-history/PROGRAM/PROGRAM.77.md); commit `ARCHOGEN-PROGRAM-0569`
 
 - ID: `PROGRAM.78`
-  Status: `pending` — filed `2026-10-10` by `PROGRAM.69`'s review round 26, its R3
+  Status: `blocked` — filed `2026-10-10` by `PROGRAM.69`'s review round 26, its R3; blocked `2026-10-28` until the
+    features are complete, its purpose a parallel mutation sweep (`decision_mutation-testing-after-completion.md`)
   Goal: the sealing self-test's arm "an interrupt mid-proof waits for the seal" holds whatever the machine's load, so a
   mutation sweep run in parallel reads its failure as a kill only when the mutant made it.
   Reproduce / issue: in a three-way parallel sweep of `scripts/check_task_history.sh`, the arm failed for 8 of 50
@@ -713,146 +681,522 @@ mdBook that is the director's window into the project.
   Status: `done` — sealed in [`PROGRAM/PROGRAM.108.md`](../task-history/PROGRAM/PROGRAM.108.md); commit `ARCHOGEN-PROGRAM-0908`
 
 - ID: `PROGRAM.109`
-  Status: `done` — fifteenth daily artifact cleanup; the record's last run `2026-10-22T15:54:45+00:00`, over 24 h old
-    at the director's prompt (`2026-10-24`)
-  Goal: remove only idle, regenerable compiler caches — the main and the wasm debug incremental directories, the
-    owned native-sweep cache being absent — after a physical and native inventory, a successful handoff census and an
-    identity recheck; retain every dependency store, final product, cited evidence directory and Git workspace; prove
-    each removed directory gone, every other entry under `target/` identity-equal or accounted, the tracked inputs
-    restored, the focused tier and `scripts/wasm_build.sh` regenerating; overwrite `docs/ARTIFACT_CLEANUP.md` and add
-    the run's section to the repository annex. The commit also seals what closed at `HEAD`: `PROGRAM.100`–`.102` and
-    `.104`–`.108`.
-    [Full evidence and adapters](../book/src/annex-repository.md#daily-artifact-cleanup-on-2026-10-24).
-  Built otherwise in one part: the wasm debug cache, empty on earlier runs, held 462 files after `M3.5.2`'s builds, so
-    it was admitted beside the main one, the same kind of regenerable compiler cache, its regeneration proven by the
-    documented `scripts/wasm_build.sh`; and the audit, which assumed every surveyed location present, now requires the
-    one absent, the native-sweep cache, to be empty.
-  Acceptance:
-  - [x] ROOT CAUSE: `python3 -I -B target/artifact-cleanup/2026-10-24/census.py`, exit code 0: five locations, physical
-    and native find/stat inventories agree; no link, nested Git boundary or cross-volume entry; the handoff census
-    `handoff: OK` before the inventory and again immediately before the deletion. No `.log` file in any location; the
-    `.bin` files are the caches' own.
-  - [x] ADDRESSED: `python3 -I -B target/artifact-cleanup/2026-10-24/audit.py`, exit code 0: only 29847 idle cache
-    files / 4245385971 logical bytes removed, 2232 bin, no logs; both directories gone by Python and native stat;
-    850169 of 850172 other `target/` entries identical, the three directory rows the strict comparison refused
-    accounted (two parents, the census's scratch); 120995 evidence digests agree; 4 of 4 falsifying arms refused.
-  - [x] NO REGRESSION: `bash scripts/trust_adequacy.sh --check-inputs`: `restored 1277 regular inputs`; production
-    source unchanged; `bash scripts/check_task_history.sh --seal PROGRAM`: `sealed 8 subtree(s), 8 leaves`, the
-    reconstruction byte for byte; `bash scripts/wasm_build.sh`: exit code 0, the wasm cache regenerated; `make focused` on this staged tree: exit code 0, `tier focused: passed — 3 passed, 0 failed, 0 unavailable, 0 not built, 0 quarantined`, in 260 s — cargo's fingerprints held every crate fresh, so nothing recompiled and the main cache, its directory recreated empty, refills on the next change; the wasm build recompiled and refilled its own.
-  Verification: `target/artifact-cleanup/2026-10-24/`; the external policies of §14, §17 and §18 re-read at the prompt,
-    each body still hashing as adopted (`README_POLICY.md`'s lines 29–187 `77a1e934…`, the adoption guide
-    `8f77fa39…`, `pgen`'s claim verification, 285 lines and 18166 bytes, verbatim in the adopted file), so nothing to
-    apply.
-  Commit: `ARCHOGEN-PROGRAM-0928 (leaf PROGRAM.109)`
+  Status: `done` — sealed in [`PROGRAM/PROGRAM.109.md`](../task-history/PROGRAM/PROGRAM.109.md); commit `ARCHOGEN-PROGRAM-0928`
 
 - ID: `PROGRAM.110`
-  Status: `done` — the director's verification doctrine 22 (`2026-10-26`) recorded: small checks per slice, full
-    verification after the feature set
-  Built: `docs/decisions/decision_small-checks-per-slice.md`, the doctrine word for word and what it means here — the
-    changed crate's tests and clippy and, for a slice changing what a root compiles, the trust inventory; the hooks and
-    `make focused` kept as commit integrity; the full xtask suite, the proofs and their pins, workspace clippy and CI
-    deferred — indexed; `M3.5.9`, `M3.5`'s deferred verification, filed pending after its feature leaves.
-  Acceptance:
-    - [x] ROOT CAUSE — WHY: the doctrine existed only in the session; WHERE, `git grep -n "doctrine 22" -- docs`: no line before this commit.
-    - [x] FIX — the record, its index row, `M3.5.9`.
-    - [x] ADDRESSED — `bash scripts/check_doctrines.sh`: green, the record indexed and inside the folder's ceiling.
-    - [x] NO REGRESSION — a records-only change; no code changed.
-    - [x] LOCKSTEP — the decisions index and the tree.
-  Verification: the doctrines.
-  Commit: `ARCHOGEN-PROGRAM-0952 (leaf PROGRAM.110)`
+  Status: `done` — sealed in [`PROGRAM/PROGRAM.110.md`](../task-history/PROGRAM/PROGRAM.110.md); commit `ARCHOGEN-PROGRAM-0952`
 
 - ID: `PROGRAM.111`
-  Status: `done` — sixteenth daily artifact cleanup; the record's last run `2026-10-23T22:20:24+00:00`, over 24 h old
-  Goal: remove only idle, regenerable incremental compiler caches, after the handoff census; keep every dependency
-    store, product, evidence directory and Git workspace; a light run under doctrine 22
-    (`docs/decisions/decision_small-checks-per-slice.md`) — no identity audit of what stayed.
-  Acceptance:
-    - [x] ROOT CAUSE — WHY: the cleanup record was over 24 hours old; WHERE, `docs/ARTIFACT_CLEANUP.md` at `3c848944`, its entry `2026-10-23T22:20:24+00:00`.
-    - [x] FIX — `python3 -I -B target/artifact-cleanup/2026-10-26/cleanup.py --delete`: `target/debug/incremental`, `target/wasm32-unknown-unknown/debug/incremental`, `target/m352101/measure-target/debug/incremental`, `target/m352111/blocks-target/debug/incremental` removed, no link in any.
-    - [x] ADDRESSED — `total files 8854 bytes 1586169011`, 495 bin, 0 log, each directory `gone: true` (`target/artifact-cleanup/2026-10-26/removed.json`); `bash scripts/handoff_census.sh`: `handoff: OK` before.
-    - [x] NO REGRESSION — caches alone, regenerated by the next build: the main by `make focused`, the wasm by `scripts/wasm_build.sh`; no tracked file but the record.
-    - [x] LOCKSTEP — the record and the tree.
-  Verification: the census, the removal report.
-  Commit: `ARCHOGEN-PROGRAM-0953 (leaf PROGRAM.111)`
+  Status: `done` — sealed in [`PROGRAM/PROGRAM.111.md`](../task-history/PROGRAM/PROGRAM.111.md); commit `ARCHOGEN-PROGRAM-0953`
 
 - ID: `PROGRAM.112`
-  Status: `done` — doctrine 22's record corrected: what `make focused` runs is not deferred
-  Built: `docs/decisions/decision_small-checks-per-slice.md`'s deferred bullet split in two — what `make focused` runs,
-    its tier `cargo fmt --all -- --check`, workspace clippy and `cargo test --all`, stays at every commit, a pin a slice
-    moves re-pinned by that slice; what it does not run — the integration tier and CI, the sweeps themselves, the
-    oracle, audits — deferred to `M3.5.9`; its index row likewise.
-  Acceptance:
-    - [x] ROOT CAUSE — WHY: the record listed the whole xtask suite, the sweep's pinned premises and workspace clippy as deferred, and `make focused`, mandatory at every commit, runs all three; WHERE, `git show d8153b33:docs/decisions/decision_small-checks-per-slice.md`, its *Deferred* bullet, against `xtask/src/main.rs`'s `focused` tier, `steps: &[FMT, CLIPPY, TESTS]` — found when `M3.5.4.5`'s focused run refused the lockfile pin the record had deferred.
-    - [x] FIX — the record's two bullets and its index row.
-    - [x] ADDRESSED — `bash scripts/check_doctrines.sh` through the hooks: the record indexed and within the folder's ceiling.
-    - [x] NO REGRESSION — a records-only change; no code changed.
-    - [x] LOCKSTEP — the record, its index and the tree.
-  Verification: the doctrines.
-  Commit: `ARCHOGEN-PROGRAM-0959 (leaf PROGRAM.112)`
+  Status: `done` — sealed in [`PROGRAM/PROGRAM.112.md`](../task-history/PROGRAM/PROGRAM.112.md); commit `ARCHOGEN-PROGRAM-0959`
 
 - ID: `PROGRAM.113`
-  Status: `active` — filed `2026-10-26` from the CI run on `d5123578`
-  Goal: `scripts/check_task_history.sh`'s self-test arm "a SIGALRM just after the tree's rename" holds on every run of
-    the Linux runner, or the reason it cannot is stated and the arm says so.
-  Reproduce / issue: the `doctrines` workflow's run `40323084588`, attempt 1, on `ubuntu-latest`: the arm `rc 142, not
-    142, or the seal not finished and proven`, the seal's output empty — the process ended by the signal before the
-    seal printed, as though `SIGALRM` were not held; the same run's `SIGQUIT`, `SIGUSR1` and `SIGUSR2` arms passed, and
-    attempt 2 of the same commit passed whole; the arm passed on this host (`aarch64-apple-darwin`) and in the base's
-    last green run. Intermittent, so one run diagnoses nothing.
-  Direction: tools first — a Linux reproduction (a container or the runner) running the arm in a loop under load,
-    recording the process's threads and signal masks (`/proc/self/status`'s `SigBlk`) at the rename; then the mask, the
-    arm or the record fixed by what it shows. Not patched blind.
-  Since (`2026-10-26`): the runs on `e089751f` (`40326236217`) and `a809a826` (`40327569374`) failed four and five of
-    the signal arms after the tree's rename — `HUP`, `QUIT`, `USR1`, `USR2`, `ALRM`, never `INT` or `TERM` — each with
-    its expected exit code, so the failures are steady on the runner, not one run's. The self-test runner keeps only
-    `^SELF-TEST` lines, so the arms' evidence never reached the log: the arm's failure line now carries it — whether the
-    seal said it sealed, whether `Q.1.md` exists, the seal's last words and the gate's verdict in the proof — as the
-    tool the next run reads (`ARCHOGEN-PROGRAM-0976`).
-  Verification: `pending`
-  Commit: `pending`
+  Status: `done` — sealed in [`PROGRAM/PROGRAM.113.md`](../task-history/PROGRAM/PROGRAM.113.md); commit `ARCHOGEN-PROGRAM-0978`
 
 - ID: `PROGRAM.113.1`
-  Status: `done` — the signal arms' failure line carries the seal's evidence, the one line the runner keeps
-  Acceptance:
-    - [x] ROOT CAUSE — WHY: the self-test runner keeps a failing gate's `^SELF-TEST` lines alone, and the arm printed its evidence on the lines after, so the runner's log said only that the arms failed; WHERE, `git show a809a826:scripts/run_self_tests.sh`, its line 110, `grep -E '^SELF-TEST|self-test' | head -8`.
-    - [x] FIX — the arm's failure line names whether the seal said it sealed, whether `Q.1.md` exists, the seal's last words and the gate's verdict in the proof.
-    - [x] ADDRESSED — the `SIGALRM` arm forced to fail, its wanted code set to `1` and restored after: its line read `sealed line yes, Q.1.md yes; output: …; gate: task-history: OK …`; `bash scripts/check_task_history.sh --self-test`: `171 pass / 0 fail (171 arms)`.
-    - [x] NO REGRESSION — `make focused` on this staged tree: `tier focused: passed — 3 passed, 0 failed, 0 unavailable, 0 not built, 0 quarantined`, in 337 s; the gate's behaviour unchanged, the arm's message alone longer.
-    - [x] LOCKSTEP — the arm and `PROGRAM.113`'s record.
-  Commit: `ARCHOGEN-PROGRAM-0976 (leaf PROGRAM.113.1)`
+  Status: `done` — sealed in [`PROGRAM/PROGRAM.113.md`](../task-history/PROGRAM/PROGRAM.113.md); commit `ARCHOGEN-PROGRAM-0976`
 
 - ID: `PROGRAM.113.2`
-  Status: `done` — the signal arms trace the seal: the signal sent, each mask change, each outcome printed
-  Acceptance:
-    - [x] ROOT CAUSE — WHY: `.1`'s evidence from the run on `d7fa9c69` — `sealed line no, Q.1.md yes`, the gate's proof OK — fits both a line printed and lost and a process ended before it printed, and one run cannot tell them apart; WHERE, `git show d7fa9c69:scripts/check_task_history.sh`, the arm's failure line, no order of events.
-    - [x] FIX — the test hook writes, unbuffered and in order, to a trace file the arm names: `fire N` as the signal is sent, `mask HOW COUNT` at each mask change, `print …` before each `task-history:` outcome; the arm's failure line quotes the trace and the output's first lines.
-    - [x] ADDRESSED — the `SIGALRM` arm forced to fail, its wanted code `1` and restored after: `trace: mask 1 23|fire 14|print task-history: docs/tasks/Q.md — sealed 1 subtree|mask 3 0|`, the designed order on this host; `bash scripts/check_task_history.sh --self-test`: `171 pass / 0 fail (171 arms)`.
-    - [x] NO REGRESSION — test-only code, the gate's own unchanged; `make focused` on this staged tree: `tier focused: passed — 3 passed, 0 failed, 0 unavailable, 0 not built, 0 quarantined`, in 308 s.
-    - [x] LOCKSTEP — the hook, the arm and `PROGRAM.113`'s record.
-  Commit: `ARCHOGEN-PROGRAM-0977 (leaf PROGRAM.113.2)`
+  Status: `done` — sealed in [`PROGRAM/PROGRAM.113.md`](../task-history/PROGRAM/PROGRAM.113.md); commit `ARCHOGEN-PROGRAM-0977`
 
 - ID: `PROGRAM.113.3`
-  Status: `done` — the arms read their output without a pipe, so `pipefail` cannot turn a match into a failure
-  Acceptance:
-    - [x] ROOT CAUSE — WHY: `.2`'s trace on the runner, run `40333831327` on `80719f25`, read `mask 0 54|fire 1|print task-history: docs/tasks/Q.md — sealed 1 subtree|mask 2 0|`, the output's first line the seal's own — the seal held the signal, said its outcome and was proven; the arm failed in its own check, `printf '%s' "$out" | grep -qE '^task-history: … sealed '` under `set -o pipefail`: GNU grep's `-q` exits at its first match while `printf` is still writing an output the size of the gate's Python, which bash's notice of a signalled job repeats (`git show d7fa9c69:scripts/check_task_history.sh` holds 55174 bytes of it, the base `8cdac117` 35958), so `printf` meets a closed pipe and the pipeline fails though `grep` matched — on Linux's pipe, never on this host's larger one or BSD grep, which reads to the end.
-    - [x] FIX — every `printf '%s' "$out" | grep -q…` in the script, fifty on forty-five lines, made `grep -q… <<< "$out"`: no pipeline, so no `pipefail`.
-    - [x] ADDRESSED — the mechanism alone, GNU grep under `pipefail` on a matching first line: through the pipe `20/20 pass` at 70 kB and `0/20 pass` at 300 kB; through the here-string `20/20 pass` at 1 MB; the arms with each signalled run's output padded by 300 kB, under GNU grep, before the fix `bash scripts/check_task_history.sh --self-test`: `159 pass / 12 fail (171 arms)`, after it `171 pass / 0 fail (171 arms)`; unpadded, with this host's grep and with GNU grep, `171 pass / 0 fail (171 arms)`.
-    - [x] NO REGRESSION — `bash scripts/check_task_history.sh`: OK; `make focused` on this staged tree: `tier focused: passed — 3 passed, 0 failed, 0 unavailable, 0 not built, 0 quarantined`, in 358 s.
-    - [x] LOCKSTEP — the script; `PROGRAM.114` filed for the idiom elsewhere.
-  Commit: `ARCHOGEN-PROGRAM-0978 (leaf PROGRAM.113.3)`
+  Status: `done` — sealed in [`PROGRAM/PROGRAM.113.md`](../task-history/PROGRAM/PROGRAM.113.md); commit `ARCHOGEN-PROGRAM-0978`
 
 - ID: `PROGRAM.114`
-  Status: `pending` — filed `2026-10-26` by `PROGRAM.113.3`
-  Goal: no gate script reads a captured output through `printf … | grep -q` under `pipefail`, where an output larger
-    than a pipe turns a match into a failure on Linux.
-  Reproduce / issue: the census of `scripts/*.sh` running under `pipefail` finds the idiom 78 times outside
-    `check_task_history.sh`, most in self-test arms — `check_frozen_evaluation.sh` 7, `check_task_acceptance.sh` 6,
-    `check_feedback_register.sh` 5, and more; each latent, failing only once its output outgrows a pipe, as
-    `PROGRAM.113.3` measured.
-  Direction: each made a here-string, and a doctrine leg refusing the idiom in a `pipefail` script, its RED arm the
-    pipe the padded experiment broke.
-  Verification: `pending`
-  Commit: `pending`
+  Status: `done` — sealed in [`PROGRAM/PROGRAM.114.md`](../task-history/PROGRAM/PROGRAM.114.md); commit `ARCHOGEN-PROGRAM-0980`
+
+- ID: `PROGRAM.115`
+  Status: `done` — sealed in [`PROGRAM/PROGRAM.115.md`](../task-history/PROGRAM/PROGRAM.115.md); commit `ARCHOGEN-PROGRAM-1036`
+
+- ID: `PROGRAM.116`
+  Status: `done` — sealed in [`PROGRAM/PROGRAM.116.md`](../task-history/PROGRAM/PROGRAM.116.md); commit `ARCHOGEN-PROGRAM-0989`
+
+- ID: `PROGRAM.117`
+  Status: `done` — sealed in [`PROGRAM/PROGRAM.117.md`](../task-history/PROGRAM/PROGRAM.117.md); commit not recorded
+
+- ID: `PROGRAM.117.1`
+  Status: `done` — sealed in [`PROGRAM/PROGRAM.117.md`](../task-history/PROGRAM/PROGRAM.117.md); commit `ARCHOGEN-PROGRAM-1020`
+
+- ID: `PROGRAM.117.2`
+  Status: `done` — sealed in [`PROGRAM/PROGRAM.117.md`](../task-history/PROGRAM/PROGRAM.117.md); commit `ARCHOGEN-PROGRAM-1022`
+
+- ID: `PROGRAM.117.3`
+  Status: `done` — sealed in [`PROGRAM/PROGRAM.117.md`](../task-history/PROGRAM/PROGRAM.117.md); commit `ARCHOGEN-PROGRAM-1037`
+
+- ID: `PROGRAM.118`
+  Status: `done` — sealed in [`PROGRAM/PROGRAM.118.md`](../task-history/PROGRAM/PROGRAM.118.md); commit `ARCHOGEN-PROGRAM-1028`
+
+- ID: `PROGRAM.119`
+  Status: `done` — sealed in [`PROGRAM/PROGRAM.119.md`](../task-history/PROGRAM/PROGRAM.119.md); commit `ARCHOGEN-PROGRAM-1021`
+
+- ID: `PROGRAM.120`
+  Status: `done` — sealed in [`PROGRAM/PROGRAM.120.md`](../task-history/PROGRAM/PROGRAM.120.md); commit `ARCHOGEN-PROGRAM-1068`
+
+- ID: `PROGRAM.121`
+  Status: `done` — sealed in [`PROGRAM/PROGRAM.121.md`](../task-history/PROGRAM/PROGRAM.121.md); commit `ARCHOGEN-PROGRAM-1107`
+
+- ID: `PROGRAM.122`
+  Status: `done` — sealed in [`PROGRAM/PROGRAM.122.md`](../task-history/PROGRAM/PROGRAM.122.md); commit `ARCHOGEN-PROGRAM-1116`
+
+- ID: `PROGRAM.123`
+  Status: `done` — sealed in [`PROGRAM/PROGRAM.123.md`](../task-history/PROGRAM/PROGRAM.123.md); commit `ARCHOGEN-PROGRAM-1118`
+
+- ID: `PROGRAM.124`
+  Status: `done` — sealed in [`PROGRAM/PROGRAM.124.md`](../task-history/PROGRAM/PROGRAM.124.md); commit `ARCHOGEN-PROGRAM-1122`
+
+- ID: `PROGRAM.125`
+  Status: `done` — sealed in [`PROGRAM/PROGRAM.125.md`](../task-history/PROGRAM/PROGRAM.125.md); commit `ARCHOGEN-PROGRAM-1135`
+
+- ID: `PROGRAM.126`
+  Status: `done` — sealed in [`PROGRAM/PROGRAM.126.md`](../task-history/PROGRAM/PROGRAM.126.md); commit `ARCHOGEN-PROGRAM-1143`
+
+- ID: `PROGRAM.127`
+  Status: `done` — `2026-11-05`: by the director's instruction, "that's critical". The machine is shared and holds 24 GB, RAM use above 88% is the danger zone and above 90% it may crash, and nothing here watched it. A watcher now stops this repository's processes before those lines and never another project's; everything `make` builds and every agent's shell command goes through it. Its review, from `PROGRAM.127.1`, closed on round 49, which found no defect (`PROGRAM.127.49`).
+
+  **Acceptance checklist (`DOCTRINE_ENFORCEMENT.md`):**
+  - [x] **REPRODUCE / ISSUE** — `2026-11-05`, the director: "You are eating all the RAM, the host is going to crash!!"; `sysctl -n vm.swapusage` → `total = 63488.00M  used = 62501.50M`, with a reader and `make focused` running at once; and `git grep -nIiE 'memory_pressure|swapusage|CARGO_BUILD_JOBS' cb7ee681 -- scripts Makefile TOOLBOX.md` → no match, exit 1: nothing read the host.
+  - [x] **ROOT CAUSE (WHY + WHERE)** — no mechanism existed: `git grep -n 'verify --tier focused' cb7ee681 -- Makefile` → `cb7ee681:Makefile:24:	cargo xtask verify --tier focused`, unbounded and unwatched, and a background job's notification says when it ended, never what it did to the host. Which process held the memory was never established: another project's `rustc --crate-name pgen` was running then and later measured 8.4 GiB, and my own kill took it down too, so that incident cannot be divided up.
+  - [x] **FIX** — `scripts/host_guard.py`, `scripts/selftest_host_guard.py`, `scripts/check_host_guard.sh` and its `HOST-GUARD` row; `Makefile`'s `GUARD`; `.claude/settings.json`'s hook; `scripts/handoff_census.sh`; `docs/decisions/decision_host-guard.md` and its index row; `CLAUDE.md`, compacted to hold it; `DOCTRINE_ENFORCEMENT.md`; `docs/book/src/verification.md`.
+  - [x] **ADDRESSED (verified)** — `python3 scripts/selftest_host_guard.py` → `host-guard self-test: 71 passed, 0 failed, 0 not run`, exit 0: a process over its limit stopped and one under it not; a process of the same size outside the root, one in a directory that merely begins with its name and an agent working in it all untouched, what the agent started stopped; what a stopped process started stopped too, in another session and directory; a process still growing stopped within a sample or two; a command line that is no text no blindness; macOS's pressure level at start, stop and critical; a loosened limit refused; every command refused at the stop line, the host still readable, nothing riding in on a read; a heavy command refused at the start line and while a build runs, and the word in a message not taken for one; on the real host, `2026-11-05`: the watcher stopped this repository's job at `RAM use is 88%, at the 88% danger line`, with `0.06 GiB` the largest of ours, and another project's compiler ran on untouched; a heavy job waited for room and a whole `make focused` then passed under it, ours peaking at `0.77` GiB; the reading agreed with the director's, `85.6%` here and `85%` there.
+  - [x] **NO REGRESSION** — `bash scripts/check_host_guard.sh` → `host-guard: OK`, exit 0, and `bash scripts/check_doctrines.sh` on the staged tree naming only the focused stamp; `make focused` → `tier focused: passed — 3 passed, 0 failed`, on the staged tree, now through the guard.
+  - [x] **LOCKSTEP** — the record, its index row, `CLAUDE.md`, the doctrine table, the book, the map, these leaves and the Commit Log.
+  Commit: `ARCHOGEN-PROGRAM-1157 (leaf PROGRAM.127)`
+
+- ID: `PROGRAM.127.1`
+  Status: `done` — sealed in [`PROGRAM/PROGRAM.127.1.md`](../task-history/PROGRAM/PROGRAM.127.1.md); commit `ARCHOGEN-PROGRAM-1158`
+
+- ID: `PROGRAM.127.2`
+  Status: `done` — sealed in [`PROGRAM/PROGRAM.127.2.md`](../task-history/PROGRAM/PROGRAM.127.2.md); commit `ARCHOGEN-PROGRAM-1159`
+
+- ID: `PROGRAM.127.3`
+  Status: `done` — sealed in [`PROGRAM/PROGRAM.127.3.md`](../task-history/PROGRAM/PROGRAM.127.3.md); commit `ARCHOGEN-PROGRAM-1160`
+
+- ID: `PROGRAM.127.4`
+  Status: `done` — sealed in [`PROGRAM/PROGRAM.127.4.md`](../task-history/PROGRAM/PROGRAM.127.4.md); commit `ARCHOGEN-PROGRAM-1161`
+
+- ID: `PROGRAM.127.5`
+  Status: `done` — sealed in [`PROGRAM/PROGRAM.127.5.md`](../task-history/PROGRAM/PROGRAM.127.5.md); commit `ARCHOGEN-PROGRAM-1163`
+
+- ID: `PROGRAM.127.6`
+  Status: `done` — sealed in [`PROGRAM/PROGRAM.127.6.md`](../task-history/PROGRAM/PROGRAM.127.6.md); commit `ARCHOGEN-PROGRAM-1165`
+
+- ID: `PROGRAM.127.7`
+  Status: `done` — sealed in [`PROGRAM/PROGRAM.127.7.md`](../task-history/PROGRAM/PROGRAM.127.7.md); commit `ARCHOGEN-PROGRAM-1168`
+
+- ID: `PROGRAM.127.8`
+  Status: `done` — sealed in [`PROGRAM/PROGRAM.127.8.md`](../task-history/PROGRAM/PROGRAM.127.8.md); commit `ARCHOGEN-PROGRAM-1171`
+
+- ID: `PROGRAM.127.9`
+  Status: `done` — sealed in [`PROGRAM/PROGRAM.127.9.md`](../task-history/PROGRAM/PROGRAM.127.9.md); commit `ARCHOGEN-PROGRAM-1176`
+
+- ID: `PROGRAM.127.10`
+  Status: `done` — sealed in [`PROGRAM/PROGRAM.127.10.md`](../task-history/PROGRAM/PROGRAM.127.10.md); commit `ARCHOGEN-PROGRAM-1178`
+
+- ID: `PROGRAM.127.11`
+  Status: `done` — sealed in [`PROGRAM/PROGRAM.127.11.md`](../task-history/PROGRAM/PROGRAM.127.11.md); commit `ARCHOGEN-PROGRAM-1182`
+
+- ID: `PROGRAM.127.12`
+  Status: `done` — sealed in [`PROGRAM/PROGRAM.127.12.md`](../task-history/PROGRAM/PROGRAM.127.12.md); commit `ARCHOGEN-PROGRAM-1185`
+
+- ID: `PROGRAM.127.13`
+  Status: `done` — sealed in [`PROGRAM/PROGRAM.127.13.md`](../task-history/PROGRAM/PROGRAM.127.13.md); commit `ARCHOGEN-PROGRAM-1189`
+
+- ID: `PROGRAM.127.14`
+  Status: `done` — sealed in [`PROGRAM/PROGRAM.127.14.md`](../task-history/PROGRAM/PROGRAM.127.14.md); commit `ARCHOGEN-PROGRAM-1194`
+
+- ID: `PROGRAM.127.15`
+  Status: `done` — sealed in [`PROGRAM/PROGRAM.127.15.md`](../task-history/PROGRAM/PROGRAM.127.15.md); commit `ARCHOGEN-PROGRAM-1197`
+
+- ID: `PROGRAM.127.16`
+  Status: `done` — sealed in [`PROGRAM/PROGRAM.127.16.md`](../task-history/PROGRAM/PROGRAM.127.16.md); commit `ARCHOGEN-PROGRAM-1199`
+
+- ID: `PROGRAM.127.17`
+  Status: `done` — sealed in [`PROGRAM/PROGRAM.127.17.md`](../task-history/PROGRAM/PROGRAM.127.17.md); commit `ARCHOGEN-PROGRAM-1202`
+
+- ID: `PROGRAM.127.18`
+  Status: `done` — sealed in [`PROGRAM/PROGRAM.127.18.md`](../task-history/PROGRAM/PROGRAM.127.18.md); commit `ARCHOGEN-PROGRAM-1206`
+
+- ID: `PROGRAM.127.19`
+  Status: `done` — sealed in [`PROGRAM/PROGRAM.127.19.md`](../task-history/PROGRAM/PROGRAM.127.19.md); commit `ARCHOGEN-PROGRAM-1211`
+
+- ID: `PROGRAM.127.20`
+  Status: `done` — sealed in [`PROGRAM/PROGRAM.127.20.md`](../task-history/PROGRAM/PROGRAM.127.20.md); commit `ARCHOGEN-PROGRAM-1213`
+
+- ID: `PROGRAM.127.21`
+  Status: `done` — sealed in [`PROGRAM/PROGRAM.127.21.md`](../task-history/PROGRAM/PROGRAM.127.21.md); commit `ARCHOGEN-PROGRAM-1216`
+
+- ID: `PROGRAM.127.22`
+  Status: `done` — sealed in [`PROGRAM/PROGRAM.127.22.md`](../task-history/PROGRAM/PROGRAM.127.22.md); commit `ARCHOGEN-PROGRAM-1218`
+
+- ID: `PROGRAM.127.23`
+  Status: `done` — sealed in [`PROGRAM/PROGRAM.127.23.md`](../task-history/PROGRAM/PROGRAM.127.23.md); commit `ARCHOGEN-PROGRAM-1222`
+
+- ID: `PROGRAM.127.24`
+  Status: `done` — sealed in [`PROGRAM/PROGRAM.127.24.md`](../task-history/PROGRAM/PROGRAM.127.24.md); commit `ARCHOGEN-PROGRAM-1226`
+
+- ID: `PROGRAM.127.25`
+  Status: `done` — sealed in [`PROGRAM/PROGRAM.127.25.md`](../task-history/PROGRAM/PROGRAM.127.25.md); commit `ARCHOGEN-PROGRAM-1231`
+
+- ID: `PROGRAM.127.26`
+  Status: `done` — sealed in [`PROGRAM/PROGRAM.127.26.md`](../task-history/PROGRAM/PROGRAM.127.26.md); commit `ARCHOGEN-PROGRAM-1236`
+
+- ID: `PROGRAM.127.27`
+  Status: `done` — sealed in [`PROGRAM/PROGRAM.127.27.md`](../task-history/PROGRAM/PROGRAM.127.27.md); commit `ARCHOGEN-PROGRAM-1241`
+
+- ID: `PROGRAM.127.28`
+  Status: `done` — sealed in [`PROGRAM/PROGRAM.127.28.md`](../task-history/PROGRAM/PROGRAM.127.28.md); commit `ARCHOGEN-PROGRAM-1244`
+
+- ID: `PROGRAM.127.29`
+  Status: `done` — sealed in [`PROGRAM/PROGRAM.127.29.md`](../task-history/PROGRAM/PROGRAM.127.29.md); commit `ARCHOGEN-PROGRAM-1248`
+
+- ID: `PROGRAM.127.30`
+  Status: `done` — sealed in [`PROGRAM/PROGRAM.127.30.md`](../task-history/PROGRAM/PROGRAM.127.30.md); commit `ARCHOGEN-PROGRAM-1250`
+
+- ID: `PROGRAM.127.31`
+  Status: `done` — sealed in [`PROGRAM/PROGRAM.127.31.md`](../task-history/PROGRAM/PROGRAM.127.31.md); commit `ARCHOGEN-PROGRAM-1254`
+
+- ID: `PROGRAM.127.32`
+  Status: `done` — sealed in [`PROGRAM/PROGRAM.127.32.md`](../task-history/PROGRAM/PROGRAM.127.32.md); commit `ARCHOGEN-PROGRAM-1257`
+
+- ID: `PROGRAM.127.33`
+  Status: `done` — sealed in [`PROGRAM/PROGRAM.127.33.md`](../task-history/PROGRAM/PROGRAM.127.33.md); commit `ARCHOGEN-PROGRAM-1259`
+
+- ID: `PROGRAM.127.34`
+  Status: `done` — sealed in [`PROGRAM/PROGRAM.127.34.md`](../task-history/PROGRAM/PROGRAM.127.34.md); commit `ARCHOGEN-PROGRAM-1263`
+
+- ID: `PROGRAM.127.35`
+  Status: `done` — sealed in [`PROGRAM/PROGRAM.127.35.md`](../task-history/PROGRAM/PROGRAM.127.35.md); commit `ARCHOGEN-PROGRAM-1266`
+
+- ID: `PROGRAM.127.36`
+  Status: `done` — sealed in [`PROGRAM/PROGRAM.127.36.md`](../task-history/PROGRAM/PROGRAM.127.36.md); commit `ARCHOGEN-PROGRAM-1270`
+
+- ID: `PROGRAM.127.37`
+  Status: `done` — sealed in [`PROGRAM/PROGRAM.127.37.md`](../task-history/PROGRAM/PROGRAM.127.37.md); commit `ARCHOGEN-PROGRAM-1276`
+
+- ID: `PROGRAM.127.38`
+  Status: `done` — sealed in [`PROGRAM/PROGRAM.127.38.md`](../task-history/PROGRAM/PROGRAM.127.38.md); commit `ARCHOGEN-PROGRAM-1280`
+
+- ID: `PROGRAM.127.39`
+  Status: `done` — sealed in [`PROGRAM/PROGRAM.127.39.md`](../task-history/PROGRAM/PROGRAM.127.39.md); commit `ARCHOGEN-PROGRAM-1283`
+
+- ID: `PROGRAM.127.40`
+  Status: `done` — sealed in [`PROGRAM/PROGRAM.127.40.md`](../task-history/PROGRAM/PROGRAM.127.40.md); commit `ARCHOGEN-PROGRAM-1286`
+
+- ID: `PROGRAM.127.41`
+  Status: `done` — sealed in [`PROGRAM/PROGRAM.127.41.md`](../task-history/PROGRAM/PROGRAM.127.41.md); commit `ARCHOGEN-PROGRAM-1290`
+
+- ID: `PROGRAM.127.42`
+  Status: `done` — sealed in [`PROGRAM/PROGRAM.127.42.md`](../task-history/PROGRAM/PROGRAM.127.42.md); commit `ARCHOGEN-PROGRAM-1293`
+
+- ID: `PROGRAM.127.43`
+  Status: `done` — sealed in [`PROGRAM/PROGRAM.127.43.md`](../task-history/PROGRAM/PROGRAM.127.43.md); commit `ARCHOGEN-PROGRAM-1297`
+
+- ID: `PROGRAM.127.44`
+  Status: `done` — sealed in [`PROGRAM/PROGRAM.127.44.md`](../task-history/PROGRAM/PROGRAM.127.44.md); commit `ARCHOGEN-PROGRAM-1300`
+
+- ID: `PROGRAM.127.45`
+  Status: `done` — `2026-11-14`: round 45, a fresh reader over round 44's answer: 5 findings, 4 defects, after 7, two in round 44's answers, each failing open on forms written to; and 3 more of this round's own reruns of the earlier rounds' rigs, 2 of them defects older than round 44. The findings and each answer are in `docs/reviews/decision_host-guard-reviews.part-2.md`; its report is `target/p12745/report.md`.
+
+  **Acceptance checklist (`DOCTRINE_ENFORCEMENT.md`):**
+  - [x] **REPRODUCE / ISSUE** — its reader's own runs on `57eac8a2`, the real hook for a scratch root (`target/p12745/report.md`): each form exit 0 with a shell running the stub, and its fuzzers 10 misses of about 3,600. This round's reruns: `python3 -I -B target/p12743/land/rig43/fuzz.py 453 600` → a `pkill` bash 3.2 ran, unread; `python3 -I -B target/p12745/land/rig45/fuzz_gather.py 6 3000` → `1 missed`, `cat <()##<() ; pkill -x rustc`. Here, this round's rows on that guard: `python3 -I -B target/p12745/land/red/scripts/selftest_host_guard.py case_the_reader_sees_what_the_shell_runs case_killing_by_name` → `307 passed, 6 failed, 0 not run` (`target/p12745/land/red.log`).
+  - [x] **ROOT CAUSE (WHY + WHERE)** — `git grep -n -F 'differs = "<<" in plain or' 57eac8a2 -- scripts/host_guard.py` → `1534`, `$[` no marker; `git grep -n -F 'elif two == "${" and self.older and not in_quotes and' 57eac8a2 -- scripts/host_guard.py` → `2230`, 3.2's `${…}` ended so outside double quotes alone; `git grep -n -F 'end = self.arithmetic_end(self.at + 3) if three == "$((" else None' 57eac8a2 -- scripts/host_guard.py` → `2177`, `$$` read as `$` and what follows; `git grep -n -F 'if told and kills_by_name(read_as(shlex.join(told), which), root, which):' 57eac8a2 -- scripts/host_guard.py` → `2808`, a run's job read once; `git grep -n -F 'elif two == "$(" and self.older and (close := self.gathered(self.at + 2, comment_first=not in_quotes))' 57eac8a2 -- scripts/host_guard.py` → `2192`, 3.2's `$(` between double quotes gathered by its expansion's rule; `git grep -n -F 'def braced(at: int) -> int | None:' 57eac8a2 -- scripts/host_guard.py` → `1558`, `gathering`'s `${…}` and, to line 1587, its nested `$(` inside a double-quoted string; `git grep -n -F '            elif c == "#":' 57eac8a2 -- scripts/host_guard.py` → `1889`, a `#` after `<(…)` taken as a comment.
+  - [x] **FIX** — `scripts/host_guard.py`: `$$` one token; `$[` among `each_bash`'s markers; 3.2's `${…}` between double quotes too; `kills_by_name` reading the first run's job as each bash; 3.2's `$(` gathered by the parser's rule and `read_older` reading what its expansion takes too; `gathering`'s `older`, a nested `$(` with no comment and `braced` as each bash ends a `${…}`; `glued`. `scripts/selftest_host_guard.py`: rows for each. The record's sentences, G45-4 and G45-5 said.
+  - [x] **ADDRESSED (verified)** — `python3 -I -B scripts/host_guard.py run --wait 1800 -- python3 -I -B scripts/selftest_host_guard.py` → `host-guard self-test: 1313 passed, 0 failed, 0 not run`, run exit 0, on the final bytes, `cmp`-equal to `target/p12745/land/draft/host_guard.py`, this round's rows among them (`target/p12745/land/selftest-full.log`); its two cases alone → `313 passed, 0 failed, 0 not run` (`target/p12745/land/green.log`); the reader's forms through the real hook → each exit 2 (`target/p12745/land/rig45/hook_forms.py` on `forms.txt`, `forms2.txt`, `forms3.txt`: 11 refused, 0 passed); its rigs `brackets.py`, `brackets2.py`, `dollars.py` → `0 missed`; `fuzz2.py` and `fuzz_brace.py` seeds 451 and 452 → `0 missed` of 6,000; this round's `fuzz_gather.py` seeds 4 to 13 → `0 missed` of 27,000 but seed 6's `<(…)#`, answered.
+  - [x] **NO REGRESSION** — `bash scripts/check_host_guard.sh` → `host-guard: OK`, exit 0; `bash scripts/run_self_tests.sh --self-test` → `run-self-tests self-test: 18 pass / 0 fail (18 arms)`; the earlier rounds' rigs on this guard: round 44's 122 forms → no kill passed but `kill -0 "$PID"`, a probe of one pid, its 20 ordinary forms passing, and its fuzzers seed 453 → `0 missed`; round 43's `fuzz2.py` → `0 missed`; round 42's tables → no row open, its fuzzers `0 missed`; round 41's 49 forms → none passed with a kill run, its 20 ordinary forms passing, its here-document fuzzers → `0 fail open` of 1,200; the probes of rounds 37 to 39 → `wrong 0`; `make focused` → `tier focused: passed — 3 passed, 0 failed, 0 unavailable, 0 not built, 0 quarantined`, on the staged tree.
+  - [x] **LOCKSTEP** — the record, the review history and its index, these leaves and the Commit Log; `MEMORY.md`'s next action. The book's section says nothing this round moves.
+  Commit: `ARCHOGEN-PROGRAM-1304 (leaf PROGRAM.127.45)`
+
+- ID: `PROGRAM.127.46`
+  Status: `done` — `2026-11-14`: round 46, a fresh reader over round 45's answer: 6 findings, 4 defects, after 6, three false sentences on forms written to and one in ordinary work, the self-test's own, with a gap and one of wording. The findings and each answer are in `docs/reviews/decision_host-guard-reviews.part-2.md`; its report is `target/p12746/report.md`.
+
+  **Acceptance checklist (`DOCTRINE_ENFORCEMENT.md`):**
+  - [x] **REPRODUCE / ISSUE** — its reader's own runs on `44a79376`, the real hook for a scratch root (`target/p12746/report.md`): `hookrun.py h1.txt` and `h2.txt`, each run form `exit 0` beside its control `exit 2`; `selftest1.log`, `1312 passed, 1 failed, 0 not run` on a host at 70%. Here, this round's rows on that guard: `python3 -I -B target/p12746/land/red/scripts/selftest_host_guard.py case_the_reader_sees_what_the_shell_runs case_killing_by_name` → `310 passed, 6 failed, 0 not run` (`target/p12746/land/red.log`).
+  - [x] **ROOT CAUSE (WHY + WHERE)** — `git grep -n -F 'job = read_through_runs(read_as(shlex.join(told), which), depth + 1, fresh, which)' 44a79376 -- scripts/host_guard.py` → `2816`, the job read as `which` alone in the run's place; `git grep -n -F 'ShellReader(text, found, itertools.count(), older=bool(which), doubled=BOTH_TO_DEPTH).commands()' 44a79376 -- scripts/host_guard.py` → `2682`, a job never doubling; `git grep -n -F "at = double_quoted(text, at + 1)[1]" 44a79376 -- scripts/host_guard.py` → `2450`, in `older_brace_end`, 3.2's `${…}` nesting nothing in a double-quoted string, and `2601`, `substitution_end`'s probing scan, which this round leaves; `git grep -n -F 'return subprocess.run([*PY, str(GUARD), verb, *flags, *rest]' 44a79376 -- scripts/selftest_host_guard.py` → `129`, a `run` refused for the host's line read as any status.
+  - [x] **FIX** — `scripts/host_guard.py`: `job_bashes`, `read_as`'s doubling, `read_through_runs` and `kills_by_name` reading the first run's job as each bash in the run's place too; `older_brace_end` nesting a substitution in a double-quoted string. `scripts/selftest_host_guard.py`: `guard()` marking the host lately unclear on a `run` refused for its line; rows for each. The record's sentences, G46-3 and G46-6 said.
+  - [x] **ADDRESSED (verified)** — `python3 -I -B scripts/host_guard.py run --wait 1800 -- python3 -I -B scripts/selftest_host_guard.py` → `host-guard self-test: 1316 passed, 0 failed, 0 not run`, run exit 0, on the final bytes, `cmp`-equal to `target/p12746/land/draft/host_guard.py`, this round's rows among them (`target/p12746/land/selftest-full.log`); its two cases alone → `316 passed, 0 failed, 0 not run` (`target/p12746/land/green.log`); the reader's forms through the real hook (`target/p12746/land/rig46/hookrun.py` on `h1.txt`, `h2.txt`) → each `exit 2`; `rig.py` on `c2.txt`, `c4.txt`, `c5.txt`, `c7.txt`, `c8.txt` → every form a bash runs a kill in refused; its fuzzer seeds 461 and 462 → `0 missed` of 10,000; its corpus → `344 texts in 0.70 s; refused as a kill 0`.
+  - [x] **NO REGRESSION** — `bash scripts/check_host_guard.sh` → `host-guard: OK`, exit 0; `bash scripts/run_self_tests.sh --self-test` → `run-self-tests self-test: 18 pass / 0 fail (18 arms)`; the earlier rounds' rigs on this guard: round 45's forms through the hook → 11 refused, its `fuzz2.py`, `fuzz_brace.py` and `fuzz_gather.py` seeds 463 and 464 → `0 missed` of 12,000; round 44's 122 forms → no kill passed but `kill -0 "$PID"`, a probe of one pid, and its fuzzers seed 465 → `0 missed`; round 43's `fuzz2.py` → `0 missed`; round 42's tables → no row open, its fuzzers `0 missed`; round 41's 49 forms → none passed with a kill run, its 20 ordinary forms passing, its here-document fuzzers → `0 fail open` of 1,200; the probes of rounds 37 to 39 → `wrong 0`; `make focused` → `tier focused: passed — 3 passed, 0 failed, 0 unavailable, 0 not built, 0 quarantined`, on the staged tree.
+  - [x] **LOCKSTEP** — the record, the review history and its index, these leaves and the Commit Log; `MEMORY.md`'s next action. The book's section says nothing this round moves.
+  Commit: `ARCHOGEN-PROGRAM-1309 (leaf PROGRAM.127.46)`
+
+- ID: `PROGRAM.127.47`
+  Status: `done` — `2026-11-14`: round 47, a fresh reader over round 46's answer: 4 findings, 2 defects, after 4, both in round 46's answers, one in the self-test and one a false sentence on a form written to, with two gaps on forms written to, stated. The findings and each answer are in `docs/reviews/decision_host-guard-reviews.part-2.md`; its report is `target/p12747/report.md`.
+
+  **Acceptance checklist (`DOCTRINE_ENFORCEMENT.md`):**
+  - [x] **REPRODUCE / ISSUE** — its reader's own runs on `29cdf880` (`target/p12747/report.md`): `g464_rig.py`, `not_run: ['a check that FAILS on a clear host, right after a `run` refused for its turn (the host filled meanwhile)']` on a clear host; `hookrun.py hook_forms.txt`, the two nested runs `exit 0` beside the control's `exit 2`. Here, this round's rows on that guard: `python3 -I -B target/p12747/land/red/scripts/selftest_host_guard.py case_killing_by_name` → `188 passed, 2 failed, 0 not run` (`target/p12747/land/red.log`).
+  - [x] **ROOT CAUSE (WHY + WHERE)** — `git grep -n -F 'done.returncode == g.UNCLEAR and "wait for the host to have room" in done.stderr:' 29cdf880 -- scripts/selftest_host_guard.py` → `130`, a hint every refusal prints; `git grep -n -F 'if any(kills_by_name(read_as(shlex.join(told), int(older), doubled), root, int(older), False) for older in bashes):' 29cdf880 -- scripts/host_guard.py` → `2886`, and `git grep -n -F 'job = read_through_runs(read_as(shlex.join(told), which, doubled if depth == 0 else BOTH_TO_DEPTH), depth + 1, fresh, which)' 29cdf880 -- scripts/host_guard.py` → `2848`: past the first run, a job read once and nothing in it twice.
+  - [x] **FIX** — `scripts/host_guard.py`: `kills_by_name` passing the first run's reading to the runs inside a job read once, `read_through_runs` its doubling, `job_bashes`' words. `scripts/selftest_host_guard.py`: `HOST_LINES`, `guard()` marking the host on its own line alone; rows for the nested runs. The record's sentences, G47-3 and G47-4 stated.
+  - [x] **ADDRESSED (verified)** — `python3 -I -B scripts/host_guard.py run --wait 1800 -- python3 -I -B scripts/selftest_host_guard.py` → `host-guard self-test: 1318 passed, 0 failed, 0 not run`, run exit 0, on the final bytes, `cmp`-equal to `target/p12747/land/draft/host_guard.py`, this round's rows among them (`target/p12747/land/selftest-full.log`); its two cases alone → `318 passed, 0 failed, 0 not run` (`target/p12747/land/green.log`); the reader's rigs on this guard (`target/p12747/land/rig47/`): `g464_rig.py` → `last_unclear moved: False`, the deliberate failure a failure, `not_run: []`; `hookrun.py hook_forms.txt` → the control and both nested runs `exit 2`, the two gaps' forms passing as the record states.
+  - [x] **NO REGRESSION** — `bash scripts/check_host_guard.sh` → `host-guard: OK`, exit 0; `bash scripts/run_self_tests.sh --self-test` → `run-self-tests self-test: 18 pass / 0 fail (18 arms)`; the earlier rounds' rigs on this guard: round 46's case files → `0 missed`, its fuzzer seeds 471 and 472 → `0 missed` of 10,000, its corpus → `344 texts in 0.72 s; refused as a kill 0`; round 45's forms through the hook → 11 refused, its fuzzers seed 473 → `0 missed`; round 44's 122 forms → no kill passed but `kill -0 "$PID"`, a probe of one pid, its fuzzers seed 474 → `0 missed`; round 43's `fuzz2.py` → `0 missed`; round 42's tables → no row open, its fuzzers `0 missed`; round 41's 49 forms → none passed with a kill run, its 20 ordinary forms passing, its here-document fuzzers → `0 fail open`; the probes of rounds 37 to 39 → `wrong 0`; `make focused` → `tier focused: passed — 3 passed, 0 failed, 0 unavailable, 0 not built, 0 quarantined`, on the staged tree.
+  - [x] **LOCKSTEP** — the record, the review history and its index, these leaves and the Commit Log; `MEMORY.md`'s next action. The book's section says nothing this round moves.
+  Commit: `ARCHOGEN-PROGRAM-1312 (leaf PROGRAM.127.47)`
+
+- ID: `PROGRAM.127.48`
+  Status: `done` — `2026-11-14`: round 48, a fresh reader over round 47's answer: 5 findings, 3 defects, after 2, none in ordinary work and none failing open, one in the self-test and two false sentences, with two gaps on forms written to, stated. The findings and each answer are in `docs/reviews/decision_host-guard-reviews.part-2.md`; its report is `target/p12748/report.md`.
+
+  **Acceptance checklist (`DOCTRINE_ENFORCEMENT.md`):**
+  - [x] **REPRODUCE / ISSUE** — its reader's own runs on `3b6ffee4` (`target/p12748/report.md`): `python3 -I -B target/p12748/work/hostlines.py` → `matched HOST_LINES: ['GiB, over ']`, `not_run: ['a check that is false on a clear host (the host filled meanwhile)']` on a clear host; `python3 -I -B target/p12748/work/runrefused.py` → `run_refused says the host took it: True` of a refusal for its turn; `innermost2.py` → the innermost text read 4, 12, 32, 80, 192 and 448 times.
+  - [x] **ROOT CAUSE (WHY + WHERE)** — `git grep -n -F 'any(line in done.stderr for line in HOST_LINES)' 3b6ffee4 -- scripts/selftest_host_guard.py` → `132`, the whole of what `run` said read, its stops among it; `git grep -n -F 'if job.poll() == g.UNCLEAR:' 3b6ffee4 -- scripts/selftest_host_guard.py` → `154`, any exit 75 the host's.
+  - [x] **FIX** — `scripts/selftest_host_guard.py`: `refused_for_the_host`, the "not started" line alone; `run_refused` taking an exit 75 for the host's only on a host lately unclear. The record's sentences, G48-2 and G48-3 said, G48-4 and G48-5 stated.
+  - [x] **ADDRESSED (verified)** — `python3 -I -B scripts/host_guard.py run --wait 1800 -- python3 -I -B scripts/selftest_host_guard.py` → `host-guard self-test: 1318 passed, 0 failed, 0 not run`, run exit 0, on the final bytes, `cmp`-equal to `target/p12748/land/draft/selftest_host_guard.py` (`target/p12748/land/selftest-full.log`); the reader's rigs on this self-test (`target/p12748/land/rig48/`): `hostlines.py` → `last_unclear set: False`, the deliberate failure a failure, `not_run: []`; `runrefused.py` → `not_run: []`, a refusal for its turn no longer the host's.
+  - [x] **NO REGRESSION** — `bash scripts/check_host_guard.sh` → `host-guard: OK`, exit 0; `bash scripts/run_self_tests.sh --self-test` → `run-self-tests self-test: 18 pass / 0 fail (18 arms)`; `scripts/host_guard.py` unchanged this round, so the earlier rounds' rigs stand as round 47 ran them; `make focused` → `tier focused: passed — 3 passed, 0 failed, 0 unavailable, 0 not built, 0 quarantined`, on the staged tree.
+  - [x] **LOCKSTEP** — the record, the review history and its index, these leaves and the Commit Log; `MEMORY.md`'s next action. The book's section says nothing this round moves.
+  Commit: `ARCHOGEN-PROGRAM-1316 (leaf PROGRAM.127.48)`
+
+- ID: `PROGRAM.127.49`
+  Status: `done` — `2026-11-14`: round 49, a fresh reader over round 48's answer: 2 findings of wording, **no defect, so the review closes**, after 3, 2, 4, 6, 5, 7, 7, 2, 2, 2, 4, 4, 2, 1, 1, 2 and 3. The findings and each answer are in `docs/reviews/decision_host-guard-reviews.part-2.md`; its report is `target/p12749/report.md`.
+
+  **Acceptance checklist (`DOCTRINE_ENFORCEMENT.md`):**
+  - [x] **REPRODUCE / ISSUE** — this round found no defect: its reader's `target/p12749/work/oracle.py` on `forms_arith*.txt`, each `MISS` a form written to, an unbalanced bracket hidden in arithmetic, beside refused controls; `git grep -n -F 'so that the work doubles once on any path (round 43)' cd6dd2db -- scripts/host_guard.py` → `2711`, the docstring round 48 left.
+  - [x] **ROOT CAUSE (WHY + WHERE)** — `git grep -n -F "is found by a scan that does not follow every quote" cd6dd2db -- docs/decisions/decision_host-guard.md` → `116`, a limit stated form by form where the code's rule is short. No defect: each is words.
+  - [x] **FIX** — the record's sentence on arithmetic's end, its status; `scripts/host_guard.py`: `job_bashes`' docstring. And from this round's own self-test run on a loaded host, which failed `a `run` no watcher can see for ends its job` with "not started: the host cannot be read" (`ps` exit 1): `scripts/selftest_host_guard.py`'s `HOST_LINES` taking a host that cannot be read as the host's, as round 48's narrowing had not.
+  - [x] **ADDRESSED (verified)** — `python3 -I -B scripts/host_guard.py run --wait 1800 -- python3 -I -B scripts/selftest_host_guard.py` → `host-guard self-test: 1318 passed, 0 failed, 0 not run`, run exit 0, on the final bytes, the docstring its one change (`target/p12749/land/selftest-full.log`); `bash scripts/check_host_guard.sh` → `host-guard: OK`, exit 0.
+  - [x] **NO REGRESSION** — `bash scripts/run_self_tests.sh --self-test` → `run-self-tests self-test: 18 pass / 0 fail (18 arms)`; the code's one change a docstring, so the earlier rounds' rigs stand as round 48 ran them; `make focused` → `tier focused: passed — 3 passed, 0 failed, 0 unavailable, 0 not built, 0 quarantined`, on the staged tree.
+  - [x] **LOCKSTEP** — the record, the review history and its index, these leaves and the Commit Log; `MEMORY.md`'s next action. The book's section says nothing this round moves.
+  Commit: `ARCHOGEN-PROGRAM-1320 (leaf PROGRAM.127.49)`
+
+- ID: `PROGRAM.128`
+  Status: `done` — sealed in [`PROGRAM/PROGRAM.128.md`](../task-history/PROGRAM/PROGRAM.128.md); commit `ARCHOGEN-PROGRAM-1162`
+
+- ID: `PROGRAM.129`
+  Status: `done` — sealed in [`PROGRAM/PROGRAM.129.md`](../task-history/PROGRAM/PROGRAM.129.md); commit `ARCHOGEN-PROGRAM-1169`
+
+- ID: `PROGRAM.130`
+  Status: `done` — sealed in [`PROGRAM/PROGRAM.130.md`](../task-history/PROGRAM/PROGRAM.130.md); commit `ARCHOGEN-PROGRAM-1175`
+
+- ID: `PROGRAM.131`
+  Status: `done` — sealed in [`PROGRAM/PROGRAM.131.md`](../task-history/PROGRAM/PROGRAM.131.md); commit `ARCHOGEN-PROGRAM-1221`
+
+- ID: `PROGRAM.132`
+  Status: `done` — sealed in [`PROGRAM/PROGRAM.132.md`](../task-history/PROGRAM/PROGRAM.132.md); commit `ARCHOGEN-PROGRAM-1224`
+
+- ID: `PROGRAM.133`
+  Status: `done` — sealed in [`PROGRAM/PROGRAM.133.md`](../task-history/PROGRAM/PROGRAM.133.md); commit `ARCHOGEN-PROGRAM-1242`
+
+- ID: `PROGRAM.134`
+  Status: `done` — sealed in [`PROGRAM/PROGRAM.134.md`](../task-history/PROGRAM/PROGRAM.134.md); commit `ARCHOGEN-PROGRAM-1265`
+
+- ID: `PROGRAM.135`
+  Status: `done` — sealed in [`PROGRAM/PROGRAM.135.md`](../task-history/PROGRAM/PROGRAM.135.md); commit `ARCHOGEN-PROGRAM-1269`
+
+- ID: `PROGRAM.136`
+  Status: `done` — sealed in [`PROGRAM/PROGRAM.136.md`](../task-history/PROGRAM/PROGRAM.136.md); commit `ARCHOGEN-PROGRAM-1272`
+
+- ID: `PROGRAM.137`
+  Status: `done` — sealed in [`PROGRAM/PROGRAM.137.md`](../task-history/PROGRAM/PROGRAM.137.md); commit `ARCHOGEN-PROGRAM-1273`
+
+- ID: `PROGRAM.138`
+  Status: `done` — sealed in [`PROGRAM/PROGRAM.138.md`](../task-history/PROGRAM/PROGRAM.138.md); commit `ARCHOGEN-PROGRAM-1279`
+
+- ID: `PROGRAM.139`
+  Status: `done` — sealed in [`PROGRAM/PROGRAM.139.md`](../task-history/PROGRAM/PROGRAM.139.md); commit `ARCHOGEN-PROGRAM-1287`
+
+- ID: `PROGRAM.140`
+  Status: `done` — sealed in [`PROGRAM/PROGRAM.140.md`](../task-history/PROGRAM/PROGRAM.140.md); commit `ARCHOGEN-PROGRAM-1296`
+
+- ID: `PROGRAM.141`
+  Status: `done` — `2026-11-14`, the live task trees over their ceiling again, `README-ROUTES` refusing the application inputs' round 17.
+  Goal: bring `docs/tasks/` under its ceiling by the project's own sealing, nothing summarised and nothing lost.
+  Acceptance:
+    - [x] ROOT CAUSE — WHY: the guard's review rounds' closed leaves in `docs/tasks/PROGRAM.md`, `PROGRAM.127.1` to `PROGRAM.127.44` among sixty, never sealed, and three closed in `M4.md` since `PROGRAM.140`. WHERE: `bash scripts/check_doctrines.sh` on the application inputs' round 17, staged → `README-ROUTES: docs/tasks/: 821042 bytes in total, over its ceiling of 819200`.
+    - [x] FIX — `bash scripts/check_task_history.sh --seal PROGRAM` and `--seal M4`, on the committed tree, that round's work set aside: 60 closed subtrees and 60 leaves of `PROGRAM`, 3 of `M4`, each with its row in the index and a stub in the tree.
+    - [x] ADDRESSED — `task-history: OK (632 sealed file(s), each against its row and its sealing commit`, "the reconstruction is byte for byte"; `docs/tasks/` 632,963 bytes in all before this leaf.
+    - [x] NO REGRESSION — `bash scripts/check_doctrines.sh` on the staged tree → exit 0. No code changed.
+    - [x] LOCKSTEP — the trees, the index and the Commit Log.
+  Verification: the seal's own proof, the gate.
+  Commit: `ARCHOGEN-PROGRAM-1302 (leaf PROGRAM.141)`
+
+- ID: `PROGRAM.142`
+  Status: `done` — `2026-11-14`, `docs/tasks/M3.md` over its line ceiling, `README-ROUTES` refusing `M3.4.17.3`.
+  Goal: bring `docs/tasks/M3.md` under its ceiling by the project's own sealing, nothing summarised and nothing lost.
+  Acceptance:
+    - [x] ROOT CAUSE — WHY: three leaves closed in `docs/tasks/M3.md` since its last seal, `M3.4.16`, `M3.4.17.1` and `M3.4.17.2`, never sealed. WHERE: `bash scripts/check_doctrines.sh` on `M3.4.17.3`, staged → `README-ROUTES: docs/tasks/: 3011 lines in its largest file, over its ceiling of 3000`.
+    - [x] FIX — `bash scripts/check_task_history.sh --seal M3`, on the committed tree, that leaf's work set aside: 3 closed subtrees and 3 leaves, each with its row in the index and a stub in the tree, and 3 log rows in `rows-0050.md`.
+    - [x] ADDRESSED — `task-history: docs/tasks/M3.md — sealed 3 subtree(s), 3 leaves: M3.4.17.1 M3.4.17.2 M3.4.16; 3 log row(s) in rows-0050.md; the reconstruction is byte for byte`; `docs/tasks/M3.md` 2,967 lines, from 2,997.
+    - [x] NO REGRESSION — `bash scripts/check_doctrines.sh` on the staged tree → exit 0. No code changed.
+    - [x] LOCKSTEP — the tree, the index and the Commit Log.
+  Verification: the seal's own proof, the gate.
+  Commit: `ARCHOGEN-PROGRAM-1307 (leaf PROGRAM.142)`
+
+- ID: `PROGRAM.143`
+  Status: `done` — `2026-11-14`, `docs/tasks/M3.md` over its line ceiling again, `README-ROUTES` refusing `M3.4.17.5`.
+  Goal: bring `docs/tasks/M3.md` under its ceiling by the project's own sealing, nothing summarised and nothing lost.
+  Acceptance:
+    - [x] ROOT CAUSE — WHY: two leaves closed in `docs/tasks/M3.md` since `PROGRAM.142`'s seal, `M3.4.17.3` and `M3.4.17.4`, never sealed. WHERE: `bash scripts/check_doctrines.sh` on `M3.4.17.5`, staged → `README-ROUTES: docs/tasks/: 3003 lines in its largest file, over its ceiling of 3000`.
+    - [x] FIX — `bash scripts/check_task_history.sh --seal M3`, on the committed tree, that leaf's work set aside: 2 closed subtrees and 2 leaves, each with its row in the index and a stub in the tree, and 2 log rows in `rows-0051.md`.
+    - [x] ADDRESSED — `task-history: docs/tasks/M3.md — sealed 2 subtree(s), 2 leaves: M3.4.17.3 M3.4.17.4; 2 log row(s) in rows-0051.md; the reconstruction is byte for byte`; `docs/tasks/M3.md` 2,972 lines, from 2,992.
+    - [x] NO REGRESSION — `bash scripts/check_doctrines.sh` on the staged tree → exit 0. No code changed.
+    - [x] LOCKSTEP — the tree, the index and the Commit Log.
+  Verification: the seal's own proof, the gate.
+  Commit: `ARCHOGEN-PROGRAM-1318 (leaf PROGRAM.143)`
+
+- ID: `PROGRAM.144`
+  Status: `done` — `2026-11-14`, `docs/tasks/M3.md` at 2,994 of its 3,000 lines once `M3.4.17.6` closed `M3.4.17`.
+  Goal: keep `docs/tasks/M3.md` under its ceiling by the project's own sealing, nothing summarised and nothing lost, before the next leaf of `M3` needs the room.
+  Acceptance:
+    - [x] ROOT CAUSE — WHY: `M3.4.17`, done with its six leaves by `ARCHOGEN-M3-1322`, and `M3.4.17.5` and `M3.4.17.6` closed in the tree since `PROGRAM.143`'s seal, unsealed. WHERE: `wc -l docs/tasks/M3.md` on `b0e57797` → `2994`.
+    - [x] FIX — `bash scripts/check_task_history.sh --seal M3`, on the committed tree: 1 closed subtree and 3 leaves, with its row in the index and a stub in the tree, and 2 log rows in `rows-0052.md`. `M3.4.17`'s stub says its commit is not recorded, as three earlier parents' do: a parent closes with its last leaf, whose row its sealed body holds.
+    - [x] ADDRESSED — `task-history: docs/tasks/M3.md — sealed 1 subtree(s), 3 leaves: M3.4.17; 2 log row(s) in rows-0052.md; the reconstruction is byte for byte`; `docs/tasks/M3.md` 2,974 lines, from 2,994.
+    - [x] NO REGRESSION — `bash scripts/check_doctrines.sh` on the staged tree → exit 0. No code changed.
+    - [x] LOCKSTEP — the tree, the index and the Commit Log.
+  Verification: the seal's own proof, the gate.
+  Commit: `ARCHOGEN-PROGRAM-1324 (leaf PROGRAM.144)`
+
+- ID: `PROGRAM.145`
+  Status: `done` — the twenty-eighth daily artifact cleanup; the record's last run `2026-11-14T00:00:06+00:00`, over 24 h old at `2026-11-15T00:06Z`.
+  Goal: remove from `target/` what is regenerable and idle, as `PROGRAM.138` did, every nested cargo target directory in a leaf's or a reader's folder and every directory a test run left in the scratch `TMPDIR` and the trust tests' scratch, each open by no process, a reader still at work skipped whole; keep the main build, every store, the guard's state and every report, brief, rig and log the trees cite as evidence. A light run under doctrine 22.
+  Acceptance:
+    - [x] ROOT CAUSE — WHY: the cleanup record was over 24 hours old, and each reader since built in a cargo target directory of its own and each test run left its scratch; WHERE, `docs/ARTIFACT_CLEANUP.md` at `068510ef`, its entry `2026-11-14T00:00:06+00:00`; `du -sk target` → 46.1 GB.
+    - [x] FIX — `python3 -I -B target/artifact-cleanup/2026-11-15/cleanup.py --delete`, `PROGRAM.138`'s second pass with its date: every nested cargo target directory, by `CACHEDIR.TAG` or `.rustc_info.json`, and every directory in `target/tmp` and `target/trust-tests`, each checked open by no process of this user (`lsof`), its links unlinked and never followed; no reader at work, so none skipped.
+    - [x] ADDRESSED — `7473` directories, `195399` files, `29325811712` bytes, each `gone: true`, none refused, none given back (`target/artifact-cleanup/2026-11-15/removed.json`); `du -sk target` → 20.2 GB, 46.1 before; the volume's free space 2461.0 GB, 2435.9 before; `bash scripts/handoff_census.sh` → `handoff: OK` before (`census-before.log`).
+    - [x] NO REGRESSION — build output and test scratch alone, each made again by the next build or test; no tracked file but the record, the leaf and the resume pointer. The 13 logs removed lay in the trust tests' scratch; every reader's and leaf's log beside its folders stays.
+    - [x] LOCKSTEP — the record, `MEMORY.md` and the tree.
+  Verification: the census, the removal report, the sizes before and after.
+  Commit: `ARCHOGEN-PROGRAM-1340 (leaf PROGRAM.145)`
+
+- ID: `PROGRAM.146`
+  Status: `done` — `2026-11-15`, `docs/tasks/` at 820,882 of its 819,200 bytes once `M4.1.7.5.4`'s split was staged (`README-ROUTES`).
+  Goal: keep `docs/tasks/` under its ceiling by the project's own sealing, nothing summarised and nothing lost, before `M4`'s next leaves need the room.
+  Acceptance:
+    - [x] ROOT CAUSE — WHY: `M4.1.7.3` and `M4.1.7.4`, done with their leaves by `ARCHOGEN-M4-1351` and `ARCHOGEN-M4-1355`, unsealed in the tree. WHERE: `bash scripts/check_task_history.sh --census HEAD` on `db95bdda` → `census: M4 — 119089 byte(s) of done leaves under open top-level subtrees, 119089 of them in 6 closed subtree(s) below the top level`.
+    - [x] FIX — `bash scripts/check_task_history.sh --seal M4`, on the committed tree: each closed subtree with its row in the index and a stub in the tree.
+    - [x] ADDRESSED — `task-history: docs/tasks/M4.md — sealed 7 subtree(s), 46 leaves: M4.1.7.2 M4.1.7.3 M4.1.7.4 M4.1.7.5.1 M4.1.7.5.2 M4.1.7.5.3 M4.12; 44 log row(s) in rows-0008.md; the reconstruction is byte for byte`; `docs/tasks/` 679,653 bytes, from 818,581 at `db95bdda`, and `docs/tasks/M4.md` 1,116 lines, from 1,551.
+    - [x] NO REGRESSION — `bash scripts/check_doctrines.sh` on the staged tree → exit 0. No code changed.
+    - [x] LOCKSTEP — the tree, the index and the Commit Log.
+  Verification: the seal's own proof, the gate.
+  Commit: `ARCHOGEN-PROGRAM-1361 (leaf PROGRAM.146)`
+
+- ID: `PROGRAM.147`
+  Status: `done` — `2026-11-16`: the 400-commit batch's integration tier, read before the push as `scripts/push_cadence.sh` asks: `make integration` at `6525de54` → `tier integration: failed — 11 passed, 3 failed`, `book`, `plan-check-wasm` and `resolve-installed`. Each was drift inside the batch from a leaf whose per-slice checks (doctrine 22) never ran this tier, and fixing `book`'s first error showed two more behind it.
+  Goal: each failure fixed at its root before the batch is offered to the director.
+  Acceptance:
+    - [x] ROOT CAUSE — WHY and WHERE, each at `6525de54`:
+      - `git grep -n -F 'the one way [\`write\`] writes a string' 6525de54 -- crates/archogen-json/src/lib.rs` → `536`, a link the pinned rustdoc reads as both the function and the macro (`M3.5.1.6.2`, `2026-10-26`);
+      - `git ls-tree 6525de54 scripts/plan_check_wasm.sh` → `100644`, committed without its execute bit, which the tier runs it by (`M3.5.7.2`), the one script of the tiers' twelve so;
+      - `git grep -n -F 'archogen-playground-trace/3' 6525de54 -- scripts/resolve_installed.sh` → `71` and `115`, beside `crates/sim-playground/src/lib.rs:21`'s `TRACE_FORMAT` of `/4` since `M4.3.5` (`cc7e6ffe`, `2026-11-07`): the script waited for a trace no package prints;
+      - `git grep -n -F 'within [\`MAX_NAME\`]' 6525de54 -- crates/eadl-front/src/reader.rs` → `46`, and `git grep -n -F '(Self::brought_by)' 6525de54 -- crates/eadl-model/src/presence.rs` → `514`: public documentation linking private items, rustdoc having stopped at `archogen-json` before them.
+    - [x] FIX — `crates/archogen-json/src/lib.rs` ``[`write()`]``; the execute bit of `scripts/plan_check_wasm.sh`; `scripts/resolve_installed.sh` reads `TRACE_FORMAT` from the simulator's own constant and exports it to its self-test's stub, so the next move of the format moves it too; `crates/eadl-front/src/reader.rs` and `crates/eadl-model/src/presence.rs` name their private items as code, not links.
+    - [x] ADDRESSED — `RUSTDOCFLAGS="-D warnings" cargo doc --offline --no-deps --keep-going` over `docs/book/api.crates`'s seven crates → exit 0 (`target/batch400/apidoc.log`); `bash scripts/build_book.sh` → exit 0, `HTML book written` (`book.log`); `bash scripts/resolve_installed.sh --self-test` → `resolve-installed self-test: 9 pass / 0 fail (9 arms)`; `make integration` after the first three fixes → `plan-check-wasm` and `resolve-installed` passed, `book` meeting the two links fixed since (`target/batch400/integration-run2.log`).
+    - [x] NO REGRESSION — `make focused` on the committed tree, the commit's gate; `cargo fmt --all -- --check` → exit 0. ⚠️ The second `make integration` gave `self-tests: incomplete — 57 passed, and 1 could not all be run`. That was `scripts/check_host_guard.sh`'s `547 passed, 0 failed, 49 not run`, "the host stayed over the start line" while another project's rustdoc ran, which is no defect and no pass. The tier is run whole again before the batch is opened, and its result goes to the director with the push question.
+    - [x] LOCKSTEP — this leaf and the Commit Log; no chapter describes these lines.
+  Commit: `ARCHOGEN-PROGRAM-1380 (leaf PROGRAM.147)`
+
+- ID: `PROGRAM.148`
+  Status: `done` — the twenty-ninth daily artifact cleanup; the record's last run `2026-11-15T00:08:35+00:00`, over 24 h old at `2026-11-16T01:18Z`.
+  Goal: remove from `target/` what is regenerable and idle, as `PROGRAM.145` did, every nested cargo target directory in a leaf's or a reader's folder and every directory a test run left in the scratch `TMPDIR` and the trust tests' scratch, each open by no process; keep the main build, every store, the guard's state and every report, brief, rig and log the trees cite as evidence.
+  Acceptance:
+    - [x] ROOT CAUSE — WHY: the cleanup record was over 24 hours old, and each reader, fork and test run since built or left scratch of its own; WHERE, `docs/ARTIFACT_CLEANUP.md` at `9d2384bc`, its entry `2026-11-15T00:08:35+00:00`; `du -sk target` → 36.9 GB.
+    - [x] FIX — `python3 -I -B target/artifact-cleanup/2026-11-16/cleanup.py --delete`, `PROGRAM.145`'s script with its date: every nested cargo target directory, by `CACHEDIR.TAG` or `.rustc_info.json`, and every directory in `target/tmp` and `target/trust-tests`, each checked open by no process of this user (`lsof`), its links unlinked and never followed; no reader at work, so none skipped.
+    - [x] ADDRESSED — `8755` directories, `134785` files, `16517771264` bytes, each `gone: true`, none refused, none given back (`target/artifact-cleanup/2026-11-16/removed.json`); `du -sk target` → 22.9 GB, 36.9 before; the volume's free space 2451.1 GB, 2437.8 before; `bash scripts/handoff_census.sh` → `handoff: OK` before (`census-before.log`).
+    - [x] NO REGRESSION — build output and test scratch alone, each made again by the next build or test; no tracked file but the record, the leaf and the resume pointer; every leaf's `land/` and `red/` logs, files beside the directories removed, stay.
+    - [x] LOCKSTEP — the record, `MEMORY.md` and the tree.
+  Verification: the census, the removal report, the sizes before and after.
+  Commit: `ARCHOGEN-PROGRAM-1381 (leaf PROGRAM.148)`
+
+- ID: `PROGRAM.149`
+  Status: `done` — `2026-11-16`: the batch is pull request [#1](https://github.com/rdje/archogen/pull/1), `batch/2026-11-16-10861334` at `108613340046b1cfebafaf6ed4779a8dd315c417`, 409 commits, opened by `rdje-bot`; the director said yes, "Yes to both decisions", the other being the cargo ruling (`decision_findings-for-director-review.md` §20). Its landing is `PROGRAM.151`'s.
+  Goal: the batch sent as `docs/decisions/decision_main-protection.md` §3 says: `make integration` read at its tip, as the cadence asks; a fresh agent context's review of `origin/main..main`, naming the tip by its full hash; then `bash scripts/open_batch.sh open --summary <file>`, one pull request into `main` from the machine account, for the director to approve and merge.
+  Acceptance:
+    - [x] ROOT CAUSE — WHY: local `main` past the ruled threshold, and the director's yes; WHERE, `origin/main` at `34b6abeb`; `bash scripts/push_cadence.sh` → exit 3, `PUSH DUE — 407 commit(s) ahead of origin/main, at or past the ruled threshold of 400`, before this leaf's filing commit and the ruling's joined them.
+    - [x] FIX — `bash scripts/open_batch.sh open --summary target/batches/summary-10861334.md` → `open-batch: opened https://github.com/rdje/archogen/pull/1 — batch/2026-11-16-10861334 at 108613340046b1cfebafaf6ed4779a8dd315c417; the director approves and merges it`, after its `--dry-run` → exit 0; `gh pr view 1` → author `rdje-bot`, base `main`, state `OPEN`, its checks running.
+    - [x] ADDRESSED — `make integration` at the tip → `tier integration: passed — 14 passed, 0 failed, 0 unavailable, 0 not built, 0 quarantined`, its stamp `6ce4d8376b01479a7866d4081572a26c22220223`, `git rev-parse HEAD^{tree}` at the tip, the first try (`target/p149/integration.log`); the summary a fresh agent context's, naming the tip by its full hash, saved by the lead since the harness refuses a subagent's report files, its findings each checked under "From the lead" (`target/batches/summary-10861334.md`).
+    - [x] NO REGRESSION — nothing pushed to `main`, the push a branch on `agent` alone; the reviewer read nothing under `docs/evaluation/` and ran no `git show` older than `origin/main`, by its own account; the findings it confirmed are `PROGRAM.150`'s, for the next batch, so that a push to this one dismisses no approval.
+    - [x] LOCKSTEP — this leaf, `PROGRAM.150` and `PROGRAM.151` filed, the Commit Log, the frontier, the index, the live status and `MEMORY.md`.
+  Commit: `ARCHOGEN-PROGRAM-1388 (leaf PROGRAM.149)` filed it; `ARCHOGEN-PROGRAM-1389 (leaf PROGRAM.149)` closes it.
+
+- ID: `PROGRAM.150`
+  Status: `done` — `2026-11-16`: the batch review's findings the lead confirmed (`target/batches/summary-10861334.md`, "From the lead"), each fixed at its root. Filed for the next batch, it joins this one: pull request #1's checks failed (`PROGRAM.151`), so the batch takes local `main`'s commits by `update` before any approval.
+  Goal: each confirmed finding fixed at its root.
+  Acceptance:
+    - [x] ROOT CAUSE — WHY and WHERE, each at `a3041ab8`:
+      - `docs/decisions/decision_programmatic-interface.md:120-123` said only `check` built, `build` over S0, `resolve` and `explain` unimplemented: written in S0's time, and no leaf since (`M3.4.4`, `M3.4.13`, `M4.2.4`) read it again;
+      - `crates/archogen-cli/src/spec.rs:234` gave `resolve` "or a target's" in `M4.1.7.5.3` (`db95bdda`), and `:380` left `explain`'s scope as it was, `explain_cmd.rs:20`, `docs/book/src/cli.md:41` and `:244` and `docs/book/src/building.md:274` with it;
+      - `crates/archogen-transport/src/ceiling.rs`'s `alloc`, `alloc_zeroed` and `realloc` counted before `System` answered and kept the count when it answered null;
+      - `scripts/selftest_host_guard.py:2243` held this host's absolute path in a command string (`ff41eab2`);
+      - `docs/decisions/decision_host-guard.md` said "External sources: none" while its hook rests on Claude Code's `onFailure`, which `docs/book/src/ledger.md` held no entry for.
+    - [x] FIX — the record's paragraph restated as the surface stands, dated; `explain`'s scope "or a target's" in `spec.rs`, `explain_cmd.rs` and both chapters; the allocator gives back what a null answer counted, a block that `realloc` refuses standing at its old size; the self-test's string `R=/srv/work/archogen; mkdir -p x`; the ledger's entry `claude-code-hooks`, the page's sha256 `ea5cce13…` and its two sentences, cited from the record's header.
+    - [x] ADDRESSED — `cargo test -q -p archogen-transport --test ceiling_null` → `test result: ok. 1 passed`, and without the fix → `left: Some(14)`, `right: Some(0)`, the child stopped at its ceiling (`target/p150/red.log`, `green.log`); `bash scripts/check_source_ledger.sh` → `source-ledger: OK (37 entries; 11 pin(s), each carried by its entry; every naming document cites it)`; the guard's own classifier reads the old string, the new and a heavy control as `False`, `False`, `True`.
+    - [x] NO REGRESSION — `bash scripts/check_host_guard.sh --self-test` on the staged tree → `host-guard self-test: 1318 passed, 0 failed, 0 not run` (`target/p150/guard-selftest.log`); `cargo fmt --all -- --check` → exit 0; `make focused` on the staged tree, the commit's gate; the trust inventory on a commit of it.
+    - [x] LOCKSTEP — the record, the two chapters, the ledger, this leaf, the Commit Log, `MEMORY.md`.
+  Commit: `ARCHOGEN-PROGRAM-1390 (leaf PROGRAM.150)`
+
+- ID: `PROGRAM.151`
+  Status: `in_progress` — pull request [#1](https://github.com/rdje/archogen/pull/1)'s required checks failed on the runner, four of five, `enforce` passing (`target/p151/ci/`); split `2026-11-16` into its leaves by root cause, three repairs, the runner's baseline and the landing. Filed `2026-11-16` by `PROGRAM.149`.
+  Goal: once the batch merges, `bash scripts/open_batch.sh sync` brings local `main` back in step, its merge changing no file (`decision_main-protection.md` §3, step 6); a failing check fixed on local `main` and added by `bash scripts/open_batch.sh update --summary <file>` first.
+  Acceptance: every required check green on the pull request's last push; `bash scripts/open_batch.sh sync` → exit 0; `git merge-base --is-ancestor origin/main HEAD`.
+  The second run, of `bea0b097`: `catalog-check` and both `doctrines` passed; `trust-gate` refused on the baseline's digests alone (`.4`); `focused` failed on the checker's ceiling (`.6`), which the first run had never reached.
+  The first run's failures, read from the jobs' own logs: `focused` and `integration` → `tier focused: failed — 2 passed, 1 failed` and `tier integration: failed — 13 passed, 1 failed`, each `crates/archogen-cli/tests/sibling.rs` alone, three tests whose stand-in is a script, `/bin/sh: 0: cannot open /proc/self/fd/3: No such file`; `catalog-check` → `could not judge: the repository is shallow`; `trust-gate` → `refused — the change: 112 line(s)`, 18 baseline forms and 51 test units with no form. ⭐ PR #1 is the first pull request this repository has had, so `catalog-check` and `trust-gate`'s pull-request runs, and every Linux run of the launcher, are first runs; and both trust findings are refused on the baseline's host alone, `x86_64-unknown-linux-gnu`, where off it the gate says "not compared" and passes.
+
+- ID: `PROGRAM.151.1`
+  Status: `done` — `2026-11-16`: the launcher on Linux names the hashed file under the front's own `/proc` entry. Its Linux run is the runner's: no host here is Linux, and none holds that target's standard library.
+  Goal: the descriptor named under the front's own `/proc` entry, which stands until the sibling ends, so whatever the kernel runs reads the file that was hashed.
+  Acceptance:
+    - [x] ROOT CAUSE — WHY: `crates/archogen-cli/src/sibling.rs:201` at `fac8754e` ran `/proc/self/fd/N`, `N` a descriptor `File::open` makes close-on-exec; the kernel runs a compiled program from it before it closes, and hands a script's interpreter that name, which in the child is gone by the time the interpreter opens it. An installed sibling is compiled, so only `crates/archogen-cli/tests/sibling.rs`'s three script stand-ins met it; WHERE, the runner's `focused` job → `/bin/sh: 0: cannot open /proc/self/fd/3: No such file`, `test result: FAILED. 3 passed; 3 failed` (`target/p151/ci/job-133209133175.log`), and `integration` the same.
+    - [x] FIX — `runnable` names `/proc/<the front's pid>/fd/N`, by `std::process::id()`: the front holds the file open until the sibling's output is read, `drop(opened)` after `output()`, so the name stands for whatever the kernel or an interpreter opens; the module's comment says so. Nothing else of the launcher moves: the hash, the cleared environment, the empty standard input, the relay.
+    - [x] ADDRESSED — `cargo test -q -p archogen-cli --test sibling` on this host → `test result: ok. 6 passed; 0 failed` (`target/p151/sibling-mac.log`), the path elsewhere unchanged; the Linux path is held by the runner's `focused` and `integration` jobs on the pull request's next push, read into `PROGRAM.151`.
+    - [x] NO REGRESSION — `cargo fmt --all -- --check` → exit 0; `make focused` on the staged tree, the commit's gate; the trust inventory on a commit of it.
+    - [x] LOCKSTEP — the launcher's comment, this leaf, `PROGRAM.151`'s split, the Commit Log.
+  Commit: `ARCHOGEN-PROGRAM-1391 (leaf PROGRAM.151.1)`
+
+- ID: `PROGRAM.151.2`
+  Status: `done` — `2026-11-16`: the catalog check's workflow checks out the whole history. Its run is the runner's, on the pull request's next push.
+  Goal: the whole history checked out, as the trust gate's workflow does.
+  Acceptance:
+    - [x] ROOT CAUSE — WHY: `.github/workflows/catalog-check.yml` at `fac8754e` checked the judged merge out with `fetch-depth: 2` (`M2.7.6.3`, `2026-10-01`), and `xtask/src/catalog_check.rs:230` refuses a repository `git rev-parse --is-shallow-repository` calls shallow since `M2.7.4.2` (`2026-10-03`); the workflow runs on pull requests and merge groups alone, and PR #1 is the first; WHERE, the runner's job → `catalog-check: could not judge: the repository is shallow: a shallow boundary would be a false ledgering commit of every line (§4)`, `exit 2` (`target/p151/ci/catalog.log`).
+    - [x] FIX — `fetch-depth: 0`, its comment saying why; the base is still cloned from the judged checkout, so it holds the whole history too, and nothing run from either moves.
+    - [x] ADDRESSED — `grep -n 'fetch-depth' .github/workflows/*.yml` → `fetch-depth: 0` at each of its four lines, `catalog-check.yml:38`, `doctrines.yml:18`, `rust.yml:38` and `trust-gate.yml:39`; the check's own run is the runner's, read into `PROGRAM.151`.
+    - [x] NO REGRESSION — no file a check reads but the workflow; `make focused` on the staged tree, the commit's gate.
+    - [x] LOCKSTEP — the workflow's comment, this leaf, the Commit Log.
+  Commit: `ARCHOGEN-PROGRAM-1392 (leaf PROGRAM.151.2)`
+
+- ID: `PROGRAM.151.3`
+  Status: `done` — `2026-11-16`: the 51 test units the runner named, each read from its source by a fresh reader and checked by the lead: two compare the roles and are derivations, `target-parity` and `plan-bounded`; 49 are classified. `resolve-plan`, whose reason said it compares two roles' writers, is a derivation too, `plan-writers`, so that `bounded`, which judges records "as `crates/eadl-resolve/tests/plan.rs` judges one", is not named apart from it.
+  Goal: each unit named by a derivation where it compares the two roles, or classified by a `defprogram` form whose reason says what it uses of the checker, each read from its source.
+  Acceptance:
+    - [x] ROOT CAUSE — WHY: the batch gave `crates/archogen-cli` (`M4.2.3.1`), `crates/archogen-emit` (`M4.2.2`) and `crates/archogen-plan` (`M4.1.13`) a development edge to `crates/archogen-plan-check`, which reaches every test target of each, and added `crates/eadl-resolve`'s `target` and `target_parity` and `crates/rt-core`'s `runtime_data`; the inventory marks each `trust-unclassified-program` and the gate refuses it on the baseline's host alone (`xtask/src/trust_gate.rs`, `refused.extend(formless)` under `own.host == host`), so no commit here saw it; WHERE, the runner's gate → 51 `trust-form-missing` lines (`target/p151/formless.txt`), and the local inventory's `program-targets` → the same 51, `trust-unclassified-program` (`target/p151/formless-units.json`).
+    - [x] FIX — `trust/roots.eadl`: 49 `defprogram` forms, each reason true of its source, its `role-packages` the inventory's; `defderivation target-parity` and `plan-bounded`, each quoting what it holds equal; `resolve-plan` made `defderivation plan-writers`, its reason saying why. The decision rule, the record's: "a classification says its unit compares nothing" (`docs/specs/trust/decision_trust-role-programs.md` §3); a checker's verdict a test takes as a precondition, to go on with a build, is no comparison. A derivation's units are read by the catalog's rules, so `path`, a local name inside a macro in `bounded.rs`, `plan.rs` and `target_parity.rs`, is renamed `route` or `file`, nothing admitted. Two comments the edge made false, `tests/fires_on.rs` and `tests/sibling.rs` of `crates/archogen-cli`, corrected.
+    - [x] ADDRESSED — `cargo xtask trust-inventory --commit <the staged tree>` → exit 0, `13 program(s), 13 pair(s), 38 shared item(s), 23 refused site(s) each admitted`, its `program-targets` `classified 76`, `derivation 7`, `root 2`, `harness 1`, none unclassified, `classifications-unused` empty; before the renames it refused 15 `path` sites in the three derivations' files; `cargo xtask trust-gate --commit <the staged tree> --base 34b6abeb` → exit 0, `trust-gate: passed — the change: 95 line(s); 151 standing entries unreviewed`, no `trust-form-missing` in its report, off the baseline's host and so not compared. The runner's gate is `.4`'s, with the baseline.
+    - [x] NO REGRESSION — `cargo fmt --all -- --check` → exit 0; the renames move no assertion and no label the tests print; `make focused` on the staged tree, the commit's gate.
+    - [x] LOCKSTEP — `trust/roots.eadl`, its section comment, this leaf, the Commit Log.
+  Commit: `ARCHOGEN-PROGRAM-1393 (leaf PROGRAM.151.3)`
+
+- ID: `PROGRAM.151.4`
+  Status: `done` — `2026-11-16`: the runner's proposal committed as `trust/baseline.eadl`, byte for byte, unaccepted (`TI-H3`), from the trust gate's run `43864635415` of `bea0b097`, the pull request's merge built from the base `34b6abeb`; the refresh `M3.6.3.2.1.1` asks for, by a base that holds the structured-key repair. The gate's own verdict on it is the next push's.
+  Goal: the gate's change part on the runner holding no refusal.
+  Acceptance:
+    - [x] ROOT CAUSE — WHY: the batch moved six shared items' digests and shared fifteen anew, three of them `PROGRAM.151.3`'s derivations, and digests compare on the baseline's host alone, `x86_64-unknown-linux-gnu`; WHERE, run `43864635415`'s gate → `trust-gate: refused — the change: 115 line(s)`, 21 `trust-form-missing` lines, each "proposes other digests than this commit measures" or "holds no form for it", 15 `trust-new-shared` and 6 `trust-shared-changed`, and no unit without a form (`target/p151/ci/tg2-133289930672.log`).
+    - [x] FIX — the proposal the job printed, its lines 537 to 908 with the log's timestamps cut, written as `trust/baseline.eadl`: `shasum -a 256` → `5d8fddce…` of both. Read form by form against the committed baseline: 23 kept, each one's classification, property, risk and controls as written, 17 of their digests unchanged and 6 moved; 15 added, each `unstated` for the review; none dropped.
+    - [x] ADDRESSED — `cargo test -q -p archogen-cli --test verdicts` → `test result: ok. 3 passed`, the file's verdict `10 schema-unknown-kind` as frozen; `bash scripts/third_opinion.sh` → `third-opinion: OK — every document still classified as recorded`; the runner's gate on the next push, read into `PROGRAM.151`.
+    - [x] NO REGRESSION — no form's review text moved; a proposal is never an acceptance (the file's own header); `make focused` on the staged tree, the commit's gate.
+    - [x] LOCKSTEP — this leaf, the Commit Log; `M3.6.3.2.1.1` closes on the runner's verdict.
+  Commit: `ARCHOGEN-PROGRAM-1394 (leaf PROGRAM.151.4)`
+
+- ID: `PROGRAM.151.5`
+  Status: `pending` — the commit-time inventory refuses a program it cannot classify, as the runner's gate does, so a unit compiling two roles is classified by the commit that makes it one, not found by a batch.
+  Goal: `cargo xtask trust-inventory` exits non-zero on a `trust-unclassified-program`, whatever host it runs on, with its arm.
+
+- ID: `PROGRAM.151.6`
+  Status: `done` — `2026-11-16`: filed by the pull request's second run, whose `focused` failed on `crates/archogen-plan-check/tests/ceiling.rs` alone; each program hashes a program's file in pieces. The first run had never reached that test: `cargo test` stops at the first failing binary, and `crates/archogen-cli`'s `sibling` failed first.
+  Goal: no program's own file, nor the sibling's, held whole under the memory ceiling.
+  Acceptance:
+    - [x] ROOT CAUSE — WHY: `git grep -n 'and_then(std::fs::read)' 7b61cdb2 -- crates/archogen-plan-check/src/main.rs` → `191`, `me()` reading the running executable whole to name it by its sha256, and `git grep -n 'let mine = std::fs::read(&front)' 7b61cdb2 -- crates/archogen-cli/src/sibling.rs` → `60`, the front reading its own file and the sibling's whole to check them; under the counting allocator each byte counts against the ceiling, and a debug build with its debug information linked in, as Linux links it (`[profile.dev] split-debuginfo` is `off`, rustc's own default there), is larger than the test's 32 MiB before any judging starts; on this host the file is 9.4 MB and needed a ceiling of 8 to 12 MiB, the judgement itself under 1; WHERE, the runner's job → `the_checker_stops_at_its_ceiling … FAILED`, `left: 14`, `right: 14`, a description of two bytes stopped at 32 MiB (`target/p151/ci/focused2-*.log`).
+    - [x] FIX — each hashes the file in pieces of 64 KiB through `archogen_digest::Sha256`, its own `sha256_of`, the shared crate unchanged; the launcher keeps the sibling's descriptor open as before. Two tests, a ceiling of half the program's own file, so that they hold on every host: `the_checker_s_own_size_takes_nothing_of_its_ceiling` and `the_programs_sizes_take_nothing_of_the_front_s_ceiling`. The launcher's file is in the generator and configuration checker's invocation item, so its digest moved: `trust/baseline.eadl`'s form takes the new one, `bd346a51…`, the one line of the local proposal that differs from the runner's, a digest of source text and no host's (the runner's and the local both `10cc3d74…` before).
+    - [x] ADDRESSED — `cargo test -q -p archogen-plan-check --test ceiling` → `test result: ok. 2 passed`, and without the fix → `FAILED. 1 passed; 1 failed`, `a ceiling of 4 MiB, half of its own 9394152 bytes: archogen-plan-check: analysis-inconclusive`; `cargo test -q -p archogen-cli --test sibling` → `test result: ok. 7 passed`, and without it → `FAILED. 6 passed; 1 failed`, `a ceiling of 7 MiB, half of its own 14711544 bytes` (`target/p151/ceil-*.log`, `sib-*.log`); the checker judges at a ceiling of 1 MiB; `cargo xtask trust-gate` on the staged tree → exit 0, its proposal differing from `.4`'s in that one digest.
+    - [x] NO REGRESSION — `cargo fmt --all -- --check` → exit 0; `cargo clippy --all-targets --all-features -- -D warnings` → exit 0, after its `precedence` lint on the two tests' shift, which the first focused run refused; the record's producer is the same sha256, computed in pieces; `make focused` on the staged tree, the commit's gate; the trust inventory on a commit of it.
+    - [x] LOCKSTEP — both programs' comments, this leaf, the Commit Log.
+  Commit: `ARCHOGEN-PROGRAM-1395 (leaf PROGRAM.151.6)`
+
+- ID: `PROGRAM.151.7`
+  Status: `done` — `2026-11-16`: the tier's `tests` step runs every test binary, so one run names every failing one.
+  Goal: `--no-fail-fast`, so that one run names every failing binary; the book's example of a failed step with it.
+  Acceptance:
+    - [x] ROOT CAUSE — WHY: `git grep -n 'args: &\["test", "--all"\]' 6abef203 -- xtask/src/main.rs` → `279`, and `cargo test` stops at the first test binary that fails; WHERE, the pull request's first run → `error: test failed, to rerun pass -p archogen-cli --test sibling`, after which no binary of `crates/archogen-plan-check` ran (`target/p151/ci/job-133209133175.log`), and its second run met the ceiling `.6` fixed, hidden by the first.
+    - [x] FIX — `args: &["test", "--all", "--no-fail-fast"]`, a comment saying why; `docs/book/src/verification.md` says the suite runs every binary, and its example's re-run line names the flag; `xtask/mutation_sweep_tests.py`'s premise digest of `xtask/src/main.rs` re-pinned, `8d3a727e…`, as each change to that file is, no reader's wiring moving.
+    - [x] ADDRESSED — the first `make focused` on the staged tree ran every test of `xtask`'s binary after a failure and named both of its failing tests at once, the book's phrase `the last 40 lines of each of its streams` broken across a line by this leaf's own reflow and the premise digest above, each fixed; `cargo test -q -p xtask --bin xtask -- tests::the_book_states_the_tail_the_runner_prints mutation::tests::the_sweep_holds_source_spans_and_equivalence_records` → `test result: ok. 2 passed`; the step's re-run line names `cargo test --all --no-fail-fast`; a failing binary no longer ends the step before the next binary runs, as cargo's own `--no-fail-fast` documents.
+    - [x] NO REGRESSION — `cargo fmt --all -- --check` → exit 0; a passing run is the same run; the step's verdict is cargo's exit, failed while any binary failed.
+    - [x] LOCKSTEP — the chapter, this leaf, the Commit Log.
+  Commit: `ARCHOGEN-PROGRAM-1396 (leaf PROGRAM.151.7)`
 
 ## Roadmap coverage map
 
@@ -919,11 +1263,11 @@ roadmap item X live?".
 
 | Order | Leaf | Status | Why next |
 | --- | --- | --- | --- |
-| 1 | `PROGRAM.72` | `pending` | next ordinary program-spine repair: a tree file in a sub-folder of `docs/tasks/` |
+| 1 | `PROGRAM.151` | `in_progress` | pull request #1's required checks failed on the runner: the launcher on Linux, the catalog check's checkout, the trust gate's forms and baseline |
 | 2 | `PROGRAM.34` | `pending` | **low, awaiting the director** — nine repositories nested in `vendor/linkedspec` are off their recorded commits since the `2026-09-27` adoption, and `REPOSITORY-BOUNDARY` sees only the first level; the restore discards third-party working trees, so it waits for a yes |
 
-The PROGRAM.34 row waits on the director's yes. The pending leaves beside them —
-`PROGRAM.73`, `.78`, `.113` and `.114` — are filed and owned. Every closed
+The PROGRAM.151 row is the batch's landing, and the PROGRAM.34 row waits on the director's yes. The other open leaf, `PROGRAM.78`, is blocked until the
+features are complete, by the ruling against mutation testing. Every closed
 leaf's outcome is its row in the Commit Log below, and a sealed leaf's full record is under `docs/task-history/PROGRAM/`.
 
 ## Decisions
@@ -981,63 +1325,10 @@ leaf's outcome is its row in the Commit Log below, and a sealed leaf's full reco
 
 | Date | Leaf | Checks | Result |
 | --- | --- | --- | --- |
-| `2026-09-28` | `PROGRAM.19` (second run) | the trigger read off `docs/ARTIFACT_CLEANUP.md` rather than assumed; a full inventory taken before any deletion; a residue census over every deleted path; `git grep` for each retention candidate's consumers; the focused tier re-run **cold**, with the scratch it consumes already deleted | ≈18 MB released: `target` 873 MB → 855 MB, `.bin` files 715 → 693, all 7 deleted paths `gone`; **2.2 GB retained on evidence** — `pgen-generated-before-remeasure` is read by `LS-004`'s `remeasure.sh:225-227`, and `target/debug/incremental` holds at most four generations per crate across 121 directories, which is cargo's retention and not residue; `make focused` → `passed — 3 / 0 / 0` cold; 13 doctrines green; `git status --porcelain` empty after the deletions |
-| `2026-09-29` | `PROGRAM.19` (third run) | the trigger read off the record's own commit timestamp rather than its date-only line; a full inventory before any deletion; a residue census over the deleted paths; the unexpected item **identified against a read-only sibling repository** before deletion; the focused tier, the whole suite and the doctrine gate all re-run **cold** with the scratch they consume already deleted | ≈11 MB released: `target` 957 MB → 949 MB, then 965 MB once verification recreated the scratch; all five sampled paths `gone`. `target/sync-backup-2026-09-21` matched **no** committed state here (`DIFFER` on 4 of 4 against both `a4cbab5^:` and `a4cbab5:`) and was proven **byte-identical to `bedrock`'s `HEAD`** copies (`MATCH` on 4 of 4), so it was the incoming scaffold and not a backup — deleted on that evidence, and identifying it exposed `PROGRAM.26`. **2.2 GB retained on evidence**, with two new retentions: `build/riscv-virt.dtb` needs the pinned emulator to regenerate and `M2.8.2` compares against it, and `target/s0-demo/base` is cited by a closed leaf and needs a full `archogen build`. `make focused` → `passed — 3 / 0 / 0`; `cargo test --all` → **492 passed, 0 failed**; 13 doctrines green, with `target/doctrine_scratch` recreated by the run |
-| `2026-09-29` | `PROGRAM.27` (filed) | **docs only in this tree — a registered doctrine gate reproduced failing to fail.** The reproduction is on the leaf and was taken on the real tree, not on a fixture: the pending note moved out of `docs/semantics/migrations/` entirely, the baseline left amended at 72 constructs, and `scripts/check_language_freeze.sh` re-run. Then the two causes located in the check's own source: the notes population grep and `names_construct`'s `*all*` case, each read against `docs/semantics/migrations/README.md`'s form template. Restored and proven: `diff -q` silent on the note and `language-freeze: OK (72 …)` with it back in place | `language-freeze: OK` with **no note at all** and an amended baseline — the exact waiver leg B was written to close, `--emit` and green. `grep -rl '^- status:[[:space:]]*pending' docs/semantics/migrations` → `README.md`, whose form template carries `- status: pending \| applied`; `grep -n '^- constructs:'` on it → `36:- constructs: <construct id>, <construct id>   — or: all`, which the `*all*) return 0 ;;` substring case reads as covering every construct. ⛔ Nine RED arms and none of them could see it: all nine point `LANGUAGE_FREEZE_NOTES` at `$work/notes`, a scratch directory holding only the fixture note, so the arms proved the mechanism and never the deployed population — `docs/knowledge/a-gate-is-only-as-sharp-as-its-fixtures.md` one level up. Filed at priority **high** and sequenced ahead of `PROGRAM.11`: a gate that cannot fail is worse than no gate, because the registry is what a reader consults to find out what is enforced. Two of the migration README's workflow steps are false as written and are part of the same fix, measured in all three note states (`pending` before `--emit` → leg A red, which the README calls green; `pending` after → green; `applied` after → green only because leg B is inert) |
 | `2026-09-30` | `PROGRAM.9.3` / `PROGRAM.9` | `cargo xtask mutate` twice (the second naming each kill's tests); harness arms H-1–H-4 through temporary entries; `cargo test -p xtask`; the `extended` tier end to end | 8 of 8 as expected, each kill by the test written for its defect, the `lcm`→`max` blind spot surviving the harmonic corpus; every arm refused as designed, `crates/` clean after each; 14 / 0; **`extended` passed for the first time** |
 | `2026-09-30` | `PROGRAM.6.3` / `PROGRAM.6` | both goldens blessed and checked; the lexer's own test; F-1–F-4 with restores; the two new catalog entries and the whole catalog; `cargo test --all` | 20 provenance key paths, re-derived from the renderer; the cost contract frozen; every falsification refused, blessing never overwrites; 11 of 11 mutations as expected; 620 / 0 |
 | `2026-09-30` | `PROGRAM.17.3` / `PROGRAM.17` | growth since `2026-09-27` from `git show 4d6d002:<file>`; closed-leaf share of `M1.md` and `PROGRAM.md` by an `awk` over leaf blocks | 77% of `M1.md` and 75% of `PROGRAM.md` are closed leaves; §8 written, `PROGRAM.31`/`.32` filed blocked; `PROGRAM.17` closed |
 | `2026-09-30` | `PROGRAM.20.3` / `PROGRAM.20` | a census of figure-shaped text in the live surfaces; the gate's 14 arms; eight mutations; the `S0.8` shape staged on the real tree | 96 phrases over 28 files as backlog; the added figure refused; the register's own first row refused as false; `PROGRAM.20` closed |
-| `2026-09-30` | `PROGRAM.19` (fourth run) | the trigger off the record's commit timestamp; a full inventory; each scratch name censused against the tracked tree and its leaf's status read; a residue census; the provisioner, the focused tier, the whole suite and the gate, cold | 6.3 GB → 4.1 GB; ten of ten paths `gone`; both CI tools `already in place`; `passed — 3 passed`; 742 passed / 0 failed over 62 suites; all green — rows added by `ARCHOGEN-PROGRAM-0197`, since `0196` omitted them |
-| `2026-10-10` | `PROGRAM.69` (rounds 7, 8) | the self-test, each new arm's rule mutated; the gate over 170 files; the doctrines | 69, then 71 arms, every new rule's mutation killed; OK; all green |
-| `2026-10-10` | `PROGRAM.69` (round 9) | the self-test, the new arms failing first on `7ad8e6b`'s tool; nine mutations of round 9's rules; the gate over 172 files; the doctrines | 74 pass / 2 fail — the working tree's first new arms beside `7ad8e6b`'s core, not durable — then 77 / 0; each killed by an untracked runner, not durable; OK; all green |
-| `2026-10-10` | `PROGRAM.69` (round 10) | the self-test, the new arms failing first beside `0a7ec7f`'s core; eleven mutations of round 10's rules; the gate over 172 files; every self-test; the doctrines | 79 pass / 5 fail, the working tree's and not durable, then 85 / 0; each killed by an untracked runner, not durable; OK; 47 passed; all green |
-| `2026-10-10` | `PROGRAM.69` (round 11) | the new arms beside `b87adbc`'s core; the self-test; six mutations of round 11's rules; the gate over 172 files; every self-test; the doctrines | 82 pass / 9 fail, the working tree's and not durable; 90 / 0; each killed by an untracked runner, not durable; OK; 47 passed; all green |
-| `2026-10-10` | `PROGRAM.69` (round 12) | the new arms beside `76d8775`'s core; the self-test; seven mutations of round 12's rules; the gate over 172 files; every self-test | 88 pass / 11 fail, the working tree's and not durable; 98 / 0; each killed by an untracked runner, not durable; OK; 48 passed |
-| `2026-10-10` | `PROGRAM.69` (round 13) | the arms as committed beside `1ad87e4`'s core; the self-test; five mutations of round 13's rules; the gate over 172 files; every self-test; focused on the staged tree | 88 pass / 10 fail, the working tree's and not durable; 98 / 0; each killed by an untracked runner, not durable; OK; 48 passed; `passed — 3 passed, 0 failed` |
-| `2026-10-10` | `PROGRAM.69` (round 14) | the arms as committed beside `6c79b36`'s core; the self-test; seven mutations of round 14's rules; the gate over 172 files; every self-test; focused on the staged tree | 97 pass / 9 fail, the working tree's and not durable; 106 / 0; each killed by an untracked runner, not durable; OK; 48 passed; `passed — 3 passed, 0 failed` |
-| `2026-10-10` | `PROGRAM.76` (round 1) | the check on the real set; its self-test; the arms beside `2f6f331`'s core; eleven mutations; the case lines a diff of `2f6f331` shows; every self-test; focused on the staged tree | exit 0; 40 / 0; 27 pass / 13 fail, not durable; 11 killed, not durable; 0; 48 passed; `passed — 3 passed, 0 failed` |
-| `2026-10-10` | `PROGRAM.69` (round 15) | the arms as committed beside `421ce47`'s core; the self-test; six mutations of round 15's rules; the gate over 172 files; every self-test; focused on the staged tree | 108 pass / 1 fail, the working tree's and not durable; 109 / 0; each killed by an untracked runner, not durable; OK; 48 passed; `passed — 3 passed, 0 failed` |
-| `2026-10-10` | `PROGRAM.76` (round 2) | the check on the real set; its self-test; the arms beside `6d61f65`'s core; ten mutations; the stale clones' indexes; every self-test; focused on the staged tree | exit 0, 0.9 s; 53 / 0; 44 pass / 9 fail, not durable; 10 killed, not durable; none holds a case; 48 passed; `passed — 3 passed, 0 failed` |
-| `2026-10-10` | `PROGRAM.69` (round 16) | the arms as committed beside `755c151`'s core; the self-test; five mutations of round 16's rules; the gate over 172 files; every self-test; focused on the staged tree | 109 pass / 2 fail, the working tree's and not durable; 111 / 0; each killed by an untracked runner, not durable; OK; 48 passed; `passed — 3 passed, 0 failed` |
-| `2026-10-10` | `PROGRAM.76` (round 3) | the check on the real set; its self-test; the arms beside `00e08cc`'s core; seven mutations; the clones older than `6d61f65`; every self-test; focused on the staged tree | exit 0; 56 / 0; 52 pass / 4 fail, not durable; 7 killed, not durable; none left; 48 passed; `passed — 3 passed, 0 failed` |
-| `2026-10-10` | `PROGRAM.69` (round 17) | the arms as committed beside `4105124`'s core; the self-test; four mutations of round 17's rules; the gate over 172 files; every self-test; focused on the staged tree | 112 pass / 4 fail, the working tree's and not durable; 116 / 0; each killed by an untracked runner, not durable; OK; 48 passed; `passed — 3 passed, 0 failed` |
-| `2026-10-10` | `PROGRAM.76` (round 4) | the check on the real set; its self-test; the arms beside `a9ec254`'s core; four mutations; every self-test; focused on the staged tree | exit 0; 58 / 0; 56 pass / 2 fail, not durable; 4 killed, not durable; 48 passed; `passed — 3 passed, 0 failed` |
-| `2026-10-10` | `PROGRAM.69` (round 18) | texts and comments alone; the self-test; the gate over 172 files; every self-test; focused on the staged tree | 116 / 0; OK; 48 passed; `passed — 3 passed, 0 failed` |
-| `2026-10-10` | `PROGRAM.76` (round 5) | the check on the real set; its self-test; the arms beside `04e306c`'s core; four mutations; every self-test; focused on the staged tree | exit 0; 63 / 0; 58 pass / 5 fail, not durable; 4 killed, not durable; 48 passed; `passed — 3 passed, 0 failed` |
-| `2026-10-10` | `PROGRAM.69` (round 19) | texts and comments alone; the self-test; the gate over 172 files; every self-test; focused on the staged tree | 116 / 0; OK; 48 passed; `passed — 3 passed, 0 failed` |
-| `2026-10-10` | `PROGRAM.76` (round 6) | the check on the real set; its self-test; the arms beside `fa0ec3f`'s core; four mutations; every self-test; focused on the staged tree | exit 0; 65 / 0; 63 pass / 2 fail, not durable; 4 killed, not durable; 48 passed; `passed — 3 passed, 0 failed` |
-| `2026-10-10` | `PROGRAM.69` (round 20) | the self-test; two mutations of `put`; the gate over 172 files; every self-test; focused on the staged tree | 117 / 0; each failing the race arm, not durable; OK; 48 passed; `passed — 3 passed, 0 failed` |
-| `2026-10-10` | `PROGRAM.69` (round 21) | the self-test; the gate over 172 files; every self-test; focused on the staged tree | 118 / 0; OK; 48 passed; `passed — 3 passed, 0 failed` |
-| `2026-10-10` | `PROGRAM.76` (round 7) | the push; the check on the real set; its self-test; four mutations; every self-test; focused on the staged tree | `origin/main` at `a543d10`, its `frozen/` the manifest alone; exit 0; 69 / 0; 4 killed, not durable; 48 passed; `passed — 3 passed, 0 failed` |
-| `2026-10-10` | `PROGRAM.69` (round 22) | the self-test; four mutations of the rules round 22 arms; the gate over 172 files; every self-test; focused on the staged tree | 120 / 0; each killed by an untracked runner, not durable; OK; 48 passed; `passed — 3 passed, 0 failed` |
-| `2026-10-10` | `PROGRAM.76` (round 8) | the self-test; the check on the tree; every self-test; two mutants, `target/p76/mutate_r8.py`, untracked; the case blobs' commits; focused on the staged tree | 71 pass / 0 fail; exit 0; 48 passed; 2 of 2 killed, not durable; `b05fadb` and `2f6f331` each; `passed — 3 passed, 0 failed` |
-| `2026-10-10` | `PROGRAM.77` (closed) | the restoring push's runs on the runner, `gh run view 38069871798`, `38069871797`, `38069871851` | `focused` success in 1 min 55 s, `integration` in 3 min 45 s; `doctrines`, `trust-gate` success |
-| `2026-10-10` | `PROGRAM.69` (round 23) | the self-test; `REVIEW-COUNTS`, its self-test, on the tree before and after row 22's fix; two mutants of round 23's rules; the gate over the history; every self-test; focused on the staged tree | 121 pass / 0 fail; 9 pass / 0 fail, exit 1 naming row 22 then exit 0; 2 of 2 killed, untracked; OK; 49 passed; `passed — 3 passed, 0 failed` |
-| `2026-10-10` | `PROGRAM.76` (round 9) | the self-test; the check on the tree; six mutants, `target/p76/mutate_r9.py`, untracked; GitHub's push record; every self-test; focused on the staged tree | 81 pass / 0 fail; exit 0; 6 of 6 killed, not durable; `32e6b14` then `a3c0cbd`; 49 passed; `passed — 3 passed, 0 failed` |
-| `2026-10-10` | `PROGRAM.69` (round 24) | `REVIEW-COUNTS` and its self-test; eight mutants, `target/p69r17/mutate24.py`, untracked; the sealing self-test; every self-test; focused on the staged tree | OK, 43 rounds of 2 records, 4 archived named (not so, review round 25 found: eight unnamed); 18 pass / 0 fail; 8 of 8 killed, not durable; 121 pass / 0 fail; 49 passed; `passed — 3 passed, 0 failed` |
-| `2026-10-10` | `PROGRAM.76` (round 10) | the self-test; the check on the tree; eight mutants, `target/p76/mutate_r10.py`, untracked; a monitor hook probed in a scratch repository; every self-test; focused on the staged tree | 92 pass / 0 fail; exit 0; 8 of 8 killed, not durable; `ls-files -m` empty under the hook, the file listed with it forced off; 49 passed; `passed — 3 passed, 0 failed` |
-| `2026-10-10` | `PROGRAM.69` (round 25) | `REVIEW-COUNTS` and its self-test; six mutants, `target/p69r17/mutate25.py`, untracked; the sealing self-test; every self-test; focused on the staged tree | OK, every row judged or named (not so, review round 26 found); 20 pass / 0 fail; 6 of 6 killed, not durable; 121 pass / 0 fail; 49 passed; `passed — 3 passed, 0 failed` |
-| `2026-10-10` | `PROGRAM.76` (round 11) | the self-test; the check on the tree; nine mutants, `target/p76/mutate_r11.py`, untracked; every self-test; focused on the staged tree | 105 pass / 0 fail; exit 0; 9 of 9 killed, not durable; 49 passed; `passed — 3 passed, 0 failed` |
-| `2026-10-10` | `PROGRAM.69` (round 26) | `REVIEW-COUNTS` and its self-test; eight mutants, `target/p69r17/mutate26.py`, untracked; the sealing self-test; every self-test; focused on the staged tree | OK, 2 reviews listed; 25 pass / 0 fail; 8 of 8 killed, not durable; 121 pass / 0 fail; 49 passed; `passed — 3 passed, 0 failed` |
-| `2026-10-10` | `PROGRAM.76` (round 12) | the self-test; the check on the tree; five mutants, `target/p76/mutate_r12.py`, untracked; every self-test; focused on the staged tree | 113 pass / 0 fail; exit 0; 5 of 5 killed, not durable; 49 passed; `passed — 3 passed, 0 failed` |
-| `2026-10-11` | `PROGRAM.69` (round 27) | `REVIEW-COUNTS` and its self-test; twelve mutants, `target/p69r17/mutate27.py`, untracked; the sealing self-test; every self-test; focused on the staged tree | OK, 1 review listed, 27 rounds judged, every one; 35 pass / 0 fail; 12 of 12 killed, not durable; 121 pass / 0 fail; 49 passed; `passed — 3 passed, 0 failed` |
-| `2026-10-11` | `PROGRAM.69` (the counted list) | `REVIEW-COUNTS` and its self-test; four mutants of the list's rules, `target/p69r17/mutate_list.py`, and round 27's twelve, untracked; `REVIEW-HISTORY`; every self-test; focused on the staged tree | OK, 1 review listed, 27 rounds judged, every one; 38 pass / 0 fail; 4 of 4 and 12 of 12 killed, not durable; OK; 49 passed; `passed — 3 passed, 0 failed` |
-| `2026-10-11` | `PROGRAM.69` (round 28) | `REVIEW-COUNTS` and its self-test; thirteen mutants, `target/p69r17/mutate28.py`, and round 27's eleven re-anchored, `mutate27b.py`, untracked; the sealing self-test; every self-test; focused on the staged tree | reported OK, 2 reviews listed, 28 rounds judged (an earlier run, not the final-tree count: review round 29 re-derived 29); 51 pass / 0 fail; 13 of 13 and 11 of 11 killed, not durable; 121 pass / 0 fail; 49 passed; `passed — 3 passed, 0 failed` |
-| `2026-10-11` | `PROGRAM.76` (round 13, hand-off) | the draft reader on the tree; the committed check restored; the no-background check; focused on the staged tree | three tracked files refused, exit 1, the draft untracked; exit 0; `handoff: OK`; `passed — 3 passed, 0 failed` |
-| `2026-10-11` | `PROGRAM.76` (round 13) | the new arms on the prior reader, then the revised reader; the real-tree check; syntax; book anchors/glossary; review counts; doctrines | 127 pass / 10 fail, then 137 pass / 0 fail; exit 0; all named checks green; case-sensitive filesystem arm skipped explicitly |
-| `2026-10-11` | `PROGRAM.69` (round 29) | new regressions before repair, then both self-tests; shell syntax; real history gate and census; final staged review-count gate; book gates; every self-test and doctrines | 53 pass / 13 fail (66 count arms), 122 pass / 2 fail (124 history arms), then 69 / 0 and 124 / 0; history OK, 175 sealed files; census 12 873 bytes, no closed subtree below an open top-level subtree; final staged review-count gate OK, 2 reviews / 30 rounds; book gates OK; doctrines all green; broader self-test runner finished: 47/49 passed restricted, both process-dependent suites passed with OS access (2/2 and 39/39 arms); all 49 covered across two runs before round 30 |
-| `2026-10-11` | `PROGRAM.69` (round 30) | eight escaped-pipe regressions before repair, then the count self-test; syntax; final staged gate; history/book/doctrine checks | 70 pass / 8 fail, then 78 pass / 0 fail; final staged count gate OK, 2 reviews / 31 rounds; history OK, 175 files; book anchors/glossary/index OK; doctrines all green |
-| `2026-10-11` | `PROGRAM.69` (round 31) | first-link regression arms before repair, then the count self-test; syntax, staged real count/history gates, book gates, doctrines | 79 pass / 2 fail, then 81 pass / 0 fail; staged count gate OK (2 reviews / 32 rounds); history gate OK (175 files); book anchors/glossary/index OK; doctrines all green |
-| `2026-10-11` | `PROGRAM.76` (round 14) | six source-line-ending controls before repair, then the complete guard suite; real sealed-tree guard, syntax, review counts, book gates and doctrines | 141 pass / 2 fail, then 143 pass / 0 fail; real guard exit 0, syntax clean; review counts OK (2 reviews / 32 rounds); book gates OK, doctrines all green; filesystem case-distinction arm explicitly skipped |
-| `2026-10-11` | `PROGRAM.69` (round 32) | ten staged-read controls on the prior reader, then repaired suite; exact-path comparison mutation; syntax, final staged real count/history gates, book gates and doctrines | 83 pass / 8 fail, then 91 pass / 0 fail; glob-comparison mutation 89 pass / 2 fail; final staged count OK (2 reviews / 33 rounds), history OK (175 files); book gates, stated-order and task-acceptance OK; final doctrines in the commit hook |
-| `2026-10-11` | `PROGRAM.76` (round 15, closure) | independent pinned-reader review; real-tree guard; shell syntax; book anchors, glossary and index; final staged doctrine hook | zero defects or actionable arm gaps; 157 / 0 synthetic probes (151 repaired-reader checks plus six prior-reader controls), untracked evidence; real guard exit 0; syntax and book gates OK; checker unchanged |
-| `2026-10-11` | `PROGRAM.69` (round 33) | 35 primary-link controls before repair, then repaired suite; original shell reproducer; two valid selection/refusal mutations; syntax, final staged count/history, book and doctrine gates | 96 pass / 30 fail, then 126 pass / 0 fail; original five shell cases refuse the primary table; selection mutation 93/33, refusal mutation 120/6; initial syntax-error mutant excluded; staged counts 2 reviews / 35 rounds, history 175 files / 335 stubs; book anchors 30/4, glossary 67/25, index 316; syntax and stated-order OK; task-acceptance evidence completed after its first refusal; final doctrines in commit hook |
-| `2026-10-11` | `PROGRAM.69` (round 34) | native old/new mutation replays, full count self-test, syntax, book and final staged gates | both mutants 126/0 before; validation removal 135/3 and angle restriction 130/8 of 138 after; unchanged production reader 138/0; book anchors 30/4, glossary 67/25, index 316; staged counts 1 review / 34 rounds, history 175 files / 335 stubs; acceptance/order/figure gates OK, final doctrines in hook |
-| `2026-10-11` | `PROGRAM.69` (round 35) | new census and summary-boundary controls before/after repair; both full self-tests, syntax, book and final staged gates | history 129/3 of 132 and counts 140/10 of 150 before; repaired 132/0 and 150/0; finite selected-read failures never print a final aggregate, empty counterparts pass; staged counts 1 review / 35 rounds, history 175 files / 335 stubs; book 30/4, 67/25, 316, syntax and final doctrine gates |
-| `2026-10-11` | `PROGRAM.69` (round 36) | EOF/path/diagnostic controls before repair, then both complete self-tests; syntax, book and staged gates | history 133/13 of 146 and counts 153/3 of 156 before; repaired 146/0 and 156/0; literal byte and unusual-path counterparts, named no-traceback row refusals; independent round 37 next |
-| `2026-10-11` | `PROGRAM.69` (round 37 closure) | independent pinned review; root recount/authentication; staged count/history and book gates | zero defects/actionable arm gaps/remarks; 347 expected checker outcomes, separate 4 096 unit comparisons; retained results recount and 17 source identities pass, exit code 0; scope/limits retained; all 37 summary rows judged before removal from counted list |
-| `2026-10-22` | `PROGRAM.101` (fourteenth run) | two handoff censuses; physical and native inventories; identity of every other `target/` entry before and after; input snapshot and restoration; audit and four falsifying arms; the focused tier on the staged tree | 5382 files / 1181873277 logical bytes removed; 590423 of 590426 identical, 3 accounted; 1205 inputs restored; 4 of 4 arms refused |
 
 ## Commit Log
 
@@ -1058,15 +1349,29 @@ leaf's outcome is its row in the Commit Log below, and a sealed leaf's full reco
 | `PROGRAM` | `ARCHOGEN-PROGRAM-0450 (leaf PROGRAM)` | **`PROGRAM.55` and `PROGRAM.56` sealed**, their 3 closed leaves into `docs/task-history/PROGRAM/`: `docs/tasks/` had grown 1 324 bytes over its 819 200-byte ceiling with `M3.1.1`'s step 27 |
 | `PROGRAM` | `ARCHOGEN-PROGRAM-0460 (leaf PROGRAM)` | **`PROGRAM.57`, `PROGRAM.58` and `PROGRAM.59` sealed**, their 3 closed leaves into `docs/task-history/PROGRAM/`: `docs/tasks/` would have grown 1 331 bytes over its 819 200-byte ceiling with `M3.1.2`'s decomposition |
 | `PROGRAM` | `ARCHOGEN-PROGRAM-0489 (leaf PROGRAM)` | **`PROGRAM.10` and `.61`–`.65` sealed**, 13 closed leaves into `docs/task-history/PROGRAM/`, when `README-ROUTES` refused `docs/tasks/` at 820 957 bytes over its 819 200; `docs/tasks/` 817 470 → 752 861 bytes, measured from `HEAD` and the tree |
-| `PROGRAM.109` | `ARCHOGEN-PROGRAM-0928 (leaf PROGRAM.109)` | **the fifteenth daily artifact cleanup**: only the idle main and wasm debug incremental caches removed, 29847 files / 4245385971 logical bytes; every other entry under `target/` identical or accounted; `PROGRAM.100`–`.102` and `.104`–`.108` sealed |
-| `PROGRAM.110` | `ARCHOGEN-PROGRAM-0952 (leaf PROGRAM.110)` | **the verification doctrine 22 recorded**: small checks per slice, full verification after the feature set, deferred to `M3.5.9` for `M3.5` |
-| `PROGRAM.111` | `ARCHOGEN-PROGRAM-0953 (leaf PROGRAM.111)` | **the sixteenth daily artifact cleanup**: only idle incremental caches removed, 8854 files / 1586169011 bytes, a light run under doctrine 22 |
-| `PROGRAM.112` | `ARCHOGEN-PROGRAM-0959 (leaf PROGRAM.112)` | **doctrine 22's record corrected**: what `make focused` runs — workspace clippy, `cargo test --all`, the sweep's premises — stays at every commit, a pin a slice moves re-pinned by it; the rest deferred to `M3.5.9` |
-| `PROGRAM.71` | `ARCHOGEN-PROGRAM-0971 (leaf PROGRAM.71)` | **the task-history index append-only in order**: leg 3 refuses committed rows that no longer stand first and in their order; an arm; `PROGRAM.72` next |
-| `PROGRAM.113` | `ARCHOGEN-PROGRAM-0974 (leaf PROGRAM.113)` | **filed**: the task-history self-test's `SIGALRM` arm failed once on the Linux runner and passed on re-run; to be reproduced on Linux before any change |
-| `PROGRAM.113.1` | `ARCHOGEN-PROGRAM-0976 (leaf PROGRAM.113.1)` | **the diagnostic**: the signal arms' failure line carries the seal's evidence, the runner's log keeping only that line; the failures now steady on CI |
-| `PROGRAM.113.2` | `ARCHOGEN-PROGRAM-0977 (leaf PROGRAM.113.2)` | **the trace**: the signal arms record the signal sent, each mask change and each outcome printed, in order, for the runner to show where Linux departs |
-| `PROGRAM.113.3` | `ARCHOGEN-PROGRAM-0978 (leaf PROGRAM.113.3)` | **the cause and its fix**: GNU grep's `-q` closing the pipe under `pipefail` while `printf` still writes a large output; every such read in the script a here-string; `PROGRAM.114` filed for the 78 elsewhere |
+| `PROGRAM.127` | `ARCHOGEN-PROGRAM-1157 (leaf PROGRAM.127)` | **the host guard**: the machine is shared and holds 24 GB, so a watcher stops this repository's processes before the director's RAM lines, never another project's; `make` and every agent's shell command go through it |
+| `PROGRAM.141` | `ARCHOGEN-PROGRAM-1302 (leaf PROGRAM.141)` | **the PROGRAM and M4 trees sealed**: 60 closed leaves of the guard's rounds and others, 3 of `M4`, so `docs/tasks/` is under its ceiling |
+| `PROGRAM.127.45` | `ARCHOGEN-PROGRAM-1304 (leaf PROGRAM.127.45)` | **the host guard's review, round 45**: `$$` one token; `$[` a marker and 3.2's `${…}` between double quotes; a run's job read as each bash; 3.2's `$(` gathered between double quotes by its parentheses alone and read as expanded; a `#` glued after `<(…)`; the `-1` sentence and the cost. |
+| `PROGRAM.142` | `ARCHOGEN-PROGRAM-1307 (leaf PROGRAM.142)` | **the M3 tree sealed**: `M3.4.16`, `M3.4.17.1` and `M3.4.17.2`, so `docs/tasks/M3.md` is under its line ceiling |
+| `PROGRAM.127.46` | `ARCHOGEN-PROGRAM-1309 (leaf PROGRAM.127.46)` | **the host guard's review, round 46**: the first run's job read as each bash in the run's place, what it holds read twice where its markers say; bash 3.2's `${…}` nesting a substitution in a double-quoted string; the self-test's `run` rows on a full host; the `-1` and `$$` sentences. |
+| `PROGRAM.127.47` | `ARCHOGEN-PROGRAM-1312 (leaf PROGRAM.127.47)` | **the host guard's review, round 47**: each run inside a job read once read as the first run's is; the self-test marking the host on its own line alone; two gaps on forms written to stated. |
+| `PROGRAM.127.48` | `ARCHOGEN-PROGRAM-1316 (leaf PROGRAM.127.48)` | **the host guard's review, round 48**: the self-test reading the host's line in `run`'s "not started" line alone and an exit 75 as the host's only on a host lately unclear; two sentences said as they are; two gaps stated. |
+| `PROGRAM.143` | `ARCHOGEN-PROGRAM-1318 (leaf PROGRAM.143)` | **the M3 tree sealed again**: `M3.4.17.3` and `M3.4.17.4`, so `docs/tasks/M3.md` is under its line ceiling |
+| `PROGRAM.144` | `ARCHOGEN-PROGRAM-1324 (leaf PROGRAM.144)` | **the M3 tree sealed again**: `M3.4.17` with its six leaves, so `docs/tasks/M3.md` keeps room under its line ceiling |
+| `PROGRAM.145` | `ARCHOGEN-PROGRAM-1340 (leaf PROGRAM.145)` | **the twenty-eighth artifact cleanup**: 29.3 GB of nested cargo target directories and test scratch, `target/` from 46.1 GB to 20.2 GB |
+| `PROGRAM.127.49` | `ARCHOGEN-PROGRAM-1320 (leaf PROGRAM.127.49)` | **the host guard's review, round 49**: no defect, so the review closes; arithmetic's end said as a rule; `job_bashes`' docstring. |
+| `PROGRAM.146` | `ARCHOGEN-PROGRAM-1361 (leaf PROGRAM.146)` | **the M4 tree sealed again**, `M4.1.7.3` and `M4.1.7.4` with their leaves, so `docs/tasks/` is under its ceiling. |
+| `PROGRAM.147` | `ARCHOGEN-PROGRAM-1380 (leaf PROGRAM.147)` | **the 400-commit batch's integration tier**: five drifts inside the batch fixed, three failures and two links behind the first. |
+| `PROGRAM.148` | `ARCHOGEN-PROGRAM-1381 (leaf PROGRAM.148)` | **the twenty-ninth artifact cleanup**: `target/` from 36.9 GB to 22.9 GB, build output and test scratch alone. |
+| `PROGRAM.149` | `ARCHOGEN-PROGRAM-1388 (leaf PROGRAM.149)` | **the batch filed**: the director's yes; the tier and a fresh review at its tip, then its pull request. |
+| `PROGRAM.149` | `ARCHOGEN-PROGRAM-1389 (leaf PROGRAM.149)` | **the batch opened**, pull request #1, 409 commits at `10861334`, the integration tier passed at its tip; the review's confirmed findings filed as `PROGRAM.150`, the landing as `PROGRAM.151`. |
+| `PROGRAM.150` | `ARCHOGEN-PROGRAM-1390 (leaf PROGRAM.150)` | **the batch review's findings fixed**: the surface's record, `explain`'s scope, the allocator's count after a null, a host path in a test string, the hook's ledger entry. |
+| `PROGRAM.151.1`, `PROGRAM.151` | `ARCHOGEN-PROGRAM-1391 (leaf PROGRAM.151.1)` | **the launcher on Linux runs what it hashed through the front's own `/proc` entry**, which a script's interpreter can open; `PROGRAM.151` split by root cause. |
+| `PROGRAM.151.2` | `ARCHOGEN-PROGRAM-1392 (leaf PROGRAM.151.2)` | **the catalog check's workflow checks out the whole history**, which its checker requires and two commits deep was not. |
+| `PROGRAM.151.3` | `ARCHOGEN-PROGRAM-1393 (leaf PROGRAM.151.3)` | **the 51 test units compiling both roles named**: 49 classified, `target-parity` and `plan-bounded` derivations, and `resolve-plan` a derivation as the record's rule makes it. |
+| `PROGRAM.151.4` | `ARCHOGEN-PROGRAM-1394 (leaf PROGRAM.151.4)` | **the runner's baseline committed**, its proposal byte for byte: 23 forms kept with their review text, 6 digests moved, 15 shared anew. |
+| `PROGRAM.151.6` | `ARCHOGEN-PROGRAM-1395 (leaf PROGRAM.151.6)` | **a program's file hashed in pieces**, the checker's own and the front's two, so a debug build's size takes nothing of the ceiling; the launcher's invocation digest moved with it. |
+| `PROGRAM.151.7` | `ARCHOGEN-PROGRAM-1396 (leaf PROGRAM.151.7)` | **the tier's tests run every binary**, `--no-fail-fast`, so one run names every failing one. |
 
 ## Changelog
 
@@ -1113,3 +1418,97 @@ leaf's outcome is its row in the Commit Log below, and a sealed leaf's full reco
 - `2026-10-11`: `PROGRAM.80` done — failed or missing actual OS census reads now refuse; the project handoff command is the guarded wrapper, the held native file unchanged.
 
 - `2026-10-18`: `PROGRAM.87` restores complete headed logs without changing prior record text; native history/rendering and original input restoration verified.
+
+- `2026-11-04`: `PROGRAM.125` filed by `M4.2.2` and done: every workspace member a row in the knowledge map, and a gate that asks for one.
+
+- `2026-11-05`: `PROGRAM.127` done: the host guard, by the director's instruction; its review `PROGRAM.127.1` filed.
+
+- `2026-11-05`: `PROGRAM.127.1` done: the guard's round 1, twenty-five findings answered; `PROGRAM.127.2` filed for round 2.
+
+- `2026-11-05`: `PROGRAM.127.2` done: the guard's round 2, twenty-three findings answered; `PROGRAM.127.3` filed for round 3.
+
+- `2026-11-05`: `PROGRAM.127.3` done: the guard's round 3, twenty findings answered; `PROGRAM.127.4` filed for round 4.
+
+- `2026-11-05`: `PROGRAM.127.4` done: the guard's round 4, sixteen findings answered by removing its lists; `PROGRAM.127.5` filed for round 5.
+
+- `2026-11-05`: `PROGRAM.128` done: a chip's document starts at `chipdoc`'s `AGENTS.md`, by the director's word; the pause lifted the same day, `PROGRAM.127.5` at work.
+
+- `2026-11-05`: `PROGRAM.127.5` done: the guard's round 5, twenty-one findings answered by a job as the unit and the shell's grammar; `PROGRAM.127.6` filed for round 6.
+
+- `2026-11-05`: `PROGRAM.127.6` done: the guard's round 6, thirteen findings answered, two of them defects; `PROGRAM.127.7` filed for round 7.
+
+- `2026-11-05`: `PROGRAM.127.7` done: the guard's round 7, thirteen findings answered, one a defect; `PROGRAM.127.8` filed for round 8.
+
+- `2026-11-06`: `PROGRAM.129` done: the director's word on RAM, in the record and the book.
+
+- `2026-11-06`: `PROGRAM.127.8` done: the guard's round 8, fourteen findings answered, one a defect; `PROGRAM.127.9` filed for round 9.
+
+- `2026-11-06`: `PROGRAM.130` done: the twenty-third artifact cleanup.
+
+- `2026-11-06`: `PROGRAM.127.9` done: the guard's round 9, ten findings answered, one a defect; `PROGRAM.127.10` filed for round 10.
+- `2026-11-06`: `PROGRAM.127.10` done: the guard's round 10, twelve findings answered, three defects; `PROGRAM.127.11` filed for round 11.
+- `2026-11-06`: `PROGRAM.127.11` done: the guard's round 11, eight findings answered, two defects; `PROGRAM.127.12` filed for round 12.
+- `2026-11-06`: `PROGRAM.127.12` done: the guard's round 12, twelve findings answered, three defects, by removing what kept failing; `PROGRAM.127.13` filed for round 13.
+- `2026-11-06`: `PROGRAM.127.13` done: the guard's round 13, eleven findings answered, five defects; `PROGRAM.127.14` filed for round 14.
+- `2026-11-06`: `PROGRAM.127.14` done: the guard's round 14, ten findings answered, two defects; `PROGRAM.127.15` filed for round 15.
+- `2026-11-06`: `PROGRAM.127.15` done: the guard's round 15, eleven findings answered, four defects, by method; `PROGRAM.127.16` filed for round 16.
+- `2026-11-06`: `PROGRAM.127.16` done: the guard's round 16, eleven findings answered, four defects; `PROGRAM.127.17` filed for round 17.
+- `2026-11-06`: `PROGRAM.127.17` done: the guard's round 17, eight findings answered, one defect; `PROGRAM.127.18` filed for round 18.
+- `2026-11-06`: `PROGRAM.127.18` done: the guard's round 18, seven findings answered, two defects; `PROGRAM.127.19` filed for round 19.
+- `2026-11-06`: `PROGRAM.127.19` done: the guard's round 19, four findings answered, two defects, both mild; `PROGRAM.127.20` filed for round 20.
+- `2026-11-06`: `PROGRAM.127.20` done: the guard's round 20, ten findings answered, two defects; `PROGRAM.127.21` filed for round 21.
+- `2026-11-06`: `PROGRAM.127.21` done: the guard's round 21, ten findings answered, three defects, by method; `PROGRAM.127.22` filed for round 22.
+- `2026-11-07`: `PROGRAM.127.22` done: the guard's round 22, eleven findings answered, three defects, by method; `PROGRAM.127.23` filed for round 23.
+- `2026-11-07`: `PROGRAM.131` done: the M4 tree sealed, 53 leaves, `docs/tasks/` under its ceiling.
+- `2026-11-07`: `PROGRAM.127.23` done: the guard's round 23, seven findings answered, three defects, by method; `PROGRAM.127.24` filed for round 24.
+- `2026-11-07`: `PROGRAM.132` done: the twenty-fourth artifact cleanup.
+- `2026-11-07`: `PROGRAM.127.24` done: the guard's round 24, six findings answered, three defects; `PROGRAM.127.25` filed for round 25.
+- `2026-11-07`: `PROGRAM.127.25` done: the guard's round 25, eight findings answered, five defects, by method; `PROGRAM.127.26` filed for round 26.
+- `2026-11-07`: `PROGRAM.127.26` done: the guard's round 26, seven findings answered, two defects; `PROGRAM.127.27` filed for round 27.
+- `2026-11-07`: `PROGRAM.127.27`'s reader has reported, and its answers are prepared and not landed: report `target/p12727/report.md`, patch `target/p12727/mine/final.diff`, which still wants the whole self-test and its evidence. Two defects, both mild: `programs_named` reads a bare script after any flag as that flag's value, sparing `python3 -u tool.py /x/codex`, and a watcher remakes its directory under a removal of its root, failing `git worktree remove --force`. Beside them: a log line of the wrong type costing `run` its status; a job elsewhere whose `run` is killed outright; too-deep local settings; `gmake -Onone`; three sentences.
+- `2026-11-10`: `PROGRAM.127.27` done: the guard's round 27, nine findings answered, two defects, the prepared answer corrected before it landed; `PROGRAM.127.28` filed for round 28.
+- `2026-11-10`: `PROGRAM.133` done: the twenty-fifth artifact cleanup.
+- `2026-11-10`: `PROGRAM.127.28` done: the guard's round 28, four findings answered, one defect, by method; `PROGRAM.127.29` filed for round 29.
+- `2026-11-10`: `PROGRAM.127.29` done: the guard's round 29, seven findings answered, one defect; `PROGRAM.127.30` filed for round 30.
+- `2026-11-10`: two of `M4`'s readers have reported, each saved and not yet answered: `M4.12.1.4`, the application inputs' round 4, not acceptable, 8 findings, 4 defects (`target/m4328/report.md`); `M4.1.7.2.3`, format `/2`'s round 3, not acceptable, 11 findings, 9 defects (`target/m4329/report.md`). They share two findings, a `binary`'s meaning and what the initialisation calls, so they are answered together.
+- `2026-11-10`: `PROGRAM.127.30` done: the guard's round 30, six findings answered, two defects; `PROGRAM.127.31` filed for round 31. It went ahead of format `/2`'s answer for its third finding, the host's safety.
+- `2026-11-10`: `PROGRAM.127.31` done: the guard's round 31, six findings answered, three defects, one in ordinary work; `PROGRAM.127.32` filed for round 32.
+- `2026-11-10`: `PROGRAM.127.32` done: the guard's round 32, three findings answered, two defects, one met in ordinary work; `PROGRAM.127.33` filed for round 33.
+- `2026-11-10`: `PROGRAM.127.33` done: the guard's round 33, five findings answered, one defect, written to and failing open; `PROGRAM.127.34` filed for round 34.
+- `2026-11-10`: `PROGRAM.127.34` done: the guard's round 34, four findings answered, two defects, both in round 33's own answers; `PROGRAM.127.35` filed for round 35.
+- `2026-11-10`: `PROGRAM.134` done: the M4 tree sealed again, 16 closed subtrees, so the live task trees stand under their ceiling.
+- `2026-11-10`: `PROGRAM.127.35` done: the guard's round 35, six findings answered, one defect, in the hook's reading of a guard's `run`; `PROGRAM.127.36` filed for round 36.
+- `2026-11-10`: `PROGRAM.135` done: an open review history continues in parts, read as one by `REVIEW-COUNTS`.
+- `2026-11-10`: `PROGRAM.127.36` done: the guard's round 36, five findings answered, two defects, in round 35's reading of a `run`; `PROGRAM.127.37` filed for round 37.
+- `2026-11-13`: `PROGRAM.136` done: the twenty-sixth artifact cleanup, the idle incremental cache alone; `PROGRAM.137` filed, fsmgen's containment revision `58d5edef7` to review.
+- `2026-11-13`: `PROGRAM.137` done: fsmgen's containment revision `58d5edef7` adopted verbatim; the other three policy sources unchanged.
+- `2026-11-13`: `PROGRAM.127.37` done: the guard's round 37, seven findings answered, four defects, two failing open in the reader; `PROGRAM.127.38` filed for round 38.
+- `2026-11-14`: `PROGRAM.138` done: the twenty-seventh artifact cleanup, asked by the director: `target/` from 180.0 GB to 16.5 GB, build output and test scratch alone.
+- `2026-11-14`: `PROGRAM.127.38` done: the guard's round 38, seven findings answered, four defects, three failing open in round 37's reading; `PROGRAM.127.39` filed for round 39.
+- `2026-11-14`: `PROGRAM.127.39` done: the guard's round 39, three findings answered, two defects failing open in the reader of a kill; `PROGRAM.127.40` filed for round 40.
+- `2026-11-14`: `PROGRAM.127.40` done: the guard's round 40, four findings answered, two defects, one failing open in the reader; `PROGRAM.127.41` filed for round 41.
+- `2026-11-14`: `PROGRAM.139` done: the M4 tree sealed again, ten closed leaves of two reviews, `docs/tasks/` under its ceiling.
+- `2026-11-14`: `PROGRAM.127.41` done: the guard's round 41, two findings answered, two defects failing open in round 40's answer; `PROGRAM.127.42` filed for round 42.
+- `2026-11-14`: `PROGRAM.127.42` done: the guard's round 42, nine findings answered, seven defects; `PROGRAM.127.43` filed for round 43.
+- `2026-11-14`: `PROGRAM.127.43` done: the guard's round 43, eight findings answered, seven defects; `PROGRAM.127.44` filed for round 44.
+- `2026-11-14`: `PROGRAM.127.44` done: the guard's round 44, seven findings answered, five defects; `PROGRAM.127.45` filed for round 45.
+- `2026-11-14`: `PROGRAM.127.45` done: the guard's round 45, eight findings answered, six defects, three of its own reruns'; `PROGRAM.127.46` filed for round 46.
+- `2026-11-14`: `PROGRAM.142` done: three closed leaves of `M3` sealed, the tree under its line ceiling for `M3.4.17.3`.
+- `2026-11-14`: `PROGRAM.127.46` done: the guard's round 46, six findings answered, four defects; `PROGRAM.127.47` filed for round 47.
+- `2026-11-14`: `PROGRAM.127.47` done: the guard's round 47, four findings answered, two defects; `PROGRAM.127.48` filed for round 48.
+- `2026-11-14`: `PROGRAM.127.48` done: the guard's round 48, five findings answered, three defects, none in ordinary work; `PROGRAM.127.49` filed for round 49.
+- `2026-11-14`: `PROGRAM.143` done: two closed leaves of `M3` sealed, the tree under its line ceiling for `M3.4.17.5`.
+- `2026-11-14`: `PROGRAM.127.49` done: the guard's round 49 found no defect, so its review closes.
+- `2026-11-14`: `PROGRAM.144` done: `M3.4.17` sealed with its six leaves, `docs/tasks/M3.md` at 2,974 lines.
+- `2026-11-15`: `PROGRAM.145` done: the twenty-eighth artifact cleanup, `target/` from 46.1 GB to 20.2 GB, build output and test scratch alone.
+- `2026-11-16`: `PROGRAM.147` done: the batch's integration failures fixed, `book`, `plan-check-wasm` and `resolve-installed`.
+- `2026-11-16`: `PROGRAM.148` done: the twenty-ninth artifact cleanup, `target/` from 36.9 GB to 22.9 GB.
+- `2026-11-16`: `PROGRAM.149` filed: the director's yes to the batch; the tier and a fresh review at its tip, then its pull request.
+- `2026-11-16`: `PROGRAM.149` done: the batch is pull request #1; `PROGRAM.150` filed for the review's findings, `PROGRAM.151` for the landing.
+- `2026-11-16`: `PROGRAM.150` done: the review's findings fixed; it joins pull request #1, whose required checks failed on the runner.
+- `2026-11-16`: `PROGRAM.151` split into five leaves by root cause; `PROGRAM.151.1` done: the launcher on Linux names its descriptor under the front's own `/proc` entry.
+- `2026-11-16`: `PROGRAM.151.2` done: the catalog check's workflow checks out the whole history.
+- `2026-11-16`: `PROGRAM.151.3` done: every test unit compiling two roles named or classified, none left unclassified.
+- `2026-11-16`: `PROGRAM.151.4` done: the runner's proposal committed as the baseline.
+- `2026-11-16`: `PROGRAM.151.6` filed and done: a program's file hashed in pieces; `PROGRAM.151.7` filed, the tier's tests to run every binary.
+- `2026-11-16`: `PROGRAM.151.7` done: the tier's tests run every binary.

@@ -109,6 +109,10 @@ pub struct CommandSpec {
     pub positionals: &'static [PositionalSpec],
     /// The options, in display order.
     pub options: &'static [OptionSpec],
+    /// The sibling program that answers this command, for a command `archogen` runs as git runs its sibling commands:
+    /// every argument after the command's name is handed to it unparsed, and `archogen help` renders its own help
+    /// (`M3.5.1`, *One table per command*). `None` for a command the front answers itself.
+    pub sibling: Option<&'static str>,
     /// How much of the §10.2 contract this command delivers today.
     pub maturity: Maturity,
     /// Whether a programmatic consumer is offered it (§10.4).
@@ -152,6 +156,14 @@ const PROFILE: OptionSpec = OptionSpec {
     required: false,
 };
 
+/// The machine a description's systems are judged on (`docs/decisions/decision_runtime-plan-format-2.md` §1; leaf `M4.1.7.4.2.1`).
+const TARGET: OptionSpec = OptionSpec {
+    long: "target",
+    value: Some("FILE"),
+    help: "a target's file, its hardware alone: judge the description's systems on that machine, e.g. targets/riscv-virt-up.eadl",
+    required: false,
+};
+
 /// Refuse to acquire or re-resolve anything: fail on a missing or mismatched input (§10.3).
 const LOCKED: OptionSpec = OptionSpec {
     long: "locked",
@@ -174,10 +186,11 @@ pub const COMMANDS: &[CommandSpec] = &[
             name: "DESCRIPTION",
             help: "path to the eADL system description",
         }],
-        options: &[PROFILE],
+        options: &[PROFILE, TARGET],
         // Built by leaf M1.8. Changing this row is what removes the command's tag from
         // `archogen --help`, in the same change that makes it real — the help text is rendered
         // from this table, so the two cannot disagree.
+        sibling: None,
         maturity: Maturity::Built,
         exposure: Exposure::Tool,
     },
@@ -205,8 +218,22 @@ pub const COMMANDS: &[CommandSpec] = &[
                 help: "write the plan without running the configuration checker over it — a downgrade, never a quiet one",
                 required: false,
             },
+            OptionSpec {
+                long: "system",
+                value: Some("NAME"),
+                help: "the system to resolve, when the description declares several",
+                required: false,
+            },
+            TARGET,
         ],
-        maturity: Maturity::Unimplemented { owner: "M3.4" },
+        sibling: None,
+        // The search over the description's own blocks and platforms (leaf `M3.4.4`), offered by the engine API and the
+        // MCP server unchecked (`M3.4.6`), a module tree's among them (`M3.4.10`); the catalog's providers, `M3.7`'s,
+        // complete it.
+        maturity: Maturity::Experimental {
+            scope: "one system of a description, over its own blocks and platforms or a target's",
+            completed_by: "M3.7",
+        },
         exposure: Exposure::Tool,
     },
     CommandSpec {
@@ -224,8 +251,10 @@ pub const COMMANDS: &[CommandSpec] = &[
         ],
         options: &[],
         // `archogen-plan-check`, an executable of its own, which the front runs as git runs a sibling command
-        // (findings §16 (a), `M3.5.1`); the generator's server never runs it, so it is that checker's own tool.
-        maturity: Maturity::Unimplemented { owner: "M3.5.6" },
+        // (findings §16 (a), `M3.5.1`; built by `M3.5.6`, run through the launcher since `M3.5.1.4.1`); the
+        // generator's server never runs it, so it is that checker's own tool.
+        sibling: Some("archogen-plan-check"),
+        maturity: Maturity::Built,
         exposure: Exposure::Excluded {
             reason: "findings §16 (a): the configuration checker's own tool, served by its own server",
         },
@@ -246,13 +275,19 @@ pub const COMMANDS: &[CommandSpec] = &[
                 help: "the dedicated output directory for generated artifacts",
                 required: true,
             },
+            OptionSpec {
+                long: "system",
+                value: Some("NAME"),
+                help: "the system to build, when the description declares several",
+                required: false,
+            },
         ],
-        // ⚠️ Runs today over the S0 path only (leaf `S0.3`): one fixed engine-owned realization,
-        // periodic releases, the hosted playground. §12 S0 requires that output to be marked
-        // experimental, so the surface marks the command.
+        // ⚠️ The hosted playground only (`docs/decisions/decision_hosted-build.md`): every job's body is empty until
+        // `M4.13` gives it the code `M4.12`'s inputs name, so what a build runs is its releases.
+        sibling: None,
         maturity: Maturity::Experimental {
-            scope: "the S0 path: one fixed realization, periodic releases, hosted playground",
-            completed_by: "M4.2",
+            scope: "the hosted playground: the plan's releases run, and no job holds application code",
+            completed_by: "M4.13",
         },
         exposure: Exposure::Excluded {
             reason: "ROADMAP.md §10.4: both builds are outside the programmatic interface",
@@ -271,6 +306,7 @@ pub const COMMANDS: &[CommandSpec] = &[
             help: "the named property to analyze, e.g. deadlines",
             required: true,
         }],
+        sibling: None,
         maturity: Maturity::Unimplemented { owner: "M2.21.2" },
         // `archogen-analyze`, an executable of its own (findings §16 (a), `M2.21`): the generator's server can never run
         // it — not in its program (`trust-shared-program`) and not as a process (`NO-SUBPROCESS`) — so it is the
@@ -292,6 +328,7 @@ pub const COMMANDS: &[CommandSpec] = &[
             help: "focused | integration | extended | hardware | assurance",
             required: true,
         }],
+        sibling: None,
         maturity: Maturity::Unimplemented { owner: "M4.11" },
         // It runs tiers, which drive a toolchain and an emulator: exposed only by its own ruling, never by
         // analogy (the open question on the `API` tree).
@@ -303,16 +340,46 @@ pub const COMMANDS: &[CommandSpec] = &[
         name: "explain",
         summary: "explain how one requirement was realized, or why it could not be",
         positionals: &[PositionalSpec {
-            name: "BUILD",
-            help: "path to a build produced by `archogen build`",
+            name: "DESCRIPTION",
+            help: "path to the eADL system description, or to a build `archogen build` wrote",
         }],
-        options: &[OptionSpec {
-            long: "requirement",
-            value: Some("REQUIREMENT"),
-            help: "the requirement ID to explain, e.g. timer.deadline",
-            required: true,
-        }],
-        maturity: Maturity::Unimplemented { owner: "M3.4" },
+        options: &[
+            PROFILE,
+            // A requirement is a requester's requirements on one fact, as the plan binds one provider per requester
+            // and fact (leaf `M3.4.13`): the fact, narrowed by whose.
+            OptionSpec {
+                long: "requirement",
+                value: Some("FACT"),
+                help: "the fact whose requirements to explain, e.g. observable-output",
+                required: true,
+            },
+            OptionSpec {
+                long: "requester",
+                value: Some("NAME"),
+                help: "only this declaration's requirement on it: a service, a policy, the system's own",
+                required: false,
+            },
+            OptionSpec {
+                long: "task",
+                value: Some("NAME"),
+                help: "only this task's requirement on it",
+                required: false,
+            },
+            OptionSpec {
+                long: "system",
+                value: Some("NAME"),
+                help: "the system to explain, when the description declares several",
+                required: false,
+            },
+            TARGET,
+        ],
+        sibling: None,
+        // The search's own account over a description (leaf `M3.4.13.2`), offered by the engine API and the MCP server;
+        // on the command line, of a build too (leaf `M4.2.3.2`).
+        maturity: Maturity::Experimental {
+            scope: "one requirement of one system, over a description's own blocks and platforms or a target's",
+            completed_by: "M3.7",
+        },
         exposure: Exposure::Tool,
     },
     CommandSpec {
@@ -323,6 +390,7 @@ pub const COMMANDS: &[CommandSpec] = &[
             help: "path to a replay manifest recorded by a failing run",
         }],
         options: &[],
+        sibling: None,
         maturity: Maturity::Unimplemented { owner: "M4.7" },
         exposure: Exposure::Tool,
     },
@@ -332,6 +400,7 @@ pub const COMMANDS: &[CommandSpec] = &[
         positionals: &[],
         options: &[],
         // Built by leaf API.6.4 (docs/decisions/decision_mcp-server.md).
+        sibling: None,
         maturity: Maturity::Built,
         exposure: Exposure::Excluded {
             reason: "ROADMAP.md §10.4: the server itself, through which the tools are offered",
@@ -526,8 +595,8 @@ mod tests {
         let build = command("build").expect("build exists");
         let tag = build.maturity.tag();
         assert!(tag.contains("experimental"), "{tag}");
-        assert!(tag.contains("S0"), "{tag}");
-        assert!(tag.contains("M4.2"), "{tag}");
+        assert!(tag.contains("no job holds application code"), "{tag}");
+        assert!(tag.contains("M4.13"), "{tag}");
     }
 
     #[test]

@@ -1,0 +1,21 @@
+(eadl-version eadl/1)
+; The system's own level served by `deadline-over-delay`: an expiry it would receive, refused (§1; round 7).
+(defblock timer.delay
+  (offers
+    (relative-delay true)
+    (counter-modulus 4294967296)
+    (tick-rate 1 MHz)
+    (observation-coherent true)
+    (channels 1 tick)
+    (reachable-at-privilege machine)))
+(defblock console.uart
+  (offers (observable-output true) (reachable-at-privilege machine)))
+(defplatform soc.d
+  (offers (core-count 1 tick) (reachable-at-privilege machine))
+  (requires (uses timer.delay console.uart)))
+(defservice console.write
+  (requires (needs observable-output)))
+(defsystem sd
+  (task t (period 25 ms) (deadline 25 ms) (deadline-from release) (priority 1) (uses console.write))
+  (requires (needs absolute-deadline))
+  (platform (uses soc.d)))

@@ -1,0 +1,2 @@
+== system po
+refused unsupported-profile: each of these is a duration whose seconds lie past the engine's exact arithmetic, signed 128-bit integers (§2.2) — `(task po b)` writes `(jitter 0.00000000000000000000000000000000000001 ns)`; `(task po a)` writes `(deadline 0.00000000000000000000000000000000000001 ns)`; `(source dev.a)` states a separation; `(source dev.z)` states a separation: state each within that range; `M1.45` has the language refuse them

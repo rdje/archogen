@@ -14,13 +14,20 @@
 //! falsification corpus (`tests/checker.rs`, `tests/corpus.rs`), so a question a machine can settle — whether every
 //! input has one outcome, whether a value is ever read the wrong way — is settled by one. The production relation,
 //! leaf `M3.1.2`, is tested against the model over the same bounded universe. [`joint`] judges the bindings of one complete
-//! assignment together — a provider's channels and the regions bound providers own (`M3.3.2`). `archogen check` does
-//! not call any of it.
+//! assignment together — a provider's channels and the regions bound providers own (`M3.3.2`). [`search`] chooses one
+//! system's providers, one per requester and fact, the relation satisfying each and the joint rules all (`M3.4.2`),
+//! and [`plan`] writes what it chose as `archogen-assignment/2`, by the generator's own code (`M3.4.3`, `M3.2.5`).
+//! [`target`] puts a system on a target's hardware and reads which target device each of its devices is (`M4.4.1`).
+//! `archogen check` does not call any of it yet.
 
+pub mod adapter;
 pub mod joint;
 pub mod offer;
+pub mod plan;
 pub mod refusal;
 pub mod relation;
 pub mod requirement;
+pub mod search;
+pub mod target;
 pub mod value;
 pub mod vocabulary;

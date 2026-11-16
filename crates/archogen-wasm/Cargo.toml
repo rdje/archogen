@@ -16,4 +16,6 @@ crate-type = ["cdylib", "rlib"]
 
 [dependencies]
 archogen-api = { path = "../archogen-api" }
+# Its strings are written by the one JSON writer the MCP server's are (leaf `M3.5.1.6.2`).
+archogen-json = { path = "../archogen-json" }
 eadl-front = { path = "../eadl-front" }

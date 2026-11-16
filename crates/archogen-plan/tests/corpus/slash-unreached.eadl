@@ -1,0 +1,12 @@
+(eadl-version eadl/1)
+; A service `sl/zzz` that nothing in system `sl` names: not served, never a task (`M4.1.11`; round 9, D1).
+(defblock console.uart
+  (offers (observable-output true) (reachable-at-privilege machine)))
+(defplatform host.p
+  (offers (core-count 1 tick) (reachable-at-privilege machine))
+  (requires (uses console.uart)))
+(defservice sl/zzz
+  (requires (needs observable-output)))
+(defsystem sl
+  (task a (period 10 ms) (deadline 10 ms) (deadline-from release) (priority 1))
+  (platform (uses host.p)))

@@ -62,7 +62,7 @@
 //! and guessing right for width while guessing wrong for a delivery bound. The direction is
 //! written down because there is no correct default.
 
-use std::collections::BTreeMap;
+use std::collections::{BTreeMap, BTreeSet};
 
 use eadl_front::{Diagnostic, Form, Label, Span};
 
@@ -192,6 +192,19 @@ impl Default for Facets {
 }
 
 impl Facets {
+    /// Every fact this declaration declares absent, with where it says so.
+    pub fn absences(&self) -> impl Iterator<Item = (&str, Span)> {
+        self.absent
+            .iter()
+            .map(|(fact, span)| (fact.as_str(), *span))
+    }
+
+    /// Whether it offers `fact`, in any way, as §3 rule 3 reads an offer.
+    #[must_use]
+    pub fn offers_fact(&self, fact: &str) -> bool {
+        self.offers.contains_key(fact)
+    }
+
     /// Reduce one declaration.
     ///
     /// Recognizes `(offers …)`, `(absent …)` and `(refines <name>)`. An offer is either a bare
@@ -201,8 +214,7 @@ impl Facets {
     /// ⭐ **Returns the diagnostics it found beside the facets, and every caller has to destructure
     /// both.** This signature is the fix, not a detail of it: it used to return `Self` and swallow what
     /// [`Quantity::read`] refused, so `archogen check` accepted a description whose tick rate was zero and
-    /// the only consumer left that surfaced the refusal was the S0 prototype `S0-RETIREMENT` exists to
-    /// delete. A caller that wants only the facets has to write `.0`, and that `.` is where the next
+    /// the only consumer left that surfaced the refusal was the S0 prototype, since deleted. A caller that wants only the facets has to write `.0`, and that `.` is where the next
     /// reader asks what the other half was.
     #[must_use]
     pub fn of(form: &Form) -> (Self, Vec<Diagnostic>) {
@@ -394,6 +406,81 @@ impl RefinementReport {
     }
 }
 
+/// Each piece of hardware a system has, through what it composes and refines, that refines what leads back to it: a more abstract saying of one thing cannot be made of that thing, and no machine stands on a
+/// loop. With what it refines, and where.
+pub fn refining_in_a_loop(
+    hardware: &BTreeSet<String>,
+    declared: &BTreeMap<&str, &Form>,
+) -> Vec<(String, String, Span)> {
+    let next = |at: &str| -> Vec<String> {
+        let Some(form) = declared.get(at).filter(|form| is_hardware(form)) else {
+            return Vec::new();
+        };
+        crate::presence::composition(form)
+            .into_iter()
+            .chain(Facets::of(form).0.refines.map(|(up, _)| up))
+            .collect()
+    };
+    let leads_to = |from: &str, to: &str| {
+        let mut seen: BTreeSet<String> = BTreeSet::from([from.to_owned()]);
+        let mut todo = vec![from.to_owned()];
+        while let Some(at) = todo.pop() {
+            for name in next(&at) {
+                if name == to {
+                    return true;
+                }
+                if seen.insert(name.clone()) {
+                    todo.push(name);
+                }
+            }
+        }
+        false
+    };
+    let mut seen: BTreeSet<String> = hardware.clone();
+    let mut todo: Vec<String> = hardware.iter().cloned().collect();
+    let mut found = Vec::new();
+    while let Some(at) = todo.pop() {
+        if let Some(form) = declared.get(at.as_str()).filter(|form| is_hardware(form)) {
+            if let Some((up, span)) = Facets::of(form).0.refines {
+                if up == at || leads_to(&up, &at) {
+                    found.push((at.clone(), up, span));
+                }
+            }
+        }
+        for name in next(&at) {
+            if seen.insert(name.clone()) {
+                todo.push(name);
+            }
+        }
+    }
+    found.sort_by(|a, b| (&a.0, &a.1).cmp(&(&b.0, &b.1)));
+    found
+}
+
+/// What [`refining_in_a_loop`] finds, refused, of a description's hardware, each system's, and of a target's: the check calls it for the first, and
+/// `eadl_resolve::target` for the others (leaf `M3.4.17.4`; before, only a target's was asked, and `check` passed a loop the search bound).
+pub fn loops_refused(
+    hardware: &BTreeSet<String>,
+    declared: &BTreeMap<&str, &Form>,
+) -> Vec<Diagnostic> {
+    refining_in_a_loop(hardware, declared)
+        .into_iter()
+        .map(|(name, up, span)| {
+            Diagnostic::error(
+                "invalid-description",
+                format!("`{name}` refines `{up}`, which leads back to it through what they compose and refine, so no machine stands on them"),
+                Label::new(span, "refines it here"),
+                "a refinement says the same thing again: compose the device, or refine what it is made of, and not both",
+            )
+        })
+        .collect()
+}
+
+/// Whether a declaration is a piece of hardware: a block or a platform.
+fn is_hardware(form: &Form) -> bool {
+    matches!(form.head(), Some("defblock" | "defplatform"))
+}
+
 /// Check that `concrete` refines `abstract_`.
 ///
 /// ⛔ **Returns an empty report when either side could not be read.** See [`Facets::readable`]: an
@@ -489,6 +576,77 @@ pub fn check(abstract_: &Facets, concrete: &Facets) -> RefinementReport {
 }
 
 /// What one offer of the abstract description costs the concrete one, which offers the same fact as `refined`.
+/// Model §3 rule 3 through a chain and through composition (leaf `M3.4.8`,
+/// `docs/decisions/decision_absence-per-provider.md`): every absence the abstract description and what it refines in
+/// turn — `ancestors`, nearest first — declare is kept by `concrete` and by every declaration it `composes`, at any
+/// depth through blocks and platforms. An absence is one declaration's statement, so two unrelated declarations do not
+/// contradict each other (model §2 rule 1); a refinement owes its abstract's exclusions with what it is made of, and a
+/// chain of refinements owes every link's. The pair's own case — the abstract's absence against the concrete's own
+/// offer — is [`check`]'s, reported once there.
+#[must_use]
+pub fn exclusions_through(
+    abstract_: &Facets,
+    ancestors: &[&Facets],
+    concrete: &Facets,
+    composes: &[&Facets],
+) -> Vec<Diagnostic> {
+    let mut violations = Vec::new();
+    if !concrete.readable {
+        return violations;
+    }
+    for owner in std::iter::once(abstract_).chain(ancestors.iter().copied()) {
+        if !owner.readable {
+            continue;
+        }
+        for (name, absent_span) in &owner.absent {
+            let found = std::iter::once(concrete)
+                .chain(composes.iter().copied())
+                .filter(|offerer| offerer.readable)
+                .filter(|offerer| {
+                    !(std::ptr::eq(owner, abstract_) && std::ptr::eq(*offerer, concrete))
+                })
+                .find_map(|offerer| {
+                    offerer
+                        .offers
+                        .get(name)
+                        .and_then(|offers| offers.first())
+                        .map(|offer| (offerer, offer))
+                });
+            let Some((offerer, offer)) = found else {
+                continue;
+            };
+            let through = if std::ptr::eq(offerer, concrete) {
+                String::new()
+            } else {
+                format!(" through `{}`, which it composes", offerer.name)
+            };
+            let owed = if std::ptr::eq(owner, abstract_) {
+                format!("`{}` declares absent", owner.name)
+            } else {
+                format!(
+                    "`{}` declares absent, and `{}` refines it in turn",
+                    owner.name, abstract_.name
+                )
+            };
+            violations.push(
+                Diagnostic::error(
+                    "refinement-violated",
+                    format!("`{}` offers `{name}`{through}, which {owed}", concrete.name),
+                    Label::new(offer.span, "offered here"),
+                    format!(
+                        "violated obligation `{}`: {} — an explicit absence is a constraint something relies on, \
+                         kept through what a refinement composes and through every refinement it refines",
+                        Obligation::Exclusion.slug(),
+                        Obligation::Exclusion.statement()
+                    ),
+                )
+                .with_secondary(Label::new(*absent_span, "declared absent here")),
+            );
+        }
+    }
+    violations
+}
+
 fn keep(
     abstract_: &Facets,
     concrete: &Facets,

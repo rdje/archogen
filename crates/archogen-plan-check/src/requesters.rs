@@ -148,6 +148,8 @@ pub struct Served<'p> {
     pub sides: BTreeMap<Requester, Side<'p>>,
     /// The requesters each one names through its `uses` and `needs`, directly.
     pub names: BTreeMap<Requester, BTreeSet<Requester>>,
+    /// The blocks and platforms counted as requesters, by [`served`]: those a block or platform reached and not among them writes bind nothing.
+    pub parts: BTreeSet<String>,
 }
 
 impl Served<'_> {
@@ -173,7 +175,11 @@ fn refusal<'a>(name: &'a str, form: &'a Form) -> impl FnOnce(NotJudged) -> Refus
 }
 
 /// The requesters system `system` serves (rules 1, 7): its own level, each of its tasks, and every declaration they
-/// reach through `uses` and `needs`, at any depth, for what it writes at its own level — each with its side.
+/// reach through `uses` and `needs`, at any depth, for what it writes at its own level — each with its side; but a block or a platform only as it may be
+/// bound (model §2 rule 3, §8 rule 5): one the system names itself, in its `platform` clause, its own `uses` and `needs` or its tasks', or a requester it
+/// serves that is no part names, or one that offers a fact a requester counted requires, a fact the vocabulary derives such a fact of, or a fact an adapter
+/// kind adding such a fact needs beneath, or one a part counted names by `needs`, to a fixed point. A part named only by another's composition and
+/// offering nothing asked is no requester, its needs binding nothing (`ROADMAP.md` §5.3; leaf `M3.4.17.6`).
 ///
 /// # Errors
 ///
@@ -219,7 +225,147 @@ pub fn served<'p>(program: &'p Program, system: &str) -> Result<Served<'p>, Refu
         served.names.insert(requester.clone(), named);
         served.sides.insert(requester, side);
     }
+    let is_part = |name: &str| {
+        declarations
+            .get(name)
+            .is_some_and(|(_, form)| matches!(form.head(), Some("defblock" | "defplatform")))
+    };
+    let reached_parts: BTreeSet<String> = served
+        .sides
+        .keys()
+        .filter_map(|requester| match requester {
+            Requester::Named(name) if is_part(name) => Some(name.clone()),
+            _ => None,
+        })
+        .collect();
+    // What each part offers, by its own reading; a part whose offers do not read is counted, failing closed.
+    let offers: BTreeMap<&String, Option<BTreeSet<String>>> = reached_parts
+        .iter()
+        .map(|name| {
+            let offered = crate::model::provider::read(declarations[name].1)
+                .ok()
+                .map(|provider| {
+                    provider
+                        .stated
+                        .iter()
+                        .filter(|(_, stated)| {
+                            !matches!(stated, crate::model::provider::Stated::Absent)
+                        })
+                        .map(|(fact, _)| fact.clone())
+                        .collect()
+                });
+            (name, offered)
+        })
+        .collect();
+    // Each part a part names by `needs`, an edge presence follows where a `uses` composes.
+    let needed: BTreeMap<&String, Vec<String>> = reached_parts
+        .iter()
+        .map(|name| {
+            let (at, part) = declarations[name];
+            let mut written = Vec::new();
+            needs_names(part, &mut written);
+            let named = resolve(program, at, &written)
+                .into_iter()
+                .filter(|named| reached_parts.contains(named))
+                .collect();
+            (name, named)
+        })
+        .collect();
+    let mut seeds = Vec::new();
+    names(form, &mut seeds, true);
+    let mut counted: BTreeSet<String> = resolve(program, id, &seeds)
+        .into_iter()
+        .filter(|name| reached_parts.contains(name))
+        .collect();
+    counted.extend(
+        offers
+            .iter()
+            .filter(|(_, offered)| offered.is_none())
+            .map(|(name, _)| (*name).clone()),
+    );
+    // And each part a served requester that is no part names, a service's `uses` among them, as presence reads it: only a part's composition asks nothing.
+    for (requester, named) in &served.names {
+        if matches!(requester, Requester::Named(name) if reached_parts.contains(name)) {
+            continue;
+        }
+        counted.extend(named.iter().filter_map(|named| match named {
+            Requester::Named(name) if reached_parts.contains(name) => Some(name.clone()),
+            _ => None,
+        }));
+    }
+    loop {
+        let mut wanted: BTreeSet<&str> = served
+            .sides
+            .iter()
+            .filter(|(requester, _)| match requester {
+                Requester::Named(name) if reached_parts.contains(name) => counted.contains(name),
+                _ => true,
+            })
+            .flat_map(|(_, side)| {
+                side.requirements
+                    .iter()
+                    .map(|located| fact_of(&located.requirement))
+            })
+            .filter(|fact| *fact != "reachable-at-privilege")
+            .collect();
+        // A fact the vocabulary's rule derives one of, or the `beneath` of an adapter kind adding one names, an instance over its provider binding it too.
+        let mut inputs: Vec<&str> = wanted.iter().copied().collect();
+        while let Some(fact) = inputs.pop() {
+            let derived = crate::model::vocab::entry(fact)
+                .into_iter()
+                .flat_map(|entry| entry.derived_from.iter().copied());
+            let beneath = crate::adapters::ADAPTERS
+                .iter()
+                .filter(|kind| kind.adds().contains(&fact))
+                .flat_map(crate::adapters::Kind::beneath_names);
+            let found: Vec<&str> = derived.chain(beneath).collect();
+            for input in found {
+                if wanted.insert(input) {
+                    inputs.push(input);
+                }
+            }
+        }
+        let more: Vec<String> = offers
+            .iter()
+            .filter(|(name, offered)| {
+                !counted.contains(name.as_str())
+                    && offered.as_ref().is_some_and(|offered| {
+                        offered.iter().any(|fact| wanted.contains(fact.as_str()))
+                    })
+            })
+            .map(|(name, _)| (*name).clone())
+            .chain(
+                counted
+                    .iter()
+                    .filter_map(|name| needed.get(name))
+                    .flatten()
+                    .filter(|named| !counted.contains(*named))
+                    .cloned(),
+            )
+            .collect();
+        if more.is_empty() {
+            break;
+        }
+        counted.extend(more);
+    }
+    let dropped = |requester: &Requester| matches!(requester, Requester::Named(name) if reached_parts.contains(name) && !counted.contains(name));
+    served.sides.retain(|requester, _| !dropped(requester));
+    served.names.retain(|requester, _| !dropped(requester));
+    for named in served.names.values_mut() {
+        named.retain(|requester| !dropped(requester));
+    }
+    served.parts = counted;
     Ok(served)
+}
+
+/// The fact a requirement is on: a group's head for a group.
+fn fact_of(requirement: &Requirement) -> &str {
+    match requirement {
+        Requirement::Presence(fact)
+        | Requirement::Constraint { fact, .. }
+        | Requirement::Group { fact, .. }
+        | Requirement::Statement(fact, _) => fact,
+    }
 }
 
 /// Every declaration of `program` by its qualified name, with the instance that wrote it.
@@ -237,8 +383,9 @@ pub fn declarations(program: &Program) -> BTreeMap<String, (usize, &Form)> {
 }
 
 /// Rule 7: a system's hardware — the blocks and platforms its `platform` clause, its own `uses` and `needs` and its
-/// tasks' name, and every block or platform those name in turn through `uses` or `needs`, a clause of their own or
-/// inside `requires`, at any depth; `refines` no edge.
+/// tasks' name, and every block or platform those blocks and platforms name in turn through `uses` or `needs`, a clause
+/// of their own or inside `requires`, at any depth, a declaration of another kind ending the path; `refines` no edge.
+/// `crates/eadl-resolve/tests/system_reading.rs` holds it equal to check (5)'s reading and the generator's.
 #[must_use]
 pub fn hardware(
     program: &Program,
@@ -288,6 +435,21 @@ fn names<'f>(form: &'f Form, out: &mut Vec<(&'f str, Span)>, system: bool) {
             ),
             Some("requires") => names(clause, out, false),
             Some("platform" | "task") if system => names(clause, out, false),
+            _ => {}
+        }
+    }
+}
+
+/// The names a block's or a platform's `needs` lists write, at its own level or in its `requires` (leaf `M3.4.17.6`).
+fn needs_names<'f>(form: &'f Form, out: &mut Vec<(&'f str, Span)>) {
+    for clause in &form.items()[1..] {
+        match clause.head() {
+            Some("needs") => out.extend(
+                clause.items()[1..]
+                    .iter()
+                    .filter_map(|f| f.as_symbol().map(|name| (name, f.span()))),
+            ),
+            Some("requires") => needs_names(clause, out),
             _ => {}
         }
     }

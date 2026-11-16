@@ -1,0 +1,13 @@
+(eadl-version eadl/1)
+; A service naming itself, taking a channel, one task naming it: no edge to itself and no user of itself, so no
+; multiplex (§2.7, §2.9; round 23, R2).
+(defblock timer.d
+  (offers (relative-delay true) (channels 1 tick) (reachable-at-privilege machine)))
+(defplatform soc
+  (offers (core-count 1 tick) (reachable-at-privilege machine))
+  (requires (uses timer.d)))
+(defservice alarm
+  (requires (needs relative-delay) (uses alarm)))
+(defsystem selfuse
+  (task t (period 10 ms) (deadline 10 ms) (deadline-from release) (priority 1) (uses alarm) (needs alarm))
+  (platform (uses soc)))

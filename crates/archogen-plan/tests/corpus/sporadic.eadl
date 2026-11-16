@@ -1,0 +1,11 @@
+(defblock dev.e
+  (offers (interrupt-source true) (min-arrival-separation 20 ms) (reachable-at-privilege machine)))
+(defplatform soc.e
+  (offers (core-count 1 tick) (reachable-at-privilege machine))
+  (requires (uses dev.e)))
+(defservice evt
+  (requires (needs interrupt-source)))
+(defsystem sporadic
+  (task s (min-separation 10 ms) (deadline 10 ms) (priority 1) (uses evt))
+  (requires (uses evt))
+  (platform (uses soc.e)))

@@ -1,0 +1,13 @@
+(eadl-version eadl/1)
+; Ranks with gaps: each task's index the number of tasks of smaller rank (§2.2; round 9).
+(defblock console.uart
+  (offers (observable-output true) (reachable-at-privilege machine)))
+(defplatform host.p
+  (offers (core-count 1 tick) (reachable-at-privilege machine))
+  (requires (uses console.uart)))
+(defservice console.write
+  (requires (needs observable-output)))
+(defsystem a11
+  (task a (period 10 ms) (deadline 10 ms) (deadline-from release) (priority 5) (uses console.write))
+  (task b (period 20 ms) (deadline 20 ms) (deadline-from release) (priority 9) (uses console.write))
+  (platform (uses host.p)))

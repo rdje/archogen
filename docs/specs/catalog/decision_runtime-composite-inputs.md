@@ -40,13 +40,13 @@ No composite ever takes the maximum of things its definition adds.
 
 | Part | Symbol | Owner | What it bounds |
 | --- | --- | --- | --- |
-| a primitive's cost | `api.p`, for each primitive `p` a task can call | catalog: timing cost `api.<p>` of the runtime API record, the one that supplies `completion` (the catalog record's §12 groups) | one call, from its first instruction to its last (§2's `primitives-out-of-line`), on the caller's behalf, excluding any service taken during the call or right after it |
-| a primitive's masked run | `masked.p` | catalog: timing cost `masked.<p>` | the longest contiguous masked stretch inside one call of `p` made with interrupts unmasked |
+| a primitive's cost | `api.p`, for each primitive `p` a task can call | catalog: timing cost `api.<p>` of the runtime API record, the one that supplies `completion` (the catalog record's §12 groups); for a generated node a job calls, its realization (§7) | one call, from its first instruction to its last (§2's `primitives-out-of-line`), on the caller's behalf, excluding any service taken during the call or right after it |
+| a primitive's masked run | `masked.p` | catalog: timing cost `masked.<p>`; for a generated node a job calls, its realization (§7) | the longest contiguous masked stretch inside one call of `p` made with interrupts unmasked |
 | the completion path | `completion` | catalog: timing cost `completion` | from the job's last instruction of its own code to the decided switch that follows, the scheduling decision included; a primitive the job's code ends by tail-calling is charged here and as a primitive, which over-counts and never under-counts (the fault contract's completion, R14 227) |
 | the completion path's masked run | `masked.completion` | catalog: timing cost `masked.completion` | the longest contiguous masked stretch in the completion path, up to the decided switch. The transition that follows it is added by `L`, as it is today |
 | the task's own code | `C_i^app` | application, per task | the most one job executes of the task's own code, from its first instruction after the transition in to its last. It excludes every primitive's execution and every service, and includes the application's own instrumentation |
-| how often it calls each primitive | `n_{i,p}` | application, per task | the most calls to `p` one job makes: §7.3's "allowed OS calls", with a count |
-| the task's masked runs | for each run `r` and each way `e` it can end: `CS_{i,r,e}^app` and `n_{r,e,p}` | application, per task | a run is a stretch from a `mask` call to an `unmask` call that ends it, or to the job's completion when none does. A run that ends at `unmask` on one path and at completion on another has both endings. For each ending, `CS_{i,r,e}^app` is the most the task's own code executes from the `mask` to that ending, and `n_{r,e,p}` counts the calls to each primitive on the way, other than the `mask` and `unmask` that delimit it |
+| how often it calls each primitive | `n_{i,p}` | application, per task | the most calls to `p` one job makes: §7.3's "allowed OS calls", with a count; a call into a node's generated code is listed so too (§7). The list has a §7.3 category (§6) |
+| the task's masked runs | for each run `r` and each way `e` it can end: `CS_{i,r,e}^app` and `n_{r,e,p}` | application, per task | a run is a stretch from a `mask` call to an `unmask` call that ends it, or to the job's completion when none does. A run that ends at `unmask` on one path and at completion on another has both endings. For each ending, `CS_{i,r,e}^app` is the most the task's own code executes from the `mask` to that ending, and `n_{r,e,p}` counts the calls to each primitive on the way, other than the `mask` and `unmask` that delimit it. The list has a §7.3 category (§6) |
 | the order among sources | `ahead(x)` for two sources | plan | a strict order over the declared sources, the interrupt controller's as the plan configures it: its priorities, with its own rule for ties. The plan also states that every declared source is deliverable, its priority above the controller's threshold, since an enabled source that is never taken has no bound |
 | where the timer stands | `ahead(x)` between the timer and a source | catalog: hardware fact `external-before-timer` (§2) | `yes`: every source is taken before the timer when both are pending; `no`: the timer before every source, admitted only with the port fact `one-claim-per-trap` (§2) |
 
@@ -73,7 +73,9 @@ A fact that cannot be read leaves undeclared the composites it gates, `analysis-
   and so does `one-claim-per-trap` when `external-before-timer` is `no`;
 - `pending-taken-after-unmask`, `releases-never-latched`, `primitives-out-of-line`, `starts-by-transition` and
   every `runtime-discipline.<id>` gate every composite;
-- `leaves-interrupt-hardware-alone` is a task fact, so its absence is the variant's own condition 9.
+- `leaves-interrupt-hardware-alone`, the application's fact, and the caller's declaration of it for a service's
+  application code each gate every composite, the whole-image facts above holding only with all application code kept
+  to it (its row); the variant takes neither as an input, so the composition judges their absence.
 
 | Fact | Kind | Says | Why the composition needs it |
 | --- | --- | --- | --- |
@@ -89,13 +91,42 @@ A fact that cannot be read leaves undeclared the composites it gates, `analysis-
 | `one-request-per-arrival.<source>` | code, one per source, with the hardware's half established in its basis, from the record that supplies `service.<source>` | every request a service of the source claims was made by an arrival, and each arrival makes at most one. The basis shows it for the target's controller: for a PLIC gateway, that the source is edge-triggered with one edge per arrival, or that its level is deasserted at the gateway before the completion arrives there; for QEMU's `sifive_plic`, which pends a request on every raise of a source's line, even while the source is claimed, that from the first enabling of interrupts, and from each claim, until the source's next arrival, the line is raised only by that arrival, or while the request it raised is still pending and unclaimed | the PLIC specification forwards a new request on a completion "if the interrupt is level-triggered and the interrupt is still asserted", and QEMU pends one on any raise of the line. Either way a source can be served twice for one arrival, and step 4 counts services by arrivals. How the controller turns the line into requests is the source's wiring, and when its service lowers or raises the line is that service's code, so both are in that record's review |
 | `starts-by-transition` | code, in the `switch` group | interrupts are first enabled by the transition into idle, which does not return: no frame of initialisation's is resumed, and a function initialisation called runs again only in a role (below). That transition is "the first enabling of interrupts" every other fact names | an application's `main` that carried on after it, or initialisation that ran on, would mask where no term of `L` counts it |
 | `one-external-controller` | hardware, about the target, in no group | every external interrupt of the target reaches the processor through one controller. It is `yes` on a target with no external source | two controllers would each order their own sources, and no strict order the plan gives would be the hardware's. A reviewer of one source's wiring cannot see the others, so this is stated once, of the target |
-| `leaves-interrupt-hardware-alone` | application fact, covering its tasks and its initialisation, and the caller's declaration for a service's application code | after the first enabling of interrupts, application code runs only as a declared task's job or as a service's application code; and no application code, a task's, a service's or application initialisation's, writes the timer's counter or compare, the interrupt controller's configuration, or the hart's interrupt or trap state other than through the runtime API's masking primitives (a job's only: the fault contract, Terms) or reads or writes the controller's claim and complete registers, a read of which claims, or a declared source's device registers; no service calls a runtime primitive; and no application code releases a task or calls a runtime function other than the runtime API record's primitives and its completion path. A runtime function is any function of a catalog record's implementation, a driver's included, called after the first enabling of interrupts; before it, application initialisation reaches that hardware only through catalog functions, which `runtime-discipline.<id>` covers | `reprograms-only-in-service`, the plan's order, `releases-never-latched`, `no-empty-claim` and each `one-request-per-arrival.<source>` are statements about the whole image, and a code fact's locator reaches only catalog code. Each holds for the image only with this one, as `sections-mask-every-interrupt` holds only with the fourth task fact |
-| `runtime-discipline.<id>` | code, one per record, stated by each record about every package its implementation's own and reached sets hold | that code writes the timer's counter or compare, the controller's configuration, or the hart's interrupt or trap state, reads or writes the controller's claim and complete registers or those of any device wired to the external controller, and releases a task, only in a role listed below this table, a device's registers in the roles of the record that supplies its source's service, whether or not the application declares it a source. No service in it calls a runtime primitive | the image-wide facts above rest on locators into their owners' code. Every other record compiled into the image, a driver or a service among them, states the same about itself, so no compiled code is covered by nothing. It is required `yes` from every record whose implementation facet, not `none`, is in the claim's closure, and from `M4` in the image's. Reading one adds its record's behavioral model to the closure, so the set is computed to a fixed point. Generated code is in no record: from `M4` the plan's generator states the same of it, and until then the conclusion names generated code, and any record compiled but outside the closure, as assumptions |
+| `leaves-interrupt-hardware-alone` | application fact, covering its tasks and its initialisation, and the caller's declaration for a service's application code | after the first enabling of interrupts, application code runs only as a declared task's job or as a service's application code; and no application code, a task's, a service's or application initialisation's, writes the timer's counter or compare, the interrupt controller's configuration, or the hart's interrupt or trap state other than through the runtime API's masking primitives (a job's only: the fault contract, Terms) or reads or writes the controller's claim and complete registers, a read of which claims, or a declared source's device registers; no service calls a runtime primitive; and no application code releases a task or calls a runtime function other than the runtime API record's primitives and its completion path. A runtime function is any function of a catalog record's implementation, a driver's included, called after the first enabling of interrupts; before it, application initialisation reaches that hardware only through catalog functions, which `runtime-discipline.<id>` covers. The paragraphs below add to it | `reprograms-only-in-service`, the plan's order, `releases-never-latched`, `no-empty-claim` and each `one-request-per-arrival.<source>` state the whole image, and a code fact's locator reaches only catalog code. Each holds only with this one, as `sections-mask-every-interrupt` holds only with the application's masking declaration |
+| `runtime-discipline.<id>` | code, one per record, stated by each record about every package its implementation's own and reached sets hold | that code writes the timer's counter or compare, the controller's configuration, the hart's interrupt or trap state, or the runtime's own data, reads or writes the controller's claim and complete registers or those of any device wired to the external controller, and releases a task, only in a role listed below this table, a device's registers in the roles of the record that supplies its source's service, whether or not the application declares it a source. No service in it calls a runtime primitive | the image-wide facts above rest on locators into their owners' code. Every other record compiled into the image, a driver or a service among them, states the same about itself, so no compiled code is covered by nothing. It is required `yes` from every record whose implementation facet, not `none`, is in the claim's closure, and from `M4` in the image's. Reading one adds its record's behavioral model to the closure, so the set is computed to a fixed point. Generated code is in no record: from `M4` the plan's generator states the same of it, and until then the conclusion names generated code, and any record compiled but outside the closure, as assumptions |
 
 **Application code calls no entry of the fault path** — in initialisation, before the first enabling of interrupts, as
 in a job or a service's application code after it; a panic reaching the image's handler is no such call (the role
 list below): `leaves-interrupt-hardware-alone` holds this too, the fault contract's narrowing of the catalog functions
 it lets initialisation call (its Terms; added `2026-10-02`, its R14 231, R15 239).
+
+**The runtime's own data** is what this section's facts read in memory or in a register a port reserves: what the
+scheduler holds, its mask depth among it, what the timer service holds of the next release, the plan's tables, each saved
+context, and what a service, a record's or generated, holds of its source. **Application code writes none of it**, nor
+any other data or code of a catalog record's implementation or of the code the build generates, but through the calls
+`leaves-interrupt-hardware-alone` lets it make, or into what a call between it and that code hands it to fill, and it
+hands no call a place in any of it to write, but what that code handed it; in initialisation as in a job or a service's
+application code, and by no other means, a stray pointer or an overrun of its own stack bound among them (its own stack,
+within its bound, is its own, and a write a guard stops writes nothing, and is the fault contract's). For this clause a
+runtime function is also a function of the code the build generates, but for a node's code its task line's `uses` lists
+or its own `bind` lines name (the runtime plan's §2.2, `RTP-H5`, `RTP-H13`), which §7 says what charges; and a job's code
+calls the completion path only as its last act, the path not returning to it. That fact holds this too (added `2026-11-04`, `M2.30`). Such a write is neither a hardware write nor a call, so
+that fact's other clauses do not reach it, and every fact about the whole image rests on there being none
+(`crates/rt-core/tests/runtime_data.rs` holds the scheduler's half of the first and the third below; the second is the
+timer service's, which no code holds yet):
+- a mask depth raised inside a masked run keeps the hardware masked past the `unmask` the run declares as its end, so
+  the run can outlast its `CS_i` and `L`, and no check sees it; raised with the hardware unmasked, it has the next
+  service latch its release, where `releases-never-latched` says none is latched and the variant's §2 takes the task as
+  ready, and the transition after that service halts (the fault contract's Terms);
+- a next release rewritten later leaves the compare late, past `J^release`, where a service reprograms from it, where
+  `reprograms-only-in-service` says it is the earliest not yet performed; where the compare already stands at the true
+  release, the trap finds none due and halts (the fault contract's Terms);
+- a rewrite of which task runs puts a lower priority over a ready higher one, with no fault before that job's completion
+  or the next observed release of a task still owing a job, which the fault contract's rule 6 puts no earlier than that
+  job's deadline: a schedule the variant's conditions 2 and 4 exclude and its model has no term for.
+
+It is a clause of that fact, not a fact of its own, for what the fact's other clauses are for: the same owners, the
+application and the caller's declaration for a service's application code; one consequence, every composite; and one
+reason, code no locator reaches.
 
 **The roles `runtime-discipline.<id>` allows.** A function's writes, claims and releases take the role of the
 context that calls it, so a runtime function called from a service acts in that service's role, and the port's
@@ -103,6 +134,7 @@ dispatch, which claims before it knows the source, acts in the role of the servi
 - the timer service writes the compare and releases its due timer tasks;
 - a source's service claims and completes its own source, accesses its own device's registers, and releases the
   tasks bound to it;
+- a generated node that takes a channel programs that channel's compare, and any generated node bound to that device reads its counter, from a job inside its own masked run or from a service that calls it, a wake first armed in the last act of initialisation before the epoch's read, as `decision_runtime-plan-format-2.md` §4 orders it, where the release alarm's §2 says at the port's transition (`RPF-H3`; format `/2`'s RP19-2), initialisation disarming any other's or writing its placeholder past what its length can reach, and that alarm's service alone claims and completes it, a source's in all the above (`docs/decisions/decision_release-alarm.md` §2, `2026-11-06`; text until `RA-H5` builds it);
 - the runtime API's primitives, the completion path (added `2026-10-01`, the fault contract's R6 136), and the port's
   trap entry and exit, its transitions, its idle wake and its fault path, mask and unmask the hardware — they write the
   hart's interrupt-enable state directly; only a job calls the runtime API's `mask` and `unmask` (the profile's fault
@@ -124,12 +156,21 @@ dispatch, which claims before it knows the source, acts in the role of the servi
   leaves none pending at the first enabling of interrupts that no arrival made. Two writes are one record's alone,
   so the facts that depend on them are reviewed with the code that makes them: the counter's first value, and the
   compare's, are written only by code of the record that supplies `timer-service` (`reprograms-only-in-service`);
-  and a declared source's device is read and written only by code of the record that supplies `service.<source>`, in
+  and a declared source's device is read and written only by code of the record that supplies `service.<source>`, or for an alarm by the role above, in
   initialisation as at run time, whose `one-request-per-arrival.<source>` basis covers that configuration. The
   hart's trap state is written only by code of the record that supplies `switch`, in initialisation as on its trap
   path, whose facts are about the code it points traps at. Which record writes the controller's configuration and
   the hart's interrupt state is not fixed in `/1`; checking what the image wrote against the plan is `M4`'s
-  (`M4.10`).
+  (`M4.10`);
+- the runtime's own data, and any other data or code of another record, of the application or of the code the build
+  generates, is written, by any means, only where the writer's basis for this fact names what it writes and the role it
+  acts in, one this list gives or, for a node's code, the job that called it, and the write leaves true every fact of
+  this section that reads the datum; or into what the datum's owner hands it by a call between the two, the owner's basis
+  naming what it hands (added `2026-11-04`, `M2.30`). No list here could name the acts of code a record alone holds, so
+  the basis is the record's to state, and the record's review checks it against each fact that reads the datum; the
+  plan's generator states the same of generated code, from `M4`. A function called acts in its caller's role: a service
+  that called the scheduling decision other than where the port's `decision-placement` places it is in no role, and,
+  ignoring it, would rewrite which task runs with no switch performed.
 
 A path that another fact of this section makes unreachable is named in the basis with that fact. `rt-core`'s
 `unmask` delivers a latched release, which is unreachable by `releases-never-latched`. Its `release` of a task whose
@@ -243,7 +284,7 @@ follows its completion, services excluded.
 
 - **The parts cover it**, overlapping only where the job's code ends in a tail call (the `completion` row). Every
   instruction in that span is the task's own code, is inside a primitive call (at most `n_{i,p}` calls to each `p`),
-  or is on the completion path. The parts meet at instructions with nothing between them: each primitive's first and
+  or is on the completion path, a node's call being §7's. The parts meet at instructions with nothing between them: each primitive's first and
   last instruction (`primitives-out-of-line`), the job's last instruction of its own code, and the end of the
   transition in (§2).
 - **Instrumentation** lands in whichever part runs it.
@@ -261,8 +302,9 @@ everything that runs inside it:
   over-covers.
 - **A run ending at completion** holds the same, but in place of `unmask` it holds the completion path, masked up
   to the decided switch. `L`'s `+ S` then covers the switch.
-- **The runs the application declares are all its runs,** for three reasons:
-  - the fourth task fact makes its masked stretches start only at a `mask` call;
+- **The runs the application declares are all its runs,** the list's completeness being its claim, under that list's category (§6), for three reasons:
+  - the application's declaration that each task masks only through the runtime API makes its masked stretches
+    start only at a `mask` call;
   - `pending-taken-after-unmask` keeps stretches split by an `unmask` apart;
   - a stretch not ended by an `unmask` ends at completion.
 - **A kernel section the task runs while unmasked** is inside one call, and is bounded by `masked.p`, or by
@@ -373,8 +415,9 @@ The least fixed point is therefore an upper bound on how late the service can st
 - **§2's boundaries:** where delivery ends and a service begins, and where `switch` ends.
 - **What these costs' `holds-under-preemption yes` means:** the bound also holds from any state the code before it
   leaves.
-- **The application's task facts gain** the same entry-state statement for its own figures, and, for each masked
-  run, each way it can end.
+- **The application's task facts gain** the same entry-state statement for its own figures, and §12 gains **the
+  application's parts**: each task's own code, its calls to each primitive, and its masked runs with each way each can
+  end (§1).
 
 This record names what §12 gains; the catalog record's own review checks the wording it takes.
 
@@ -386,6 +429,13 @@ This record names what §12 gains; the catalog record's own review checks the wo
     analytically established, externally supplied, observed maximum, assumed. `ROADMAP.md` §7.3 lists the four
     categories without ranking them, so the order is this record's choice. The catalog record leaves evidence
     strength to the analysis to state (its §7).
+  - **A task's list of calls and its list of masked runs are parts of that order, though they add nothing** (added
+    `2026-11-04`, `M2.31`). Each is the application's claim of what one job calls or runs masked, and of what it does
+    not, and §7.3 asks a category of every bound. `C_i` reads the list of calls. `CS_i` reads both, since which
+    `masked.p` and which runs its largest is taken over rests on them, and what rests on `CS_i` inherits it. The
+    list with no call in it counts the same: it still says the job makes none. Each list carries one category, the
+    weakest of what backs it, a run's `CS_{i,r,e}^app` keeping its own, and the conclusion names each list. A category
+    that cannot be read leaves what reads it undeclared, as the next rule says of any part.
   - §7.3's rule stands: an observed maximum with a safety factor remains an empirical assumption "unless a valid
     argument establishes a bound".
   - The description's periods, deadlines and release jitters, and the plan's order, are requirements and
@@ -443,6 +493,12 @@ This record names what §12 gains; the catalog record's own review checks the wo
   that code as a runtime function (§2), so a task that makes such a call is outside the composition,
   `unsupported-profile`, naming the fact: no part covers that code's execution or its masked runs. Giving such calls
   parts of their own is a later leaf's.
+- **A job's call into a node's generated code**, one its task line's `uses` lists or its own `bind` lines name (§2's
+  clause on the runtime's own data; added `2026-11-04`, `M2.30`). It is a primitive's call, its `api.N` and `masked.N` stated by the realization (`docs/decisions/decision_release-alarm.md` §4, `2026-11-06`), and §3 does
+  not change. Until a realization states them the caller lists each such call among the task's
+  calls, under a name no primitive of the catalog has, and §6's "a primitive the catalog does not cost" leaves the task's
+  composites undeclared, `analysis-inconclusive`, naming it. A call into any other generated code is the fact's `no`,
+  `unsupported-profile`.
 
 ## Why
 
@@ -503,6 +559,19 @@ under-charges against the variant's §1 definitions. The findings, and the answe
 window, the `one-claim-per-trap` row's reading column and the opening paragraph's model version — were reviewed with
 the variant's change, in
 [`decision_runtime-analysis-variant-reviews.md`](../../reviews/decision_runtime-analysis-variant-reviews.md).
+`M2.23`'s correction on `2026-10-28` — §2's list called `leaves-interrupt-hardware-alone` a task fact, against its
+row and `compose.rs`, and now says what both say — moves no rule; a reader who did not write it checked it against
+the row, the code and the variant's condition 9 (the leaf's evidence). So do `M2.26`'s, §5 filing a masked run's
+endings among the application's parts, and `M2.27`'s, the application's declaration that each task masks only through
+the runtime API named so, not as one of the variant's task facts, each checked by a reader who did not write it.
+`M2.25`'s on the same day widens the caller's declaration for a service's application code from every `J` to every
+composite, as its row's reasoning has it; no verdict moves, and `compose.rs` stops naming a task's `C` and `CS` as
+values when the declaration cannot be read.
+`M2.31`'s on `2026-11-04`, §6's lists with a category, was reviewed by a context that did not write it, which found no
+defect (the leaf's evidence); no value moves, and a category lowers only where a list's is the weakest part.
+`M2.30`'s on `2026-11-04`, the runtime's own data in `leaves-interrupt-hardware-alone` and in `runtime-discipline.<id>`'s
+roles, was reviewed by contexts that did not write it (the leaf's evidence); no verdict moves, `compose.rs` reading both
+facts by name.
 
 | Round | Findings | Defects | Verdict |
 | --- | --- | --- | --- |

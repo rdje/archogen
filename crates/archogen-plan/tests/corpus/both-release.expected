@@ -1,0 +1,2 @@
+== system br
+refused unsupported-profile: `(task br j)`'s deadline is measured from `activation`, and the analysis measures every relative deadline from the nominal release

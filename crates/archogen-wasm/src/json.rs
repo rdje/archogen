@@ -13,29 +13,11 @@ impl Json {
         self.0.push_str(text);
     }
 
-    /// A string: `"` and `\` escaped, every character below `0x20` escaped, and nothing else.
+    /// A string, written as `archogen-json` writes every string: `"` and `\` escaped, every character below `0x20`
+    /// escaped, and nothing else — one writer for the binding and the MCP server's reader to agree with (leaf
+    /// `M3.5.1.6.2`).
     fn string(&mut self, text: &str) {
-        self.0.push('"');
-        for c in text.chars() {
-            match c {
-                '"' => self.0.push_str("\\\""),
-                '\\' => self.0.push_str("\\\\"),
-                '\u{08}' => self.0.push_str("\\b"),
-                '\t' => self.0.push_str("\\t"),
-                '\n' => self.0.push_str("\\n"),
-                '\u{0c}' => self.0.push_str("\\f"),
-                '\r' => self.0.push_str("\\r"),
-                c if u32::from(c) < 0x20 => {
-                    const DIGITS: &[u8; 16] = b"0123456789abcdef";
-                    let byte = u32::from(c);
-                    self.0.push_str("\\u00");
-                    self.0.push(char::from(DIGITS[(byte >> 4) as usize]));
-                    self.0.push(char::from(DIGITS[(byte & 0x0f) as usize]));
-                }
-                c => self.0.push(c),
-            }
-        }
-        self.0.push('"');
+        archogen_json::write_string(&mut self.0, text);
     }
 
     fn optional_string(&mut self, text: Option<&str>) {
@@ -79,7 +61,7 @@ fn label(json: &mut Json, label: &Label, sources: &SourceMap) {
     });
     json.raw("{");
     json.key("source");
-    json.string(name);
+    json.string(&eadl_front::fit_name(name));
     json.raw(",");
     json.key("line");
     json.integer(line);

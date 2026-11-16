@@ -1,0 +1,2 @@
+== system empty
+refused unsupported-profile: the system `empty` declares no task, and the scheduler a build runs has no empty form (`rt_core::Scheduler::from_eadl_ranks`, `BootError::NoTasks`): describe a task

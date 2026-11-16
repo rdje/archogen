@@ -1,0 +1,15 @@
+(eadl-version eadl/1)
+; `dl`'s expiry and `al`'s alarm share `timer.d`; `al`'s handler and task `t`'s job both call `dl`: the route `dl`'s
+; instance programs is its own, but `al`'s code there calls it, so `dl` is multiplexed (§2.9; round 9, D2 and D4).
+(defblock timer.d
+  (offers (relative-delay true) (counter-modulus 4294967296) (tick-rate 1 MHz) (observation-coherent true)
+    (channels 2 tick) (reachable-at-privilege machine)))
+(defplatform soc
+  (offers (core-count 1 tick) (reachable-at-privilege machine))
+  (requires (uses timer.d)))
+(defservice dl (requires (needs absolute-deadline)))
+(defservice al (requires (needs relative-delay) (uses dl)))
+(defsystem sx
+  (task t (period 10 ms) (deadline 10 ms) (deadline-from release) (priority 1) (uses dl))
+  (requires (uses al))
+  (platform (uses soc)))

@@ -4,7 +4,8 @@
      are generated automatically. -->
 
 Responsibility boundaries follow `ROADMAP.md` §4.2. A crate is created when a real consumer
-justifies the split — the rows below appear as that happens.
+justifies the split — the rows below appear as that happens, and `BOOK-COVERAGE` refuses a
+workspace member with none.
 
 - `crates/eadl-front/` — the reader (§4.2): S-expressions, byte spans with character columns,
   and caret diagnostics carrying a repair direction. Purely syntactic and float-free; comments
@@ -33,19 +34,6 @@ justifies the split — the rows below appear as that happens.
   outcome vocabulary and the stable exit-code contract; `src/cli.rs` is the dependency-free
   parser and help renderer. `src/check_cmd.rs` and `src/build_cmd.rs` are thin translations onto
   the crates that do the work.
-- `crates/archogen-s0/` — ⛔ **the temporary S0 realization, and everything in it is meant to be
-  deleted** (§12 S0: "no hidden special-case generator is grandfathered into the release"). It is
-  deliberately not named `archogen-plan`/`archogen-emit`, the §4.2 names `M4` builds under.
-  `interpret.rs` turns a checked description into a `Plan` and refuses in two families — inputs
-  that describe no buildable system, and requests the engine cannot realize, the second naming
-  the missing capability and its leaf per §5.4. `runtime/rt.rs` and `runtime/service.rs` are the
-  engine-owned Rust every generated crate contains: compiled and tested here, copied there
-  verbatim, with a test asserting the two are identical. `emit.rs` writes a manifest, one
-  specialized table, and that copy — it generates no behavior. `provenance.rs` writes
-  `provenance.json`, the §10.1 mapping from each generated declaration to its source span and the
-  engine rule that produced it; every record is resolved from **both** ends by
-  `crates/archogen-cli/tests/s0_provenance.rs`, because a record pointing at the wrong line is
-  worse than none.
 - `crates/rt-analysis/` — §7.4's idealized zero-overhead response-time analysis (F18).
   `model.rs` makes the eight applicability conditions a **constructor precondition**, so the
   analysis cannot return a number for a system the model does not describe; `response.rs` is the
@@ -75,6 +63,46 @@ justifies the split — the rows below appear as that happens.
   sequences with coverage floors; ⭐ the five places they disagree are all questions the contract
   does not decide, asserted on both sides as ratchets and recorded in
   `docs/decisions/decision_runtime-contract-gaps.md`.
+- `crates/archogen-plan/` — the lowering (§4.2, §10.1 step 5): a checked assignment into
+  `archogen-runtime-plan/1`, the one canonical text the generator is told. `lower_checked` refuses
+  all but what the configuration checker accepted for those same inputs; `src/contents.rs` reads a
+  plan back and refuses anything its writer would not write; `tests/goldens/` freezes three plans,
+  each held to its digest with no bless.
+- `crates/sim-playground/` — the hosted playground's deterministic event harness (§6.3) over
+  `rt-core`, with no I/O: a system as data, a job's body as steps, an observer for each event, one
+  order for one instant, the trace `archogen-playground-trace/3`. Copied into each generated system.
+- `crates/sim-devices/` — the hosted simulator's device models (§6.2): a timer and an interrupt controller as exact state machines
+  over a contract read as data, with no I/O and no clock, F13, F14 and F15 enumerated at small moduli. Not yet wired into a run.
+- `crates/archogen-emit/` — the emitter (§4.2, §10.1 step 6): a checked plan into the files of a
+  package, with no I/O. ⛔ A plan is accepted only by lowering it again and comparing bytes. What it
+  specializes is data; behavior is `rt-core` and `sim-playground` copied under `copies/`, each held
+  to its source. `archogen build`, `crates/archogen-cli/src/build_cmd.rs`, is its one caller.
+- `crates/archogen-api/` — the engine API (§10.4), one transport-neutral contract: a description
+  as text plus a profile in, a `Response` out. The command line, the wasm binding and the MCP
+  server consume it. ⭐ Every response carries a `Status`, which is never absent and has no default.
+- `crates/archogen-catalog/` — catalog records (§9): reading them, their hashes, the evidence status
+  derived from them, the lock and claim admission. It does no I/O: its caller hands it every byte
+  and every commit, so `xtask/`, not the product, is what runs git.
+- `crates/archogen-digest/` — SHA-256 and its one written form, a package of its own so that a
+  checker naming a digest compiles nothing else the generator does.
+- `crates/archogen-install/` — `archogen-install/1`, the manifest an install writes beside its
+  programs. The front reads it and hashes a sibling before running it, which catches a stale or
+  mismatched sibling and ⚠️ never tampering.
+- `crates/archogen-json/` — a bounded, strict RFC 8259 reader and a one-way writer. It reads what
+  the MCP server is sent and the checkers' result records, so no second reader can disagree.
+- `crates/archogen-outcome/` — the status vocabulary and the `archogen-result/1` record, no role's
+  and doing no I/O: the generator and both checkers compile it, as a shared item the inventory sees.
+- `crates/archogen-plan-check/` — the configuration checker (§4.4, §7.1), its role's root: it judges
+  the search's assignment record against the description, apart from the generator that wrote it,
+  and holds the executable model of the substitutability relation.
+- `crates/archogen-plan-check-wasm/` — that checker's browser module, its own, so a page judging a
+  plan runs no generator code.
+- `crates/archogen-transport/` — the MCP server's line framing, protocol eras and JSON-RPC envelopes,
+  so that each role serves its own tools over one framing.
+- `crates/archogen-wasm/` — the engine API's WebAssembly binding: three exports, a framed request and
+  a JSON response, with everything between the buffers and the API a pure function its tests call.
+- `crates/eadl-resolve/` — the generator's search (§4.2): the substitutability relation held to its
+  executable model, the joint rules of model §8, and the assignment record the search writes.
 - `xtask/src/trust.rs` — the F30 inventory and its role/package/source judgments. Its private
   `trust_compiler.rs` controller and embedded `trust_compiler_observer.rs` collect actual compiler
   arguments independently of diagnostics. `docs/specs/trust/compiler-provenance-contract.md` and
@@ -111,7 +139,7 @@ justifies the split — the rows below appear as that happens.
 - `examples/` — the three M0 use cases as real descriptions, checked by
   `crates/eadl-model/tests/examples.rs`: they validate, and none carries an execution bound, an
   entry point or an allocation.
-- `examples/s0-heartbeat/` + `crates/archogen-cli/tests/s0_oracle.rs` — the F28 corpus and its
+- `examples/s0-heartbeat/` + `crates/archogen-cli/tests/functional_fixtures.rs` — the F28 corpus and its
   oracle. Three descriptions (base, one period changed, one sporadic) and the observations they
   must produce, frozen in `expected/` before any emitter existed. The oracle re-derives each
   expectation from its description through its own implementation of the five-rule observation
@@ -137,9 +165,7 @@ justifies the split — the rows below appear as that happens.
   today and each names the leaf that closes it — which is the runner's most useful output.
 - `scripts/check_doctrines.sh` — the doctrine enforcer (git hook + CI). `make gate`.
   Project doctrines live in `scripts/check_doctrines.project.sh`: `check_frozen_evaluation.sh`
-  keeps the reuse measurement sealed and unseen, `check_s0_retirement.sh` keeps the S0
-  prototype from quietly becoming permanent — every `S0-ASSUMPTION:` marker listed with an owning
-  leaf, and no new consumers of the crate — `check_feedback_self_contained.sh` keeps an upstream
+  keeps the reuse measurement sealed and unseen, `check_feedback_self_contained.sh` keeps an upstream
   bug report readable inside someone else's project, and `check_book_anchors.sh` keeps prose about
   the code resolvable over **two populations**, the mdBook's chapters and the normative documents under
   `docs/semantics/`: every behavior document cites a repository path, and every cited path exists. An

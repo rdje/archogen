@@ -7,7 +7,7 @@ the early executable generation path. Owned by task-tree [`S0`](../../docs/tasks
 | --- | --- | --- | --- |
 | [`system.eadl`](system.eadl) | base | `0` accepted | `0` + the observation in [`expected/system.txt`](expected/system.txt) |
 | [`system-changed.eadl`](system-changed.eadl) | one parameter changed | `0` accepted | `0` + the observation in [`expected/system-changed.txt`](expected/system-changed.txt) |
-| [`system-unsupported.eadl`](system-unsupported.eadl) | no engine realization | `0` accepted | `12` refusal, per [`expected/system-unsupported.txt`](expected/system-unsupported.txt) |
+| [`system-unsupported.eadl`](system-unsupported.eadl) | nothing releases a sporadic task | `0` accepted | `11` refusal, per [`expected/system-unsupported.txt`](expected/system-unsupported.txt) |
 
 Every number in the right-hand column is **frozen**, and was written before any emitter existed.
 That ordering is the whole point of the corpus, so it is a fact of the commit history rather
@@ -17,7 +17,7 @@ had been frozen — compared with `diff`, not by eye.
 
 ## The observation contract
 
-What a generated S0 system does is the **engine's** decision, not the description's. These are
+What a generated system is observed to do is the **engine's** decision, not the description's. `crates/archogen-cli/tests/functional_fixtures.rs` reads these lines out of the trace a generated system prints. These are
 the rules the frozen observations were derived from, stated once so a reader can check every
 expected file by hand:
 
@@ -31,9 +31,9 @@ expected file by hand:
    [`decision_priority-comparison-direction`](../../docs/decisions/decision_priority-comparison-direction.md).
 4. **Form.** One `system <name>` line, one `release <t> ms <task>` line per release, and a
    closing `summary hyperperiod <H> ms releases <N>` line.
-5. **Refusal.** A task that declares `min-separation` instead of `period` has no derivable
-   release schedule, and the build is refused with `unsupported-profile` (exit `12`) naming the
-   missing engine capability.
+5. **Refusal.** A task that declares `min-separation` instead of `period`, with nothing to release
+   it, has no derivable release schedule, and the build is refused with `missing-fact` (exit `11`)
+   naming its repair. S0 said `unsupported-profile` here, having no event source to model.
 
 ⛔ **These are release events, not an execution trace.** A release is a workload fact that
 follows from the description; when a task actually *runs* is a scheduling result, and S0
@@ -60,7 +60,7 @@ The changed case moves `chime` to a 20 ms period. `H` becomes `lcm(10, 20) = 20 
 
 ## What the oracle asserts, and why it is independent
 
-The oracle is [`crates/archogen-cli/tests/s0_oracle.rs`](../../crates/archogen-cli/tests/s0_oracle.rs).
+The oracle is [`crates/archogen-cli/tests/functional_fixtures.rs`](../../crates/archogen-cli/tests/functional_fixtures.rs).
 It re-derives each expected observation from its description, using its own implementation of
 the five rules above, and compares the result to the frozen bytes. So an edit to a fixture that
 forgets its expected file fails, and an edit to an expected file that does not follow from any
@@ -84,13 +84,13 @@ dangerous kind of green.
 ⛔ **The three cases above share a blind spot, and it was measured rather than guessed.** Their
 periods are 10 and 30, then 10 and 20. In both, one period divides the other — the task sets are
 **harmonic** — so the hyperperiod equals the longest period. A realization that returned `max`
-instead of `lcm` therefore passes every one of them, end to end. Replacing `lcm` with `max` in
-`crates/archogen-s0` left all twelve oracle tests green.
+instead of `lcm` therefore passes every one of them, end to end. Replacing `lcm` with `max` in the
+S0 realization, since deleted, left all twelve oracle tests green.
 
 Two things close it:
 
-- a unit test in `crates/archogen-s0/src/interpret.rs` on a non-harmonic set, where
-  `lcm(10, 15) = 30` and the longest period is `15`; and
+- a hand-computed derivation in the oracle on a non-harmonic set, where `lcm(10, 15) = 30` and the
+  longest period is `15`; and
 - [`system-non-harmonic.eadl`](system-non-harmonic.eadl), which runs the whole path on
   `beat` at 10 ms against `chime` at 15 ms.
 
@@ -113,7 +113,7 @@ Leaf `S0.6` owns the retirement note. These are the temporary decisions this cor
 | Assumption | Retired by |
 | --- | --- |
 | The observation horizon is exactly one hyperperiod | `M4.3` — the harness declares its own observation policy |
-| Task periods must be whole milliseconds | `M4.1` — the plan carries exact rational time |
+| Task periods must be whole milliseconds | `M4.2` — the runtime plan carries exact rational time |
 | The event format above is fixed and engine-internal | `M4.3` — the §6.3 observation event set |
 | Only periodic releases are realized | `M4.3` — the modeled event source |
 | One fixed engine-owned realization, no provider search | `M3` — joint resolution |

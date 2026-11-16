@@ -13,25 +13,15 @@
 ## Current state
 
 - **Project:** archogen — the eADL → OS generation toolchain (`ROADMAP.md` revision 2.0).
-- **Active tree:** `M3` → frontier `M3.5`; `PROGRAM` resumes at `PROGRAM.72`.
-- **Next action:** pushed `d5123578` (2026-10-26, director's yes); watch CI; then `M3.5.5.7`, `M3.5.6.5` and
-  `M3.5.1.8` from the runner, `M3.5.3.1`, `M3.5.1.4`; `M3.5.3.1` and `M3.5.8` after
-  the next push; full verification `M3.5.9` after `M3.5`'s features (doctrine 22).
-  `.1.8` waits on the runner: the trust gate refuses the shared digest package on `main` until its form lands.
-  The mutation campaign is `M7.6`'s. `M3.3.1` and `.2` hold F08 and F09 (`crates/eadl-resolve/src/joint.rs`),
-  focused green at `eaf71286`; `archogen check` wiring is `M3.4`'s. The next artifact cleanup is due after
-  `2026-10-27T08:56` UTC (`PROGRAM.111` ran `2026-10-26T08:56:05Z`). A test's deadline is one only a hang reaches (`PROGRAM.99`).
-  **Mutation testing is stopped** until the functionality is locked
-  (`decision_mutation-testing-after-completion.md`, `2026-10-21`): every pending `M3.6.9` leaf is `blocked`;
-  every decision advances the project first. `M3.6.9.6.3.2.2.15.2.1.8.2` stays owned, a suspected defect, P2.
-  Disposable project-owned Git fixtures under ignored `target/` are approved;
-  maintained external repositories and submodules stay read-only.
-  Corrected renderer adoption stays owned in `.4.3.4.1`.
-  The handoff command is `bash scripts/handoff_census.sh`; failed OS reads refuse.
-  `M3.6.3.2.1.1` owns runner-baseline compatibility after key encoding; an authorized cadence run is needed. `M2`'s open leaves
-  wait on the director: `M2.7.4.5` and `M2.7.6`'s review and hosting half. No branches.
+- **Active tree:** `M4` → frontier `M4.13`, the build of the application's inputs; `M4.1`'s `/2` written and read,
+  `M4.1.7.6.10` waiting on `M4.2` and `M4.10`; `PROGRAM` → `PROGRAM.151`, the batch's checks.
+- **The host is shared:** every heavy job goes through `scripts/host_guard.py`, one at a time (`docs/decisions/decision_host-guard.md`). A reader's brief says so.
+- **Next action:** `PROGRAM.151`: pull request #1's required checks failed on the runner, `focused` (the launcher's
+  `/proc/self/fd` and a script), `catalog-check` (a shallow checkout) and `trust-gate` (51 joined test units with no
+  form, the runner's baseline); each repaired, `open_batch.sh update`, then the director merges. Then `M4.13.1`.
+  Daily artifact cleanup next due after `2026-11-17T01:21` UTC.
 - **⏳ Blockers (the director's):** `PROGRAM.34` — a yes to restore nine nested vendored checkouts; `M1.29.4` — §7 of
-  `decision_findings-for-director-review.md`; `M5` — no board procured; `M2.7.4` and `M2.7.6.4` — findings §11, `main`'s protection and a reviewer;
+  `decision_findings-for-director-review.md`; `M5` — no board procured; `M2.7.4.5` — the catalog records; `M2.7.6.4` — the director's review round;
   `TEMPLATE-REFS` — postponed. **The 17 template files archogen has not changed are never edited** (findings §10,
   ruled `2026-09-30`); every other script is archogen's.
 - **Derive, don't copy:** the test baseline is `cargo test --all -q` (must be 0 failed); the push distance

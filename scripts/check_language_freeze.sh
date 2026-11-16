@@ -250,11 +250,11 @@ self_test() {
       printf '%s\n' "$out" | sed -n '1,4p' | sed 's/^/    /' >&2
       return
     fi
-    if [ "$want" -ne 0 ] && ! printf '%s' "$out" | grep -q 'LANGUAGE-FREEZE'; then
+    if [ "$want" -ne 0 ] && ! grep -q 'LANGUAGE-FREEZE' <<< "$out"; then
       echo "SELF-TEST: $name — exit $rc but the check never spoke, so the refusal is not this check's" >&2
       return
     fi
-    if [ -n "$must" ] && ! printf '%s' "$out" | grep -qF -- "$must"; then
+    if [ -n "$must" ] && ! grep -qF -- "$must" <<< "$out"; then
       echo "SELF-TEST: $name — refused, but not about \`$must\`, so it refused for another reason:" >&2
       printf '%s\n' "$out" | sed -n '1,4p' | sed 's/^/    /' >&2
       return
@@ -400,7 +400,7 @@ MD
   ( trap 'cp "$backup" "$victim"' EXIT
     printf '\n(defblock extra (offers x))\n' >> "$victim"
     out="$(bash "$SELF" 2>&1)"; rc=$?
-    if [ "$rc" -ne 1 ] || ! printf '%s' "$out" | grep -q 'positive-minimal-system'; then
+    if [ "$rc" -ne 1 ] || ! grep -q 'positive-minimal-system' <<< "$out"; then
       echo "SELF-TEST: editing a frozen description did not fire the gate on it (rc=$rc)" >&2
       printf '%s\n' "$out" | head -4 | sed 's/^/    /' >&2
       exit 1

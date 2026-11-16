@@ -29,6 +29,7 @@ fn check_file(relative: &str, profile: Option<&str>) -> Response {
         text: &text,
         profile,
         modules: &NoModules,
+        target: None,
     })
 }
 
@@ -185,6 +186,7 @@ fn an_import_that_exists_and_cannot_be_read_fails_the_request_and_is_not_called_
             "(defmodule app (version 1 0) (import hw.timer (as timer) (version (at-least 1 0))))\n",
         profile: None,
         modules: &Unreadable,
+        target: None,
     });
     assert_consistent("unreadable import", &response);
     assert_eq!(response.status, Status::Usage);
@@ -208,6 +210,7 @@ fn a_module_tree_in_memory_is_elaborated_and_judged() {
             "(defmodule app (version 1 0) (import hw.timer (as timer) (version (at-least 1 0))))\n",
         profile: None,
         modules: &modules,
+        target: None,
     });
     assert_consistent("module tree", &response);
     assert_eq!(
@@ -232,6 +235,7 @@ fn a_description_that_does_not_read_gets_the_read_pass_verdict() {
         text: "(defkind widget\n",
         profile: None,
         modules: &NoModules,
+        target: None,
     });
     assert_consistent("does not read", &response);
     assert_eq!(response.status, Status::InvalidDescription);
@@ -240,13 +244,51 @@ fn a_description_that_does_not_read_gets_the_read_pass_verdict() {
 
 #[test]
 fn the_version_and_the_operations_are_declared() {
-    assert_eq!(VERSION.to_string(), "1.3");
-    assert_eq!(OPERATIONS, ["check"]);
+    assert_eq!(VERSION.to_string(), "1.11");
+    assert_eq!(OPERATIONS, ["check", "resolve", "explain"]);
 }
 
 /// The version that last changed the response's shape below: `1.1` added `engine`. `1.2` added an operation, not a
-/// field, so it left the shape alone, and `1.3` a status, a value of the field `status`.
+/// field, so it left the shape alone, `1.3` a status, a value of the field `status`, `1.4` the operation `resolve`,
+/// whose answer carries this response beside its plan, `1.5` the operation `explain`, whose answer carries it beside
+/// its plan and its accounts, `1.6` a definition, a value of `Definition`, not a field, and `1.7` a field of the plan,
+/// not of this response; `1.10` a field of the request, below.
 const SHAPE_OF: archogen_api::Version = archogen_api::Version { major: 1, minor: 1 };
+
+/// The version that last changed the request's shape: `1.10` added `target` (leaf `M4.1.7.4.1`).
+const REQUEST_SHAPE_OF: archogen_api::Version = archogen_api::Version {
+    major: 1,
+    minor: 10,
+};
+
+#[test]
+fn the_request_shape_is_the_one_its_version_declares() {
+    // ⛔ Exhaustive on purpose, as the response's below: a field added to or removed from `Request` or `TargetFile` stops this compiling,
+    // here, beside the version that last changed the shape (`docs/decisions/decision_engine-api.md`).
+    let request = Request {
+        name: "t.eadl",
+        text: "",
+        profile: None,
+        modules: &NoModules,
+        target: Some(archogen_api::TargetFile {
+            name: "m.eadl",
+            text: "",
+        }),
+    };
+    let version = check(&request).version;
+    let Request {
+        name: _,
+        text: _,
+        profile: _,
+        modules: _,
+        target,
+    } = request;
+    let archogen_api::TargetFile { name: _, text: _ } = target.expect("named");
+    assert!(
+        version.major == REQUEST_SHAPE_OF.major && version.minor >= REQUEST_SHAPE_OF.minor,
+        "the request's shape was recorded at {REQUEST_SHAPE_OF}, and the API says {version}: a field added without its bump"
+    );
+}
 
 #[test]
 fn the_response_shape_is_the_one_its_version_declares() {
@@ -310,6 +352,7 @@ fn an_answer_is_as_bounded_as_its_request() {
         text: &text,
         profile: None,
         modules: &archogen_api::NoModules,
+        target: None,
     });
     let rendered = response.render_diagnostics();
     assert!(
@@ -322,4 +365,40 @@ fn an_answer_is_as_bounded_as_its_request() {
         rendered.len(),
         text.len()
     );
+    // What a check says is bounded whatever the request, in each shape that drew the most: junk on one line, on many, that reads as forms, and a system of tasks; a long name quoted by each error; a long source name; a fact stated both ways n times.
+    let long_name = "n".repeat(65_536);
+    let many_sharing = format!(
+        "(defsystem s (task {} (period 10 ms) (deadline 10 ms) (deadline-from release) (priority 1) (on-overrun fault))\n{})",
+        "n".repeat(256),
+        (0..1100)
+            .map(|i| format!("(task t{i} (period 10 ms) (deadline 10 ms) (deadline-from release) (priority 1) (on-overrun fault))\n"))
+            .collect::<String>()
+    );
+    let both_ways = format!(
+        "(defblock b (offers {}) (absent {}))",
+        "f ".repeat(1000),
+        "f ".repeat(1000)
+    );
+    let mut most = 0;
+    for (name, shape) in [
+        ("junk.eadl", "x ".repeat(60_000)),
+        ("junk.eadl", "x\n".repeat(60_000)),
+        ("junk.eadl", "\0".repeat(120_000)),
+        ("junk.eadl", "1.2.3 ".repeat(20_000)),
+        ("junk.eadl", "(defsystem s (task t))\n".repeat(5_000)),
+        ("junk.eadl", many_sharing),
+        ("junk.eadl", both_ways),
+        (long_name.as_str(), ")".repeat(1100)),
+    ] {
+        let response = archogen_api::check(&Request {
+            name,
+            text: &shape,
+            profile: None,
+            modules: &archogen_api::NoModules,
+            target: None,
+        });
+        assert_eq!(response.diagnostics.len(), 1001, "{}", &shape[..8]);
+        most = most.max(response.render_diagnostics().len());
+    }
+    assert!(most < 8 * 1024 * 1024, "{most} bytes rendered");
 }

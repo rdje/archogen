@@ -2,7 +2,7 @@
 
 - **Type:** `decision`
 - **Date:** `2026-09-30`
-- **Status:** `active`
+- **Status:** `superseded by docs/decisions/decision_ceilings-bound-reads.md` — `2026-10-27`, on the director's ruling of that day: its total and file count no longer bind; its measurements are the history of how the folder grew
 - **Owner / source:** leaf `PROGRAM.38` (`docs/tasks/PROGRAM.md`), on the director's ruling of `2026-09-30`.
   - The question put: "`docs/decisions/` is at 324 162 of its 327 680-byte ceiling (28 of 32 files). The next
     catalog-review answers need ~5 KB more. The policy's structural fix (a sub-folder) would hide those records from

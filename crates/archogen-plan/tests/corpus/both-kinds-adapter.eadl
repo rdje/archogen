@@ -1,0 +1,27 @@
+(eadl-version eadl/1)
+; One provider raising a source and carrying an epoch extender's timer route.
+(defblock dev.x
+  (offers
+    (interrupt-source true)
+    (min-arrival-separation 20 ms)
+    (relative-delay true)
+    (counter-width 16 bit)
+    (counter-modulus 65536)
+    (tick-rate 10 MHz)
+    (wrap-behavior modular)
+    (observation-coherent true)
+    (channels 1 tick)
+    (reachable-at-privilege machine)))
+(defplatform soc.x
+  (offers (core-count 1 tick) (reachable-at-privilege machine))
+  (requires (uses dev.x)))
+(defservice evt
+  (requires (needs interrupt-source)))
+(defservice time.monotonic
+  (requires
+    (unambiguous-horizon (at-least 60 s))
+    (needs counter-width tick-rate observation-coherent)))
+(defsystem bx
+  (task s (min-separation 20 ms) (deadline 20 ms) (deadline-from release) (priority 1) (uses evt))
+  (task p (period 10 ms) (deadline 10 ms) (deadline-from release) (priority 2) (uses time.monotonic))
+  (platform (uses soc.x)))

@@ -63,3 +63,6 @@ so a future session does not re-litigate it, and so the number is not mistaken f
   threshold can strand a commit; "due" is its exit `3` and a loud line for whoever asks.
 - Reaching `N` is a prompt to push, not an automatic push. Read `make integration` first, and if it
   reports `incomplete`, read what it names before deciding to proceed (§14.3).
+- *Amended `2026-10-28`:* `main` is protected (`decision_main-protection.md`), so a push is a **batch**: one pull
+  request from a `batch/` branch, opened by `bash scripts/open_batch.sh open` as the machine account and merged by
+  the director. The threshold and the distance are unchanged, still counted from `origin/main`.

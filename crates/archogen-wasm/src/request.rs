@@ -1,5 +1,6 @@
 //! The request's framing (`docs/decisions/decision_wasm-binding.md` §4): length-prefixed UTF-8 fields, so the
-//! module needs no parser for a format only its own loader writes.
+//! module needs no parser for a format only its own loader writes. `archogen-wasm-request/2` adds the target after the
+//! profile (leaf `M4.1.7.4.2.3`); `/1`, which has none, is still read.
 
 use core::fmt;
 
@@ -12,6 +13,8 @@ pub struct Framed {
     pub text: String,
     /// The profile's identifier; `None` for the API's default, which the framing writes as an empty field.
     pub profile: Option<String>,
+    /// The target the description's systems are judged on, its name and its text; `None` for none, and for every `/1` request.
+    pub target: Option<(String, String)>,
     /// Each module's name and text, in the order the request gives them.
     pub modules: Vec<(String, String)>,
 }
@@ -19,8 +22,8 @@ pub struct Framed {
 /// Why a request could not be read: the field, the byte offset it starts at, and what is wrong there.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct FramingError {
-    /// The field, as the record's §4 names it: `format`, `name`, `text`, `profile`, `module count`,
-    /// `module 2 name`, `module 2 text`, or `end`.
+    /// The field, as the record's §4 names it: `format`, `name`, `text`, `profile`, `target count`, `target name`,
+    /// `target text`, `module count`, `module 2 name`, `module 2 text`, or `end`.
     pub field: String,
     /// The offset in the request at which that field starts.
     pub offset: usize,
@@ -97,7 +100,7 @@ impl<'a> Reader<'a> {
     }
 }
 
-/// Read a request. Everything the record's §4 requires is checked, and nothing may follow the last module.
+/// Read a request, `/2` or `/1`. Everything the record's §4 requires is checked, and nothing may follow the last module.
 ///
 /// # Errors
 ///
@@ -105,20 +108,44 @@ impl<'a> Reader<'a> {
 pub fn parse(bytes: &[u8]) -> Result<Framed, FramingError> {
     let mut reader = Reader { bytes, at: 0 };
     let format = reader.field("format")?;
-    if format != crate::REQUEST_FORMAT {
-        return Err(reader.fail(
-            "format",
-            0,
-            format!(
-                "is `{format}`, and this module reads `{}`",
-                crate::REQUEST_FORMAT
-            ),
-        ));
-    }
+    let names_a_target = match format {
+        crate::REQUEST_FORMAT => true,
+        crate::REQUEST_FORMAT_1 => false,
+        other => {
+            return Err(reader.fail(
+                "format",
+                0,
+                format!(
+                    "is `{other}`, and this module reads `{}` and `{}`",
+                    crate::REQUEST_FORMAT,
+                    crate::REQUEST_FORMAT_1
+                ),
+            ))
+        }
+    };
     let name = reader.field("name")?.to_string();
     let text = reader.field("text")?.to_string();
     let profile = reader.field("profile")?;
     let profile = (!profile.is_empty()).then(|| profile.to_string());
+    let target = if names_a_target {
+        let count_at = reader.at;
+        match reader.integer("target count")? {
+            0 => None,
+            1 => Some((
+                reader.field("target name")?.to_string(),
+                reader.field("target text")?.to_string(),
+            )),
+            count => {
+                return Err(reader.fail(
+                    "target count",
+                    count_at,
+                    format!("is {count}, and a request names at most one target"),
+                ))
+            }
+        }
+    } else {
+        None
+    };
     let count = reader.integer("module count")?;
     // Nothing is allocated for the count before the fields are read, so a count larger than the request can hold
     // fails on the first field that is not there.
@@ -151,11 +178,12 @@ pub fn parse(bytes: &[u8]) -> Result<Framed, FramingError> {
         name,
         text,
         profile,
+        target,
         modules,
     })
 }
 
-/// Write a request in the framing [`parse`] reads: what the loader does, for tests and for other Rust hosts.
+/// Write a request in the framing [`parse`] reads, `/2`: what the loader does, for tests and for other Rust hosts.
 #[must_use]
 pub fn frame(request: &Framed) -> Vec<u8> {
     fn field(out: &mut Vec<u8>, text: &str) {
@@ -168,6 +196,14 @@ pub fn frame(request: &Framed) -> Vec<u8> {
     field(&mut out, &request.name);
     field(&mut out, &request.text);
     field(&mut out, request.profile.as_deref().unwrap_or(""));
+    match &request.target {
+        None => out.extend_from_slice(&0u32.to_le_bytes()),
+        Some((name, text)) => {
+            out.extend_from_slice(&1u32.to_le_bytes());
+            field(&mut out, name);
+            field(&mut out, text);
+        }
+    }
     let count = u32::try_from(request.modules.len()).expect("fewer than 2^32 modules");
     out.extend_from_slice(&count.to_le_bytes());
     for (name, text) in &request.modules {

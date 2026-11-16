@@ -8,7 +8,7 @@ use std::path::Path;
 
 use archogen_outcome::record::{Finding, Severity};
 use archogen_outcome::Status;
-use archogen_plan_check::assignment::{program_digest, Assignment, Requester};
+use archogen_plan_check::assignment::{program_digest, Assignment, Provider, Requester};
 use archogen_plan_check::check::{
     bindings, Verdict, PLAN_BINDING, PLAN_DESCRIPTION, PLAN_UNSATISFIED,
 };
@@ -82,12 +82,13 @@ fn plan(program: &Program) -> Assignment {
         (named("console.write"), "observable-output", "console.uart"),
         (named("idle.hook"), "available-in-state", "timer"),
     ] {
-        bindings.insert((requester, fact.to_owned()), provider.to_owned());
+        bindings.insert((requester, fact.to_owned()), provider.into());
     }
     Assignment {
         profile: RT_STATIC_UP_V1.id.to_owned(),
         system: "s".to_owned(),
         program: program_digest(program),
+        target: None,
         placement: None,
         bindings,
     }
@@ -197,7 +198,7 @@ fn check_three_refuses_a_binding_of_no_requirement_or_of_a_requester_the_system_
         let mut extra = plan(&program);
         extra
             .bindings
-            .insert((requester.clone(), fact.to_owned()), provider.to_owned());
+            .insert((requester.clone(), fact.to_owned()), provider.into());
         let findings = corrupted(checked(&sources, &program, &extra).unwrap_err());
         assert_eq!(findings.len(), 1, "{findings:?}");
         let finding = &findings[0];
@@ -218,7 +219,7 @@ fn check_three_refuses_a_provider_that_is_none_of_the_description_s_blocks_or_pl
     for provider in ["nowhere", "stray"] {
         let mut moved = plan(&program);
         let key = (named("console.write"), "observable-output".to_owned());
-        moved.bindings.insert(key.clone(), provider.to_owned());
+        moved.bindings.insert(key.clone(), provider.into());
         let findings = corrupted(checked(&sources, &program, &moved).unwrap_err());
         assert_eq!(findings.len(), 1, "{findings:?}");
         assert_eq!(findings[0].code, PLAN_BINDING);
@@ -244,15 +245,14 @@ fn check_four_judges_each_binding_at_its_provider() {
         "tick-rate",
         "observation-coherent",
     ] {
-        moved.bindings.insert(
-            (named("time.monotonic"), fact.to_owned()),
-            "slow".to_owned(),
-        );
+        moved
+            .bindings
+            .insert((named("time.monotonic"), fact.to_owned()), "slow".into());
     }
     // And a console bound to the timer, which does not describe output.
     moved.bindings.insert(
         (named("console.write"), "observable-output".to_owned()),
-        "timer".to_owned(),
+        "timer".into(),
     );
     let findings = corrupted(checked(&sources, &program, &moved).unwrap_err());
     let said: BTreeSet<(&str, u32)> = findings
@@ -326,6 +326,22 @@ fn what_the_model_refuses_to_read_is_the_description_s_status() {
     assert_eq!(verdict.findings[0].code, PLAN_DESCRIPTION);
     assert!(
         verdict.findings[0].message.contains("`idle.hook`"),
+        "{verdict:?}"
+    );
+    // A system's own level against one of its tasks: requesters apart, and one side (model §8 rule 1, §7 rule 4). The
+    // search refuses this itself since `RTP-H20`, so no plan reaches here through it; held here for a record that does.
+    let split = DESCRIPTION.replace(
+        "(requires (uses idle.hook))",
+        "(requires (uses idle.hook) (relative-delay false))",
+    );
+    let (sources, program) = elaborated(&split);
+    let verdict = checked(&sources, &program, &plan(&program)).unwrap_err();
+    assert_eq!(verdict.status, Status::InvalidDescription, "{verdict:?}");
+    assert_eq!(verdict.findings[0].code, PLAN_DESCRIPTION);
+    assert!(
+        verdict.findings[0]
+            .message
+            .contains("two constraints on `relative-delay` that no value satisfies together"),
         "{verdict:?}"
     );
 }
@@ -417,4 +433,210 @@ fn every_requirement_the_model_reads_is_located_once() {
         .unwrap();
     let tasks: Vec<_> = sides(s).unwrap().iter().map(|side| side.task).collect();
     assert_eq!(tasks, [None, Some("beat")]);
+}
+
+// ------------------------------------------------------------------------------------------------------------------
+// An engine adapter's instance (`docs/specs/adapters/decision_engine-adapters.md` §3.1, §3.3, §6; model §8 rule 15).
+
+/// A deadline service and a monotonic time service, a 32-bit relative timer and a 16-bit modular one.
+const ADAPTED: &str = "\
+(defblock timer.d (offers (relative-delay true) (counter-modulus 4294967296) (tick-rate 1 MHz) (observation-coherent true)
+  (channels 1 tick) (reachable-at-privilege machine)))
+(defblock timer.short (offers (relative-delay true) (counter-modulus 65536) (tick-rate 1 MHz) (observation-coherent true)
+  (wrap-behavior modular) (channels 1 tick) (reachable-at-privilege machine)))
+(defplatform soc (offers (core-count 1 tick) (reachable-at-privilege machine)) (requires (uses timer.d timer.short)))
+(defservice alarm (requires (absolute-deadline (supported-horizon (at-least 10 s)) (delivery-bound (at-most 100 us)))))
+(defservice time.monotonic (requires (unambiguous-horizon (at-least 60 s))))
+(defsystem s (requires (uses alarm time.monotonic)) (platform (uses soc)))
+";
+
+const DEADLINE: [&str; 4] = [
+    "counter-modulus",
+    "observation-coherent",
+    "relative-delay",
+    "tick-rate",
+];
+
+/// The plan binding `alarm` through the translator `deadline` and `time.monotonic` through the extender `extended`,
+/// each instance's bindings beneath to the device it programs.
+fn adapted(program: &Program, deadline: &str, extended: &str) -> Assignment {
+    let mut bindings = BTreeMap::new();
+    for (requester, fact, provider) in [
+        ("alarm", "absolute-deadline", deadline),
+        ("time.monotonic", "unambiguous-horizon", extended),
+    ] {
+        let provider = Provider::parse(provider).expect("an instance");
+        let Provider::Instance(instance) = &provider else {
+            panic!("an instance");
+        };
+        let beneath: &[&str] = if instance.kind == "epoch-extender" {
+            &[
+                "counter-modulus",
+                "observation-coherent",
+                "relative-delay",
+                "tick-rate",
+                "wrap-behavior",
+            ]
+        } else {
+            &DEADLINE
+        };
+        for fact in beneath {
+            bindings.insert(
+                (Requester::Instance(instance.clone()), (*fact).to_owned()),
+                instance.over.as_str().into(),
+            );
+        }
+        bindings.insert((named(requester), fact.to_owned()), provider);
+    }
+    Assignment {
+        profile: RT_STATIC_UP_V1.id.to_owned(),
+        system: "s".to_owned(),
+        program: program_digest(program),
+        target: None,
+        placement: None,
+        bindings,
+    }
+}
+
+const ALARM: &str = "(adapter deadline-over-delay timer.d alarm)";
+const EXTENDED: &str = "(adapter epoch-extender timer.short)";
+
+fn instance(text: &str) -> Requester {
+    Requester::parse(text).expect("an instance")
+}
+
+#[test]
+fn checks_three_and_four_accept_an_instance_bound_whole_and_met_beneath() {
+    let (sources, program) = elaborated(ADAPTED);
+    assert_eq!(
+        checked(&sources, &program, &adapted(&program, ALARM, EXTENDED)),
+        Ok(())
+    );
+}
+
+#[test]
+fn check_three_refuses_an_instance_s_binding_its_kind_does_not_make() {
+    let (sources, program) = elaborated(ADAPTED);
+    let deadline = || instance(ALARM);
+    type Corruption = Box<dyn Fn(&mut Assignment)>;
+    let cases: [(&str, Corruption); 6] = [
+        (
+            "requirement beneath on `tick-rate` is bound to no provider",
+            Box::new(move |plan| {
+                plan.bindings.remove(&(deadline(), "tick-rate".to_owned()));
+            }),
+        ),
+        (
+            "to the provider it programs, `timer.d`",
+            Box::new(move |plan| {
+                plan.bindings
+                    .insert((deadline(), "tick-rate".to_owned()), "timer.short".into());
+            }),
+        ),
+        (
+            "requires nothing of it beneath",
+            Box::new(move |plan| {
+                plan.bindings
+                    .insert((deadline(), "wrap-behavior".to_owned()), "timer.d".into());
+            }),
+        ),
+        (
+            "which the system `s` does not serve",
+            Box::new(|plan| {
+                plan.bindings.insert(
+                    (
+                        instance("(adapter deadline-over-delay timer.short alarm)"),
+                        "tick-rate".to_owned(),
+                    ),
+                    "timer.short".into(),
+                );
+            }),
+        ),
+        (
+            "an exclusive instance, which serves `stray` alone",
+            Box::new(|plan| {
+                let other = Provider::parse("(adapter deadline-over-delay timer.d stray)").unwrap();
+                plan.bindings
+                    .insert((named("alarm"), "absolute-deadline".to_owned()), other);
+                for fact in DEADLINE {
+                    plan.bindings.insert(
+                        (
+                            instance("(adapter deadline-over-delay timer.d stray)"),
+                            fact.to_owned(),
+                        ),
+                        "timer.d".into(),
+                    );
+                }
+                plan.bindings.retain(|(r, _), _| *r != instance(ALARM));
+            }),
+        ),
+        (
+            "whose kind `epoch-extender` requires nothing of it beneath",
+            Box::new(|plan| {
+                plan.bindings.insert(
+                    (instance(EXTENDED), "absolute-deadline".to_owned()),
+                    "timer.short".into(),
+                );
+            }),
+        ),
+    ];
+    for (said, corrupt) in cases {
+        let mut plan = adapted(&program, ALARM, EXTENDED);
+        corrupt(&mut plan);
+        let findings = corrupted(checked(&sources, &program, &plan).unwrap_err());
+        assert_eq!(findings.len(), 1, "{said}: {findings:#?}");
+        assert_eq!(findings[0].code, PLAN_BINDING, "{findings:#?}");
+        assert!(findings[0].message.contains(said), "{said}: {findings:#?}");
+        // At the record's binding.
+        assert_eq!(findings[0].primary.source, "plan.eadl", "{findings:#?}");
+    }
+    // An instance over no block or platform: the binding to it, and each of its own beneath.
+    let plan = adapted(
+        &program,
+        "(adapter deadline-over-delay nowhere alarm)",
+        EXTENDED,
+    );
+    let findings = corrupted(checked(&sources, &program, &plan).unwrap_err());
+    assert_eq!(findings.len(), 5, "{findings:#?}");
+    assert!(
+        findings
+            .iter()
+            .all(|f| f.code == PLAN_BINDING && f.message.contains("`nowhere`")),
+        "{findings:#?}"
+    );
+}
+
+#[test]
+fn check_four_judges_an_instance_s_offers_and_its_requirements_beneath() {
+    let (sources, program) = elaborated(ADAPTED);
+    // A translator over the 16-bit timer: its supported horizon is that timer's 65.535 ms, short of ten seconds.
+    let short = adapted(
+        &program,
+        "(adapter deadline-over-delay timer.short alarm)",
+        EXTENDED,
+    );
+    let findings = corrupted(checked(&sources, &program, &short).unwrap_err());
+    assert_eq!(findings.len(), 1, "{findings:#?}");
+    assert_eq!(findings[0].code, PLAN_UNSATISFIED);
+    assert!(
+        findings[0].message.contains(
+            "`alarm`'s requirement `(absolute-deadline (supported-horizon (at-least 10 s)) (delivery-bound (at-most 100 \
+             us)))` is not met at `(adapter deadline-over-delay timer.short alarm)`"
+        ) && findings[0].message.contains("lies outside it"),
+        "{findings:#?}"
+    );
+    assert_eq!(findings[0].primary.source, "app.case.eadl");
+    // An extender over the 32-bit timer, which does not describe its wrap: its requirement beneath is not met there.
+    let unwrapped = adapted(&program, ALARM, "(adapter epoch-extender timer.d)");
+    let findings = corrupted(checked(&sources, &program, &unwrapped).unwrap_err());
+    assert_eq!(findings.len(), 1, "{findings:#?}");
+    assert_eq!(findings[0].code, PLAN_UNSATISFIED);
+    assert!(
+        findings[0].message.contains(
+            "the instance `(adapter epoch-extender timer.d)`'s requirement beneath `(wrap-behavior modular)` is not \
+             met at `timer.d`, the provider it programs: `timer.d` does not describe it"
+        ),
+        "{findings:#?}"
+    );
+    assert_eq!(findings[0].primary.source, "plan.eadl");
 }

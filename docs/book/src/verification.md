@@ -55,7 +55,9 @@ $ cargo xtask verify --list              # or: make tiers
 | `hardware` | a change to target support, and every release gate | board regressions and timing observations |
 | `assurance` | every supported release | trust inventory, claim completeness, source and binary identity |
 
-When a step fails, the report shows the last 40 lines of each of its streams, then names a file holding
+The contract suite runs every test binary whatever another's result, so one failing run names each binary that
+fails, not the first alone (leaf `PROGRAM.151.7`). When a step fails, the report shows
+the last 40 lines of each of its streams, then names a file holding
 the whole of both, `target/verify-logs/<tier>/<step>.log`: the command, how it exited, then stdout and
 stderr in full. A step's log is removed when the step next runs, so a log that exists is always of that
 step's last run, and that run failed. The tail alone once lost a failure that had taken 45 minutes to
@@ -67,7 +69,7 @@ tests with it (leaf `PROGRAM.100`, measured `2026-10-21`). For example:
      … 2222 earlier line(s) omitted
      …the last 40 lines of stdout, then of stderr…
      whole output: target/verify-logs/focused/tests.log
-     re-run it directly: cargo test --all
+     re-run it directly: cargo test --all --no-fail-fast
 ```
 
 ## The precise rules
@@ -568,6 +570,18 @@ $ cargo xtask mutate --only lcm-to-max      # one entry
 $ cargo xtask mutate --timeouts-fail --only lcm-to-max  # require a finishing test outcome
 ```
 
+### This machine is shared: the host guard
+
+Everything here runs on a machine shared with many other projects, so a build that uses too much memory is everyone's problem. A watcher reads the
+host every second and stops this repository's own jobs before the director's lines, and nothing heavy starts when the machine is already full: it
+waits for room (`scripts/host_guard.py`, `docs/decisions/decision_host-guard.md`). A job is what a person would start again, a script with all it started,
+so a stopped build is not simply followed by the next. A job that holds little and builds nothing stays, whatever it is called, and so does what frees room, such as `cargo clean` or a script of `rm` on a volume under its floor. A job goes whole, so an editor that started a build goes with it at the danger line, unsaved words included.
+
+`make` runs everything that compiles or tests through it, and first looks at whether the guard's file is whole, since one emptied by accident would exit 0 having run nothing and a recipe would read as passed. An agent's shell commands are checked before they run. `python3 scripts/host_guard.py status`
+says what it reads, who holds the most memory, and what it has stopped. It stops only this repository's processes, so it cannot make the host safe from
+another project's; it can only take its own share out of the way and say who holds the rest. What it stops is told to the agent beside its next command's result, and
+what it refuses before a command runs is three things: what it cannot read, stopping by a program's name or all at once, and a heavy command with no room. `HOST-GUARD` keeps all of this wired in. Nobody has to watch it: the director's word of `2026-11-06` is to observe the trend, and to say something only when RAM is over 90% and still rising.
+
 ### What CI does with an `incomplete` tier
 
 It passes the job, and says so on every run. The policy is recorded in
@@ -626,13 +640,21 @@ runs; removing each protection turns an arm red. The checker is `xtask catalog-c
 
 `.github/workflows/catalog-check.yml` (`M2.7.6.3`) runs it on a pull request: the hosting's merge is checked out
 where nothing runs from it, and the base is cloned beside it. The checker judges the merge against its base; on an
-empty catalog the job passes. Whether a pull request's own copy of the file can satisfy the required check is for the hosting's rules,
-which only the director can set, as is the repository's default token. The design's first independent review found
+empty catalog the job passes. The design's first independent review found
 two ways past `WORKFLOW-TOKENS`, an escaped YAML key and a setting on a neighbouring step; both are now refused,
 and so are a quoted key and a key written twice, or twice but for case, in one mapping
 (`docs/reviews/catalog-check-protection-reviews.md`). Its next two rounds, each by a new agent context, were stopped
 by the agent harness's own safety screening before they reported, so the next round is a reviewer the director
 names.
+
+Whether a pull request's own copy of the file can satisfy the required check is for the hosting's rules, which only
+the director can set, as is the repository's default token. The director set them on `2026-10-28`
+(`docs/decisions/decision_main-protection.md`): the check is required from the `github-actions` app, and a pull
+request needs an approval from someone other than its author and its last pusher. `.github/CODEOWNERS` makes every
+path the director's (`M2.7.6.5`). Once it is on `main`, that approval is the director's, and a copy changed by a
+pull request merges nothing without the director. GitHub skips a line of the file it cannot read, which would leave
+a path without an owner and nothing failing. `CODE-OWNERS` (`scripts/check_code_owners.sh`) holds the file to the
+record's text and to the syntax GitHub reads, its first rule `*` and every rule with an owner.
 
 `.github/workflows/trust-gate.yml` (`M3.6.3.4`) runs the trust gate through the same harness, so the gate that
 judges a commit is the one its base holds, and a pull request that changes the gate is judged by the gate it
@@ -671,6 +693,10 @@ page uses (`crates/archogen-wasm/js/archogen.mjs`). It checks three things:
 - **and the same verdict as the command line.** Each response's exit code equals what `archogen check` exits
   with for that file.
 
+The last two hold again on the shipped target, each request naming `targets/riscv-virt-up.eadl` as
+`archogen check --target` does (leaf `M4.1.7.4.2.3`), and the page's code is run with that target typed beside its
+input too.
+
 It also runs the page's own code (`crates/archogen-wasm/page/page.mjs`) against a stand-in for the browser's
 document. The page must load this module, answer its default description on load, and show exactly what the
 engine-API chapter says it shows for that chapter's example. The director has since opened the page in a real
@@ -690,6 +716,54 @@ The engine API (`archogen-api`, `crates/archogen-api/src/lib.rs`, leaf `API.3.2`
 day it was written, derived like the rest. It depends on `eadl-front`, which still compiles for wasm32 as its dependency. It never
 calls the directory loader: a caller hands it a `ModuleSource`, and an in-memory one is what a browser
 would pass.
+
+### The checker's browser module answers as the checker does
+
+The configuration checker has a browser module of its own ([Checking a plan](plan-check.md#in-a-browser)), and the
+`plan-check-wasm` step holds it as `wasm-binding` holds the generator's: it builds the module, runs it in
+[Node](ledger.md#node) through the loader a page uses (`crates/archogen-plan-check-wasm/js/plan-check.mjs`), and checks
+that
+
+- **the module imports nothing**, and exports its three functions and nothing a page could reach beyond them, read
+  from the compiled module by the runtime's own parser;
+- **every case gets the host build's answer, byte for byte.** No plan is tracked, so the cases are derived on every
+  run: each tracked description with an empty plan and a bare one — the right program, its first system, no binding
+  — and the accepted plans the checker's own tests write. The loader's fingerprint of the module, which every record
+  names, must be the one the host computes;
+- **and the executable's verdict.** Each case is written out as files and judged by `archogen-plan-check`: the same
+  record but for the program it names, with the same exit code. One text is set aside, and counted: where a module
+  is not found, the executable's repair names the file it looked for, and the module, given texts, has none to name.
+
+```console
+$ bash scripts/plan_check_wasm.sh              # the step
+$ bash scripts/plan_check_wasm.sh --self-test  # its RED arms: an import, an unlisted or a missing export, an answer
+                                               # that differs, a record or an exit the executable does not share
+```
+
+### A plan resolved and checked as a user runs it
+
+Each half of `archogen resolve` has its own tests: the front's against a stand-in checker, the checker's against plans
+the generator wrote in the same process. The `resolve-installed` step runs the two programs together, as a user does
+(leaf `M3.2.6.2`):
+- it builds an install with `cargo xtask install`, the trust build's executables with the manifest that vouches for
+  them ([The command line](cli.md));
+- it runs that install's `archogen resolve`, checked, over the heartbeat, `examples/s0-heartbeat/system.eadl`,
+  resolved through its own providers, and the two adapter fixtures of `crates/eadl-resolve/tests/search/`, each
+  resolved through one kind of the engine's adapter catalog;
+- for the heartbeat, it also runs that install's `archogen build`, and builds and runs the package it writes
+  ([Building a system](building.md)).
+
+Each plan must be written, the install's `archogen-plan-check` must accept it, and its record must sit beside it in
+`<plan>.check/`. A plan through an adapter must bind the instance, and the command must say the plan is conditional
+on what the instance owes ([Matching](matching.md)).
+
+```console
+$ bash scripts/resolve_installed.sh                  # the step: an install built, then each resolved through it
+$ bash scripts/resolve_installed.sh --install <dir>  # the same through an install already built
+$ bash scripts/resolve_installed.sh --self-test      # its RED arms, against stub installs
+```
+
+Without Node the step is unavailable, which the tier reports and never counts as a pass.
 
 ### A third reader
 
@@ -715,8 +789,13 @@ new one cannot go unrecorded (`PROGRAM.60`).
 ### The product runs nothing
 
 archogen describes, checks and generates, and it executes nothing. `archogen build` writes a crate and stops.
-Nothing in the product compiles, links or runs what it wrote, and nothing it does starts another process. That
-is the property that makes it safe to hand archogen to an agent that did not write the description. The
+Nothing in the product compiles, links or runs what it wrote. That is the property that makes it safe to hand
+archogen to an agent that did not write the description. One exception is made, for the person at the command line
+alone: `archogen plan-check`, `archogen resolve` and `archogen build` run the configuration checker, `archogen-plan-check`, a program of its own, as git runs
+its sibling commands (`ROADMAP.md` §10.2). The code that starts it is one file, `crates/archogen-cli/src/sibling.rs`,
+which only the `archogen` executable's `main.rs` declares and hands to the command line; the library, the engine API,
+the browser module and the [MCP](ledger.md#mcp-specification) server hold a launcher that runs nothing, so no agent driving archogen through them can
+make it start a program (leaf `M3.5.1.4.1`). The
 `NO-SUBPROCESS` doctrine (`scripts/check_no_subprocess.sh`, leaf `API.2`) holds it on every commit. With no
 third-party dependency, Rust code reaches a process three ways, and each is closed (leaf `PROGRAM.105`): through
 `std::process`, which product code may use only for `ExitCode` and `exit`, however it imports it — an alias or a `use`
@@ -724,7 +803,9 @@ group split over lines included; through a foreign function such as `execve` or 
 `extern` block or `#[link]`, both refused — an `extern "C" fn` the browser module exports is a definition and passes;
 and through inline assembly, refused. `Command::new`, `.spawn(`, `exec` and `fork` stay refused by name. The check
 reads code with comments and string and character literals removed, so a message may name what it refuses, and a file
-it cannot lex to its end is refused rather than passed. Test modules, `tests/`,
+it cannot lex to its end is refused rather than passed. It admits the launcher by its path, for those process routes
+alone, and refuses `mod sibling` anywhere but `main.rs` and every `path` attribute and `include!` in product code, the
+ways another module could compile that file. Test modules, `tests/`,
 `xtask/` and `scripts/` compile and run things on purpose, and they are outside what it reads. A
 `#[cfg(test)]` on a lone helper does not hide the lines below it. Only one that opens a test module does.
 
@@ -736,6 +817,19 @@ and `bash scripts/push_cadence.sh` reads it and reports the live distance (leaf 
 when a push is due and `2` when it cannot tell, for example with no `origin/main` or with a record that gives
 two answers. It is a report and never a gate. A push needs the director's authorization, so a check that
 refused commits at the threshold would strand the work it is meant to protect.
+
+Since `main` is protected, a push is a **batch** (`docs/decisions/decision_main-protection.md` §3):
+1. A fresh agent context reviews the commits local `main` holds beyond `origin/main`, and writes a summary that
+   names the batch's tip by its full hash.
+2. `bash scripts/open_batch.sh open --summary <file>` checks that local `main` is clean, holds `origin/main` and
+   is due. It then pushes the tip to a `batch/` branch as the agents' machine account, and opens one pull request
+   with the summary and the commit list.
+3. The director approves it and merges it in GitHub's web interface, where GitHub signs the merge commit it makes.
+   If its checks fail first, the fix is committed on local `main` and `update` adds it to the same pull request.
+4. `bash scripts/open_batch.sh sync` brings local `main` back in step: a fast-forward, or a merge that changes no
+   file when the agents committed in the meantime.
+
+The script never approves, never merges on GitHub and never pushes to `main` (leaf `M2.7.6.6.4`).
 
 ### What the `tests` step is a suite *of*
 
@@ -751,7 +845,7 @@ of it.
 | `docs/semantics/boundary` | the controlling boundary — functionality versus implementation — in paired accept/reject cases, each carrying its verdict in a comment header that **F27** reads |
 | `docs/semantics/cases` | the worked semantic cases, each declaring the §5.5 verdict it expects in its own header, so a driver that computed the expectation could not agree with itself |
 | `docs/semantics/kinds` | the `defkind` modules the registry is built from, which makes the language's own definitions conformance cases of the language |
-| `examples` | the descriptions a reader copies, checked end to end and — for the S0 fixture — built and run |
+| `examples` | the descriptions a reader copies, checked end to end and — for the heartbeat — built and run |
 
 ⭐ **The manifest carries no count.** A size is a property of the roots, so the roots are where it is
 measured: a leg pins the population and refuses an empty one, and the chapters that publish a figure
@@ -760,7 +854,10 @@ publish the measured one under a leg comparing prose to walk.
 **What is outside the suite, and why.** Everything under `docs/feedback` — the reproductions of defects
 reported to another project. Their bytes *are* the reproduction, `FEEDBACK-SELF-CONTAINED` seals them,
 and several are deliberately malformed, so sweeping them in would turn one project's bug reports into
-conformance cases of a language version.
+conformance cases of a language version. So are the engine's own fixtures — the joint check's, F08 and F09
+(`crates/eadl-resolve/tests/joint`), and the search's, F10 and F11 (`crates/eadl-resolve/tests/search`) — which prove
+a rule over an assignment or a search, not what a language version means, and are checked where that is. Every
+exclusion, these among them, is a row of `docs/semantics/conformance.md` with its reason.
 
 **Four rules the manifest's legs enforce**, in `crates/eadl-front/tests/conformance_suite.rs`:
 

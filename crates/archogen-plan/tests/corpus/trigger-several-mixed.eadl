@@ -1,0 +1,20 @@
+(eadl-version eadl/1)
+; A sporadic task naming a policy and a block that each handle a source, two offered, one declaring its separation
+; absent: the search binds both to the bounded one, whose route alone reaches the task, `(source dev.z every)`
+; (§2.2; round 25's probe, round 26, R6).
+(defblock dev.z
+  (offers (interrupt-source true) (min-arrival-separation 20 ms) (reachable-at-privilege machine)))
+(defblock dev.a
+  (offers (interrupt-source true) (reachable-at-privilege machine))
+  (absent min-arrival-separation))
+(defblock hnd
+  (offers (observable-output true) (reachable-at-privilege machine))
+  (requires (needs interrupt-source)))
+(defplatform soc
+  (offers (core-count 1 tick) (reachable-at-privilege machine))
+  (requires (uses dev.z dev.a hnd)))
+(defpolicy pol
+  (requires (needs interrupt-source)))
+(defsystem sm
+  (task s (min-separation 10 ms) (deadline 10 ms) (deadline-from release) (priority 1) (uses pol hnd))
+  (platform (uses soc)))

@@ -74,7 +74,7 @@ Two rules decide what an import reads, and both are normative (`docs/semantics/r
 After elaboration the tree's declarations go through **every pass a single description gets** — the same
 code, in the same order ([Checking a description](checking.md)) — once two more rules have said what their
 names mean. They are the subject of [Names carry their whole path](#names-carry-their-whole-path) below.
-`archogen build` answers a module file exactly as `check` does, and then meets the S0 path's own limits.
+`archogen build` answers a module file exactly as `check` does, and then meets the search's and the emitter's own limits.
 
 Still open, owned by leaf `M1.29.4`: module **parameters** reach no declaration yet — a `(with …)`
 binding is recorded and used by nothing.
@@ -159,8 +159,8 @@ means `board.bus.clock` — without the rule both would be looked for at the roo
 $ archogen check docs/semantics/modules/app.sibling.eadl
 docs/semantics/modules/app.sibling.eadl: accepted against profile `rt-static-up-v1` (5 declaration(s))
   elaborated from 2 instance(s): board = hw.bus 1.0, (root) = app.sibling 1.0
-  closure: board.bus.clock (needed by board.bus.fast), board.bus.fast (requested), board.bus.main (requested), board.bus.timer (requested)
-  outside the closure, needed by nothing requested: app.rt, bus-width, clock-rate, counter-width
+  closure: board.bus.clock (needed by board.bus.fast), board.bus.fast (requested), board.bus.main (requested)
+  outside the closure, needed by nothing requested: app.rt, board.bus.timer, bus-width, clock-rate, counter-width
   this checks the description, not a system: no resolution, generation or analysis has run
 ```
 

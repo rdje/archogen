@@ -49,6 +49,48 @@ struct Described {
     declared: Vec<String>,
     /// The levels each declaration states it is reachable from, `(reachable-at-privilege …)`.
     levels: BTreeMap<String, Vec<String>>,
+    /// What a block states of the release timer (`decision_release-alarm.md` §1, `RA-H8`): the block, the fact, and
+    /// the words after its name (leaf `M4.1.7.3.3`).
+    release: Vec<(String, String, Vec<String>)>,
+    /// The platform's `catalog-target`, the name its catalog records go by (`decision_runtime-plan-format-2.md` §2).
+    catalog_target: Option<String>,
+    /// The platform's `firmware-traps`, how many traps firmware beneath the image takes.
+    firmware_traps: Option<u64>,
+    /// The platform's `non-maskable-interrupts`, how many sources no mask stops.
+    non_maskable: Option<u64>,
+}
+
+/// The QEMU release whose source was read for what it raises that no mask stops (`docs/book/src/ledger.md`'s `qemu`, leaf
+/// `M4.1.7.3.4`): its RISC-V hart takes no non-maskable interrupt but Smrnmi's, and no device connects one.
+const NON_MASKABLE_READ_AT: &str = "11.1.1";
+
+/// The facts the release requester asks of the timer and its compare, which the release timer's block states, and what a system reads of
+/// its counter beside them, its width and its wrap (`decision_device-correspondence.md`, `DC-H1`; leaf `M4.1.7.3.5`).
+const RELEASE: [&str; 12] = [
+    "relative-delay",
+    "channels",
+    "alarm-wiring",
+    "alarm-kind",
+    "counter-modulus",
+    "compare-step",
+    "compare-magnitude",
+    "observation-coherent",
+    "available-in-state",
+    "supported-horizon",
+    "counter-width",
+    "wrap-behavior",
+];
+
+/// The words of `forms`: an integer by its digits, a symbol by its name, a list by its own words.
+fn words(forms: &[Form]) -> Vec<String> {
+    forms
+        .iter()
+        .map(|f| match f {
+            Form::Integer { value, .. } => value.to_string(),
+            Form::List { .. } => words(f.items()).join(" "),
+            _ => f.as_symbol().unwrap_or("?").to_string(),
+        })
+        .collect()
 }
 
 /// A quantity `(n unit)` in the base unit, bytes or Hz. `None` for a unit the agreement does not compare.
@@ -181,6 +223,23 @@ fn describe(text: &str, name: &str) -> Result<Described, Vec<String>> {
                                 Ok(r) => found.regions.push((owner.clone(), r)),
                                 Err(e) => problems.push(e),
                             },
+                            Some(fact) if RELEASE.contains(&fact) && !platform => {
+                                found.release.push((
+                                    owner.clone(),
+                                    fact.to_string(),
+                                    words(&parts[1..]),
+                                ));
+                            }
+                            Some("catalog-target") if platform => {
+                                found.catalog_target =
+                                    parts.get(1).and_then(Form::as_symbol).map(str::to_string);
+                            }
+                            Some("firmware-traps") if platform => {
+                                found.firmware_traps = parts.get(1).and_then(integer);
+                            }
+                            Some("non-maskable-interrupts") if platform => {
+                                found.non_maskable = parts.get(1).and_then(integer);
+                            }
                             Some("reachable-at-privilege") => {
                                 found.levels.insert(
                                     owner.clone(),
@@ -225,6 +284,58 @@ fn describe(text: &str, name: &str) -> Result<Described, Vec<String>> {
     } else {
         Err(problems)
     }
+}
+
+/// The machine-timer lines of a CLINT's `interrupts-extended`, each cause 7, the privileged specification's machine-timer
+/// interrupt, with whether it reaches a hart's own interrupt controller, `riscv,cpu-intc`: a specifier is a phandle and as
+/// many cells as the controller it names says, by its `#interrupt-cells`.
+fn timer_lines(clint: &Node, nodes: &[(&Node, (usize, usize))]) -> Vec<bool> {
+    let Some(bytes) = property(clint, "interrupts-extended") else {
+        return Vec::new();
+    };
+    let cells_of: Vec<u32> = bytes
+        .chunks(4)
+        .filter_map(|c| c.try_into().ok().map(u32::from_be_bytes))
+        .collect();
+    let mut out = Vec::new();
+    let mut at = 0;
+    while at < cells_of.len() {
+        let handle = u64::from(cells_of[at]);
+        let target = nodes
+            .iter()
+            .map(|(n, _)| *n)
+            .find(|n| property(n, "phandle").and_then(cells) == Some(handle));
+        let width = target
+            .and_then(|n| property(n, "#interrupt-cells"))
+            .and_then(cells)
+            .and_then(|w| usize::try_from(w).ok())
+            .unwrap_or(1);
+        if width == 0 {
+            break;
+        }
+        if cells_of.get(at + 1) == Some(&7) {
+            out.push(target.is_some_and(|n| {
+                strings(n, "compatible")
+                    .iter()
+                    .any(|c| c == "riscv,cpu-intc")
+            }));
+        }
+        at += 1 + width;
+    }
+    out
+}
+
+/// A duration `(n unit)` as a fraction of a second, `(n, per)`, for the units a horizon is written in.
+fn seconds(words: &[String]) -> Option<(u128, u128)> {
+    let n: u128 = words.first()?.parse().ok()?;
+    let per: u128 = match words.get(1)?.as_str() {
+        "s" => 1,
+        "ms" => 1_000,
+        "us" => 1_000_000,
+        "ns" => 1_000_000_000,
+        _ => return None,
+    };
+    Some((n, per))
 }
 
 /// A node's property as bytes.
@@ -324,6 +435,7 @@ pub fn disagreements(
         text: description,
         profile: None,
         modules: &NoModules,
+        target: None,
     });
     if response.status != Status::Ok {
         wrong.push(format!(
@@ -482,6 +594,217 @@ pub fn disagreements(
         }
     }
 
+    // REQUIRES_RELEASE_TIMER: what the release requester asks of the timer (`decision_release-alarm.md` §1, `RA-H8`), stated
+    // by the block that offers the tick-rate, the CLINT. Its delay, its lines and their wiring are read off the CLINT's
+    // `interrupts-extended`; its modulus, its compare's kind, step and magnitude, its states and its coherence are the
+    // privileged specification's machine timer, which the node compatible with `riscv,clint0` is: "The `mtime` register
+    // has a 64-bit precision on all RV32 and RV64 systems", "will wrap around if the count overflows", "A machine timer
+    // interrupt becomes pending whenever `mtime` contains a value greater than or equal to `mtimecmp`, treating the values
+    // as unsigned integers", "`mtime` must increment at constant frequency", and on RV64 64-bit accesses "are atomic"; its
+    // horizon, a capacity, at most what one compare reaches, `(2^64 − 1)` ticks of `/cpus`'s timebase (leaf `M4.1.7.3.3`). The same two
+    // sentences give what a system reads of the counter, `DC-H1`'s: its width, 64 bits, and its wrap, modular (leaf `M4.1.7.3.5`).
+    if requires("REQUIRES_RELEASE_TIMER") {
+        let owner = described.tick_rate.as_ref().map(|(_, o)| o.clone());
+        for (o, f, _) in &described.release {
+            if Some(o) != owner.as_ref() {
+                wrong.push(format!(
+                    "REQUIRES_RELEASE_TIMER: `{o}` states `{f}`, and only the block offering the tick-rate is the release timer"
+                ));
+            }
+        }
+        let stated = |fact: &str| {
+            described
+                .release
+                .iter()
+                .find(|(o, f, _)| Some(o) == owner.as_ref() && f == fact)
+                .map(|(_, _, w)| w.clone())
+        };
+        let clint = find(&|n: &Node| strings(n, "compatible").iter().any(|c| c == "riscv,clint0"));
+        let lines = clint
+            .map(|(n, _)| timer_lines(n, &nodes))
+            .unwrap_or_default();
+        let rv64 = find(&|n: &Node| n.path.starts_with("/cpus/cpu@"))
+            .is_some_and(|(n, _)| strings(n, "riscv,isa-base") == ["rv64i"]);
+        let gives = |word: &str| vec![word.to_string()];
+        let expected: [(&str, &str, Vec<String>); 11] = [
+            (
+                "relative-delay",
+                "the CLINT",
+                gives(if lines.is_empty() { "false" } else { "true" }),
+            ),
+            ("channels", "the CLINT", gives(&lines.len().to_string())),
+            (
+                "alarm-wiring",
+                "the CLINT",
+                gives(if !lines.is_empty() && lines.iter().all(|l| *l) {
+                    "core"
+                } else {
+                    "controller"
+                }),
+            ),
+            (
+                "alarm-kind",
+                "the privileged specification",
+                gives("level-compare"),
+            ),
+            (
+                "counter-modulus",
+                "the privileged specification",
+                gives("pow2 64"),
+            ),
+            ("compare-step", "the privileged specification", gives("1")),
+            (
+                "compare-magnitude",
+                "the privileged specification",
+                gives("true"),
+            ),
+            (
+                "observation-coherent",
+                "the privileged specification on RV64",
+                gives(if rv64 { "true" } else { "false" }),
+            ),
+            (
+                "available-in-state",
+                "the privileged specification",
+                vec!["idle".to_string(), "run".to_string()],
+            ),
+            (
+                "counter-width",
+                "the privileged specification",
+                vec!["64".to_string(), "bit".to_string()],
+            ),
+            (
+                "wrap-behavior",
+                "the privileged specification",
+                gives("modular"),
+            ),
+        ];
+        match (&owner, clint) {
+            (Some(_), Some(_)) => {}
+            _ => wrong.push("REQUIRES_RELEASE_TIMER: no tick-rate block, or no node compatible with `riscv,clint0`".into()),
+        }
+        let owner_name = owner.clone().unwrap_or_else(|| "?".to_string());
+        for (fact, source, want) in &expected {
+            match stated(fact) {
+                None => wrong.push(format!(
+                    "REQUIRES_RELEASE_TIMER: `{owner_name}` states no `{fact}`"
+                )),
+                Some(mut got) => {
+                    // A count's unit is the language's, and a set's members are in no order.
+                    if got.last().map(String::as_str) == Some("tick") {
+                        got.pop();
+                    }
+                    let mut compared = got.clone();
+                    if *fact == "available-in-state" {
+                        compared.sort();
+                    }
+                    if &compared != want {
+                        wrong.push(format!(
+                            "REQUIRES_RELEASE_TIMER: `{owner_name}` states `({fact} {})`, and {source} gives `{}`",
+                            got.join(" "),
+                            want.join(" ")
+                        ));
+                    }
+                }
+            }
+        }
+        let timebase = find(&|n: &Node| n.path == "/cpus")
+            .and_then(|(n, _)| property(n, "timebase-frequency"))
+            .and_then(cells);
+        match (stated("supported-horizon").as_deref().and_then(seconds), timebase) {
+            (Some((n, per)), Some(hz)) => {
+                // n / per seconds of hz ticks a second, held within 2^64 − 1 ticks, in exact integers.
+                if n.saturating_mul(u128::from(hz)) > ((1_u128 << 64) - 1).saturating_mul(per) {
+                    wrong.push(format!(
+                        "REQUIRES_RELEASE_TIMER: `{owner_name}` states a supported-horizon beyond what one compare reaches, 2^64 − 1 ticks at {hz} Hz"
+                    ));
+                }
+            }
+            (None, _) => wrong.push(format!(
+                "REQUIRES_RELEASE_TIMER: `{owner_name}` states no supported-horizon in s, ms, us or ns"
+            )),
+            (Some(_), None) => wrong.push("REQUIRES_RELEASE_TIMER: /cpus has no timebase-frequency".into()),
+        }
+    } else if let Some((o, f, _)) = described.release.first() {
+        wrong.push(format!(
+            "`{o}` states `{f}`, and the .env requires no release timer to compare it with"
+        ));
+    }
+
+    // REQUIRES_CATALOG_TARGET: the platform's `catalog-target`, the name its catalog records go by, which is the
+    // `.env`'s own target (`decision_runtime-plan-format-2.md` §2, leaf `M4.1.7.3.3`).
+    if requires("REQUIRES_CATALOG_TARGET") {
+        let target = env.get("TARGET_ID").map_or("none", String::as_str);
+        match &described.catalog_target {
+            None => wrong.push("REQUIRES_CATALOG_TARGET: the platform offers no `catalog-target`".into()),
+            Some(got) if got != target => wrong.push(format!(
+                "REQUIRES_CATALOG_TARGET: the platform offers catalog-target `{got}`, and the .env's target is `{target}`"
+            )),
+            Some(_) => {}
+        }
+    } else if described.catalog_target.is_some() {
+        wrong.push(
+            "the platform states a `catalog-target`, and the .env requires none to compare it with"
+                .into(),
+        );
+    }
+
+    // REQUIRES_FIRMWARE_TRAPS: the platform's `firmware-traps`, 0 only where the emulator starts the image with no firmware
+    // beneath it, the `.env`'s `QEMU_BIOS=none`; any other count nothing here checks (`decision_runtime-plan-format-2.md` §2).
+    if requires("REQUIRES_FIRMWARE_TRAPS") {
+        let bios = env.get("QEMU_BIOS").map_or("unset", String::as_str);
+        match described.firmware_traps {
+            None => wrong.push("REQUIRES_FIRMWARE_TRAPS: the platform offers no `firmware-traps`".into()),
+            Some(0) if bios == "none" => {}
+            Some(n) => wrong.push(format!(
+                "REQUIRES_FIRMWARE_TRAPS: the platform offers firmware-traps {n}, and the .env starts the image with QEMU_BIOS={bios}"
+            )),
+        }
+    } else if described.firmware_traps.is_some() {
+        wrong.push(
+            "the platform states `firmware-traps`, and the .env requires none to compare it with"
+                .into(),
+        );
+    }
+
+    // REQUIRES_NON_MASKABLE_INTERRUPTS: the platform's `non-maskable-interrupts`, 0 only where no hart of the dump offers
+    // `smrnmi` and the pinned release is the one whose source was read: in QEMU 11.1.1 a RISC-V hart marks pending and takes a
+    // non-maskable interrupt only under Smrnmi (`target/riscv/tcg/cpu_helper.c`, lines 339-348 and 2082), aborts the emulator
+    // on an M-mode double trap without it (line 2317), and no device in `hw/` connects its `riscv.cpu.rnmi` input
+    // (`target/riscv/tcg/tcg-cpu.c`, lines 1682-1683); a hart offers Smrnmi exactly where its ISA string names it
+    // (`target/riscv/cpu.c`, line 267). A count other than 0 nothing here checks (`decision_runtime-plan-format-2.md` §2).
+    if requires("REQUIRES_NON_MASKABLE_INTERRUPTS") {
+        let rnmi = nodes.iter().any(|(n, _)| {
+            n.path.starts_with("/cpus/cpu@")
+                && (strings(n, "riscv,isa-extensions")
+                    .iter()
+                    .any(|e| e == "smrnmi")
+                    || strings(n, "riscv,isa")
+                        .iter()
+                        .any(|isa| isa.split('_').any(|e| e == "smrnmi")))
+        });
+        let pinned = env
+            .get("QEMU_VERSION_PINNED")
+            .map_or("unset", String::as_str);
+        match described.non_maskable {
+            None => wrong.push(
+                "REQUIRES_NON_MASKABLE_INTERRUPTS: the platform offers no `non-maskable-interrupts`".into(),
+            ),
+            Some(0) if rnmi => wrong.push(
+                "REQUIRES_NON_MASKABLE_INTERRUPTS: the platform offers non-maskable-interrupts 0, and a hart of the device tree offers `smrnmi`".into(),
+            ),
+            Some(0) if pinned != NON_MASKABLE_READ_AT => wrong.push(format!(
+                "REQUIRES_NON_MASKABLE_INTERRUPTS: the platform offers non-maskable-interrupts 0, and the .env pins QEMU {pinned} where the release whose source was read is {NON_MASKABLE_READ_AT}: read the new release's for what it raises"
+            )),
+            Some(0) => {}
+            Some(n) => wrong.push(format!(
+                "REQUIRES_NON_MASKABLE_INTERRUPTS: the platform offers non-maskable-interrupts {n}, a count nothing here checks"
+            )),
+        }
+    } else if described.non_maskable.is_some() {
+        wrong.push("the platform states `non-maskable-interrupts`, and the .env requires none to compare it with".into());
+    }
+
     // A region no rule compared is an assertion nothing checks.
     for (_, r) in &described.regions {
         if !covered.contains(&r.name.as_str()) {
@@ -549,12 +872,120 @@ mod tests {
             "REQUIRES_OBSERVABLE_OUTPUT",
             "REQUIRES_EXECUTABLE_RAM",
             "REQUIRES_PRIVILEGE",
+            "REQUIRES_RELEASE_TIMER",
+            "REQUIRES_CATALOG_TARGET",
+            "REQUIRES_FIRMWARE_TRAPS",
+            "REQUIRES_NON_MASKABLE_INTERRUPTS",
         ] {
             assert!(
                 env.contains_key(key),
                 "the .env no longer names {key}, so this leg compares less"
             );
         }
+        // The catalog's name is held to `TARGET_ID`, which is the `.env`'s stem (`decision_runtime-plan-format-2.md` §2).
+        assert_eq!(
+            env.get("TARGET_ID").map(String::as_str),
+            Some("riscv-virt-up")
+        );
+        assert!(root().join("targets/riscv-virt-up.env").is_file());
+    }
+
+    /// Leaf `M4.1.7.3.3`: what the release requester asks of the timer, each fact against its source, and the platform's
+    /// two facts format `/2` reads, each reported when it differs (`decision_release-alarm.md` §1, `RA-H8`;
+    /// `decision_runtime-plan-format-2.md` §2).
+    #[test]
+    fn each_fact_format_2_reads_is_reported_when_it_differs() {
+        for (from, to, needle) in [
+            ("(relative-delay true)", "", "states no `relative-delay`"),
+            (
+                "(channels 1 tick)",
+                "(channels 2 tick)",
+                "`(channels 2)`, and the CLINT gives `1`",
+            ),
+            (
+                "(alarm-wiring core)",
+                "(alarm-wiring controller)",
+                "`(alarm-wiring controller)`, and the CLINT gives `core`",
+            ),
+            (
+                "(alarm-kind level-compare)",
+                "(alarm-kind delay)",
+                "`(alarm-kind delay)`",
+            ),
+            (
+                "(counter-modulus (pow2 64))",
+                "(counter-modulus (pow2 32))",
+                "`(counter-modulus pow2 32)`",
+            ),
+            (
+                "(compare-step 1 tick)",
+                "(compare-step 2 tick)",
+                "`(compare-step 2)`",
+            ),
+            (
+                "(compare-magnitude true)",
+                "(compare-magnitude false)",
+                "`(compare-magnitude false)`",
+            ),
+            (
+                "(observation-coherent true)",
+                "",
+                "states no `observation-coherent`",
+            ),
+            (
+                "(available-in-state run idle)",
+                "(available-in-state run)",
+                "`(available-in-state run)`",
+            ),
+            (
+                "(supported-horizon 1844674407370 s)",
+                "(supported-horizon 1844674407371 s)",
+                "beyond what one compare reaches",
+            ),
+            (
+                "(counter-width 64 bit)",
+                "(counter-width 32 bit)",
+                "`(counter-width 32 bit)`, and the privileged specification gives `64 bit`",
+            ),
+            (
+                "(wrap-behavior modular)",
+                "(wrap-behavior saturating)",
+                "`(wrap-behavior saturating)`, and the privileged specification gives `modular`",
+            ),
+            (
+                "(catalog-target riscv-virt-up)",
+                "(catalog-target riscv-virt)",
+                "catalog-target `riscv-virt`",
+            ),
+            (
+                "(firmware-traps 0)",
+                "(firmware-traps 1)",
+                "firmware-traps 1",
+            ),
+        ] {
+            reported(&with(from, to), needle);
+        }
+        // The device tree's side: a CLINT whose timer line is gone has no delay, no line and no wiring to compare.
+        let (env, description, mut tree) = kept();
+        fn clint(node: &mut Node) -> Option<&mut Node> {
+            if node.path.starts_with("/soc/clint@") {
+                return Some(node);
+            }
+            node.children.iter_mut().find_map(clint)
+        }
+        let node = clint(&mut tree).expect("the kept dump's CLINT");
+        let lines = node
+            .properties
+            .iter_mut()
+            .find(|(n, _)| n == "interrupts-extended")
+            .expect("its interrupts-extended");
+        lines.1.truncate(8);
+        let wrong = disagreements(&env, &description, "targets/riscv-virt-up.eadl", &tree);
+        reported(&wrong, "`(channels 1)`, and the CLINT gives `0`");
+        reported(
+            &wrong,
+            "`(relative-delay true)`, and the CLINT gives `false`",
+        );
     }
 
     #[test]
@@ -603,6 +1034,40 @@ mod tests {
         );
     }
 
+    /// Leaf `M4.1.7.3.4`: the count of non-maskable interrupts, 0 only where the dump's harts offer no `smrnmi` and the pin is
+    /// the release whose source was read, which takes no non-maskable interrupt but Smrnmi's and connects none.
+    #[test]
+    fn the_non_maskable_count_is_held_to_the_dump_and_the_reading() {
+        reported(
+            &with("(non-maskable-interrupts 0)", "(non-maskable-interrupts 1)"),
+            "non-maskable-interrupts 1",
+        );
+        let (env, description, mut tree) = kept();
+        fn hart(node: &mut Node) -> Option<&mut Node> {
+            if node.path.starts_with("/cpus/cpu@") {
+                return Some(node);
+            }
+            node.children.iter_mut().find_map(hart)
+        }
+        let extensions = hart(&mut tree)
+            .expect("the kept dump's hart")
+            .properties
+            .iter_mut()
+            .find(|(n, _)| n == "riscv,isa-extensions")
+            .expect("its extensions");
+        extensions.1.extend_from_slice(b"smrnmi\0");
+        reported(
+            &disagreements(&env, &description, "targets/riscv-virt-up.eadl", &tree),
+            "offers `smrnmi`",
+        );
+        let (mut moved, description, tree) = kept();
+        moved.insert("QEMU_VERSION_PINNED".to_string(), "11.2.0".to_string());
+        reported(
+            &disagreements(&moved, &description, "targets/riscv-virt-up.eadl", &tree),
+            "whose source was read is 11.1.1",
+        );
+    }
+
     #[test]
     fn what_the_agreement_does_not_read_is_refused() {
         // Leaf `M3.3.4.4`: the target states nothing it cannot check, so an offer or a clause no rule reads is a
@@ -646,15 +1111,16 @@ mod tests {
             env.get("REQUIRES_PRIVILEGE").map(String::as_str),
             Some("machine")
         );
-        let timer = "(tick-rate 10 MHz)\n    (reachable-at-privilege machine)";
+        // The timer's last fact before its level, since leaf `M4.1.7.3.3` gave it the release timer's facts.
+        let timer = "(supported-horizon 1844674407370 s)\n    (reachable-at-privilege machine)";
         reported(
-            &with(timer, "(tick-rate 10 MHz)"),
+            &with(timer, "(supported-horizon 1844674407370 s)"),
             "REQUIRES_PRIVILEGE: `target.timer` states no level",
         );
         reported(
             &with(
                 timer,
-                "(tick-rate 10 MHz)\n    (reachable-at-privilege supervisor)",
+                "(supported-horizon 1844674407370 s)\n    (reachable-at-privilege supervisor)",
             ),
             "REQUIRES_PRIVILEGE: `target.timer` is reachable from supervisor, and the .env requires machine",
         );

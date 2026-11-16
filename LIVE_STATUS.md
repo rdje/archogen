@@ -10,13 +10,13 @@ one of those changes, and only then. What each closed leaf did lives in its tree
 | Discipline spine (`bedrock`) | Done | memory architecture · task-trees · commit workflow · doctrine enforcement · **claim verification** (adopted `2026-09-27`) · mdBook skeleton |
 | Roadmap seeded into task-trees | Done | eleven trees: `PROGRAM`, `API`, `M0`, `S0`, `M1`–`M7`; F01–F30 each owned |
 | `API` — programmatic interface (§10.4) | Done | closed `2026-10-02`: the engine API, the wasm binding and its page (run in Chrome 154), `archogen mcp` in both MCP eras, and the book's chapter; findings §9 with the director |
-| `PROGRAM` — workspace, tiers, book, ledger | In Progress | frontier `PROGRAM.72` next: a tree file in a sub-folder of `docs/tasks/`; `PROGRAM.34` awaits the director |
+| `PROGRAM` — workspace, tiers, book, ledger | In Progress | frontier `PROGRAM.151`, pull request #1's failed checks repaired, then the director's approval and merge; `PROGRAM.34` awaiting the director; `PROGRAM.78` blocked until the features are complete |
 | `M0` — charter, boundary, profile, target | Done | all seven leaves closed; F27 green. The board remains a recorded blocker, not a passed gate |
 | `S0` — early executable generation (F28) | Done | **F28 green**; every leaf closed — `S0.8` made the book chapter's counts and corpus table measured |
-| `M1` — eADL description foundation | Mostly Done | §12 M1's exit gate met; `M1.29.4` waits on the director (findings §7) |
-| `M2` — one engine realization + controls | In Progress | **F17 (analysis half), F18 and F29 green**; `riscv-virt-up` verified (`M2.8`); frontier `M2.7.4`, on the director: the gate done, its records and `M2.7.6` waiting; `M2.20`, `M2.10`, `M2.15`, `M2.12`, `M2.11`, `M2.9` closed; the catalog crate built |
+| `M1` — eADL description foundation | Mostly Done | §12 M1's exit gate met; `M1.42`, durations held to time, filed by the runtime plan's review; `M1.29.4` waits on the director (findings §7) |
+| `M2` — one engine realization + controls | In Progress | **F17 (analysis half), F18 and F29 green**; `riscv-virt-up` verified (`M2.8`); frontier `M2.7.4`: the gate done, its records the director's; `main` protected (`M2.7.6.6.3`); the catalog crate built |
 | `M3` — joint resolver + checked plan | In Progress | frontier `M3.5`, the independent checker; `M3.3`'s joint constraints closed `2026-10-22`, F08 and F09 refused; F30's gate runs; `M3.6.9` postponed by the director `2026-10-21` until the functionality is locked |
-| `M4` — generated system + simulator | Not Started | frontier `M4.1` |
+| `M4` — generated system + simulator | In Progress | frontier `M4.13`, the build of the application's inputs, ruled to run cargo `2026-11-16`; `M4.1`'s format `/2` written and read |
 | `M5` — physical execution evidence | Not Started | **blocked: no board procured** (2026-09-13) — director decision |
 | `M6` — reuse and extension | Not Started | gated on `M4` |
 | `M7` — first supported release | Not Started | gated on `M5`, `M6` |

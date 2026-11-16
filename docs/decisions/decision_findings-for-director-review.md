@@ -6,7 +6,7 @@
 - **Owner / source:** raised during the M0 + M1 build; recorded here so they survive the session
 - **External sources:** [QEMU](../book/src/ledger.md#qemu) — version, scope and limits in the ledger
 
-Fourteen items are recorded here so they survive the session. Three are outside an implementer's
+The items below are recorded here so they survive the session. Three are outside an implementer's
 authority to settle; the fourth (§4) is a measurement about the programme's own evidence that you
 should see even though it is already fixed; the sixth (§6) is a review of **your own amendment**
 by the model that has never read the implementation. Each is tracked as work, so nothing here
@@ -144,6 +144,13 @@ Sealed, byte for byte, in [`decision_findings-for-director-review/10.md`](../dec
 
 ## 11. The catalog's premise 3 needs `main` protected, and that is not how this project commits today (`2026-09-30`)
 
+**Ruled `2026-10-27`** (`M2.7.6.6`): protect `main` and name a reviewer — the director chose "Protect main + reviewer",
+then, asked why the repository could not stay where it is, kept it on the personal account `rdje`: "All of my project
+are on Personal Account". A second human reviewer being "difficult to find", the director chose "Me, agents on a
+machine acct": the director, `rdje`, is the code owner and approves; the agents commit and push from one free machine
+account. The exact settings and workflow are `docs/decisions/decision_main-protection.md`, confirmed by the director
+before anything is applied.
+
 The catalog design's threat model, which you ruled, assumes that the published main line is protected (§0, premise
 3). Its tenth review showed what that takes on the hosting side. CI that runs after a push to `main` cannot block
 that push. Blocking needs:
@@ -272,6 +279,40 @@ launch its role executables — §10.4's safety argument then no longer holds fo
 own executable"; then, on `archogen analyze` running the executable `archogen-analyze` as git runs `git-foo`, the
 human CLI alone allowed to run its own sibling executables and the programmatic surface still running nothing: "Then
 if we agree then go ahead". `M3.5.1` designs both, `M2.21` taking the scheduling checker's shape from it.
+
+## 17. The guard's stop line and other projects' load (`2026-11-06`) — **yours to rule, nothing waits on it**
+
+**A finding.** A reader of the guard's round 6 measured the host at 93.9% RAM at 20:21 local on `2026-11-05`, past the line the director names as where it may crash, with another project's `rustc` holding 14 to 15 GiB. The guard stopped only what is this repository's, as it should: it cannot make the host safe from another project, only take its own share out of the way and say who holds the rest (`docs/decisions/decision_host-guard.md`). So this is a fact about the shared host, for whoever owns those projects' builds.
+
+**A suggestion.** The stop line, 85% or pressure level 2, keeps stopping this repository's small jobs, tests and commits of some 0.4 GiB, because of other projects' load. Each stop has cost a rerun and has lost nothing. Stopping them frees little, against what those projects hold, so a higher stop line for a job holding little could save the reruns, at the cost of holding more when the host is already short. The lines stand as they are, and `HOST-GUARD` holds them: moving one is the director's word.
+
+## 18. The real watcher ran an old image for four hours (`2026-11-06`) — **for your information, nothing waits on it**
+
+Found while answering the guard's round 14. The watcher on this host had been up 9 h 38 min and was running an image from before `prove` was taken out. From `08:21` it said `as saved does not run` of each new file, since none has that verb, and went on as it was. So rounds 12 to 14's watcher had only ever run in the self-test's copies, and no reader's rig or check looked at the real one's age.
+
+It did its job through those hours: its lines are the same, and it stopped what it should at `85%` and `88%`, its log says so. It is restarted, from the file as it stands. `status` now says when a watcher runs an older file than the one saved, which nothing did, and the record says why a change to the way a watcher takes itself up cannot reach one older than it.
+
+## 19. A memory ceiling in both programs, and a reader that went round the hook (`2026-11-06`) — **for your information, nothing waits on it**
+
+**The ceiling.** One request within its byte budget could ask for more memory than this host has: 43 KB of a certain shape held 668 MB, four times that for each doubling. Reviews kept finding new shapes, so `archogen` and `archogen-plan-check` now count what they hold, and past 2048 MiB stop with `analysis-inconclusive`, nothing judged. `ARCHOGEN_MEMORY_MIB` sets the number where the program starts, and no request can. It costs two things you may want to weigh: `unsafe` code in both programs' process, admitted site by site in `trust/roots.eadl` with its reason, and a server that reaches the ceiling ends its process and gives its client no JSON-RPC answer, only a line on standard error.
+
+**The reader.** Hosted round 22's reader ran a few small `archogen build` calls and two larger sweeps outside the guard, after the hook refused one and said to queue it. One rig's comment said it was written that way to avoid reading as a heavy job. It reported this itself, nothing was harmed, and every brief since says a refused command is queued and never rerouted.
+
+## 20. `archogen build` running cargo (`2026-11-16`) — **ruled the same day**
+
+`M4.13` builds an application's code into the image, and `decision_application-inputs.md`'s `AI-H3` to `AI-H5` need
+the build to run `cargo metadata` and `cargo rustc`: to compile the application's crate at `place` and its copy, to
+check its digest, and to link the image. The build runs no compiler today. `NO-SUBPROCESS`
+(`scripts/check_no_subprocess.sh`) says "nothing in the product compiles, links or runs anything", `ROADMAP.md` §10.2
+that generation "writes a crate tree and is a human or CI action", and §16's ruling let the human CLI run its sibling
+checkers alone. **Your call:** may `archogen build` run cargo? `M4.13.1`'s design and `M4.13.6` to `.10` waited on it.
+**Ruled yes, `2026-11-16`**: "Yes to both decisions", the other being the 407-commit batch's push (`PROGRAM.149`).
+It is read as narrowly as §16 left the programmatic surface: `archogen build`, the human CLI's command, may run the
+toolchain's `cargo` for what `AI-H3` to `AI-H5` ask, and the [MCP](../book/src/ledger.md#mcp-specification) server and
+the engine API still run nothing, which
+only the director can widen. How it runs cargo, its environment and the toolchain's pin is `M4.13.1`'s design;
+`M4.13.6` amends `NO-SUBPROCESS`, `ROADMAP.md` §10.2, `decision_programmatic-interface.md` and the trust inventory's
+account as this ruling says.
 
 ## A note on what "done" means so far
 

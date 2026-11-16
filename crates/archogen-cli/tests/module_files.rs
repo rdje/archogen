@@ -45,7 +45,7 @@ fn repo_root() -> PathBuf {
 /// what that leg wrote.
 ///
 /// Cargo creates `CARGO_TARGET_TMPDIR` when it *builds* a test binary, not when it runs one, so a cached
-/// binary plus a cleaned `target/tmp` would make a bare write panic (`s0_build.rs` measured exactly that).
+/// binary plus a cleaned `target/tmp` would make a bare write panic (measured exactly that at leaf `S0.3`).
 /// ⛔ **One directory per leg.** Tests run in parallel and `fs::write` truncates before it writes, so two
 /// legs sharing a file race — measured while writing this suite: a concurrent `check` read the empty file,
 /// found no declarations, and *accepted* it.

@@ -68,12 +68,13 @@ fn written(program: &Program) -> Assignment {
         (named("time.monotonic"), "observation-coherent", "timer"),
         (named("console.write"), "observable-output", "console.uart"),
     ] {
-        bindings.insert((requester, fact.to_owned()), provider.to_owned());
+        bindings.insert((requester, fact.to_owned()), provider.into());
     }
     Assignment {
         profile: RT_STATIC_UP_V1.id.to_owned(),
         system: "s".to_owned(),
         program: program_digest(program),
+        target: None,
         placement: None,
         bindings,
     }
@@ -110,7 +111,7 @@ fn a_binding_moved_to_a_provider_that_refuses_it() {
     let mut moved = plan_of(DESCRIPTION);
     moved.bindings.insert(
         (named("time.monotonic"), "counter-width".to_owned()),
-        "slow".to_owned(),
+        "slow".into(),
     );
     assert_eq!(
         refused(DESCRIPTION, &moved.to_canonical()),
@@ -160,7 +161,7 @@ fn a_binding_of_a_requester_the_system_does_not_serve_or_of_no_requirement() {
         let mut extra = plan_of(DESCRIPTION);
         extra
             .bindings
-            .insert((requester, fact.to_owned()), "console.uart".to_owned());
+            .insert((requester, fact.to_owned()), "console.uart".into());
         assert_eq!(
             refused(DESCRIPTION, &extra.to_canonical()),
             (Status::ToolFailure, vec![PLAN_BINDING.to_owned()])
@@ -173,7 +174,7 @@ fn a_provider_the_description_does_not_declare() {
     let mut moved = plan_of(DESCRIPTION);
     moved.bindings.insert(
         (named("console.write"), "observable-output".to_owned()),
-        "console.usb".to_owned(),
+        "console.usb".into(),
     );
     assert_eq!(
         refused(DESCRIPTION, &moved.to_canonical()),
@@ -261,12 +262,13 @@ fn joint_plan() -> Assignment {
         (named("time.monotonic"), "observation-coherent", "timer"),
         (named("console.write"), "observable-output", "console.uart"),
     ] {
-        bindings.insert((requester, fact.to_owned()), provider.to_owned());
+        bindings.insert((requester, fact.to_owned()), provider.into());
     }
     Assignment {
         profile: RT_STATIC_UP_V1.id.to_owned(),
         system: "s".to_owned(),
         program: program_digest(&elaborated(JOINT).1),
+        target: None,
         placement: Some(("soc".to_owned(), "ram".to_owned())),
         bindings,
     }
@@ -283,7 +285,7 @@ fn one_corruption_per_joint_rule_is_refused() {
         let mut plan = joint_plan();
         for fact in facts {
             plan.bindings
-                .insert((requester.clone(), (*fact).to_owned()), provider.to_owned());
+                .insert((requester.clone(), (*fact).to_owned()), provider.into());
         }
         plan
     };

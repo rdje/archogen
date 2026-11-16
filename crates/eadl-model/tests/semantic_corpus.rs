@@ -323,9 +323,10 @@ fn the_verdict_is_what_to_fix_first_not_what_was_found_first() {
 #[test]
 fn the_examples_directory_agrees_with_the_pipeline() {
     // The three shipped use cases run through the same pipeline as the corpus. uc1 and uc2 are
-    // accepted; uc3 is `infeasible-configuration` today, because its platform declares
-    // `absolute-deadline` absent and its service requires it — the gap M3.2's indirect
-    // realization must close, without the description changing.
+    // accepted; uc3 is `missing-fact` today: its platform declares `absolute-deadline` absent and
+    // its service requires it, and the engine's adapter that would offer it past that absence
+    // needs a modulus `timer.delay` leaves undescribed (leaf `M3.2.4`) — describing it is
+    // `M3.4.7`'s migration, the director's before the description changes.
     let mut sources = SourceMap::new();
     let registry = registry(&mut sources);
     let profile = default_profile();
@@ -333,14 +334,12 @@ fn the_examples_directory_agrees_with_the_pipeline() {
     for (relative, expected) in [
         ("examples/periodic-three/system.eadl", Verdict::Ok),
         ("examples/high-interference/system.eadl", Verdict::Ok),
-        (
-            "examples/alternative-timer/system.eadl",
-            Verdict::InfeasibleConfiguration,
-        ),
-        // ⭐ uc3 and uc4 are both refused, for reasons that must not be confused. uc3's refusal
-        // is TEMPORARY — the same description must build once M3.2 supplies indirect
-        // realization. uc4's is PERMANENT for this profile: admitting it requires a new named
-        // profile with its own analysis obligations, not a wider `rt-static-up-v1`.
+        // ⭐ uc3 is accepted since its timer states its modulus (leaf `M3.4.7.1`): M3.2's adapter realizes
+        // its absolute deadline past the timer's declared absence, and what remains, its policy's
+        // constraints, is the search's to refuse until M3.7. uc4's refusal is PERMANENT for this
+        // profile: admitting it requires a new named profile with its own analysis obligations, not a
+        // wider `rt-static-up-v1`. The two must not be confused.
+        ("examples/alternative-timer/system.eadl", Verdict::Ok),
         (
             "examples/bounded-queue/system.eadl",
             Verdict::UnsupportedProfile,

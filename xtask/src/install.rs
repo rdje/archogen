@@ -5,9 +5,9 @@
 //! what it places is what the trust gate judges: the build's identity, the inventory's own sha256 and each program's
 //! sha256 come from it, and each file is hashed before it is copied and again where it lands, so a copy that is not
 //! the inventoried artifact is refused. Which roots are programs to place is read from the commit's own
-//! `trust/roots.eadl`: the generator's executable is the front, and every other root whose target is an executable is
-//! a sibling — the configuration checker's, `archogen-plan-check`, since `M3.5.6.2`; the scheduling checker's with
-//! `M2.21.3`.
+//! `trust/roots.eadl`: the generator's executable is the front, and the siblings are exactly the roots its form
+//! `(invokes …)` (`RP-H5`, leaf `M3.5.1.4.4`) — the configuration checker's, `archogen-plan-check`, since then; the
+//! scheduling checker's when `M2.21.5` adds it. An executable root the front does not run is no part of an install.
 //!
 //! ⛔ **It removes nothing, and a failed install leaves no manifest.** The directory must be absent or empty, and the
 //! manifest is written last, through a file renamed into place, so the front never reads a manifest naming a program
@@ -111,7 +111,7 @@ struct Placing {
     sha256: Digest,
 }
 
-/// Place every executable root's artifact from `builds` — the inventory's `target/`, one directory per root — in
+/// Place the front's and each invoked root's artifact from `builds` — the inventory's `target/`, one directory per root — in
 /// `to`, and write the manifest there last.
 pub(crate) fn place(
     inventory: &Json,
@@ -122,7 +122,26 @@ pub(crate) fn place(
 ) -> Result<Manifest, String> {
     let mut front: Option<Placing> = None;
     let mut siblings: Vec<Placing> = Vec::new();
-    for root in roots.programs.iter().filter(|p| p.pair.is_none()) {
+    // The roots the front's form invokes: its siblings, and no other root.
+    let fronts: Vec<&str> = roots
+        .programs
+        .iter()
+        .filter(|p| p.pair.is_none() && p.role == FRONT_ROLE)
+        .map(|p| p.name.as_str())
+        .collect();
+    let invoked: Vec<&str> = roots
+        .front_clauses
+        .iter()
+        .filter(|c| fronts.contains(&c.root.as_str()))
+        .flat_map(|c| c.invokes.iter().flatten())
+        .map(String::as_str)
+        .collect();
+    for root in roots
+        .programs
+        .iter()
+        .filter(|p| p.pair.is_none())
+        .filter(|p| p.role == FRONT_ROLE || invoked.contains(&p.name.as_str()))
+    {
         let Target::Bin(bin) = &root.target else {
             if root.role == FRONT_ROLE {
                 return Err(format!(
@@ -245,7 +264,15 @@ mod tests {
   (role generator)
   (package "crates/archogen-cli")
   (target bin archogen)
-  (role-packages "crates/archogen-cli"))
+  (role-packages "crates/archogen-cli")
+  (invokes scheduling-checker)
+  (installed "archogen-install.json"))
+
+(defroot configuration-checker
+  (role configuration-checker)
+  (package "crates/archogen-plan-check")
+  (target bin archogen-plan-check)
+  (role-packages "crates/archogen-plan-check"))
 
 (defroot scheduling-checker
   (role scheduling-checker)
@@ -284,6 +311,11 @@ mod tests {
                 "release/librt_reference.rlib",
                 b"a library",
             ),
+            (
+                "configuration-checker",
+                "release/archogen-plan-check",
+                b"a program the front does not run",
+            ),
         ] {
             let path = builds.join(root).join(file);
             fs::create_dir_all(path.parent().unwrap()).unwrap();
@@ -303,10 +335,12 @@ mod tests {
 "programs":[
 {{"name":"generator","role":"generator","artifact":{{"path":"release/archogen","sha256":"{}"}}}},
 {{"name":"scheduling-checker","role":"scheduling-checker","artifact":{{"path":"release/archogen-analyze","sha256":"{}"}}}},
-{{"name":"reference-model","role":"reference-model","artifact":{{"path":"release/librt_reference.rlib","sha256":"{}"}}}}]}}"#,
+{{"name":"reference-model","role":"reference-model","artifact":{{"path":"release/librt_reference.rlib","sha256":"{}"}}}},
+{{"name":"configuration-checker","role":"configuration-checker","artifact":{{"path":"release/archogen-plan-check","sha256":"{}"}}}}]}}"#,
             hex(front),
             hex(Digest::of(b"a sibling")),
             hex(Digest::of(b"a library")),
+            hex(Digest::of(b"a program the front does not run")),
         ))
         .unwrap()
     }
@@ -332,8 +366,9 @@ mod tests {
         assert_eq!(
             names,
             ["archogen-analyze"],
-            "the library root is no program to place"
+            "the library root is no program to place, nor an executable root the front does not invoke"
         );
+        assert!(!c.to.join("archogen-plan-check").exists());
         assert_eq!(fs::read(c.to.join("archogen")).unwrap(), b"the front");
         assert_eq!(
             fs::read(c.to.join("archogen-analyze")).unwrap(),
@@ -356,6 +391,35 @@ mod tests {
             ["archogen", "archogen-analyze", FILE],
             "no partial manifest is left"
         );
+    }
+
+    #[test]
+    fn the_real_front_names_the_manifest_and_runs_through_the_launcher_no_subprocess_admits() {
+        // `RP-H5`: the generator's form names the install manifest by `archogen_install::FILE`, invokes the
+        // configuration checker, and the launcher whose sha256 every invocation item carries is the one file
+        // `NO-SUBPROCESS` admits.
+        let repo = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("..");
+        let roots =
+            read_roots(&fs::read_to_string(repo.join("trust/roots.eadl")).unwrap()).unwrap();
+        let front = roots
+            .front_clauses
+            .iter()
+            .find(|c| c.root == "generator")
+            .expect("the front's clauses");
+        assert_eq!(
+            front.installed.as_deref(),
+            Some([FILE.to_owned()].as_slice())
+        );
+        assert_eq!(
+            front.invokes.as_deref(),
+            Some(["configuration-checker".to_owned()].as_slice())
+        );
+        let gate = fs::read_to_string(repo.join("scripts/check_no_subprocess.sh")).unwrap();
+        let admitted = gate
+            .lines()
+            .find_map(|l| l.strip_prefix("ADMITTED=\"")?.strip_suffix('"'))
+            .expect("the gate names the file it admits");
+        assert_eq!(admitted, crate::trust::LAUNCHER);
     }
 
     #[test]
@@ -407,8 +471,17 @@ mod tests {
         assert!(!c.to.join(FILE).exists());
         // A generator that is not an executable.
         let c = case("library-front");
-        let library =
-            read_roots(&ROOTS.replacen("(target bin archogen)", "(target lib)", 1)).unwrap();
+        // Its clauses go with it: a front that is no executable invokes nothing, which the roots' reader refuses.
+        let library = read_roots(
+            &ROOTS
+                .replacen("(target bin archogen)", "(target lib)", 1)
+                .replacen(
+                    "\n  (invokes scheduling-checker)\n  (installed \"archogen-install.json\")",
+                    "",
+                    1,
+                ),
+        )
+        .unwrap();
         let e = place(
             &inventory(Digest::of(b"the front")),
             Digest::of(b"i"),

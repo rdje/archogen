@@ -18,6 +18,8 @@ book never shows you. The crates are read from `Cargo.toml` rather than listed, 
 it is added. A name alone does not count: a list of crate names would pass a name-only rule and tell you
 nothing about where anything lives. When it was written, the scheduling checker — the `rt-analysis` crate —
 was in no chapter at all; [What the scheduling checker establishes](analysis.md) now says which file holds what.
+The same check asks that every crate has a row in `knowledge-map/subsystems.md`, the input to the map a fresh
+working session starts from.
 
 ```console
 $ bash scripts/check_book_coverage.sh
@@ -49,9 +51,11 @@ system's temporary directory. `SCRATCH-LOCALITY` reads every tracked shell scrip
 refuses a `mktemp` with no template under `target/`, a line naming the system temporary directory, and a
 Rust `temp_dir()` call. When it was written, one ordinary run of the doctrines and their self-tests made
 **26** temporary directories and files, **every one** of them off this volume, from 18 places in 15
-files. Four of those places are in files this project takes from its scaffold. A local edit there would
-be erased by the next sync, so the check lists them without refusing them, and the change they need is
-written down for the scaffold's owner in `docs/decisions/decision_scratch-on-the-repository-volume.md`.
+files. Under the director's ruling of `2026-09-30`, a file this project takes from its scaffold is held — never
+edited here — only while the project has never changed it; `.doctrine/scaffold_held.txt` lists those files. Two of
+the places are in such a file, so the check lists them without refusing them, and the change they need is written
+down for the scaffold's owner in `docs/decisions/decision_scratch-on-the-repository-volume.md`. Two more were in
+`check_task_acceptance.sh`, which the project had changed and so owns; they are fixed (leaf `PROGRAM.116`).
 
 Moving a fixture changes what surrounds it. Two self-tests broke when their scratch moved under
 `target/`: one because git ignores that whole directory, and one because [Cargo](ledger.md#rust-toolchain), walking up from the
@@ -122,6 +126,22 @@ archives unchanged. The task-tree root's child summary now includes the already 
 children beyond its former `.89` endpoint. The latest-only record retains the removal receipt's
 exact recorded time. Cleanup ran shortly before the daily boundary ahead of the next long
 controller sweep; current controller measurement resumes next.
+
+
+## A check's own reading cannot fail it
+
+A check often captures a command's output and asks whether a line is in it. Written as a pipe — the output printed into
+`grep -q` — that question can come back wrong. `grep -q` stops at the first match; GNU grep then closes the pipe while
+the printing side is still writing, the write fails, and a script running under `pipefail` counts the pipeline as
+failed though the line was there. It only happens when the output is bigger than a pipe holds, which a Linux pipe
+reaches long before a macOS one, and BSD grep reads to the end anyway: so it passes on a developer's machine and fails
+on CI, now and then. It did, on the CI runs after the push of `d5123578`: the task-history gate's own tests failed
+there while the seal they tested was sound, their outputs having grown past the pipe with the gate's own source.
+
+`PIPE-READS` (`scripts/check_pipe_reads.sh`) refuses that form in every tracked script that runs under `pipefail`; the
+output is read from a here-string instead, `grep -q … <<< "$out"`, which has no pipe to close. As with scratch, the
+places in the files held for the scaffold (`.doctrine/scaffold_held.txt`) are listed, not refused, their change
+written down for the scaffold's owner in the leaf that wrote the check, `PROGRAM.114`.
 
 ## Before handing the workspace over
 
@@ -631,9 +651,9 @@ any harness to adopt, is `docs/TASK_TREE_SEALING.md`.
   the largest finished part, whole. A placeholder's commit, a row's date and the rule against a line at column 0 are
   the tool's alone, which the check does not read, and so are where a placeholder stands in its tree, any text after
   the name on its first line, a seal of only some finished parts, and prose in the index outside its tables;
-- that no live leaf sits inside a part that is sealed, in any tree directly under `docs/tasks/` (one in a sub-folder is
-  `PROGRAM.72`'s), and that each tree holds only its own leaves, each named once; that every sealed file holds a leaf;
-  and that the index keeps one table per tree, its rows under it.
+- that no live leaf sits inside a part that is sealed, in any tree under `docs/tasks/`; that no tree file sits in a
+  sub-folder of it, where nothing would judge it (`PROGRAM.72`); and that each tree holds only its own leaves, each
+  named once; that every sealed file holds a leaf; and that the index keeps one table per tree, its rows under it.
 - that every file of moved log rows is the form the tool writes and matches its index row; that its rows were the
   tree's own just before the commit that moved them, in that order and under that log's header; that every row
   that log then held for a sealed leaf is still in the tree or in those files, none invented; and that each row
@@ -767,15 +787,46 @@ bounded as rolling ledgers (above). A design's review history, which grows by a 
 decisions folder to `docs/reviews/`, which has ceilings of its own, and a closed review's history overflows on to
 `docs/review-history/` (above). The task trees are bounded too, and their
 finished parts overflow to `docs/task-history/`, as settled sections of a decision record do to
-`docs/decision-history/` (above). A folder grown too large is split by subject into sub-folders, each with ceilings
-of its own, while the parent still counts their non-book material, so an ordinary split adds no room.
-Book files remain excluded from those ancestor measurements. No ceiling
-may rise above what a decision fixes, which the policy lists and the check enforces. The decisions folder was split
-this way on `2026-09-30`, and `DECISION-INDEX` keeps every record in a sub-folder listed in its index.
+`docs/decision-history/` (above).
+
+**The record folders bound what is read, not how much is kept.** The decisions, the specifications and the reviews
+may hold as many records as the project needs; the director ruled so on `2026-10-27`
+(`docs/decisions/decision_ceilings-bound-reads.md`), after the specifications folder's total had been raised four
+times in eighteen days. What remains bounds something someone reads, or catches something going wrong:
+
+- **One record.** Each file keeps its own limits on lines, bytes and line width, so any record fits in one reading.
+- **One listing.** No folder among them lists more than 64 entries, its files and its sub-folders together, archive
+  stubs aside: its [fan-out](glossary.md). A subject with several records gets a sub-folder of its own, whose listing
+  is bounded the same way.
+- **A mistake, when it is made.** One commit may grow such a folder by at most 256 KiB over the last commit. A
+  generated or copied tree of files is refused in the commit that adds it. An honest change that big is split, or
+  names the task-tree leaf that owns it. The commit hook judges this, not CI, so a commit made without the hooks, an
+  amendment's total or a tree split across commits is not seen.
+- **A slow drift, years ahead.** Each folder's total has a [runaway guard](glossary.md) of 16 MiB, about twenty-six
+  times the largest of them when it was set. At three quarters of it the check refuses until a leaf asks the
+  director for a ruling, or the ruling is written beside the guard. A total over it is a defect to find.
+
+In the policy, these are a `fan-out N` in a row's Files cell and a `guard N` in its Total bytes cell; the step is a
+sixty-fourth of the guard. Other folders,
+the task trees among them, keep a file count and a total that count a sub-folder's material into its parent, so
+there an ordinary split adds no room. Book files remain excluded from every ancestor measurement. No ceiling may rise
+above what a decision fixes, which the policy lists and the check enforces, and a maximum and its cell must be of one
+kind: a number, a fan-out or a guard. `--report` prints each folder's files, widest listing and total, its growth
+since the newest commit at least a fortnight old, and when at that pace the check would refuse it: at three
+quarters of a guard with no ruling beside it, at its bound otherwise. An accepted design moves to the
+specifications by one scripted step, `scripts/move_record.sh`. It rewrites the record's own links and every live
+citation of its path, and leaves what records the past: a path written at a revision, the archives, the rolling
+ledgers, the verbatim proofs and the files held for the scaffold. A dry run lists each, and the step stages the
+move only after no live file names the old path. The decisions folder was split by subject on
+`2026-09-30`, and `DECISION-INDEX` keeps every record in a sub-folder listed in its index. It holds the specifications
+to the same rule, and it reads a sub-folder's own `INDEX.md` once an index it already reached links it, so no single
+index has to list every record (`PROGRAM.117.3`).
 
 ```console
 $ bash scripts/check_readme_routes.sh              # the gate
 $ bash scripts/check_readme_routes.sh --self-test  # its RED arms, on scratch repositories
+$ bash scripts/check_readme_routes.sh --report     # each folder's totals and growth: telemetry, not a verdict
+$ bash scripts/move_record.sh --dry-run <record> <destination>   # plan a record's move: what changes, what stays
 ```
 
 ## "Next" means what the task tree says

@@ -50,9 +50,17 @@ states the level it is reachable from, `(reachable-at-privilege machine)` — th
 `rt-static-up-v1` runs every caller at — as every suite description's hardware does (leaf
 `M3.3.4.5`, `docs/semantics/migrations/eadl-1-uc3-states-its-level.md`). No requirement and no
 absence moved, and `crates/eadl-model/tests/examples.rs` asserts both halves of the gap are
-still there. The description `M3.2` must build is the one that change left; any later change to
-what it describes moves its digest in `docs/semantics/BASELINE.txt`, which
-`scripts/check_language_freeze.sh` refuses without a migration note.
+still there. Any later change to what it describes moves its digest in `docs/semantics/BASELINE.txt`,
+which `scripts/check_language_freeze.sh` refuses without a migration note.
+
+It changed a second time on `2026-10-27`, again stating a fact of its hardware: `timer.delay` states
+`(counter-modulus 4294967296)`, the count its 32-bit counter wraps at (leaf `M3.4.7.1`,
+`docs/semantics/migrations/eadl-1-uc3-states-its-modulus.md`). The engine's adapter that realizes an
+absolute deadline over a relative delay needs that modulus, and the vocabulary makes a modulus a fact
+a description states, never one derived from a width. The director delegated the change. No
+requirement and no absence moved: `absolute-deadline` is still required and still declared absent.
+`archogen check` accepts the description, and the search realizes its deadlines through the adapter;
+what remains is its scheduling policy's constraints, which only a catalog record offers (`M3.7`).
 
 ## Why the status changes
 

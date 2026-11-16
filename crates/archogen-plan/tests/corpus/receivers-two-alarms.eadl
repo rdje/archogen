@@ -1,0 +1,10 @@
+(eadl-version eadl/1)
+; Two tasks programming alarms at one timer, `b` at rank 1: the refusal names both in runtime order (§1; round 11,
+; D1).
+(defblock timer.d
+  (offers (relative-delay true) (channels 2 tick) (reachable-at-privilege machine)))
+(defplatform soc.d (offers (core-count 1 tick) (reachable-at-privilege machine)) (requires (uses timer.d)))
+(defsystem ord2
+  (task a (period 20 ms) (deadline 20 ms) (deadline-from release) (priority 2) (needs relative-delay))
+  (task b (period 10 ms) (deadline 10 ms) (deadline-from release) (priority 1) (needs relative-delay))
+  (platform (uses soc.d)))

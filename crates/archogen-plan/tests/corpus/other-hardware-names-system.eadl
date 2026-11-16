@@ -1,0 +1,14 @@
+(eadl-version eadl/1)
+; A block on another system's platform naming a system: no requester `s` serves names a system, so the naming-system
+; refusal does not apply; the hardware-naming refusal names no scope (§1) (§1; round 14, R1).
+(defblock console.uart (offers (observable-output true) (reachable-at-privilege machine)))
+(defblock odd (offers (core-count 1 tick) (reachable-at-privilege machine)) (requires (uses s)))
+(defplatform soc (offers (core-count 1 tick) (reachable-at-privilege machine)) (requires (uses console.uart)))
+(defplatform soc.o (offers (core-count 1 tick) (reachable-at-privilege machine)) (requires (uses console.uart odd)))
+(defservice console.write (requires (needs observable-output)))
+(defsystem s
+  (task a (period 10 ms) (deadline 10 ms) (deadline-from release) (priority 1) (uses console.write))
+  (platform (uses soc)))
+(defsystem o
+  (task b (period 10 ms) (deadline 10 ms) (deadline-from release) (priority 1) (uses console.write))
+  (platform (uses soc.o)))

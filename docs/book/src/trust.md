@@ -21,8 +21,8 @@ everything they used, kept current, with each shared spreadsheet flagged for rev
 > **In one minute, for engineers.** `trust/roots.eadl` names each **root** — the program that runs a role — and
 > classifies every other program target of the workspace. `cargo xtask trust-inventory` builds each root clean from
 > the commit's blobs, reads what [rustc](ledger.md#rust-toolchain) read, and lists every **shared item** two roots have in common: a package, a
-> file, a byte-for-byte copy, the comparison harness, the build configuration, what a committed generated source was
-> made from. `trust/baseline.eadl` holds one
+> file, a byte-for-byte copy, a comparison (the harness or a derivation), the build configuration, what a committed
+> generated source was made from. `trust/baseline.eadl` holds one
 > **form** per shared item, proposed by the tool and accepted only by a protected review (`M3.6.5`).
 > `cargo xtask trust-gate` compares a commit's inventory with its base commit's forms and writes a report in two
 > parts, the change and the standing list; `cargo xtask trust-verify` checks a package that carries an inventory. It
@@ -42,11 +42,11 @@ target, the **role packages** holding its role's own logic, and any fixed data i
   (role generator)
   (package "crates/archogen-cli")
   (target bin archogen)
-  (role-packages "crates/archogen-cli" "crates/archogen-api" "crates/archogen-s0"))
+  (role-packages "crates/archogen-cli" "crates/archogen-api" "crates/archogen-emit"))
 ```
 
 The root's own package always belongs to its role packages, even if the clause omits it. With
-`(package "crates/archogen-cli")` and `(role-packages "crates/archogen-s0")`, both packages belong to the root's set;
+`(package "crates/archogen-cli")` and `(role-packages "crates/archogen-emit")`, both packages belong to the root's set;
 without a role-packages clause, its set still contains `crates/archogen-cli`. Every declared member is retained.
 
 `defroot`, `defharness`, `defderivation`, `defprogram` and `defrole` place a symbol or string name immediately after the
@@ -74,15 +74,26 @@ including in a harness between valid ones. A harness compares a reference model 
 validates — one root of role `reference-model` and one of role `implementation`, in either order — and any other
 pair refuses, so a comparison of the generator with a checker cannot be written as one.
 
-**Read and built, written by no commit yet** (`M3.5.2`'s readers, `decision_trust-role-programs.md`).
-The gate reads two forms no commit
-writes yet, since the gate that judges a push is built from the commit before it and must already know a form:
+**Read before they are written** (`M3.5.2`'s readers, `decision_trust-role-programs.md`). The gate that judges a push
+is built from the commit before it, so it must know a form before any commit writes one. It reads two more:
 
 - `(defderivation <name> (pair generator <checker>) (package "<dir>") (test <target>) (reason "…"))`, a test
   comparing a reading of the generator's with either checker's, its pair the generator's root and that checker's, in
-  either order, and a reason;
+  either order, and a reason. The first two are the relation's comparisons in `crates/eadl-resolve` (leaf
+  `M3.5.3.1`): `production`, the production relation against the checker's executable model, and `vocabulary`, the
+  typed table against the checker's own, entry by entry. Building them compiles `eadl-resolve`'s library, whose two
+  `include_str!` sites, the shipped kind `deffact` and vocabulary `/1`, are each admitted by a `defadmit`. The third,
+  `system-reading` (leaf `M3.5.5.7.2`), compares two readings written apart rather than a transcription: the search's
+  reading of a system against the one the configuration checker's joint check judges with, which a context that
+  never read the search's wrote. The fourth, `adapters` (leaf `M3.2.2`), holds the engine's adapter catalog as the
+  generator reads it from `adapters.eadl` — two more admitted `include_str!` sites, its kind `defadapter` and the
+  catalog `adapters/1` — equal, kind by kind, to the checker's own table, written from the design record by a context
+  that never read the generator's;
 - on the front's form alone — the one root of role `generator`, an executable — `(invokes <root> …)`, the other
-  executable roots it runs, each once, and `(installed "archogen-install.json")`, together.
+  executable roots it runs, each once, and `(installed "archogen-install.json")`, together. The generator's form holds
+  them since leaf `M3.5.1.4.4`: `(invokes configuration-checker)`, so the inventory records the front and the checker
+  sharing an invocation, the launcher's sha256 within it, and `cargo xtask install` places exactly the roots the
+  front invokes.
 
 Each departure refuses before a build, as a misnamed harness does — a clause holding anything but names among them,
 and a fault within one form stopping the reading at that form (leaf `M3.5.2.2.1`) — and one test target belongs to one
@@ -90,7 +101,7 @@ comparison only, never classified beside it (leaf `M3.5.2.3.2`). A derivation is
 no root: its pair takes its item, `shared-derivation`, one item a form (leaf `M3.5.2.1.2`); no comparison is paired with
 another, the harness with every root but its pair's two (leaf `M3.5.2.6.4`). The front and each root it
 invokes share an `invocation` item: the invoked root's name, role and target, and the sha256 of the launcher — the
-file the constant `LAUNCHER` in `xtask/src/trust.rs` names, which the front gains with leaf `M3.5.1.4` — so an edit to
+file the constant `LAUNCHER` in `xtask/src/trust.rs` names, `crates/archogen-cli/src/sibling.rs` since leaf `M3.5.1.4.1` — so an edit to
 the launcher, whose acceptance contract carries the risk, is reported; a front that invokes while its commit holds no
 launcher is refused (leaf `M3.5.2.1.3`). A comparison no form names is found by what the census reads of every
 unit, not by the names its sources use: every test-like unit — an integration test, a bench, a library's or an executable's unit tests, a library's doc

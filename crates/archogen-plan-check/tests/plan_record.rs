@@ -41,12 +41,13 @@ fn written(program: &Program) -> Assignment {
             Requester::Named("app.rt".to_owned()),
             "counter-width".to_owned(),
         ),
-        "app.timer".to_owned(),
+        "app.timer".into(),
     );
     Assignment {
         profile: RT_STATIC_UP_V1.id.to_owned(),
         system: "app.rt".to_owned(),
         program: program_digest(program),
+        target: None,
         placement: None,
         bindings,
     }

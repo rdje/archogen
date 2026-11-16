@@ -1,0 +1,15 @@
+(eadl-version eadl/1)
+; Named, unbound hardware running in a timer route's interrupt through an expiry (§2.6; round 19, R9).
+(defblock timer.d
+  (offers (relative-delay true) (counter-modulus 4294967296) (tick-rate 1 MHz) (observation-coherent true)
+    (channels 1 tick) (reachable-at-privilege machine)))
+(defblock log.b
+  (offers (transfer-engine true) (reachable-at-privilege machine)))
+(defplatform soc.d
+  (offers (core-count 1 tick) (reachable-at-privilege machine))
+  (requires (uses timer.d log.b)))
+(defservice dl
+  (requires (absolute-deadline (delivery-bound (at-most 50 us))) (uses log.b)))
+(defsystem ne
+  (task x (period 25 ms) (deadline 25 ms) (deadline-from release) (priority 1) (uses dl))
+  (platform (uses soc.d)))

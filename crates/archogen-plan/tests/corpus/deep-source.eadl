@@ -1,0 +1,20 @@
+(eadl-version eadl/1)
+; A sporadic task reaching its source two services deep, the serving service logging: the source's interrupt context
+; reaches the console (§2.6; round 7).
+(defblock dev.e
+  (offers (interrupt-source true) (min-arrival-separation 20 ms) (reachable-at-privilege machine)))
+(defblock console.uart
+  (offers (observable-output true) (reachable-at-privilege machine)))
+(defplatform soc.e
+  (offers (core-count 1 tick) (reachable-at-privilege machine))
+  (requires (uses dev.e console.uart)))
+(defservice log
+  (requires (needs observable-output)))
+(defservice evt
+  (requires (needs interrupt-source) (uses log)))
+(defservice handler
+  (requires (uses evt)))
+(defsystem ds
+  (task s (min-separation 10 ms) (deadline 10 ms) (deadline-from release) (priority 1) (uses handler))
+  (task p (period 10 ms) (deadline 10 ms) (deadline-from release) (priority 2) (uses log))
+  (platform (uses soc.e)))

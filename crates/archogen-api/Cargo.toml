@@ -15,3 +15,5 @@ workspace = true
 archogen-outcome = { path = "../archogen-outcome" }
 eadl-front = { path = "../eadl-front" }
 eadl-model = { path = "../eadl-model" }
+# The search and the plan it writes, `resolve`'s (leaf `M3.4.4`).
+eadl-resolve = { path = "../eadl-resolve" }

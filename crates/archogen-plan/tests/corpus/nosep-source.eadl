@@ -1,0 +1,20 @@
+(eadl-version eadl/1)
+(defblock dev.g
+  (offers (interrupt-source true) (reachable-at-privilege machine)))
+(defblock dev.a
+  (offers (interrupt-source true) (reachable-at-privilege machine))
+  (absent min-arrival-separation))
+(defplatform soc.g
+  (offers (core-count 1 tick) (reachable-at-privilege machine))
+  (requires (uses dev.g)))
+(defplatform soc.a
+  (offers (core-count 1 tick) (reachable-at-privilege machine))
+  (requires (uses dev.a)))
+(defservice nosep
+  (requires (needs interrupt-source)))
+(defsystem ns
+  (task u (min-separation 10 ms) (deadline 10 ms) (deadline-from release) (priority 1) (uses nosep))
+  (platform (uses soc.g)))
+(defsystem as
+  (task u (min-separation 10 ms) (deadline 10 ms) (deadline-from release) (priority 1) (uses nosep))
+  (platform (uses soc.a)))

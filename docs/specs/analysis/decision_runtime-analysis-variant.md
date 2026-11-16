@@ -55,7 +55,7 @@ defaults.** A zero is declared, like any other value, with its evidence.
 | `S` | the platform | one context transition: from a decided switch, saving the outgoing context beyond what interrupt entry saved, to the incoming one running. It bounds the ledger's *task switch*, *initial dispatch* and *idle/wakeup* alike |
 | `W_wake` | the platform | from an interrupt becoming pending while the idle context waits, to interrupts being unmasked: the idle check plus the wake latency. The ledger's *idle/wakeup* is split here: the wake is `W_wake`, before the service; the switch out of idle is `S` |
 | `γ` | the platform | the preemption delay: the most one preemption or service adds to the preempted execution through lost cache, pipeline, predictor or TLB state. `0` only with evidence that the target keeps no such state |
-| `ρ`, `δ` | the platform | the largest delay the compare's rounding adds to a release (at most one resolution step less one unit; `0` when releases fall on ticks); the hardware's delivery latency from an interrupt becoming pending, unmasked, to its entry |
+| `ρ`, `δ` | the platform | the largest delay the compare's rounding adds to a release (less than one resolution step; `0` when releases fall on ticks); the hardware's delivery latency from an interrupt becoming pending, unmasked, to its entry |
 | the platform facts | the platform | each a declared yes or no, with its evidence: <br>• there is one processor; <br>• the timer is event-driven, its compare has level semantics and rounds up, and the due-check uses the compare's counter and rounding; <br>• **a service releases a task only once its nominal release has passed** (no early release), the timer service releases every due one; the timer's interrupt is taken only when a release is due; <br>• only the timer service releases timer-released tasks; <br>• interrupts do not nest; every masked section masks every interrupt; every service preempts every task; <br>• **every interrupt taken runs one service, paid for by a due release or by an arrival**, in the terms and with every clause condition 5 states; <br>• preemption happens at every point outside a masked section, a service or a transition (no scheduler lock, no deferred preemption); <br>• a pending interrupt is taken before the resumed context executes an instruction, and every transition, into idle included, ends unmasked; <br>• context switching is eager, or `S` includes every deferred save and restore a transition causes (lazy floating-point state, for instance); <br>• each cost bound holds under any preemption pattern |
 | enabled sources | the build | the interrupts the build enables (§7.5's resolved plan), non-maskable interrupts and firmware traps included, which the declared sources plus the timer must equal |
 
@@ -70,9 +70,12 @@ from parts is decided in `decision_runtime-composite-inputs.md` (`M2.10.1`), and
 kernel or platform figure. `C_s` stays the caller's for a service whose record states `no-application-code` `no`
 (that record's §6). The enabled set and interrupt
 priorities are the plan's. Condition 8 is each catalog cost's `holds-under-preemption`, plus the application's
-declaration for its own figures. The platform fact that sections mask every interrupt is the conjunction of the catalog's
-fact for the kernel's sections and a fourth task fact, that no task masks other than through the runtime API
-(`decision_catalog-records.md` §12); `M2.7.5` composes them. What each input **means** is unchanged, and so was the model, then `/1`. A conclusion
+declaration for its own figures, and, for generated code's costs and times on a target, the realization's `holds-under-preemption`
+of each node a job calls, each alarm and each source, as `decision_runtime-plan-format-2.md` §3 owes it (amended `2026-11-14`,
+its rounds 24 to 26). The platform fact that sections mask every interrupt is the conjunction of the catalog's
+fact for the kernel's sections and the application's declaration, for each task, that it masks only through the
+runtime API (`decision_catalog-records.md` §12). That declaration is a conjunct of the platform fact, not a fourth
+of the three task facts §1 lists and condition 4 names (`M2.27`, `2026-10-28`). `M2.7.5` composes the two. What each input **means** is unchanged, and so was the model, then `/1`. A conclusion
 names every input the caller supplied, whatever its category, and none of them can back a production claim
 (`decision_catalog-records.md` §7). `M2.7.5` implements that naming.
 

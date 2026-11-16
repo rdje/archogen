@@ -9,11 +9,21 @@ No bootstrap read includes this directory.
   record's `## Review`.
 - **A new design under review:** a file named as its design record with `-reviews` added, and its row below; once
   its first round is answered, its line under *Counted by `REVIEW-COUNTS`* if its record keeps a table of its rounds.
+- **A history past its ceiling,** a file of `README-ROUTES`' 1 200 lines or 131 072 bytes, continues in a part:
+  `<file>.part-2.md` beside it, then `.part-3.md`, each new round appended to the last and nothing before it edited,
+  the file before it ending in a line that names it. `REVIEW-COUNTS` reads the history and its parts in order, as one
+  (`PROGRAM.135`); the row and the counted line name the first file alone.
 - **When the review closes,** the file is frozen: its last round is the one that found no defect. It may then move
   to `docs/review-history/`, byte for byte, behind a stub (`bash scripts/check_review_history.sh --seal <FILE>`).
 
 | Review history | Design record | Rounds | Status |
 | --- | --- | --- | --- |
+| [`decision_runtime-plan-format-2-reviews.md`](decision_runtime-plan-format-2-reviews.md) | [`decision_runtime-plan-format-2.md`](../decisions/decision_runtime-plan-format-2.md) | 39 | closed: round 39 found no defect (`M4.1.7.2.39`) |
+| [`decision_application-inputs-reviews.md`](decision_application-inputs-reviews.md) | [`decision_application-inputs.md`](../decisions/decision_application-inputs.md) | 20 | closed: round 20 found no defect (`M4.12.1.20`) |
+| [`decision_host-guard-reviews.md`](decision_host-guard-reviews.md) | [`decision_host-guard.md`](../decisions/decision_host-guard.md) | 49 | closed: round 49 found no defect (`PROGRAM.127.49`) |
+| [`decision_release-alarm-reviews.md`](decision_release-alarm-reviews.md) | [`decision_release-alarm.md`](../decisions/decision_release-alarm.md) | 16 | closed: round 16 found no defect (`M4.1.6.16`) |
+| [`decision_device-correspondence-reviews.md`](decision_device-correspondence-reviews.md) | [`decision_device-correspondence.md`](../decisions/decision_device-correspondence.md) | 9 | closed: round 9 found no defect (`M4.4.1.9`) |
+| [`decision_hosted-build-reviews.md`](decision_hosted-build-reviews.md) | [`decision_hosted-build.md`](../decisions/decision_hosted-build.md) | 29 | closed: round 29 found no defect (`M4.2.3.3.29`) |
 | [`decision_catalog-records-reviews.md`](decision_catalog-records-reviews.md) | [`decision_catalog-records.md`](../specs/catalog/decision_catalog-records.md) | 16 | closed: the record met its closure rule on round 16 (`M2.7.1`) |
 | [`decision_decisions-folder-ceiling-reviews.md`](decision_decisions-folder-ceiling-reviews.md) | [`decision_decisions-folder-ceiling.md`](../decisions/decision_decisions-folder-ceiling.md) | 1 | closed: answered before the raise landed (`PROGRAM.38`) |
 | [`decision-history-reviews.md`](decision-history-reviews.md) | `DECISION-HISTORY`: the header of `scripts/check_decision_history.sh`, and [`decision_decisions-folder-ceiling.md`](../decisions/decision_decisions-folder-ceiling.md)'s sealing bullet | 1 | closed: answered with the gate's hardening (`PROGRAM.41.1`) |
@@ -32,6 +42,10 @@ No bootstrap read includes this directory.
 | [`decision_trust-generated-refusals-reviews.md`](decision_trust-generated-refusals-reviews.md) | [`decision_trust-generated-refusals.md`](../specs/trust/decision_trust-generated-refusals.md) | 23 | closed: `2026-10-10`, round 23 found no defect; rounds 1–22 answered, rounds 5, 14, 16 to 20 by method (`M3.6.6.4`) |
 | [`decision_trust-generated-adequacy-reviews.md`](decision_trust-generated-adequacy-reviews.md) | [`decision_trust-generated-adequacy.md`](../specs/trust/decision_trust-generated-adequacy.md) | 3 | closed: `2026-10-11`, round 3 found zero defects and one remark, existing invocation-error kills owned by M3.6.9.1; accepted design, strict outcomes built; remaining implementation pending |
 | [`decision_trust-role-programs-reviews.md`](decision_trust-role-programs-reviews.md) | [`decision_trust-role-programs.md`](../specs/trust/decision_trust-role-programs.md) | 15 | closed: round 15 found no defect `2026-10-24`, rounds 1 to 15 holding 112 defects and 114 remarks, every one answered (`M3.5.2`) |
+| [`decision_trust-role-programs-transport-reviews.md`](decision_trust-role-programs-transport-reviews.md) | §5's `crates/archogen-transport` row of [`decision_trust-role-programs.md`](../specs/trust/decision_trust-role-programs.md), reopened by `RP-H10` | 4 | stopped: rounds 16–18 answered, 14 defects and 19 remarks; round 19 stopped `2026-10-26` by the director's ruling against mutation testing before feature completeness (`M3.5.1.6.3`; the suites' adequacy `M7.6`'s) |
+| [`decision_absence-per-provider-reviews.md`](decision_absence-per-provider-reviews.md) | [`decision_absence-per-provider.md`](../decisions/decision_absence-per-provider.md) | 3 | closed: `2026-10-27`, round 3 found no defect; rounds 1–3 found 13, 8 and 5, round 3's wording and a lag of its leaf, all answered (`M3.4.8`) |
+| [`decision_engine-adapters-reviews.md`](decision_engine-adapters-reviews.md) | [`decision_engine-adapters.md`](../specs/adapters/decision_engine-adapters.md) | 3 | closed: `2026-10-27`, round 3 found no defect; rounds 1–3 found 25, 12 and 4, all answered (`M3.2.1`) |
+| [`decision_runtime-plan-reviews.md`](decision_runtime-plan-reviews.md) | [`decision_runtime-plan.md`](../decisions/decision_runtime-plan.md) | 6 | open: rounds 1–6 found 28, 25, 32, 27, 18 and 20, with 18, 17, 18, 16, 8 and 10 defects, each answered; round 7 reviews the record with its executable form and probe corpus |
 
 ## Counted by `REVIEW-COUNTS`
 

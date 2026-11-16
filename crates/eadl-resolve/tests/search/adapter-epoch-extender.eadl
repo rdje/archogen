@@ -1,0 +1,33 @@
+; A counter extended to 2^64 counts (`docs/specs/adapters/decision_engine-adapters.md` §2, leaf M3.2.3.2): the timer's
+; own 16-bit counter at 10 MHz disambiguates (65535 / 10 MHz) 6.5535 ms and `time.monotonic` asks 60 s, so the
+; timer alone meets no assignment; the engine's adapter `epoch-extender` programs it — an epoch advanced by a wake on
+; its relative delay before each wrap — and offers `(pow2 64)` counts at its rate, from which the horizon is derived,
+; beside the counter's width, rate and coherent reads, so the service's facts of one function meet at one provider
+; (model §8 rule 13). `archogen check` accepts it.
+
+(eadl-version eadl/1)
+
+(defblock timer.short
+  (offers
+    (relative-delay true)
+    (counter-width 16 bit)
+    (counter-modulus 65536)
+    (tick-rate 10 MHz)
+    (wrap-behavior modular)
+    (observation-coherent true)
+    (channels 1 tick)
+    (reachable-at-privilege machine)))
+
+(defplatform soc.short
+  (offers (core-count 1 tick) (reachable-at-privilege machine))
+  (requires (uses timer.short)))
+
+(defservice time.monotonic
+  (requires
+    (unambiguous-horizon (at-least 60 s))
+    (needs counter-width tick-rate observation-coherent)))
+
+(defsystem short-counter
+  (task beat (period 10 ms) (deadline 10 ms) (deadline-from release) (priority 1) (uses time.monotonic))
+  (requires (uses time.monotonic))
+  (platform (uses soc.short)))

@@ -198,10 +198,14 @@ reviews stale and the affected claims flagged. It rests on four premises, each w
 3. the published main line is protected;
 4. the machine running a check is not working against it.
 
-The third premise needs settings only the director can turn on, which the findings record lists (§11). They
-include a second person to approve changes to the checking tool, since a sole author approving their own change
-protects nothing. How the check itself is protected from what it judges is the leaf `M2.7.6`, with a test for
-every attack the reviews found.
+The third premise needs settings only the director can turn on, which the findings record lists (§11). The
+director turned them on, `2026-10-28` (`docs/decisions/decision_main-protection.md`):
+- `main` changes only by a merged pull request, after the required checks pass on the merge;
+- the director approves each pull request, the ownership file making every path the director's (`M2.7.6.5`);
+- the agents author from a machine account of their own, so the author of a change is never its approver.
+
+A sole author approving their own change protects nothing. How the check itself is protected from what it judges
+is the leaf `M2.7.6`, with a test for every attack the reviews found.
 
 ### How it was reviewed
 
@@ -236,7 +240,8 @@ chapter](analysis.md)).
   port's record is written, every analysis of the runtime variant over the catalog is inconclusive.
 - **No surface makes a production claim.** That needs images, which are `M4`'s, and `M4.10` holds everything the
   design leaves to it.
-- **Premise 3 is unmet** until the director turns on the hosting settings and names a second reviewer. Its
-  repository half has begun: every workflow holds a read-only token and keeps no credentials (`M2.7.6.1`), and
+- **Premise 3 is unmet** until the first batch merges under the hosting's rules, which are on (`M2.7.6.6`): its
+  merge commit is the one from which the premise holds. Its repository half has begun: every workflow holds a
+  read-only token and keeps no credentials (`M2.7.6.1`), and
   the harness that builds the checker from the base and runs it on the judged tree is written and tested against
   the constructions the reviews found (`M2.7.6.2`).

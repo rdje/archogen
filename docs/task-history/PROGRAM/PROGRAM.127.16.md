@@ -1,0 +1,11 @@
+- ID: `PROGRAM.127.16`
+  Status: `done` — `2026-11-06`: round 16, a fresh reader over round 15's answer: 11 findings, 4 defects, after 15, 12, 5, 6, 13, 2, 1, 1, 1, 3, 2, 3, 5, 2 and 4, each in round 15's stamp or what it reads. A stamp is of a whole run, of the bytes that run began on, in the repository they lie in; all the check reads is read as staged, and what the index lost is gone; it compiles the bytes. The findings and each answer are in `docs/reviews/decision_host-guard-reviews.md`.
+
+  **Acceptance checklist (`DOCTRINE_ENFORCEMENT.md`):**
+  - [x] **REPRODUCE / ISSUE** — the reader's fixtures on `7871ed4f`, `target/p12716/work/`: `f5` → `selftest case_what_counts_as_heavy`, 153 passed, then `git commit` rc 0 with `job.bytess` in HEAD; `f6` → a save at 14:27:46 stamped, rc 0; `f3` → `{"hooks":{}}` staged, the tree restored, rc 0; a copy's import → sha run `9f37d6f2`, sha it would stamp `a49df506`.
+  - [x] **ROOT CAUSE (WHY + WHERE)** — `git grep -n 'stamp_of(ROOT' 7871ed4f -- scripts/selftest_host_guard.py` → the stamp took the repository's files as they stood at the end, whatever ran; `git grep -n 'root / "Makefile"\|settings.read_text\|root / "CLAUDE.md"' 7871ed4f -- scripts/check_host_guard.sh` → the rest read from the tree.
+  - [x] **FIX** — `scripts/selftest_host_guard.py`: `leave_the_stamp`, its case, what is staged of the rest. `scripts/check_host_guard.sh`: `as_staged` of everything it reads, what the index lost, `compile` of the bytes, the same place asked of the filesystem. `scripts/host_guard.py`: a pid's spellings, `x` no selector. `scripts/run_self_tests.sh`: an incomplete gate's last lines, an arm. The record, the review history and its index.
+  - [x] **ADDRESSED (verified)** — `python3 -I -B scripts/selftest_host_guard.py` → `host-guard self-test: 748 passed, 0 failed, 0 not run`, exit 0; `bash scripts/run_self_tests.sh --self-test`, `run-self-tests self-test: 17 pass / 0 fail (17 arms)`, exit 0.
+  - [x] **NO REGRESSION** — `bash scripts/check_host_guard.sh` → `host-guard: OK`, exit 0, on the staged tree, its stamp matching; `make focused` → `tier focused: passed — 3 passed, 0 failed`, on the staged tree, through the guard.
+  - [x] **LOCKSTEP** — the record, the review history and its index, these leaves and the Commit Log; `MEMORY.md`'s next action.
+  Commit: `ARCHOGEN-PROGRAM-1199 (leaf PROGRAM.127.16)`

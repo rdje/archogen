@@ -1,0 +1,15 @@
+(eadl-version eadl/1)
+; A stated level, which binds no provider (`M4.1.9`), and ranks 3 and 7 (round 7, D3).
+(defblock console.uart
+  (offers (observable-output true) (reachable-at-privilege machine)))
+(defblock timer.d
+  (offers (relative-delay true) (channels 1 tick) (reachable-at-privilege machine)))
+(defplatform host.p
+  (offers (core-count 1 tick) (reachable-at-privilege machine))
+  (requires (uses console.uart timer.d)))
+(defservice console.write
+  (requires (needs observable-output) (reachable-at-privilege machine)))
+(defsystem sh
+  (task a (period 10 ms) (deadline 10 ms) (deadline-from release) (priority 7) (uses console.write))
+  (task b (period 20 ms) (deadline 20 ms) (deadline-from release) (priority 3) (uses console.write))
+  (platform (uses host.p)))

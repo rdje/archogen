@@ -4,8 +4,11 @@
 - **Authority:** the director's standing instruction, which names live-document size containment an
   adopted policy. Adopted `2026-09-30` by leaf `PROGRAM.17.1` (`docs/tasks/PROGRAM.md`).
 - **Source, read-only, never written to:** the neutral body below is copied verbatim from fsmgen's
-  `LIVE_DOCUMENT_SIZE_CONTAINMENT.md` at `0fa794310` (lines 190–529; the body's sha256 is
-  `af130de4d7bbeef6db532b0cea4ba25a07ce131c6a44511cbe25d8a91c037aa2`). The adoption route followed is fsmgen's
+  `LIVE_DOCUMENT_SIZE_CONTAINMENT.md` at `58d5edef7` (lines 191–549; the body's sha256 is
+  `f5fbff0506537e23ca602e0006588ff1e76bfe4b4c056628d527ef8752261e4b`), the revision `PROGRAM.137` reviewed and adopted on `2026-11-13`. It
+  adds fsmgen's user-facing book exception, which agrees with this repository's own ruling of `2026-10-18` that the book's
+  growth is unbounded (the inventory's `docs/book/src/` row); its surface names and decision numbers are fsmgen's, not
+  this repository's. The first adoption was of `0fa794310` (lines 190–529, sha256 `af130de4…7aa2`). The adoption route followed is fsmgen's
   `docs/LIVE_DOCUMENT_SIZE_CONTAINMENT_ADOPTION_GUIDE.md` at `727e0d086` (sha256
   `8f77fa39c9bcb9cfc43166259a627a6ced64682030088400b727dccc5d674a53`). The origin is a template, not an
   upstream. A later revision there is adopted only by a new, owned review here. No fsmgen threshold, path,
@@ -31,9 +34,9 @@ Sizes are lines / bytes / longest line in bytes.
 | `docs/task-history/` — sealed subtrees, their leaves' log rows and an index | `archive_terminal` | 756 207 in aggregate; `M1/M1.13.md` 1 511 / 138 922 | every file against its row and its sealing commit, every leaf against its stub and its tree before the seal, by `TASK-HISTORY`; ≤ 1 800 lines, ≤ 163 840 bytes and ≤ 2 048 bytes a line a file, by `README-ROUTES`; the count and total unbounded by design | one file per closed subtree | retain: immutable, indexed, in no bootstrap read (`PROGRAM.32`) |
 | `ROADMAP.md` | `maintained_reference`, owned by the director | 953 / 104 333 / 623 | none; it changes with the program's scope | scope | retain; not archogen's to restructure |
 | `KNOWLEDGE_MAP.md` | `generated_projection` | 178 / 14 491 / 113 | freshness, by `KNOWLEDGE-MAP` | one card per promoted lesson | retain; it is generated, never edited |
-| `docs/decisions/` — 35 records, a template and an index | `partitioned_canonical`, by subject | 4 069 / 355 040, after `PROGRAM.102`'s move | the index lists every record by its path, by `DECISION-INDEX`; ≤ 40 files and ≤ 393 216 in total, a decision's cap, with its per-file limits, by `README-ROUTES` | one record per decision | retain; settled sections sealed to `docs/decision-history/` (`PROGRAM.41`); accepted designs moved to `docs/specs/` (`PROGRAM.43`, `.56`, `.102`) |
-| `docs/specs/` — 14 records by subject: 7 in `catalog/`, 6 in `trust/`, 1 in `analysis/` | `partitioned_canonical`, by subject | 6 320 / 589 151 | ≤ 16 files, ≤ 1 200 lines and ≤ 98 304 bytes a file, ≤ 1 536 bytes a line, ≤ 655 360 in total, a decision's cap, by `README-ROUTES` | an accepted design moved in | retain (`PROGRAM.43`, `PROGRAM.56`, `PROGRAM.79`, `PROGRAM.102`, `PROGRAM.108`) |
-| `docs/reviews/` — 3 review histories, 12 stubs, an index, measured `2026-10-10` | `partitioned_canonical` | 610 / 78 575 / 849 | ≤ 16 files, archive stubs aside (`PROGRAM.70`); ≤ 1 200 lines and ≤ 131 072 bytes a file, ≤ 1 024 a line, ≤ 393 216 in total, by `README-ROUTES` | rounds while open; archived once closed (`REVIEW-HISTORY`), its stub's file kept, that cell raised by the ceiling record when it binds | retain; in no bootstrap read |
+| `docs/decisions/` — 38 records, a template, an index; `2026-10-27` | `partitioned_canonical`, by subject; the working set | 40 entries / 407 037 | every record indexed by its path, by `DECISION-INDEX`; per-file limits, 64 entries a listing, a 16 MiB runaway guard and its step, by `README-ROUTES` | one record per decision | sections sealed to `docs/decision-history/` (`PROGRAM.41`); accepted designs to `docs/specs/`; superseded ones kept in place (`PROGRAM.117`) |
+| `docs/specs/` — 16 records in four subject folders; `2026-10-27` | `partitioned_canonical`, by subject | widest listing 7 (`catalog/`) / 649 155 | ≤ 1 200 lines and ≤ 98 304 bytes a file, ≤ 1 536 a line, 64 entries a listing, a 16 MiB runaway guard and its step, by `README-ROUTES` | an accepted design moved in | retain (`PROGRAM.43`; its totals superseded by `PROGRAM.117`) |
+| `docs/reviews/` — 5 review histories, 16 stubs, an index; `2026-10-27` | `partitioned_canonical` | 6 entries, stubs aside / 85 442 | ≤ 1 200 lines and ≤ 131 072 bytes a file, ≤ 1 024 a line, 64 entries a listing, stubs aside (`PROGRAM.70`), a 16 MiB runaway guard and its step, by `README-ROUTES` | rounds while open, an open history past its ceiling continued in parts, `<file>.part-2.md` on (`PROGRAM.135`); archived once closed (`REVIEW-HISTORY`) | retain; in no bootstrap read |
 | `docs/decision-history/` — 4 sealed sections, an index | `archive_terminal` | 153 / 11 220 | each file against its row, stub and record, by `DECISION-HISTORY`; per-file limits by `README-ROUTES`; unbounded by design | one file per settled section | retain: immutable, in no bootstrap read (`PROGRAM.41`) |
 | `docs/review-history/` — 12 closed review histories, an index, measured `2026-10-10` | `archive_terminal` | 3 486 / 438 077 | each file against its row, its stub and its closed review, by `REVIEW-HISTORY`; per-file limits by `README-ROUTES`; unbounded by design | one file per closed review | retain: immutable, in no bootstrap read (`PROGRAM.55`) |
 | `docs/knowledge/` — 22 cards and an index | `partitioned_canonical` | 1 891 / 123 527; index 33 / 5 940 / 643 | complete, by `KNOWLEDGE-MAP` | index rows grow with each card's questions | retain; watch the index's row width |
@@ -196,20 +199,39 @@ first if it is wrong, and only then remove the duplicate. A smaller document
 that silently loses the answer or preserves a defective authority is not a
 successful containment migration.
 
+## User-facing book exception
+
+The director's 2026-11-04 instruction makes the mdBook content unbounded.
+There are no chapter, line, byte, line-width, summary, file-count, aggregate
+or growth limits on the book. Do not shorten explanations or split chapters
+to satisfy a size gate. Keep semantic organization useful to readers.
+
+The registered `shipped_behavior` surface uses `maintained_reference` with
+`reference_contract.size_policy: unbounded`, an owned policy authority, null
+pressure/debt fields and `containment_status: not_applicable`. It remains in
+document coverage and complete membership-index checks. Accuracy, claim
+verification, links, runnable examples and source alignment still apply.
+Other surfaces retain their existing limits; runtime resource guards remain.
+The original-constant baseline records the exact retired book identity set,
+matched to this owned unbounded policy; it does not require live book ceilings.
+The bounded-reference requirements below apply to references without this
+explicit unbounded policy. The shared adoption guide remains a read-only
+reference; this local directive takes precedence for the book.
+
 ## Lifecycle classes
 
 | Class | Purpose | Required containment |
 | --- | --- | --- |
 | `bounded_snapshot` | Current state, resume pointer, or concise landing/index view | Overwrite semantics, no embedded chronology, line/byte limits, and a stale-state check where derivable |
 | `partitioned_canonical` | Finite or contract-bounded canonical material whose full content remains directly browsable | Stable semantic partitions, bounded table of contents, per-part/file-count/aggregate limits, and link/reconstruction checks |
-| `maintained_reference` | Unique maintained product/specification prose whose aggregate follows legitimate product scope | Auditable audience/role/rationale, stable semantic parts, bounded complete mandatory index and navigation depth, per-part limits, and exact fresh authority for every aggregate change |
+| `maintained_reference` | Unique maintained product/specification prose whose aggregate follows legitimate product scope | Auditable audience/role/rationale, stable semantic parts, bounded complete mandatory index and navigation depth, per-part limits and exact fresh aggregate-change authority unless an explicit owned unbounded content policy applies |
 | `generated_projection` | Search map, catalog, or index derived from smaller canonical units | Reproducible generation, freshness proof, bounded root view and shards, and no unique facts in generated output |
 | `rolling_ledger` | Ordered recent entries with historical value | Bounded current window, deterministic seal/rotation boundary, immutable segments, bounded index, and an archive transition before aggregate growth becomes unbounded |
 | `archive_terminal` | Exact historical evidence not needed in ordinary reading | Immutable locator, identity and size proof, tool-neutral retrieval procedure, retention owner, and exclusion from mandatory bootstrap reads |
 | `external_terminal` | History retained by an independently managed system | Named authority, retention commitment, stable query/export contract, and a failure policy if that contract disappears |
 | `frozen_legacy` | Existing record awaiting an owned lifecycle decision | Exact content identity or equivalent write prohibition; it cannot accept new content or act as an overflow destination |
 
-A local adoption may define additional classes, but each must make growth stop,
+Except for an explicit unbounded product-reference policy, each local class must make growth stop,
 become predictably partitioned under fixed bounds, or govern product-scope
 change through exact fresh authority. Renaming an append-only blob is not a new
 lifecycle.

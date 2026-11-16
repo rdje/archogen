@@ -177,7 +177,9 @@ archogen's next largest mass: 433 254 bytes of rows naming sealed leaves, with t
 
 - every log row whose leaf cell names exactly one leaf that stands in the tree as a stub — and that the committed tree
   holds — moves, byte for byte and in order, into a numbered row file per tree (`rows-0001.md`, `rows-0002.md` …),
-  one or more per seal under a size budget, each indexed like a sealed file;
+  one or more per seal under a size budget, each indexed like a sealed file; a plain note in parentheses after the
+  leaf, `(step 3)`, is no second leaf (`2026-11-03`: a tree stood at its line ceiling with nothing else to seal, and 71
+  of its rows carried one);
 - a row naming an open leaf, a done leaf not yet sealed, no leaf or several stays live;
 - nothing is left where a row stood — no pointer row, which would keep most of the row's bytes and say nothing the
   leaf's stub does not.

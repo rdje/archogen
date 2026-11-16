@@ -180,7 +180,7 @@ as today's corpus writes it, because a reader of a bound should see which way it
 a bare value, `(counter-width 32 bit)`, takes its direction from the vocabulary, which is what makes both checkable
 (R16 9).
 
-**The entries of `/1`**, one per fact the census writes, and `channels`, which `M3.3`'s joint check reads, each direction and function with its reason; `M3.1.2` ships them as
+**The entries of `/1`**, one per fact the census writes, `channels`, which `M3.3`'s joint check reads, and the seven format `/2` reads (`M4.1.7.3.1`), each direction and function with its reason; `M3.1.2` ships them as
 `vocabulary.eadl` and adds none without a row here (R2 B8). A fact marked *interface* takes `exact` because a
 different value is a different interface, not a better one (§5.2); a *capacity* takes the direction in which more
 of it satisfies more.
@@ -221,8 +221,14 @@ of it satisfies more.
 | `tick-unit` | enumeration `ns us ms` | guarantee | `exact` | `counter` | interface (§4.3, representation units) |
 | `unambiguous-horizon` | quantity time | guarantee | `at-least` | `counter` | capacity; derived from `counter-modulus` and `tick-rate`, and offered only where neither is, nor `wrap-behavior` (§4) |
 | `wrap-behavior` | enumeration `modular saturating` | guarantee | `exact` | `counter` | read by §4's rule |
+| `alarm-wiring` | enumeration `core controller` | guarantee | `exact` | `counter` | interface: where the counter's alarm interrupts, the core's own line or the controller's, `/2` writing no route for one wired to the core (`decision_release-alarm.md` `RA-H8`; `decision_runtime-plan-format-2.md` §6); like the four after it, no reader of a time base (model §8 rule 14) |
+| `alarm-kind` | enumeration `level-compare delay edge` | guarantee | `exact` | `counter` | interface: a level compare, a delay and an edge are three alarms, none a better other (`RA-H8`; the variant's condition 6) |
+| `compare-step` | count | guarantee | `at-most` | `counter` | capacity: the step its compare matches on, in its counter's ticks, so a whole number of them by its domain; a finer step satisfies more (`RA-H8`) |
+| `compare-window` | count | guarantee | `at-least` | `counter` | capacity: how far past a value, in its counter's ticks, its compare still reads it as due; a wider window reads more as due (`RA-H8`; `/2` §2) |
+| `compare-magnitude` | boolean | guarantee | `exact` | `counter` | that its compare reads the two values as whole numbers; a device states it or a window (`RA-H8`; `/2` §2) |
+| `non-maskable-interrupts`, `firmware-traps` | count | guarantee | `at-most` | `processor` | capacity: the sources no mask stops, and the traps firmware beneath the image takes, fewer satisfying more; the profile's admission asks each of every target (`/2` §2, R4-D15) |
 
-`region` and `ordering` have no entry in `/1` (§10).
+`region` and `ordering` have no entry in `/1` (§10), nor `catalog-target`, a target's name for its catalog records, which no domain of §2 holds, no requirement constrains and the catalog's selection alone reads (`decision_runtime-plan-format-2.md` §2; `M4.1.7.3.1`).
 
 ### 2. The value domains
 
@@ -378,8 +384,11 @@ C12); a width whose value in bits is not a positive whole number is `invalid-des
 more holds every writable modulus, `(pow2 126)`
 the largest, so the check is made only below that (R7 G8). The rule is a modular counter's, one that wraps at its modulus — which is what `counter-modulus` means: a
 modulus offered beside a `wrap-behavior` that is `saturating` is `invalid-description`, and a saturating counter's
-range is another fact, added when a description needs it (R1 A14; R3 C6). These two refusals, a modulus above
-`2^width` and a modulus beside `saturating`, are cross-field rules of the vocabulary, declared here and in §8, the
+range is another fact, added when a description needs it (R1 A14; R3 C6). A `compare-magnitude` offered `true` beside an
+offered `compare-window` is `invalid-description` too: a compare reads due by a window or as whole numbers, not both, and
+`(compare-magnitude false)` beside one says nothing, as an absent fact does (`decision_runtime-plan-format-2.md` §2;
+`M4.1.7.3.2`). These three refusals, a modulus above `2^width`, a modulus beside `saturating` and a magnitude beside a
+window, are cross-field rules of the vocabulary, declared here and in §8, the
 record `vocabulary.eadl` is read with: they only refuse, and no requirement is met through them (`ROADMAP.md` §5.2;
 R28 5). The `modular` reading of an omitted
 `wrap-behavior` serves the rule alone: a constraint on `wrap-behavior` itself is judged on what is offered, so
@@ -416,8 +425,8 @@ description gaining a fact §3.1 names, not a requirement weakened. The target's
 `(2^64 − 1) / 10 000 000 s = 1 844 674 407 370.9551615 s`, and fits the arithmetic. With `(counter-modulus 4294967296)`
 at `10 MHz`, the horizon is
 `4294967295 / 10 000 000 s = 429.4967295 s`, and `time.monotonic`'s `(unambiguous-horizon (at-least 60 s))` is
-satisfied; `timer.delay` in `examples/alternative-timer/system.eadl`, at `1 MHz` and with that modulus stated, would
-have `4294.967295 s`, slower and better here. A 16-bit counter, `(counter-modulus 65536)` at `10 MHz`, has
+satisfied; `timer.delay` in `examples/alternative-timer/system.eadl`, at `1 MHz` and stating that modulus since
+`2026-10-27` (leaf `M3.4.7.1`), has `4294.967295 s`, slower and better here. A 16-bit counter, `(counter-modulus 65536)` at `10 MHz`, has
 `65535 / 10 000 000 s = 6.5535 ms` and
 fails the same requirement: the faster wrapping counter §5.2 warns of, caught because the direction belongs to the
 horizon and the derivation to the vocabulary, not to anyone's sense of which counter is better. A reload counter,
@@ -498,7 +507,7 @@ The relation's own codes are about an offer or a requirement as written, whateve
 | Code | When |
 | --- | --- |
 | `invalid-description` | written forms: an item of `requires` that is not a list headed by a name — a bare name, fact or not, a number, a string, `()`, a list headed by one of them — or `(f)` (R21 3; R22 1); any form §1's grammar of positions does not admit — a list inside `needs`, `uses` or `absent`, whose rest would be dropped or in `absent` read as the whole fact absent; an item of `offers` naming nothing or holding a clause; a clause but `needs`, `uses` and `requires` inside `requires`; an item of `platform` but `needs`, `uses` and `requires` — a service's too (R18 2; R23 3; R26 1; R27 2; R28 3; R29 1); a `uses` naming a vocabulary fact; a declaration whose local name is a vocabulary fact (R16 1); a direction wrapper other than `at-least`, `at-most` and `exactly` — a list headed by a direction's name, `(f (includes …))`, `(f (within …))`, `(f (exact …))` — since a requirement writes its value and the direction is the fact's (R15 16; R16 4); a provider's own name a vocabulary fact (R17 R5); a `needs` of a statement fact; a direction written against the vocabulary's, `exactly` apart (§1.1) |
-| `invalid-description` | values and contradictions: one side's constraints on one fact that no value satisfies together (§3 rule 5; R19 2; R21 1); a derived fact declared absent beside a fact its rule reads (R16 8); a value outside its fact's domain; a value of information that is not a positive whole number of bits, and a `counter-modulus` of 0, wherever written — an offer, a bound or a requirement (R17 6); a statement fact declared absent (R17 R4); a set written with no member in a requirement, or as `(f (exactly))` in an offer — `(f)` in an offer is bare (§2; R13 M11) — or an interval with `lo > hi` on either side; a provider offering and declaring absent one fact; one provider offering one declared fact with two values, or a bound beside a value; a boolean or group head offered with a bound other than `exactly`; a derived fact offered beside a fact its rule reads (§4); a `counter-modulus` above a valued `2^width`, or beside `(wrap-behavior saturating)`; an offer of a statement fact |
+| `invalid-description` | values and contradictions: one side's constraints on one fact that no value satisfies together (§3 rule 5; R19 2; R21 1); a derived fact declared absent beside a fact its rule reads (R16 8); a value outside its fact's domain; a value of information that is not a positive whole number of bits, and a `counter-modulus` of 0, wherever written — an offer, a bound or a requirement (R17 6); a statement fact declared absent (R17 R4); a set written with no member in a requirement, or as `(f (exactly))` in an offer — `(f)` in an offer is bare (§2; R13 M11) — or an interval with `lo > hi` on either side; a provider offering and declaring absent one fact; one provider offering one declared fact with two values, or a bound beside a value; a boolean or group head offered with a bound other than `exactly`; a derived fact offered beside a fact its rule reads (§4); a `counter-modulus` above a valued `2^width`, or beside `(wrap-behavior saturating)`; a `compare-magnitude` offered `true` beside a `compare-window`; an offer of a statement fact |
 | `unsupported-profile` | a constraint on a fact the vocabulary does not declare, `(x)` or `(x v)` (R19 7); exact arithmetic that overflows `i128` |
 
 Whether each cause of a row takes a code of its own, as reference §4 rule 3 asks of a new rule, is `M3.1.2`'s to decide
@@ -536,6 +545,13 @@ decided in this record.
 - Which provider a service is bound to, and which constraints of one clause different providers may meet, are
   `M3.3`'s and `M3.4`'s; the relation judges each provider on its own, a group never split from its sub-constraints
   (§5; R3 C3; R6 F9; R11 K3; R12 L5).
+  *Decided `2026-10-27` by leaf `M3.4.9` (`SR-H17`): on one side, the facts of one function are met at one provider
+  — model §8 rule 13's, which holds a group with its sub-facts, whose function is their head's, flat or nested — and
+  the facts of different functions may be met at different providers. Two requesters are two, a system's own level
+  and the service its task uses among them (model §8 rule 1): a sub-fact one writes joins no head the other writes,
+  each bound on its own. A nested group is one requirement, and a provider stating any of its facts takes part in
+  `SR-H18`'s code — so a provider leaving the head undescribed beside a sub-fact it states gives `missing-fact`, as the
+  flat spelling's rule 13 does.*
 - What a refinement keeps of an abstract platform is model §3's: `M1.40`, closed `2026-10-03`, keeps a value only by
   the same value as written or, for a quantity, the same amount (R12 L17; R13 M1).
 - `region` and `ordering` fit no domain of §2 and stay undeclared in `/1`, placement and ordering being `M3.3`'s;
@@ -544,6 +560,8 @@ decided in this record.
 - `uc3`'s seal: `timer.delay` states no modulus, and its policy waits on a record, so its horizon comes from one
   provider — itself, an adapter or a record after `M3.7` — `M3.2`'s to choose, the director's before the description
   changes (`SR-H10`; R14 1; R15 4); its level it states itself (`M3.3.4.5`).
+  *Chosen `2026-10-27`: the adapter `deadline-over-delay`, once `timer.delay` states its modulus, the director's
+  (`M3.4.7`); `SR-H8` and `SR-H9` built by `M3.2.3.2` and `M3.2.4` (`docs/specs/adapters/decision_engine-adapters.md`).*
 - `/1` has no condition role: the context a plan binds a caller to is §5.4's privilege constraint, `M3.3`'s; a clock
   a block must be fed is another fact, added when a description needs one (R2 B2; R10 J1, J6).
 - Arithmetic in a description stays refused: `(pow2 N)` is a literal's spelling, and a new derivation is a new named
@@ -558,6 +576,12 @@ decided in this record.
   `SR-H16` gives the question to `M3.4`, decided in a reviewed record with its reason — two blocks that differ in one
   fact writing `(f false)` at one being two providers' two values, each judged on its own (§5; R24 5; R26 5; R27 3;
   R29 6).
+  *Decided `2026-10-27` by leaf `M3.4.8` in a reviewed record of its own,
+  [`decision_absence-per-provider.md`](decision_absence-per-provider.md): a fact is not both offered and absent by
+  one declaration, itself or through what it composes, two other declarations' offer and absence being two
+  statements, each judged on its own; model §2 rule 1
+  reads per declaration, every declaration compared; and model §3 rule 3 keeps an exclusion through what a refinement
+  composes and through a chain of refinements.*
 - A negative requirement, which `ROADMAP.md` §5.1.1 lists among what refinement checks, is model §3's there, an
   absence kept (model §3 rule 3). A requirement that a provider *not* have a fact has no spelling in `/1`:
   `(requires (absent f))` is a provider's clause where a constraint stands, `invalid-description` (§1, §8; R29 1), and
@@ -595,6 +619,10 @@ the review history the rounds that found each.
 | `SR-H20` | `M3.4` | Every verdict `crates/archogen-cli/tests/verdicts.txt` and `module_cases.rs` freeze is kept, or changed only in the commit that names the case, the rule that moves it and its migration — a description gaining a fact, the target's agreement and its ledger source included — ordered after `M3.3` and `M3.7` where a migration needs them, the seven `0` verdicts `M3.1.1`'s round 14 measured among them. |
 | `SR-H21` | `M3.7` | The catalog record decision's §2 is amended so a contract facet states offers and absences of vocabulary facts, read by the relation's reader and judged like a block's, and a record whose path crosses a mediation boundary says so and enters only through `M3.2`'s search, where the requirer wrote `or-through-mediation` as `allowed`, bare or under `exactly`. |
 | `SR-H22` | `M3.7` | A design reviewed by a context that did not write it answers how a record's offer or absence meets a block's absence or offer, named in model §2 rule 2's amendment and decided with `M3.4`, and how a record's preconditions become offered sets judged by inclusion, a record with a precondition no entry states being no provider. |
+
+*`2026-10-27`: `SR-H10`'s description change — `timer.delay`'s `(counter-modulus 4294967296)` — was brought to the
+director, who delegated it that day ("is yours to take, but it better be sota, signoff and production-ready"); leaf
+`M3.4.7.1` made it (`docs/semantics/migrations/eadl-1-uc3-states-its-modulus.md`).*
 
 ## Why
 

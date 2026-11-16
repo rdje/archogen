@@ -12,6 +12,8 @@
 //! single description gets — and accepted. `M1.29.2` answered those cases `unimplemented`; the headers did not
 //! change when that stopped being true, because a header states what the description *is*.
 
+mod common;
+
 use std::collections::BTreeSet;
 use std::path::{Path, PathBuf};
 
@@ -174,23 +176,24 @@ fn every_case_gets_exactly_the_answer_its_header_declares() {
 fn build_never_contradicts_check_about_a_case() {
     // One frontend: `build` calls the same function, so the two commands cannot disagree about a module tree
     // the way they once disagreed about a quantity (`M1.28`). A refusal is the same refusal. An accepted tree
-    // may still be refused by `build` — but only on the S0 realization path, which is narrower than the
-    // language, and it must say that the check accepted it.
+    // may still be refused by `build`, by the search or the emitter, which are narrower than the language: never as a
+    // `tool-failure`, which would be two of the engine's parts disagreeing about it.
     let out_root = Path::new(env!("CARGO_TARGET_TMPDIR")).join("module-cases");
     let mut disagreements = Vec::new();
     for (index, case) in cases().iter().enumerate() {
         let out_dir = out_root.join(index.to_string());
         let _ = std::fs::remove_dir_all(&out_dir);
         let (checked, _, check_err) = invoke(&["check", &case.path]);
-        let (built, _, build_err) =
-            invoke(&["build", &case.path, "--out", &out_dir.display().to_string()]);
-        let realization_refusal = checked == Status::Ok
-            && build_err.contains("the S0 path cannot realize")
-            && build_err.contains("though the check pipeline accepted it");
+        let (built, _, build_err) = common::invoke(
+            &["build", &case.path, "--out", &out_dir.display().to_string()],
+            &common::Checker,
+        );
+        let refused_after_the_check = build_err.contains("no plan was written")
+            || build_err.contains("nothing was generated");
         if checked == Status::Ok {
-            if built != Status::Ok && !realization_refusal {
+            if built != Status::Ok && (built == Status::ToolFailure || !refused_after_the_check) {
                 disagreements.push(format!(
-                    "{}: check accepted it and build refused it for a reason that is not the S0 path's:\n{build_err}",
+                    "{}: check accepted it and build refused it for a reason that is neither the search's nor the emitter's:\n{build_err}",
                     case.path
                 ));
             }

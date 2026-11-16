@@ -24,6 +24,9 @@ use crate::source::{SourceId, SourceMap, Span};
 /// means every conforming reader refuses the same descriptions rather than whichever its stack cannot hold.
 pub const MAX_NESTING: usize = 256;
 
+/// The most characters a symbol holds, a property of this version of the language as `MAX_NESTING` is. Every answer quotes names, per fact and per error, so one name of any length multiplied what a request could cost (leaf `M4.2.3.3.21`). The longest in the repository is 57.
+const MAX_NAME: usize = 256;
+
 /// Read one source into a document.
 ///
 /// Returns the document and every diagnostic produced. A document is returned even when there
@@ -36,12 +39,34 @@ pub const MAX_NESTING: usize = 256;
 /// only have come from `SourceMap::add`.
 #[must_use]
 pub fn read(sources: &SourceMap, source: SourceId) -> (Document, Diagnostics) {
+    read_names_within(sources, source, MAX_NAME)
+}
+
+/// Read a record this engine writes, a plan among them. Each symbol there is a name as elaboration qualified it, the
+/// path of the modules it came through and then its own, so a tree whose every written symbol is within `MAX_NAME`
+/// can write one past it, and what the language limits is what a person writes.
+///
+/// # Panics
+///
+/// As [`read`].
+#[must_use]
+pub fn read_record(sources: &SourceMap, source: SourceId) -> (Document, Diagnostics) {
+    read_names_within(sources, source, usize::MAX)
+}
+
+fn read_names_within(
+    sources: &SourceMap,
+    source: SourceId,
+    most_name: usize,
+) -> (Document, Diagnostics) {
     let text = sources
         .get(source)
         .expect("read called with an id not in this SourceMap")
         .text
         .clone();
-    let (document, mut diagnostics) = Reader::new(&text, source).run();
+    let mut reader = Reader::new(&text, source);
+    reader.most_name = most_name;
+    let (document, mut diagnostics) = reader.run();
     // §8 of `docs/semantics/reference.md`: the language version a description states. Checked here
     // rather than by a caller of `read`, so every consumer of a `Document` gets the same verdict
     // including the ones that do not know the rule exists — the reason `M1.13.1` put the escape rule
@@ -59,6 +84,8 @@ struct Reader<'a> {
     comments: Vec<Comment>,
     /// How many lists are open where the reader stands.
     depth: usize,
+    /// The most characters a symbol may hold here.
+    most_name: usize,
 }
 
 /// What closed a list-reading loop.
@@ -79,6 +106,7 @@ impl<'a> Reader<'a> {
             diagnostics: Diagnostics::new(),
             comments: Vec::new(),
             depth: 0,
+            most_name: MAX_NAME,
         }
     }
 
@@ -632,6 +660,15 @@ impl<'a> Reader<'a> {
                 format!("`{}` cannot start a form", ch.escape_debug()),
                 Label::new(self.span(start, self.offset()), "unexpected here"),
                 "forms are lists `(…)`, symbols, numbers or strings",
+            ));
+            return None;
+        }
+        if self.raw[start as usize..end as usize].chars().count() > self.most_name {
+            self.diagnostics.push(Diagnostic::error(
+                "read-name-too-long",
+                format!("a symbol of more than {MAX_NAME} characters"),
+                Label::new(self.span(start, end), "too long"),
+                format!("a name is at most {MAX_NAME} characters: shorten it"),
             ));
             return None;
         }

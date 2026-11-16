@@ -10,9 +10,18 @@ import { instantiate } from "../js/archogen.mjs";
  * wasm32-unknown-unknown` has built it. */
 export const ARTIFACT = "../../../target/wasm32-unknown-unknown/release/archogen_wasm.wasm";
 
-/** The page's request for a description typed into it: named `description.eadl`, with no modules. */
-export function request(text, profile = "") {
-  return { name: "description.eadl", text, profile, modules: {} };
+/**
+ * The page's request for a description typed into it: named `description.eadl`, with no modules, on the target typed
+ * beside it, named `target.eadl`, or on its own hardware when that box holds nothing but blanks.
+ */
+export function request(text, profile = "", target = "") {
+  return {
+    name: "description.eadl",
+    text,
+    profile,
+    modules: {},
+    target: target.trim() === "" ? null : { name: "target.eadl", text: target },
+  };
 }
 
 /**
@@ -39,8 +48,8 @@ export function show(response) {
 }
 
 /**
- * Wire a document: the description typed in, the profile, the button, and where the answer goes. The page calls it
- * on load; the harness calls it with a stand-in document, so the wiring it checks is this one.
+ * Wire a document: the description typed in, the profile, the target, the button, and where the answer goes. The page
+ * calls it on load; the harness calls it with a stand-in document, so the wiring it checks is this one.
  */
 export async function wire(document) {
   const output = document.getElementById("output");
@@ -59,7 +68,11 @@ export async function wire(document) {
   }
   const check = () => {
     const response = binding.check(
-      request(document.getElementById("description").value, document.getElementById("profile").value.trim()),
+      request(
+        document.getElementById("description").value,
+        document.getElementById("profile").value.trim(),
+        document.getElementById("target").value,
+      ),
     );
     output.textContent = show(response);
   };

@@ -2,7 +2,7 @@
 
 - **Type:** `decision`
 - **Date:** `2026-10-05`
-- **Status:** `active`
+- **Status:** `superseded by docs/decisions/decision_ceilings-bound-reads.md` — `2026-10-27`, on the director's ruling of that day: its total and file count no longer bind; its measurements are the history of how the folder grew
 - **Owner / source:** leaf `PROGRAM.56` (`docs/tasks/PROGRAM.md`), under `README_POLICY.md`'s rule that a routed
   destination's ceiling rises only with a decision record, and `LIVE_DOCUMENT_SIZE_CONTAINMENT.md`'s, that the record
   shows the surface's role grew. `PROGRAM.43` set the ceiling on `2026-10-01`; [[decision_specifications-home]] is the

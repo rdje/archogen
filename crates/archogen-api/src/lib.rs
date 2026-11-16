@@ -25,6 +25,7 @@
 //!     text: "(defblock console.uart (offers observable-output))\n",
 //!     profile: None,
 //!     modules: &NoModules,
+//!     target: None,
 //! });
 //! assert_eq!(response.status.slug(), "ok");
 //! assert!(response.judged.is_some(), "a judged description says what it was judged under");
@@ -35,6 +36,7 @@
 //!     text: "(defblock console.uart (offers observable-output))\n",
 //!     profile: Some("rt-dynamic-mp"),
 //!     modules: &NoModules,
+//!     target: None,
 //! });
 //! assert_eq!(not_judged.status.slug(), "unsupported-profile");
 //! assert!(not_judged.judged.is_none());
@@ -45,11 +47,14 @@
 
 #![deny(missing_docs)]
 
+mod explain;
+mod on_target;
+mod resolve;
 mod status;
 
 use std::cell::{Cell, RefCell};
 
-use eadl_front::{elaborate_source, read, Position, Verdict};
+use eadl_front::{elaborate_source, read, Position, Program, Verdict};
 use eadl_model::check::{check_program, default_profile, shipped_registry, Outcome};
 use eadl_model::profile::{self, Profile};
 
@@ -57,8 +62,10 @@ use eadl_model::profile::{self, Profile};
 /// checker carries them without the API; re-exported, so `archogen_api::Status` and `archogen_api::Version` name what
 /// they named.
 pub use archogen_outcome::{Status, Version};
-pub use eadl_front::{Diagnostic, Form, MemoryModules, ModuleSource, SourceId, SourceMap};
+pub use eadl_front::{Diagnostic, Form, MemoryModules, ModuleSource, SourceId, SourceMap, Span};
 pub use eadl_model::check::Closure;
+pub use explain::{explain_with, Account, Answer, Explain, Explanation};
+pub use resolve::{resolve_with, Elaborated, Owed, Owes, Plan, Resolution, Resolve};
 pub use status::verdict_status;
 
 /// This API's version: apart from the language's (`eadl/1`) and the profiles', as `ROADMAP.md` §15 requires.
@@ -69,8 +76,19 @@ pub use status::verdict_status;
 /// the same language version is a language change, recorded in `docs/semantics/migrations/`, not an API
 /// change. `1.0` was fixed `2026-09-30`, when leaf `API.3` closed; `1.1` added [`Response::engine`] (leaf
 /// `API.4.1`); `1.2` added [`check_with`] and [`Limits`] (leaf `API.4.2`); `1.3` added the status `stale-input`, the
-/// vocabulary growing (leaf `M3.5.1.1`). `docs/book/src/versions.md` registers it.
-pub const VERSION: Version = Version { major: 1, minor: 3 };
+/// vocabulary growing (leaf `M3.5.1.1`); `1.4` added the operation `resolve`, [`resolve_with`], the search alone (leaf
+/// `M3.4.4`); `1.5` added the operation `explain`, [`explain_with`], one requirement's account (leaf `M3.4.13.2`);
+/// `1.6` added [`Definition::Adapter`], the definitions growing as `1.3`'s statuses did (leaf `M3.2.2`); `1.7` added
+/// [`Plan::obligations`], what a plan binding an engine adapter owes (leaf `M3.2.6.1`); `1.8` added
+/// [`Resolution::elaborated`], what a plan was written from, for the command line's build (leaf `M4.2.3.1`); `1.9` added
+/// [`is_a_plan`], which the command line asks before a plan replaces what stands at its name (leaf `M4.2.3.3.10`); `1.10` added
+/// [`Request::target`], the machine a description's systems are judged on (leaf `M4.1.7.4.1`); `1.11` answers it in
+/// [`resolve_with`] and [`explain_with`], the search on the target, a plan `archogen-assignment/3` (leaf `M4.1.7.5.3`).
+/// `docs/book/src/versions.md` registers it.
+pub const VERSION: Version = Version {
+    major: 1,
+    minor: 11,
+};
 
 /// The engine version: the one the workspace's members share, which `archogen --version` reports and
 /// `docs/book/src/versions.md` registers as `engine`. With [`VERSION`] it names the build a response came from
@@ -79,7 +97,7 @@ pub const ENGINE: &str = env!("CARGO_PKG_VERSION");
 
 /// The operations this API exposes, each by the name `crates/archogen-cli/src/spec.rs` gives its command.
 /// Parity with the CLI's built commands is gated on it (leaf `API.3.3`).
-pub const OPERATIONS: &[&str] = &["check"];
+pub const OPERATIONS: &[&str] = &["check", "resolve", "explain"];
 
 /// The leaf that loads a kind module a user writes (`ROADMAP.md` §5.6 rule 1): extension experiment 1, a new
 /// kind built from the existing declaration constructs.
@@ -100,6 +118,26 @@ const KIND_MODULES: &[(&str, &str)] = &[
     ),
 ];
 
+/// What the shipped capability vocabulary says that the check reads. Each fact it declares, by name: the check reads a
+/// fact outside it on each system's own hardware, the search binding nothing for one (model §2; leaf `M3.4.16`). And
+/// each fact it derives, with the facts its rule requires: the check reads one as described where one block or
+/// platform offers each, as the search derives it (leaf `M3.4.17.1`). None where the vocabulary does not read, which
+/// `resolve` reports as the tool's failure and a check then reads every description whole.
+fn vocabulary_facts(
+    kinds: &eadl_model::kind::Registry,
+) -> Option<eadl_model::check::VocabularyFacts> {
+    let mut sources = eadl_front::SourceMap::new();
+    let vocabulary = eadl_resolve::vocabulary::Vocabulary::shipped(&mut sources, kinds).ok()?;
+    Some(facts_of(&vocabulary))
+}
+
+/// What `vocabulary` says that the check reads: [`vocabulary_facts`]'s answer, of a vocabulary already read.
+fn facts_of(
+    vocabulary: &eadl_resolve::vocabulary::Vocabulary,
+) -> eadl_model::check::VocabularyFacts {
+    eadl_resolve::target::check_facts(vocabulary)
+}
+
 /// The shipped kind modules, owned so a [`SourceMap`] can take them.
 #[must_use]
 pub fn kind_modules() -> Vec<(String, String)> {
@@ -109,13 +147,22 @@ pub fn kind_modules() -> Vec<(String, String)> {
         .collect()
 }
 
+/// Whether `text` is an assignment record in the canonical form the search writes (API `1.9`): read by the generator's own reader of
+/// the format, so a comment in any place makes it none, and a line out of its form or sorted place. ⚠️ An edit that leaves it canonical, one binding
+/// for another or one added in its place, is still one: canonical text carries no digest of itself. What may replace an earlier plan asks this.
+#[must_use]
+pub fn is_a_plan(text: &str) -> bool {
+    eadl_resolve::plan::read(text).is_ok()
+}
+
 /// The default budget for one request: 1 MiB of text, the description and every module elaboration loads
 /// counted together (leaf `API.4.2`).
 ///
 /// ⭐ **Why one number is enough.** The language bounds the shapes that multiply work — list nesting (`M1.38`),
-/// module instances and import chains (`M1.39`) — and what is left is linear in the input. Measured `2026-09-30`
-/// on a debug build: 1 MB of description checked in 0.36 s holding 82 MB, and 5 MB in 1.95 s holding 383 MB. So a
-/// byte budget bounds a request's time and memory. The largest description the repository holds is 5 KB.
+/// module instances and import chains (`M1.39`) — and what is left is linear in the input for what `check` does, what
+/// compares pairs growing with the pairs (`docs/book/src/engine-api.md`). Measured `2026-09-30` on a debug build: 1 MB
+/// of description checked in 0.36 s holding 82 MB, and 5 MB in 1.95 s holding 383 MB. So a byte budget bounds what a
+/// request reads, and the ceiling what it holds; neither bounds its time. The largest description the repository holds is 5 KB.
 pub const DEFAULT_BYTES: usize = 1024 * 1024;
 
 /// What an instance lets one request cost. The **instance** sets it, never the consumer: its purpose is to protect
@@ -125,7 +172,7 @@ pub const DEFAULT_BYTES: usize = 1024 * 1024;
 /// get with no budget, so a response that is not a refusal does not depend on it.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct Limits {
-    /// The most text one request may bring, the description and its modules together; `None` is no budget.
+    /// The most text one request may bring, the description, its target and its modules together; `None` is no budget.
     pub bytes: Option<usize>,
 }
 
@@ -169,7 +216,8 @@ impl ModuleSource for Budgeted<'_> {
     }
 }
 
-/// What a consumer asks: one description, the profile to judge it against, and where its imports resolve.
+/// What a consumer asks: one description, the profile to judge it against, where its imports resolve, and the machine its
+/// systems are judged on, when it names one.
 pub struct Request<'a> {
     /// How spans and notes name the description — a path for the CLI, any label for another consumer.
     pub name: &'a str,
@@ -179,6 +227,20 @@ pub struct Request<'a> {
     pub profile: Option<&'a str>,
     /// Where an import resolves. [`NoModules`] for a description that imports nothing.
     pub modules: &'a dyn ModuleSource,
+    /// The target its systems are judged on, its hardware alone; `None` judges them on the description's own hardware (API `1.10`,
+    /// `docs/decisions/decision_runtime-plan-format-2.md` §1). [`resolve_with`] and [`explain_with`] search the system there, its
+    /// release requester among its requesters, and write `archogen-assignment/3` (API `1.11`).
+    pub target: Option<TargetFile<'a>>,
+}
+
+/// A target a request names: a machine's file, which declares its hardware alone and is identified by what it holds, never found by a name
+/// under a directory (`docs/decisions/decision_runtime-plan-format-2.md` §1, `docs/decisions/decision_device-correspondence.md`).
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub struct TargetFile<'a> {
+    /// How spans and notes name it — a path for the CLI, any label for another consumer.
+    pub name: &'a str,
+    /// Its text.
+    pub text: &'a str,
 }
 
 /// A source that holds no module: every import is `module-not-found`.
@@ -316,6 +378,12 @@ pub fn check(request: &Request<'_>) -> Response {
 /// description, because a judgement cut short is not one.
 #[must_use]
 pub fn check_with(request: &Request<'_>, limits: Limits) -> Response {
+    checked(request, limits, &mut None)
+}
+
+/// [`check_with`], and the program a module file was elaborated to when the description is accepted, in `elaborated`
+/// — what [`resolve_with`] searches, so it is elaborated once.
+fn checked(request: &Request<'_>, limits: Limits, elaborated: &mut Option<Program>) -> Response {
     if let Some(budget) = limits.bytes {
         if request.text.len() > budget {
             return over_budget(format!(
@@ -324,15 +392,30 @@ pub fn check_with(request: &Request<'_>, limits: Limits) -> Response {
                 request.text.len()
             ));
         }
+        let target = request.target.map_or(0, |target| target.text.len());
+        if let Some(named) = request
+            .target
+            .filter(|_| target > budget - request.text.len())
+        {
+            return over_budget(format!(
+                "{} and its target {} come to {} bytes, over this instance's budget of {budget} bytes for one request",
+                request.name,
+                named.name,
+                request.text.len() + target
+            ));
+        }
         let budgeted = Budgeted {
             inner: request.modules,
-            remaining: Cell::new(budget - request.text.len()),
+            remaining: Cell::new(budget - request.text.len() - target),
             over: RefCell::new(None),
         };
-        let response = judge(&Request {
-            modules: &budgeted,
-            ..*request
-        });
+        let response = judge(
+            &Request {
+                modules: &budgeted,
+                ..*request
+            },
+            elaborated,
+        );
         if let Some((module, size, left)) = budgeted.over.into_inner() {
             return over_budget(format!(
                 "the modules {} imports come to more than this instance's budget of {budget} bytes for one \
@@ -342,7 +425,7 @@ pub fn check_with(request: &Request<'_>, limits: Limits) -> Response {
         }
         return response;
     }
-    judge(request)
+    judge(request, elaborated)
 }
 
 /// The response for a request over its budget: `tool-failure`, never a partial result.
@@ -360,8 +443,8 @@ fn over_budget(note: String) -> Response {
     )
 }
 
-/// The judgement itself, with no budget.
-fn judge(request: &Request<'_>) -> Response {
+/// The judgement itself, with no budget; a module file's program, once accepted, in `elaborated`.
+fn judge(request: &Request<'_>, elaborated: &mut Option<Program>) -> Response {
     if let Some(refused) = refuse_profile(request.profile) {
         return refused;
     }
@@ -391,12 +474,46 @@ fn judge(request: &Request<'_>) -> Response {
             Vec::new(),
         );
     };
+    let target = match request.target {
+        Some(target) => match sources.add(target.name.to_string(), target.text.to_string()) {
+            Ok(file) => Some(file),
+            Err(_) => {
+                return Response::not_judged(
+                    Status::ToolFailure,
+                    sources,
+                    vec![format!("{} is too large to address", target.name)],
+                    None,
+                    Vec::new(),
+                )
+            }
+        },
+        None => None,
+    };
 
     if !is_module_file(&sources, id) {
         if let Some(kind) = kind_module(&sources, id) {
             return refuse_kind_module(request.name, &kind, sources);
         }
-        let outcome = eadl_model::check::check(&sources, id, &registry, active);
+        if let Some(file) = target {
+            return on_target::judge(
+                sources,
+                &registry,
+                active,
+                id,
+                file,
+                on_target::Described::Plain,
+            );
+        }
+        let outcome = match vocabulary_facts(&registry) {
+            Some(vocabulary) => eadl_model::check::check_with_vocabulary(
+                &sources,
+                id,
+                &registry,
+                active,
+                &vocabulary,
+            ),
+            None => eadl_model::check::check(&sources, id, &registry, active),
+        };
         return Response::judged(outcome, None, active, id, sources);
     }
 
@@ -417,23 +534,26 @@ fn judge(request: &Request<'_>) -> Response {
             sources,
             notes,
             Some(
-                "the module exists and could not be read — check its permissions and that it is \
-                 UTF-8 text"
+                "the module could not be read — check that it exists, that its name is not too long \
+                 for its filesystem, its permissions, and that it is UTF-8 text"
                     .to_string(),
             ),
             Vec::new(),
         );
     }
+    if let Some(file) = target {
+        let described = if diagnostics.has_errors() {
+            on_target::Described::Uncomposed(diagnostics.items())
+        } else {
+            on_target::Described::Tree(&program)
+        };
+        return on_target::judge(sources, &registry, active, id, file, described);
+    }
     if diagnostics.has_errors() {
         // A composition problem is a verdict about the description, carried by each code through the one
         // accessor every consumer shares — and nothing past elaboration, because the passes cannot read a
         // tree that did not compose.
-        let verdict = diagnostics
-            .items()
-            .iter()
-            .map(|diagnostic| Verdict::of_code(diagnostic.code))
-            .max_by_key(|verdict| verdict.precedence())
-            .unwrap_or(Verdict::InvalidDescription);
+        let verdict = composition_verdict(diagnostics.items());
         let outcome = Outcome {
             verdict,
             diagnostics: diagnostics.items().to_vec(),
@@ -442,7 +562,32 @@ fn judge(request: &Request<'_>) -> Response {
         };
         return Response::judged(outcome, None, active, id, sources);
     }
-    let instances = program
+    let instances = instances_of(&program);
+    let outcome = match vocabulary_facts(&registry) {
+        Some(vocabulary) => eadl_model::check::check_program_with_vocabulary(
+            &program,
+            &registry,
+            active,
+            &vocabulary,
+        ),
+        None => check_program(&program, &registry, active),
+    };
+    *elaborated = Some(program);
+    Response::judged(outcome, Some(instances), active, id, sources)
+}
+
+/// The verdict of a module tree that did not compose: each code's, through the one accessor every consumer shares.
+fn composition_verdict(diagnostics: &[Diagnostic]) -> Verdict {
+    diagnostics
+        .iter()
+        .map(|diagnostic| Verdict::of_code(diagnostic.code))
+        .max_by_key(|verdict| verdict.precedence())
+        .unwrap_or(Verdict::InvalidDescription)
+}
+
+/// A module tree's instances as a judgement names them: `<alias path> = <module> <version>`, the root as `(root)`.
+fn instances_of(program: &Program) -> Vec<String> {
+    program
         .instances
         .iter()
         .map(|instance| {
@@ -453,9 +598,7 @@ fn judge(request: &Request<'_>) -> Response {
             };
             format!("{name} = {} {}", instance.module, instance.version)
         })
-        .collect();
-    let outcome = check_program(&program, &registry, active);
-    Response::judged(outcome, Some(instances), active, id, sources)
+        .collect()
 }
 
 /// The response for a profile nobody supports, or `None` when `requested` names one this build supports —
@@ -498,7 +641,8 @@ pub fn is_module_file(sources: &SourceMap, id: SourceId) -> bool {
             .any(|form| form.head() == Some("defmodule"))
 }
 
-/// What a file that defines part of the language declares: a kind, or a fact of the capability vocabulary.
+/// What a file that defines part of the language declares: a kind, a fact of the capability vocabulary, or an adapter
+/// of the engine's catalog.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum Definition {
     /// `(defkind …)`: a kind module (leaf `M1.32`).
@@ -506,6 +650,9 @@ pub enum Definition {
     /// `(deffact …)`: an entry of the capability vocabulary,
     /// `docs/decisions/decision_substitutability-relation.md` §1.1 (leaf `M3.1.2.1`).
     Fact,
+    /// `(defadapter …)`: an adapter of the engine's catalog, `docs/specs/adapters/decision_engine-adapters.md` §1.1
+    /// (leaf `M3.2.2`, API `1.6`).
+    Adapter,
 }
 
 impl Definition {
@@ -514,6 +661,7 @@ impl Definition {
         match head {
             "defkind" => Some(Self::Kind),
             "deffact" => Some(Self::Fact),
+            "defadapter" => Some(Self::Adapter),
             _ => None,
         }
     }
@@ -524,15 +672,16 @@ impl Definition {
         match self {
             Self::Kind => "defkind",
             Self::Fact => "deffact",
+            Self::Adapter => "defadapter",
         }
     }
 }
 
-/// The first `(defkind …)` or `(deffact …)` of a file that declares one: which definition, the name it gives,
-/// and where.
+/// The first `(defkind …)`, `(deffact …)` or `(defadapter …)` of a file that declares one: which definition, the name
+/// it gives, and where.
 #[derive(Debug)]
 pub struct KindModule {
-    /// Whether it declares a kind or a fact.
+    /// Whether it declares a kind, a fact or an adapter.
     pub definition: Definition,
     /// The kind's or the fact's name, when the declaration gives one.
     pub name: Option<String>,
@@ -609,6 +758,16 @@ fn refuse_kind_module(name: &str, kind: &KindModule, sources: SourceMap) -> Resp
                  {KIND_MODULE_OWNER} (docs/TASK_TREE.md); until then, check a description that offers and \
                  requires the shipped facts"
             ),
+        ),
+        Definition::Adapter => (
+            format!(
+                "{name}:{line}:{column} declares an adapter of the engine's catalog, `{declared}`: the engine's own \
+                 knowledge, not a description"
+            ),
+            "an adapter is the engine's, never a description's: the search binds one of the adapters this toolchain \
+             ships (docs/semantics/adapters/adapters.eadl) where a description's own providers cannot meet a \
+             requirement. Check a description that offers and requires facts"
+                .to_owned(),
         ),
     };
     Response::not_judged(

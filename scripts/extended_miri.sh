@@ -81,7 +81,7 @@ RS
   out="$(cd "$work" && CARGO_TARGET_DIR="$ROOT/target/doctrine_scratch/extended_miri/target" \
     cargo +"$TOOLCHAIN" miri test -q 2>&1)"; rc=$?
   rm -rf "$work"
-  if [ "$rc" -ne 0 ] && printf '%s' "$out" | grep -q "Undefined Behavior"; then
+  if [ "$rc" -ne 0 ] && grep -q "Undefined Behavior" <<< "$out"; then
     echo "  ✓ arm: Miri refused the seeded dangling-pointer read"
     return 0
   fi

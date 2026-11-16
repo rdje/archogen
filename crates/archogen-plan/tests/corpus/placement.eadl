@@ -1,0 +1,12 @@
+(eadl-version eadl/1)
+; Placement memory: refused, laying an image out in memory being `/2`'s (§1; round 7).
+(defblock console.uart
+  (offers (observable-output true) (region uart.regs (base 0x1000_0000) (size 1 KiB)) (reachable-at-privilege machine)))
+(defplatform board
+  (offers (core-count 1 tick) (region ram (base 0x8000_0000) (size 64 KiB) (executable true)) (reachable-at-privilege machine))
+  (requires (uses console.uart)))
+(defservice console.write
+  (requires (needs observable-output)))
+(defsystem pm
+  (task t (period 10 ms) (deadline 10 ms) (deadline-from release) (priority 1) (uses console.write))
+  (platform (uses board)))

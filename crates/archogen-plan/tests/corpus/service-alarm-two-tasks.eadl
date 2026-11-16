@@ -1,0 +1,11 @@
+(eadl-version eadl/1)
+; `block-requires-alarm`'s twin, the channel taken by a service: multiplexed alike (§2.9; round 12, D3).
+(defblock timer.d (offers (relative-delay true) (channels 2 tick) (reachable-at-privilege machine)))
+(defblock dma.x (offers (observable-output true) (reachable-at-privilege machine)))
+(defplatform soc (offers (core-count 1 tick) (reachable-at-privilege machine)) (requires (uses timer.d dma.x)))
+(defservice drv (requires (needs relative-delay)))
+(defservice out (requires (needs observable-output) (uses drv)))
+(defsystem bs
+  (task a (period 10 ms) (deadline 10 ms) (deadline-from release) (priority 1) (uses out))
+  (task b (period 20 ms) (deadline 20 ms) (deadline-from release) (priority 2) (uses out))
+  (platform (uses soc)))

@@ -29,7 +29,9 @@ use eadl_resolve::vocabulary::{Function, Vocabulary};
 /// stated on the block that offers the rest — a description gaining a fact, `SR-H20`'s migration, `M3.4`'s — or a
 /// provider re-offering the whole counter, `SR-H10`'s epoch extender, `M3.2`'s. A counter offering its rate bare states
 /// its horizon as unknown (record §3 rule 1), so it is whole at its own block, and not listed: four suite cases are
-/// that, which the design's approximate census, `target/m336/functions_census.py`, counted among nine.
+/// that, which the design's approximate census, `target/m336/functions_census.py`, counted among nine. `uc3`'s
+/// `examples/alternative-timer` left the list when its timer stated its modulus, the first route (leaf `M3.4.7.1`): its
+/// horizon is derived where the rest is offered.
 const PARTIAL: &[(&str, &str, &str, &[&str])] = &[
     (
         "docs/semantics/cases/missing-relevant-fact.eadl",
@@ -42,12 +44,6 @@ const PARTIAL: &[(&str, &str, &str, &[&str])] = &[
         "time.monotonic",
         "counter",
         &["wrap-behavior"],
-    ),
-    (
-        "examples/alternative-timer/system.eadl",
-        "time.monotonic",
-        "counter",
-        &["unambiguous-horizon"],
     ),
     (
         "examples/high-interference/system.eadl",

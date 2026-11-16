@@ -54,13 +54,13 @@ roadmap-unit → tree mapping and the F01–F30 fixture-ownership map live in
 | Tree | Status | Frontier (next leaf) | Owner |
 | --- | --- | --- | --- |
 | [`S0`](tasks/S0.md) | `done` | — every leaf closed; F28 green, and the chapter's counts are measured (`S0.8`) | repo-local |
-| [`PROGRAM`](tasks/PROGRAM.md) | `active` | `PROGRAM.72` next: a tree file in a sub-folder of `docs/tasks/`; `PROGRAM.34` awaits the director | repo-local |
-| [`M1`](tasks/M1.md) | `active` | `M1.29.4` — blocked: module parameters wait on the director's call (findings §7) | repo-local |
+| [`PROGRAM`](tasks/PROGRAM.md) | `active` | `PROGRAM.151` next, pull request #1's failed checks repaired, then the director's approval and merge; `PROGRAM.34` awaiting the director; `PROGRAM.78` blocked until the features are complete | repo-local |
+| [`M1`](tasks/M1.md) | `active` | `M1.29.4` — blocked: module parameters wait on the director's call (findings §7); `M1.42` — a task's durations held to time; `M1.43` — a periodic task's second release model | repo-local |
 | [`API`](tasks/API.md) | `done` | closed `2026-10-02`: one engine API, the wasm binding and its page, `archogen mcp`, and the book's chapter; findings §9 with the director | repo-local |
 | [`M0`](tasks/M0.md) | `done` | — all seven leaves closed; F27 green | repo-local |
 | [`M2`](tasks/M2.md) | `active` | `M2.7.4` — the catalog's gate, `.1`–`.4` done; `.5`, the records and the lock, and `M2.7.6`'s review and hosting half, wait on the director; `M2.21`, `archogen analyze`'s shape, ruled (findings §16) and taken from `M3.5.1` | repo-local |
 | [`M3`](tasks/M3.md) | `active` | `M3.5` — the independent checker, F12; `M3.3`'s joint constraints closed `2026-10-22`; `M3.6`'s mutation adequacy `.9` postponed by the director `2026-10-21` until the functionality is locked | repo-local |
-| [`M4`](tasks/M4.md) | `pending` | `M4.1` — the typed runtime/build plan | repo-local |
+| [`M4`](tasks/M4.md) | `active` | `M4.13` — the build of the application's inputs, ruled to run cargo `2026-11-16`; `M4.13.1` next, its design record; `M4.1`'s format `/2` written and read, `M4.1.7.6.10` waiting on `M4.2` and `M4.10` | repo-local |
 | [`M5`](tasks/M5.md) | `blocked` | — **no board procured** (`M0.5`, 2026-09-13) | repo-local |
 | [`M6`](tasks/M6.md) | `pending` | `M6.1` — three materially different systems | repo-local |
 | [`M7`](tasks/M7.md) | `pending` | `M7.4` — the F01–F30 mandatory-case audit | repo-local |

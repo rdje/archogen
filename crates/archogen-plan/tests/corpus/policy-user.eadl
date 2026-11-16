@@ -1,0 +1,16 @@
+(eadl-version eadl/1)
+; A task, and a policy another task uses, both calling one alarm: two tasks reach its one channel, so it is
+; multiplexed (§2.9; round 7, D2).
+(defblock timer.d
+  (offers (relative-delay true) (channels 1 tick) (reachable-at-privilege machine)))
+(defplatform soc.m
+  (offers (core-count 1 tick) (reachable-at-privilege machine))
+  (requires (uses timer.d)))
+(defservice alarm
+  (requires (needs relative-delay)))
+(defpolicy watchdog
+  (requires (uses alarm)))
+(defsystem pu
+  (task a (period 10 ms) (deadline 10 ms) (deadline-from release) (priority 1) (uses alarm))
+  (task b (period 20 ms) (deadline 20 ms) (deadline-from release) (priority 2) (uses watchdog))
+  (platform (uses soc.m)))

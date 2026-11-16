@@ -1,0 +1,13 @@
+(eadl-version eadl/1)
+
+; A module tree (round 8): a sporadic task and a periodic task over services and hardware another module declares,
+; the lowering's `resolved_declarations` branch.
+(defmodule app.main
+  (version 1 0)
+  (import hw.dev (as hw) (version (at-least 1 0)))
+  (import os.svc (as os) (version (at-least 1 0)))
+  (export app)
+  (defsystem app
+    (task s (min-separation 10 ms) (deadline 10 ms) (deadline-from release) (priority 1) (uses os.evt))
+    (task p (period 10 ms) (deadline 10 ms) (deadline-from release) (priority 2) (uses os.alarm))
+    (platform (uses hw.soc))))

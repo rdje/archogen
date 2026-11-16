@@ -24,7 +24,8 @@ empty rather than with a false claim.
 | File | Phrase | Class | Why |
 | --- | --- | --- | --- |
 | `docs/book/src/s0.md` | four descriptions | gated | `crates/archogen-cli/tests/s0_chapter.rs` compares it, and the corpus table row by row, with the `.eadl` files in `examples/s0-heartbeat/` |
-| `docs/book/src/s0.md` | five files | gated | `crates/archogen-cli/tests/s0_chapter.rs` compares it, and the file table beneath it, with what `archogen build` writes |
+| `docs/book/src/s0.md` | five files | record | measured `2026-11-04`: what S0 wrote while a command reached it, until `M4.2.3.1` |
+| `docs/book/src/building.md` | thirteen files | gated | `crates/archogen-cli/tests/s0_chapter.rs` compares it, and the file table beneath it, with what `archogen build` writes |
 | `docs/book/src/verification.md` | four members | record | measured `2026-09-30` by `scripts/wasm_build.sh --list`; the sentence gives its date, and the step re-derives the set on every run |
 | `docs/book/src/modules.md` | 100 bytes | record | measured `2026-09-30` by leaf `M1.39`'s fan-out probe, before the module limits; the sentence places it before the leaf, and `crates/eadl-front/tests/module_limits.rs` holds the limits that ended it |
 | `docs/semantics/reference.md` | 100 bytes | record | measured `2026-09-30` by leaf `M1.39`'s fan-out probe; §6 rule 11 says it was taken before the rule existed |
@@ -67,3 +68,4 @@ empty rather than with a false claim.
 | `docs/book/src/annex-trust-proofs.md` | 28 files | record | measured `2026-10-19`, .15.2.1.3.3.3.1.1: exact current census binding-map keys and SHA-256 checks, including four discovered sources; the dated book checkpoint and target/compiler-source-qualification/census.json retain this source epoch |
 | `docs/book/src/annex-trust-proofs.md` | 47 tests | record | measured `2026-10-19`, .15.2.1.3.3.3.2.3: complete tracked xtask/mutation_sweep_tests.py run passes in151.443s, including the actual close omission and source-premise controls; this is the dated tool-suite result, not whole-source adequacy |
 | `docs/book/src/verification.md` | 40 lines | gated | `xtask/src/main.rs`'s `the_book_states_the_tail_the_runner_prints` compares the chapter's phrase with `TAIL_LINES`, the tail the runner prints of a failed step |
+| `docs/book/src/annex-repository.md` | 64 entries | not-a-count | the fan-out `README_POLICY.md`'s `### Ceilings a decision fixes` holds for the record folders, fixed by `docs/decisions/decision_ceilings-bound-reads.md`: a limit `README-ROUTES` enforces, not a carried measurement |

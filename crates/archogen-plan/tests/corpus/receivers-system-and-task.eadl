@@ -1,0 +1,10 @@
+(eadl-version eadl/1)
+; The system's own level and a task each programming an alarm: the task named first, then the system's level (§1;
+; round 11, D2).
+(defblock timer.d
+  (offers (relative-delay true) (channels 2 tick) (reachable-at-privilege machine)))
+(defplatform soc.d (offers (core-count 1 tick) (reachable-at-privilege machine)) (requires (uses timer.d)))
+(defsystem aaa
+  (task b (period 10 ms) (deadline 10 ms) (deadline-from release) (priority 1) (needs relative-delay))
+  (requires (needs relative-delay))
+  (platform (uses soc.d)))

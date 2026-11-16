@@ -1,0 +1,13 @@
+(eadl-version eadl/1)
+; A release jitter, a sub-millisecond period and `skip-late-job` (round 7).
+(defblock console.uart
+  (offers (observable-output true) (reachable-at-privilege machine)))
+(defplatform host.p
+  (offers (core-count 1 tick) (reachable-at-privilege machine))
+  (requires (uses console.uart)))
+(defservice console.write
+  (requires (needs observable-output)))
+(defsystem ex
+  (task j (period 1.5 ms) (deadline 1500 us) (jitter 0.25 ms) (deadline-from release) (on-overrun skip-late-job) (priority 2) (uses console.write))
+  (task k (period 1 s) (deadline 0.5 s) (deadline-from release) (priority 1) (uses console.write))
+  (platform (uses host.p)))

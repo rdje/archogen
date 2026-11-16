@@ -10,7 +10,7 @@ use archogen_digest::Digest;
 use archogen_outcome::record::{Judged, Record};
 use archogen_outcome::Status;
 use archogen_plan_check::assignment::{program_digest, program_text, Assignment, Requester};
-use archogen_plan_check::check::{plan_file, PLAN_STALE, PLAN_UNSATISFIED};
+use archogen_plan_check::check::{plan_file, PLAN_DESCRIPTION, PLAN_STALE, PLAN_UNSATISFIED};
 use eadl_front::module::DirectoryModules;
 use eadl_front::SourceMap;
 use eadl_model::profile::RT_STATIC_UP_V1;
@@ -70,12 +70,13 @@ fn plan(description: &Path, requester: &str, provider: &str) -> String {
             Requester::Named(requester.to_owned()),
             "observable-output".to_owned(),
         ),
-        provider.to_owned(),
+        provider.into(),
     );
     Assignment {
         profile: RT_STATIC_UP_V1.id.to_owned(),
         system: "s".to_owned(),
         program: program_digest(&program_of(description)),
+        target: None,
         placement: None,
         bindings,
     }
@@ -217,17 +218,144 @@ fn a_stale_a_corrupted_and_a_refused_plan_each_exit_with_their_status() {
 }
 
 #[test]
+fn a_service_naming_hardware_outside_its_system_exits_with_the_description_s_status() {
+    // Model §8 rule 7: the plan binds nothing outside the hardware, and the service's name refuses the system whatever
+    // it binds — the description's `infeasible-configuration`, with the rule's repair, by the plain route and the
+    // module's.
+    let service = "(defservice console.write (requires (needs observable-output)))";
+    let named = "(defservice console.write (requires (needs observable-output)) (uses spare.uart))";
+    let spare =
+        "(defblock spare.uart (offers (observable-output true) (reachable-at-privilege machine)))";
+    let plain = format!("{}{spare}\n", PLAIN.replace(service, named));
+    let module = format!(
+        "(defmodule app (version 1 0)\n{})",
+        plain.replace("(eadl-version eadl/1)\n", "")
+    );
+    for (file, text) in [("system.eadl", plain), ("app.eadl", module)] {
+        let dir = scratch();
+        let description = dir.join(file);
+        std::fs::write(&description, text).unwrap();
+        let plan_text = plan(&description, "console.write", "console.uart");
+        let (code, record, stderr) = check(&description, &plan_text);
+        assert_eq!(
+            (code, record.status(), record.findings()[0].code.as_str()),
+            (13, Status::InfeasibleConfiguration, PLAN_DESCRIPTION),
+            "{file}: {stderr}"
+        );
+        assert!(
+            stderr.contains("error[plan-description]")
+                && stderr.contains("(rule 7)")
+                && stderr.contains("= repair: compose `spare.uart` into the platform of `s`"),
+            "{file}: {stderr}"
+        );
+    }
+}
+
+#[test]
 fn an_earlier_record_at_the_path_is_replaced() {
     let dir = scratch();
     let description = dir.join("system.eadl");
     std::fs::write(&description, PLAIN).unwrap();
-    std::fs::write(dir.join("result.json"), "an earlier record").unwrap();
-    let (code, record, _) = check(
-        &description,
-        &plan(&description, "console.write", "console.uart"),
-    );
+    let the_plan = plan(&description, "console.write", "console.uart");
+    let (code, _, _) = check(&description, &the_plan);
+    assert_eq!(code, 0);
+    let earlier = std::fs::metadata(dir.join("result.json")).unwrap();
+    assert!(earlier.len() > 0, "an earlier record stands");
+    let (code, record, _) = check(&description, &the_plan);
     assert_eq!((code, record.status()), (0, Status::Ok));
     assert!(!dir.join("result.json.part").exists());
+}
+
+/// What comes at the result's name after it was judged stays, and the checker refuses. The plan is read from a pipe, so the
+/// checker has judged the name once the pipe opens, and judges the plan only once this has written it.
+#[cfg(unix)]
+#[test]
+fn what_comes_at_the_result_while_the_checker_runs_stays() {
+    use std::io::Write as _;
+    use std::process::Stdio;
+    type Comes = fn(&Path);
+    let came: [(&str, Comes); 3] = [
+        ("nothing stood there", |result| {
+            std::fs::write(result, "mine").unwrap();
+        }),
+        ("over an earlier record", |result| {
+            let other = result.with_extension("other");
+            std::fs::write(&other, "mine").unwrap();
+            std::fs::rename(&other, result).unwrap();
+        }),
+        ("into an earlier record", |result| {
+            std::fs::write(result, "mine").unwrap();
+        }),
+    ];
+    for (case, comes) in came {
+        let dir = scratch();
+        let description = dir.join("system.eadl");
+        std::fs::write(&description, PLAIN).unwrap();
+        let the_plan = plan(&description, "console.write", "console.uart");
+        let result = dir.join("result.json");
+        if case != "nothing stood there" {
+            let (code, _, _) = check(&description, &the_plan);
+            assert_eq!(code, 0, "{case}");
+        }
+        let pipe = dir.join("plan.pipe");
+        let made = Command::new("mkfifo").arg(&pipe).status().unwrap();
+        assert!(made.success(), "{case}");
+        let running = Command::new(EXE)
+            .args(["--result", result.to_str().unwrap(), "--"])
+            .args([description.to_str().unwrap(), pipe.to_str().unwrap()])
+            .env_clear()
+            .stdout(Stdio::piped())
+            .stderr(Stdio::piped())
+            .spawn()
+            .unwrap();
+        let mut writer = std::fs::OpenOptions::new().write(true).open(&pipe).unwrap();
+        comes(&result);
+        writer.write_all(the_plan.as_bytes()).unwrap();
+        drop(writer);
+        let output = running.wait_with_output().unwrap();
+        let said = String::from_utf8_lossy(&output.stderr);
+        assert_eq!(output.status.code(), Some(70), "{case}: {said}");
+        assert_eq!(std::fs::read_to_string(&result).unwrap(), "mine", "{case}");
+        assert!(
+            said.contains("no longer what stood there"),
+            "{case}: {said}"
+        );
+        assert!(
+            said.contains("look at what stands there now"),
+            "{case}: {said}"
+        );
+        assert!(!said.contains("disk has room"), "{case}: {said}");
+        assert!(!dir.join("result.json.part").exists(), "{case}");
+    }
+}
+
+#[test]
+fn a_stream_that_reads_as_nothing_is_no_description_and_no_plan() {
+    let dir = scratch();
+    let description = dir.join("system.eadl");
+    std::fs::write(&description, PLAIN).expect("written");
+    let plan_file = dir.join("plan");
+    std::fs::write(
+        &plan_file,
+        plan(&description, "console.write", "console.uart"),
+    )
+    .expect("written");
+    for args in [
+        ["/dev/stdin", plan_file.to_str().expect("a path")],
+        [description.to_str().expect("a path"), "/dev/stdin"],
+    ] {
+        let output = run(&args);
+        assert_eq!(
+            output.status.code(),
+            Some(2),
+            "{args:?}: {}",
+            String::from_utf8_lossy(&output.stderr)
+        );
+        assert!(
+            String::from_utf8_lossy(&output.stderr).contains("read as nothing"),
+            "{args:?}"
+        );
+    }
 }
 
 #[test]
@@ -235,7 +363,7 @@ fn a_usage_error_writes_no_record() {
     let dir = scratch();
     let description = dir.join("system.eadl");
     std::fs::write(&description, PLAIN).unwrap();
-    std::fs::write(dir.join("plan.eadl"), "(format \"archogen-assignment/1\")").unwrap();
+    std::fs::write(dir.join("plan.eadl"), "(format \"archogen-assignment/2\")").unwrap();
     let result = dir.join("result.json");
     let (d, p, r) = (
         description.to_str().unwrap(),
@@ -245,8 +373,12 @@ fn a_usage_error_writes_no_record() {
     let p = p.to_str().unwrap();
     let missing = dir.join("absent.eadl");
     for (case, args) in [
-        ("no result path", vec!["--", d, p]),
         ("no paths", vec!["--result", r]),
+        ("three paths", vec!["--result", r, "--", d, p, p]),
+        (
+            "an unknown option before the paths",
+            vec!["--result", r, "-x", d, p],
+        ),
         ("one path", vec!["--result", r, "--", d]),
         (
             "an unknown option",
@@ -276,6 +408,32 @@ fn a_usage_error_writes_no_record() {
 }
 
 #[test]
+fn the_roadmap_s_form_writes_the_record_on_standard_output() {
+    // `ROADMAP.md` §10.2's `archogen plan-check DESCRIPTION PLAN`, handed here unparsed (leaf `M3.5.1.4.1`): no result
+    // path, no `--`, the record on standard output and the exit code its status's.
+    let dir = scratch();
+    let description = dir.join("system.eadl");
+    std::fs::write(&description, PLAIN).unwrap();
+    let plan_path = dir.join("plan.eadl");
+    std::fs::write(
+        &plan_path,
+        plan(&description, "console.write", "console.uart"),
+    )
+    .unwrap();
+    let (d, p) = (description.to_str().unwrap(), plan_path.to_str().unwrap());
+    for args in [vec![d, p], vec!["--", d, p], vec![d, "--", p]] {
+        let output = run(&args);
+        let record = Record::read(&output.stdout, 1 << 20).expect("the record on standard output");
+        assert_eq!(record.status(), Status::Ok, "{args:?}");
+        assert_eq!(output.status.code(), Some(0), "{args:?}");
+        assert!(
+            std::fs::read_dir(&dir).unwrap().count() == 2,
+            "{args:?}: a file was written beside the inputs"
+        );
+    }
+}
+
+#[test]
 fn help_and_version_answer_and_exit_zero() {
     let help = run(&["--help"]);
     assert_eq!(help.status.code(), Some(0));
@@ -284,6 +442,170 @@ fn help_and_version_answer_and_exit_zero() {
     assert_eq!(version.status.code(), Some(0));
     assert_eq!(
         String::from_utf8_lossy(&version.stdout),
-        "archogen-plan-check: reads archogen-assignment/1, writes archogen-result/1\n"
+        "archogen-plan-check: reads archogen-assignment/2, and archogen-assignment/3 with --target, writes \
+         archogen-result/1\n"
+    );
+}
+
+#[test]
+#[cfg(unix)]
+fn what_stands_beside_the_record_is_refused_and_a_link_there_is_never_written_through() {
+    let dir = scratch();
+    let description = dir.join("system.eadl");
+    std::fs::copy(
+        Path::new(env!("CARGO_MANIFEST_DIR")).join("../../examples/s0-heartbeat/system.eadl"),
+        &description,
+    )
+    .expect("a description");
+    let plan = dir.join("plan.eadl");
+    std::fs::write(&plan, "(format \"archogen-assignment/2\")\n").expect("a plan");
+    let mine = dir.join("mine");
+    std::fs::write(&mine, "mine").expect("written");
+    let result = dir.join("result.json");
+    std::os::unix::fs::symlink(&mine, dir.join("result.json.part")).expect("a link");
+    let output = run(&[
+        "--result",
+        result.to_str().unwrap(),
+        "--",
+        description.to_str().unwrap(),
+        plan.to_str().unwrap(),
+    ]);
+    assert_eq!(output.status.code(), Some(2), "{output:?}");
+    let said = String::from_utf8_lossy(&output.stderr);
+    assert!(said.contains("hint: look at it"), "{said}");
+    assert_eq!(std::fs::read_to_string(&mine).expect("kept"), "mine");
+    assert!(std::fs::symlink_metadata(dir.join("result.json.part"))
+        .expect("kept")
+        .is_symlink());
+    assert!(!result.exists());
+}
+
+#[test]
+fn a_result_replaces_only_a_record_and_never_what_it_was_read_from() {
+    let dir = scratch();
+    let description = dir.join("system.eadl");
+    std::fs::copy(
+        Path::new(env!("CARGO_MANIFEST_DIR")).join("../../examples/s0-heartbeat/system.eadl"),
+        &description,
+    )
+    .expect("a description");
+    let plan = dir.join("plan.eadl");
+    std::fs::write(&plan, "(format \"archogen-assignment/2\")\n").expect("a plan");
+    let (before, before_plan) = (
+        std::fs::read(&description).expect("read"),
+        std::fs::read(&plan).expect("read"),
+    );
+    let mine = dir.join("mine.txt");
+    std::fs::write(&mine, "mine").expect("written");
+    for at in [&description, &plan, &mine] {
+        let output = run(&[
+            "--result",
+            at.to_str().unwrap(),
+            "--",
+            description.to_str().unwrap(),
+            plan.to_str().unwrap(),
+        ]);
+        assert_eq!(output.status.code(), Some(2), "{output:?}");
+        assert!(
+            String::from_utf8_lossy(&output.stderr).contains("a result replaces only a record"),
+            "{output:?}"
+        );
+    }
+    assert_eq!(std::fs::read(&description).expect("kept"), before);
+    assert_eq!(std::fs::read(&plan).expect("kept"), before_plan);
+    assert_eq!(std::fs::read_to_string(&mine).expect("kept"), "mine");
+    // An empty file is nobody's work, and takes a record.
+    let empty = dir.join("empty.json");
+    std::fs::write(&empty, "").expect("written");
+    let output = run(&[
+        "--result",
+        empty.to_str().unwrap(),
+        "--",
+        description.to_str().unwrap(),
+        plan.to_str().unwrap(),
+    ]);
+    assert_ne!(output.status.code(), Some(2), "{output:?}");
+    assert!(std::fs::metadata(&empty).expect("it stands").len() > 0);
+}
+
+#[test]
+#[cfg(unix)]
+fn a_result_keeps_the_mode_of_what_it_replaces_and_a_bad_place_is_refused_before_anything_is_judged(
+) {
+    use std::os::unix::fs::PermissionsExt;
+    let dir = scratch();
+    let description = dir.join("system.eadl");
+    std::fs::write(&description, PLAIN).unwrap();
+    let the_plan = plan(&description, "console.write", "console.uart");
+    let (code, _, _) = check(&description, &the_plan);
+    assert_eq!(code, 0);
+    let result = dir.join("result.json");
+    std::fs::set_permissions(&result, std::fs::Permissions::from_mode(0o600)).unwrap();
+    let (code, _, _) = check(&description, &the_plan);
+    assert_eq!(code, 0);
+    let kept = std::fs::metadata(&result).unwrap().permissions().mode();
+    assert_eq!(kept & 0o777, 0o600);
+    // Each of these is `usage`, a repair in its words, where it was once a tool failure after the whole judgement.
+    let plan_path = dir.join("plan.eadl");
+    let bad = |at: &Path, words: &str| {
+        let output = run(&[
+            "--result",
+            at.to_str().unwrap(),
+            "--",
+            description.to_str().unwrap(),
+            plan_path.to_str().unwrap(),
+        ]);
+        assert_eq!(output.status.code(), Some(2), "{at:?}: {output:?}");
+        assert!(
+            String::from_utf8_lossy(&output.stderr).contains(words),
+            "{at:?}: {output:?}"
+        );
+    };
+    bad(
+        &dir.join("missing/result.json"),
+        "no directory this user can reach",
+    );
+    bad(&dir.join("names-no-file/"), "names no file of its own");
+    std::fs::write(dir.join("stale.json.part"), "mine").unwrap();
+    bad(&dir.join("stale.json"), "where the result is written first");
+    assert_eq!(
+        std::fs::read_to_string(dir.join("stale.json.part")).unwrap(),
+        "mine"
+    );
+}
+
+/// A record past a mebibyte is one this executable may write, so it reads it as one and may replace it.
+#[test]
+fn a_large_record_is_a_record_it_may_replace() {
+    let dir = scratch();
+    let description = dir.join("system.eadl");
+    std::fs::write(&description, PLAIN).unwrap();
+    let the_plan = plan(&description, "console.write", "console.uart");
+    let (code, _, _) = check(&description, &the_plan);
+    assert_eq!(code, 0);
+    let result = dir.join("result.json");
+    let large = std::fs::read_to_string(&result)
+        .unwrap()
+        .replace("archogen-plan-check", &"x".repeat(1 << 21));
+    assert!(large.len() > 1 << 21, "{}", large.len());
+    std::fs::write(&result, large).unwrap();
+    let (code, record, said) = check(&description, &the_plan);
+    assert_eq!((code, record.status()), (0, Status::Ok), "{said}");
+    assert!(std::fs::metadata(&result).unwrap().len() < 1 << 20);
+}
+
+/// An argument that is no text is a usage error, not a panic: exit 101 is a code no status has.
+#[test]
+#[cfg(unix)]
+fn an_argument_that_is_no_text_is_a_usage_error() {
+    use std::os::unix::ffi::OsStrExt;
+    let output = Command::new(EXE)
+        .arg(std::ffi::OsStr::from_bytes(b"r\xff"))
+        .output()
+        .expect("the executable runs");
+    assert_eq!(output.status.code(), Some(2), "{output:?}");
+    assert!(
+        String::from_utf8_lossy(&output.stderr).contains("not UTF-8"),
+        "{output:?}"
     );
 }

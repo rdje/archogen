@@ -1,0 +1,13 @@
+(eadl-version eadl/1)
+; A separation, a deadline and a jitter written as a frequency or a size: not times, refused (§1, §2.2; round 7, D1).
+(defblock dev.e
+  (offers (interrupt-source true) (min-arrival-separation 20 ms) (reachable-at-privilege machine)))
+(defplatform soc.e
+  (offers (core-count 1 tick) (reachable-at-privilege machine))
+  (requires (uses dev.e)))
+(defservice evt
+  (requires (needs interrupt-source)))
+(defsystem hz2
+  (task s (min-separation 50 Hz) (deadline 10 ms) (jitter 8 bit) (deadline-from release) (priority 1) (uses evt))
+  (task p (period 10 ms) (deadline 10 kHz) (deadline-from release) (priority 2))
+  (platform (uses soc.e)))

@@ -1,0 +1,22 @@
+(eadl-version eadl/1)
+
+(defblock timer.delay
+  (offers
+    (relative-delay true)
+    (counter-modulus 4294967296)
+    (tick-rate 1 MHz)
+    (observation-coherent true)
+    (channels 1 tick)
+    (reachable-at-privilege machine)))
+
+(defplatform soc.d
+  (offers (core-count 1 tick) (reachable-at-privilege machine))
+  (requires (uses timer.delay)))
+
+(defservice time.deadline
+  (requires (needs absolute-deadline)))
+
+(defsystem bare
+  (task t (period 25 ms) (deadline 25 ms) (deadline-from release) (priority 1) (uses time.deadline))
+  (requires (uses time.deadline))
+  (platform (uses soc.d)))

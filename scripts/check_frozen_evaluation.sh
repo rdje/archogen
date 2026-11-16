@@ -149,16 +149,16 @@ self_test() {
     shift 3
     arms=$((arms + 1))
     out="$(cd "$work" && bash ${TRACE:+-x} "$SELF" "$@" 2>&1)"; rc=$?
-    if printf '%s' "$out" | grep -q 'ARM-CASE-TEXT'; then
+    if grep -q 'ARM-CASE-TEXT' <<< "$out"; then
       echo "SELF-TEST: $name — the check printed a sealed case's text" >&2; return
     fi
     if [ "$rc" -ne "$want" ]; then
       echo "SELF-TEST: $name — expected exit $want, got $rc" >&2; printf '%s\n' "$out" | sed -n '1,3p' | sed 's/^/    /' >&2; return
     fi
-    if [ "$want" -ne 0 ] && ! printf '%s' "$out" | grep -q 'FROZEN-EVALUATION'; then
+    if [ "$want" -ne 0 ] && ! grep -q 'FROZEN-EVALUATION' <<< "$out"; then
       echo "SELF-TEST: $name — exit $rc but the check never spoke" >&2; return
     fi
-    if [ -n "$must" ] && ! printf '%s' "$out" | grep -qF -- "$must"; then
+    if [ -n "$must" ] && ! grep -qF -- "$must" <<< "$out"; then
       echo "SELF-TEST: $name — not about \`$must\`, so it answered for another reason:" >&2
       printf '%s\n' "$out" | sed -n '1,3p' | sed 's/^/    /' >&2; return
     fi
@@ -363,7 +363,7 @@ SHIM
     sed '/^set +x/d' "$SELF" > "$work/../traced.sh"
     normal="$(cd "$work" && bash -x "$work/../traced.sh" 2>&1)"
     out="$normal$(cd "$work" && bash -x "$work/../traced.sh" --restore 2>&1)"
-    printf '%s' "$out" | grep -q 'ARM-CASE-TEXT' && leaked="$leaked $place"
+    grep -q 'ARM-CASE-TEXT' <<< "$out" && leaked="$leaked $place"
     case "$place" in  # each place's own refusal, in the normal run alone (review R6 D2)
       quote) want="quotes a line of a sealed case" ;;
       seal) want="has no '# seal: sealed|unsealed' line" ;;
@@ -372,7 +372,7 @@ SHIM
       custody|comment) want="MANIFEST.txt' quotes a line of a sealed case" ;;
       *) want="is not '<sha256>  <file>'" ;;
     esac
-    printf '%s' "$normal" | grep -qF -- "$want" || leaked="$leaked $place(no-refusal)"
+    grep -qF -- "$want" <<< "$normal" || leaked="$leaked $place(no-refusal)"
     rm -f "$work/../traced.sh"
   done
   if [ -z "$leaked" ]; then ok=$((ok + 1)); echo "  ✅ a run with tracing forced on prints no case's line (9 places)"
@@ -391,7 +391,7 @@ SHIM
       name) manifest "0000000000000000000000000000000000000000000000000000000000000000  $LONG" ;;
     esac
     out="$(cd "$work" && bash "$SELF" 2>&1; cd "$work" && bash "$SELF" --restore 2>&1)"
-    printf '%s' "$out" | grep -q 'ARM-CASE-TEXT' && leaked="$leaked $place"
+    grep -q 'ARM-CASE-TEXT' <<< "$out" && leaked="$leaked $place"
   done
   if [ -z "$leaked" ]; then ok=$((ok + 1)); echo "  ✅ a case's line in any field of the manifest is never printed (8 places)"
   else echo "SELF-TEST: a case's line in the manifest was printed, from:$leaked" >&2; fi
@@ -483,7 +483,7 @@ SHIM
   sed "s/trap 'rm -rf \"\$tmp\"' EXIT/trap : EXIT/" "$SELF" > "$work/../kept.sh"
   kept_out="$(cd "$work" && bash "$work/../kept.sh" 2>&1)"
   arms=$((arms + 1))
-  if ! printf '%s' "$kept_out" | grep -q 'ARM-CASE-TEXT' &&
+  if ! grep -q 'ARM-CASE-TEXT' <<< "$kept_out" &&
      [ -n "$(find "$work/target/doctrine_scratch" -name 'frozen_evaluation.*' -type d 2>/dev/null)" ] &&
      ! grep -rq 'ARM-CASE-TEXT' "$work/target/doctrine_scratch" 2>/dev/null; then
     ok=$((ok + 1)); echo "  ✅ the check's scratch holds no manifest line of another form"

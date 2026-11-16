@@ -3,9 +3,10 @@
 # `PROGRAM.41`, hardened by `PROGRAM.41.1`; docs/decisions/decision_decisions-folder-ceiling.md,
 # docs/reviews/decision-history-reviews.md, LIVE_DOCUMENT_SIZE_CONTAINMENT.md's `archive_terminal`).
 #
-# ⭐ WHY. `docs/decisions/` has a ceiling that only the director can raise, and it was raised once (`PROGRAM.38`).
-# Some records hold numbered sections that are settled and cited by number across the task trees: the findings
-# register's resolved and ruled items. Sealing such a section moves it, byte for byte, into
+# ⭐ WHY. A record stays one reading only within its per-file ceilings; the folder's total bounded it too until
+# docs/decisions/decision_ceilings-bound-reads.md (`PROGRAM.38` raised that total once). Some records hold numbered
+# sections that are settled and cited by number across the task trees: the findings register's resolved and ruled
+# items. Sealing such a section moves it, byte for byte, into
 # `docs/decision-history/<record>/<NN>.md`, and leaves its heading and a one-line stub where it stood, so every
 # citation by number still finds it. `docs/decision-history/INDEX.md` records each file's lines, bytes and sha256.
 # It is `TASK-HISTORY`'s pattern (`docs/decisions/decision_task-tree-sealing.md`), for sections instead of leaves.
@@ -477,7 +478,7 @@ MD
     if [ "$rc" -ne "$want" ]; then
       echo "SELF-TEST: $name — expected exit $want, got $rc" >&2; printf '%s\n' "$out" | sed -n '1,3p' | sed 's/^/    /' >&2; return
     fi
-    if [ -n "$must" ] && ! printf '%s' "$out" | grep -qF -- "$must"; then
+    if [ -n "$must" ] && ! grep -qF -- "$must" <<< "$out"; then
       echo "SELF-TEST: $name — not about \`$must\`:" >&2; printf '%s\n' "$out" | sed -n '1,4p' | sed 's/^/    /' >&2; return
     fi
     ok=$((ok + 1)); echo "  ✅ $name"
@@ -599,7 +600,7 @@ PY
   git clone -q --depth 1 "file://$work" "$work-shallow" 2>/dev/null
   arms=$((arms + 1))
   if out="$(cd "$work-shallow" && bash "$SELF" 2>&1)"; then echo "SELF-TEST: a shallow clone passed" >&2
-  elif printf '%s' "$out" | grep -qF "the repository is shallow"; then ok=$((ok + 1)); echo "  ✅ a shallow clone is refused"
+  elif grep -qF "the repository is shallow" <<< "$out"; then ok=$((ok + 1)); echo "  ✅ a shallow clone is refused"
   else echo "SELF-TEST: a shallow clone was refused for another reason:" >&2; printf '%s\n' "$out" | sed -n '1,3p' | sed 's/^/    /' >&2; fi
   rm -rf "$work-shallow"
   mkdir -p "$work/docs/decisions/other" && printf '# Another\n\n## 1. Else\n\nText.\n' > "$work/docs/decisions/other/decision_r.md"

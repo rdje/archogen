@@ -1,0 +1,18 @@
+(eadl-version eadl/1)
+; A module tree whose aliases order the sources' qualified texts against their local names: `z.dev.a` (5 ms) and
+; `a.dev.b` (30 ms), each with its handler in a third module. `s` reaches both handlers, `(several …)` by qualified
+; text; `t` binds its own source, the slower, model §8 rule 16 refusing the faster; the ranks by separation, ties none
+; (round 29, R6; `M4.1.2.3`).
+(defmodule app.main
+  (version 1 0)
+  (import src.one (as z) (version (at-least 1 0)))
+  (import src.two (as a) (version (at-least 1 0)))
+  (import os.svc (as os) (version (at-least 1 0)))
+  (export app)
+  (defplatform soc
+    (offers (core-count 1 tick) (reachable-at-privilege machine))
+    (requires (uses z.dev.a a.dev.b)))
+  (defsystem app
+    (task s (min-separation 10 ms) (deadline 10 ms) (deadline-from release) (priority 1) (uses os.h1 os.h2))
+    (task t (min-separation 20 ms) (deadline 20 ms) (deadline-from release) (priority 2) (needs interrupt-source))
+    (platform (uses soc))))

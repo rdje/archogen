@@ -1,0 +1,15 @@
+(eadl-version eadl/1)
+; `outp` takes a channel at `tmr` for its alarm; `tmr`'s own requirement is bound to `outp`, so `tmr`'s code, which
+; serves `outp`'s own timer route, calls `outp` there. §2.9: its own route counts "where [something] else that route
+; runs reaches it": `tmr` does. One task reaches `outp` too: two users, multiplexed (§2.9; round 14, R4).
+(defblock outp
+  (offers (observable-output true) (reachable-at-privilege machine))
+  (requires (needs relative-delay)))
+(defblock tmr
+  (offers (relative-delay true) (channels 1 tick) (reachable-at-privilege machine))
+  (requires (needs observable-output)))
+(defplatform soc (offers (core-count 1 tick) (reachable-at-privilege machine)) (requires (uses outp tmr)))
+(defservice w (requires (needs observable-output)))
+(defsystem s
+  (task a (period 10 ms) (deadline 10 ms) (deadline-from release) (priority 1) (uses w))
+  (platform (uses soc)))

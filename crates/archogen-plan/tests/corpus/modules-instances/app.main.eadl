@@ -1,0 +1,12 @@
+(eadl-version eadl/1)
+; Round 22's module tree: two adapter instances on one route, a source, and a service two jobs share through an
+; exclusive instance, across modules, names qualified (§2; round 23, R1).
+(defmodule app.main
+  (version 1 0)
+  (import hw.dev (as hw) (version (at-least 1 0)))
+  (import os.svc (as os) (version (at-least 1 0)))
+  (export app)
+  (defsystem app
+    (task s (min-separation 10 ms) (deadline 10 ms) (deadline-from release) (priority 1) (uses os.evt os.dl))
+    (task p (period 20 ms) (deadline 20 ms) (priority 2) (uses os.time os.dl))
+    (platform (uses hw.soc))))

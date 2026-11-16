@@ -7,18 +7,28 @@
 //!
 //! No semantics live here. Each command arm is a thin translation between the command line and
 //! the crate that does the work — [`check_cmd`] runs `eadl_model::check`, [`build_cmd`] runs the
-//! experimental S0 realization in `archogen_s0` — and its job is to map a result onto the exit
+//! lowering and the emitter on what the search and the checker made — and its job is to map a result onto the exit
 //! code contract without adding a judgement of its own. `run` returns a [`Status`] and writes to
 //! the caller's streams, so the whole surface is testable without a process.
 
 pub mod build_cmd;
+pub mod built;
 pub mod check_cmd;
 pub mod cli;
+pub mod consume;
+pub mod explain_cmd;
+pub mod launch;
 pub mod mcp;
+mod place;
+pub mod resolve_cmd;
 pub mod spec;
 pub mod status;
 
 use std::io::Write;
+
+use eadl_front::Printable;
+
+use launch::{Launch, NoLaunch};
 
 /// The MCP server's JSON, [`archogen_json`] under the name it had here until leaf `M3.5.1.7` gave it a package of its
 /// own, so that a checker's result record is read by the one reader the server's messages are.
@@ -32,21 +42,25 @@ pub const VERSION: &str = env!("CARGO_PKG_VERSION");
 
 /// Run one invocation, writing normal output to `out` and diagnostics to `err`.
 ///
-/// Returns the [`Status`] the process should exit with. Errors from the writers are reported
-/// as [`Status::ToolFailure`]: a toolchain that cannot deliver its own output has not
-/// produced a result, and §5.5 forbids presenting that as a valid system.
+/// Returns the [`Status`] the process should exit with. A writer's error does not reach it, save `--help`'s and `--version`'s, whose
+/// whole output is that one write: a command drops each line's error, and whoever needs to know that `out` failed holds it in a
+/// [`Watched`], as the `archogen` executable does. A failing `err` changes nothing, having nothing else to say it on. It runs no
+/// program: a command a sibling program answers is refused here, which only the `archogen` executable runs ([`launch`]).
 pub fn run<A, S>(args: A, out: &mut dyn Write, err: &mut dyn Write) -> Status
 where
     A: IntoIterator<Item = S>,
     S: Into<String>,
 {
-    run_with_input(args, &mut std::io::empty(), out, err)
+    run_with_input(args, &mut std::io::empty(), &NoLaunch, out, err)
 }
 
-/// [`run`], with the input a command that reads one takes: `archogen mcp` serves its messages from it.
+/// [`run`], with the input a command that reads one takes — `archogen mcp` serves its messages from it — and the
+/// launcher a command a sibling program answers is run through, which only the `archogen` executable's `main` holds
+/// one of that starts a process.
 pub fn run_with_input<A, S>(
     args: A,
     input: &mut dyn std::io::BufRead,
+    launcher: &dyn Launch,
     out: &mut dyn Write,
     err: &mut dyn Write,
 ) -> Status
@@ -54,13 +68,59 @@ where
     A: IntoIterator<Item = S>,
     S: Into<String>,
 {
+    let args: Vec<String> = args.into_iter().map(Into::into).collect();
+    if args.iter().any(|arg| arg.contains(['\n', '\r'])) {
+        return report(
+            &mut Printable(err),
+            &Refusal {
+                status: Status::Usage,
+                message: "an argument holds a line break, which could write a line of a run's own"
+                    .to_owned(),
+                repair: "give paths and names this tool can print".to_owned(),
+            },
+        );
+    }
     match cli::parse(args) {
         Ok(Invocation::Help(None)) => emit(out, &cli::help_overview()),
-        Ok(Invocation::Help(Some(name))) => emit(out, &cli::help_command(name)),
+        Ok(Invocation::Help(Some(name))) => match spec::command(name).and_then(|spec| spec.sibling)
+        {
+            // A sibling's help is its own: the front holds none of its options to describe.
+            Some(program) => sibling(program, &["--help".to_owned()], launcher, out, err),
+            None => emit(&mut Printable(out), &cli::help_command(name)),
+        },
         Ok(Invocation::Version) => emit(out, &format!("archogen {VERSION}\n")),
-        Ok(Invocation::Run(parsed)) => dispatch(&parsed, input, out, err),
-        Err(refusal) => report(err, &refusal),
+        Ok(Invocation::Run(parsed)) => dispatch(&parsed, input, launcher, out, err),
+        Err(refusal) => report(&mut Printable(err), &refusal),
     }
+}
+
+/// A command a sibling program answers: `args` handed over unparsed, the sibling's exit code answered when the status
+/// vocabulary holds it; a sibling the front cannot run, or one ending with no status, `tool-failure`.
+fn sibling(
+    program: &str,
+    args: &[String],
+    launcher: &dyn Launch,
+    out: &mut dyn Write,
+    err: &mut dyn Write,
+) -> Status {
+    let refusal = match launcher.launch(program, args, out, err) {
+        Ok(launched) => match launch::status_of(&launched.ended) {
+            Ok(status) => return status,
+            Err(why) => Refusal {
+                status: Status::ToolFailure,
+                message: format!("`{program}` {why}"),
+                repair: format!(
+                    "remove what it left beside its result, if it was given one, and run `{program}` again; if it ends so again, report it, with what it wrote above"
+                ),
+            },
+        },
+        Err(unlaunched) => Refusal {
+            status: Status::ToolFailure,
+            message: unlaunched.message,
+            repair: unlaunched.repair,
+        },
+    };
+    report(&mut Printable(err), &refusal)
 }
 
 fn emit(out: &mut dyn Write, text: &str) -> Status {
@@ -70,19 +130,75 @@ fn emit(out: &mut dyn Write, text: &str) -> Status {
     Status::Ok
 }
 
+/// A stream that remembers a write that failed. A command prints line after line and drops each line's error, so a report cut
+/// at its last line, which goes straight through a line buffer and leaves nothing for a later flush to fail on, would look whole.
+/// Held here, every route is one: what the executable exits with reads this.
+pub struct Watched<W> {
+    inner: W,
+    failed: bool,
+}
+
+impl<W: Write> Watched<W> {
+    /// `inner`, watched.
+    pub const fn new(inner: W) -> Self {
+        Self {
+            inner,
+            failed: false,
+        }
+    }
+
+    /// Whether any write or flush has failed.
+    pub const fn failed(&self) -> bool {
+        self.failed
+    }
+
+    /// Note how a write went, an interrupted one being retried and so no failure.
+    fn note<T>(&mut self, result: std::io::Result<T>) -> std::io::Result<T> {
+        if let Err(error) = &result {
+            self.failed |= error.kind() != std::io::ErrorKind::Interrupted;
+        }
+        result
+    }
+}
+
+impl<W: Write> Write for Watched<W> {
+    fn write(&mut self, bytes: &[u8]) -> std::io::Result<usize> {
+        let written = self.inner.write(bytes);
+        self.note(written)
+    }
+
+    fn flush(&mut self) -> std::io::Result<()> {
+        let flushed = self.inner.flush();
+        self.note(flushed)
+    }
+}
+
+/// Say that standard output failed, the exit code that follows from it: it is said, since a code alone would not tell a reader
+/// that whatever the command did stands.
+pub fn unwritten(err: &mut dyn Write) -> Status {
+    let failure = Status::ToolFailure;
+    let _ = writeln!(
+        err,
+        "archogen: {}: standard output could not take what was written to it, so the exit code is this one; what the command did stands",
+        failure.slug()
+    );
+    let _ = writeln!(
+        err,
+        "  hint: give standard output somewhere that takes it, and run the command again"
+    );
+    failure
+}
+
 /// Print a refusal in the shape every archogen diagnostic uses: what happened, then what to
 /// do about it. §5.5 requires a concrete repair direction on every diagnostic.
 fn report(err: &mut dyn Write, refusal: &Refusal) -> Status {
-    let written = writeln!(
+    let _ = writeln!(
         err,
         "archogen: {}: {}",
         refusal.status.slug(),
         refusal.message
-    )
-    .and_then(|()| writeln!(err, "  hint: {}", refusal.repair));
-    if written.is_err() {
-        return Status::ToolFailure;
-    }
+    );
+    let _ = writeln!(err, "  hint: {}", refusal.repair);
     refusal.status
 }
 
@@ -94,13 +210,28 @@ fn report(err: &mut dyn Write, refusal: &Refusal) -> Status {
 fn dispatch(
     parsed: &Parsed,
     input: &mut dyn std::io::BufRead,
+    launcher: &dyn Launch,
     out: &mut dyn Write,
     err: &mut dyn Write,
 ) -> Status {
     let spec = parsed.spec();
+    if let Some(program) = spec.sibling {
+        return sibling(program, &parsed.positionals, launcher, out, err);
+    }
     match spec.name {
-        "check" => return check_cmd::run(parsed, out, err),
-        "build" => return build_cmd::run(parsed, out, err),
+        // What these say a person reads, so nothing of a path or a name moves a terminal. `plan-check` and `mcp` write what a program reads, each escaped by its format.
+        "check" => {
+            return check_cmd::run(parsed, &mut Printable(out), &mut Printable(err));
+        }
+        "build" => {
+            return build_cmd::run(parsed, launcher, &mut Printable(out), &mut Printable(err));
+        }
+        "resolve" => {
+            return resolve_cmd::run(parsed, launcher, &mut Printable(out), &mut Printable(err));
+        }
+        "explain" => {
+            return explain_cmd::run(parsed, &mut Printable(out), &mut Printable(err));
+        }
         "mcp" => {
             return match mcp::serve(input, out) {
                 Ok(()) => Status::Ok,
@@ -194,10 +325,10 @@ mod tests {
 
     #[test]
     fn an_unbuilt_command_exits_unimplemented_and_names_its_leaf() {
-        // `resolve` is still unbuilt. This arm moved off `check` when leaf M1.8 built it — the
-        // property under test is the routing of an unbuilt command, not any particular command
-        // being unbuilt, so it follows the surface rather than pinning it.
-        let (status, out, err) = invoke(&["resolve", "examples/x.eadl", "--out", "plan.json"]);
+        // `replay` is still unbuilt. This arm moved off `check` when leaf M1.8 built it, and off `resolve` when
+        // leaf M3.4.4 did — the property under test is the routing of an unbuilt command, not any particular
+        // command being unbuilt, so it follows the surface rather than pinning it.
+        let (status, out, err) = invoke(&["replay", "artifacts/failure/replay.json"]);
         assert_eq!(status, Status::Unimplemented);
         assert_eq!(status.code(), 20);
         assert!(
@@ -206,7 +337,7 @@ mod tests {
         );
         assert!(err.contains("unimplemented"), "{err}");
         assert!(
-            err.contains("M3.4"),
+            err.contains("M4.7"),
             "the refusal must name the owning leaf: {err}"
         );
     }
@@ -224,13 +355,22 @@ mod tests {
             !check_line.contains("unimplemented"),
             "`check` is built but still advertised as unimplemented: {check_line}"
         );
+        let replay_line = out
+            .lines()
+            .find(|line| line.trim_start().starts_with("replay "))
+            .expect("replay is listed");
+        assert!(
+            replay_line.contains("unimplemented"),
+            "`replay` is unbuilt and should say so: {replay_line}"
+        );
+        // An experimental command says so, and what completes it (leaf M3.4.4).
         let resolve_line = out
             .lines()
             .find(|line| line.trim_start().starts_with("resolve "))
             .expect("resolve is listed");
         assert!(
-            resolve_line.contains("unimplemented"),
-            "`resolve` is unbuilt and should say so: {resolve_line}"
+            resolve_line.contains("experimental") && resolve_line.contains("M3.7"),
+            "`resolve` is experimental and should say so: {resolve_line}"
         );
     }
 
@@ -318,9 +458,13 @@ mod tests {
         let (status, out, err) = invoke(&["resolve", "--help"]);
         assert_eq!(status, Status::Ok);
         assert!(out.contains("archogen resolve <DESCRIPTION>"), "{out}");
+        // The leaf the command table names, whatever it is today — `resolve` is experimental, completed by `M3.7`.
+        let owner = crate::spec::command("resolve")
+            .and_then(|spec| spec.maturity.owner())
+            .expect("an experimental command names the leaf that completes it");
         assert!(
-            out.contains("M3.4"),
-            "command help must name the owning leaf:\n{out}"
+            out.contains(owner),
+            "command help must name the owning leaf, {owner}:\n{out}"
         );
         assert!(err.is_empty(), "{err}");
     }

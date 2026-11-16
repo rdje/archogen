@@ -1,0 +1,13 @@
+(eadl-version eadl/1)
+; A task reaching the platform through a service bound to it: composition is no call, so the blocks the platform
+; composes run in no job of the task's (§2, §2.6; round 12, D4).
+(defblock console.uart (offers (observable-output true) (reachable-at-privilege machine)))
+(defplatform soc
+  (offers (core-count 1 tick) (reachable-at-privilege machine))
+  (requires (uses console.uart)))
+(defservice cpu (requires (needs core-count)))
+(defservice log (requires (needs observable-output)))
+(defsystem tp
+  (task p (period 10 ms) (deadline 10 ms) (deadline-from release) (priority 1) (uses cpu))
+  (requires (uses log))
+  (platform (uses soc)))

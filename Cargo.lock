@@ -9,6 +9,7 @@ dependencies = [
  "archogen-outcome",
  "eadl-front",
  "eadl-model",
+ "eadl-resolve",
 ]
 
 [[package]]
@@ -25,8 +26,14 @@ name = "archogen-cli"
 version = "0.1.0"
 dependencies = [
  "archogen-api",
+ "archogen-digest",
+ "archogen-emit",
+ "archogen-install",
  "archogen-json",
- "archogen-s0",
+ "archogen-outcome",
+ "archogen-plan",
+ "archogen-plan-check",
+ "archogen-transport",
  "archogen-wasm",
  "eadl-front",
  "eadl-model",
@@ -35,6 +42,21 @@ dependencies = [
 [[package]]
 name = "archogen-digest"
 version = "0.1.0"
+
+[[package]]
+name = "archogen-emit"
+version = "0.1.0"
+dependencies = [
+ "archogen-digest",
+ "archogen-json",
+ "archogen-outcome",
+ "archogen-plan",
+ "archogen-plan-check",
+ "eadl-front",
+ "eadl-model",
+ "eadl-resolve",
+ "sim-playground",
+]
 
 [[package]]
 name = "archogen-evidence"
@@ -64,21 +86,47 @@ dependencies = [
 ]
 
 [[package]]
-name = "archogen-plan-check"
+name = "archogen-plan"
 version = "0.1.0"
 dependencies = [
  "archogen-digest",
  "archogen-outcome",
+ "archogen-plan-check",
+ "eadl-front",
+ "eadl-model",
+ "eadl-resolve",
+]
+
+[[package]]
+name = "archogen-plan-check"
+version = "0.1.0"
+dependencies = [
+ "archogen-digest",
+ "archogen-json",
+ "archogen-outcome",
+ "archogen-transport",
  "eadl-front",
  "eadl-model",
 ]
 
 [[package]]
-name = "archogen-s0"
+name = "archogen-plan-check-wasm"
 version = "0.1.0"
 dependencies = [
+ "archogen-digest",
+ "archogen-json",
+ "archogen-outcome",
+ "archogen-plan-check",
+ "archogen-transport",
  "eadl-front",
  "eadl-model",
+]
+
+[[package]]
+name = "archogen-transport"
+version = "0.1.0"
+dependencies = [
+ "archogen-json",
 ]
 
 [[package]]
@@ -86,6 +134,7 @@ name = "archogen-wasm"
 version = "0.1.0"
 dependencies = [
  "archogen-api",
+ "archogen-json",
  "eadl-front",
 ]
 
@@ -104,6 +153,7 @@ dependencies = [
 name = "eadl-resolve"
 version = "0.1.0"
 dependencies = [
+ "archogen-digest",
  "archogen-plan-check",
  "eadl-front",
  "eadl-model",
@@ -126,6 +176,17 @@ dependencies = [
 [[package]]
 name = "rt-reference"
 version = "0.1.0"
+
+[[package]]
+name = "sim-devices"
+version = "0.1.0"
+
+[[package]]
+name = "sim-playground"
+version = "0.1.0"
+dependencies = [
+ "rt-core",
+]
 
 [[package]]
 name = "xtask"

@@ -67,27 +67,16 @@ their versioned readers and permanent refusal controls enforce their local contr
 | Pinned by | the frozen verdict of every description in the repository (`crates/archogen-cli/tests/verdicts.rs`, 120 today), and the conformance suite |
 | Keeps | the language's and the profile's guarantees above, which do not depend on the engine's version |
 
-## `catalog-s0`
+## `configuration-checker`
 
 | Field | Value |
 | --- | --- |
-| Surface | the one catalog entry so far: S0's fixed realization, `s0.hosted-playground.periodic`, a stub until the catalogs of `M6` |
+| Surface | the configuration checker's own version, as its [MCP](ledger.md#mcp-specification) server names itself in `serverInfo` ([Checking a plan](plan-check.md#as-an-mcp-tool)) |
 | Version | `0.1.0` |
-| Declared at | `const:crates/archogen-s0/src/provenance.rs:REALIZATION_VERSION` |
-| Changes when | the observation contract changes, since each frozen expectation in `examples/s0-heartbeat/expected/` holds for one contract |
-| Pinned by | the frozen observations, compared by `crates/archogen-cli/tests/s0_oracle.rs` |
-| Keeps | the same description built by this entry gives the same observation |
-
-## `provenance-format`
-
-| Field | Value |
-| --- | --- |
-| Surface | the provenance a build writes beside what it generated |
-| Version | `archogen-provenance/1` |
-| Declared at | `const:crates/archogen-s0/src/provenance.rs:FORMAT` |
-| Changes when | a field is added, removed or reinterpreted. A consumer that does not recognize the identifier must refuse rather than guess |
-| Pinned by | its shape — every key path and the kind of value at it — frozen in `crates/archogen-cli/tests/goldens/archogen-provenance-1.golden` and compared by `crates/archogen-cli/tests/format_golden.rs`; a golden is never rewritten, so a shape change fails until the identifier moves |
-| Keeps | an artifact labelled `archogen-provenance/1` means the same to every reader of `/1` |
+| Declared at | `const:crates/archogen-plan-check/src/lib.rs:VERSION` |
+| Changes when | the checker's package version does, at a release: a literal, because the trust gate refuses a value compiled in through `env!` in a root |
+| Pinned by | `crates/archogen-plan-check/tests/mcp.rs`, which holds it equal to the package manifest's version (`M3.5.1.6.4`) |
+| Keeps | a client reads which checker answered; what it judges and writes is pinned by `result-format` and `assignment-format`, not by this number |
 
 ## `catalog-rules`
 
@@ -138,7 +127,7 @@ their versioned readers and permanent refusal controls enforce their local contr
 | Field | Value |
 | --- | --- |
 | Surface | the engine API: the one contract every consumer judges a description through, the CLI today and the wasm and [MCP](ledger.md#mcp-specification) bindings to come ([The engine API](engine-api.md)) |
-| Version | `1.3` — `1.0` fixed `2026-09-30` when leaf `API.3` closed; `1.1` added the response's engine version (`API.4.1`); `1.2` added `check_with` and its `Limits` (`API.4.2`); `1.3` added the status `stale-input`, the vocabulary growing (`M3.5.1.1`) |
+| Version | `1.11` — `1.0` fixed `2026-09-30` when leaf `API.3` closed; `1.1` added the response's engine version (`API.4.1`); `1.2` added `check_with` and its `Limits` (`API.4.2`); `1.3` added the status `stale-input`, the vocabulary growing (`M3.5.1.1`); `1.4` added the operation `resolve`, the search alone (`M3.4.4`); `1.5` added the operation `explain`, one requirement's account (`M3.4.13.2`); `1.6` added the definition `defadapter`, a file of the engine's adapter catalog answered as the language's own (`M3.2.2`); `1.7` added the plan's `obligations`, what a plan binding an engine adapter owes (`M3.2.6.1`); `1.8` added the resolution's `elaborated`, what a plan was written from, for the command line's build (`M4.2.3.1`), `1.9` `is_a_plan`, which the command line asks before a plan replaces what stands at its name (`M4.2.3.3.10`), `1.10` the request's `target`, the machine a description's systems are judged on (`M4.1.7.4.1`), `1.11` `resolve` and `explain` answering it, the search on the target and a plan `archogen-assignment/3` (`M4.1.7.5.3`) |
 | Declared at | `const:crates/archogen-api/src/lib.rs:VERSION` |
 | Changes when | an operation or a response field is added, which is a minor; an operation or a field removed, or a field given a new meaning, which is a new major |
 | Pinned by | the exhaustive reading of `Response` and `Judgement` in `crates/archogen-api/tests/check.rs`, which stops compiling when a field is added or removed and names the version its shape belongs to; the three parity legs of `crates/archogen-cli/tests/api_parity.rs`. The bump itself is the author's act: nothing can tell a new field from a renamed one |
@@ -159,7 +148,7 @@ their versioned readers and permanent refusal controls enforce their local contr
 
 | Field | Value |
 | --- | --- |
-| Surface | the record a checker writes for the front that ran it and the build that consumes it: who wrote it and its sha256, what it judged, the profile, the status and every finding (`M3.5.1`) |
+| Surface | the record a checker writes for the front that ran it and the build that consumes it: who wrote it and its sha256, what it judged, the profile, the status and every finding, up to `too-many-errors` (`M3.5.1`) |
 | Version | `archogen-result/1` |
 | Declared at | `const:crates/archogen-outcome/src/record.rs:FORMAT` |
 | Changes when | a member is added, removed, renamed, re-typed or reinterpreted. A reader that meets another identifier refuses the record rather than guess |
@@ -170,12 +159,56 @@ their versioned readers and permanent refusal controls enforce their local contr
 
 | Field | Value |
 | --- | --- |
-| Surface | the record of what the search chose for one system — the profile, the system, the elaborated program's digest, the placement memory and one binding per requester and fact — which the configuration checker judges against the description and the plan carries (`M3.5.4.1`) |
-| Version | `archogen-assignment/1` |
-| Declared at | `const:crates/archogen-plan-check/src/assignment.rs:FORMAT` |
+| Surface | the record of what the search chose for one system — the profile, the system, the elaborated program's digest, the adapter catalog it was resolved with, the placement memory and one binding per requester and fact, an engine adapter's instance a provider and a requester among them — which the configuration checker judges against the description and the plan carries (`M3.5.4.1`; `/2`, `M3.2.5`) |
+| Version | `archogen-assignment/2` — `/1` fixed by `M3.5.4.1`; `/2` added the `adapters` clause and the adapter instance, a provider and requester kind (`docs/specs/adapters/decision_engine-adapters.md` §5) — and `archogen-assignment/3`, the plan of a system on a target: `(target NAME "SHA256")` after the program and the release requester, `(release SYSTEM)`, last among requesters (`M4.1.7.5.2`, `docs/decisions/decision_runtime-plan-format-2.md` §1); `/2` stays the hosted one |
+| Declared at | `const:crates/archogen-plan-check/src/assignment.rs:FORMAT`, the checker's; `const:crates/eadl-resolve/src/plan.rs:FORMAT`, the search's — two constants of one format, one golden; `const:crates/eadl-resolve/src/plan.rs:FORMAT_3`, the search's, and `const:crates/archogen-plan-check/src/assignment.rs:FORMAT_3`, the checker's — two constants of `/3`, one golden |
 | Changes when | a clause is added, removed, renamed, re-typed, reordered or reinterpreted, a provider or requester kind is added, or the program's digest is computed otherwise. A reader that meets another identifier refuses the record rather than guess |
-| Pinned by | its canonical text — every clause, the bindings' order and the digest of a fixed program — frozen in `crates/archogen-plan-check/tests/goldens/archogen-assignment-1.golden` and compared by `crates/archogen-plan-check/tests/record.rs`, never rewritten; the same test reads every record back as itself and refuses another format, a provider kind `/1` does not name and a binding out of order or twice. A plain description — no `defmodule` — is one root instance, written `instance . - 0.0`, which `crates/archogen-plan-check/tests/executable.rs` holds (`M3.5.6.1`, completing `/1` before any plan of one could be checked). The search's writer (`M3.4`) is held to the same golden |
-| Keeps | a record labelled `archogen-assignment/1` has one text, and names the same program and bindings to every reader of `/1` |
+| Pinned by | its canonical text — every clause, the bindings' order and the digest of a fixed program — frozen in `crates/archogen-plan-check/tests/goldens/archogen-assignment-2.golden` and compared by `crates/archogen-plan-check/tests/record.rs`, never rewritten, beside `/1`'s golden, kept unchanged and refused as another format; the same test reads every record back as itself and refuses another format, a kind the checker's table does not hold and a binding out of order or twice. A plain description — no `defmodule` — is one root instance, written `instance . - 0.0`, which `crates/archogen-plan-check/tests/executable.rs` holds (`M3.5.6.1`, completing `/1` before any plan of one could be checked). `/3`'s golden, `crates/archogen-plan-check/tests/goldens/archogen-assignment-3.golden`, written apart, holds the search's writer of it in `crates/eadl-resolve/tests/plan.rs` and the checker's in `crates/archogen-plan-check/tests/record.rs`, each reader reading it back and refusing a release requester in `/2` and a `/3` naming no target. The search's writer, `crates/eadl-resolve/src/plan.rs` with its own `FORMAT` constant, is held to the same golden byte for byte, and its program text to the checker's over every tracked description, by `crates/eadl-resolve/tests/plan.rs` (`M3.4.3`) |
+| Keeps | a record labelled `archogen-assignment/2` has one text, and names the same program, adapter catalog and bindings to every reader of `/2`; the generator's own reader, `plan::read`, accepts only what its writer writes, every record the search writes reading back as itself (`M4.1.3`) |
+
+## `runtime-plan-format`
+
+| Field | Value |
+| --- | --- |
+| Surface | the runtime plan a checked assignment is lowered into, for a system run on the hosted playground: its tasks and what releases each, its bindings and adapter instances, its interrupts ranked, each part's execution contexts, its initialisation graph and steps, and what it owes (`docs/decisions/decision_runtime-plan.md`, `M4.1`) |
+| Version | `archogen-runtime-plan/1`, its design accepted `2026-10-29` (`M4.1.1`), for the hosted playground; a target's layout is `/2`'s (`M4.1.7`) |
+| Declared at | `const:crates/archogen-plan/src/lib.rs:FORMAT` |
+| Changes when | any rule of the record's §2 changes — an order, the topological choice — or what §2 reads, the joint rules, the vocabulary or the adapter catalog, moves a plan for the same inputs |
+| Pinned by | three goldens, lowered by the production entry from frozen inputs and a fixed result record, each held to its sha256 and never rewritten (`crates/archogen-plan/tests/goldens.rs`); the record's three worked texts, compared with what the code writes by `crates/archogen-plan/tests/worked.rs`, and the review's probe systems with their outcomes, `crates/archogen-plan/tests/corpus.rs`; the frozen goldens come with `M4.1.4`'s production half |
+| Keeps | a plan labelled `archogen-runtime-plan/1` has one text for one record and one description |
+
+## `runtime-plan-format-2`
+
+| Field | Value |
+| --- | --- |
+| Surface | the runtime plan of a system on a target, or on the hosted playground with its application's inputs: what `/1` holds, the machine by its digest, the code identity and what generates the code, each alarm and the epoch, each region and allocation, the interrupt controller, the application's and the realization's lines (`docs/decisions/decision_runtime-plan-format-2.md`, `M4.1.7`) |
+| Version | `archogen-runtime-plan/2`, its design accepted `2026-11-15` (`M4.1.7.2`, round 39), built by `M4.1.7.6`: written by the executable form's entries, `archogen_plan::lower_hosted` on the hosted playground and `archogen_plan::lower_on_target` on a target, which no command reaches yet; what a realization's file and the catalog's records state is `M4.1.7.6.10`'s; read by `archogen_plan::contents2` (`M4.1.7.7`) |
+| Declared at | `const:crates/archogen-plan/src/lib.rs:FORMAT_2` |
+| Changes when | a line of the record's §3 is added, removed, renamed, reordered or reinterpreted, a procedure of its §4 to §7 changes, or what its code identity keeps or leaves out changes |
+| Pinned by | five goldens (`M4.1.7.6.9`), lowered by those entries from frozen inputs, `crates/archogen-plan/tests/goldens2/`, each held to its sha256 and its code identity and never rewritten (`crates/archogen-plan/tests/format2_goldens.rs`): the heartbeat hosted, with and without its application's file, on a frozen copy of `riscv-virt-up`, and a sporadic system and two alarms on a test target, each frozen assignment one the configuration checker accepts; beside them `crates/archogen-plan/tests/format2_hosted.rs`, every hosted plan held to `/1`'s text over the corpus, `format2_target.rs`, §7's order end to end, and `format2_model.rs`, each procedure held to the record's executable model; and its reader, `crates/archogen-plan/src/contents2.rs` (`M4.1.7.7`), held to each golden and refusing each line of each mutated, which both lowerings read back through (`crates/archogen-plan/tests/format2_reader.rs`) |
+| Keeps | a plan labelled `archogen-runtime-plan/2` has one text for one record, one description, one target and one set of inputs |
+
+## `application-inputs-format`
+
+| Field | Value |
+| --- | --- |
+| Surface | what a description may not state of a task's own code, in one file per system: what holds its code, each task's entry point, bounds with their evidence, calls and facts, and the application's quoted declaration (`M4.12`) |
+| Version | `archogen-application/1` |
+| Declared at | `const:crates/archogen-plan/src/application.rs:FORMAT` |
+| Changes when | a clause is added, removed, renamed or reinterpreted, or the words `CLAUSE_PARTS` quotes move. A reader that meets another identifier refuses the file rather than guess |
+| Pinned by | `crates/archogen-plan/tests/code_digest.rs`, which holds the `code` digest's recipe to the pinned compiler, and `crates/archogen-plan/tests/application.rs`: a whole file reads as it says, each malformed input is refused saying what is wrong, the quoted clause reads back from the composite-inputs record with what stands beside it and stands whole in the book, and every fact the three golden plans owe the application is held |
+| Keeps | a file labelled `archogen-application/1` means the same to every reader of `/1`, and declares the words it quotes |
+
+## `adapter-catalog`
+
+| Field | Value |
+| --- | --- |
+| Surface | the adapters the engine knows — what each requires of the provider it programs, what it offers over it, the level its code runs at and what it owes — which the search binds and the configuration checker judges (`docs/specs/adapters/decision_engine-adapters.md` §1, §2) |
+| Version | `adapters/1` |
+| Declared at | `const:crates/eadl-resolve/src/adapter.rs:VERSION`, the generator's; `const:crates/archogen-plan-check/src/adapters.rs:VERSION`, the checker's — two constants of one catalog, held equal |
+| Changes when | a kind is added, removed or renamed, or what one requires, offers, owes or runs at changes. The file's canonical form is frozen in `docs/semantics/BASELINE.txt`, so a change needs a migration note, and a plan naming another catalog is refused by the checker (record §5) |
+| Pinned by | `docs/semantics/adapters/adapters.eadl`, read by `crates/eadl-resolve/src/adapter.rs` and held kind by kind to the checker's own table by `crates/eadl-resolve/tests/adapters.rs` (`M3.2.2`) |
+| Keeps | a plan resolved with `adapters/1` binds instances whose requirements, offers and obligations mean the same to the generator and the checker |
 
 ## `install-format`
 
@@ -188,16 +221,38 @@ their versioned readers and permanent refusal controls enforce their local contr
 | Pinned by | its shape — every key path and the kind of value at it — frozen in `crates/archogen-install/tests/goldens/archogen-install-1.golden` and compared by `crates/archogen-install/tests/manifest.rs`, never rewritten; the same test reads every manifest back as itself |
 | Keeps | a manifest labelled `archogen-install/1` has one text, and names the same programs to every reader of `/1` |
 
+## `playground-trace-format`
+
+| Field | Value |
+| --- | --- |
+| Surface | the trace a system prints on the hosted playground: one line an event, its time exact, in the one order `docs/decisions/decision_hosted-build.md` §3 fixes for an instant |
+| Version | `archogen-playground-trace/4` — `/2` moved the order of one instant, a job with nothing left that takes time finishing before what arrives then (`M4.3.2`); `/3` made the fault paths' events the ones `docs/profiles/rt-static-up-v1-faults-observation.md` §2 fixes, added a release's nominal instant and idle entry, and wrote a programmed instant as a time (`M4.3.3`); `/4` added each device to the header, a job's access to one, and an alarm's programming, arrival and service (`M4.3.5`) |
+| Declared at | `const:crates/sim-playground/src/lib.rs:TRACE_FORMAT` |
+| Changes when | an event's words change, an event is added or removed, or the order of one instant moves |
+| Pinned by | the exact traces of `crates/sim-playground/tests/harness.rs` |
+| Keeps | one system, run twice, writes one trace |
+
+## `build-provenance-format`
+
+| Field | Value |
+| --- | --- |
+| Surface | what a generated system says it was lowered from, and what each of its table entries came from: `provenance.json`, beside the plan's text |
+| Version | `archogen-build-provenance/5` — `/2` added the name of the description the build records (`M4.2.3.2`), `/3` every file it wrote with its digest and the entries of `SOURCES` and `INITIALISATION`, `/4` its own digest (`M4.2.3.3`), `/5` each file's length, so that a file grown to any size is changed without being read (`M4.2.3.3.11`), each days or less after the last, which no reader had met |
+| Declared at | `const:crates/archogen-emit/src/lib.rs:PROVENANCE_FORMAT` |
+| Changes when | a member is added, removed or reinterpreted |
+| Pinned by | its shape — every key path and the kind of value at it — frozen in `crates/archogen-cli/tests/goldens/archogen-build-provenance-5.golden` and compared by `crates/archogen-cli/tests/format_golden.rs`, a golden never being rewritten; each entry followed from both ends by `crates/archogen-cli/tests/build.rs` |
+| Keeps | a generated table entry can be followed back to the plan's line and the description's form |
+
 ## `wasm-request-format`
 
 | Field | Value |
 | --- | --- |
-| Surface | the request a page writes to the wasm binding: length-prefixed fields for the description, its profile and its modules ([The engine API](engine-api.md), `docs/decisions/decision_wasm-binding.md` §4) |
-| Version | `archogen-wasm-request/1` |
-| Declared at | `const:crates/archogen-wasm/src/lib.rs:REQUEST_FORMAT` |
+| Surface | the request a page writes to the wasm binding: length-prefixed fields for the description, its profile, its target and its modules ([The engine API](engine-api.md), `docs/decisions/decision_wasm-binding.md` §4) |
+| Version | `archogen-wasm-request/2`, which the loader writes — `/1` fixed by `API.5`; `/2` names a target after the profile, at most one (`M4.1.7.4.2.3`) — and `archogen-wasm-request/1`, still read as `/2` naming none |
+| Declared at | `const:crates/archogen-wasm/src/lib.rs:REQUEST_FORMAT`, `const:crates/archogen-wasm/src/lib.rs:REQUEST_FORMAT_1` |
 | Changes when | a field is added, removed, reordered or reinterpreted. A request naming another format is answered `usage`, never read |
-| Pinned by | the framing tests of `crates/archogen-wasm/tests/binding.rs`: a request reads back as it was framed, and each refusal names its field and byte offset |
-| Keeps | a loader that writes `archogen-wasm-request/1` is read the same way by every module that accepts it |
+| Pinned by | the framing tests of `crates/archogen-wasm/tests/binding.rs`: a request reads back as it was framed, a `/1` request is answered as `/2` naming no target, and each refusal names its field and byte offset |
+| Keeps | a loader that writes `archogen-wasm-request/1` or `/2` is read the same way by every module that accepts it |
 
 ## `wasm-response-format`
 
@@ -209,6 +264,28 @@ their versioned readers and permanent refusal controls enforce their local contr
 | Changes when | a key is added, removed, renamed or re-typed, or the encoding of a value changes |
 | Pinned by | its shape — every key path and the kinds of value at it — frozen in `crates/archogen-wasm/tests/goldens/archogen-wasm-response-1.golden` and compared by `crates/archogen-wasm/tests/binding.rs`, never rewritten; the same test compares every field with the API's response |
 | Keeps | a page that reads `archogen-wasm-response/1` finds every key where it was, with the same kind of value |
+
+## `plan-check-wasm-request-format`
+
+| Field | Value |
+| --- | --- |
+| Surface | the request a page writes to the configuration checker's own wasm module: length-prefixed fields for the module's digest, the description, its profile, its modules and the plan ([Checking a plan](plan-check.md#in-a-browser), `docs/decisions/decision_wasm-binding.md` §11) |
+| Version | `archogen-plan-check-wasm-request/1` |
+| Declared at | `const:crates/archogen-plan-check-wasm/src/lib.rs:REQUEST_FORMAT` |
+| Changes when | a field is added, removed, reordered or reinterpreted. A request naming another format is refused `usage`, never judged |
+| Pinned by | the framing tests of `crates/archogen-plan-check-wasm/tests/module.rs`: a request reads back as it was framed, and each refusal names its field and byte offset |
+| Keeps | a loader that writes `archogen-plan-check-wasm-request/1` is read the same way by every module that accepts it |
+
+## `plan-check-wasm-refusal-format`
+
+| Field | Value |
+| --- | --- |
+| Surface | the answer the configuration checker's wasm module gives a request it cannot judge — its format, status, exit code and a note — where a request it judges is answered with the result record, `result-format` (`docs/decisions/decision_wasm-binding.md` §11) |
+| Version | `archogen-plan-check-wasm-refusal/1` |
+| Declared at | `const:crates/archogen-plan-check-wasm/src/lib.rs:REFUSAL_FORMAT` |
+| Changes when | a key is added, removed, renamed, reordered or re-typed |
+| Pinned by | `crates/archogen-plan-check-wasm/tests/module.rs`, which reads every refusal it makes and holds its keys, in their order, and their kinds |
+| Keeps | a page that meets `archogen-plan-check-wasm-refusal/1` finds why nothing was judged where it was |
 
 ## How an engine change is held to what descriptions mean
 

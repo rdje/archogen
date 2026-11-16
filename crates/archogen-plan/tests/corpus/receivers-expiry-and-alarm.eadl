@@ -1,0 +1,11 @@
+(eadl-version eadl/1)
+; Task `a` (rank 1) receiving an expiry and task `b` (rank 2) programming an alarm itself: the refusal names both, `a`
+; first (§1; round 11, D1).
+(defblock timer.d
+  (offers (relative-delay true) (counter-modulus 4294967296) (tick-rate 1 MHz) (observation-coherent true)
+    (channels 2 tick) (reachable-at-privilege machine)))
+(defplatform soc.d (offers (core-count 1 tick) (reachable-at-privilege machine)) (requires (uses timer.d)))
+(defsystem ord
+  (task a (period 10 ms) (deadline 10 ms) (deadline-from release) (priority 1) (needs absolute-deadline))
+  (task b (period 20 ms) (deadline 20 ms) (deadline-from release) (priority 2) (needs relative-delay))
+  (platform (uses soc.d)))

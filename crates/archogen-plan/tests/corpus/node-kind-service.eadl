@@ -1,0 +1,11 @@
+(eadl-version eadl/1)
+; `x` a service: a node of kind `service` (§3; round 24, D2).
+(defservice x
+  (requires (or-through-mediation allowed)))
+(defplatform soc
+  (offers (core-count 1 tick) (reachable-at-privilege machine)))
+(defservice s
+  (requires (or-through-mediation allowed) (uses x)))
+(defsystem kind
+  (task t (period 10 ms) (deadline 10 ms) (deadline-from release) (priority 1) (uses s))
+  (platform (uses soc)))

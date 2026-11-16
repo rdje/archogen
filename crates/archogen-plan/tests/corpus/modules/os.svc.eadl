@@ -1,0 +1,9 @@
+(eadl-version eadl/1)
+
+(defmodule os.svc
+  (version 1 0)
+  (export evt alarm)
+  (defservice alarm
+    (requires (needs relative-delay)))
+  (defservice evt
+    (requires (needs interrupt-source))))

@@ -1,0 +1,15 @@
+(eadl-version eadl/1)
+; A sporadic task reaching one handler the search binds to the faster of two sources: `(unknown (faster …))`,
+; `missing-fact` (§2.2, `RTP-H1`; round 28, D2).
+(defblock dev.b
+  (offers (interrupt-source true) (min-arrival-separation 30 ms) (available-in-state run idle) (reachable-at-privilege machine)))
+(defblock dev.a
+  (offers (interrupt-source true) (min-arrival-separation 5 ms) (available-in-state run sleep) (reachable-at-privilege machine)))
+(defplatform soc
+  (offers (core-count 1 tick) (reachable-at-privilege machine))
+  (requires (uses dev.b dev.a)))
+(defservice hb
+  (requires (needs interrupt-source) (available-in-state sleep)))
+(defsystem sv
+  (task s (min-separation 10 ms) (deadline 10 ms) (deadline-from release) (priority 1) (uses hb))
+  (platform (uses soc)))

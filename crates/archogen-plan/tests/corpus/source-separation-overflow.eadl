@@ -1,0 +1,11 @@
+(eadl-version eadl/1)
+; A source whose separation's two spellings overflow when compared: past the arithmetic, refused, never `unknown` (§1,
+; §2.5; round 12, D2).
+(defblock dev.e
+  (offers (interrupt-source true) (min-arrival-separation 20 ms)
+    (min-arrival-separation 0.00000000000000000000000000000000000001 ns) (reachable-at-privilege machine)))
+(defplatform soc (offers (core-count 1 tick) (reachable-at-privilege machine)) (requires (uses dev.e)))
+(defservice evt (requires (needs interrupt-source)))
+(defsystem so
+  (task s (min-separation 10 ms) (deadline 10 ms) (deadline-from release) (priority 1) (uses evt))
+  (platform (uses soc)))

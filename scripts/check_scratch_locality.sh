@@ -20,10 +20,11 @@
 # A full-line comment is not code and is skipped. A trailing comment is part of the line, so a reason that has
 # to mention one of these shapes goes on a line of its own.
 #
-# OWNERSHIP is derived, never listed here: a file named in `scripts/update_scaffold.sh`'s NEUTRAL array is the
-# scaffold's. Its breaches are COUNTED AND REPORTED, NOT REFUSED — another repository owns that file, and a
-# local edit would be erased by the next sync. The change it needs is written down in
-# `docs/decisions/decision_scratch-on-the-repository-volume.md` for whoever owns the scaffold.
+# OWNERSHIP is read, never listed here: a file `.doctrine/scaffold_held.txt` names is held for the scaffold under the
+# director's ruling of 2026-09-30 (findings §10) — an inherited template file archogen has never changed. Its breaches
+# are COUNTED AND REPORTED, NOT REFUSED, and the change it needs is written down in
+# `docs/decisions/decision_scratch-on-the-repository-volume.md` for whoever owns the scaffold. Every other file is
+# archogen's, a file on the updater's NEUTRAL list among them once archogen has changed it (leaf `PROGRAM.116`).
 #
 # ⚠️ HONEST LIMITS: it reads source. A scratch path assembled at run time from pieces is not seen, nor is a
 # tool that spills to the system directory on its own (`sort` on a large input). The run-time census recorded
@@ -45,11 +46,10 @@ GOOD_RE="${MK}([[:space:]]+-d)?[[:space:]]+\"\\\$(ROOT|\\{ROOT\\})/target/[^\"]*
 SYSDIR_RE="(^|[^A-Za-z0-9_.-])/(private/|var/)?${SYS}(/|[^A-Za-z0-9_.-]|\$)|\\\$\\{?T""MPDIR"
 RUST_RE="(^|[^A-Za-z0-9_])temp_dir[[:space:]]*\\("
 
-# The scaffold's files, one per line: the NEUTRAL array of the updater, if there is one.
+# The files held for the scaffold, one per line, from the ruling's list; none if the repository keeps none.
 scaffold_owned() {
-  [ -f scripts/update_scaffold.sh ] || return 0
-  awk '/^NEUTRAL=\(/{f=1; next} f&&/^\)/{exit} f{gsub(/[[:space:]]/,""); if ($0 != "" && $0 !~ /^#/) print}' \
-    scripts/update_scaffold.sh
+  [ -f .doctrine/scaffold_held.txt ] || return 0
+  grep -vE '^[[:space:]]*(#|$)' .doctrine/scaffold_held.txt | tr -d '[:blank:]'
 }
 
 fail=0; owed=0; scanned=0
@@ -58,7 +58,7 @@ owned_by_scaffold="$(scaffold_owned)"
 
 # $1 = file, $2 = line number, $3 = what is wrong
 breach() {
-  if printf '%s\n' "$owned_by_scaffold" | grep -qxF -- "$1"; then
+  if grep -qxF -- "$1" <<< "$owned_by_scaffold"; then
     owed=$((owed + 1))
     printf '  scaffold-owned, reported not refused: %s:%s\n' "$1" "$2"
   else
@@ -111,7 +111,8 @@ self_test() {
     rm -rf "$work"; mkdir -p "$work/scripts" "$work/src"
     git -C "$work" init -q
     printf '#!/usr/bin/env bash\n# a bare %s in a comment is not a call\n%s\n' "$MK" "$good" > "$work/scripts/check_x.sh"
-    printf 'NEUTRAL=(\n  scripts/check_owned.sh\n)\n' > "$work/scripts/update_scaffold.sh"
+    mkdir -p "$work/.doctrine"; printf '# held\nscripts/check_owned.sh\n' > "$work/.doctrine/scaffold_held.txt"
+    printf 'NEUTRAL=(\n  scripts/check_owned.sh\n  scripts/check_changed.sh\n)\n' > "$work/scripts/update_scaffold.sh"
     printf 'fn main() {}\n' > "$work/src/main.rs"
     git -C "$work" add -A
   }
@@ -123,7 +124,7 @@ self_test() {
     if [ "$rc" -ne "$want" ]; then
       echo "SELF-TEST: $name — expected exit $want, got $rc" >&2; printf '%s\n' "$out" | sed -n '1,3p' | sed 's/^/    /' >&2; return
     fi
-    if [ -n "$must" ] && ! printf '%s' "$out" | grep -qF -- "$must"; then
+    if [ -n "$must" ] && ! grep -qF -- "$must" <<< "$out"; then
       echo "SELF-TEST: $name — not about \`$must\`:" >&2; printf '%s\n' "$out" | sed -n '1,3p' | sed 's/^/    /' >&2; return
     fi
     ok=$((ok + 1)); echo "  ✅ $name"
@@ -151,6 +152,8 @@ self_test() {
   arm "a Rust temp_dir() is refused" 1 "src/lib.rs:1"
   fresh; put scripts/check_owned.sh "tmp=\"\$(${MK} -d)\""
   arm "a scaffold-owned file is reported, not refused" 0 "scaffold-owned, reported not refused: scripts/check_owned.sh:2"
+  fresh; put scripts/check_changed.sh "tmp=\"\$(${MK} -d)\""
+  arm "a file on the updater's NEUTRAL list that archogen changed is its own, and refused" 1 "scripts/check_changed.sh:2"
   fresh; printf '#!/usr/bin/env bash\ntmp="$(%s -d)"\n' "$MK" > "$work/scripts/check_new.sh"
   arm "an untracked script is outside the repository's view" 0 ""
   git -C "$work" add -A

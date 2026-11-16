@@ -532,9 +532,10 @@ fn write_into(out: &mut String, value: &Value) {
     }
 }
 
-/// A string as the wasm binding writes one: `"` and `\` escaped, `\b \t \n \f \r` by their short escapes, every
-/// other character below `0x20` as `\u00xx`, and nothing else.
-fn write_string(out: &mut String, text: &str) {
+/// A string, appended to `out` with its quotes: `"` and `\` escaped, `\b \t \n \f \r` by their short escapes, every
+/// other character below `0x20` as `\u00xx`, and nothing else — the one way [`write()`] writes a string, and the wasm
+/// binding's encoding too, which writes its strings through this function (leaf `M3.5.1.6.2`).
+pub fn write_string(out: &mut String, text: &str) {
     const DIGITS: &[u8; 16] = b"0123456789abcdef";
     out.push('"');
     for c in text.chars() {

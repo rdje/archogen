@@ -19,7 +19,7 @@ built from it will meet its deadlines, which needs the steps that come after.
 
 > **In one minute, for engineers.** `archogen check` runs read, resolve, boundary, schema, profile, workload and
 > presence passes in an order where a failure makes the next meaningless. The headline verdict is chosen by a fixed
-> precedence meaning *what to fix first*, every diagnostic is still printed, and the verdict maps totally onto the
+> precedence meaning *what to fix first*, every diagnostic up to a thousand errors is still printed, and the verdict maps totally onto the
 > process exit code. Capabilities outside the profile are refused by name. The language definition is compiled into
 > the binary, and a semantic corpus pins the verdicts.
 
@@ -28,8 +28,8 @@ built from it will meet its deadlines, which needs the steps that come after.
 ```console
 $ archogen check examples/periodic-three/system.eadl --profile rt-static-up-v1
 examples/periodic-three/system.eadl: accepted against profile `rt-static-up-v1` (8 declaration(s))
-  closure: console.uart (requested), console.write (requested), counter-width (needed by time.monotonic), observable-output (needed by console.write), observation-coherent (needed by time.monotonic), scheduling.fixed-priority (requested), soc.playground (requested), tick-rate (needed by time.monotonic), time.monotonic (requested), time.periodic-release (requested), timer.counter (requested)
-  outside the closure, needed by nothing requested: core-count, periodic-three, region
+  closure: console.uart (needed by console.write), console.write (requested), counter-width (needed by time.monotonic), observable-output (needed by console.write), observation-coherent (needed by time.monotonic), scheduling.fixed-priority (requested), soc.playground (requested), tick-rate (needed by time.monotonic), time.monotonic (requested), time.periodic-release (requested), timer.counter (needed by time.monotonic)
+  outside the closure, needed by nothing requested: core-count, periodic-three, reachable-at-privilege, region
   this checks the description, not a system: no resolution, generation or analysis has run
 ```
 
@@ -52,7 +52,7 @@ built from it will behave — the evidence categories start after this point.
 | presence | offered / absent / undescribed | `missing-fact`, `infeasible-configuration`, `invalid-description` |
 | refinement | the three obligations, the target they are owed to, and the quantities they are written in | `infeasible-configuration`; a target the description does not declare is `missing-fact`; a quantity it cannot read is `invalid-description` |
 
-Every pass runs. Every diagnostic is collected. A description with three problems costs one edit
+Every pass runs. Every diagnostic is collected, up to a thousand errors, and what is held back past that still counts for the verdict. A description with three problems costs one edit
 cycle, not three.
 
 The rules these passes enforce are written down in two normative documents, and each diagnostic code
@@ -96,6 +96,10 @@ error[schema-duplicate-name]: `timer.counter` is declared twice
   = hint: rename one — a name means one declaration (§7 rule 6); with two, every reference to it has two answers and every fact it offers two values
 archogen: invalid-description: 1 diagnostic(s) in docs/semantics/cases/invalid-duplicate-name.eadl
 ```
+
+Two tasks of one system are refused the same way (`M1.50`), since every rule that knows a task by its name would read
+the two as one: *task `a` is declared twice in one system*, with both sites named and the repair *rename one*. Two
+systems' tasks may share a name, because a task is named within its system.
 
 The `profile` and `workload` passes are two halves of one contract and it is worth keeping them
 apart. `profile` consults the capabilities `rt-static-up-v1` **refuses** — `general-ipc`,
@@ -152,24 +156,36 @@ The verdict maps to the process exit code through one table, and a test asserts 
 total — so the number a script branches on and the word a human reads come from the same place:
 
 ```console
-$ archogen check examples/alternative-timer/system.eadl ; echo $?
-error[infeasible-configuration]: `absolute-deadline` is required by this system but declared absent
-  --> examples/alternative-timer/system.eadl:52:25
-   |
-52 |   (needs time.monotonic absolute-deadline))
-   |                         ^^^^^^^^^^^^^^^^^ required through this request
-  --> examples/alternative-timer/system.eadl:27:11
-   |
-27 |   (absent absolute-deadline))
-   |           ----------------- declared absent by `timer.delay`
-  = hint: either the requirement or the platform is wrong; an explicitly absent fact is a definite answer, not a gap to be filled in
-archogen: infeasible-configuration: 1 diagnostic(s) in examples/alternative-timer/system.eadl
-13
+$ archogen check docs/semantics/cases/missing-relevant-fact.eadl ; echo $?
+error[missing-fact]: `wrap-behavior` is required by this system and nothing describes it
+  --> docs/semantics/cases/missing-relevant-fact.eadl:9:59
+  |
+9 | (defservice time.monotonic (requires (needs counter-width wrap-behavior)))
+  |                                                           ^^^^^^^^^^^^^ required through this request
+  = hint: declare `wrap-behavior` as offered or absent on the platform — it is inside the dependency closure of what this system requests, so no decision that depends on it can be made
+archogen: missing-fact: 1 diagnostic(s) in docs/semantics/cases/missing-relevant-fact.eadl
+11
 ```
 
-That is `uc3`, behaving exactly as the use case says it should *today*: the platform offers only
-a relative delay timer, the workload requires absolute deadlines, and no indirect realization
-exists yet. When `M3.2` lands, the same description must build — without changing.
+That is F04, a relevant capability left undescribed: the service needs the counter's wrap behaviour, and no block
+says whether it has one, so no decision resting on it can be made.
+
+A fact of a description's own, one the capability vocabulary does not declare, answers only where the machine has it.
+A system's hardware is what its `platform` clause, its own `uses` and `needs` or its tasks' name, and what those blocks
+and platforms name in turn. A block the description declares beside it, which no part of that hardware names, is some
+other machine's: what it offers answers nothing the system needs, and the refusal says so, naming the block. So a
+description of two systems is read once for each, on its own hardware. A service, a policy or a system that offers
+such a fact answers nothing either, since no device is bound to it; and a block that offers it `false` has none of it. A fact the vocabulary does declare is the
+search's to bind, and it refuses a provider outside the hardware itself (`docs/semantics/model.md` §2).
+
+`uc3`, `examples/alternative-timer`, was this section's example until `2026-10-27`. Its platform offers only a
+relative delay timer, and its workload requires absolute deadlines. The engine's adapter that programs one through the
+other needs the timer's modulus, which the description did not state, so the refusal named that one fact (leaf
+`M3.2.4`). The timer now states it, `(counter-modulus 4294967296)`, the count a 32-bit counter running through its
+width wraps at (leaf `M3.4.7.1`). That is a fact about the hardware: no requirement or absence moved, and the timer
+still declares absolute deadlines absent. So `archogen check` accepts it, and the search realizes its deadlines through
+the adapter. What still stops `uc3` building is its scheduling policy's constraints, which only a catalog record can
+offer (`M3.7`).
 
 ### Refused by name
 
@@ -221,7 +237,7 @@ it the way it answers a kind module (leaf `M3.1.2.1`):
 
 ```console
 $ archogen check docs/semantics/vocabulary/vocabulary.eadl ; echo $?
-archogen: unimplemented: docs/semantics/vocabulary/vocabulary.eadl:26:1 declares a fact of the capability vocabulary, `(deffact absolute-deadline …)`: the language's own definition, not a description, and no command loads vocabulary a user writes yet
+archogen: unimplemented: docs/semantics/vocabulary/vocabulary.eadl:27:1 declares a fact of the capability vocabulary, `(deffact absolute-deadline …)`: the language's own definition, not a description, and no command loads vocabulary a user writes yet
   hint: the facts a description may constrain are the vocabulary this toolchain ships with `eadl/1` (docs/semantics/vocabulary/vocabulary.eadl). Extending the vocabulary is task-tree leaf M6.3 (docs/TASK_TREE.md); until then, check a description that offers and requires the shipped facts
 20
 ```
@@ -229,6 +245,58 @@ archogen: unimplemented: docs/semantics/vocabulary/vocabulary.eadl:26:1 declares
 A module file is classified first, as always: a `deffact` inside a module is `schema-unknown-kind`, and one beside
 its `defmodule` is `module-multiple-forms`, both exit `10`. The engine reads the vocabulary itself, validating
 each entry against `deffact`, as the matching chapter will describe (leaf `M3.1.3`).
+
+### On a target
+
+`--target FILE` judges the description's systems on a real machine, described in a file of its own that declares its
+hardware and nothing else, such as `targets/riscv-virt-up.eadl` ([Where generated systems run](targets.md)). Each
+system is given the target's platform in place of its own, so the machine answers what the system asks; the
+description's own hardware is one platform it could run on, and need not answer it. The target's own file is judged
+first, alone: what keeps it from being a target, and what the profile asks of any machine, one active core, no
+interrupt source no mask stops, and memory to place an image in. Then every pass on the description but presence, what
+the search refuses of what it writes, and presence on each system put on the machine
+([Checking on a target](engine-api.md#checking-on-a-target) gives every rule; leaf `M4.1.7.4.2.1`).
+
+`periodic-three` asks a console and a counter of its timer service, and the emulated machine has both:
+
+```console
+$ archogen check examples/periodic-three/system.eadl --target targets/riscv-virt-up.eadl ; echo $?
+examples/periodic-three/system.eadl: accepted against profile `rt-static-up-v1` on target targets/riscv-virt-up.eadl (8 declaration(s))
+  closure: console.write (requested), counter-width (needed by time.monotonic), observable-output (needed by console.write), observation-coherent (needed by time.monotonic), scheduling.fixed-priority (requested), target.console (needed by console.write), target.riscv-virt-up (requested), target.timer (needed by time.monotonic), tick-rate (needed by time.monotonic), time.monotonic (requested), time.periodic-release (requested)
+  outside the closure, needed by nothing requested: alarm-kind, alarm-wiring, available-in-state, catalog-target, channels, compare-magnitude, compare-step, console.uart, core-count, counter-modulus, firmware-traps, non-maskable-interrupts, periodic-three, reachable-at-privilege, region, relative-delay, soc.playground, supported-horizon, timer.counter, wrap-behavior
+  this checks the description, not a system: no resolution, generation or analysis has run
+0
+```
+
+The closure is the machine's now: `target.console` and `target.timer` answer, and the description's own `console.uart`
+and `timer.counter` lie outside it. `high-interference` asks an interrupt source with its separation, which the
+machine does not describe:
+
+```console
+$ archogen check examples/high-interference/system.eadl --target targets/riscv-virt-up.eadl ; echo $?
+error[missing-fact]: `interrupt-source` is required by this system and nothing describes it
+  --> examples/high-interference/system.eadl:51:12
+   |
+51 |     (needs interrupt-source min-arrival-separation)))
+   |            ^^^^^^^^^^^^^^^^ required through this request
+  = hint: declare `interrupt-source` as offered or absent on the platform — it is inside the dependency closure of what this system requests, so no decision that depends on it can be made
+
+error[missing-fact]: `min-arrival-separation` is required by this system and nothing describes it
+  --> examples/high-interference/system.eadl:51:29
+   |
+51 |     (needs interrupt-source min-arrival-separation)))
+   |                             ^^^^^^^^^^^^^^^^^^^^^^ required through this request
+  = hint: declare `min-arrival-separation` as offered or absent on the platform — it is inside the dependency closure of what this system requests, so no decision that depends on it can be made
+archogen: missing-fact: 2 diagnostic(s) in examples/high-interference/system.eadl on target targets/riscv-virt-up.eadl
+11
+```
+
+The verdict of every tracked description on the shipped target is frozen beside the one without, in
+`crates/archogen-cli/tests/verdicts-on-riscv-virt-up.txt`, and the command says on each what the engine API says with
+the target in its request (`crates/archogen-cli/tests/api_parity.rs`). `resolve --target` and
+`explain --target` search the system on the target (leaf `M4.1.7.5.3`), `resolve` writing the plan
+`archogen-assignment/3`, which the configuration checker judges on the same target, handed it with `--target`
+(leaf `M4.1.7.5.4.4`). `build` on a target lowers format `/2`, `M4.1.7.6` and after.
 
 ### The semantic corpus
 

@@ -1,0 +1,16 @@
+(eadl-version eadl/1)
+; Two alarms and two timers, the search binding them apart; `tests/records.rs` lowers a record binding both to the
+; one-channel timer, which the generator's joint rules refuse (§1; round 7, D9).
+(defblock timer.one
+  (offers (relative-delay true) (channels 1 tick) (reachable-at-privilege machine)))
+(defblock timer.two
+  (offers (relative-delay true) (channels 2 tick) (reachable-at-privilege machine)))
+(defplatform soc
+  (offers (core-count 1 tick) (reachable-at-privilege machine))
+  (requires (uses timer.one timer.two)))
+(defservice alarm.a (requires (needs relative-delay)))
+(defservice alarm.b (requires (needs relative-delay)))
+(defsystem dis
+  (task a (period 10 ms) (deadline 10 ms) (deadline-from release) (priority 1) (uses alarm.a))
+  (task b (period 20 ms) (deadline 20 ms) (deadline-from release) (priority 2) (uses alarm.b))
+  (platform (uses soc)))

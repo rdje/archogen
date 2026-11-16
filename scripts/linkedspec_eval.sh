@@ -137,7 +137,7 @@ case "$cmd" in
     for want in '"format":"linkedspec-sexpr-v1"' '"kind":"symbol","lexeme":"v"' \
                 '"kind":"number","lexeme":"1"' '"kind":"string","lexeme":"\"1\""' \
                 '"kind":"symbol","lexeme":"done"'; do
-      if printf '%s' "$out" | grep -qF "$want"; then echo "  present: $want"
+      if grep -qF "$want" <<< "$out"; then echo "  present: $want"
       else echo "  MISSING: $want"; echo "REFERENCE CHECK: the published result shape did not appear"; exit 1; fi
     done
     forms="$(printf '%s' "$out" | grep -o '"kind":"list"' | wc -l | tr -d ' ')"

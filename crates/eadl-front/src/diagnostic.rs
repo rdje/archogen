@@ -153,6 +153,77 @@ impl Severity {
     }
 }
 
+/// The most further places one error names. A search's refusal names each provider it asked, so with no limit a thousand errors of a thousand labels answered far more than each sentence's own limit says.
+const MOST_LABELS: usize = 32;
+
+/// The most characters of one sentence of a diagnostic that it keeps, each then printed as it prints. A message quotes names whole, a name may be any length, and a thousand errors each quoting one were an answer thousands of times its request (leaf `M4.2.3.3.20`).
+pub const MOST_SAID: usize = 1024;
+
+/// A character as a diagnostic prints it: one that would move, clear or reorder what a terminal shows is written as its escape, as canonical text writes it, so a description cannot paint over what is said of it.
+fn shown(c: char) -> Option<String> {
+    (c != '\t'
+        && c != '\n'
+        && (c.is_control() || matches!(c, '\u{202a}'..='\u{202e}' | '\u{2066}'..='\u{2069}')))
+    .then(|| format!("\\u{{{:x}}}", u32::from(c)))
+}
+
+/// `text` as a diagnostic says it: within [`MOST_SAID`], cut with `…`, and with nothing a terminal would act on.
+fn fit(text: String) -> String {
+    if text.len() <= MOST_SAID && !text.chars().any(|c| shown(c).is_some()) {
+        return text;
+    }
+    let mut out = String::new();
+    for (at, c) in text.chars().enumerate() {
+        if at == MOST_SAID {
+            out.push('…');
+            break;
+        }
+        match shown(c) {
+            Some(escape) => out.push_str(&escape),
+            None => out.push(c),
+        }
+    }
+    out
+}
+
+/// `text` with nothing a terminal would act on, and no shorter.
+#[must_use]
+pub fn printable(text: &str) -> String {
+    text.chars()
+        .fold(String::with_capacity(text.len()), |mut out, c| {
+            match shown(c) {
+                Some(escape) => out.push_str(&escape),
+                None => out.push(c),
+            }
+            out
+        })
+}
+
+/// A writer of what a person reads, passing nothing a terminal would act on: a path, a name and a checker's words reach a person by many sentences, and this is all of them.
+pub struct Printable<W>(pub W);
+
+impl<W: std::io::Write> std::io::Write for Printable<W> {
+    fn write(&mut self, bytes: &[u8]) -> std::io::Result<usize> {
+        match std::str::from_utf8(bytes) {
+            Ok(text) => self.0.write_all(printable(text).as_bytes())?,
+            // What is no text keeps to its bytes, but for those a terminal acts on alone.
+            Err(_) => {
+                let kept: Vec<u8> = bytes
+                    .iter()
+                    .copied()
+                    .filter(|byte| !(byte.is_ascii_control() && *byte != b'\n' && *byte != b'\t'))
+                    .collect();
+                self.0.write_all(&kept)?;
+            }
+        }
+        Ok(bytes.len())
+    }
+
+    fn flush(&mut self) -> std::io::Result<()> {
+        self.0.flush()
+    }
+}
+
 /// A span with something to say about it.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Label {
@@ -168,7 +239,7 @@ impl Label {
     pub fn new(span: Span, message: impl Into<String>) -> Self {
         Self {
             span,
-            message: message.into(),
+            message: fit(message.into()),
         }
     }
 }
@@ -207,10 +278,10 @@ impl Diagnostic {
         Self {
             severity: Severity::Error,
             code,
-            message: message.into(),
+            message: fit(message.into()),
             primary,
             secondary: Vec::new(),
-            repair: repair.into(),
+            repair: fit(repair.into()),
             related_ids: Vec::new(),
             profile: None,
         }
@@ -302,7 +373,7 @@ impl Diagnostic {
 
         format!(
             "  --> {}:{}:{}\n{pad} |\n{} | {}\n{pad} | {}{}{}{}\n",
-            source.name,
+            fit_name(&source.name),
             position.line,
             position.column,
             position.line,
@@ -326,40 +397,74 @@ pub const EXCERPT: usize = 160;
 /// How many characters of context an excerpt keeps before its span.
 const BEFORE: usize = 40;
 
+/// A source's name as a diagnostic prints it: its end, where one is longer than a sentence, which is what tells two paths apart; and nothing a terminal would act on.
+#[must_use]
+pub fn fit_name(name: &str) -> String {
+    let length = name.chars().count();
+    // A name is said within a line of its own words, so a line break in one could write a line of a run's own.
+    let one_line = |said: String| said.replace('\n', "\\u{a}");
+    if length <= MOST_SAID {
+        return one_line(fit(name.to_owned()));
+    }
+    let tail: String = name.chars().skip(length - MOST_SAID + 1).collect();
+    format!("…{}", one_line(fit(tail)))
+}
+
 /// The text to quote for a line, the span's column in that text (0-based), and how many characters the caret may
 /// cover from there before the quoted text ends: the line itself when it is at most [`EXCERPT`] characters, and
 /// otherwise a window of that many around `column`, marked `…` at each cut end.
 fn excerpt(line: &str, column: usize) -> (String, usize, usize) {
     let length = line.chars().count();
-    if length <= EXCERPT {
-        return (
-            line.to_owned(),
-            column,
-            length.saturating_sub(column).max(1),
-        );
-    }
-    let mut start = column.saturating_sub(BEFORE);
-    let end = (start + EXCERPT).min(length);
-    if end - start < EXCERPT {
-        start = end.saturating_sub(EXCERPT);
-    }
+    let (start, end) = if length <= EXCERPT {
+        (0, length)
+    } else {
+        let mut start = column.saturating_sub(BEFORE);
+        let end = (start + EXCERPT).min(length);
+        if end - start < EXCERPT {
+            start = end.saturating_sub(EXCERPT);
+        }
+        (start, end)
+    };
     let mut text = String::new();
-    let mut shifted = column - start;
+    // In what is printed: an escape is wider than what it stands for, and the marker keeps to what it marks.
+    let (mut shifted, mut room) = (0_usize, 0_usize);
     if start > 0 {
         text.push('…');
         shifted += 1;
     }
-    text.extend(line.chars().skip(start).take(end - start));
+    for (at, c) in line.chars().enumerate().skip(start).take(end - start) {
+        let wrote = match shown(c) {
+            Some(escape) => {
+                text.push_str(&escape);
+                escape.chars().count()
+            }
+            None => {
+                text.push(c);
+                1
+            }
+        };
+        if at < column {
+            shifted += wrote;
+        } else {
+            room += wrote;
+        }
+    }
+    shifted += column.saturating_sub(end);
     if end < length {
         text.push('…');
     }
-    (text, shifted, end.saturating_sub(column).max(1))
+    (text, shifted, room.max(1))
 }
+
+/// How many errors one set holds. A file of junk gets one error per byte, at some 2 KiB each once said: a file of 64 MiB
+/// reached 3.46 GiB on a shared host (leaf `M4.2.3.3.18`), and nobody reads the thousandth.
+pub const MOST_ERRORS: usize = 1000;
 
 /// A set of diagnostics collected during one pass.
 #[derive(Debug, Clone, Default)]
 pub struct Diagnostics {
     items: Vec<Diagnostic>,
+    errors: usize,
 }
 
 impl Diagnostics {
@@ -369,9 +474,42 @@ impl Diagnostics {
         Self::default()
     }
 
-    /// Record one.
-    pub fn push(&mut self, diagnostic: Diagnostic) {
+    /// Record one. Past [`MOST_ERRORS`] errors one last says so, where the next would have been, and no more are kept.
+    pub fn push(&mut self, mut diagnostic: Diagnostic) {
+        if diagnostic.secondary.len() > MOST_LABELS {
+            let more = diagnostic.secondary.len() - MOST_LABELS;
+            diagnostic.secondary.truncate(MOST_LABELS);
+            let span = diagnostic.secondary[MOST_LABELS - 1].span;
+            diagnostic.secondary.push(Label::new(
+                span,
+                format!("and {more} more like this go unsaid"),
+            ));
+        }
+        if diagnostic.severity == Severity::Error {
+            self.errors = self.errors.saturating_add(1);
+            if self.errors == MOST_ERRORS + 1 {
+                self.items.push(Diagnostic::error(
+                    "too-many-errors",
+                    format!("{MOST_ERRORS} errors, and what else there is goes unsaid"),
+                    Label::new(diagnostic.primary.span, "the next one is here"),
+                    "repair these, or give another file",
+                ));
+            }
+            if self.errors > MOST_ERRORS {
+                return;
+            }
+        }
         self.items.push(diagnostic);
+    }
+
+    /// `diagnostics` as a set would hold them, for a pass that gathers its own list.
+    #[must_use]
+    pub fn held(diagnostics: impl IntoIterator<Item = Diagnostic>) -> Vec<Diagnostic> {
+        let mut set = Self::new();
+        for diagnostic in diagnostics {
+            set.push(diagnostic);
+        }
+        set.items
     }
 
     /// Everything recorded, in the order it was recorded.
@@ -413,8 +551,33 @@ impl Diagnostics {
 
 #[cfg(test)]
 mod tests {
-    use super::{Diagnostic, Diagnostics, Label, Severity, Verdict, EXCERPT};
+    use super::{Diagnostic, Diagnostics, Label, Severity, Verdict, EXCERPT, MOST_ERRORS};
     use crate::source::{SourceMap, Span};
+
+    #[test]
+    fn a_set_holds_a_thousand_errors_and_says_the_rest_went_unsaid() {
+        for (junk, code) in [
+            ("\0", "read-unexpected-character"),
+            (")", "read-unexpected-close"),
+        ] {
+            for whole in [junk.repeat(5000), format!("({}", junk.repeat(5000))] {
+                let mut sources = SourceMap::new();
+                let source = sources.add("t.eadl", &whole).expect("small");
+                let (_, diagnostics) = crate::reader::read(&sources, source);
+                let last = diagnostics
+                    .items()
+                    .iter()
+                    .rposition(|item| item.code == "too-many-errors");
+                assert!(last.is_some(), "{code}: {}", diagnostics.len());
+                assert!(
+                    diagnostics.len() <= MOST_ERRORS + 1,
+                    "{code}: {}",
+                    diagnostics.len()
+                );
+                assert!(diagnostics.has_errors());
+            }
+        }
+    }
 
     // ── `Verdict::of_code`: one rule, one default, every consumer ────────────────────────────
     //

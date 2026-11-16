@@ -1,0 +1,12 @@
+(eadl-version eadl/1)
+; A service named with `/` beside a task of the same system (`M4.1.11`; round 9).
+(defblock console.uart
+  (offers (observable-output true) (reachable-at-privilege machine)))
+(defplatform host.p
+  (offers (core-count 1 tick) (reachable-at-privilege machine))
+  (requires (uses console.uart)))
+(defservice sl/a
+  (requires (needs observable-output)))
+(defsystem sl
+  (task a (period 10 ms) (deadline 10 ms) (deadline-from release) (priority 1) (uses sl/a))
+  (platform (uses host.p)))

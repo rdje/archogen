@@ -1,0 +1,15 @@
+# The hosted playground simulator (ROADMAP.md §6.3, §4.2 `sim-*`; leaf M4.3.1): the deterministic event harness
+# over the shared runtime logic, as docs/decisions/decision_hosted-build.md §3 writes it. It does no I/O, and its sources are
+# copied byte for byte into every generated system, so it depends on `rt-core` by name alone.
+[package]
+name = "sim-playground"
+version = "0.1.0"
+edition.workspace = true
+license.workspace = true
+description = "The hosted playground simulator: a deterministic event harness over the archogen runtime's state machine."
+
+[lints]
+workspace = true
+
+[dependencies]
+rt-core = { path = "../rt-core" }

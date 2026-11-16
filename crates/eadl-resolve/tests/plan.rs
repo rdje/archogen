@@ -1,0 +1,1348 @@
+//! The plan the search writes (leaf `M3.4.3`): `archogen-assignment/1` by the generator's own code, held to the
+//! format's golden byte for byte, its program text and plain program held to the configuration checker's over every
+//! tracked description, and a resolved example's plan read back by the checker's reader and accepted by its checks;
+//! the generator's own reader of the record, and the bindings it rebuilds (leaf `M4.1.3`).
+//! The checker is a development dependency here alone: the generator compiles none of it.
+
+use std::path::{Path, PathBuf};
+use std::process::Command;
+
+use archogen_plan_check::assignment::{self, Assignment};
+use archogen_plan_check::check::{self, plan_file};
+use archogen_plan_check::providers::refusals;
+use eadl_front::module::{elaborate, DirectoryModules, MemoryModules};
+use eadl_front::{Form, Program, SourceMap};
+use eadl_model::check::shipped_registry;
+use eadl_model::profile::RT_STATIC_UP_V1;
+use eadl_resolve::plan::{self, FORMAT, FORMAT_3};
+use eadl_resolve::search::{search, Limits, Policy, Resolution, Search, Who};
+use eadl_resolve::vocabulary::Vocabulary;
+
+fn root() -> PathBuf {
+    Path::new(env!("CARGO_MANIFEST_DIR"))
+        .parent()
+        .and_then(Path::parent)
+        .expect("crates/<name>/ is two levels below the root")
+        .to_path_buf()
+}
+
+fn vocabulary() -> Vocabulary {
+    let kinds: Vec<(String, String)> = [
+        "docs/semantics/kinds/core.eadl",
+        "docs/semantics/kinds/os-rt.eadl",
+    ]
+    .iter()
+    .map(|r| {
+        (
+            (*r).to_string(),
+            std::fs::read_to_string(root().join(r)).expect("a kind module"),
+        )
+    })
+    .collect();
+    let registry = shipped_registry(&mut SourceMap::new(), &kinds).expect("the kinds load");
+    Vocabulary::shipped(&mut SourceMap::new(), &registry).expect("the shipped vocabulary reads")
+}
+
+/// The program the description at `path` becomes, as the checker elaborates it.
+fn program_of(path: &Path) -> Program {
+    let mut sources = SourceMap::new();
+    let id = sources
+        .add(
+            path.display().to_string(),
+            std::fs::read_to_string(path).expect("readable"),
+        )
+        .expect("small");
+    let modules = DirectoryModules::new(path.parent().expect("a directory"));
+    plan_file(
+        &mut sources,
+        id,
+        &modules,
+        &RT_STATIC_UP_V1,
+        "plan.json",
+        "",
+    )
+    .0
+}
+
+/// Every tracked description, the vendors' reproduction inputs and the sealed set's place apart.
+fn tracked() -> Vec<PathBuf> {
+    // The sealed set is excluded by the listing itself, never by a filter after it (`docs/evaluation/README.md`).
+    let output = Command::new("git")
+        .args([
+            "ls-files",
+            "-z",
+            "--",
+            "*.eadl",
+            ":!docs/evaluation",
+            ":!docs/feedback",
+        ])
+        .current_dir(root())
+        .output()
+        .expect("git runs");
+    assert!(output.status.success());
+    String::from_utf8(output.stdout)
+        .expect("UTF-8 paths")
+        .split('\0')
+        .filter(|path| !path.is_empty())
+        .map(|path| root().join(path))
+        .collect()
+}
+
+#[test]
+fn the_writer_writes_the_format_s_golden() {
+    // `/2` (leaf `M3.2.5`, `docs/specs/adapters/decision_engine-adapters.md` §5): the checker's golden, written apart
+    // from this writer, binds a shared and two exclusive engine adapter instances — one serving a name, one a task —
+    // beside the plain bindings, and this writer writes it byte for byte from the resolution the search would hold.
+    assert_eq!(
+        FORMAT,
+        assignment::FORMAT,
+        "the two constants name one format"
+    );
+    let timer = "platform.timer.timer.counter";
+    let v = vocabulary();
+    let catalog = eadl_resolve::adapter::Catalog::shipped(&mut SourceMap::new(), &v)
+        .expect("the shipped catalog reads");
+    let instance = |kind: &str, serves: Option<&str>| {
+        let name = eadl_resolve::adapter::instance_name(kind, timer, serves);
+        eadl_resolve::adapter::Instance {
+            kind: kind.to_owned(),
+            over: timer.to_owned(),
+            serves: serves.map(str::to_owned),
+            provider: eadl_resolve::offer::Provider {
+                name,
+                span: eadl_front::Span::new(eadl_front::SourceId(0), 0, 0),
+                facts: std::collections::BTreeMap::new(),
+            },
+            beneath: catalog.kind(kind).expect("a kind").beneath_names.clone(),
+            delivers: catalog.kind(kind).expect("a kind").delivers(),
+        }
+    };
+    let extender = instance("epoch-extender", None);
+    let for_name = instance("deadline-over-delay", Some("clock.time.monotonic"));
+    let for_task = instance("deadline-over-delay", Some("(task app.rt sensor)"));
+    let named = || Who::Named("clock.time.monotonic".to_owned());
+    let task = || Who::Task {
+        system: "app.rt".to_owned(),
+        task: "sensor".to_owned(),
+    };
+    let mut bindings = std::collections::BTreeMap::new();
+    for (who, fact, provider) in [
+        (named(), "absolute-deadline", &for_name),
+        (named(), "counter-width", &extender),
+        (named(), "unambiguous-horizon", &extender),
+        (task(), "absolute-deadline", &for_task),
+        (task(), "tick-rate", &extender),
+    ] {
+        bindings.insert((who, fact.to_owned()), provider.provider.name.clone());
+    }
+    let resolution = Resolution {
+        system: "app.rt".to_owned(),
+        placement: Some(("platform.soc.bus".to_owned(), "soc.ram".to_owned())),
+        bindings,
+        obligations: Vec::new(),
+        steps: 1,
+        instances: vec![extender.clone(), for_name.clone(), for_task.clone()],
+    };
+    let golden = std::fs::read_to_string(
+        root().join("crates/archogen-plan-check/tests/goldens/archogen-assignment-2.golden"),
+    )
+    .expect("the golden");
+    assert_eq!(
+        plan::write(
+            &resolution,
+            RT_STATIC_UP_V1.id,
+            "f116a4715daf8b404d559b210f6f0d09c060158b1c1493fb133bf50197545620"
+        ),
+        golden
+    );
+}
+
+#[test]
+fn the_program_text_and_the_plain_program_are_the_checker_s_on_every_tracked_description() {
+    let mut programs = 0;
+    for file in tracked() {
+        let program = program_of(&file);
+        assert_eq!(
+            plan::program_text(&program),
+            assignment::program_text(&program),
+            "{}",
+            file.display()
+        );
+        // A description that does not elaborate leaves no instance: its text is still compared, empty on both sides.
+        if let Some(root) = program.instances.last() {
+            let declarations: Vec<Form> = root.declarations.clone();
+            assert_eq!(
+                plan::program_text(&plan::plain(declarations.clone())),
+                assignment::program_text(&check::plain(declarations)),
+                "{}",
+                file.display()
+            );
+        }
+        programs += 1;
+    }
+    assert!(programs > 100, "{programs} description(s)");
+}
+
+#[test]
+fn a_resolved_example_s_plan_is_read_back_and_accepted_by_the_checker() {
+    let v = vocabulary();
+    let path = root().join("examples/s0-heartbeat/system.eadl");
+    let program = program_of(&path);
+    let declarations = &program.root().declarations;
+    let system = declarations
+        .iter()
+        .find(|f| f.head() == Some("defsystem"))
+        .expect("a system");
+    let Search::Resolved(resolution) = search(
+        declarations,
+        system,
+        RT_STATIC_UP_V1.caller_level,
+        &v,
+        &Policy::default(),
+        Limits::DEFAULT,
+    ) else {
+        panic!("s0-heartbeat resolves");
+    };
+    let text = plan::write(
+        &resolution,
+        RT_STATIC_UP_V1.id,
+        &plan::program_digest(&program),
+    );
+    let read = Assignment::read(&text).expect("the checker's reader reads it");
+    assert_eq!(read.to_canonical(), text, "one text for what it holds");
+    let mut sources = SourceMap::new();
+    let id = sources
+        .add(
+            path.display().to_string(),
+            std::fs::read_to_string(&path).expect("readable"),
+        )
+        .expect("small");
+    let modules = DirectoryModules::new(path.parent().expect("a directory"));
+    let (_, verdict) = plan_file(
+        &mut sources,
+        id,
+        &modules,
+        &RT_STATIC_UP_V1,
+        "plan.json",
+        &text,
+    );
+    assert_eq!(verdict, Ok(()), "{text}");
+}
+
+/// The regions of a small memory map, and the description holding them: `ram` of 4 KiB, or of no size, beside the
+/// regions the block `fw` offers.
+fn small_map(ram_size: &str, regions: &[String]) -> String {
+    format!(
+        "(defmodule app.case\n  (version 1 0)\n\
+         (defblock fw (offers (core-count 1 tick) {}))\n\
+         (defplatform soc (offers (core-count 1 tick) (region ram (base 0x8000_0000) {ram_size} (executable true))) \
+         (requires (uses fw)))\n\
+         (defsystem s (task t (period 10 ms) (deadline 10 ms) (deadline-from release) (priority 1)) (platform (uses soc))))",
+        regions.join(" ")
+    )
+}
+
+/// What the search and the configuration checker's description check conclude of a module `app.case` holding `text`:
+/// each one's status and what it said.
+fn both_readings(
+    text: &str,
+    v: &Vocabulary,
+) -> (&'static str, Vec<String>, &'static str, Vec<String>) {
+    let modules = MemoryModules::new().with("app.case", text);
+    let mut sources = SourceMap::new();
+    let (program, diagnostics) = elaborate(&mut sources, &modules, "app.case");
+    assert!(!diagnostics.has_errors(), "{text}");
+    let declarations = &program.root().declarations;
+    let system = declarations
+        .iter()
+        .find(|f| f.head() == Some("defsystem"))
+        .expect("a system");
+    let (by_search, said) = match search(
+        declarations,
+        system,
+        RT_STATIC_UP_V1.caller_level,
+        v,
+        &Policy::default(),
+        Limits::DEFAULT,
+    ) {
+        Search::Resolved(_) => ("ok", Vec::new()),
+        Search::Refused {
+            verdict,
+            diagnostics,
+        } => (
+            verdict.slug(),
+            diagnostics.iter().map(|d| d.message.clone()).collect(),
+        ),
+        Search::Inconclusive { .. } => panic!("{text}: inconclusive"),
+    };
+    let (by_checker, written) = match refusals(&sources, &program) {
+        Ok(()) => ("ok", Vec::new()),
+        Err(verdict) => (
+            verdict.status.slug(),
+            verdict.findings.into_iter().map(|f| f.message).collect(),
+        ),
+    };
+    (by_search, said, by_checker, written)
+}
+
+/// Model §8 rule 5 (`M4.1.19`), a bare `region`: both readings refuse it alike, in a block the system composes and in one
+/// no system's hardware holds, as they refuse any region that does not read.
+#[test]
+fn the_search_and_the_checker_refuse_a_bare_region_alike() {
+    let v = vocabulary();
+    for (case, composed) in [("composed", "(requires (uses b))"), ("in no hardware", "")] {
+        let text = format!(
+            "(defmodule app.case\n  (version 1 0)\n\
+             (defblock b (offers (core-count 1 tick) region))\n\
+             (defplatform soc (offers (core-count 1 tick)) {composed})\n\
+             (defsystem s (task t (period 10 ms) (deadline 10 ms) (deadline-from release) (priority 1)) (platform (uses soc))))"
+        );
+        let (by_search, said, by_checker, written) = both_readings(&text, &v);
+        assert_eq!(by_search, "invalid-description", "{case}: {said:#?}");
+        assert_eq!(by_checker, "invalid-description", "{case}: {written:#?}");
+    }
+}
+
+/// Model §7 rule 4 and §8 rule 1 (`RTP-H20`): a system's own level and its tasks are requesters apart and one side, so
+/// the search refuses a contradiction between them, or between two tasks, and not what is only written twice. The
+/// configuration checker's reading is its check (5), which needs a plan and so has none to read here: until this leaf
+/// the runtime plan's bounded checker held the two readings apart by a class of records the checker refused.
+#[test]
+fn the_search_reads_a_system_s_side_whole() {
+    let v = vocabulary();
+    let task = |name: &str, side: &str| {
+        format!("(task {name} (period 10 ms) (deadline 10 ms) (deadline-from release) (priority 1) {side})")
+    };
+    for (case, own, tasks, expected) in [
+        (
+            "its own level against a task",
+            "(requires (observable-output false))",
+            task("t", "(needs observable-output)"),
+            "invalid-description",
+        ),
+        (
+            "two tasks",
+            "",
+            format!(
+                "{} {}",
+                task("a", "(requires (observable-output false))"),
+                task("b", "(needs observable-output)")
+            ),
+            "invalid-description",
+        ),
+        (
+            "written twice alike",
+            "(needs observable-output)",
+            task("t", "(needs observable-output)"),
+            "ok",
+        ),
+    ] {
+        let text = format!(
+            "(defmodule app.case\n  (version 1 0)\n\
+             (defblock dev (offers (observable-output true) (reachable-at-privilege machine)))\n\
+             (defplatform soc (offers (core-count 1 tick) (reachable-at-privilege machine)) (requires (uses dev)))\n\
+             (defsystem s {own} {tasks} (platform (uses soc))))"
+        );
+        let (by_search, said, _, _) = both_readings(&text, &v);
+        assert_eq!(by_search, expected, "{case}: {said:#?}");
+    }
+}
+
+/// Model §8 rule 5 (`M4.1.20`), a size past the exact arithmetic: both readings refuse `unsupported-profile` a decimal too
+/// precise to hold exactly, and `invalid-description` a size that is no whole number of bytes or names no unit.
+#[test]
+fn the_search_and_the_checker_refuse_a_size_past_the_arithmetic_alike() {
+    let v = vocabulary();
+    for (size, expected) in [
+        (
+            "0.000000000000000000000000000000000000001 byte",
+            "unsupported-profile",
+        ),
+        ("9223372036854775807 GiB", "invalid-description"),
+        ("9223372036854775807 MiB", "ok"),
+        ("0 byte", "invalid-description"),
+        ("4 bit", "invalid-description"),
+        ("4 ms", "invalid-description"),
+        ("4 KiB", "ok"),
+    ] {
+        let text = format!(
+            "(defmodule app.case\n  (version 1 0)\n\
+             (defblock b (offers (core-count 1 tick) (region r (base 0x1000) (size {size}))))\n\
+             (defplatform soc (offers (core-count 1 tick)) (requires (uses b)))\n\
+             (defsystem s (task t (period 10 ms) (deadline 10 ms) (deadline-from release) (priority 1)) (platform (uses soc))))"
+        );
+        let (by_search, said, by_checker, written) = both_readings(&text, &v);
+        assert_eq!(by_search, expected, "{size}: {said:#?}");
+        assert_eq!(by_checker, expected, "{size}: {written:#?}");
+    }
+}
+
+/// Model §8 rule 10 (`M4.1.2.5`), held to both its readings over a bounded universe of memory maps: every base against
+/// a 4 KiB `ram` and a second bank above it, every size, a device's registers or a reserved range, a hole beside it,
+/// `ram` itself sized or not. The search's verdict and the configuration checker's description check are the same on
+/// each, and name the same regions of no size. The checker is the reading a fenced context wrote from the rule alone.
+#[test]
+fn the_search_and_the_checker_read_every_small_memory_map_alike() {
+    let v = vocabulary();
+    let bases = [
+        "0x7FFF_F000",
+        "0x8000_0000",
+        "0x8000_0800",
+        "0x8000_0FFF",
+        "0x8000_1000",
+        "0x8000_2000",
+    ];
+    let sizes = ["", "(size 1 byte)", "(size 2 KiB)", "(size 4 KiB)"];
+    let forms = |name: &str, flags: &[&str]| -> Vec<(String, bool)> {
+        let mut forms = vec![(String::new(), false)];
+        for base in bases {
+            for size in sizes {
+                for flag in flags {
+                    forms.push((
+                        format!("(region {name} (base {base}) {size} {flag})"),
+                        size.is_empty(),
+                    ));
+                }
+            }
+        }
+        forms
+    };
+    let first = forms("a", &["", "(reserved true)"]);
+    let second = forms("b", &["(reserved true)"]);
+    let bank = "(region bank (base 0x8000_2000) (size 4 KiB) (executable true))";
+    let (mut judged, mut outcomes) = (0_u32, std::collections::BTreeMap::new());
+    for ram_size in ["(size 4 KiB)", ""] {
+        for bank in ["", bank] {
+            for (a, a_open) in &first {
+                for (b, b_open) in &second {
+                    let text = small_map(ram_size, &[a.clone(), b.clone(), bank.to_string()]);
+                    let (by_search, said, by_checker, written) = both_readings(&text, &v);
+                    assert_eq!(by_search, by_checker, "{text}\n{said:#?}\n{written:#?}");
+                    // Each region of no size one reading names, the other names.
+                    let open = [
+                        ("`a`", *a_open),
+                        ("`b`", *b_open),
+                        ("`ram`", ram_size.is_empty()),
+                    ];
+                    let names = |messages: &[String]| -> Vec<&str> {
+                        open.iter()
+                            .filter(|(name, open)| {
+                                *open && messages.iter().any(|m| m.contains(name))
+                            })
+                            .map(|(name, _)| *name)
+                            .collect()
+                    };
+                    assert_eq!(
+                        names(&said),
+                        names(&written),
+                        "{text}\n{said:#?}\n{written:#?}"
+                    );
+                    judged += 1;
+                    *outcomes.entry(by_search).or_insert(0_u32) += 1;
+                }
+            }
+        }
+    }
+    // Every outcome the rule has is reached, so that the agreement is not over one verdict.
+    assert_eq!(judged, 4 * 49 * 25);
+    for outcome in ["ok", "missing-fact", "invalid-description"] {
+        assert!(outcomes.contains_key(outcome), "{outcomes:?}");
+    }
+}
+
+/// Whether the language's check accepts the description at `path`, as the engine API checks it: a module file
+/// elaborated and its program checked, a plain one checked as read.
+fn language_accepts(path: &Path, text: &str) -> bool {
+    let kinds: Vec<(String, String)> = [
+        "docs/semantics/kinds/core.eadl",
+        "docs/semantics/kinds/os-rt.eadl",
+    ]
+    .iter()
+    .map(|r| {
+        (
+            (*r).to_string(),
+            std::fs::read_to_string(root().join(r)).expect("a kind module"),
+        )
+    })
+    .collect();
+    let mut sources = SourceMap::new();
+    let registry = shipped_registry(&mut sources, &kinds).expect("the kinds load");
+    let id = sources
+        .add(path.display().to_string(), text.to_owned())
+        .expect("small");
+    let module = eadl_front::read(&sources, id)
+        .0
+        .forms
+        .iter()
+        .any(|form| form.head() == Some("defmodule"));
+    let outcome = if module {
+        let modules = DirectoryModules::new(path.parent().expect("a directory"));
+        let (program, diagnostics) = eadl_front::elaborate_source(&mut sources, &modules, id);
+        if diagnostics.has_errors() {
+            return false;
+        }
+        eadl_model::check::check_program(&program, &registry, &RT_STATIC_UP_V1)
+    } else {
+        eadl_model::check::check(&sources, id, &registry, &RT_STATIC_UP_V1)
+    };
+    outcome.verdict.is_ok()
+}
+
+#[test]
+fn the_positive_corpus_every_plan_the_search_writes_the_checker_accepts_and_twice_alike() {
+    let policy = Policy {
+        adapters: eadl_resolve::adapter::Catalog::shipped(&mut SourceMap::new(), &vocabulary())
+            .expect("the shipped catalog reads"),
+        ..Policy::default()
+    };
+    // `M3.5`'s filing to `M3.4`: every plan of the positive corpus is accepted by `archogen-plan-check`. The corpus is
+    // derived: every tracked description the language's check accepts, as the engine API runs it before `resolve`
+    // searches — never the checker's answer to an empty plan, whose check (1) refuses it before it re-checks the
+    // description — and each system the search resolves, a module tree's among them.
+    let v = vocabulary();
+    let (mut resolved, mut refused) = (0, 0);
+    for file in tracked() {
+        let text = std::fs::read_to_string(&file).expect("readable");
+        let judge = |plan: &str| {
+            let mut sources = SourceMap::new();
+            let id = sources
+                .add(file.display().to_string(), text.clone())
+                .expect("small");
+            let modules = DirectoryModules::new(file.parent().expect("a directory"));
+            plan_file(
+                &mut sources,
+                id,
+                &modules,
+                &RT_STATIC_UP_V1,
+                "plan.json",
+                plan,
+            )
+        };
+        if !language_accepts(&file, &text) {
+            continue;
+        }
+        let (program, _) = judge("");
+        // A module tree is read as the language checks it, its names qualified (leaf `M3.4.10`).
+        let flattened;
+        let declarations: &[Form] = if program.instances.len() == 1 {
+            &program.root().declarations
+        } else {
+            flattened = eadl_model::check::resolved_declarations(&program).0;
+            &flattened
+        };
+        for system in declarations
+            .iter()
+            .filter(|f| f.head() == Some("defsystem"))
+        {
+            // With the engine's own adapters, as it runs (leaf `M3.2.5`): a plan binding an instance is the checker's to
+            // judge like any other.
+            let searched = || {
+                search(
+                    declarations,
+                    system,
+                    RT_STATIC_UP_V1.caller_level,
+                    &v,
+                    &policy,
+                    Limits::DEFAULT,
+                )
+            };
+            // A refusal is searched once — F11's fixture spends the whole budget — and a plan twice, to hold it alike.
+            let Search::Resolved(once) = searched() else {
+                refused += 1;
+                continue;
+            };
+            let Search::Resolved(twice) = searched() else {
+                panic!("{}: resolved once and not twice", file.display());
+            };
+            let digest = plan::program_digest(&program);
+            let text_once = plan::write(&once, RT_STATIC_UP_V1.id, &digest);
+            assert_eq!(
+                text_once,
+                plan::write(&twice, RT_STATIC_UP_V1.id, &digest),
+                "{}",
+                file.display()
+            );
+            let (_, verdict) = judge(&text_once);
+            assert_eq!(verdict, Ok(()), "{}: {text_once}", file.display());
+            // Leaf `M4.1.3`: the generator's own reader reads the record back to the same bytes, and the bindings it
+            // rebuilds over the description give the joint rules the search's own obligations.
+            let record =
+                plan::read(&text_once).unwrap_or_else(|e| panic!("{}: {e}", file.display()));
+            assert_eq!(record.text(), text_once, "{}", file.display());
+            let rebuilt = plan::rebuild(
+                &record,
+                declarations,
+                RT_STATIC_UP_V1.caller_level,
+                &v,
+                &policy.adapters,
+            )
+            .unwrap_or_else(|e| panic!("{}: {e}", file.display()));
+            let report = rebuilt.joint.check(&rebuilt.bindings);
+            assert!(report.holds(), "{}: {report:?}", file.display());
+            assert_eq!(report.obligations, once.obligations, "{}", file.display());
+            resolved += 1;
+        }
+    }
+    // A corpus of one outcome compares nothing: plans written, and systems the search refuses beside them.
+    assert!(
+        resolved > 0 && refused > 0,
+        "{resolved} resolved, {refused} refused"
+    );
+}
+
+/// The heartbeat's record, as the search writes it, with its description's declarations.
+fn heartbeat_record() -> (String, Vec<Form>) {
+    let path = root().join("examples/s0-heartbeat/system.eadl");
+    let program = program_of(&path);
+    let declarations = program.root().declarations.clone();
+    let system = declarations
+        .iter()
+        .find(|f| f.head() == Some("defsystem"))
+        .expect("a system")
+        .clone();
+    let policy = Policy {
+        adapters: eadl_resolve::adapter::Catalog::shipped(&mut SourceMap::new(), &vocabulary())
+            .expect("the shipped catalog reads"),
+        ..Policy::default()
+    };
+    let Search::Resolved(resolution) = search(
+        &declarations,
+        &system,
+        RT_STATIC_UP_V1.caller_level,
+        &vocabulary(),
+        &policy,
+        Limits::DEFAULT,
+    ) else {
+        panic!("the heartbeat resolves");
+    };
+    (
+        plan::write(
+            &resolution,
+            RT_STATIC_UP_V1.id,
+            &plan::program_digest(&program),
+        ),
+        declarations,
+    )
+}
+
+#[test]
+fn the_reader_accepts_only_what_its_writer_writes() {
+    // Leaf `M4.1.3`: a record read back writes back the same bytes, so any other spelling of it is refused.
+    let (text, _) = heartbeat_record();
+    assert_eq!(plan::read(&text).expect("it reads").text(), text);
+    let refused = |changed: String, about: &str| {
+        let why = plan::read(&changed).expect_err(&changed);
+        assert!(why.0.contains(about), "{changed}: {why}");
+    };
+    refused(
+        text.replace(FORMAT, "archogen-assignment/1"),
+        "names the format",
+    );
+    refused(text.replace("(bind ", "(bind  "), "canonical form");
+    refused(format!("; a comment\n{text}"), "no comment");
+    refused(
+        text.replace("(adapters adapters/1)\n", ""),
+        "`(adapters …)`",
+    );
+    refused(
+        format!("{text}(bind console.write observable-output console.uart)\n"),
+        "sorted",
+    );
+    refused(text.replace("(program \"", "(program \"A"), "hexadecimal");
+    refused(
+        format!("{text}(placement host.playground ram)\n"),
+        "where only",
+    );
+}
+
+#[test]
+fn a_record_rebuilds_only_over_what_its_description_requires() {
+    // Leaf `M4.1.3`: every binding is matched to a requirement its requester writes, and none is left unbound.
+    let (text, declarations) = heartbeat_record();
+    let v = vocabulary();
+    let catalog = eadl_resolve::adapter::Catalog::shipped(&mut SourceMap::new(), &v)
+        .expect("the shipped catalog reads");
+    let rebuilt = |record: &str| {
+        plan::rebuild(
+            &plan::read(record).expect("it reads"),
+            &declarations,
+            RT_STATIC_UP_V1.caller_level,
+            &v,
+            &catalog,
+        )
+    };
+    let whole = rebuilt(&text).expect("the search's record rebuilds");
+    assert_eq!(whole.bindings.len(), 1);
+    assert!(whole.joint.check(&whole.bindings).holds());
+    let refused = |changed: String, about: &str| {
+        let why = rebuilt(&changed).expect_err(&changed);
+        assert!(why.0.contains(about), "{changed}: {why}");
+    };
+    refused(
+        text.replace("(bind console.write observable-output console.uart)\n", ""),
+        "unbound",
+    );
+    refused(
+        text.replace("console.write observable-output", "console.write tick-rate"),
+        "does not require",
+    );
+    refused(
+        text.replace("console.uart)", "no.such.device)"),
+        "is no provider",
+    );
+    refused(
+        text.replace("(system heartbeat)", "(system nowhere)"),
+        "no system",
+    );
+}
+
+/// `text`, a plain description, its one system searched: the record written, the checker's verdict on it, and whether the
+/// generator's own reader rebuilds it and its joint rules hold.
+fn resolved_and_judged(text: &str) -> (String, bool, bool) {
+    let mut sources = SourceMap::new();
+    let id = sources
+        .add("description.eadl", text.to_owned())
+        .expect("small");
+    let modules = DirectoryModules::new(root());
+    let (program, _) = plan_file(
+        &mut sources,
+        id,
+        &modules,
+        &RT_STATIC_UP_V1,
+        "plan.json",
+        "",
+    );
+    let declarations = program.root().declarations.clone();
+    let system = declarations
+        .iter()
+        .find(|f| f.head() == Some("defsystem"))
+        .expect("a system")
+        .clone();
+    let v = vocabulary();
+    let catalog = eadl_resolve::adapter::Catalog::shipped(&mut SourceMap::new(), &v)
+        .expect("the shipped catalog reads");
+    let policy = Policy {
+        adapters: catalog.clone(),
+        ..Policy::default()
+    };
+    let Search::Resolved(resolution) = search(
+        &declarations,
+        &system,
+        RT_STATIC_UP_V1.caller_level,
+        &v,
+        &policy,
+        Limits::DEFAULT,
+    ) else {
+        panic!("it resolves");
+    };
+    let record = plan::write(
+        &resolution,
+        RT_STATIC_UP_V1.id,
+        &plan::program_digest(&program),
+    );
+    let mut sources = SourceMap::new();
+    let id = sources
+        .add("description.eadl", text.to_owned())
+        .expect("small");
+    let (_, verdict) = plan_file(
+        &mut sources,
+        id,
+        &modules,
+        &RT_STATIC_UP_V1,
+        "plan.json",
+        &record,
+    );
+    let rebuilt = plan::rebuild(
+        &plan::read(&record).expect("it reads"),
+        &declarations,
+        RT_STATIC_UP_V1.caller_level,
+        &v,
+        &catalog,
+    )
+    .is_ok_and(|r| r.joint.check(&r.bindings).holds());
+    (record, verdict.is_ok(), rebuilt)
+}
+
+#[test]
+fn a_qualifier_binds_nothing_where_its_requester_relies_on_a_function() {
+    // Leaf `M4.1.8`: model §8 rule 13's qualifier "makes no binding of its own" where its requester relies on a
+    // function, `evt`'s `interrupt` here; the joint rules judge it at the provider bound for one, so `dev.b`, which
+    // meets no `sleep`, is passed over. The search once wrote the qualifier's own binding, which the checker refuses.
+    let header = "(eadl-version eadl/1)
+(defblock dev.b (offers (interrupt-source true) (available-in-state run) (reachable-at-privilege machine)))
+(defblock dev.a (offers (interrupt-source true) (available-in-state run sleep) (reachable-at-privilege machine)))
+(defplatform soc (offers (core-count 1 tick) (reachable-at-privilege machine)) (requires (uses dev.a dev.b)))
+";
+    let relied = format!(
+        "{header}(defservice evt (requires (needs interrupt-source) (available-in-state run sleep)))
+(defsystem s
+  (task t (min-separation 10 ms) (deadline 10 ms) (deadline-from release) (priority 1) (uses evt))
+  (platform (uses soc)))
+"
+    );
+    let (record, accepted, rebuilt) = resolved_and_judged(&relied);
+    assert!(!record.contains("available-in-state"), "{record}");
+    assert!(
+        record.contains("(bind evt interrupt-source dev.a)\n"),
+        "{record}"
+    );
+    assert!(accepted, "{record}");
+    assert!(rebuilt, "{record}");
+    // A requester relying on no function binds its qualifier as any requirement.
+    let alone = format!(
+        "{header}(defservice power (requires (available-in-state run sleep)))
+(defsystem s
+  (task t (period 10 ms) (deadline 10 ms) (deadline-from release) (priority 1) (uses power))
+  (platform (uses soc)))
+"
+    );
+    let (record, accepted, rebuilt) = resolved_and_judged(&alone);
+    assert!(
+        record.contains("(bind power available-in-state dev.a)\n"),
+        "{record}"
+    );
+    assert!(accepted, "{record}");
+    assert!(rebuilt, "{record}");
+}
+
+#[test]
+fn a_level_a_requester_states_binds_no_provider() {
+    // Leaf `M4.1.9`: `reachable-at-privilege` is judged against the level the profile gives the system (model §8 rule
+    // 9), never at a provider of its own, as `docs/semantics/boundary/accept/access-authority.eadl` writes it. The
+    // search once wrote its binding, which the checker refuses.
+    let text = "(eadl-version eadl/1)
+(defblock console.uart (offers (observable-output true) (reachable-at-privilege machine)))
+(defplatform host.p (offers (core-count 1 tick) (reachable-at-privilege machine)) (requires (uses console.uart)))
+(defservice console.write (requires (needs observable-output) (reachable-at-privilege machine)))
+(defsystem sh
+  (task a (period 10 ms) (deadline 10 ms) (deadline-from release) (priority 1) (uses console.write))
+  (platform (uses host.p)))
+";
+    let (record, accepted, rebuilt) = resolved_and_judged(text);
+    assert!(!record.contains("reachable-at-privilege"), "{record}");
+    assert!(
+        record.contains("(bind console.write observable-output console.uart)\n"),
+        "{record}"
+    );
+    assert!(accepted, "{record}");
+    assert!(rebuilt, "{record}");
+}
+
+/// `text`, a plain description, and `record`, a hand-written record whose `"PROGRAM"` stands for its program's digest:
+/// whether the configuration checker accepts the record, and the generator's rebuild of it.
+fn judged_record(text: &str, record: &str) -> (bool, Result<(), String>) {
+    let mut sources = SourceMap::new();
+    let id = sources
+        .add("description.eadl", text.to_owned())
+        .expect("small");
+    let modules = DirectoryModules::new(root());
+    let (program, _) = plan_file(
+        &mut sources,
+        id,
+        &modules,
+        &RT_STATIC_UP_V1,
+        "plan.json",
+        "",
+    );
+    let record = record.replace("PROGRAM", &plan::program_digest(&program));
+    let mut sources = SourceMap::new();
+    let id = sources
+        .add("description.eadl", text.to_owned())
+        .expect("small");
+    let (_, verdict) = plan_file(
+        &mut sources,
+        id,
+        &modules,
+        &RT_STATIC_UP_V1,
+        "plan.json",
+        &record,
+    );
+    let v = vocabulary();
+    let catalog = eadl_resolve::adapter::Catalog::shipped(&mut SourceMap::new(), &v)
+        .expect("the shipped catalog reads");
+    let rebuilt = plan::rebuild(
+        &plan::read(&record).expect("it reads"),
+        &program.root().declarations,
+        RT_STATIC_UP_V1.caller_level,
+        &v,
+        &catalog,
+    )
+    .map(|_| ())
+    .map_err(|e| e.0);
+    (verdict.is_ok(), rebuilt)
+}
+
+#[test]
+fn a_record_rebuilds_only_the_instances_its_system_s_requesters_are_bound_to() {
+    // Leaf `M4.1.10`: an instance is a requester because it is bound, and an exclusive one serves the one requester bound
+    // to it (`docs/specs/adapters/decision_engine-adapters.md` §4 and §5). The checker refused both records below, and
+    // the rebuild once accepted them, the lowering then writing obligations no requester owed.
+    let orphan = "(eadl-version eadl/1)
+(defblock console.uart (offers (observable-output true) (reachable-at-privilege machine)))
+(defblock timer.short
+  (offers (relative-delay true) (counter-modulus 65536) (tick-rate 10 MHz) (wrap-behavior modular)
+    (observation-coherent true) (channels 1 tick) (reachable-at-privilege machine)))
+(defplatform host.p
+  (offers (core-count 1 tick) (reachable-at-privilege machine))
+  (requires (uses console.uart timer.short)))
+(defservice console.write (requires (needs observable-output)))
+(defsystem orph
+  (task a (period 10 ms) (deadline 10 ms) (deadline-from release) (priority 1) (uses console.write))
+  (platform (uses host.p)))
+";
+    let header = |system: &str| {
+        format!(
+            "(format \"archogen-assignment/2\")\n(profile rt-static-up-v1)\n(system {system})\n(program \"PROGRAM\")\n(adapters adapters/1)\n"
+        )
+    };
+    let extender = "(adapter epoch-extender timer.short)";
+    let mut record = header("orph") + "(bind console.write observable-output console.uart)\n";
+    for fact in [
+        "counter-modulus",
+        "observation-coherent",
+        "relative-delay",
+        "tick-rate",
+        "wrap-behavior",
+    ] {
+        record.push_str(&format!("(bind {extender} {fact} timer.short)\n"));
+    }
+    let (accepted, rebuilt) = judged_record(orphan, &record);
+    assert!(!accepted, "{record}");
+    let why = rebuilt.expect_err(&record);
+    assert!(
+        why.contains(
+            "`(adapter epoch-extender timer.short)`, which no requester `orph` serves is bound to"
+        ),
+        "{why}"
+    );
+
+    let misnamed = "(eadl-version eadl/1)
+(defblock timer.delay
+  (offers (relative-delay true) (counter-modulus 4294967296) (tick-rate 1 MHz) (observation-coherent true)
+    (channels 1 tick) (reachable-at-privilege machine)))
+(defplatform soc.d (offers (core-count 1 tick) (reachable-at-privilege machine)) (requires (uses timer.delay)))
+(defservice dl (requires (needs absolute-deadline)))
+(defservice ghost (requires (absolute-deadline (delivery-bound (at-most 7 us)))))
+(defsystem mi
+  (task x (period 25 ms) (deadline 25 ms) (deadline-from release) (priority 1) (uses dl))
+  (platform (uses soc.d)))
+";
+    let ghost = "(adapter deadline-over-delay timer.delay ghost)";
+    let mut record = header("mi") + &format!("(bind dl absolute-deadline {ghost})\n");
+    for fact in [
+        "counter-modulus",
+        "observation-coherent",
+        "relative-delay",
+        "tick-rate",
+    ] {
+        record.push_str(&format!("(bind {ghost} {fact} timer.delay)\n"));
+    }
+    let (accepted, rebuilt) = judged_record(misnamed, &record);
+    assert!(!accepted, "{record}");
+    let why = rebuilt.expect_err(&record);
+    assert!(
+        why.contains("an exclusive instance, which serves `ghost` alone"),
+        "{why}"
+    );
+    // Named for the requester it serves, the same record rebuilds, and the checker accepts it.
+    let own = record.replace(" ghost)", " dl)");
+    let (accepted, rebuilt) = judged_record(misnamed, &own);
+    assert!(accepted, "{own}");
+    assert_eq!(rebuilt, Ok(()), "{own}");
+}
+
+#[test]
+fn a_record_rebuilds_only_where_each_provider_meets_its_requirements() {
+    // Leaf `M4.1.12`: the search binds a provider only where the relation finds it meeting the pair, and the checker
+    // refuses one that does not (`plan-unsatisfied`). The rebuild once accepted the swapped record below, and the
+    // lowering wrote a source at the console.
+    let description = "(eadl-version eadl/1)
+(defblock console.uart (offers (observable-output true) (reachable-at-privilege machine)))
+(defblock dev.e (offers (interrupt-source true) (min-arrival-separation 20 ms) (reachable-at-privilege machine)))
+(defplatform host.p
+  (offers (core-count 1 tick) (reachable-at-privilege machine))
+  (requires (uses console.uart dev.e)))
+(defservice console.write (requires (needs observable-output)))
+(defservice evt (requires (needs interrupt-source)))
+(defsystem rel
+  (task s (min-separation 10 ms) (deadline 10 ms) (deadline-from release) (priority 1) (uses evt console.write))
+  (platform (uses host.p)))
+";
+    let header = "(format \"archogen-assignment/2\")\n(profile rt-static-up-v1)\n(system rel)\n(program \"PROGRAM\")\n(adapters adapters/1)\n";
+    let swapped = format!(
+        "{header}(bind console.write observable-output dev.e)\n(bind evt interrupt-source console.uart)\n"
+    );
+    let (accepted, rebuilt) = judged_record(description, &swapped);
+    assert!(!accepted, "{swapped}");
+    let why = rebuilt.expect_err(&swapped);
+    assert!(why.contains("to `dev.e`, which does not meet it"), "{why}");
+    let right = format!(
+        "{header}(bind console.write observable-output console.uart)\n(bind evt interrupt-source dev.e)\n"
+    );
+    let (accepted, rebuilt) = judged_record(description, &right);
+    assert!(accepted, "{right}");
+    assert_eq!(rebuilt, Ok(()), "{right}");
+}
+
+#[test]
+fn a_block_s_own_requirements_are_bound_and_rebuilt() {
+    // Leaf `M4.1.14`: a block is a requester for what it writes at its own level (model §8 rule 1), its `uses` being
+    // composition. The search once took no requirement of a block's, and the checker refused its record.
+    let text = "(eadl-version eadl/1)
+(defblock timer.d (offers (relative-delay true) (channels 2 tick) (reachable-at-privilege machine)))
+(defblock dma.x
+  (offers (observable-output true) (reachable-at-privilege machine))
+  (requires (needs relative-delay)))
+(defplatform soc (offers (core-count 1 tick) (reachable-at-privilege machine)) (requires (uses timer.d dma.x)))
+(defservice out (requires (needs observable-output)))
+(defsystem bl
+  (task a (period 10 ms) (deadline 10 ms) (deadline-from release) (priority 1) (uses out))
+  (platform (uses soc)))
+";
+    let (record, accepted, rebuilt) = resolved_and_judged(text);
+    assert!(
+        record.contains("(bind dma.x relative-delay timer.d)\n"),
+        "{record}"
+    );
+    assert!(accepted, "{record}");
+    assert!(rebuilt, "{record}");
+    // A record leaving it unbound no longer rebuilds.
+    let header = "(format \"archogen-assignment/2\")\n(profile rt-static-up-v1)\n(system bl)\n(program \"PROGRAM\")\n(adapters adapters/1)\n";
+    let (accepted, rebuilt) = judged_record(
+        text,
+        &format!("{header}(bind out observable-output dma.x)\n"),
+    );
+    assert!(!accepted);
+    let why = rebuilt.expect_err("unbound");
+    assert!(why.contains("`dma.x`'s `relative-delay` unbound"), "{why}");
+}
+
+#[test]
+fn a_block_bound_for_requirements_of_its_own_is_a_node_of_rule_12_s_graph() {
+    // Leaf `M4.1.15`: a block the system serves that is bound for requirements of its own is a requester whose code an
+    // interrupt can run — here its deadline instance's expiry — so it is a node, a provider's, with the edge from the
+    // instance bound for it. It offers what the system asks, so it may be bound and its needs are the search's (leaf
+    // `M3.4.17.6`: offering nothing asked, an unused device's needs bind nothing).
+    let text = "(eadl-version eadl/1)
+(defblock timer.d
+  (offers (relative-delay true) (counter-modulus 65536) (tick-rate 10 MHz) (observation-coherent true)
+    (channels 2 tick) (reachable-at-privilege machine)))
+(defblock dma.x (offers debug-port (reachable-at-privilege machine)) (requires (needs absolute-deadline)))
+(defplatform soc (offers (core-count 1 tick) (reachable-at-privilege machine)) (requires (uses timer.d dma.x)))
+(defsystem be
+  (task a (period 10 ms) (deadline 10 ms) (deadline-from release) (priority 1))
+  (requires (needs debug-port))
+  (platform (uses soc)))
+";
+    let (record, accepted, rebuilt) = resolved_and_judged(text);
+    assert!(accepted && rebuilt, "{record}");
+    let mut sources = SourceMap::new();
+    let id = sources
+        .add("description.eadl", text.to_owned())
+        .expect("small");
+    let (program, _) = plan_file(
+        &mut sources,
+        id,
+        &DirectoryModules::new(root()),
+        &RT_STATIC_UP_V1,
+        "plan.json",
+        "",
+    );
+    let v = vocabulary();
+    let catalog = eadl_resolve::adapter::Catalog::shipped(&mut SourceMap::new(), &v)
+        .expect("the shipped catalog reads");
+    let r = plan::rebuild(
+        &plan::read(&record).expect("it reads"),
+        &program.root().declarations,
+        RT_STATIC_UP_V1.caller_level,
+        &v,
+        &catalog,
+    )
+    .expect("it rebuilds");
+    let graph = r.joint.initialization(&r.system, &r.bindings);
+    assert!(
+        graph
+            .nodes
+            .iter()
+            .any(|(n, k)| n == "dma.x" && *k == eadl_resolve::joint::Node::Provider),
+        "{:?}",
+        graph.nodes
+    );
+    assert!(
+        graph
+            .edges
+            .iter()
+            .any(|(from, to, _)| from.starts_with("(adapter deadline-over-delay") && to == "dma.x"),
+        "{:?}",
+        graph.edges
+    );
+}
+
+// ── `archogen-assignment/3`, a plan of a system on a target (leaf `M4.1.7.5.2`) ──────────────────────────────────────────
+
+const GOLDEN_3: &str = "crates/archogen-plan-check/tests/goldens/archogen-assignment-3.golden";
+
+/// `/3`'s golden, written apart from this writer: its target line after the program, and the release requester last among
+/// requesters, after a task and an instance.
+#[test]
+fn the_writer_writes_the_target_format_s_golden() {
+    let v = vocabulary();
+    let catalog = eadl_resolve::adapter::Catalog::shipped(&mut SourceMap::new(), &v)
+        .expect("the shipped catalog reads");
+    let kind = catalog.kind("epoch-extender").expect("a kind");
+    let extender = eadl_resolve::adapter::Instance {
+        kind: "epoch-extender".to_owned(),
+        over: "target.timer".to_owned(),
+        serves: None,
+        provider: eadl_resolve::offer::Provider {
+            name: eadl_resolve::adapter::instance_name("epoch-extender", "target.timer", None),
+            span: eadl_front::Span::new(eadl_front::SourceId(0), 0, 0),
+            facts: std::collections::BTreeMap::new(),
+        },
+        beneath: vec!["counter-modulus".to_owned()],
+        delivers: kind.delivers(),
+    };
+    let mut bindings = std::collections::BTreeMap::new();
+    let release = || Who::Release {
+        system: "app.rt".to_owned(),
+    };
+    for (who, fact, provider) in [
+        (release(), "supported-horizon", "target.timer".to_owned()),
+        (
+            Who::Named("console.write".to_owned()),
+            "observable-output",
+            "target.console".to_owned(),
+        ),
+        (release(), "relative-delay", "target.timer".to_owned()),
+        (
+            Who::Task {
+                system: "app.rt".to_owned(),
+                task: "sensor".to_owned(),
+            },
+            "counter-width",
+            extender.provider.name.clone(),
+        ),
+        (release(), "alarm-kind", "target.timer".to_owned()),
+    ] {
+        bindings.insert((who, fact.to_owned()), provider);
+    }
+    let resolution = Resolution {
+        system: "app.rt".to_owned(),
+        placement: Some(("target.riscv-virt-up".to_owned(), "target.ram".to_owned())),
+        bindings,
+        obligations: Vec::new(),
+        steps: 1,
+        instances: vec![extender],
+    };
+    let golden = std::fs::read_to_string(root().join(GOLDEN_3)).expect("the golden");
+    let written = plan::write_on_target(
+        &resolution,
+        RT_STATIC_UP_V1.id,
+        "f116a4715daf8b404d559b210f6f0d09c060158b1c1493fb133bf50197545620",
+        (
+            "target.riscv-virt-up",
+            "0f1e2d3c4b5a69788796a5b4c3d2e1f00f1e2d3c4b5a69788796a5b4c3d2e1f0",
+        ),
+    );
+    assert_eq!(written, golden);
+    // And the generator's reader reads it back as it was written.
+    let record = plan::read(&golden).expect("it reads");
+    assert_eq!(record.text(), golden);
+    assert_eq!(
+        record.target,
+        Some((
+            "target.riscv-virt-up".to_owned(),
+            "0f1e2d3c4b5a69788796a5b4c3d2e1f00f1e2d3c4b5a69788796a5b4c3d2e1f0".to_owned()
+        ))
+    );
+    assert!(golden.starts_with(&format!("(format \"{FORMAT_3}\")")));
+}
+
+/// A `/3` record says what `/3` alone says: a release requester in `/2`, a `/3` with no target line, or one whose target is no
+/// digest, is no record.
+#[test]
+fn the_reader_reads_a_release_requester_and_a_target_in_the_target_format_alone() {
+    let golden = std::fs::read_to_string(root().join(GOLDEN_3)).expect("the golden");
+    let as_second = golden.replacen(FORMAT_3, FORMAT, 1).replacen(
+        "(target target.riscv-virt-up \"0f1e2d3c4b5a69788796a5b4c3d2e1f00f1e2d3c4b5a69788796a5b4c3d2e1f0\")\n",
+        "",
+        1,
+    );
+    assert!(
+        plan::read(&as_second).is_err(),
+        "a `/2` binding a release requester"
+    );
+    let no_target = golden.replacen(
+        "(target target.riscv-virt-up \"0f1e2d3c4b5a69788796a5b4c3d2e1f00f1e2d3c4b5a69788796a5b4c3d2e1f0\")\n",
+        "",
+        1,
+    );
+    assert!(plan::read(&no_target).is_err(), "a `/3` naming no target");
+    let short = golden.replacen(
+        "\"0f1e2d3c4b5a69788796a5b4c3d2e1f00f1e2d3c4b5a69788796a5b4c3d2e1f0\"",
+        "\"0f1e\"",
+        1,
+    );
+    assert!(plan::read(&short).is_err(), "a target that is no digest");
+}
+
+/// `/2` §1: a record of the other kind, or of another target, belongs to another run, `stale-input`, "resolve again".
+#[test]
+fn a_record_of_another_run_is_stale() {
+    let golden = std::fs::read_to_string(root().join(GOLDEN_3)).expect("the golden");
+    let third = plan::read(&golden).expect("it reads");
+    let digest = "0f1e2d3c4b5a69788796a5b4c3d2e1f00f1e2d3c4b5a69788796a5b4c3d2e1f0";
+    assert_eq!(
+        third.stale_for(Some(("target.riscv-virt-up", digest))),
+        None
+    );
+    let none = third.stale_for(None).expect("given no target");
+    assert!(
+        none.contains(FORMAT_3) && none.contains("no target is given"),
+        "{none}"
+    );
+    let other = third
+        .stale_for(Some(("target.riscv-virt-up", &"a".repeat(64))))
+        .expect("another target");
+    assert!(other.contains("resolve again"), "{other}");
+    let (hosted, _) = heartbeat_record();
+    let second = plan::read(&hosted).expect("it reads");
+    assert_eq!(second.stale_for(None), None);
+    let given = second
+        .stale_for(Some(("target.riscv-virt-up", digest)))
+        .expect("given a target");
+    assert!(
+        given.contains(FORMAT) && given.contains("resolved on no target"),
+        "{given}"
+    );
+}
+
+/// `/2` §1 as `M4.1.7.5.6` amends it: the digest decides which run a `/3` is of, so another platform beside the given
+/// file's digest is no other run's, and another platform beside another digest is; a `NAME` other than the platform of
+/// the file whose digest it writes is a record no run writes, `tool-failure`, which [`plan::Record::misnames`] says.
+#[test]
+fn the_digest_decides_the_run_and_a_name_against_it_is_no_record_a_run_writes() {
+    let golden = std::fs::read_to_string(root().join(GOLDEN_3)).expect("the golden");
+    let third = plan::read(&golden).expect("it reads");
+    let digest = "0f1e2d3c4b5a69788796a5b4c3d2e1f00f1e2d3c4b5a69788796a5b4c3d2e1f0";
+    assert_eq!(third.stale_for(Some(("target.elsewhere", digest))), None);
+    assert!(third
+        .stale_for(Some(("target.elsewhere", &"a".repeat(64))))
+        .is_some_and(|stale| stale.contains("resolve again")));
+    assert_eq!(third.misnames("target.riscv-virt-up"), None);
+    let misnamed = third
+        .misnames("target.elsewhere")
+        .expect("another platform");
+    assert!(
+        misnamed.contains("`target.riscv-virt-up`")
+            && misnamed.contains("`target.elsewhere`")
+            && misnamed.contains("archogen resolve"),
+        "{misnamed}"
+    );
+    let (hosted, _) = heartbeat_record();
+    let second = plan::read(&hosted).expect("it reads");
+    assert_eq!(second.misnames("target.riscv-virt-up"), None);
+}
+
+/// The target's digest is of its forms, as a program's is: a comment moves it not, a fact does.
+#[test]
+fn a_target_s_digest_is_of_its_forms() {
+    let file = std::fs::read_to_string(root().join("targets/riscv-virt-up.eadl")).expect("read");
+    let digest = |text: &str| {
+        let mut sources = SourceMap::new();
+        let id = sources.add("t.eadl", text).expect("small");
+        let (document, diagnostics) = eadl_front::read(&sources, id);
+        assert!(!diagnostics.has_errors());
+        let forms: Vec<Form> = document
+            .forms
+            .into_iter()
+            .filter(|f| f.head() != Some("eadl-version"))
+            .collect();
+        let start = eadl_front::Span::at(id, 0);
+        plan::target_digest(&eadl_resolve::target::Target::read(&forms, start).expect("a target"))
+    };
+    let shipped = digest(&file);
+    assert_eq!(shipped.len(), 64);
+    assert_eq!(digest(&format!("; a comment\n{file}")), shipped);
+    assert_ne!(
+        digest(&file.replacen("(firmware-traps 0)", "(firmware-traps 1)", 1)),
+        shipped
+    );
+}
+
+/// A plan of a system on the shipped target, written as `/3`, read back and rebuilt over what `on_target` gives, its release
+/// requester among the bindings.
+#[test]
+fn a_plan_on_a_target_is_written_read_back_and_rebuilt() {
+    let v = vocabulary();
+    let catalog = eadl_resolve::adapter::Catalog::shipped(&mut SourceMap::new(), &v)
+        .expect("the shipped catalog reads");
+    let text =
+        std::fs::read_to_string(root().join("examples/s0-heartbeat/system.eadl")).expect("read");
+    let parsed = |text: &str| {
+        let mut sources = SourceMap::new();
+        let id = sources.add("t.eadl", text).expect("small");
+        let (document, _) = eadl_front::read(&sources, id);
+        (
+            document
+                .forms
+                .into_iter()
+                .filter(|f| f.head() != Some("eadl-version"))
+                .collect::<Vec<Form>>(),
+            eadl_front::Span::at(id, 0),
+        )
+    };
+    let (declarations, _) = parsed(&text);
+    let (target_forms, start) =
+        parsed(&std::fs::read_to_string(root().join("targets/riscv-virt-up.eadl")).expect("read"));
+    let target = eadl_resolve::target::Target::read(&target_forms, start).expect("a target");
+    let system = declarations
+        .iter()
+        .find(|f| f.head() == Some("defsystem"))
+        .expect("a system");
+    let there =
+        eadl_resolve::target::on_target(system, &declarations, &target).expect("read there");
+    let policy = Policy {
+        adapters: catalog.clone(),
+        ..Policy::default()
+    };
+    let Search::Resolved(resolution) = eadl_resolve::search::search_on_target(
+        &there,
+        RT_STATIC_UP_V1.caller_level,
+        &v,
+        &policy,
+        Limits::DEFAULT,
+    ) else {
+        panic!("no plan on the target");
+    };
+    let digest = plan::target_digest(&target);
+    let written = plan::write_on_target(
+        &resolution,
+        RT_STATIC_UP_V1.id,
+        &plan::program_digest(&plan::plain(declarations.clone())),
+        (&target.platform, &digest),
+    );
+    assert!(
+        written.contains("(bind (release heartbeat) relative-delay target.timer)"),
+        "{written}"
+    );
+    let record = plan::read(&written).expect("it reads back");
+    assert_eq!(record.text(), written);
+    assert_eq!(record.stale_for(Some((&target.platform, &digest))), None);
+    let rebuilt = plan::rebuild(
+        &record,
+        &there.declarations,
+        RT_STATIC_UP_V1.caller_level,
+        &v,
+        &catalog,
+    )
+    .expect("it rebuilds over what on_target gives");
+    assert!(
+        rebuilt
+            .bindings
+            .iter()
+            .any(|b| b.requester == "(release heartbeat)" && b.provider == "target.timer"),
+        "{:?}",
+        rebuilt.bindings
+    );
+}

@@ -1,0 +1,12 @@
+(eadl-version eadl/1)
+; `served-block-not-hardware` with its service renamed `a.drv`: the block it names first (§2.7; round 17, D1), until
+; round 20 (D3) refused it, a block the system serves outside its hardware; since `M1.49`, model §8 rule 7's conflict.
+(defblock console.uart (offers (observable-output true) (reachable-at-privilege machine)))
+(defblock blk
+  (offers (core-count 1 tick) (reachable-at-privilege machine))
+  (requires (needs observable-output)))
+(defplatform soc (offers (core-count 1 tick) (reachable-at-privilege machine)) (requires (uses console.uart)))
+(defservice a.drv (requires (uses blk)))
+(defsystem sb
+  (task p (period 10 ms) (deadline 10 ms) (deadline-from release) (priority 1) (uses a.drv))
+  (platform (uses soc)))

@@ -1,0 +1,11 @@
+(eadl-version eadl/1)
+; A timer whose `uses` names the service bound to it: refused (§1; round 13, D3), the edge rule 12 would drop across
+; that composition never written.
+(defblock timer.d
+  (offers (relative-delay true) (channels 2 tick) (reachable-at-privilege machine))
+  (requires (uses alarm)))
+(defplatform soc (offers (core-count 1 tick) (reachable-at-privilege machine)) (requires (uses timer.d)))
+(defservice alarm (requires (needs relative-delay)))
+(defsystem bc
+  (task p (period 10 ms) (deadline 10 ms) (deadline-from release) (priority 1) (uses alarm))
+  (platform (uses soc)))

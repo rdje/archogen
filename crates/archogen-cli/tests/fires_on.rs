@@ -17,7 +17,8 @@
 //! - `plan <text> <plan> <record>` — a description, the module `app`, and an assignment record checked against it by
 //!   the configuration checker; `<digest>` in the record stands for the elaborated program's digest. Parsed here, a
 //!   cell that is no input a violation as any other is, and run by `crates/archogen-plan-check/tests/fires_on.rs`
-//!   through the `archogen-plan-check` executable (leaf `M3.5.8`), so the generator's package compiles no checker;
+//!   through the `archogen-plan-check` executable (leaf `M3.5.8`), so this test calls no item of the checker, which the
+//!   package's development edge compiles for `tests/common/mod.rs` (`trust/roots.eadl`'s `cli-fires-on`);
 //! - `none: <reason>` — no writable input fires the code. The reason is review, and it may not be empty.
 //!
 //! `<0xNN>` names a character, decoded by the same `reference_table` reader the reference's other tables use —

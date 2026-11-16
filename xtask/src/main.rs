@@ -271,12 +271,14 @@ const CLIPPY: Step = Step {
     },
 };
 
+// Every test binary runs whatever another's result: `cargo test` alone stops at the first that fails, so one run named
+// one failure and hid the next behind it (leaf `PROGRAM.151.7`).
 const TESTS: Step = Step {
     name: "tests",
     proves: "every contract test passes, F28 and the semantic corpus included",
     action: Action::Run {
         program: "cargo",
-        args: &["test", "--all"],
+        args: &["test", "--all", "--no-fail-fast"],
         requires: None,
         matters: "",
     },
@@ -394,6 +396,33 @@ const TIERS: &[Tier] = &[
                     matters: "the wasm binding (leaf `API.5.3`) is checked on the artifact a page loads, through the \
                               loader a page uses, and a JavaScript runtime is what runs it. Without one, nothing \
                               shows that the compiled module agrees with the host build or the command line",
+                },
+            },
+            Step {
+                name: "plan-check-wasm",
+                proves: "the configuration checker's browser artifact imports nothing, exports what its record lists, \
+                         and answers every derived case byte for byte as the host build does, agreeing with \
+                         archogen-plan-check over the case's files",
+                action: Action::Run {
+                    program: "scripts/plan_check_wasm.sh",
+                    args: &[],
+                    requires: Some("node"),
+                    matters: "the configuration checker's own browser module (leaf `M3.5.7.2`) is checked on the \
+                              artifact a page loads, through the loader a page uses, and a JavaScript runtime is what \
+                              runs it. Without one, nothing shows that the compiled module agrees with the host build \
+                              or the executable",
+                },
+            },
+            Step {
+                name: "resolve-installed",
+                proves: "archogen resolve, run from an install the trust build placed, writes each positive \
+                         description's plan and the install's archogen-plan-check accepts it — the heartbeat's, and \
+                         one through each kind of the adapter catalog, said to be conditional on what it owes",
+                action: Action::Run {
+                    program: "scripts/resolve_installed.sh",
+                    args: &[],
+                    requires: None,
+                    matters: "",
                 },
             },
             Step {
@@ -1461,8 +1490,7 @@ mod tests {
     fn every_named_leaf_is_declared_by_a_task_tree() {
         // ⭐ The leg that makes routing real rather than decorative. A step naming `PROGRAM.9`
         // when no tree declares it sends a reader to a dead end, and the shape test above cannot
-        // see the difference — `M9.9` has exactly the same shape as `M4.8`. This is the same
-        // check `scripts/check_s0_retirement.sh` applies to the retirement record.
+        // see the difference — `M9.9` has exactly the same shape as `M4.8`.
         let trees = std::path::Path::new(env!("CARGO_MANIFEST_DIR"))
             .parent()
             .expect("xtask/ sits at the repository root")

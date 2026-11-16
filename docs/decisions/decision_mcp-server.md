@@ -35,6 +35,23 @@
    tools, and `plan-check`, the configuration checker's command, never was: each is excluded citing the ruling, a test
    asserts it, and each checker serves its own tools (`M2.21.4`, `M3.5.1.6`). The tools today are `check`, `resolve`,
    `explain` and `replay`.*
+   *Since `2026-10-27` (leaf `M3.5.1.6.4`) the configuration checker's server is built: `archogen-plan-check --mcp`,
+   its one tool `plan-check` over the same framing, `crates/archogen-transport` — texts in, the result record answered
+   inline, `isError` unless it accepts, under the checker's own byte budget, §3 to §5's choices made for its own
+   request (the book's *Checking a plan*).*
+   *Since `2026-10-27` (leaf `M3.4.6`) `resolve` is served, experimental as the command is: it takes §3's request with
+   `system` and `unchecked`, asks the engine API's `resolve` (version `1.4`, leaf `M3.4.4`), and answers
+   `{"response": …, "plan": …}` — the response in §4's encoding, the plan or `null` — that JSON its one text block and
+   `isError` unless the response accepts. The API answers the search alone, so a call without `unchecked` set is its
+   refusal with the repair: compose the plan with `archogen-plan-check`'s own tool. A tool's description says what it
+   is where a model reads it: "not built yet" for an unimplemented one, which a call answers too, and what an
+   experimental one does today.*
+   *Since `2026-10-27` (leaf `M3.4.13.2`) `explain` is served, experimental as the command is: it takes §3's request
+   with `requirement` (a fact), `requester` or `task`, and `system`, asks the engine API's `explain` (version `1.5`),
+   and answers `{"response": …, "plan": …, "accounts": […]}` — each account its requester, fact, clauses, each
+   provider's answer, the search's own refusal when none meets it, the provider bound and each other one's refusal in
+   its place — that JSON its one text block and `isError` unless the response accepts. It asks no `unchecked`: it hands
+   over no plan to build on and claims no check.*
 3. **A tool takes the engine API's request, not the command line's.** The command line names a file; the server
    has no filesystem authority (§10.4), so `check` takes the description's text, its profile and the texts of its
    modules — `archogen_api::Request` — under the API's byte budget, and answers `archogen_api::Response`.
@@ -61,6 +78,9 @@
    `M3.5.1.7`, no role's, re-exported as `archogen_cli::json`, so a checker's own server (`M3.5.1.6`) reads with the
    same code — a shared item the trust inventory will disclose when a checker compiles it. The server still spawns
    nothing, after the ruling of `2026-10-22` as before: the command line alone runs the checkers.*
+   *Since `2026-10-26` (leaf `M3.5.1.4.1`) that is structural: `mcp::serve` takes no launcher, and the one that runs a
+   program, `sibling.rs`, is declared by the `archogen` executable's `main.rs` alone, the one file `NO-SUBPROCESS`
+   admits.*
 
 ## As built (`2026-10-02`, leaf `API.6.4`)
 
@@ -77,7 +97,13 @@ by `API.6.5`'s review:
   carries `resultType: "complete"` and the server's `serverInfo` in its `_meta`; a `2025-11-25` result carries
   neither, its revision having no `resultType`.
 - `check` takes `description`, and optionally `name`, `profile` and `modules`, an object from each module's name to
-  its text; any other argument, or one of the wrong type, is a tool error (§4). An unbuilt tool's description says it
+  its text; any other argument, or one of the wrong type, is a tool error (§4). *Amended `2026-11-15` (leaf
+  `M4.1.7.4.2.2`):* and `target`, an object of a target's file, `text`, and optionally its `name`, `target.eadl` when
+  absent, the engine API's `TargetFile` (API `1.10`); a `target` that is no such object is a tool error too. *Amended
+  `2026-11-15` (leaf `M4.1.7.5.5`):* `resolve` and `explain` take the same `target`, one schema in both eras, and search
+  the system there, as the engine API's `resolve_with` and `explain_with` do since API `1.11`; `resolve` still answers
+  unchecked, its plan `archogen-assignment/3` for `archogen-plan-check`'s own tool to judge on that target. A tool that is
+  not built takes none. An unbuilt tool's description says it
   is not built and names its leaf, since a model reads a description and few clients show it `_meta`.
 - The line bound is six times the API's byte budget and 64 KiB (§5): a bound that refused a description the API
   accepts, for how its client escaped it, would be a transport overruling the engine.
@@ -85,9 +111,17 @@ by `API.6.5`'s review:
   response's `id` optional and type it a string or an integer, so `null`, which JSON-RPC 2.0 would write, is not
   theirs. A request's id is a string or an integral number, as JSON Schema's `integer` reads one; `1.5` is refused.
 - A response the client sends is ignored, since this server sends no request; a blank line is skipped.
-- Chosen and not changed: the line separators U+2028 and U+0085 reach stdout unescaped, as the wasm binding writes
+- Chosen and not changed: the line separators U+2028, U+2029 and U+0085 reach stdout unescaped, as the wasm binding writes
   them, since the stdio transport frames messages by `\n` alone; and a per-request `_meta` naming `2025-11-25` is
   refused with `-32022`, whose message says that revision opens with `initialize`.
+- *Added `2026-10-26` (leaf `M3.5.1.6.3`, review round 16's R16-D4 of `decision_trust-role-programs.md`), the framing
+  now `crates/archogen-transport`'s:* a tool's result is a JSON object, and under `2026-07-28` the server merges its
+  `serverInfo` into the `_meta` a tool's result carries of its own, never writing a second one — the pinned schema's
+  `Result` has one `_meta?: ResultMetaObject`, its `serverInfo` the server's, and requires `resultType`, which the
+  server writes. A result that is no object, holds `resultType`, holds a `_meta` that is no object or names
+  `serverInfo`, or does not read back under the strict reader — a member named twice — is the server's failure,
+  `-32603`, in either era, the framing checking it before either era answers (review round 18's R18-D1). Re-read at the
+  ledger's commit for this, the schema's hash unchanged.
 
 ## Why
 

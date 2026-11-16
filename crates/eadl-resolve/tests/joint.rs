@@ -9,8 +9,8 @@
 use eadl_front::{read, Form, SourceMap};
 use eadl_model::check::shipped_registry;
 use eadl_resolve::joint::{
-    requesters, Because, Binding, Finding, Initialization, Interrupt, Joint, Kind, Node,
-    Obligation, Report, Requester, System,
+    requesters, Because, Binding, Caller, Finding, Initialization, Interrupt, Joint, Kind, Node,
+    Obligation, Report, Requester, Routine, System, Unadmitted,
 };
 use eadl_resolve::offer::{self, Provider, State};
 use eadl_resolve::relation::{judge, Verdict};
@@ -201,6 +201,16 @@ fn named(f: &Finding) -> String {
         Finding::ChannelsContradicted { provider, .. } => {
             format!("{} channels of {provider}", f.code())
         }
+        Finding::ReleaseCompareUnstated {
+            system,
+            provider,
+            missing,
+            ..
+        } => format!(
+            "{} compare of {provider} releasing {system}: {}",
+            f.code(),
+            missing.join(" ")
+        ),
         Finding::RegionMalformed {
             provider, detail, ..
         } => format!("{} {provider}: {detail}", f.code()),
@@ -214,6 +224,16 @@ fn named(f: &Finding) -> String {
             ..
         } => format!(
             "{} unconnected {requester} -> {provider} outside {system}",
+            f.code()
+        ),
+        Finding::TwoTimeBases {
+            requester,
+            device,
+            reader,
+            read_device,
+            ..
+        } => format!(
+            "{} time bases {requester} at {device} / {reader} at {read_device}",
             f.code()
         ),
         Finding::LevelUnsupported {
@@ -267,6 +287,32 @@ fn named(f: &Finding) -> String {
             sizeless.0,
             sizeless.1.name
         ),
+        Finding::NamedOutside {
+            namer,
+            named,
+            system,
+            ..
+        } => format!("{} named outside {system}: {namer} {named}", f.code()),
+        Finding::MemoryUnsized { system, memory } => {
+            format!(
+                "{} size of memory {} {} in {system}",
+                f.code(),
+                memory.0,
+                memory.1.name
+            )
+        }
+        Finding::HoleUnsized {
+            system,
+            memory,
+            hole,
+        } => format!(
+            "{} size of hole {} {} closing {} {} in {system}",
+            f.code(),
+            hole.0,
+            hole.1.name,
+            memory.0,
+            memory.1.name
+        ),
         Finding::PlacementIllegal {
             system,
             region,
@@ -284,6 +330,21 @@ fn named(f: &Finding) -> String {
             "{} level {} {requester} -> {provider}",
             f.code(),
             if *absent { "absent" } else { "unstated" }
+        ),
+        Finding::OwnSource {
+            requester,
+            provider,
+            why,
+            ..
+        } => format!(
+            "{} own source {} {requester} -> {provider}",
+            f.code(),
+            match why {
+                Unadmitted::Faster { task, source } => format!("faster {source} < {task}"),
+                Unadmitted::Absent => "absent".to_string(),
+                Unadmitted::PastArithmetic => "past arithmetic".to_string(),
+                Unadmitted::Unstated => "unstated".to_string(),
+            }
         ),
         Finding::FunctionSplit {
             requester,
@@ -485,12 +546,16 @@ fn two_tasks_of_one_system_are_two_requesters() {
         .collect();
     assert_eq!(
         kinds,
-        [("s", Kind::Other), ("s/a", Kind::Task), ("s/b", Kind::Task)]
+        [
+            ("s", Kind::Other),
+            ("(task s a)", Kind::Task),
+            ("(task s b)", Kind::Task)
+        ]
     );
     for r in every(text, &v) {
         assert_eq!(
             report_of(&r).0,
-            ["infeasible-configuration over timer.compare (1): s/a s/b"]
+            ["infeasible-configuration over timer.compare (1): (task s a) (task s b)"]
         );
     }
 }
@@ -509,17 +574,163 @@ fn a_service_two_tasks_use_is_one_requester_and_owes_the_multiplexing() {
     let reports = every(text, &v);
     assert_eq!(reports.len(), 1);
     assert!(reports[0].holds());
+    // Its own timer route at `timer.compare` is no user: that route's own code delivering to it calls nothing (rule 4).
     assert_eq!(
         reports[0].obligations,
         [
-            Obligation::Multiplex {
-                service: "time.deadline".to_string(),
-                users: vec!["s/a".to_string(), "s/b".to_string()],
-                provider: "timer.compare".to_string(),
-            },
             timer_route("s", "timer.compare", &["time.deadline"]),
+            Obligation::Multiplex {
+                node: "time.deadline".to_string(),
+                users: vec![
+                    Caller::Task("(task s a)".to_string()),
+                    Caller::Task("(task s b)".to_string())
+                ],
+                providers: vec!["timer.compare".to_string()],
+            },
         ]
     );
+}
+
+/// Rule 4's multiplexers of `system`'s assignments of `text`, each holding and all agreeing: each node with its users.
+fn multiplexers(text: &str, system: &str, v: &Vocabulary) -> Vec<(String, Vec<Caller>)> {
+    let read = Read::of(text, v);
+    let system = read
+        .systems()
+        .into_iter()
+        .find(|s| s.name == system)
+        .expect("the system is declared");
+    let joint = read.joint(v).expect("reads").for_system(system.clone());
+    let found: Vec<Vec<(String, Vec<Caller>)>> = read
+        .assignments_of(v, |r| system.serves(r))
+        .iter()
+        .map(|a| {
+            let report = joint.check(a);
+            assert!(report.holds(), "{:?}", report_of(&report));
+            report
+                .obligations
+                .into_iter()
+                .filter_map(|o| match o {
+                    Obligation::Multiplex { node, users, .. } => Some((node, users)),
+                    _ => None,
+                })
+                .collect()
+        })
+        .collect();
+    let [first, rest @ ..] = found.as_slice() else {
+        panic!("no assignment");
+    };
+    assert!(rest.iter().all(|other| other == first), "{found:?}");
+    first.clone()
+}
+
+/// A task's jobs, as rule 4 names a user.
+fn task(name: &str) -> Caller {
+    Caller::Task(name.to_string())
+}
+
+/// A route's routine, as rule 4 names a user.
+fn routine(provider: &str, timer: bool) -> Caller {
+    Caller::Routine(Routine {
+        provider: provider.to_string(),
+        timer,
+    })
+}
+
+#[test]
+fn rule_4_a_source_s_routine_that_runs_a_node_is_one_of_its_users() {
+    // Leaf `M4.1.2.4`: `evt` handles `dev.e`'s source and uses `alarm`, so that interrupt runs `alarm`'s code beside the
+    // jobs of `p`; the system's own `uses` of `evt` is no user, and `alarm`'s own timer route calls nothing back.
+    let v = vocabulary();
+    let text = "(defblock dev.e (offers (interrupt-source true) (min-arrival-separation 20 ms)))
+(defblock timer.d (offers (relative-delay true) (channels 1 tick)))
+(defplatform soc (offers (core-count 1 tick)) (requires (uses dev.e timer.d)))
+(defservice alarm (requires (needs relative-delay)))
+(defservice evt (requires (needs interrupt-source) (uses alarm)))
+(defsystem it
+  (task p (period 10 ms) (deadline 10 ms) (deadline-from release) (priority 1) (uses alarm))
+  (requires (uses evt))
+  (platform (uses soc)))";
+    assert_eq!(
+        multiplexers(text, "it", &v),
+        [(
+            "alarm".to_string(),
+            vec![task("(task it p)"), routine("dev.e", false)]
+        )]
+    );
+    // Without the task, the interrupt is its one user.
+    let alone = text.replace(" (uses alarm))\n  (requires", ")\n  (requires");
+    assert_ne!(alone, text);
+    assert_eq!(multiplexers(&alone, "it", &v), []);
+}
+
+#[test]
+fn rule_4_its_own_timer_route_is_a_user_only_where_another_node_there_calls_it() {
+    // `a` and `b` both take `timer.d`'s channels, so its route runs both, and `a` calls `b` there: that route is a user
+    // of `b`, though it is `b`'s own, and `t`'s jobs are the other. `a`, which no task reaches, has none.
+    let v = vocabulary();
+    let text = "(defblock timer.d (offers (relative-delay true) (channels 2 tick)))
+(defplatform soc (offers (core-count 1 tick)) (requires (uses timer.d)))
+(defservice b (requires (needs relative-delay)))
+(defservice a (requires (needs relative-delay) (uses b)))
+(defsystem sh
+  (task t (period 10 ms) (deadline 10 ms) (deadline-from release) (priority 1) (uses b))
+  (requires (uses a))
+  (platform (uses soc)))";
+    assert_eq!(
+        multiplexers(text, "sh", &v),
+        [(
+            "b".to_string(),
+            vec![task("(task sh t)"), routine("timer.d", true)]
+        )]
+    );
+    // Where `a` does not call `b`, `b`'s own route only delivers to it: one user, no multiplexer.
+    let apart = text.replace(" (uses b)))\n(defsystem", "))\n(defsystem");
+    assert_ne!(apart, text);
+    assert_eq!(multiplexers(&apart, "sh", &v), []);
+}
+
+#[test]
+fn rule_4_a_node_naming_itself_is_not_its_own_user() {
+    // Counting the services that name a service by `uses`, `alarm` was its own second user beside `t`.
+    let v = vocabulary();
+    let text = "(defblock timer.d (offers (relative-delay true) (channels 1 tick)))
+(defplatform soc (offers (core-count 1 tick)) (requires (uses timer.d)))
+(defservice alarm (requires (needs relative-delay) (uses alarm)))
+(defsystem selfuse
+  (task t (period 10 ms) (deadline 10 ms) (deadline-from release) (priority 1) (uses alarm) (needs alarm))
+  (platform (uses soc)))";
+    assert_eq!(multiplexers(text, "selfuse", &v), []);
+}
+
+#[test]
+fn rule_4_counts_one_system_s_tasks_never_another_s() {
+    // Two systems share the description's `alarm`: each system is resolved alone (rule 7), so another's task is no
+    // user, and only two tasks of one system make it a multiplexer.
+    let v = vocabulary();
+    let text = "(defblock timer.d (offers (relative-delay true) (channels 1 tick)))
+(defplatform soc (offers (core-count 1 tick)) (requires (uses timer.d)))
+(defservice alarm (requires (needs relative-delay)))
+(defsystem one
+  (task t (period 10 ms) (deadline 10 ms) (deadline-from release) (priority 1) (uses alarm))
+  (platform (uses soc)))
+(defsystem two
+  (task t (period 10 ms) (deadline 10 ms) (deadline-from release) (priority 1) (uses alarm))
+  (platform (uses soc)))";
+    assert_eq!(multiplexers(text, "one", &v), []);
+    assert_eq!(multiplexers(text, "two", &v), []);
+    let both = text.replace(
+        "(uses alarm))\n  (platform (uses soc)))\n(defsystem two",
+        "(uses alarm))\n  (task u (period 20 ms) (deadline 20 ms) (deadline-from release) (priority 2) (uses alarm))\n  (platform (uses soc)))\n(defsystem two",
+    );
+    assert_ne!(both, text);
+    assert_eq!(
+        multiplexers(&both, "one", &v),
+        [(
+            "alarm".to_string(),
+            vec![task("(task one t)"), task("(task one u)")]
+        )]
+    );
+    assert_eq!(multiplexers(&both, "two", &v), []);
 }
 
 #[test]
@@ -695,6 +906,11 @@ fn a_region_that_names_no_byte_range_is_refused() {
             "invalid-description p: region `r`'s size is a positive whole number of bytes",
         ),
         (
+            // `M4.1.20`: a size that does not read says why, rather than what a size is.
+            "(region r (base 0x10) (size 4 GiB))",
+            "invalid-description p: region `r`'s size does not read: `GiB` is not a known unit",
+        ),
+        (
             "(region (base 0x10))",
             "invalid-description p: a region is named first",
         ),
@@ -741,7 +957,7 @@ fn every_finding_s_diagnostic_carries_its_code() {
     assert_eq!(seen, ["infeasible-configuration", "missing-fact"]);
 }
 
-// Connectivity and routes (leaf `M3.3.3`, model §8 rules 7 and 8): `SR-H15`'s last clause in the checker's form, and the
+// Connectivity and routes (leaf `M3.3.3`, model §8 rules 7 and 8): `SR-H15`'s last clause, the joint check's, and the
 // interrupts an assignment relies on.
 
 /// `docs/semantics/modules/hw.bus.eadl`'s edges, flattened: a platform naming a block through `needs`, one refining
@@ -808,7 +1024,8 @@ fn a_block_outside_the_system_s_hardware_is_refused_beside_one_inside() {
             (vec![], vec![]),
             (
                 vec![
-                    "infeasible-configuration unconnected s/t -> stray.clock outside s".to_string()
+                    "infeasible-configuration unconnected (task s t) -> stray.clock outside s"
+                        .to_string()
                 ],
                 vec![]
             ),
@@ -824,12 +1041,16 @@ fn a_system_with_no_hardware_binds_no_block() {
         every_named(&text, &v),
         [
             (
-                vec!["infeasible-configuration unconnected s/t -> bus.clock outside s".to_string()],
+                vec![
+                    "infeasible-configuration unconnected (task s t) -> bus.clock outside s"
+                        .to_string()
+                ],
                 vec![]
             ),
             (
                 vec![
-                    "infeasible-configuration unconnected s/t -> stray.clock outside s".to_string()
+                    "infeasible-configuration unconnected (task s t) -> stray.clock outside s"
+                        .to_string()
                 ],
                 vec![]
             ),
@@ -862,7 +1083,7 @@ fn two_systems_are_judged_apart_each_against_its_own_board() {
             .collect();
         seen.sort();
         let refused = format!(
-            "infeasible-configuration unconnected {0}/t -> {other} outside {0}",
+            "infeasible-configuration unconnected (task {0} t) -> {other} outside {0}",
             system.name
         );
         assert_eq!(seen, [(vec![], vec![]), (vec![refused], vec![])]);
@@ -878,13 +1099,13 @@ fn two_systems_are_judged_apart_each_against_its_own_board() {
     };
     let both = [
         Binding {
-            requester: "sa/t".to_string(),
-            requirement: need("sa/t"),
+            requester: "(task sa t)".to_string(),
+            requirement: need("(task sa t)"),
             provider: "timer.a".to_string(),
         },
         Binding {
-            requester: "sb/t".to_string(),
-            requirement: need("sb/t"),
+            requester: "(task sb t)".to_string(),
+            requirement: need("(task sb t)"),
             provider: "timer.b".to_string(),
         },
     ];
@@ -1073,7 +1294,7 @@ fn a_caller_is_bound_only_to_a_provider_reachable_at_its_system_s_level() {
             (vec![], vec![]),
             (
                 vec![
-                    "infeasible-configuration out of level s/t -> timer.s at machine: supervisor"
+                    "infeasible-configuration out of level (task s t) -> timer.s at machine: supervisor"
                         .to_string()
                 ],
                 vec![]
@@ -1110,20 +1331,20 @@ fn a_provider_that_states_no_level_is_refused_for_a_caller() {
         one("(offers (counter-width 32 bit))"),
         (
             vec![],
-            vec!["missing-fact level unstated s/t -> timer".to_string()]
+            vec!["missing-fact level unstated (task s t) -> timer".to_string()]
         )
     );
     assert_eq!(
         one("(offers (counter-width 32 bit) reachable-at-privilege)"),
         (
             vec![],
-            vec!["missing-fact level unstated s/t -> timer".to_string()]
+            vec!["missing-fact level unstated (task s t) -> timer".to_string()]
         )
     );
     assert_eq!(
         one("(offers (counter-width 32 bit)) (absent reachable-at-privilege)"),
         (
-            vec!["infeasible-configuration level absent s/t -> timer".to_string()],
+            vec!["infeasible-configuration level absent (task s t) -> timer".to_string()],
             vec![]
         )
     );
@@ -1379,7 +1600,8 @@ fn a_region_both_executable_and_reserved_is_no_placement_memory() {
 
 #[test]
 fn a_size_the_map_needs_is_unknown_either_way() {
-    // Review D4: rule 5 mirrored — memory unsized below a device, and a device unsized below memory.
+    // Review D4: rule 5 mirrored for a device unsized below memory; memory with no size said once, for itself
+    // (`M4.1.2.5`).
     let v = vocabulary();
     let sizeless_ram = memory_map(&format!("{DEV_OUTSIDE}\n{FW_HOLE}")).replace(
         "(region ram (base 0x8000_0000) (size 128 MiB) (executable true))",
@@ -1387,16 +1609,181 @@ fn a_size_the_map_needs_is_unknown_either_way() {
     );
     assert_eq!(
         map_of(&sizeless_ram, &v).1,
-        [
-            "missing-fact size of soc ram against dev in s",
-            "missing-fact size of soc ram against fw in s"
-        ]
+        ["missing-fact size of memory soc ram in s"]
     );
     let sizeless_dev =
         "(defblock dev (offers (observable-output true) (region dev.regs (base 0x7FFF_F000))))";
     assert_eq!(
         map_of(&memory_map(&format!("{sizeless_dev}\n{FW_HOLE}")), &v).1,
         ["missing-fact size of dev dev.regs against soc in s"]
+    );
+}
+
+/// A platform whose `ram` is `0x1000` bytes at `0x8000_0000`, and a block `fw` offering `regions`.
+fn small_map(regions: &str) -> String {
+    format!(
+        "(defblock fw (offers (core-count 1 tick) {regions}))
+(defplatform soc (offers (core-count 1 tick) (region ram (base 0x8000_0000) (size 4 KiB) (executable true)))
+  (requires (uses fw)))
+{}",
+        one_task_system("", "\n  (platform (uses soc))")
+    )
+}
+
+#[test]
+fn placement_memory_with_no_size_is_a_missing_fact_with_nothing_above_it() {
+    // `M4.1.2.5`: nothing can be laid out in it, whatever else the map holds, and until now nothing said so here.
+    let v = vocabulary();
+    let text = "(defplatform soc (offers (core-count 1 tick) (region ram (base 0x8000_0000) (executable true))))\n"
+        .to_string()
+        + &one_task_system("", "\n  (platform (uses soc))");
+    let (refused, unknowns, _) = map_of(&text, &v);
+    assert!(refused.is_empty(), "{refused:?}");
+    assert_eq!(unknowns, ["missing-fact size of memory soc ram in s"]);
+    // A device on its base byte is still two claims on one byte, which no size repairs, and the memory still has no size.
+    let on_base = "(defblock dev (offers (observable-output true) (region dev.regs (base 0x8000_0000) (size 4 KiB))))
+(defplatform soc (offers (core-count 1 tick) (region ram (base 0x8000_0000) (executable true))) (requires (uses dev)))\n"
+        .to_string()
+        + &one_task_system("", "\n  (platform (uses soc))");
+    let (refused, unknowns, _) = map_of(&on_base, &v);
+    assert_eq!(
+        refused,
+        ["invalid-description map s: dev dev.regs in soc ram"]
+    );
+    assert_eq!(unknowns, ["missing-fact size of memory soc ram in s"]);
+}
+
+#[test]
+fn a_hole_of_no_size_reaches_the_region_s_end_and_is_named_only_where_that_closes_it() {
+    // `M4.1.2.5`, `M3.5.5.7.3`'s obligation. Bytes are left below it, so the description holds and the hole is reported.
+    let v = vocabulary();
+    let (refused, unknowns, obligations) = map_of(
+        &small_map("(region low (base 0x8000_0800) (reserved true))"),
+        &v,
+    );
+    assert!(
+        refused.is_empty() && unknowns.is_empty(),
+        "{refused:?} {unknowns:?}"
+    );
+    assert_eq!(obligations, [placement("ram", &[("fw", "low")])]);
+
+    // At the region's base, it leaves nothing: the size is the fact the system lacks.
+    assert_eq!(
+        map_of(
+            &small_map("(region at (base 0x8000_0000) (reserved true))"),
+            &v
+        )
+        .1,
+        ["missing-fact size of hole fw at closing soc ram in s"]
+    );
+
+    // A sized hole fills what lies below it: the same closing, and only the one with no size is named.
+    assert_eq!(
+        map_of(
+            &small_map(
+                "(region lo (base 0x8000_0000) (size 2 KiB) (reserved true)) (region up (base 0x8000_0800) (reserved true))"
+            ),
+            &v
+        ),
+        (
+            vec![],
+            vec!["missing-fact size of hole fw up closing soc ram in s".to_string()],
+            vec![placement("ram", &[("fw", "lo"), ("fw", "up")])]
+        )
+    );
+
+    // Two of no size closing it are both named, so that one pass repairs the description.
+    assert_eq!(
+        map_of(
+            &small_map(
+                "(region a (base 0x8000_0000) (reserved true)) (region b (base 0x8000_0800) (reserved true))"
+            ),
+            &v
+        )
+        .1,
+        [
+            "missing-fact size of hole fw a closing soc ram in s",
+            "missing-fact size of hole fw b closing soc ram in s"
+        ]
+    );
+}
+
+#[test]
+fn bytes_surely_reserved_are_a_contradiction_no_size_repairs() {
+    // `M4.1.2.5`: the base byte of a hole of no size is surely reserved, so this region is full whatever its size says.
+    let v = vocabulary();
+    let (refused, unknowns, _) = map_of(
+        &small_map(
+            "(region lo (base 0x8000_0000) (size 4095 byte) (reserved true)) (region last (base 0x8000_0FFF) (reserved true))"
+        ),
+        &v,
+    );
+    assert_eq!(refused, ["invalid-description all holes s: soc ram"]);
+    assert!(unknowns.is_empty(), "{unknowns:?}");
+    // One byte shorter, a free byte lies below the hole of no size, so the map holds.
+    let (refused, unknowns, _) = map_of(
+        &small_map(
+            "(region lo (base 0x8000_0000) (size 4094 byte) (reserved true)) (region last (base 0x8000_0FFF) (reserved true))"
+        ),
+        &v,
+    );
+    assert!(
+        refused.is_empty() && unknowns.is_empty(),
+        "{refused:?} {unknowns:?}"
+    );
+}
+
+#[test]
+fn a_reserved_range_of_no_size_outside_placement_memory_stays_rule_5_s() {
+    // `M4.1.2.5` narrows nothing here: below the memory its size decides whether it is a hole; above it, none.
+    let v = vocabulary();
+    let (refused, unknowns, _) = map_of(
+        &small_map("(region below (base 0x7FFF_F000) (reserved true))"),
+        &v,
+    );
+    assert!(refused.is_empty(), "{refused:?}");
+    assert_eq!(unknowns, ["missing-fact size of fw below against soc in s"]);
+    // A device's registers with no size are no hole: inside the memory their base byte is already a second claim.
+    let (refused, unknowns, _) = map_of(&small_map("(region regs (base 0x8000_0800))"), &v);
+    assert_eq!(refused, ["invalid-description map s: fw regs in soc ram"]);
+    assert!(unknowns.is_empty(), "{unknowns:?}");
+    assert_eq!(
+        map_of(
+            &small_map("(region above (base 0x8000_1000) (reserved true))"),
+            &v
+        ),
+        (vec![], vec![], vec![placement("ram", &[])])
+    );
+}
+
+#[test]
+fn a_hole_s_extent_is_its_region_s_alone_and_free_bytes_elsewhere_answer_nothing() {
+    // `M4.1.2.5`. A second bank above: taken to the first bank's end, the hole's size is still unknown against the second.
+    let v = vocabulary();
+    let bank = "(region bank (base 0x8000_2000) (size 4 KiB) (executable true))";
+    assert_eq!(
+        map_of(
+            &small_map(&format!(
+                "(region low (base 0x8000_0800) (reserved true)) {bank}"
+            )),
+            &v
+        )
+        .1,
+        ["missing-fact size of fw low against fw in s"]
+    );
+    // A hole closing the lower bank, with free bytes in the upper: judged of the region, as all holes is.
+    assert_eq!(
+        map_of(
+            &small_map(&format!(
+                "(region at (base 0x8000_0000) (reserved true)) {bank}"
+            )),
+            &v
+        )
+        .1,
+        [
+            "missing-fact size of fw at against fw in s",
+            "missing-fact size of hole fw at closing soc ram in s",
+        ]
     );
 }
 
@@ -1441,6 +1828,67 @@ fn a_region_s_sub_forms_follow_one_grammar() {
             [format!("invalid-description b: {refused}")]
         );
     }
+}
+
+#[test]
+fn a_bare_region_is_an_offer_that_names_no_byte_range() {
+    // `M4.1.19`: read as what it says, not skipped as no region at all.
+    let v = vocabulary();
+    let found = Read::of("(defblock b (offers (core-count 1 tick) region))", &v)
+        .joint(&v)
+        .expect_err("refused");
+    assert_eq!(
+        found.iter().map(named).collect::<Vec<_>>(),
+        ["invalid-description b: a region is named first"]
+    );
+}
+
+#[test]
+fn a_service_naming_hardware_outside_the_system_is_that_system_s_conflict() {
+    // `M1.49`, model §8 rule 7: "a block that only a service names is not hardware", so the name is no path into it.
+    let v = vocabulary();
+    let text = |platform: &str| {
+        format!(
+            "(defblock blk (offers (observable-output true) (reachable-at-privilege machine)))
+(defplatform soc (offers (core-count 1 tick) (reachable-at-privilege machine)) {platform})
+(defservice drv (requires (uses blk)))
+{}",
+            one_task_system("(uses drv)", "\n  (platform (uses soc))")
+        )
+    };
+    assert_eq!(
+        map_of(&text(""), &v).0,
+        ["infeasible-configuration named outside s: drv blk"]
+    );
+    // Composed by the platform, the same name is a path inside it.
+    assert!(map_of(&text("(requires (uses blk))"), &v).0.is_empty());
+    // A second system the name leaves inside its hardware is not refused for it, and the first is (rule 7: each
+    // serving system's).
+    let two = format!(
+        "{}\n(defplatform soc2 (offers (core-count 1 tick) (reachable-at-privilege machine)) (requires (uses blk)))
+(defsystem s2 (task t (period 10 ms) (deadline 10 ms) (deadline-from release) (priority 1) (uses drv)) (platform (uses soc2)))",
+        text("")
+    );
+    let read = Read::of(&two, &v);
+    let joint = read.joint(&v).expect("reads");
+    let outcomes: Vec<(String, Vec<String>)> = read
+        .systems()
+        .into_iter()
+        .map(|system| {
+            let refused = joint.map(&system).refused.iter().map(named).collect();
+            (system.name, refused)
+        })
+        .collect();
+    assert_eq!(
+        outcomes,
+        [
+            (
+                "s".to_string(),
+                vec!["infeasible-configuration named outside s: drv blk".to_string()]
+            ),
+            ("s2".to_string(), vec![]),
+        ]
+    );
 }
 
 #[test]
@@ -1595,8 +2043,10 @@ fn a_system_s_initialization_graph_runs_from_providers_and_used_services_to_thei
 }
 
 #[test]
-fn a_composite_and_its_part_binding_each_other_make_no_edge() {
-    // Review D1: a well-formed board whose platform needs its timer's counter and whose timer needs the bus.
+fn a_composite_and_its_part_binding_each_other_are_one_component() {
+    // `M3.3.7`'s review D1: a well-formed board whose platform needs its timer's counter and whose timer needs the bus.
+    // Its answer dropped both edges while a cycle was refused; a cycle is one component since its D3, so the bindings
+    // keep their edges and the board is one unit (leaf `M4.1.16`).
     let v = vocabulary();
     let text = "(defblock timer (offers (counter-width 32 bit)) (requires (needs bus-width)))
 (defplatform soc (offers (bus-width 32 bit) (core-count 1 tick))
@@ -1612,8 +2062,74 @@ fn a_composite_and_its_part_binding_each_other_make_no_edge() {
             ("timer".to_string(), Node::Provider)
         ]
     );
-    assert!(g.edges.is_empty(), "{:?}", g.edges);
+    assert_eq!(
+        g.edges,
+        [
+            edge("soc", "timer", bound("bus-width")),
+            edge("timer", "soc", bound("counter-width")),
+        ]
+    );
+    assert_eq!(g.components, [vec!["soc".to_string(), "timer".to_string()]]);
+}
+
+#[test]
+fn a_composite_bound_to_its_part_comes_after_it() {
+    // Leaf `M4.1.16`: a platform bound to the timer it composes is initialised after it, whatever their names — a
+    // binding's edge holds across composition, and composition alone gives none.
+    let v = vocabulary();
+    let text = "(defblock timer (offers (counter-width 32 bit)))
+(defplatform soc (offers (core-count 1 tick)) (requires (uses timer) (needs counter-width)))
+(defsystem s
+  (task t (period 10 ms) (deadline 10 ms) (deadline-from release) (priority 1))
+  (platform (uses soc)))";
+    let g = graph(text, &["timer", "soc"], &v);
+    assert_eq!(g.edges, [edge("timer", "soc", bound("counter-width"))]);
     assert!(g.components.is_empty());
+}
+
+#[test]
+fn a_service_naming_a_block_comes_after_it() {
+    // Leaf `M4.1.17`: a service naming a block by `uses` calls it (the runtime plan's §2), so the block is initialised
+    // first, whatever their names — `M3.3.7`'s reading, "the requester may call it while it initialises".
+    let v = vocabulary();
+    let text = "(defblock z.uart (offers (observable-output true)))
+(defplatform soc (offers (core-count 1 tick)) (requires (uses z.uart)))
+(defservice console.write (requires (needs observable-output)))
+(defservice a.log (requires (uses z.uart)))
+(defsystem s
+  (task t (period 10 ms) (deadline 10 ms) (deadline-from release) (priority 1) (uses a.log))
+  (requires (uses console.write))
+  (platform (uses soc)))";
+    let g = graph(text, &[], &v);
+    assert!(
+        g.edges.contains(&edge("z.uart", "a.log", Because::Named)),
+        "{:?}",
+        g.edges
+    );
+}
+
+#[test]
+fn a_block_a_service_names_and_nothing_binds_is_a_node() {
+    // Leaf `M4.1.18`: the service's name is a call, so the block is a node, initialised before it, though no binding
+    // names it.
+    let v = vocabulary();
+    let text = "(defblock z.uart (offers (observable-output true)))
+(defplatform soc (offers (core-count 1 tick)) (requires (uses z.uart)))
+(defservice a.log (requires (uses z.uart)))
+(defsystem s
+  (task t (period 10 ms) (deadline 10 ms) (deadline-from release) (priority 1) (uses a.log))
+  (platform (uses soc)))";
+    let g = graph(text, &[], &v);
+    assert!(
+        g.nodes.contains(&("z.uart".to_string(), Node::Provider)),
+        "{:?}",
+        g.nodes
+    );
+    assert!(
+        g.edges.contains(&edge("z.uart", "a.log", Because::Named)),
+        "{:?}",
+        g.edges
+    );
 }
 
 #[test]
@@ -1723,6 +2239,46 @@ fn one_requester_s_counter_facts_across_two_timers_are_refused_naming_both() {
             ],
             vec![]
         )
+    );
+}
+
+/// Model §8 rule 14 reads none of the five facts that describe a counter's compare as a reader of a time base (`decision_release-alarm.md`'s
+/// `RA-H8`, `M4.1.7.3.1`): a requester the deadline's reaches, bound for each of them at another device, splits no time base, while one of its
+/// facts that is a reading of the counter's time, `tick-rate`, bound there, does.
+#[test]
+fn rule_14_reads_no_fact_describing_a_compare_as_a_reader_of_time() {
+    let v = vocabulary();
+    let devices = "(defblock timer.abs (offers (absolute-deadline true) (supported-horizon 3600 s) (counter-modulus 4294967296)
+  (tick-rate 1 MHz) (channels 1 tick) (reachable-at-privilege machine)))
+(defblock timer.e (offers (alarm-kind level-compare) (alarm-wiring core) (compare-step 1 tick) (compare-window 16 tick)
+  (compare-magnitude false) (tick-rate 1 MHz) (reachable-at-privilege machine)))
+(defplatform soc (offers (core-count 1 tick) (reachable-at-privilege machine)) (requires (uses timer.abs timer.e)))
+(defservice alarm.now (requires (absolute-deadline (supported-horizon (at-least 10 s))) (uses time.kind)))
+(defsystem s (requires (uses alarm.now)) (platform (uses soc)))";
+    let describing = format!(
+        "{devices}
+(defservice time.kind (requires (alarm-kind level-compare) (alarm-wiring core) (compare-step (at-most 1 tick))
+  (compare-window (at-least 16 tick)) (compare-magnitude false)))"
+    );
+    let got: Vec<(Vec<String>, Vec<String>)> = every_named_with(&describing, &v)
+        .into_iter()
+        .map(|(c, u, _)| (c, u))
+        .collect();
+    assert_eq!(got, [(vec![], vec![])]);
+    let reading = format!(
+        "{devices}
+(defservice time.kind (requires (alarm-kind level-compare) (alarm-wiring core) (compare-step (at-most 1 tick))
+  (compare-window (at-least 16 tick)) (compare-magnitude false) (tick-rate 1 MHz)))"
+    );
+    let conflicts: Vec<String> = every_named_with(&reading, &v)
+        .into_iter()
+        .flat_map(|(c, _, _)| c)
+        .collect();
+    assert!(
+        conflicts
+            .iter()
+            .any(|c| c.ends_with("time bases alarm.now at timer.abs / time.kind at timer.e")),
+        "{conflicts:#?}"
     );
 }
 
@@ -1993,4 +2549,149 @@ fn rule_13_s_diagnostics_say_what_the_book_quotes() {
     for f in report.conflicts.iter().chain(&report.unknowns) {
         assert_eq!(f.diagnostic().code, f.code());
     }
+}
+
+/// Every distinct report of `text`'s assignments, sorted: what rule 16 says of each binding a task's own
+/// `interrupt-source` may take.
+fn distinct(text: &str, v: &Vocabulary) -> Vec<(Vec<String>, Vec<String>)> {
+    let mut seen: Vec<_> = every(text, v).iter().map(report_of).collect();
+    seen.sort();
+    seen.dedup();
+    seen
+}
+
+/// A sporadic task of 10 ms bound itself for `interrupt-source`, beside the sources `sources` declares and a console
+/// its service writes to.
+fn own_source(sources: &str) -> String {
+    format!(
+        "{sources}
+(defblock console.uart (offers (observable-output true) (reachable-at-privilege machine)))
+(defplatform soc (offers (core-count 1 tick) (reachable-at-privilege machine)) (requires (uses dev.a dev.b console.uart)))
+(defservice log (requires (needs observable-output)))
+(defsystem s
+  (task t (min-separation 10 ms) (deadline 10 ms) (deadline-from release) (priority 1) (needs interrupt-source) (uses log))
+  (platform (uses soc)))"
+    )
+}
+
+fn source(name: &str, separation: &str) -> String {
+    format!("(defblock {name} (offers (interrupt-source true) {separation} (reachable-at-privilege machine)))")
+}
+
+#[test]
+fn a_task_s_own_source_faster_than_it_is_refused_where_a_slower_one_would_be_admitted() {
+    // Model §8 rule 16 (`RTP-H24`): every arrival releases a task bound itself for `interrupt-source`, so the
+    // analysis's condition 5 asks the source's separation be at least the task's. Of two sources, the binding to the
+    // faster is refused `unsupported-profile` and the one to the slower admitted, so the search binds the slower.
+    let v = vocabulary();
+    let text = own_source(&format!(
+        "{}\n{}",
+        source("dev.a", "(min-arrival-separation 5 ms)"),
+        source("dev.b", "(min-arrival-separation 30 ms)")
+    ));
+    assert_eq!(
+        distinct(&text, &v),
+        [
+            (vec![], vec![]),
+            (
+                vec![
+                    "unsupported-profile own source faster 5 ms < 10 ms (task s t) -> dev.a"
+                        .to_string()
+                ],
+                vec![]
+            ),
+        ]
+    );
+}
+
+#[test]
+fn a_task_s_own_source_is_admitted_from_its_own_separation_up_in_any_unit() {
+    let v = vocabulary();
+    for (a, b) in [
+        (
+            "(min-arrival-separation 10 ms)",
+            "(min-arrival-separation 10000 us)",
+        ),
+        (
+            "(min-arrival-separation (exactly 10 ms))",
+            "(min-arrival-separation 1 s)",
+        ),
+    ] {
+        let text = own_source(&format!("{}\n{}", source("dev.a", a), source("dev.b", b)));
+        assert_eq!(distinct(&text, &v), [(vec![], vec![])], "{a} {b}");
+    }
+}
+
+#[test]
+fn a_task_s_own_source_unbounded_or_unstated_is_refused_with_its_code() {
+    // Declared absent: an unbounded source, `unsupported-profile` (the analysis's condition 3). No value — none, a bare
+    // offer, or a bound, which the relation reads as none — an unknown, `missing-fact`.
+    let v = vocabulary();
+    let slow = source("dev.b", "(min-arrival-separation 30 ms)");
+    let case = |a: &str| distinct(&own_source(&format!("{}\n{slow}", source("dev.a", a))), &v);
+    let absent =
+        "(defblock dev.a (offers (interrupt-source true) (reachable-at-privilege machine)) \
+                  (absent min-arrival-separation))";
+    assert_eq!(
+        distinct(&own_source(&format!("{absent}\n{slow}")), &v)
+            .last()
+            .cloned(),
+        Some((
+            vec!["unsupported-profile own source absent (task s t) -> dev.a".to_string()],
+            vec![]
+        ))
+    );
+    let unstated = (
+        vec![],
+        vec!["missing-fact own source unstated (task s t) -> dev.a".to_string()],
+    );
+    for a in [
+        "",
+        "(min-arrival-separation)",
+        "(min-arrival-separation (at-least 20 ms))",
+    ] {
+        assert_eq!(case(a), [(vec![], vec![]), unstated.clone()], "{a}");
+    }
+}
+
+#[test]
+fn a_task_s_own_source_past_the_exact_arithmetic_is_unsupported() {
+    // §7 rule 2: a comparison whose arithmetic overflows decides nothing.
+    let v = vocabulary();
+    let text = own_source(&format!(
+        "{}\n{}",
+        source(
+            "dev.a",
+            "(min-arrival-separation 0.00000000000000000000000000000000000001 ns)"
+        ),
+        source("dev.b", "(min-arrival-separation 30 ms)")
+    ));
+    assert_eq!(
+        distinct(&text, &v).last().cloned(),
+        Some((
+            vec!["unsupported-profile own source past arithmetic (task s t) -> dev.a".to_string()],
+            vec![]
+        ))
+    );
+}
+
+#[test]
+fn rule_16_judges_a_task_s_own_binding_alone() {
+    // A task a faster source reaches through its handler is no binding of the task's own: the runtime plan writes its
+    // trigger `(unknown (faster …))`, owed to the description, and no joint rule refuses the assignment. A periodic task
+    // has no `min-separation` for the rule to compare.
+    let v = vocabulary();
+    let through_handler = "(defblock dev.a (offers (interrupt-source true) (min-arrival-separation 5 ms) (reachable-at-privilege machine)))
+(defplatform soc (offers (core-count 1 tick) (reachable-at-privilege machine)) (requires (uses dev.a)))
+(defservice h (requires (needs interrupt-source)))
+(defsystem s
+  (task t (min-separation 10 ms) (deadline 10 ms) (deadline-from release) (priority 1) (uses h))
+  (platform (uses soc)))";
+    assert_eq!(distinct(through_handler, &v), [(vec![], vec![])]);
+    let periodic = "(defblock dev.a (offers (interrupt-source true) (min-arrival-separation 5 ms) (reachable-at-privilege machine)))
+(defplatform soc (offers (core-count 1 tick) (reachable-at-privilege machine)) (requires (uses dev.a)))
+(defsystem s
+  (task t (period 10 ms) (deadline 10 ms) (deadline-from release) (priority 1) (needs interrupt-source))
+  (platform (uses soc)))";
+    assert_eq!(distinct(periodic, &v), [(vec![], vec![])]);
 }

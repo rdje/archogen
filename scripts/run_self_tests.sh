@@ -18,10 +18,11 @@
 # here first rather than on the runner. Measured when it was added: all 23 passed under it — each scratch
 # repository that commits sets its own identity — so this guards the next arm, not a known one.
 #
-# CONTRACT: exit 0 = every self-test passed; 1 = at least one failed, each named; 2 = nothing to run.
+# CONTRACT: exit 0 = every self-test passed; 1 = at least one failed, each named; 2 = nothing to run; 20 = none failed and at least one could not all be run, which is no pass.
+# A gate that reads one host alone exits 21 on any other, and is counted apart, never as passed. Only those `SELF_TESTS_ONE_HOST` names may: any other could exempt itself by its exit code.
 # `--self-test` runs this runner's own arms against stub gates in `target/doctrine_scratch/`.
-# Seams, for those arms only: `SELF_TESTS_GLOB` (where gates are looked for) and `SELF_TESTS_HARNESS` (the
-# outside harness).
+# Seams, for those arms only: `SELF_TESTS_GLOB` (where gates are looked for), `SELF_TESTS_HARNESS` (the
+# outside harness) and `SELF_TESTS_ONE_HOST`.
 set -uo pipefail
 SELF="$0"
 case "$SELF" in /*) ;; *) SELF="$PWD/$SELF" ;; esac
@@ -29,6 +30,7 @@ ROOT="$(git rev-parse --show-toplevel)"; cd "$ROOT"
 
 GLOB="${SELF_TESTS_GLOB:-scripts/*.sh knowledge-map/scripts/*.sh}"
 HARNESS="${SELF_TESTS_HARNESS-scripts/selftest_spine.sh}"
+ONE_HOST="${SELF_TESTS_ONE_HOST-scripts/check_host_guard.sh}"
 
 # Run a command as a bare runner would: no global or system git configuration, no identity it did not set.
 bare() {
@@ -60,7 +62,7 @@ self_test() {
     if [ "$rc" -ne "$want" ]; then
       echo "SELF-TEST: $name — expected exit $want, got $rc" >&2; printf '%s\n' "$out" | sed -n '1,3p' | sed 's/^/    /' >&2; return
     fi
-    if [ -n "$must" ] && ! printf '%s' "$out" | grep -qF -- "$must"; then
+    if [ -n "$must" ] && ! grep -qF -- "$must" <<< "$out"; then
       echo "SELF-TEST: $name — not about \`$must\`:" >&2; printf '%s\n' "$out" | sed -n '1,4p' | sed 's/^/    /' >&2; return
     fi
     ok=$((ok + 1)); echo "  ✅ $name"
@@ -84,6 +86,27 @@ self_test() {
   arm "an arm leaning on this machine's git identity fails, as it would on a runner" 1 "✗ $work/check_ident.sh"
   printf '#!/usr/bin/env bash\n[ "${1:-}" = "--self-test" ] || exit 0\nd="%s/ident"; rm -rf "$d"; git init -q "$d" 2>/dev/null && git -C "$d" -c user.name=arm -c user.email=arm@example.invalid commit -q --allow-empty -m x\n' "$work" > "$work/check_ident.sh"
   arm "an arm that sets its own identity passes" 0 "check_ident.sh"
+  stub "$work/check_ident.sh" 20
+  arm "one that could not all be run is incomplete, no pass" 20 "incomplete"
+  stub "$work/check_alpha.sh" 1; stub "$work/check_ident.sh" 20
+  arm "and a failure outranks it" 1 "✗ $work/check_alpha.sh"
+  rm -f "$work"/check_*.sh
+  printf '#!/usr/bin/env bash\n[ "${1:-}" = "--self-test" ] || exit 0\ncat > /dev/null\nexit 0\n' > "$work/check_a_reader.sh"; stub "$work/check_later.sh" 1
+  arm "a gate that reads its input ends no census: what comes after it is still seen" 1 "✗ $work/check_later.sh"
+  rm -f "$work"/check_*.sh
+  printf '#!/usr/bin/env bash\n[ "${1:-}" = "--self-test" ] || exit 0\necho "host-guard self-test: waiting for room, up to 9 s more"\necho "ValueError: the reason"\nexit 1\n' > "$work/check_waited.sh"
+  arm "one that waited and then died says why it died" 1 "ValueError: the reason"
+  printf '#!/usr/bin/env bash\n[ "${1:-}" = "--self-test" ] || exit 0\necho "case_a: FAILED"\necho "ValueError: the real reason"\nexit 1\n' > "$work/check_waited.sh"
+  arm "one that says FAILED and then died says why it died" 1 "ValueError: the real reason"
+  printf '#!/usr/bin/env bash\n[ "${1:-}" = "--self-test" ] || exit 0\nkill -KILL $$\n' > "$work/check_waited.sh"
+  arm "one a signal ended says how it ended" 1 "exit 137"
+  printf '#!/usr/bin/env bash\n[ "${1:-}" = "--self-test" ] || exit 0\necho "boom"\nexit 20\n' > "$work/check_waited.sh"
+  arm "one incomplete that names nothing says what it said last" 20 "boom"
+  rm -f "$work"/check_*.sh; stub "$work/check_alpha.sh" 0; stub "$work/check_beta.sh" 21
+  arm "a gate no row names cannot exempt itself as of another host" 1 "✗ $work/check_beta.sh"
+  SELF_TESTS_ONE_HOST="$work/check_beta.sh" arm "one that reads another host is counted apart, never as passed" 0 "1 self-test(s) passed, and 1 reads another host"
+  rm -f "$work/check_alpha.sh"
+  SELF_TESTS_ONE_HOST="$work/check_beta.sh" arm "and with nothing else run, nothing was" 2 "nothing here ran"
   rm -rf "$work"
   echo "run-self-tests self-test: $ok pass / $((arms - ok)) fail ($arms arms)"
   [ "$ok" -eq "$arms" ]
@@ -98,21 +121,51 @@ if [ -z "$gates" ]; then
   echo "SELF-TESTS: no gate carries a --self-test under '$GLOB' — nothing ran, which is not a pass" >&2
   exit 2
 fi
-passed=0; failed=0
+passed=0; failed=0; incomplete=0; elsewhere=0
 while IFS= read -r gate; do
   started=$SECONDS
-  if out="$(bare bash "$gate" --self-test 2>&1)"; then
+  # Its input is nothing, since this loop's is the rest of the census, which a gate that reads would end.
+  out="$(bare bash "$gate" --self-test 2>&1 </dev/null)"
+  status=$?
+  if [ "$status" -eq 0 ]; then
     passed=$((passed + 1))
     printf '  ✓ %-52s %3ss  %s\n' "$gate" "$((SECONDS - started))" "$(printf '%s\n' "$out" | tail -1)"
+  elif [ "$status" -eq 20 ]; then
+    # Could not all be run, which is neither: `ROADMAP.md` §14.3's incomplete, said and carried up.
+    incomplete=$((incomplete + 1))
+    printf '  ? %-52s %3ss  %s\n' "$gate" "$((SECONDS - started))" "$(printf '%s\n' "$out" | grep -E 'self-test:' | tail -1)"
+    printf '%s\n' "$out" | grep -E 'not run:' | head -8 | sed 's/^/      /'
+    # And what one that names nothing said last, as a failure does.
+    grep -qE 'not run:' <<< "$out" || printf '%s\n' "$out" | tail -3 | sed 's/^/      /'
+  elif [ "$status" -eq 21 ] && [ "$gate" = "$ONE_HOST" ]; then
+    elsewhere=$((elsewhere + 1))
+    printf '  - %-52s %3ss  %s\n' "$gate" "$((SECONDS - started))" "$(printf '%s\n' "$out" | tail -1)"
   else
     failed=$((failed + 1))
-    printf '  ✗ %-52s %3ss  its RED arms did not all pass:\n' "$gate" "$((SECONDS - started))" >&2
-    printf '%s\n' "$out" | grep -E '^SELF-TEST|self-test' | head -8 | sed 's/^/      /' >&2
+    printf '  ✗ %-52s %3ss  its RED arms did not all pass, exit %s:\n' "$gate" "$((SECONDS - started))" "$status" >&2
+    # What it says it waits for says nothing of why it failed, and one that died by a traceback says only that.
+    said="$(printf '%s\n' "$out" | grep -vE '^host-guard( self-test)?: waiting for room')"
+    reason="$(grep -E '^SELF-TEST|self-test|FAILED' <<< "$said")"
+    [ -n "$reason" ] && printf '%s\n' "$reason" | head -12 | sed 's/^/      /' >&2
+    # And how it ended, which a `FAILED` above it does not say: the last lines, as they stand.
+    printf '%s\n' "$said" | tail -3 | sed 's/^/      /' >&2
   fi
 done <<< "$gates"
 if [ "$failed" -ne 0 ]; then
   echo "SELF-TESTS: $failed of $((passed + failed)) self-test(s) failed — a gate that cannot show it fails is a gate nobody knows works" >&2
   exit 1
+fi
+if [ "$incomplete" -ne 0 ]; then
+  echo "self-tests: incomplete — $passed passed, and $incomplete could not all be run, which is no pass"
+  exit 20
+fi
+if [ "$passed" -eq 0 ]; then
+  echo "SELF-TESTS: $elsewhere read another host, and nothing here ran, which is not a pass" >&2
+  exit 2
+fi
+if [ "$elsewhere" -ne 0 ]; then
+  echo "self-tests: OK — $passed self-test(s) passed, and $elsewhere reads another host"
+  exit 0
 fi
 echo "self-tests: OK — $passed self-test(s) passed"
 exit 0

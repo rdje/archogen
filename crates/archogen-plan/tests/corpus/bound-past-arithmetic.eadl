@@ -1,0 +1,11 @@
+(eadl-version eadl/1)
+; A `deadline-over-delay` requester bounding its delivery at 1e-38 ns: refused past the arithmetic, never "not a
+; duration" (§1, §2.4; round 10, D2).
+(defblock timer.delay
+  (offers (relative-delay true) (counter-modulus 4294967296) (tick-rate 1 MHz) (observation-coherent true)
+    (channels 1 tick) (reachable-at-privilege machine)))
+(defplatform soc.d (offers (core-count 1 tick) (reachable-at-privilege machine)) (requires (uses timer.delay)))
+(defservice dl (requires (absolute-deadline (delivery-bound (at-most 0.00000000000000000000000000000000000001 ns)))))
+(defsystem tb
+  (task x (period 25 ms) (deadline 25 ms) (deadline-from release) (priority 1) (uses dl))
+  (platform (uses soc.d)))

@@ -1,0 +1,23 @@
+(eadl-version eadl/1)
+; Round 15: A service the timer route at timer.short names (through the extender it binds its counter facts to) and
+; bound to timer.short itself for a fact that is not consumed (observable-output): §2.6's second bullet keys on "a
+; consumed fact where it is a timer route", and a wake runs the instance's code alone, so the service is in no
+; interrupt.
+(defblock timer.short
+  (offers
+    (relative-delay true)
+    (counter-modulus 65536)
+    (tick-rate 10 MHz)
+    (wrap-behavior modular)
+    (observation-coherent true)
+    (observable-output true)
+    (channels 1 tick)
+    (reachable-at-privilege machine)))
+(defplatform soc.short
+  (offers (core-count 1 tick) (reachable-at-privilege machine))
+  (requires (uses timer.short)))
+(defservice stamp
+  (requires (needs counter-width tick-rate observation-coherent observable-output)))
+(defsystem sx
+  (task s (period 10 ms) (deadline 10 ms) (deadline-from release) (priority 1) (uses stamp))
+  (platform (uses soc.short)))

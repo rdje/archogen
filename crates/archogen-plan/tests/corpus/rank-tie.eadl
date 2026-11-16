@@ -1,0 +1,17 @@
+(eadl-version eadl/1)
+; Two sources stating the same separation: §2.5 ranks them "ascending by it, ties broken on their interrupt's text".
+(defblock dev.b
+  (offers (interrupt-source true) (min-arrival-separation 20 ms) (available-in-state run) (reachable-at-privilege machine)))
+(defblock dev.a
+  (offers (interrupt-source true) (min-arrival-separation 20000 us) (available-in-state run sleep) (reachable-at-privilege machine)))
+(defplatform soc.t
+  (offers (core-count 1 tick) (reachable-at-privilege machine))
+  (requires (uses dev.a dev.b)))
+(defservice evt.a
+  (requires (needs interrupt-source) (available-in-state run sleep)))
+(defservice evt.b
+  (requires (needs interrupt-source)))
+(defsystem tie
+  (task s (min-separation 10 ms) (deadline 10 ms) (deadline-from release) (priority 1) (uses evt.a))
+  (task u (min-separation 10 ms) (deadline 10 ms) (deadline-from release) (priority 2) (uses evt.b))
+  (platform (uses soc.t)))

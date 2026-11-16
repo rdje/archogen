@@ -108,7 +108,7 @@ install_qemu() {
     note "the QEMU build failed; the end of ${log#"$ROOT"/}:"; tail -n 30 "$log" >&2; return 1
   fi
   have="$("$BIN/qemu-system-riscv64" --version 2>/dev/null | head -1)"
-  printf '%s' "$have" | grep -qF "$want" || { note "the built QEMU reports '$have', and the pin is '$want'"; return 1; }
+  grep -qF "$want" <<< "$have" || { note "the built QEMU reports '$have', and the pin is '$want'"; return 1; }
   note "qemu: $have installed"
 }
 
@@ -121,7 +121,7 @@ self_test() {
     if [ "$rc" -ne "$want" ]; then
       echo "SELF-TEST: $name — expected exit $want, got $rc" >&2; printf '%s\n' "$out" | sed -n '1,3p' | sed 's/^/    /' >&2; return
     fi
-    if [ -n "$must" ] && ! printf '%s' "$out" | grep -qF -- "$must"; then
+    if [ -n "$must" ] && ! grep -qF -- "$must" <<< "$out"; then
       echo "SELF-TEST: $name — not about \`$must\`:" >&2; printf '%s\n' "$out" | sed -n '1,3p' | sed 's/^/    /' >&2; return
     fi
     ok=$((ok + 1)); echo "  ✅ $name"

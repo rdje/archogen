@@ -447,6 +447,81 @@ fn implies_names_members_of_a_set() {
     assert_eq!(causes(&fact("f", "set a b", "includes", "(implies a)")), []);
 }
 
+/// The seven facts format `/2` reads (`M4.1.7.3.1`; `docs/decisions/decision_runtime-plan-format-2.md` §2, `decision_release-alarm.md`'s `RA-H8`),
+/// each shared, with the domain, direction and function its row in the relation record's §1.1 gives it, written out here so a row moved in the
+/// record, the file and the model at once still fails; and `catalog-target`, a name no domain holds, which the catalog's selection alone reads,
+/// declared by none.
+#[test]
+fn the_facts_format_2_reads_are_declared_as_the_record_rows_them() {
+    let table = shipped();
+    let enumeration = |alternatives: &[&str]| Domain::Enumeration {
+        alternatives: alternatives.iter().map(|a| (*a).to_owned()).collect(),
+        ordered: false,
+    };
+    let rows = [
+        (
+            "alarm-wiring",
+            enumeration(&["core", "controller"]),
+            Direction::Exact,
+            "counter",
+        ),
+        (
+            "alarm-kind",
+            enumeration(&["level-compare", "delay", "edge"]),
+            Direction::Exact,
+            "counter",
+        ),
+        ("compare-step", Domain::Count, Direction::AtMost, "counter"),
+        (
+            "compare-window",
+            Domain::Count,
+            Direction::AtLeast,
+            "counter",
+        ),
+        (
+            "compare-magnitude",
+            Domain::Boolean,
+            Direction::Exact,
+            "counter",
+        ),
+        (
+            "non-maskable-interrupts",
+            Domain::Count,
+            Direction::AtMost,
+            "processor",
+        ),
+        (
+            "firmware-traps",
+            Domain::Count,
+            Direction::AtMost,
+            "processor",
+        ),
+    ];
+    for (name, domain, direction, function) in rows {
+        let fact = table
+            .fact(name)
+            .unwrap_or_else(|| panic!("`{name}` is an entry"));
+        assert_eq!(
+            (
+                &fact.domain,
+                fact.role,
+                fact.direction,
+                fact.usage,
+                &fact.function
+            ),
+            (
+                &domain,
+                Role::Guarantee,
+                direction,
+                Usage::Shared,
+                &Some(Function::Of(function.to_owned()))
+            ),
+            "{name}"
+        );
+    }
+    assert!(table.fact("catalog-target").is_none());
+}
+
 #[test]
 fn the_two_alarms_are_consumed_and_every_other_fact_is_shared() {
     // `M3.3`'s marks, written out here rather than read from the model or the record, so a mark moved in all three at
@@ -566,6 +641,11 @@ fn each_fact_describes_the_function_m3_3_6_gives_it() {
                 "tick-unit",
                 "unambiguous-horizon",
                 "wrap-behavior",
+                "alarm-wiring",
+                "alarm-kind",
+                "compare-step",
+                "compare-window",
+                "compare-magnitude",
             ],
         ),
         ("debug", &["debug-port"]),
@@ -574,7 +654,15 @@ fn each_fact_describes_the_function_m3_3_6_gives_it() {
         ("mutex", &["application-mutexes"]),
         ("none", &["or-through-mediation"]),
         ("output", &["observable-output", "uart"]),
-        ("processor", &["core-count", "multicore"]),
+        (
+            "processor",
+            &[
+                "core-count",
+                "multicore",
+                "non-maskable-interrupts",
+                "firmware-traps",
+            ],
+        ),
         ("queue", &["general-ipc", "queue-capacity"]),
         ("release", &["release-accuracy"]),
         ("scheduler", &["deadlines", "preemptive", "priorities"]),

@@ -11,9 +11,10 @@
 ;
 ; So this description is expected to be REFUSED before leaf M3.2 — with a missing-engine-
 ; capability report — and to BUILD after it, with the adapter's own costs and obligations in the
-; plan. The description does not change between those two outcomes. If the only way to build it
-; were to weaken `absolute-deadline` into `relative-delay` here, the engine would have failed and
-; §17's first stop/rework trigger would apply.
+; plan. Its requirements do not change between those two outcomes: its hardware has gained only
+; facts true of it that it had left unstated — the level it is reachable from (M3.3.4.5) and the
+; timer's modulus (M3.4.7.1). If the only way to build it were to weaken `absolute-deadline` into
+; `relative-delay` here, the engine would have failed and §17's first stop/rework trigger would apply.
 
 (eadl-version eadl/1)
 
@@ -21,6 +22,7 @@
   (offers
     (relative-delay true)
     (counter-width 32 bit)
+    (counter-modulus 4294967296)
     (tick-rate 1 MHz)
     (observation-coherent true)
     (reachable-at-privilege machine))

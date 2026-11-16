@@ -58,10 +58,11 @@
 #      stays the seal's; nor where a stub stands among its tree's lines, nor text after the name on its ID line (R9-5);
 #      nor a seal of only some of a tree's closed units, each the tool's, the rest sealing later as units of their own,
 #      nor prose in the index outside its tables (R10 P1);
-#   6. no live leaf sits in a subtree that is sealed, at any depth and in any tree file of docs/tasks/ (one in a sub-
-#      folder is PROGRAM.72's): new work opens a new subtree
-#      outside it (P6); and a tree file holds only leaves under its own name, each named once, so no leaf is judged in a
-#      tree not its own; the index keeps one table per tree, its header first and its rows under it, one row a file.
+#   6. no live leaf sits in a subtree that is sealed, at any depth and in any tree file of docs/tasks/: new work opens a
+#      new subtree outside it (P6); a tree file is docs/tasks/<TREE>.md, so a Markdown file in a sub-folder, which no
+#      leg would judge and `TASK-ACCEPTANCE` would still take an owning leaf from, is refused (PROGRAM.72); and a tree
+#      file holds only leaves under its own name, each named once, so no leaf is judged in a tree not its own; the index
+#      keeps one table per tree, its header first and its rows under it, one row a file.
 #   7. LOG ROWS (PROGRAM.95): each log-row file's rows, lines, bytes and sha256 are its row's, it is exactly the form the
 #      seal writes, and a tree's files are numbered 1 to n; its table rows are append-only and its files as their
 #      commit wrote them, as legs 3 and 1; and PROVENANCE: the files one commit added to a tree, taken together, hold
@@ -101,8 +102,10 @@ WORK_UNIT = re.compile(r"ARCHOGEN-[A-Z0-9-]*[A-Z0-9]-[0-9]{4}(?![0-9])")
 ROW_RE = re.compile(r"^\| `([^`]+)` \| (\d+) \| (\d+) \| (\d+) \| `([0-9a-f]{64})` \| `(\d{4}-\d{2}-\d{2})` \|$")
 ROWS_RE = re.compile(r"^\| `(rows-\d{4})` \| (\d+) \| (\d+) \| (\d+) \| `([0-9a-f]{64})` \| `(\d{4}-\d{2}-\d{2})` \|$")
 # The two logs a tree keeps, each with the regex of the cell that names its leaf: the Commit Log's first cell, the
-# Verification Log's second (PROGRAM.95, docs/decisions/decision_task-log-row-sealing.md).
-LOGS = (("## Verification Log", re.compile(r"^\| `[^`]*` \| `([^`]+)` \|")), ("## Commit Log", re.compile(r"^\| `([^`]+)` \|")))
+# Verification Log's second (PROGRAM.95, docs/decisions/decision_task-log-row-sealing.md). A note in parentheses after
+# the leaf, `(step 3)` or `(closed)`, is no second leaf (PROGRAM.124); a second name in the cell still keeps the row live.
+LOGS = (("## Verification Log", re.compile(r"^\| `[^`]*` \| `([^`]+)`(?: \([^)|`]*\))? \|")),
+        ("## Commit Log", re.compile(r"^\| `([^`]+)`(?: \([^)|`]*\))? \|")))
 ROW_BYTES = int(os.environ.get("TASK_HISTORY_ROW_BYTES", "131072"))  # a log-row file's budget, under README-ROUTES' 163 840
 ROW_LINES = 1500                                                        # and its 1 800 lines
 fails = []
@@ -600,6 +603,15 @@ def gate():
         c = added.get(fpath)
         if c and at(c, fpath) != read(fpath):
             note("%s is not what %s wrote when it sealed it — a sealed file changed" % (fpath, c[:12]))
+    # Leg 6, whole: a tree file is docs/tasks/<TREE>.md. One in a sub-folder would be judged by no leg here, while
+    # `TASK-ACCEPTANCE` takes an owning leaf from any staged docs/tasks/**/*.md, so it is refused (PROGRAM.72).
+    for dirpath, dirs, names in os.walk(TASKS):
+        dirs.sort()
+        if dirpath == TASKS:
+            continue
+        for name in sorted(n for n in names if n.endswith(".md")):
+            note("%s is a tree file in a sub-folder of %s/, which no leg judges — a tree is %s/<TREE>.md"
+                 % (os.path.join(dirpath, name), TASKS, TASKS))
     # Legs 4 and 6: stubs against bodies and trees; no live leaf in a sealed subtree.
     stubs = {}
     sealed_keys = {(t, k) for (t, k) in files.values()}
@@ -1009,6 +1021,9 @@ if mode == "census":
         census(tree)
     except (Unreadable, OSError) as e:
         sys.exit("task-history: %s" % e)
+    except Exception as e:
+        # Any other failure of the census's own run is named, never a traceback (PROGRAM.73).
+        sys.exit("task-history: the census stopped on %s: %s" % (type(e).__name__, e))
     sys.exit(0)
 try:
     if mode == "seal":
@@ -1032,6 +1047,11 @@ try:
     checked, nrows, nstubs = gate()
 except (Unreadable, OSError) as e:
     note(str(e))
+    checked, nrows, nstubs = 0, 0, 0
+except Exception as e:
+    # Any other failure of the gate's own run — git printing bytes that are not UTF-8 among them — is a breach the gate
+    # names, never a traceback; a seal stopped so has already rolled back and said so (PROGRAM.73).
+    note("the gate stopped on %s: %s" % (type(e).__name__, e))
     checked, nrows, nstubs = 0, 0, 0
 for msg in fails:
     print("TASK-HISTORY: " + msg, file=sys.stderr)
@@ -1449,7 +1469,7 @@ PY
   commit
   printf '\n## Commit Log\n\n| Leaf | Commit | Notes |\n| --- | --- | --- |\n| `T.6` | `ARCHOGEN-T-0023 (leaf T.6)` | closed |\n' >> "$work/docs/tasks/T.md"
   arm "a commit the sealing commit's Commit Log names is the stub's" 0 "sealed 1 subtree(s), 1 leaves: T.6;" --seal T
-  ! printf '%s' "$LAST" | grep -qF "warning — T.6" ||
+  ! grep -qF "warning — T.6" <<< "$LAST" ||
     { arms=$((arms + 1)); echo "SELF-TEST: a leaf whose commit the log names was warned of (review R22 AG2)" >&2; }
   grep -q '^  Status: `done` — sealed in \[`T/T.6.md`\](../task-history/T/T.6.md); commit in the tree'\''s Commit Log$' "$work/docs/tasks/T.md" ||
     { arms=$((arms + 1)); echo "SELF-TEST: a commit the Commit Log names did not reach the stub" >&2; }
@@ -1723,7 +1743,7 @@ PY
   printf -- '# P\n\n## Task Tree\n\n- ID: `P`\n  Status: `active`\n  Goal: %s\n\n- ID: `P.1`\n  Status: `done`\n  Goal: %s\n  Commit: `ARCHOGEN-P-0001`\n' "$(python3 -c 'print("x" * 10000)')" "$(python3 -c 'print("y" * 8000)')" > "$work/docs/tasks/P.md"
   commit
   limit=16 arm "a rollback a full disk stops names what it could not undo" 1 "could not undo docs/tasks/P.md, not restored" --seal P
-  printf '%s' "$LAST" | grep -qF "and its rollback left what it named above" && ! printf '%s' "$LAST" | grep -qF "rolled back" ||
+  grep -qF "and its rollback left what it named above" <<< "$LAST" && ! grep -qF "rolled back" <<< "$LAST" ||
     { arms=$((arms + 1)); echo "SELF-TEST: an error's rollback that was not whole says it was rolled back (review R15 AG2)" >&2; }
   grep -q '^  Status: `done` — sealed in' "$work/docs/tasks/P.md" && [ -f "$work/docs/task-history/P/P.1.md" ] &&
     [ -z "$(git -C "$work" status --porcelain -- docs/task-history/INDEX.md)" ] ||
@@ -1740,8 +1760,8 @@ PY
   restore
   # A stop during the seal is held by the signal mask until the seal is done — proven and kept, or refused and rolled
   # back — and then takes effect with its own exit code, the seal whole either way (review R13). Mid-proof, a fake git
-  # sends the interrupt; git output that is not UTF-8 is an exception instead, rolled back and ending in its traceback
-  # (review R9-2).
+  # sends the interrupt; git output that is not UTF-8 is an exception instead, rolled back and named as a breach, never
+  # a traceback (review R9-2, PROGRAM.73).
   proven() { [ -f "$work/docs/task-history/Q/Q.1.md" ] && (cd "$work" && bash "$SELF" >/dev/null 2>&1); }
   fake="$SCRATCH/fakebin"; rm -rf "$fake"; mkdir -p "$fake"
   for how in interrupt undecodable; do
@@ -1757,15 +1777,28 @@ PY
         echo "SELF-TEST: an interrupt mid-proof — rc $rc, or the seal not finished and proven:" >&2
         printf '%s\n' "$out" | tail -3 | sed 's/^/    /' >&2
       fi
-    elif [ "$rc" -ne 0 ] && grep -qF UnicodeDecodeError <<< "$out" && ! grep -qE '^task-history: [^ ]+ — sealed ' <<< "$out" && clean &&
+    elif [ "$rc" -eq 1 ] && grep -qF "TASK-HISTORY: the gate stopped on UnicodeDecodeError" <<< "$out" &&
+         ! grep -q '^Traceback' <<< "$out" && ! grep -qE '^task-history: [^ ]+ — sealed ' <<< "$out" && clean &&
          [ ! -d "$work/docs/task-history/Q" ]; then
-      ok=$((ok + 1)); echo "  ✅ git output that is not UTF-8, mid-proof, rolls the seal back"
+      ok=$((ok + 1)); echo "  ✅ git output that is not UTF-8, mid-proof, rolls the seal back and is a named breach"
     else
       echo "SELF-TEST: git output that is not UTF-8 mid-proof — rc $rc, or its writes left behind:" >&2
       printf '%s\n' "$out" | tail -2 | sed 's/^/    /' >&2
     fi
     restore
   done
+  # The same output in a plain run of the gate: a breach it names, exit 1, never a traceback (PROGRAM.73).
+  act='printf "\\377\\n"; exit 0'
+  printf '#!/bin/sh\nfor a in "$@"; do [ "$a" = "--is-shallow-repository" ] && { %s; }; done\nexec "%s" "$@"\n' "$act" "$(command -v git)" > "$fake/git"
+  chmod +x "$fake/git"
+  arms=$((arms + 1))
+  out="$(cd "$work" && PATH="$fake:$PATH" bash "$SELF" 2>&1)"; rc=$?
+  if [ "$rc" -eq 1 ] && grep -qF "TASK-HISTORY: the gate stopped on UnicodeDecodeError" <<< "$out" && ! grep -q '^Traceback' <<< "$out"; then
+    ok=$((ok + 1)); echo "  ✅ git output that is not UTF-8, in a plain run, is a breach the gate names"
+  else
+    echo "SELF-TEST: git output that is not UTF-8 in a plain run — rc $rc, or no named breach:" >&2
+    printf '%s\n' "$out" | tail -2 | sed 's/^/    /' >&2
+  fi
   rm -rf "$fake"
   # A stop just after or before a write, from a hook on the interpreter's path: held until the seal is done.
   hook="$SCRATCH/hook"; rm -rf "$hook"; mkdir -p "$hook"
@@ -1998,7 +2031,7 @@ HOOK
   printf -- '# H\n\n## Task Tree\n\n- ID: `H.1`\n  Status: `done`\n  Goal: a closed subtree, its field pending\n  Commit: `pending`\n\n## Commit Log\n\n| Leaf | Commit | Notes |\n| --- | --- | --- |\n| `H.1` | `ARCHOGEN-H-0001 (leaf H.1)` | closed |\n' > "$work/docs/tasks/H.md"
   commit
   arm "a done leaf whose field reads pending is sealed, and warned of whatever the log holds" 0 "sealed 1 subtree(s), 1 leaves: H.1;" --seal H
-  printf '%s' "$LAST" | grep -qF "warning — H.1 is \`done\` and its Commit field names no commit" ||
+  grep -qF "warning — H.1 is \`done\` and its Commit field names no commit" <<< "$LAST" ||
     { arms=$((arms + 1)); echo "SELF-TEST: a done leaf whose field reads pending was not warned of (review R22 AG2)" >&2; }
   rm -rf "$work/docs/task-history/H"; restore; git -C "$work" rm -q docs/tasks/H.md; commit
   # A sealed file a file-size limit stops as it is written: noted before the write, so the rollback removes what the
@@ -2006,7 +2039,7 @@ HOOK
   printf -- '# L\n\n## Task Tree\n\n- ID: `L`\n  Status: `active`\n  Goal: open\n\n- ID: `L.1`\n  Status: `done`\n  Goal: %s\n  Commit: `ARCHOGEN-L-0001`\n' "$(python3 -c 'print("y" * 20000)')" > "$work/docs/tasks/L.md"
   commit
   limit=16 arm "a sealed file a full disk stops halfway is removed again" 1 "File too large" --seal L
-  printf '%s' "$LAST" | grep -qF "so it was rolled back" && [ ! -e "$work/docs/task-history/L" ] &&
+  grep -qF "so it was rolled back" <<< "$LAST" && [ ! -e "$work/docs/task-history/L" ] &&
     git -C "$work" diff --quiet -- docs/tasks ||
     { arms=$((arms + 1)); echo "SELF-TEST: a sealed file stopped halfway was left behind (review R22 AG1)" >&2; }
   restore; git -C "$work" rm -q docs/tasks/L.md; commit
@@ -2250,6 +2283,8 @@ HOOK
 | `2026-10-03` | `L.1.1` | the child's check, with a `code span` | pass |
 | `2026-10-04` | `L.2.1` | the closed leaf's check | pass |
 | `2026-10-05` | `L.1` and `L.1.1` | a row naming two leaves, which stays | pass |
+| `2026-10-06` | `L.1` (step 2) | a note after the leaf, which goes | pass |
+| `2026-10-07` | `L.1` (with `L.2`) | a note naming a second leaf, which stays | pass |
 
 ## Commit Log
 
@@ -2266,8 +2301,9 @@ HOOK
 MD
   commit
   arm "the census counts no log row before a leaf is sealed" 0 "census: HEAD — 0 byte(s) of log rows naming sealed leaves" --census HEAD
-  arm "the seal moves the log rows of the leaves it seals and of none other" 0 "sealed 2 subtree(s), 3 leaves: L.1 L.2.1; 6 log row(s) in rows-0001.md;" --seal L
+  arm "the seal moves the log rows of the leaves it seals and of none other" 0 "sealed 2 subtree(s), 3 leaves: L.1 L.2.1; 7 log row(s) in rows-0001.md;" --seal L
   grep -q '^| `2026-10-02` | `L.2` | the open subtree' "$work/docs/tasks/L.md" && grep -q '^| `2026-10-05` | `L.1` and `L.1.1` |' "$work/docs/tasks/L.md" &&
+    grep -q '^| `2026-10-07` | `L.1` (with `L.2`) |' "$work/docs/tasks/L.md" && ! grep -q 'a note after the leaf' "$work/docs/tasks/L.md" &&
     grep -q '^| `L.2` | `pending` | open |$' "$work/docs/tasks/L.md" && ! grep -q 'the child'"'"'s check' "$work/docs/tasks/L.md" && ! grep -q '^| `L.1.1` |' "$work/docs/tasks/L.md" ||
     { arms=$((arms + 1)); echo "SELF-TEST: the row seal moved a live row, or left a sealed leaf's row in the tree" >&2; }
   python3 - "$work" <<'PY' || { arms=$((arms + 1)); echo "SELF-TEST: the log-row file is not the form the seal writes" >&2; }
@@ -2277,6 +2313,7 @@ want = ("## Verification Log\n\n| Date | Leaf | Checks | Result |\n| --- | --- |
         "| `2026-10-01` | `L.1` | the subtree's check | pass |\n"
         "| `2026-10-03` | `L.1.1` | the child's check, with a `code span` | pass |\n"
         "| `2026-10-04` | `L.2.1` | the closed leaf's check | pass |\n"
+        "| `2026-10-06` | `L.1` (step 2) | a note after the leaf, which goes | pass |\n"
         "\n## Commit Log\n\n| Leaf | Commit subject or reference | Notes |\n| --- | --- | --- |\n"
         "| `L.1` | `ARCHOGEN-L-0001 (leaf L.1)` | closed |\n"
         "| `L.1.1` | `ARCHOGEN-L-0002 (leaf L.1.1)` | closed |\n"
@@ -2284,15 +2321,15 @@ want = ("## Verification Log\n\n| Date | Leaf | Checks | Result |\n| --- | --- |
 sys.exit(0 if open(w + "/docs/task-history/L/rows-0001.md", encoding="utf-8").read() == want else 1)
 PY
   arm "the sealed tree and its log-row file pass the gate" 0 "1 log-row file(s)"
-  grep -q '^## `L` log rows$' "$work/docs/task-history/INDEX.md" && grep -q '^| `rows-0001` | 6 | 15 | ' "$work/docs/task-history/INDEX.md" ||
+  grep -q '^## `L` log rows$' "$work/docs/task-history/INDEX.md" && grep -q '^| `rows-0001` | 7 | 16 | ' "$work/docs/task-history/INDEX.md" ||
     { arms=$((arms + 1)); echo "SELF-TEST: the index has no log-row table for L, or its row is not the file's" >&2; }
   arm "sealing again moves nothing" 0 "nothing to seal" --seal L
   commit
   printf 'x' >> "$work/docs/task-history/L/rows-0001.md"
   arm "a byte added to a log-row file is refused" 1 "a log-row file changed"
   restore
-  sub docs/task-history/INDEX.md '^(\| `rows-0001` \| )6( \|)' '\g<1>7\2'
-  arm "a log-row file's row count unlike its row's is refused" 1 "holds 6 rows, and its row says 7"
+  sub docs/task-history/INDEX.md '^(\| `rows-0001` \| )7( \|)' '\g<1>8\2'
+  arm "a log-row file's row count unlike its row's is refused" 1 "holds 7 rows, and its row says 8"
   restore
   sub docs/task-history/INDEX.md '^\| `rows-0001` \|.*\n' ''
   arm "a log-row file with no row is refused" 1 "rows-0001.md is in no row of"
@@ -2390,6 +2427,13 @@ PY
     { arms=$((arms + 1)); echo "SELF-TEST: a row parted from its table was sealed" >&2; }
   arm "and the files pass" 0 "5 log-row file(s)"
   commit
+  # A tree file in a sub-folder of docs/tasks/, with a live leaf, is refused, and the tree passes once it is gone
+  # (PROGRAM.72).
+  mkdir -p "$work/docs/tasks/m1"
+  printf -- '# L\n\n## Task Tree\n\n- ID: `L.9`\n  Status: `pending`\n  Goal: a live leaf filed in a sub-folder\n' > "$work/docs/tasks/m1/L.md"
+  arm "a tree file in a sub-folder of docs/tasks/ is refused" 1 "docs/tasks/m1/L.md is a tree file in a sub-folder"
+  rm -rf "$work/docs/tasks/m1"
+  arm "and without it the tree passes" 0 "5 log-row file(s)"
   rm -rf "$work"
   arms=$((arms + 1))
   if bash "$SELF" >/dev/null 2>&1; then ok=$((ok + 1)); echo "  ✅ the real task history passes"

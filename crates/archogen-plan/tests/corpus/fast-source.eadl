@@ -1,0 +1,11 @@
+(eadl-version eadl/1)
+(defblock dev.f
+  (offers (interrupt-source true) (min-arrival-separation 5 ms) (reachable-at-privilege machine)))
+(defplatform soc.f
+  (offers (core-count 1 tick) (reachable-at-privilege machine))
+  (requires (uses dev.f)))
+(defservice fast
+  (requires (needs interrupt-source)))
+(defsystem fs
+  (task s (min-separation 10 ms) (deadline 10 ms) (deadline-from release) (priority 1) (uses fast))
+  (platform (uses soc.f)))

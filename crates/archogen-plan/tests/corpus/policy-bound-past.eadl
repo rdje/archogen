@@ -1,0 +1,11 @@
+(eadl-version eadl/1)
+; A policy's obliged bound past the exact arithmetic: refused, naming the instance and the fact (§1; round 16, D2).
+(defblock timer.d
+  (offers (relative-delay true) (counter-modulus 4294967296) (tick-rate 1 MHz) (observation-coherent true)
+    (channels 1 tick) (reachable-at-privilege machine)))
+(defplatform soc.d (offers (core-count 1 tick) (reachable-at-privilege machine)) (requires (uses timer.d)))
+(defpolicy pol
+  (requires (absolute-deadline (delivery-bound (at-most 0.00000000000000000000000000000000000001 ns)))))
+(defsystem pp
+  (task x (period 25 ms) (deadline 25 ms) (deadline-from release) (priority 1) (uses pol))
+  (platform (uses soc.d)))

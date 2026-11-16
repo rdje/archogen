@@ -1,0 +1,13 @@
+(eadl-version eadl/1)
+; A platform taking an expiry through an exclusive instance, named by two tasks (§2.6; round 25's probe, round
+; 26, R6).
+(defblock timer.d
+  (offers (relative-delay true) (counter-modulus 65536) (tick-rate 1 MHz) (observation-coherent true)
+    (channels 2 tick) (reachable-at-privilege machine)))
+(defplatform soc
+  (offers (core-count 1 tick) (reachable-at-privilege machine))
+  (requires (uses timer.d) (absolute-deadline (delivery-bound (at-most 5 ms)))))
+(defsystem pe
+  (task t (period 10 ms) (deadline 10 ms) (deadline-from release) (priority 1) (uses soc))
+  (task u (period 20 ms) (deadline 20 ms) (deadline-from release) (priority 2) (needs soc))
+  (platform (uses soc)))

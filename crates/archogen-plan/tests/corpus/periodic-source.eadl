@@ -1,0 +1,11 @@
+(eadl-version eadl/1)
+; A periodic task binding an interrupt source itself, a second release model: refused (§1; round 8, R1) until `M1.43`
+; makes the check refuse it.
+(defblock dev.e
+  (offers (interrupt-source true) (min-arrival-separation 20 ms) (reachable-at-privilege machine)))
+(defplatform soc.e
+  (offers (core-count 1 tick) (reachable-at-privilege machine))
+  (requires (uses dev.e)))
+(defsystem ps
+  (task p (period 10 ms) (deadline 10 ms) (deadline-from release) (priority 1) (needs interrupt-source))
+  (platform (uses soc.e)))

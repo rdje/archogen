@@ -57,6 +57,13 @@ apply to code changes.
    adds the doctrine enforcer, every gate's self-test, the book build, the `no_std` build, the
    `wasm32` build and the emulator check. Whether a push is *due* is `bash scripts/push_cadence.sh` (the ruled threshold, and the
    live distance from `origin/main`); a due push still waits for the director's authorization.
+   A push is a **batch**, never a push to `main` (`docs/decisions/decision_main-protection.md` §3): a fresh agent
+   context reviews `origin/main..main` into a summary naming the tip's full hash, then
+   `bash scripts/open_batch.sh open --summary <file>` pushes the tip to a `batch/` branch as the machine account and
+   opens its pull request; a fix for its failing checks joins it by `update`. The director approves and merges it;
+   `bash scripts/open_batch.sh sync` then brings local
+   `main` back in step. Its landing merge, if one is needed, changes no file and begins `BATCH-LANDED`: the one
+   commit whose subject names no work unit.
 
    ⚠️ A tier can exit **20 = incomplete**, which is *not* a pass and *not* a failure: nothing
    broke, and something could not be run. `ROADMAP.md` §14.3 requires that outcome to be visible

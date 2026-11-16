@@ -1,0 +1,12 @@
+(eadl-version eadl/1)
+; Several durations past the exact arithmetic: each named, the tasks in runtime order, then the sources by text (§1;
+; round 12).
+(defblock dev.z (offers (interrupt-source true) (min-arrival-separation 0.00000000000000000000000000000000000001 ns) (reachable-at-privilege machine)))
+(defblock dev.a (offers (interrupt-source true) (min-arrival-separation 0.00000000000000000000000000000000000001 ns) (available-in-state run sleep) (reachable-at-privilege machine)))
+(defplatform soc (offers (core-count 1 tick) (reachable-at-privilege machine)) (requires (uses dev.z dev.a)))
+(defservice evt.z (requires (needs interrupt-source)))
+(defservice evt.a (requires (needs interrupt-source) (available-in-state run sleep)))
+(defsystem po
+  (task a (period 10 ms) (deadline 0.00000000000000000000000000000000000001 ns) (deadline-from release) (priority 2) (uses evt.z))
+  (task b (period 10 ms) (deadline 10 ms) (jitter 0.00000000000000000000000000000000000001 ns) (deadline-from release) (priority 1) (uses evt.a))
+  (platform (uses soc)))

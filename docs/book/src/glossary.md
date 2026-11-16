@@ -40,6 +40,9 @@ as `F26`, task-tree leaves — are names, not words, and are not listed. Histori
   whether interrupts are enabled. See [What this project relies on from outside](ledger.md).
 - **DMA** — Direct Memory Access: a device moving data to or from memory without the processor; excluded from the
   first profile. See [The supported profile](profile.md).
+- **DMPO** — Deadline Monotonic Priority Ordering: priorities given by relative deadline, the shortest first;
+  optimal for pre-emptive fixed priorities with constrained deadlines, and not for non-pre-emptive ones. See [What
+  this project relies on from outside](ledger.md#davis-speedup-factors).
 - **DSP** — Digital Signal Processor: a processor specialised for signal arithmetic. See [What this project relies
   on from outside](ledger.md).
 - **eADL** — Extended Architecture Description Language: the description language archogen reads. *Extended* in
@@ -48,12 +51,17 @@ as `F26`, task-tree leaves — are names, not words, and are not listed. Histori
   boundary](boundary.md) and [Reading a description](reading.md).
 - **EBNF** — Extended Backus–Naur Form: a notation for writing down a language's grammar. See [Verifying the
   toolchain](verification.md).
+- **EDF** — Earliest Deadline First: running the ready job whose absolute deadline is nearest; a dynamic-priority
+  rule this profile does not use. See [What this project relies on from outside](ledger.md#davis-speedup-factors).
 - **EIP** — External Interrupt Pending: the [PLIC specification](ledger.md#riscv-plic)'s name for the pending bit it
   raises at a hart.
 - **ELF** — Executable and Linkable Format: the object-file format Linux and bare-metal toolchains use, where each
   function may sit in a section of its own; macOS uses Mach-O instead. See [Verifying the toolchain](verification.md).
 - **EOF** — End Of File: the point past a file's or a stream's last byte; a record cut off there is malformed.
   See [Trust proofs](annex-trust-proofs.md#dependency-path-domain-repair-commit-note-routing).
+- **FP-NP** — Fixed Priority, Non-Pre-emptive: fixed priorities, each job running to its end once started; how this
+  profile serves interrupts, which do not nest. See [What this project relies on from
+  outside](ledger.md#davis-speedup-factors).
 - **GB**, **KB**, **MB** — gigabyte, kilobyte, megabyte, in this book's prose; the language's own units are the
   binary `KiB` and `MiB`. See [Quantities and units](quantities.md).
 - **GNU** — the GNU project ("GNU's Not Unix"): here, the flavour of the standard command-line tools a Linux runner
@@ -125,6 +133,7 @@ as `F26`, task-tree leaves — are names, not words, and are not listed. Histori
 - **RP2350** — the microcontroller on the Raspberry Pi Pico 2, with RISC-V cores beside its Arm ones: a part number,
   not an acronym. See [Where generated systems run](targets.md) and [its datasheet's ledger entry](ledger.md#rp2350).
 - **RUSTC** — the Cargo environment variable selecting the Rust compiler program; the provenance collector sets it to `rustc`. See [the pinned toolchain](ledger.md#rust-toolchain) and [the historical records](annex-trust-proofs.md#historical-trust-helper-and-controller-commit-records).
+- **RV32** — 32-bit RISC-V. See [What this project relies on from outside](ledger.md#riscv-privileged).
 - **RV32IMAC** — 32-bit RISC-V with the integer base (`I`), multiply and divide (`M`), atomic instructions (`A`) and
   compressed instructions (`C`): the letters name the instruction-set extensions a core implements. See [Where
   generated systems run](targets.md).
@@ -175,6 +184,8 @@ as `F26`, task-tree leaves — are names, not words, and are not listed. Histori
   catalog, application and plan parts. See [What the scheduling checker establishes](analysis.md).
 - **deadline** — how long after its release a task's work must be finished. See [Describing a workload](workload.md).
 - **description** — a text in eADL saying what a system must do, never how. See [Reading a description](reading.md).
+- **fan-out** — how many entries one folder of the repository's records may list, its files and its sub-folders
+  together; past it, a subject takes a sub-folder of its own. See [The repository annex](annex-repository.md#where-the-landing-page-sends-things).
 - **fault** — something gone wrong that the runtime must answer: an overrun, a stack overflow, an unexpected trap or
   a failed check. See [The runtime](runtime.md).
 - **generated source** — a file committed as a program's or a script's output, such as a table written from a data
@@ -200,6 +211,10 @@ as `F26`, task-tree leaves — are names, not words, and are not listed. Histori
 - **provider** — a block or a platform of a description, whose offers a requirement may be met by. See [Matching an
   offer to a requirement](matching.md).
 - **release** — the moment a task's next round of work becomes due. See [Describing a workload](workload.md).
+- **runaway guard** — a limit on a folder's total size, far above its honest growth: it is not a budget to plan
+  against. Three quarters of it asks the director for a ruling, and one commit may grow the folder by only a
+  sixty-fourth of it, so a mistake is refused when it is made. See [The repository
+  annex](annex-repository.md#where-the-landing-page-sends-things).
 - **runtime** — the code inside every generated system that decides which task runs next and what to do when
   something goes wrong. See [The runtime](runtime.md).
 - **shared item** — anything two checked programs both use — a package, a file, a generated source's provenance —

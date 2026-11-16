@@ -1,0 +1,13 @@
+(eadl-version eadl/1)
+; A sporadic task reaching an alarm and no source: no source's route reaches it, so its trigger is unknown and owed
+; (§2.2; round 8).
+(defblock timer.d
+  (offers (relative-delay true) (channels 1 tick) (reachable-at-privilege machine)))
+(defplatform soc
+  (offers (core-count 1 tick) (reachable-at-privilege machine))
+  (requires (uses timer.d)))
+(defservice alarm
+  (requires (needs relative-delay)))
+(defsystem sa
+  (task s (min-separation 10 ms) (deadline 10 ms) (deadline-from release) (priority 1) (uses alarm))
+  (platform (uses soc)))

@@ -1,0 +1,11 @@
+(eadl-version eadl/1)
+; A block requiring an interrupt source that nothing binds to: a node, its handler run in the source's interrupt
+; (§2.6; round 12, D1).
+; It offers what the system asks, so it may be bound and its needs are the search's (`M3.4.17.6`).
+(defblock dev.e (offers (interrupt-source true) (min-arrival-separation 20 ms) (reachable-at-privilege machine)))
+(defblock nic (offers debug-port (reachable-at-privilege machine)) (requires (needs interrupt-source)))
+(defplatform soc (offers (core-count 1 tick) (reachable-at-privilege machine)) (requires (uses dev.e nic)))
+(defsystem bn
+  (task a (period 10 ms) (deadline 10 ms) (deadline-from release) (priority 1))
+  (requires (needs debug-port))
+  (platform (uses soc)))

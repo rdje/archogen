@@ -1,21 +1,23 @@
-//! `archogen-provenance/1`'s shape cannot change without its identifier moving (leaf `PROGRAM.6.3`, `ROADMAP.md` §15).
+//! A build provenance's shape cannot change without its identifier moving (leaf `PROGRAM.6.3`, `ROADMAP.md` §15).
 //!
 //! A consumer that meets an identifier it does not know must refuse rather than guess (the provenance's `FORMAT` constant says so), so
-//! the identifier is the promise: every artifact labelled `archogen-provenance/1` has one shape. This builds the
-//! S0 base fixture, reads the provenance it writes, and freezes its **shape** — every key path with the kind of
+//! the identifier is the promise: every artifact labelled `archogen-build-provenance/1` has one shape. This builds
+//! the heartbeat, reads the provenance it writes, and freezes its **shape** — every key path with the kind of
 //! value at it — in a golden named after the identifier. The values change with the description and are not
 //! frozen; a key added, removed, renamed or re-typed is a new shape. The golden for an identifier is **never
 //! rewritten**: a shape change fails here until `FORMAT` moves, and the new identifier gets its golden only
 //! deliberately (`ARCHOGEN_BLESS_FORMATS=1 cargo test -p archogen-cli --test format_golden`).
 //!
-//! ⛔ Deliberately not a JSON parser, as in `s0_provenance.rs`: a lexer that walks strings, numbers and brackets and
+//! ⛔ Deliberately not a JSON parser: a lexer that walks strings, numbers and brackets and
 //! keeps a stack of the keys it is inside. The set of key paths does not depend on how many records a build has.
+
+mod common;
 
 use std::collections::BTreeSet;
 use std::fs;
 use std::path::{Path, PathBuf};
 
-use archogen_cli::{run, Status};
+use archogen_cli::Status;
 
 fn repo_root() -> PathBuf {
     Path::new(env!("CARGO_MANIFEST_DIR"))
@@ -130,24 +132,19 @@ fn the_shape_of_the_provenance_format_is_frozen_under_its_identifier() {
     let dir = Path::new(env!("CARGO_TARGET_TMPDIR")).join("format-golden");
     let _ = fs::remove_dir_all(&dir);
     let source = repo_root().join("examples/s0-heartbeat/system.eadl");
-    let mut out: Vec<u8> = Vec::new();
-    let mut err: Vec<u8> = Vec::new();
-    let status = run(
-        [
+    let (status, _, err) = common::invoke(
+        &[
             "build",
             &source.display().to_string(),
             "--out",
             &dir.display().to_string(),
-        ]
-        .map(String::from),
-        &mut out,
-        &mut err,
+        ],
+        &common::Checker,
     );
-    assert_eq!(status, Status::Ok, "{}", String::from_utf8_lossy(&err));
+    assert_eq!(status, Status::Ok, "{err}");
     let text =
         fs::read_to_string(dir.join("provenance.json")).expect("the build writes provenance.json");
-    // The identifier is read from the artifact, which carries it — not imported from the S0 prototype, which
-    // `S0-RETIREMENT` keeps free of new consumers. What is pinned is what the artifact says about itself.
+    // The identifier is read from the artifact, which carries it. What is pinned is what the artifact says about itself.
     let identifier = text
         .lines()
         .find_map(|line| line.trim().strip_prefix("\"format\": \""))
