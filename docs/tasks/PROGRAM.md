@@ -1095,15 +1095,30 @@ mdBook that is the director's window into the project.
   Commit: `ARCHOGEN-PROGRAM-1381 (leaf PROGRAM.148)`
 
 - ID: `PROGRAM.149`
-  Status: `in_progress` — `2026-11-16`: the director said yes to the batch, "Yes to both decisions", the other being the cargo ruling (`decision_findings-for-director-review.md` §20). `bash scripts/push_cadence.sh` → exit 3, `PUSH DUE — 407 commit(s) ahead of origin/main, at or past the ruled threshold of 400`, before this leaf's filing commit joined them.
+  Status: `done` — `2026-11-16`: the batch is pull request [#1](https://github.com/rdje/archogen/pull/1), `batch/2026-11-16-10861334` at `108613340046b1cfebafaf6ed4779a8dd315c417`, 409 commits, opened by `rdje-bot`; the director said yes, "Yes to both decisions", the other being the cargo ruling (`decision_findings-for-director-review.md` §20). Its landing is `PROGRAM.151`'s.
   Goal: the batch sent as `docs/decisions/decision_main-protection.md` §3 says: `make integration` read at its tip, as the cadence asks; a fresh agent context's review of `origin/main..main`, naming the tip by its full hash; then `bash scripts/open_batch.sh open --summary <file>`, one pull request into `main` from the machine account, for the director to approve and merge.
   Acceptance:
-    - [ ] ROOT CAUSE — WHY: local `main` is past the ruled threshold, and the director has said yes; WHERE, `origin/main` at `34b6abeb`.
-    - [ ] FIX — the tip pushed to `batch/<date>-<the tip's first 8 hex digits>` on `agent`, and its pull request opened by `scripts/open_batch.sh`.
-    - [ ] ADDRESSED — `make integration` at the tip → `tier integration: passed`; the summary naming the tip's full hash; the pull request's URL.
-    - [ ] NO REGRESSION — nothing pushed to `main`; the director approves and merges in the web interface; `bash scripts/open_batch.sh sync` once it lands.
-    - [ ] LOCKSTEP — this leaf, the Commit Log and `MEMORY.md`; the closing commit goes to the next batch.
-  Commit: `ARCHOGEN-PROGRAM-1388 (leaf PROGRAM.149)` files it.
+    - [x] ROOT CAUSE — WHY: local `main` past the ruled threshold, and the director's yes; WHERE, `origin/main` at `34b6abeb`; `bash scripts/push_cadence.sh` → exit 3, `PUSH DUE — 407 commit(s) ahead of origin/main, at or past the ruled threshold of 400`, before this leaf's filing commit and the ruling's joined them.
+    - [x] FIX — `bash scripts/open_batch.sh open --summary target/batches/summary-10861334.md` → `open-batch: opened https://github.com/rdje/archogen/pull/1 — batch/2026-11-16-10861334 at 108613340046b1cfebafaf6ed4779a8dd315c417; the director approves and merges it`, after its `--dry-run` → exit 0; `gh pr view 1` → author `rdje-bot`, base `main`, state `OPEN`, its checks running.
+    - [x] ADDRESSED — `make integration` at the tip → `tier integration: passed — 14 passed, 0 failed, 0 unavailable, 0 not built, 0 quarantined`, its stamp `6ce4d8376b01479a7866d4081572a26c22220223`, `git rev-parse HEAD^{tree}` at the tip, the first try (`target/p149/integration.log`); the summary a fresh agent context's, naming the tip by its full hash, saved by the lead since the harness refuses a subagent's report files, its findings each checked under "From the lead" (`target/batches/summary-10861334.md`).
+    - [x] NO REGRESSION — nothing pushed to `main`, the push a branch on `agent` alone; the reviewer read nothing under `docs/evaluation/` and ran no `git show` older than `origin/main`, by its own account; the findings it confirmed are `PROGRAM.150`'s, for the next batch, so that a push to this one dismisses no approval.
+    - [x] LOCKSTEP — this leaf, `PROGRAM.150` and `PROGRAM.151` filed, the Commit Log, the frontier, the index, the live status and `MEMORY.md`.
+  Commit: `ARCHOGEN-PROGRAM-1388 (leaf PROGRAM.149)` filed it; `ARCHOGEN-PROGRAM-1389 (leaf PROGRAM.149)` closes it.
+
+- ID: `PROGRAM.150`
+  Status: `pending` — filed `2026-11-16` by `PROGRAM.149`, from the batch review's findings the lead confirmed (`target/batches/summary-10861334.md`, "From the lead").
+  Goal: each confirmed finding fixed at its root:
+    - `docs/decisions/decision_programmatic-interface.md:120-123` says only `check` is built, `build` over S0 and `resolve` and `explain` unimplemented, which `M4.2.4`, `M3.4.4` and `M3.4.13` made untrue;
+    - `explain`'s maturity, `crates/archogen-cli/src/spec.rs:380`, and `crates/archogen-cli/src/explain_cmd.rs:20` say it searches "a description's own blocks and platforms", where `--target` has added a target's since `M4.1.7.5.3`, and `docs/book/src/cli.md:41` and `:244` print it;
+    - `crates/archogen-transport/src/ceiling.rs`'s `alloc`, `alloc_zeroed` and `realloc` count before `System` answers, and keep the count when it answers null, so a fallible allocation that fails holds the ceiling lower than it is, erring safe;
+    - `scripts/selftest_host_guard.py:2243` holds this host's absolute path in a command string the classifier is tested on, where a neutral one tests the same;
+    - `docs/decisions/decision_host-guard.md:64` rests on Claude Code's `onFailure`, which its hooks reference documents from v2.1.295, and no ledger entry says so.
+  Acceptance: each item's root cause, fix and evidence in this leaf's checklist; `make focused`; the trust inventory where root code moves; the guard's self-test where it moves.
+
+- ID: `PROGRAM.151`
+  Status: `blocked` — on the director: pull request [#1](https://github.com/rdje/archogen/pull/1)'s checks, approval and merge. Filed `2026-11-16` by `PROGRAM.149`.
+  Goal: once the batch merges, `bash scripts/open_batch.sh sync` brings local `main` back in step, its merge changing no file (`decision_main-protection.md` §3, step 6); a failing check fixed on local `main` and added by `bash scripts/open_batch.sh update --summary <file>` first.
+  Acceptance: `bash scripts/open_batch.sh sync` → exit 0; `git merge-base --is-ancestor origin/main HEAD`; `bash scripts/push_cadence.sh` counting from the merge.
 
 ## Roadmap coverage map
 
@@ -1170,10 +1185,11 @@ roadmap item X live?".
 
 | Order | Leaf | Status | Why next |
 | --- | --- | --- | --- |
-| 1 | `PROGRAM.149` | `in_progress` | the director said yes `2026-11-16` to the 407-commit batch: the tier at its tip, a fresh review, the pull request |
-| 2 | `PROGRAM.34` | `pending` | **low, awaiting the director** — nine repositories nested in `vendor/linkedspec` are off their recorded commits since the `2026-09-27` adoption, and `REPOSITORY-BOUNDARY` sees only the first level; the restore discards third-party working trees, so it waits for a yes |
+| 1 | `PROGRAM.150` | `pending` | the batch review's confirmed findings, for the next batch |
+| 2 | `PROGRAM.151` | `blocked` | the batch, pull request #1, waits on its checks and the director's approval and merge; then `sync` |
+| 3 | `PROGRAM.34` | `pending` | **low, awaiting the director** — nine repositories nested in `vendor/linkedspec` are off their recorded commits since the `2026-09-27` adoption, and `REPOSITORY-BOUNDARY` sees only the first level; the restore discards third-party working trees, so it waits for a yes |
 
-The PROGRAM.149 row is the batch, and the PROGRAM.34 row waits on the director's yes. The other open leaf, `PROGRAM.78`, is blocked until the
+The PROGRAM.151 row is the batch's landing, and the PROGRAM.34 row waits on the director's yes. The other open leaf, `PROGRAM.78`, is blocked until the
 features are complete, by the ruling against mutation testing. Every closed
 leaf's outcome is its row in the Commit Log below, and a sealed leaf's full record is under `docs/task-history/PROGRAM/`.
 
@@ -1271,6 +1287,7 @@ leaf's outcome is its row in the Commit Log below, and a sealed leaf's full reco
 | `PROGRAM.147` | `ARCHOGEN-PROGRAM-1380 (leaf PROGRAM.147)` | **the 400-commit batch's integration tier**: five drifts inside the batch fixed, three failures and two links behind the first. |
 | `PROGRAM.148` | `ARCHOGEN-PROGRAM-1381 (leaf PROGRAM.148)` | **the twenty-ninth artifact cleanup**: `target/` from 36.9 GB to 22.9 GB, build output and test scratch alone. |
 | `PROGRAM.149` | `ARCHOGEN-PROGRAM-1388 (leaf PROGRAM.149)` | **the batch filed**: the director's yes; the tier and a fresh review at its tip, then its pull request. |
+| `PROGRAM.149` | `ARCHOGEN-PROGRAM-1389 (leaf PROGRAM.149)` | **the batch opened**, pull request #1, 409 commits at `10861334`, the integration tier passed at its tip; the review's confirmed findings filed as `PROGRAM.150`, the landing as `PROGRAM.151`. |
 
 ## Changelog
 
@@ -1403,3 +1420,4 @@ leaf's outcome is its row in the Commit Log below, and a sealed leaf's full reco
 - `2026-11-16`: `PROGRAM.147` done: the batch's integration failures fixed, `book`, `plan-check-wasm` and `resolve-installed`.
 - `2026-11-16`: `PROGRAM.148` done: the twenty-ninth artifact cleanup, `target/` from 36.9 GB to 22.9 GB.
 - `2026-11-16`: `PROGRAM.149` filed: the director's yes to the batch; the tier and a fresh review at its tip, then its pull request.
+- `2026-11-16`: `PROGRAM.149` done: the batch is pull request #1; `PROGRAM.150` filed for the review's findings, `PROGRAM.151` for the landing.
