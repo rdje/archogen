@@ -1094,6 +1094,17 @@ mdBook that is the director's window into the project.
   Verification: the census, the removal report, the sizes before and after.
   Commit: `ARCHOGEN-PROGRAM-1381 (leaf PROGRAM.148)`
 
+- ID: `PROGRAM.149`
+  Status: `in_progress` — `2026-11-16`: the director said yes to the batch, "Yes to both decisions", the other being the cargo ruling (`decision_findings-for-director-review.md` §20). `bash scripts/push_cadence.sh` → exit 3, `PUSH DUE — 407 commit(s) ahead of origin/main, at or past the ruled threshold of 400`, before this leaf's filing commit joined them.
+  Goal: the batch sent as `docs/decisions/decision_main-protection.md` §3 says: `make integration` read at its tip, as the cadence asks; a fresh agent context's review of `origin/main..main`, naming the tip by its full hash; then `bash scripts/open_batch.sh open --summary <file>`, one pull request into `main` from the machine account, for the director to approve and merge.
+  Acceptance:
+    - [ ] ROOT CAUSE — WHY: local `main` is past the ruled threshold, and the director has said yes; WHERE, `origin/main` at `34b6abeb`.
+    - [ ] FIX — the tip pushed to `batch/<date>-<the tip's first 8 hex digits>` on `agent`, and its pull request opened by `scripts/open_batch.sh`.
+    - [ ] ADDRESSED — `make integration` at the tip → `tier integration: passed`; the summary naming the tip's full hash; the pull request's URL.
+    - [ ] NO REGRESSION — nothing pushed to `main`; the director approves and merges in the web interface; `bash scripts/open_batch.sh sync` once it lands.
+    - [ ] LOCKSTEP — this leaf, the Commit Log and `MEMORY.md`; the closing commit goes to the next batch.
+  Commit: `ARCHOGEN-PROGRAM-1388 (leaf PROGRAM.149)` files it.
+
 ## Roadmap coverage map
 
 Every roadmap unit has exactly one owning tree. This table is the answer to "where does
@@ -1159,9 +1170,10 @@ roadmap item X live?".
 
 | Order | Leaf | Status | Why next |
 | --- | --- | --- | --- |
-| 1 | `PROGRAM.34` | `pending` | **low, awaiting the director** — nine repositories nested in `vendor/linkedspec` are off their recorded commits since the `2026-09-27` adoption, and `REPOSITORY-BOUNDARY` sees only the first level; the restore discards third-party working trees, so it waits for a yes |
+| 1 | `PROGRAM.149` | `in_progress` | the director said yes `2026-11-16` to the 407-commit batch: the tier at its tip, a fresh review, the pull request |
+| 2 | `PROGRAM.34` | `pending` | **low, awaiting the director** — nine repositories nested in `vendor/linkedspec` are off their recorded commits since the `2026-09-27` adoption, and `REPOSITORY-BOUNDARY` sees only the first level; the restore discards third-party working trees, so it waits for a yes |
 
-The PROGRAM.34 row waits on the director's yes. The other open leaf, `PROGRAM.78`, is blocked until the
+The PROGRAM.149 row is the batch, and the PROGRAM.34 row waits on the director's yes. The other open leaf, `PROGRAM.78`, is blocked until the
 features are complete, by the ruling against mutation testing. Every closed
 leaf's outcome is its row in the Commit Log below, and a sealed leaf's full record is under `docs/task-history/PROGRAM/`.
 
@@ -1258,6 +1270,7 @@ leaf's outcome is its row in the Commit Log below, and a sealed leaf's full reco
 | `PROGRAM.146` | `ARCHOGEN-PROGRAM-1361 (leaf PROGRAM.146)` | **the M4 tree sealed again**, `M4.1.7.3` and `M4.1.7.4` with their leaves, so `docs/tasks/` is under its ceiling. |
 | `PROGRAM.147` | `ARCHOGEN-PROGRAM-1380 (leaf PROGRAM.147)` | **the 400-commit batch's integration tier**: five drifts inside the batch fixed, three failures and two links behind the first. |
 | `PROGRAM.148` | `ARCHOGEN-PROGRAM-1381 (leaf PROGRAM.148)` | **the twenty-ninth artifact cleanup**: `target/` from 36.9 GB to 22.9 GB, build output and test scratch alone. |
+| `PROGRAM.149` | `ARCHOGEN-PROGRAM-1388 (leaf PROGRAM.149)` | **the batch filed**: the director's yes; the tier and a fresh review at its tip, then its pull request. |
 
 ## Changelog
 
@@ -1389,3 +1402,4 @@ leaf's outcome is its row in the Commit Log below, and a sealed leaf's full reco
 - `2026-11-15`: `PROGRAM.145` done: the twenty-eighth artifact cleanup, `target/` from 46.1 GB to 20.2 GB, build output and test scratch alone.
 - `2026-11-16`: `PROGRAM.147` done: the batch's integration failures fixed, `book`, `plan-check-wasm` and `resolve-installed`.
 - `2026-11-16`: `PROGRAM.148` done: the twenty-ninth artifact cleanup, `target/` from 36.9 GB to 22.9 GB.
+- `2026-11-16`: `PROGRAM.149` filed: the director's yes to the batch; the tier and a fresh review at its tip, then its pull request.
