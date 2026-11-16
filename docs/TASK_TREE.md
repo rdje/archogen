@@ -60,7 +60,7 @@ roadmap-unit → tree mapping and the F01–F30 fixture-ownership map live in
 | [`M0`](tasks/M0.md) | `done` | — all seven leaves closed; F27 green | repo-local |
 | [`M2`](tasks/M2.md) | `active` | `M2.7.4` — the catalog's gate, `.1`–`.4` done; `.5`, the records and the lock, and `M2.7.6`'s review and hosting half, wait on the director; `M2.21`, `archogen analyze`'s shape, ruled (findings §16) and taken from `M3.5.1` | repo-local |
 | [`M3`](tasks/M3.md) | `active` | `M3.5` — the independent checker, F12; `M3.3`'s joint constraints closed `2026-10-22`; `M3.6`'s mutation adequacy `.9` postponed by the director `2026-10-21` until the functionality is locked | repo-local |
-| [`M4`](tasks/M4.md) | `active` | `M4.1` — the typed runtime/build plan, its design `decision_runtime-plan.md` accepted `2026-10-29`; the model's amendments done (`M4.1.2`); `M4.2.3.3` next, the hosted build's review; `archogen build` on the plan done (`M4.2.3.1`) | repo-local |
+| [`M4`](tasks/M4.md) | `active` | `M4.13` — the build of the application's inputs, ruled to run cargo `2026-11-16`; `M4.13.1` next, its design record; `M4.1`'s format `/2` written and read, `M4.1.7.6.10` waiting on `M4.2` and `M4.10` | repo-local |
 | [`M5`](tasks/M5.md) | `blocked` | — **no board procured** (`M0.5`, 2026-09-13) | repo-local |
 | [`M6`](tasks/M6.md) | `pending` | `M6.1` — three materially different systems | repo-local |
 | [`M7`](tasks/M7.md) | `pending` | `M7.4` — the F01–F30 mandatory-case audit | repo-local |

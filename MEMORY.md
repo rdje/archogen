@@ -13,16 +13,17 @@
 ## Current state
 
 - **Project:** archogen — the eADL → OS generation toolchain (`ROADMAP.md` revision 2.0).
-- **Active tree:** `M4` → frontier `M4.1`, the accepted runtime plan, the model's amendments done (`M4.1.2`): `/1` for
-  the hosted playground; `PROGRAM` → `PROGRAM.34`, the director's.
+- **Active tree:** `M4` → frontier `M4.13`, the build of the application's inputs; `M4.1`'s `/2` written and read,
+  `M4.1.7.6.10` waiting on `M4.2` and `M4.10`; `PROGRAM` → `PROGRAM.149`, the batch.
 - **The host is shared:** every heavy job goes through `scripts/host_guard.py`, one at a time (`docs/decisions/decision_host-guard.md`). A reader's brief says so.
-- **Next action:** two rulings asked of the director: the 400-commit batch (integration passed at `6e128b2b`), and
-  whether `archogen build` may run cargo (`M4.13.6`), which `M4.13`'s design and compiling half wait on. Closed reviews: format `/2`'s
+- **Next action:** the director said yes to both rulings `2026-11-16`: the batch is opened by `PROGRAM.149` (the
+  integration tier at its tip, a fresh agent's review, `scripts/open_batch.sh open`), then `M4.13.1`, the design record of
+  a build that runs cargo (`decision_findings-for-director-review.md` §20). Closed reviews: format `/2`'s
   (`M4.1.7.2`, round 39), the application inputs' (`M4.12.1`, round 20) and the host guard's (`PROGRAM.127`, round 49).
   Daily artifact cleanup next due after `2026-11-17T01:21` UTC.
 - **⏳ Blockers (the director's):** `PROGRAM.34` — a yes to restore nine nested vendored checkouts; `M1.29.4` — §7 of
   `decision_findings-for-director-review.md`; `M5` — no board procured; `M2.7.4.5` — the catalog records; `M2.7.6.4` — the director's review round;
-  `M4.13.6` — may the build run cargo; `TEMPLATE-REFS` — postponed. **The 17 template files archogen has not changed are never edited** (findings §10,
+  `TEMPLATE-REFS` — postponed. **The 17 template files archogen has not changed are never edited** (findings §10,
   ruled `2026-09-30`); every other script is archogen's.
 - **Derive, don't copy:** the test baseline is `cargo test --all -q` (must be 0 failed); the push distance
   and the ruled threshold are `bash scripts/push_cadence.sh`; the integration tier is

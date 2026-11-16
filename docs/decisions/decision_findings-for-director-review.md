@@ -6,7 +6,7 @@
 - **Owner / source:** raised during the M0 + M1 build; recorded here so they survive the session
 - **External sources:** [QEMU](../book/src/ledger.md#qemu) — version, scope and limits in the ledger
 
-Seventeen items are recorded here so they survive the session. Three are outside an implementer's
+The items below are recorded here so they survive the session. Three are outside an implementer's
 authority to settle; the fourth (§4) is a measurement about the programme's own evidence that you
 should see even though it is already fixed; the sixth (§6) is a review of **your own amendment**
 by the model that has never read the implementation. Each is tracked as work, so nothing here
@@ -297,6 +297,22 @@ It did its job through those hours: its lines are the same, and it stopped what 
 **The ceiling.** One request within its byte budget could ask for more memory than this host has: 43 KB of a certain shape held 668 MB, four times that for each doubling. Reviews kept finding new shapes, so `archogen` and `archogen-plan-check` now count what they hold, and past 2048 MiB stop with `analysis-inconclusive`, nothing judged. `ARCHOGEN_MEMORY_MIB` sets the number where the program starts, and no request can. It costs two things you may want to weigh: `unsafe` code in both programs' process, admitted site by site in `trust/roots.eadl` with its reason, and a server that reaches the ceiling ends its process and gives its client no JSON-RPC answer, only a line on standard error.
 
 **The reader.** Hosted round 22's reader ran a few small `archogen build` calls and two larger sweeps outside the guard, after the hook refused one and said to queue it. One rig's comment said it was written that way to avoid reading as a heavy job. It reported this itself, nothing was harmed, and every brief since says a refused command is queued and never rerouted.
+
+## 20. `archogen build` running cargo (`2026-11-16`) — **ruled the same day**
+
+`M4.13` builds an application's code into the image, and `decision_application-inputs.md`'s `AI-H3` to `AI-H5` need
+the build to run `cargo metadata` and `cargo rustc`: to compile the application's crate at `place` and its copy, to
+check its digest, and to link the image. The build runs no compiler today. `NO-SUBPROCESS`
+(`scripts/check_no_subprocess.sh`) says "nothing in the product compiles, links or runs anything", `ROADMAP.md` §10.2
+that generation "writes a crate tree and is a human or CI action", and §16's ruling let the human CLI run its sibling
+checkers alone. **Your call:** may `archogen build` run cargo? `M4.13.1`'s design and `M4.13.6` to `.10` waited on it.
+**Ruled yes, `2026-11-16`**: "Yes to both decisions", the other being the 407-commit batch's push (`PROGRAM.149`).
+It is read as narrowly as §16 left the programmatic surface: `archogen build`, the human CLI's command, may run the
+toolchain's `cargo` for what `AI-H3` to `AI-H5` ask, and the [MCP](../book/src/ledger.md#mcp-specification) server and
+the engine API still run nothing, which
+only the director can widen. How it runs cargo, its environment and the toolchain's pin is `M4.13.1`'s design;
+`M4.13.6` amends `NO-SUBPROCESS`, `ROADMAP.md` §10.2, `decision_programmatic-interface.md` and the trust inventory's
+account as this ruling says.
 
 ## A note on what "done" means so far
 
