@@ -28,12 +28,14 @@ jobs:
     steps:
       # The commit the hosting made for this run: github.sha is the merge branch's last merge commit for a
       # pull_request event and the merge group's for merge_group — never the event payload's merge_commit_sha,
-      # which can be null or stale (review round 1, V4). A SHA, never text a pull request wrote.
+      # which can be null or stale (review round 1, V4). A SHA, never text a pull request wrote. The whole history:
+      # the checker refuses a shallow repository, whose boundary would be a false ledgering commit of every line
+      # (xtask/src/catalog_check.rs, premise 2), which two commits deep is (leaf PROGRAM.151.2).
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0, what v4 resolved to on 2026-09-30
         with:
           ref: ${{ github.sha }}
           path: judged
-          fetch-depth: 2
+          fetch-depth: 0
           persist-credentials: false
       - name: Check out the base beside the judged commit
         run: |

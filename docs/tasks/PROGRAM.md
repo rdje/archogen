@@ -1139,8 +1139,15 @@ mdBook that is the director's window into the project.
   Commit: `ARCHOGEN-PROGRAM-1391 (leaf PROGRAM.151.1)`
 
 - ID: `PROGRAM.151.2`
-  Status: `pending` — `.github/workflows/catalog-check.yml` checks the judged merge out two commits deep (`M2.7.6.3`, `2026-10-01`), and the checker refuses a shallow repository since `M2.7.4.2` (`2026-10-03`): no pull request ran between.
+  Status: `done` — `2026-11-16`: the catalog check's workflow checks out the whole history. Its run is the runner's, on the pull request's next push.
   Goal: the whole history checked out, as the trust gate's workflow does.
+  Acceptance:
+    - [x] ROOT CAUSE — WHY: `.github/workflows/catalog-check.yml` at `fac8754e` checked the judged merge out with `fetch-depth: 2` (`M2.7.6.3`, `2026-10-01`), and `xtask/src/catalog_check.rs:230` refuses a repository `git rev-parse --is-shallow-repository` calls shallow since `M2.7.4.2` (`2026-10-03`); the workflow runs on pull requests and merge groups alone, and PR #1 is the first; WHERE, the runner's job → `catalog-check: could not judge: the repository is shallow: a shallow boundary would be a false ledgering commit of every line (§4)`, `exit 2` (`target/p151/ci/catalog.log`).
+    - [x] FIX — `fetch-depth: 0`, its comment saying why; the base is still cloned from the judged checkout, so it holds the whole history too, and nothing run from either moves.
+    - [x] ADDRESSED — `grep -n 'fetch-depth' .github/workflows/*.yml` → `fetch-depth: 0` at each of its four lines, `catalog-check.yml:38`, `doctrines.yml:18`, `rust.yml:38` and `trust-gate.yml:39`; the check's own run is the runner's, read into `PROGRAM.151`.
+    - [x] NO REGRESSION — no file a check reads but the workflow; `make focused` on the staged tree, the commit's gate.
+    - [x] LOCKSTEP — the workflow's comment, this leaf, the Commit Log.
+  Commit: `ARCHOGEN-PROGRAM-1392 (leaf PROGRAM.151.2)`
 
 - ID: `PROGRAM.151.3`
   Status: `pending` — the batch gave `crates/archogen-cli`, `crates/archogen-emit` and `crates/archogen-plan` a development edge to `crates/archogen-plan-check`, so 51 test units compile both roles' packages with no form in `trust/roots.eadl`; the local inventory marks each `trust-unclassified-program` and refuses none (`target/p151/formless-units.json`).
@@ -1323,6 +1330,7 @@ leaf's outcome is its row in the Commit Log below, and a sealed leaf's full reco
 | `PROGRAM.149` | `ARCHOGEN-PROGRAM-1389 (leaf PROGRAM.149)` | **the batch opened**, pull request #1, 409 commits at `10861334`, the integration tier passed at its tip; the review's confirmed findings filed as `PROGRAM.150`, the landing as `PROGRAM.151`. |
 | `PROGRAM.150` | `ARCHOGEN-PROGRAM-1390 (leaf PROGRAM.150)` | **the batch review's findings fixed**: the surface's record, `explain`'s scope, the allocator's count after a null, a host path in a test string, the hook's ledger entry. |
 | `PROGRAM.151.1`, `PROGRAM.151` | `ARCHOGEN-PROGRAM-1391 (leaf PROGRAM.151.1)` | **the launcher on Linux runs what it hashed through the front's own `/proc` entry**, which a script's interpreter can open; `PROGRAM.151` split by root cause. |
+| `PROGRAM.151.2` | `ARCHOGEN-PROGRAM-1392 (leaf PROGRAM.151.2)` | **the catalog check's workflow checks out the whole history**, which its checker requires and two commits deep was not. |
 
 ## Changelog
 
@@ -1458,3 +1466,4 @@ leaf's outcome is its row in the Commit Log below, and a sealed leaf's full reco
 - `2026-11-16`: `PROGRAM.149` done: the batch is pull request #1; `PROGRAM.150` filed for the review's findings, `PROGRAM.151` for the landing.
 - `2026-11-16`: `PROGRAM.150` done: the review's findings fixed; it joins pull request #1, whose required checks failed on the runner.
 - `2026-11-16`: `PROGRAM.151` split into five leaves by root cause; `PROGRAM.151.1` done: the launcher on Linux names its descriptor under the front's own `/proc` entry.
+- `2026-11-16`: `PROGRAM.151.2` done: the catalog check's workflow checks out the whole history.
