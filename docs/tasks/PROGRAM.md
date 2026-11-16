@@ -1082,6 +1082,18 @@ mdBook that is the director's window into the project.
     - [x] LOCKSTEP — this leaf and the Commit Log; no chapter describes these lines.
   Commit: `ARCHOGEN-PROGRAM-1380 (leaf PROGRAM.147)`
 
+- ID: `PROGRAM.148`
+  Status: `done` — the twenty-ninth daily artifact cleanup; the record's last run `2026-11-15T00:08:35+00:00`, over 24 h old at `2026-11-16T01:18Z`.
+  Goal: remove from `target/` what is regenerable and idle, as `PROGRAM.145` did, every nested cargo target directory in a leaf's or a reader's folder and every directory a test run left in the scratch `TMPDIR` and the trust tests' scratch, each open by no process; keep the main build, every store, the guard's state and every report, brief, rig and log the trees cite as evidence.
+  Acceptance:
+    - [x] ROOT CAUSE — WHY: the cleanup record was over 24 hours old, and each reader, fork and test run since built or left scratch of its own; WHERE, `docs/ARTIFACT_CLEANUP.md` at `9d2384bc`, its entry `2026-11-15T00:08:35+00:00`; `du -sk target` → 36.9 GB.
+    - [x] FIX — `python3 -I -B target/artifact-cleanup/2026-11-16/cleanup.py --delete`, `PROGRAM.145`'s script with its date: every nested cargo target directory, by `CACHEDIR.TAG` or `.rustc_info.json`, and every directory in `target/tmp` and `target/trust-tests`, each checked open by no process of this user (`lsof`), its links unlinked and never followed; no reader at work, so none skipped.
+    - [x] ADDRESSED — `8755` directories, `134785` files, `16517771264` bytes, each `gone: true`, none refused, none given back (`target/artifact-cleanup/2026-11-16/removed.json`); `du -sk target` → 22.9 GB, 36.9 before; the volume's free space 2451.1 GB, 2437.8 before; `bash scripts/handoff_census.sh` → `handoff: OK` before (`census-before.log`).
+    - [x] NO REGRESSION — build output and test scratch alone, each made again by the next build or test; no tracked file but the record, the leaf and the resume pointer; every leaf's `land/` and `red/` logs, files beside the directories removed, stay.
+    - [x] LOCKSTEP — the record, `MEMORY.md` and the tree.
+  Verification: the census, the removal report, the sizes before and after.
+  Commit: `ARCHOGEN-PROGRAM-1381 (leaf PROGRAM.148)`
+
 ## Roadmap coverage map
 
 Every roadmap unit has exactly one owning tree. This table is the answer to "where does
@@ -1245,6 +1257,7 @@ leaf's outcome is its row in the Commit Log below, and a sealed leaf's full reco
 | `PROGRAM.127.49` | `ARCHOGEN-PROGRAM-1320 (leaf PROGRAM.127.49)` | **the host guard's review, round 49**: no defect, so the review closes; arithmetic's end said as a rule; `job_bashes`' docstring. |
 | `PROGRAM.146` | `ARCHOGEN-PROGRAM-1361 (leaf PROGRAM.146)` | **the M4 tree sealed again**, `M4.1.7.3` and `M4.1.7.4` with their leaves, so `docs/tasks/` is under its ceiling. |
 | `PROGRAM.147` | `ARCHOGEN-PROGRAM-1380 (leaf PROGRAM.147)` | **the 400-commit batch's integration tier**: five drifts inside the batch fixed, three failures and two links behind the first. |
+| `PROGRAM.148` | `ARCHOGEN-PROGRAM-1381 (leaf PROGRAM.148)` | **the twenty-ninth artifact cleanup**: `target/` from 36.9 GB to 22.9 GB, build output and test scratch alone. |
 
 ## Changelog
 
@@ -1375,3 +1388,4 @@ leaf's outcome is its row in the Commit Log below, and a sealed leaf's full reco
 - `2026-11-14`: `PROGRAM.144` done: `M3.4.17` sealed with its six leaves, `docs/tasks/M3.md` at 2,974 lines.
 - `2026-11-15`: `PROGRAM.145` done: the twenty-eighth artifact cleanup, `target/` from 46.1 GB to 20.2 GB, build output and test scratch alone.
 - `2026-11-16`: `PROGRAM.147` done: the batch's integration failures fixed, `book`, `plan-check-wasm` and `resolve-installed`.
+- `2026-11-16`: `PROGRAM.148` done: the twenty-ninth artifact cleanup, `target/` from 36.9 GB to 22.9 GB.

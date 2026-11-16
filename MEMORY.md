@@ -19,7 +19,7 @@
 - **Next action:** `M4.1.7.6.7.3`, a target's regions and owed facts in `/2`; `M4.1.7.6`'s last leaf, `.10`,
   waits on `M4.2` and `M4.10`. Closed reviews: format `/2`'s
   (`M4.1.7.2`, round 39), the application inputs' (`M4.12.1`, round 20) and the host guard's (`PROGRAM.127`, round 49).
-  Daily artifact cleanup next due after `2026-11-16T00:09` UTC.
+  Daily artifact cleanup next due after `2026-11-17T01:21` UTC.
 - **⏳ Blockers (the director's):** `PROGRAM.34` — a yes to restore nine nested vendored checkouts; `M1.29.4` — §7 of
   `decision_findings-for-director-review.md`; `M5` — no board procured; `M2.7.4.5` — the catalog records; `M2.7.6.4` — the director's review round;
   `TEMPLATE-REFS` — postponed. **The 17 template files archogen has not changed are never edited** (findings §10,
