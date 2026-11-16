@@ -1161,8 +1161,15 @@ mdBook that is the director's window into the project.
   Commit: `ARCHOGEN-PROGRAM-1393 (leaf PROGRAM.151.3)`
 
 - ID: `PROGRAM.151.4`
-  Status: `pending` — the runner's proposal for `trust/baseline.eadl`, its 18 forms whose digests this tree moved or which it shares anew, committed unaccepted as `TI-H3` has it (`M3.6.3.2.1`); the owned leaf `M3.6.3.2.1.1` asks for. After `.1` to `.3` and `PROGRAM.150` are on the pull request, since each moves a digest.
+  Status: `done` — `2026-11-16`: the runner's proposal committed as `trust/baseline.eadl`, byte for byte, unaccepted (`TI-H3`), from the trust gate's run `43864635415` of `bea0b097`, the pull request's merge built from the base `34b6abeb`; the refresh `M3.6.3.2.1.1` asks for, by a base that holds the structured-key repair. The gate's own verdict on it is the next push's.
   Goal: the gate's change part on the runner holding no refusal.
+  Acceptance:
+    - [x] ROOT CAUSE — WHY: the batch moved six shared items' digests and shared fifteen anew, three of them `PROGRAM.151.3`'s derivations, and digests compare on the baseline's host alone, `x86_64-unknown-linux-gnu`; WHERE, run `43864635415`'s gate → `trust-gate: refused — the change: 115 line(s)`, 21 `trust-form-missing` lines, each "proposes other digests than this commit measures" or "holds no form for it", 15 `trust-new-shared` and 6 `trust-shared-changed`, and no unit without a form (`target/p151/ci/tg2-133289930672.log`).
+    - [x] FIX — the proposal the job printed, its lines 537 to 908 with the log's timestamps cut, written as `trust/baseline.eadl`: `shasum -a 256` → `5d8fddce…` of both. Read form by form against the committed baseline: 23 kept, each one's classification, property, risk and controls as written, 17 of their digests unchanged and 6 moved; 15 added, each `unstated` for the review; none dropped.
+    - [x] ADDRESSED — `cargo test -q -p archogen-cli --test verdicts` → `test result: ok. 3 passed`, the file's verdict `10 schema-unknown-kind` as frozen; `bash scripts/third_opinion.sh` → `third-opinion: OK — every document still classified as recorded`; the runner's gate on the next push, read into `PROGRAM.151`.
+    - [x] NO REGRESSION — no form's review text moved; a proposal is never an acceptance (the file's own header); `make focused` on the staged tree, the commit's gate.
+    - [x] LOCKSTEP — this leaf, the Commit Log; `M3.6.3.2.1.1` closes on the runner's verdict.
+  Commit: `ARCHOGEN-PROGRAM-1394 (leaf PROGRAM.151.4)`
 
 - ID: `PROGRAM.151.5`
   Status: `pending` — the commit-time inventory refuses a program it cannot classify, as the runner's gate does, so a unit compiling two roles is classified by the commit that makes it one, not found by a batch.
@@ -1339,6 +1346,7 @@ leaf's outcome is its row in the Commit Log below, and a sealed leaf's full reco
 | `PROGRAM.151.1`, `PROGRAM.151` | `ARCHOGEN-PROGRAM-1391 (leaf PROGRAM.151.1)` | **the launcher on Linux runs what it hashed through the front's own `/proc` entry**, which a script's interpreter can open; `PROGRAM.151` split by root cause. |
 | `PROGRAM.151.2` | `ARCHOGEN-PROGRAM-1392 (leaf PROGRAM.151.2)` | **the catalog check's workflow checks out the whole history**, which its checker requires and two commits deep was not. |
 | `PROGRAM.151.3` | `ARCHOGEN-PROGRAM-1393 (leaf PROGRAM.151.3)` | **the 51 test units compiling both roles named**: 49 classified, `target-parity` and `plan-bounded` derivations, and `resolve-plan` a derivation as the record's rule makes it. |
+| `PROGRAM.151.4` | `ARCHOGEN-PROGRAM-1394 (leaf PROGRAM.151.4)` | **the runner's baseline committed**, its proposal byte for byte: 23 forms kept with their review text, 6 digests moved, 15 shared anew. |
 
 ## Changelog
 
@@ -1476,3 +1484,4 @@ leaf's outcome is its row in the Commit Log below, and a sealed leaf's full reco
 - `2026-11-16`: `PROGRAM.151` split into five leaves by root cause; `PROGRAM.151.1` done: the launcher on Linux names its descriptor under the front's own `/proc` entry.
 - `2026-11-16`: `PROGRAM.151.2` done: the catalog check's workflow checks out the whole history.
 - `2026-11-16`: `PROGRAM.151.3` done: every test unit compiling two roles named or classified, none left unclassified.
+- `2026-11-16`: `PROGRAM.151.4` done: the runner's proposal committed as the baseline.
