@@ -55,7 +55,9 @@ $ cargo xtask verify --list              # or: make tiers
 | `hardware` | a change to target support, and every release gate | board regressions and timing observations |
 | `assurance` | every supported release | trust inventory, claim completeness, source and binary identity |
 
-When a step fails, the report shows the last 40 lines of each of its streams, then names a file holding
+The contract suite runs every test binary whatever another's result, so one failing run names each binary that
+fails, not the first alone (leaf `PROGRAM.151.7`). When a step fails, the report shows
+the last 40 lines of each of its streams, then names a file holding
 the whole of both, `target/verify-logs/<tier>/<step>.log`: the command, how it exited, then stdout and
 stderr in full. A step's log is removed when the step next runs, so a log that exists is always of that
 step's last run, and that run failed. The tail alone once lost a failure that had taken 45 minutes to
@@ -67,7 +69,7 @@ tests with it (leaf `PROGRAM.100`, measured `2026-10-21`). For example:
      … 2222 earlier line(s) omitted
      …the last 40 lines of stdout, then of stderr…
      whole output: target/verify-logs/focused/tests.log
-     re-run it directly: cargo test --all
+     re-run it directly: cargo test --all --no-fail-fast
 ```
 
 ## The precise rules

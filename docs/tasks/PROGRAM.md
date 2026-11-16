@@ -1188,8 +1188,15 @@ mdBook that is the director's window into the project.
   Commit: `ARCHOGEN-PROGRAM-1395 (leaf PROGRAM.151.6)`
 
 - ID: `PROGRAM.151.7`
-  Status: `pending` — the tier's `tests` step runs `cargo test --all`, which stops at the first failing test binary, so each run of the pull request showed one failure and hid what followed: the first run's `sibling` hid `.6`'s ceiling.
+  Status: `done` — `2026-11-16`: the tier's `tests` step runs every test binary, so one run names every failing one.
   Goal: `--no-fail-fast`, so that one run names every failing binary; the book's example of a failed step with it.
+  Acceptance:
+    - [x] ROOT CAUSE — WHY: `git grep -n 'args: &\["test", "--all"\]' 6abef203 -- xtask/src/main.rs` → `279`, and `cargo test` stops at the first test binary that fails; WHERE, the pull request's first run → `error: test failed, to rerun pass -p archogen-cli --test sibling`, after which no binary of `crates/archogen-plan-check` ran (`target/p151/ci/job-133209133175.log`), and its second run met the ceiling `.6` fixed, hidden by the first.
+    - [x] FIX — `args: &["test", "--all", "--no-fail-fast"]`, a comment saying why; `docs/book/src/verification.md` says the suite runs every binary, and its example's re-run line names the flag; `xtask/mutation_sweep_tests.py`'s premise digest of `xtask/src/main.rs` re-pinned, `8d3a727e…`, as each change to that file is, no reader's wiring moving.
+    - [x] ADDRESSED — the first `make focused` on the staged tree ran every test of `xtask`'s binary after a failure and named both of its failing tests at once, the book's phrase `the last 40 lines of each of its streams` broken across a line by this leaf's own reflow and the premise digest above, each fixed; `cargo test -q -p xtask --bin xtask -- tests::the_book_states_the_tail_the_runner_prints mutation::tests::the_sweep_holds_source_spans_and_equivalence_records` → `test result: ok. 2 passed`; the step's re-run line names `cargo test --all --no-fail-fast`; a failing binary no longer ends the step before the next binary runs, as cargo's own `--no-fail-fast` documents.
+    - [x] NO REGRESSION — `cargo fmt --all -- --check` → exit 0; a passing run is the same run; the step's verdict is cargo's exit, failed while any binary failed.
+    - [x] LOCKSTEP — the chapter, this leaf, the Commit Log.
+  Commit: `ARCHOGEN-PROGRAM-1396 (leaf PROGRAM.151.7)`
 
 ## Roadmap coverage map
 
@@ -1364,6 +1371,7 @@ leaf's outcome is its row in the Commit Log below, and a sealed leaf's full reco
 | `PROGRAM.151.3` | `ARCHOGEN-PROGRAM-1393 (leaf PROGRAM.151.3)` | **the 51 test units compiling both roles named**: 49 classified, `target-parity` and `plan-bounded` derivations, and `resolve-plan` a derivation as the record's rule makes it. |
 | `PROGRAM.151.4` | `ARCHOGEN-PROGRAM-1394 (leaf PROGRAM.151.4)` | **the runner's baseline committed**, its proposal byte for byte: 23 forms kept with their review text, 6 digests moved, 15 shared anew. |
 | `PROGRAM.151.6` | `ARCHOGEN-PROGRAM-1395 (leaf PROGRAM.151.6)` | **a program's file hashed in pieces**, the checker's own and the front's two, so a debug build's size takes nothing of the ceiling; the launcher's invocation digest moved with it. |
+| `PROGRAM.151.7` | `ARCHOGEN-PROGRAM-1396 (leaf PROGRAM.151.7)` | **the tier's tests run every binary**, `--no-fail-fast`, so one run names every failing one. |
 
 ## Changelog
 
@@ -1503,3 +1511,4 @@ leaf's outcome is its row in the Commit Log below, and a sealed leaf's full reco
 - `2026-11-16`: `PROGRAM.151.3` done: every test unit compiling two roles named or classified, none left unclassified.
 - `2026-11-16`: `PROGRAM.151.4` done: the runner's proposal committed as the baseline.
 - `2026-11-16`: `PROGRAM.151.6` filed and done: a program's file hashed in pieces; `PROGRAM.151.7` filed, the tier's tests to run every binary.
+- `2026-11-16`: `PROGRAM.151.7` done: the tier's tests run every binary.

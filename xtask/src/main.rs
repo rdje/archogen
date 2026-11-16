@@ -271,12 +271,14 @@ const CLIPPY: Step = Step {
     },
 };
 
+// Every test binary runs whatever another's result: `cargo test` alone stops at the first that fails, so one run named
+// one failure and hid the next behind it (leaf `PROGRAM.151.7`).
 const TESTS: Step = Step {
     name: "tests",
     proves: "every contract test passes, F28 and the semantic corpus included",
     action: Action::Run {
         program: "cargo",
-        args: &["test", "--all"],
+        args: &["test", "--all", "--no-fail-fast"],
         requires: None,
         matters: "",
     },
