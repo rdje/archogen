@@ -336,11 +336,11 @@ fn every_plan_the_search_writes_on_the_target_the_checker_accepts() {
     let mut refused = Vec::new();
     let registry = eadl_model::check::shipped_registry(&mut SourceMap::new(), &kinds())
         .expect("the kinds load");
-    for path in plain_descriptions() {
-        let text = std::fs::read_to_string(&path).expect("readable");
+    for file in plain_descriptions() {
+        let text = std::fs::read_to_string(&file).expect("readable");
         let mut sources = SourceMap::new();
         let d = sources
-            .add(path.display().to_string(), text.as_str())
+            .add(file.display().to_string(), text.as_str())
             .expect("small");
         let t = sources
             .add("targets/riscv-virt-up.eadl", target_text.as_str())
@@ -405,7 +405,7 @@ fn every_plan_the_search_writes_on_the_target_the_checker_accepts() {
             if let Err(verdict) = checked {
                 refused.push(format!(
                     "{} `{}`: {:?} {:?}\n{plan}",
-                    path.display(),
+                    file.display(),
                     resolution.system,
                     verdict.status,
                     verdict

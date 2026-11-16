@@ -68,6 +68,24 @@
   (test system_reading)
   (reason "holds the generator's reading of a system, joint::System::read, equal to the one the configuration checker's joint check judges with, written apart under M3.5's fence: the hardware, the declarations reached and the requesters served, over every tracked system and a generated sequence of shapes (model §8 rules 1 and 7; RP-H4)"))
 
+(defderivation target-parity
+  (pair generator configuration-checker)
+  (package "crates/eadl-resolve")
+  (test target_parity)
+  (reason "holds the generator's reading of a target and of a system on it, `eadl_resolve::target`, equal to the configuration checker's, `archogen_plan_check::target`, written apart under `docs/tasks/M3.md`'s fence: the same inputs accepted, the rest refused with the same codes, the same hardware read for a system on the target and one digest of a target, over the shipped target, the examples and each row of the correspondence record's tables; and every plan the search writes on the shipped target accepted by the checker (DC-H2; M4.1.7.5.4.2, M4.1.7.5.4.3)"))
+
+(defderivation plan-bounded
+  (pair generator configuration-checker)
+  (package "crates/archogen-plan")
+  (test bounded)
+  (reason "the runtime plan's bounded exhaustive checker (M4.1.13): every `archogen-assignment/2` record the generator's search writes over its universes is judged by the configuration checker, `archogen_plan_check::check::plan_file`, a refusal a finding; and each record binding a task's own source model §8 rule 16 does not admit is refused by the checker and by the lowering's joint rules, the codes agreeing, each held to the test's own reading of the record (decision_runtime-plan.md §1, §2.2)"))
+
+(defderivation plan-writers
+  (pair generator configuration-checker)
+  (package "crates/eadl-resolve")
+  (test plan)
+  (reason "holds the generator's plan writer (M3.4.3) to the format's golden and to the configuration checker's reader, program text and checks: two roles' writers of one format compared, so a divergence is found here rather than as a stale plan on every run; each writer is its own role's code. Classified as a program until leaf PROGRAM.151.3, whose reading of the record's rule, that a classification says its unit compares nothing, makes it a derivation"))
+
 ; Every other program target of the workspace, classified as not a root (§2, leaf M3.6.3.1): the reason, and the role
 ; packages its build compiles — its package's normal edges, an example's development edges too — so a set that grows
 ; is unreviewed again. Proposed, unaccepted until M3.6.5 reads acceptance. Measured 2026-10-06 by
@@ -187,12 +205,6 @@
   (reason "the configuration checker's model's falsification corpus (M3.1.1.1): it runs `archogen_plan_check::model` alone and uses no item of the generator's package it lives in, where the model's tests stayed when M3.5.3 moved the model to the checker; it compiles the resolver as the package of its own target")
   (role-packages "crates/archogen-plan-check" "crates/eadl-resolve"))
 
-(defprogram resolve-plan
-  (package "crates/eadl-resolve")
-  (target test plan)
-  (reason "holds the generator's plan writer (M3.4.3) to the format's golden and to the configuration checker's reader, program text and checks: two roles' writers of one format compared, so a divergence is found here rather than as a stale plan on every run; each writer is its own role's code, and no claim of the checker's independence rests on this test")
-  (role-packages "crates/archogen-plan-check" "crates/eadl-resolve"))
-
 (defprogram rt-core-units
   (package "crates/rt-core")
   (target lib-test rt_core)
@@ -240,6 +252,304 @@
   (target bin xtask)
   (reason "the repository's tiers, gates and measuring instruments, this gate's among them; it judges commits, and no claim's result is its output")
   (role-packages "crates/archogen-api" "crates/eadl-resolve"))
+
+; The test units a development edge to a checker reaches in crates/archogen-cli, crates/archogen-emit and
+; crates/archogen-plan, and three more the batch of 2026-11-16 added, each read from its source (leaf PROGRAM.151.3).
+; Measured by the runner's gate, PR #1, and by `cargo xtask trust-inventory`'s `program-targets`.
+
+(defprogram cli-units
+  (package "crates/archogen-cli")
+  (target lib-test archogen_cli)
+  (reason "the CLI library's unit tests: they test the front's own command table, commands, result-record intake through fake launchers and MCP server, and use no item of the configuration checker, which they compile only because the package's development edge to `crates/archogen-plan-check`, for `tests/common/mod.rs`'s in-process checker (M4.2.3.1), reaches every test target")
+  (role-packages "crates/archogen-api" "crates/archogen-cli" "crates/archogen-emit" "crates/archogen-plan" "crates/archogen-plan-check" "crates/eadl-resolve"))
+
+(defprogram cli-doctests
+  (package "crates/archogen-cli")
+  (target doctest archogen_cli)
+  (reason "the CLI library's doc tests: they use no item of the configuration checker, which they compile only because the package's development edge to `crates/archogen-plan-check`, for `tests/common/mod.rs`'s in-process checker (M4.2.3.1), reaches every test target")
+  (role-packages "crates/archogen-api" "crates/archogen-cli" "crates/archogen-emit" "crates/archogen-plan" "crates/archogen-plan-check" "crates/eadl-resolve"))
+
+(defprogram cli-bin-units
+  (package "crates/archogen-cli")
+  (target bin-test archogen)
+  (reason "the `archogen` executable's unit tests, in `src/main.rs` and its launcher `src/sibling.rs`: they use no item of the configuration checker, which they compile only because the package's development edge to `crates/archogen-plan-check`, for `tests/common/mod.rs`'s in-process checker (M4.2.3.1), reaches every test target")
+  (role-packages "crates/archogen-api" "crates/archogen-cli" "crates/archogen-emit" "crates/archogen-plan" "crates/archogen-plan-check" "crates/eadl-resolve"))
+
+(defprogram cli-api-parity
+  (package "crates/archogen-cli")
+  (target test api_parity)
+  (reason "holds the command line and the engine API to one capability, structurally, by operation and by behaviour over every description (API.3.3), both the generator's own: it uses no item of the configuration checker, which it compiles only because the package's development edge to `crates/archogen-plan-check`, for `tests/common/mod.rs`'s in-process checker (M4.2.3.1), reaches every test target")
+  (role-packages "crates/archogen-api" "crates/archogen-cli" "crates/archogen-emit" "crates/archogen-plan" "crates/archogen-plan-check" "crates/eadl-resolve"))
+
+(defprogram cli-book-tour
+  (package "crates/archogen-cli")
+  (target test book_tour)
+  (reason "holds the book's tour to the files it shows (PROGRAM.44): it uses no item of the configuration checker, which it compiles only because the package's development edge to `crates/archogen-plan-check`, for `tests/common/mod.rs`'s in-process checker (M4.2.3.1), reaches every test target")
+  (role-packages "crates/archogen-api" "crates/archogen-cli" "crates/archogen-emit" "crates/archogen-plan" "crates/archogen-plan-check" "crates/eadl-resolve"))
+
+(defprogram cli-book-transcripts
+  (package "crates/archogen-cli")
+  (target test book_transcripts)
+  (reason "holds every diagnostic the book shows to what `archogen check` prints (PROGRAM.20.2): it uses no item of the configuration checker, which it compiles only because the package's development edge to `crates/archogen-plan-check`, for `tests/common/mod.rs`'s in-process checker (M4.2.3.1), reaches every test target")
+  (role-packages "crates/archogen-api" "crates/archogen-cli" "crates/archogen-emit" "crates/archogen-plan" "crates/archogen-plan-check" "crates/eadl-resolve"))
+
+(defprogram cli-build
+  (package "crates/archogen-cli")
+  (target test build)
+  (reason "`archogen build` from a description to a package that compiles and runs (M4.2.3.1): it uses the configuration checker only through `tests/common/mod.rs`'s `Checker`, which judges each plan the front hands over and writes the result record the installed checker would, beside fake checkers of its own for each way a record can disagree; the front builds on that verdict as on an installed checker's, and no reading of the generator's is held equal to the checker's")
+  (role-packages "crates/archogen-api" "crates/archogen-cli" "crates/archogen-emit" "crates/archogen-plan" "crates/archogen-plan-check" "crates/eadl-resolve"))
+
+(defprogram cli-check-target
+  (package "crates/archogen-cli")
+  (target test check_target)
+  (reason "`archogen check --target FILE` and the book's transcripts of it (M4.1.7.4.2.1): it uses no item of the configuration checker, which it compiles only because the package's development edge to `crates/archogen-plan-check`, for `tests/common/mod.rs`'s in-process checker (M4.2.3.1), reaches every test target")
+  (role-packages "crates/archogen-api" "crates/archogen-cli" "crates/archogen-emit" "crates/archogen-plan" "crates/archogen-plan-check" "crates/eadl-resolve"))
+
+(defprogram cli-closure-report
+  (package "crates/archogen-cli")
+  (target test closure_report)
+  (reason "what `archogen check` reports of an accepted description's closure, over every description `tests/verdicts.txt` records as accepted (M1.30): it uses no item of the configuration checker, which it compiles only because the package's development edge to `crates/archogen-plan-check`, for `tests/common/mod.rs`'s in-process checker (M4.2.3.1), reaches every test target")
+  (role-packages "crates/archogen-api" "crates/archogen-cli" "crates/archogen-emit" "crates/archogen-plan" "crates/archogen-plan-check" "crates/eadl-resolve"))
+
+(defprogram cli-fires-on
+  (package "crates/archogen-cli")
+  (target test fires_on)
+  (reason "runs each `fires on` cell of the reference's diagnostics tables through the pipeline it names (M1.26.2.1), only parsing the `plan` cells the checker's own `tests/fires_on.rs` runs through its executable: it uses no item of the configuration checker, which it compiles only because the package's development edge to `crates/archogen-plan-check`, for `tests/common/mod.rs`'s in-process checker (M4.2.3.1), reaches every test target")
+  (role-packages "crates/archogen-api" "crates/archogen-cli" "crates/archogen-emit" "crates/archogen-plan" "crates/archogen-plan-check" "crates/eadl-resolve"))
+
+(defprogram cli-format-golden
+  (package "crates/archogen-cli")
+  (target test format_golden)
+  (reason "freezes the build provenance's shape under its identifier (PROGRAM.6.3): it builds the heartbeat with `tests/common/mod.rs`'s in-process `Checker` writing the result record the installed checker would, and holds no reading of the generator's equal to the checker's")
+  (role-packages "crates/archogen-api" "crates/archogen-cli" "crates/archogen-emit" "crates/archogen-plan" "crates/archogen-plan-check" "crates/eadl-resolve"))
+
+(defprogram cli-functional-fixtures
+  (package "crates/archogen-cli")
+  (target test functional_fixtures)
+  (reason "S0's functional fixtures through `archogen build` (ROADMAP.md §12; M4.2.3.1), what each generated system observes held to its frozen expected output: it uses the configuration checker only through `tests/common/mod.rs`'s `Checker`, writing each build's result record as the installed checker would, and holds no reading of the generator's equal to the checker's")
+  (role-packages "crates/archogen-api" "crates/archogen-cli" "crates/archogen-emit" "crates/archogen-plan" "crates/archogen-plan-check" "crates/eadl-resolve"))
+
+(defprogram cli-hosted-limits
+  (package "crates/archogen-cli")
+  (target test hosted_limits)
+  (reason "what holds however a description is shaped (M4.2.3.3.22): the process's ceiling, bounded messages, the language's limit on a name and one-line sayings; it uses the configuration checker only through `tests/common/mod.rs`'s `Checker`, writing each resolve's and build's result record as the installed checker would, and holds no reading of the generator's equal to the checker's")
+  (role-packages "crates/archogen-api" "crates/archogen-cli" "crates/archogen-emit" "crates/archogen-plan" "crates/archogen-plan-check" "crates/eadl-resolve"))
+
+(defprogram cli-kind-modules
+  (package "crates/archogen-cli")
+  (target test kind_modules)
+  (reason "what `archogen check` and `archogen build` do with a kind module and with the capability vocabulary's file (M1.32, M3.1.2.1): it uses no item of the configuration checker, which it compiles only because the package's development edge to `crates/archogen-plan-check`, for `tests/common/mod.rs`'s in-process checker (M4.2.3.1), reaches every test target")
+  (role-packages "crates/archogen-api" "crates/archogen-cli" "crates/archogen-emit" "crates/archogen-plan" "crates/archogen-plan-check" "crates/eadl-resolve"))
+
+(defprogram cli-mcp-stdio
+  (package "crates/archogen-cli")
+  (target test mcp_stdio)
+  (reason "the built `archogen mcp` driven over its standard input and output, every verdict it answers held to the command line's (API.6.4), both the generator's own: it uses no item of the configuration checker, which it compiles only because the package's development edge to `crates/archogen-plan-check`, for `tests/common/mod.rs`'s in-process checker (M4.2.3.1), reaches every test target")
+  (role-packages "crates/archogen-api" "crates/archogen-cli" "crates/archogen-emit" "crates/archogen-plan" "crates/archogen-plan-check" "crates/eadl-resolve"))
+
+(defprogram cli-module-cases
+  (package "crates/archogen-cli")
+  (target test module_cases)
+  (reason "every module case under `docs/semantics/modules/` through `archogen check` and `archogen build`, the generator's two commands held to one verdict (M1.29.2, M1.29.3): its builds use the configuration checker only through `tests/common/mod.rs`'s `Checker`, writing the result record the installed checker would, and it holds no reading of the generator's equal to the checker's")
+  (role-packages "crates/archogen-api" "crates/archogen-cli" "crates/archogen-emit" "crates/archogen-plan" "crates/archogen-plan-check" "crates/eadl-resolve"))
+
+(defprogram cli-module-files
+  (package "crates/archogen-cli")
+  (target test module_files)
+  (reason "what `archogen check` and `archogen build` do with a module file, and what `archogen help check` says of it (M1.29.1, M1.29.2): it uses no item of the configuration checker, which it compiles only because the package's development edge to `crates/archogen-plan-check`, for `tests/common/mod.rs`'s in-process checker (M4.2.3.1), reaches every test target")
+  (role-packages "crates/archogen-api" "crates/archogen-cli" "crates/archogen-emit" "crates/archogen-plan" "crates/archogen-plan-check" "crates/eadl-resolve"))
+
+(defprogram cli-plan-check-contract
+  (package "crates/archogen-cli")
+  (target test plan_check_contract)
+  (reason "the front's contract for the result record it consumes (M3.5.1.4.3), held with a fake launcher that writes the record each case asks for: it uses no item of the configuration checker, which it compiles only because the package's development edge to `crates/archogen-plan-check`, for `tests/common/mod.rs`'s in-process checker (M4.2.3.1), reaches every test target")
+  (role-packages "crates/archogen-api" "crates/archogen-cli" "crates/archogen-emit" "crates/archogen-plan" "crates/archogen-plan-check" "crates/eadl-resolve"))
+
+(defprogram cli-plan-check-front
+  (package "crates/archogen-cli")
+  (target test plan_check_front)
+  (reason "`archogen plan-check` at the front (M3.5.1.4.1), run through a fake launcher that records what it was asked and ends as told: it uses no item of the configuration checker, which it compiles only because the package's development edge to `crates/archogen-plan-check`, for `tests/common/mod.rs`'s in-process checker (M4.2.3.1), reaches every test target")
+  (role-packages "crates/archogen-api" "crates/archogen-cli" "crates/archogen-emit" "crates/archogen-plan" "crates/archogen-plan-check" "crates/eadl-resolve"))
+
+(defprogram cli-presence-derived
+  (package "crates/archogen-cli")
+  (target test presence_derived)
+  (reason "`archogen check` told what the capability vocabulary derives, as the search derives it (M3.4.17.1): it uses no item of the configuration checker, which it compiles only because the package's development edge to `crates/archogen-plan-check`, for `tests/common/mod.rs`'s in-process checker (M4.2.3.1), reaches every test target")
+  (role-packages "crates/archogen-api" "crates/archogen-cli" "crates/archogen-emit" "crates/archogen-plan" "crates/archogen-plan-check" "crates/eadl-resolve"))
+
+(defprogram cli-presence-hardware
+  (package "crates/archogen-cli")
+  (target test presence_hardware)
+  (reason "`archogen check` reading a fact the vocabulary does not declare on each system's own hardware (M3.4.16): it uses no item of the configuration checker, which it compiles only because the package's development edge to `crates/archogen-plan-check`, for `tests/common/mod.rs`'s in-process checker (M4.2.3.1), reaches every test target")
+  (role-packages "crates/archogen-api" "crates/archogen-cli" "crates/archogen-emit" "crates/archogen-plan" "crates/archogen-plan-check" "crates/eadl-resolve"))
+
+(defprogram cli-reader-contract
+  (package "crates/archogen-cli")
+  (target test reader_contract)
+  (reason "the reader's contract seen through `archogen check`, any text answered with a verdict and never a crash (M1.35): it uses no item of the configuration checker, which it compiles only because the package's development edge to `crates/archogen-plan-check`, for `tests/common/mod.rs`'s in-process checker (M4.2.3.1), reaches every test target")
+  (role-packages "crates/archogen-api" "crates/archogen-cli" "crates/archogen-emit" "crates/archogen-plan" "crates/archogen-plan-check" "crates/eadl-resolve"))
+
+(defprogram cli-resolve
+  (package "crates/archogen-cli")
+  (target test resolve)
+  (reason "`archogen resolve` (M3.4.4), the plan, the command's status and `--unchecked` held with a fake launcher of its own that writes the record each case asks for: it uses `tests/common/mod.rs` only for its file and table helpers and calls no item of the configuration checker, which it compiles only because the package's development edge to `crates/archogen-plan-check`, for `tests/common/mod.rs`'s in-process checker (M4.2.3.1), reaches every test target")
+  (role-packages "crates/archogen-api" "crates/archogen-cli" "crates/archogen-emit" "crates/archogen-plan" "crates/archogen-plan-check" "crates/eadl-resolve"))
+
+(defprogram cli-s0-chapter
+  (package "crates/archogen-cli")
+  (target test s0_chapter)
+  (reason "holds the S0 chapter's figures and the building chapter's file count to measurements (S0.8): it builds the heartbeat with `tests/common/mod.rs`'s in-process `Checker`, writing the result record the installed checker would, to list what a build writes, and holds no reading of the generator's equal to the checker's")
+  (role-packages "crates/archogen-api" "crates/archogen-cli" "crates/archogen-emit" "crates/archogen-plan" "crates/archogen-plan-check" "crates/eadl-resolve"))
+
+(defprogram cli-s0-reader
+  (package "crates/archogen-cli")
+  (target test s0_reader)
+  (reason "the S0 corpus reads, and a corrupted one is reported where it broke (S0.2): it uses no item of the configuration checker, which it compiles only because the package's development edge to `crates/archogen-plan-check`, for `tests/common/mod.rs`'s in-process checker (M4.2.3.1), reaches every test target")
+  (role-packages "crates/archogen-api" "crates/archogen-cli" "crates/archogen-emit" "crates/archogen-plan" "crates/archogen-plan-check" "crates/eadl-resolve"))
+
+(defprogram cli-sibling
+  (package "crates/archogen-cli")
+  (target test sibling)
+  (reason "the front's launcher run as an install runs it (M3.5.1.4.1), the sibling a second copy of `archogen` under the configuration checker's name: it uses no item of the configuration checker, which it compiles only because the package's development edge to `crates/archogen-plan-check`, for `tests/common/mod.rs`'s in-process checker (M4.2.3.1), reaches every test target")
+  (role-packages "crates/archogen-api" "crates/archogen-cli" "crates/archogen-emit" "crates/archogen-plan" "crates/archogen-plan-check" "crates/eadl-resolve"))
+
+(defprogram cli-stage-left
+  (package "crates/archogen-cli")
+  (target test stage_left)
+  (reason "what a refused run leaves in its stage (decision_hosted-build.md §5): it uses the configuration checker only through `tests/common/mod.rs`'s `Checker`, alone or wrapped to change the stage while or after it runs, writing the result record the installed checker would, and holds no reading of the generator's equal to the checker's")
+  (role-packages "crates/archogen-api" "crates/archogen-cli" "crates/archogen-emit" "crates/archogen-plan" "crates/archogen-plan-check" "crates/eadl-resolve"))
+
+(defprogram cli-verdicts
+  (package "crates/archogen-cli")
+  (target test verdicts)
+  (reason "freezes every tracked description's verdict, alone and on the shipped target (PROGRAM.6.2, M4.1.7.4.2.1): it uses no item of the configuration checker, which it compiles only because the package's development edge to `crates/archogen-plan-check`, for `tests/common/mod.rs`'s in-process checker (M4.2.3.1), reaches every test target")
+  (role-packages "crates/archogen-api" "crates/archogen-cli" "crates/archogen-emit" "crates/archogen-plan" "crates/archogen-plan-check" "crates/eadl-resolve"))
+
+(defprogram emit-units
+  (package "crates/archogen-emit")
+  (target lib-test archogen_emit)
+  (reason "the emitter's unit tests: they test its tables, header, tick, horizon, provenance and refusals over `crates/archogen-plan`'s golden plans and use no item of the configuration checker or of the runtime core, which they compile only because the package's development edges to `crates/archogen-plan-check` and to `crates/sim-playground`, which compiles `crates/rt-core`, both `tests/emit.rs`'s, reach every test target")
+  (role-packages "crates/archogen-emit" "crates/archogen-plan" "crates/archogen-plan-check" "crates/eadl-resolve" "crates/rt-core"))
+
+(defprogram emit-doctests
+  (package "crates/archogen-emit")
+  (target doctest archogen_emit)
+  (reason "the emitter's doc tests: they use no item of the configuration checker or of the runtime core, which they compile only because the package's development edges to `crates/archogen-plan-check` and to `crates/sim-playground`, which compiles `crates/rt-core`, both `tests/emit.rs`'s, reach every test target")
+  (role-packages "crates/archogen-emit" "crates/archogen-plan" "crates/archogen-plan-check" "crates/eadl-resolve" "crates/rt-core"))
+
+(defprogram emit-generated-systems
+  (package "crates/archogen-emit")
+  (target test emit)
+  (reason "the emitter (M4.2.2): a generated system from a description to its trace, the plan accepted only by lowering it again, and each file of `copies/` held to the engine's source, read as a file; it uses the configuration checker's `judge` only to write each build's result record as `archogen build` has the checker write it, a refusal failing the case, and the runtime core only through `sim-playground`'s trace format, and holds no reading of the generator's equal to the checker's")
+  (role-packages "crates/archogen-emit" "crates/archogen-plan" "crates/archogen-plan-check" "crates/eadl-resolve" "crates/rt-core"))
+
+(defprogram plan-units
+  (package "crates/archogen-plan")
+  (target lib-test archogen_plan)
+  (reason "the lowering's unit tests: they test format `/2`'s memory layout and code identity and use no item of the configuration checker, which they compile only because the package's development edge to `crates/archogen-plan-check` — the bounded checker's (M4.1.13), the goldens', the result intake's and `tests/common/mod.rs`'s — reaches every test target")
+  (role-packages "crates/archogen-plan" "crates/archogen-plan-check" "crates/eadl-resolve"))
+
+(defprogram plan-doctests
+  (package "crates/archogen-plan")
+  (target doctest archogen_plan)
+  (reason "the lowering's doc tests: they use no item of the configuration checker, which they compile only because the package's development edge to `crates/archogen-plan-check` — the bounded checker's (M4.1.13), the goldens', the result intake's and `tests/common/mod.rs`'s — reaches every test target")
+  (role-packages "crates/archogen-plan" "crates/archogen-plan-check" "crates/eadl-resolve"))
+
+(defprogram plan-application
+  (package "crates/archogen-plan")
+  (target test application)
+  (reason "the application inputs' reader (M4.12): every malformed input refused naming what is wrong, and every fact a plan owes `(by application)` held against the goldens; it uses no item of the configuration checker, which it compiles only because the package's development edge to `crates/archogen-plan-check` — the bounded checker's (M4.1.13), the goldens', the result intake's and `tests/common/mod.rs`'s — reaches every test target")
+  (role-packages "crates/archogen-plan" "crates/archogen-plan-check" "crates/eadl-resolve"))
+
+(defprogram plan-code-digest
+  (package "crates/archogen-plan")
+  (target test code_digest)
+  (reason "what an application's `code` digest is of, held by asking the pinned compiler for its own account (decision_application-inputs.md, round 6): it uses no item of the configuration checker, which it compiles only because the package's development edge to `crates/archogen-plan-check` — the bounded checker's (M4.1.13), the goldens', the result intake's and `tests/common/mod.rs`'s — reaches every test target")
+  (role-packages "crates/archogen-plan" "crates/archogen-plan-check" "crates/eadl-resolve"))
+
+(defprogram plan-contents
+  (package "crates/archogen-plan")
+  (target test contents)
+  (reason "`archogen-runtime-plan/1` read back (M4.1.4.2), every plan of the corpus reading back to itself and a text the writer would not write refused: it uses `tests/common/mod.rs`'s search and lowering and not its `judged_record`, so it calls no item of the configuration checker, which it compiles only because the package's development edge to `crates/archogen-plan-check` — the bounded checker's (M4.1.13), the goldens', the result intake's and `tests/common/mod.rs`'s — reaches every test target")
+  (role-packages "crates/archogen-plan" "crates/archogen-plan-check" "crates/eadl-resolve"))
+
+(defprogram plan-corpus
+  (package "crates/archogen-plan")
+  (target test corpus)
+  (reason "the lowering's falsification corpus, each probe's outcome blessed under `tests/corpus/` (decision_executable-design-reviews.md §3): it uses `tests/common/mod.rs`'s search and lowering and not its `judged_record`, so it calls no item of the configuration checker, which it compiles only because the package's development edge to `crates/archogen-plan-check` — the bounded checker's (M4.1.13), the goldens', the result intake's and `tests/common/mod.rs`'s — reaches every test target")
+  (role-packages "crates/archogen-plan" "crates/archogen-plan-check" "crates/eadl-resolve"))
+
+(defprogram plan-format2-application
+  (package "crates/archogen-plan")
+  (target test format2_application)
+  (reason "an application's file in hosted `/2` as `lower_hosted` writes it (M4.1.7.6.6): it uses `tests/common/mod.rs`'s search and lowering and not its `judged_record`, so it calls no item of the configuration checker, which it compiles only because the package's development edge to `crates/archogen-plan-check` — the bounded checker's (M4.1.13), the goldens', the result intake's and `tests/common/mod.rs`'s — reaches every test target")
+  (role-packages "crates/archogen-plan" "crates/archogen-plan-check" "crates/eadl-resolve"))
+
+(defprogram plan-format2-goldens
+  (package "crates/archogen-plan")
+  (target test format2_goldens)
+  (reason "`archogen-runtime-plan/2`'s goldens (M4.1.7.6.9), each lowered from frozen inputs byte for byte: it uses the configuration checker's `judge_on` only to hold that each frozen assignment is one the checker accepts today, so that the frozen input stays the checker's word, and holds no reading of the generator's equal to the checker's")
+  (role-packages "crates/archogen-plan" "crates/archogen-plan-check" "crates/eadl-resolve"))
+
+(defprogram plan-format2-hosted
+  (package "crates/archogen-plan")
+  (target test format2_hosted)
+  (reason "format `/2` on the hosted playground held to `/1` over every system of the corpus (M4.1.7.6.4): it uses `tests/common/mod.rs`'s search and lowering and not its `judged_record`, so it calls no item of the configuration checker, which it compiles only because the package's development edge to `crates/archogen-plan-check` — the bounded checker's (M4.1.13), the goldens', the result intake's and `tests/common/mod.rs`'s — reaches every test target")
+  (role-packages "crates/archogen-plan" "crates/archogen-plan-check" "crates/eadl-resolve"))
+
+(defprogram plan-format2-model
+  (package "crates/archogen-plan")
+  (target test format2_model)
+  (reason "format `/2`'s decision procedures as an executable model (M4.1.7.6): the lowering's layout and identity procedures and the generator's joint rules held to the model's transcription of the record; it holds the model's alarm gates to the text of the scheduling checker's model test, `crates/rt-analysis/tests/alarm_model.rs`, read by `include_str!`, so that a change there fails here, runs no item of either checker, and compiles `crates/archogen-plan-check` only because the package's development edge — the bounded checker's (M4.1.13), the goldens', the result intake's and `tests/common/mod.rs`'s — reaches every test target")
+  (role-packages "crates/archogen-plan" "crates/archogen-plan-check" "crates/eadl-resolve" "crates/rt-analysis"))
+
+(defprogram plan-format2-reader
+  (package "crates/archogen-plan")
+  (target test format2_reader)
+  (reason "`archogen-runtime-plan/2`'s reader held to its goldens, each line mutated three ways and refused (M4.1.7.7): it uses `tests/common/mod.rs` only for the repository's root and calls no item of the configuration checker, which it compiles only because the package's development edge to `crates/archogen-plan-check` — the bounded checker's (M4.1.13), the goldens', the result intake's and `tests/common/mod.rs`'s — reaches every test target")
+  (role-packages "crates/archogen-plan" "crates/archogen-plan-check" "crates/eadl-resolve"))
+
+(defprogram plan-format2-target
+  (package "crates/archogen-plan")
+  (target test format2_target)
+  (reason "format `/2` on a target, its identity, refusals, time, regions and allocations as `lower_on_target` gives them (M4.1.7.6.7.1 to M4.1.7.6.8): it uses `tests/common/mod.rs`'s search and lowering and not its `judged_record`, so it calls no item of the configuration checker, which it compiles only because the package's development edge to `crates/archogen-plan-check` — the bounded checker's (M4.1.13), the goldens', the result intake's and `tests/common/mod.rs`'s — reaches every test target")
+  (role-packages "crates/archogen-plan" "crates/archogen-plan-check" "crates/eadl-resolve"))
+
+(defprogram plan-goldens
+  (package "crates/archogen-plan")
+  (target test goldens)
+  (reason "`archogen-runtime-plan/1`'s goldens (M4.1.4.3), each lowered from its frozen assignment and result record: it uses the configuration checker's `judge` only to hold each golden's fixed result record to what the checker writes today for that frozen assignment, and holds no reading of the generator's equal to the checker's")
+  (role-packages "crates/archogen-plan" "crates/archogen-plan-check" "crates/eadl-resolve"))
+
+(defprogram plan-records
+  (package "crates/archogen-plan")
+  (target test records)
+  (reason "hand-written `archogen-assignment/2` records no search writes, through the lowering's refusals and §2.5's order (decision_runtime-plan.md §1): it uses the configuration checker only through `tests/common/mod.rs`'s `judged_record`, which judges first each record the lowering is to accept, as §1 lowers only what the checker accepted, a refusal failing the test, and holds no reading of the generator's equal to the checker's")
+  (role-packages "crates/archogen-plan" "crates/archogen-plan-check" "crates/eadl-resolve"))
+
+(defprogram plan-result-intake
+  (package "crates/archogen-plan")
+  (target test result_intake)
+  (reason "the production entry `lower_checked` taking the checker's result record (M4.1.4.1), each refusal by its code and in §1's order: it uses the configuration checker's `judge` once, so that the record taken is the one the checker writes for that assignment rather than a hand-made one, and holds no reading of the generator's equal to the checker's")
+  (role-packages "crates/archogen-plan" "crates/archogen-plan-check" "crates/eadl-resolve"))
+
+(defprogram plan-worked
+  (package "crates/archogen-plan")
+  (target test worked)
+  (reason "the record's worked texts are what the lowering writes (decision_runtime-plan.md §3): it uses `tests/common/mod.rs`'s search and lowering and not its `judged_record`, so it calls no item of the configuration checker, which it compiles only because the package's development edge to `crates/archogen-plan-check` — the bounded checker's (M4.1.13), the goldens', the result intake's and `tests/common/mod.rs`'s — reaches every test target")
+  (role-packages "crates/archogen-plan" "crates/archogen-plan-check" "crates/eadl-resolve"))
+
+(defprogram resolve-target
+  (package "crates/eadl-resolve")
+  (target test target)
+  (reason "a system on a target (M4.4.1): the generator's correspondence rule and its search on a target, over the shipped target's file and the examples, each refusal by what it says; it uses no item of the configuration checker, which it compiles only because the package's development edge to `crates/archogen-plan-check` — the `production`, `vocabulary`, `adapters`, `system-reading`, `plan-writers` and `target-parity` derivations', the model's checker's and corpus's — reaches every test target (RP-H7)")
+  (role-packages "crates/archogen-plan-check" "crates/eadl-resolve"))
+
+(defprogram rt-core-runtime-data
+  (package "crates/rt-core")
+  (target test runtime_data)
+  (reason "the scheduler's half of the composite-inputs record's clause on the runtime's own data (M2.30): it tests the implementation's own state machine and uses no item of the reference model, which it compiles only because the package's development edge to `crates/rt-reference`, the `differential` harness's, reaches every test target (RP-H18)")
+  (role-packages "crates/rt-core" "crates/rt-reference"))
 
 ; The sites the catalog's rules refuse in today's roots, each admitted by review once M3.6.5 reads acceptance: the
 ; file, the rule as the catalog's scanner names it, and the sha256 of the site's extent — the statement or item it

@@ -160,13 +160,13 @@ fn the_writer_writes_the_format_s_golden() {
 #[test]
 fn the_program_text_and_the_plain_program_are_the_checker_s_on_every_tracked_description() {
     let mut programs = 0;
-    for path in tracked() {
-        let program = program_of(&path);
+    for file in tracked() {
+        let program = program_of(&file);
         assert_eq!(
             plan::program_text(&program),
             assignment::program_text(&program),
             "{}",
-            path.display()
+            file.display()
         );
         // A description that does not elaborate leaves no instance: its text is still compared, empty on both sides.
         if let Some(root) = program.instances.last() {
@@ -175,7 +175,7 @@ fn the_program_text_and_the_plain_program_are_the_checker_s_on_every_tracked_des
                 plan::program_text(&plan::plain(declarations.clone())),
                 assignment::program_text(&check::plain(declarations)),
                 "{}",
-                path.display()
+                file.display()
             );
         }
         programs += 1;
@@ -501,14 +501,14 @@ fn the_positive_corpus_every_plan_the_search_writes_the_checker_accepts_and_twic
     // description — and each system the search resolves, a module tree's among them.
     let v = vocabulary();
     let (mut resolved, mut refused) = (0, 0);
-    for path in tracked() {
-        let text = std::fs::read_to_string(&path).expect("readable");
+    for file in tracked() {
+        let text = std::fs::read_to_string(&file).expect("readable");
         let judge = |plan: &str| {
             let mut sources = SourceMap::new();
             let id = sources
-                .add(path.display().to_string(), text.clone())
+                .add(file.display().to_string(), text.clone())
                 .expect("small");
-            let modules = DirectoryModules::new(path.parent().expect("a directory"));
+            let modules = DirectoryModules::new(file.parent().expect("a directory"));
             plan_file(
                 &mut sources,
                 id,
@@ -518,7 +518,7 @@ fn the_positive_corpus_every_plan_the_search_writes_the_checker_accepts_and_twic
                 plan,
             )
         };
-        if !language_accepts(&path, &text) {
+        if !language_accepts(&file, &text) {
             continue;
         }
         let (program, _) = judge("");
@@ -552,7 +552,7 @@ fn the_positive_corpus_every_plan_the_search_writes_the_checker_accepts_and_twic
                 continue;
             };
             let Search::Resolved(twice) = searched() else {
-                panic!("{}: resolved once and not twice", path.display());
+                panic!("{}: resolved once and not twice", file.display());
             };
             let digest = plan::program_digest(&program);
             let text_once = plan::write(&once, RT_STATIC_UP_V1.id, &digest);
@@ -560,15 +560,15 @@ fn the_positive_corpus_every_plan_the_search_writes_the_checker_accepts_and_twic
                 text_once,
                 plan::write(&twice, RT_STATIC_UP_V1.id, &digest),
                 "{}",
-                path.display()
+                file.display()
             );
             let (_, verdict) = judge(&text_once);
-            assert_eq!(verdict, Ok(()), "{}: {text_once}", path.display());
+            assert_eq!(verdict, Ok(()), "{}: {text_once}", file.display());
             // Leaf `M4.1.3`: the generator's own reader reads the record back to the same bytes, and the bindings it
             // rebuilds over the description give the joint rules the search's own obligations.
             let record =
-                plan::read(&text_once).unwrap_or_else(|e| panic!("{}: {e}", path.display()));
-            assert_eq!(record.text(), text_once, "{}", path.display());
+                plan::read(&text_once).unwrap_or_else(|e| panic!("{}: {e}", file.display()));
+            assert_eq!(record.text(), text_once, "{}", file.display());
             let rebuilt = plan::rebuild(
                 &record,
                 declarations,
@@ -576,10 +576,10 @@ fn the_positive_corpus_every_plan_the_search_writes_the_checker_accepts_and_twic
                 &v,
                 &policy.adapters,
             )
-            .unwrap_or_else(|e| panic!("{}: {e}", path.display()));
+            .unwrap_or_else(|e| panic!("{}: {e}", file.display()));
             let report = rebuilt.joint.check(&rebuilt.bindings);
-            assert!(report.holds(), "{}: {report:?}", path.display());
-            assert_eq!(report.obligations, once.obligations, "{}", path.display());
+            assert!(report.holds(), "{}: {report:?}", file.display());
+            assert_eq!(report.obligations, once.obligations, "{}", file.display());
             resolved += 1;
         }
     }

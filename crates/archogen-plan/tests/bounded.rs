@@ -1272,11 +1272,11 @@ fn release_case(
         },
         if alarm { "yes" } else { "no" }
     );
-    for (i, (separation, path)) in sources.iter().enumerate() {
+    for (i, (separation, route)) in sources.iter().enumerate() {
         let block = BLOCKS[i];
         let suffix = &block[4..];
         blocks.push(source_block(block, *separation, STATES[i]));
-        label.push_str(&format!("{block}:{separation:?}:{path:?} "));
+        label.push_str(&format!("{block}:{separation:?}:{route:?} "));
         let evt = format!("evt.{suffix}");
         let mut handler = service(&evt, Counter::None, true, Vec::new());
         if i == 1 {
@@ -1285,7 +1285,7 @@ fn release_case(
                 .other
                 .push("(available-in-state run sleep)".to_string());
         }
-        match path {
+        match route {
             Path::DirectT => t.needs.push("interrupt-source".to_string()),
             Path::DirectU => u.needs.push("interrupt-source".to_string()),
             Path::DirectSys => own.needs.push("interrupt-source".to_string()),
@@ -1304,7 +1304,7 @@ fn release_case(
             }
             Path::ServiceSys => name_in(&mut own, &evt),
         }
-        if !matches!(path, Path::DirectT | Path::DirectU | Path::DirectSys) {
+        if !matches!(route, Path::DirectT | Path::DirectU | Path::DirectSys) {
             services.push(handler);
         }
     }
@@ -12117,9 +12117,9 @@ fn release_classes(label: &str) -> BTreeSet<&'static str> {
         }
     }
     // A source reaches a task through its handler `evt.X`, which the task uses, or uses through `h.X`.
-    let through_handler = |task: &str, path: &str| match task {
-        "t" => matches!(path, "ServiceT" | "ChainT" | "ServiceTU"),
-        _ => matches!(path, "ServiceU" | "ServiceTU"),
+    let through_handler = |task: &str, route: &str| match task {
+        "t" => matches!(route, "ServiceT" | "ChainT" | "ServiceTU"),
+        _ => matches!(route, "ServiceU" | "ServiceTU"),
     };
     for (task, kind, ms) in [("t", t, 20), ("u", u, 40)] {
         if kind != "sporadic" {
@@ -12127,12 +12127,12 @@ fn release_classes(label: &str) -> BTreeSet<&'static str> {
         }
         let reaching: Vec<&(&str, &str, &str)> = sources
             .iter()
-            .filter(|(name, _, path)| {
-                own_source.get(task) == Some(name) || through_handler(task, path)
+            .filter(|(name, _, route)| {
+                own_source.get(task) == Some(name) || through_handler(task, route)
             })
             .collect();
         if let Some(&mine) = own_source.get(task) {
-            let (_, separation, path) = sources
+            let (_, separation, route) = sources
                 .iter()
                 .find(|(n, _, _)| *n == mine)
                 .expect("a source");
@@ -12159,7 +12159,7 @@ fn release_classes(label: &str) -> BTreeSet<&'static str> {
                 });
             }
             // Its own source's route names the handler the task uses: `dev.a`, taken in place of `dev.z`.
-            if through_handler(task, path) {
+            if through_handler(task, route) {
                 out.insert(
                     "trigger: its own source, reached through a requester its route names too",
                 );
@@ -12185,8 +12185,8 @@ fn release_classes(label: &str) -> BTreeSet<&'static str> {
     // path, the system's own level or its handler.
     let routed: Vec<&str> = sources
         .iter()
-        .filter(|(name, _, path)| {
-            own_source.values().any(|s| s == name) || !matches!(*path, "DirectT" | "DirectU")
+        .filter(|(name, _, route)| {
+            own_source.values().any(|s| s == name) || !matches!(*route, "DirectT" | "DirectU")
         })
         .map(|(_, separation, _)| *separation)
         .collect();

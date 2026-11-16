@@ -1150,8 +1150,15 @@ mdBook that is the director's window into the project.
   Commit: `ARCHOGEN-PROGRAM-1392 (leaf PROGRAM.151.2)`
 
 - ID: `PROGRAM.151.3`
-  Status: `pending` — the batch gave `crates/archogen-cli`, `crates/archogen-emit` and `crates/archogen-plan` a development edge to `crates/archogen-plan-check`, so 51 test units compile both roles' packages with no form in `trust/roots.eadl`; the local inventory marks each `trust-unclassified-program` and refuses none (`target/p151/formless-units.json`).
+  Status: `done` — `2026-11-16`: the 51 test units the runner named, each read from its source by a fresh reader and checked by the lead: two compare the roles and are derivations, `target-parity` and `plan-bounded`; 49 are classified. `resolve-plan`, whose reason said it compares two roles' writers, is a derivation too, `plan-writers`, so that `bounded`, which judges records "as `crates/eadl-resolve/tests/plan.rs` judges one", is not named apart from it.
   Goal: each unit named by a derivation where it compares the two roles, or classified by a `defprogram` form whose reason says what it uses of the checker, each read from its source.
+  Acceptance:
+    - [x] ROOT CAUSE — WHY: the batch gave `crates/archogen-cli` (`M4.2.3.1`), `crates/archogen-emit` (`M4.2.2`) and `crates/archogen-plan` (`M4.1.13`) a development edge to `crates/archogen-plan-check`, which reaches every test target of each, and added `crates/eadl-resolve`'s `target` and `target_parity` and `crates/rt-core`'s `runtime_data`; the inventory marks each `trust-unclassified-program` and the gate refuses it on the baseline's host alone (`xtask/src/trust_gate.rs`, `refused.extend(formless)` under `own.host == host`), so no commit here saw it; WHERE, the runner's gate → 51 `trust-form-missing` lines (`target/p151/formless.txt`), and the local inventory's `program-targets` → the same 51, `trust-unclassified-program` (`target/p151/formless-units.json`).
+    - [x] FIX — `trust/roots.eadl`: 49 `defprogram` forms, each reason true of its source, its `role-packages` the inventory's; `defderivation target-parity` and `plan-bounded`, each quoting what it holds equal; `resolve-plan` made `defderivation plan-writers`, its reason saying why. The decision rule, the record's: "a classification says its unit compares nothing" (`docs/specs/trust/decision_trust-role-programs.md` §3); a checker's verdict a test takes as a precondition, to go on with a build, is no comparison. A derivation's units are read by the catalog's rules, so `path`, a local name inside a macro in `bounded.rs`, `plan.rs` and `target_parity.rs`, is renamed `route` or `file`, nothing admitted. Two comments the edge made false, `tests/fires_on.rs` and `tests/sibling.rs` of `crates/archogen-cli`, corrected.
+    - [x] ADDRESSED — `cargo xtask trust-inventory --commit <the staged tree>` → exit 0, `13 program(s), 13 pair(s), 38 shared item(s), 23 refused site(s) each admitted`, its `program-targets` `classified 76`, `derivation 7`, `root 2`, `harness 1`, none unclassified, `classifications-unused` empty; before the renames it refused 15 `path` sites in the three derivations' files; `cargo xtask trust-gate --commit <the staged tree> --base 34b6abeb` → exit 0, `trust-gate: passed — the change: 95 line(s); 151 standing entries unreviewed`, no `trust-form-missing` in its report, off the baseline's host and so not compared. The runner's gate is `.4`'s, with the baseline.
+    - [x] NO REGRESSION — `cargo fmt --all -- --check` → exit 0; the renames move no assertion and no label the tests print; `make focused` on the staged tree, the commit's gate.
+    - [x] LOCKSTEP — `trust/roots.eadl`, its section comment, this leaf, the Commit Log.
+  Commit: `ARCHOGEN-PROGRAM-1393 (leaf PROGRAM.151.3)`
 
 - ID: `PROGRAM.151.4`
   Status: `pending` — the runner's proposal for `trust/baseline.eadl`, its 18 forms whose digests this tree moved or which it shares anew, committed unaccepted as `TI-H3` has it (`M3.6.3.2.1`); the owned leaf `M3.6.3.2.1.1` asks for. After `.1` to `.3` and `PROGRAM.150` are on the pull request, since each moves a digest.
@@ -1331,6 +1338,7 @@ leaf's outcome is its row in the Commit Log below, and a sealed leaf's full reco
 | `PROGRAM.150` | `ARCHOGEN-PROGRAM-1390 (leaf PROGRAM.150)` | **the batch review's findings fixed**: the surface's record, `explain`'s scope, the allocator's count after a null, a host path in a test string, the hook's ledger entry. |
 | `PROGRAM.151.1`, `PROGRAM.151` | `ARCHOGEN-PROGRAM-1391 (leaf PROGRAM.151.1)` | **the launcher on Linux runs what it hashed through the front's own `/proc` entry**, which a script's interpreter can open; `PROGRAM.151` split by root cause. |
 | `PROGRAM.151.2` | `ARCHOGEN-PROGRAM-1392 (leaf PROGRAM.151.2)` | **the catalog check's workflow checks out the whole history**, which its checker requires and two commits deep was not. |
+| `PROGRAM.151.3` | `ARCHOGEN-PROGRAM-1393 (leaf PROGRAM.151.3)` | **the 51 test units compiling both roles named**: 49 classified, `target-parity` and `plan-bounded` derivations, and `resolve-plan` a derivation as the record's rule makes it. |
 
 ## Changelog
 
@@ -1467,3 +1475,4 @@ leaf's outcome is its row in the Commit Log below, and a sealed leaf's full reco
 - `2026-11-16`: `PROGRAM.150` done: the review's findings fixed; it joins pull request #1, whose required checks failed on the runner.
 - `2026-11-16`: `PROGRAM.151` split into five leaves by root cause; `PROGRAM.151.1` done: the launcher on Linux names its descriptor under the front's own `/proc` entry.
 - `2026-11-16`: `PROGRAM.151.2` done: the catalog check's workflow checks out the whole history.
+- `2026-11-16`: `PROGRAM.151.3` done: every test unit compiling two roles named or classified, none left unclassified.

@@ -1,6 +1,6 @@
 //! The front's launcher (leaf `M3.5.1.4.1`), run as an install runs it: the `archogen` executable copied into a scratch
 //! directory beside a sibling and the install manifest, `archogen-install/1`, that names them both. The sibling here is
-//! a second copy of `archogen` under the configuration checker's name — this package compiles no checker, and what is
+//! a second copy of `archogen` under the configuration checker's name — this test calls no item of the checker, and what is
 //! held is the front's half: that it runs a sibling the manifest vouches for, with the arguments it was given, an
 //! empty standard input and its output and exit code relayed, and refuses one it cannot vouch for.
 
