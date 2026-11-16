@@ -276,9 +276,15 @@ one write reaches, the compare's step and how it is read. Then come the horizon 
 owed until a catalog record states it. A system no task of which the timer releases writes `(timer none)`. The epoch is
 counted from a read, its lead owed too, and `last-act-lead` is owed wherever the system has an alarm. An alarm writes
 its device's counter the same way, and owes its `lag`. The release timer's device is a node of the plan, initialised in
-its step, where the catalog's timer service runs. Until its regions, its memory and its controller are written (leaves
-`M4.1.7.6.7.3` and `M4.1.7.6.8`), the lowering on a target refuses after every refusal that comes before them, rather
-than return a plan short of them; `archogen_plan::on_target_so_far` gives what is written meanwhile, for the tests.
+its step, where the catalog's timer service runs.
+
+Then a target's regions and what it owes (leaf `M4.1.7.6.7.3`). Each region of the machine's hardware has its line, the
+placement memory the search chose written `placement` and followed by `(placement PROVIDER REGION)`. On a target, each
+source and each alarm owes `external`, whether its interrupt reaches the controller. It owes `holds-under-preemption`
+too, as does each node a job calls: that each cost the generated code states holds under any preemption. Both are the
+realization's to state, and a hosted plan owes neither, since the simulator states them. Until its memory and its
+controller are written (leaf `M4.1.7.6.8`), the lowering on a target refuses after every refusal that comes before them,
+rather than return a plan short of them; `archogen_plan::on_target_so_far` gives what is written meanwhile, for the tests.
 No command writes a `/2` plan yet.
 
 ## From a plan to a generated system

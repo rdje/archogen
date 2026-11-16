@@ -5,8 +5,9 @@
 //! the record, of the kind and the target given, the digest deciding the run; then the application's target, the platform's
 //! name. Its time (leaf `M4.1.7.6.7.2`) is held through `on_target_so_far`: the release timer's line, the epoch's, each
 //! alarm's `COUNTER` line, the release timer's device's `(interrupt timer)`, and what each owes, over the shipped target
-//! and `TWO_CHANNELS`, a test target with an alarm's room and a source, written in this file. The rest of a plan on a target
-//! is `M4.1.7.6.7.3` and `M4.1.7.6.8`'s, and the lowering says so rather than write it short.
+//! and `TWO_CHANNELS`, a test target with an alarm's room and a source, written in this file. Its regions, its placement
+//! line and what a target adds to what is owed (leaf `M4.1.7.6.7.3`) are held the same way. The rest of a plan on a target,
+//! its memory and its controller, is `M4.1.7.6.8`'s, and the lowering says so rather than write it short.
 
 mod common;
 
@@ -18,7 +19,9 @@ use archogen_plan::{
     lower_hosted, lower_on_target, on_target_so_far, target_lines, ApplicationFile, Generation,
     Refusal, TargetFile,
 };
-use common::{catalog, hosted_record, registry, root, searched_on_target, vocabulary};
+use common::{
+    catalog, hosted_record, lowered_both, registry, root, searched_on_target, vocabulary,
+};
 use eadl_resolve::plan;
 
 const EMPTY: [(String, Digest); 0] = [];
@@ -76,8 +79,8 @@ fn refused(outcome: Result<String, Refusal>, said: &str) -> &'static str {
     refusal.code
 }
 
-/// Past every stage built: the rest of the plan is `M4.1.7.6.7.3` and `M4.1.7.6.8`'s.
-const UNBUILT: &str = "M4.1.7.6.7.3";
+/// Past every stage built: the rest of the plan, its memory and its controller, is `M4.1.7.6.8`'s.
+const UNBUILT: &str = "M4.1.7.6.8";
 
 /// A whole application's file for the heartbeat, of `target`.
 fn an_application(target: &str) -> String {
@@ -611,14 +614,106 @@ fn an_alarm_on_a_target_writes_its_counter_and_owes_its_lag() {
     assert!(!lines.iter().any(|line| line.contains("(alarm (release ")));
 }
 
-/// The plan on a target is still refused past every stage built, now naming the leaves left: no plan short of its regions,
-/// memory and controller is returned as whole.
+/// The plan on a target is still refused past every stage built, now naming the one leaf left: no plan short of its memory
+/// and controller is returned as whole.
 #[test]
 fn a_plan_on_a_target_names_the_leaves_it_waits_on() {
     let refusal = on(&riscv_virt_up(), None, None).expect_err("refused");
     assert_eq!(refusal.code, "tool-failure");
     assert!(
-        refusal.message.contains("M4.1.7.6.7.3") && refusal.message.contains("M4.1.7.6.8"),
+        refusal.message.contains("M4.1.7.6.8") && !refusal.message.contains("M4.1.7.6.7.3"),
         "{refusal}"
     );
+}
+
+// ---- a target's regions and what it owes (leaf `M4.1.7.6.7.3`)
+
+/// The S0 heartbeat on the shipped target: a `(region …)` line for each region of the target's hardware, by base, its use
+/// as §3 gives one, the placement memory the assignment chose written `placement`, each with the requesters bound to its
+/// provider; the `(placement …)` line beside the map, after the regions; and what a target adds to what is owed, each node a
+/// job calls owing `holds-under-preemption` (§3, "Values", "Orders" and "`(owed …)`, as `/2` writes it"; §5).
+#[test]
+fn the_heartbeat_s_regions_and_placement_on_the_shipped_target() {
+    let lines = so_far(&heartbeat(), &riscv_virt_up());
+    assert_eq!(
+        headed(&lines, "region"),
+        [
+            "(region target.timer target.timer (base 33554432) (size 65536) (use device) (requesters (release heartbeat)))",
+            "(region target.console target.console (base 268435456) (size 256) (use device) (requesters console.write))",
+            "(region target.ram target.riscv-virt-up (base 2147483648) (size 134217728) (use placement) (requesters))",
+        ]
+    );
+    assert_eq!(
+        headed(&lines, "placement"),
+        ["(placement target.riscv-virt-up target.ram)"]
+    );
+    assert_eq!(
+        lines
+            .iter()
+            .filter(|line| line.contains(" holds-under-preemption ") || line.contains(" external ("))
+            .map(String::as_str)
+            .collect::<Vec<_>>(),
+        [
+            "(owed console.write holds-under-preemption (by realization))",
+            "(owed target.console holds-under-preemption (by realization))",
+        ]
+    );
+    // §3's order: the regions after `(interrupt-model …)`, the placement after them, and the nodes after both.
+    let at = |head: &str| {
+        lines
+            .iter()
+            .position(|line| archogen_plan::identity::head(line) == head)
+    };
+    assert!(
+        at("interrupt-model") < at("region")
+            && at("region") < at("placement")
+            && at("placement") < at("node")
+    );
+}
+
+/// A source and an alarm on a target: each owes `external`, whether its interrupt reaches the controller, and
+/// `holds-under-preemption`, by the realization, as §3 adds of a source on a target and of each alarm, a source of its own;
+/// the hosted plan of the same system owes neither (§3, "`(owed …)`, as `/2` writes it").
+#[test]
+fn a_source_and_an_alarm_on_a_target_owe_external_and_holds_under_preemption() {
+    let of = |description: &str| -> Vec<String> {
+        so_far(description, &two_channels())
+            .into_iter()
+            .filter(|line| {
+                line.contains(" holds-under-preemption ") || line.contains(" external (")
+            })
+            .collect()
+    };
+    assert_eq!(
+        of(SPORADIC),
+        [
+            "(owed (source target.button) external (by realization))",
+            "(owed (source target.button) holds-under-preemption (by realization))",
+            "(owed evt holds-under-preemption (by realization))",
+            "(owed log holds-under-preemption (by realization))",
+            "(owed target.button holds-under-preemption (by realization))",
+            "(owed target.console holds-under-preemption (by realization))",
+        ]
+    );
+    assert_eq!(
+        of(WAITER),
+        [
+            "(owed (alarm wait) external (by realization))",
+            "(owed (alarm wait) holds-under-preemption (by realization))",
+            "(owed console.write holds-under-preemption (by realization))",
+            "(owed target.console holds-under-preemption (by realization))",
+            "(owed target.timer holds-under-preemption (by realization))",
+            "(owed wait holds-under-preemption (by realization))",
+        ]
+    );
+    // A hosted plan owes neither: the simulator states them (`RTP-H9`), and §3 adds them on a target alone.
+    for description in [SPORADIC, WAITER] {
+        let (_, hosted) = lowered_both(description, None, &generation()).expect("it resolves");
+        let hosted = hosted.expect("it lowers hosted");
+        assert!(
+            !hosted.contains(" holds-under-preemption ") && !hosted.contains(" external ("),
+            "{hosted}"
+        );
+        assert!(!hosted.contains("(placement "), "{hosted}");
+    }
 }

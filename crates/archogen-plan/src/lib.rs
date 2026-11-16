@@ -507,6 +507,13 @@ struct Body {
     task_order: Vec<(String, String)>,
     /// On a target, its time (leaf `M4.1.7.6.7.2`); none on the playground.
     time: Option<Time>,
+    /// On a target, `(placement PROVIDER REGION)`, the assignment's placement memory, written beside the map (§3, §5; leaf
+    /// `M4.1.7.6.7.3`).
+    placement: Option<String>,
+    /// On a target, what a target adds to what is owed (§3): each source's and each alarm's `external`, and the
+    /// `holds-under-preemption` of each node a job calls, each alarm and each source, by the realization (leaf
+    /// `M4.1.7.6.7.3`).
+    target_owed: Vec<String>,
 }
 
 /// What `/2` writes of a body's alarms (`decision_runtime-plan-format-2.md` §3; `decision_release-alarm.md` §2 and §3):
@@ -530,6 +537,9 @@ struct Two {
     /// the counter itself that is no wake ([`alarm::asks_application`]), which a task writes where it reaches its node
     /// (§3, `RA-H7`).
     asked: Vec<(String, String)>,
+    /// Each alarm's item, `(alarm NODE)`, by `NODE`'s text: a source of its own on a target, which owes what a source does
+    /// there (§3; leaf `M4.1.7.6.7.3`).
+    items: Vec<String>,
 }
 
 /// One alarm of `/2` (§3): what takes a channel of a device for a compare, its node.
@@ -590,8 +600,10 @@ struct Place {
     epoch: String,
     /// The `(timer …)` line.
     timer: String,
-    /// Whether its `(region …)` lines are written yet: a hosted plan's are; a target's are `M4.1.7.6.7.3`'s.
+    /// Whether its `(region …)` lines are written: a hosted plan's are, and a target's since leaf `M4.1.7.6.7.3`.
     regions: bool,
+    /// `(placement PROVIDER REGION)`, a target's; a hosted plan has none (§1).
+    placement: Option<String>,
     /// What the place owes beside the rest: a target's time.
     owed: Vec<String>,
 }
@@ -649,6 +661,7 @@ impl Body {
                 epoch: "(epoch simulator)".to_string(),
                 timer: format!("(timer simulator {})", list("releases", &self.releases)),
                 regions: true,
+                placement: None,
                 owed: Vec::new(),
             },
             generation,
@@ -657,9 +670,9 @@ impl Body {
     }
 
     /// `archogen-runtime-plan/2`'s text on a target as far as it is built (`decision_runtime-plan-format-2.md` §1 and §3;
-    /// leaves `M4.1.7.6.7.1` and `.2`): the target's and the catalog's lines, its time, and every line it shares with a
-    /// hosted plan, an alarm's `COUNTER` and its `lag` among them; its regions, placement, memory and controller are
-    /// `M4.1.7.6.7.3` and `M4.1.7.6.8`'s.
+    /// leaves `M4.1.7.6.7.1` to `.3`): the target's and the catalog's lines, its time, every line it shares with a hosted
+    /// plan, an alarm's `COUNTER` and its `lag` among them, its regions with its placement memory's, its `(placement …)`
+    /// line and what a target adds to what is owed; its memory and controller are `M4.1.7.6.8`'s.
     fn write_two_on_target(
         &self,
         target: &TargetLines,
@@ -678,8 +691,9 @@ impl Body {
                 catalog: target.catalog.clone(),
                 epoch: time.epoch.clone(),
                 timer: time.timer.clone(),
-                regions: false,
-                owed: time.owed.clone(),
+                regions: true,
+                placement: self.placement.clone(),
+                owed: time.owed.iter().chain(&self.target_owed).cloned().collect(),
             },
             generation,
             application,
@@ -734,6 +748,7 @@ impl Body {
         if place.regions {
             lines.extend(self.regions.iter().cloned());
         }
+        lines.extend(place.placement.iter().cloned());
         lines.extend(self.nodes.iter().cloned());
         lines.extend(self.two.contexts.iter().cloned());
         lines.extend(self.depends.iter().cloned());
@@ -1071,13 +1086,13 @@ pub fn target_lines(
     lines_of(&a_target(file, kinds, vocabulary)?, generation)
 }
 
-/// The executable form's `/2` lowering on a target (`decision_runtime-plan-format-2.md` §1 and §7; leaves `M4.1.7.6.7.1` and
-/// `.2`): an `archogen-assignment/3` record resolved on `target`, lowered over `program` with the target's platform in the
+/// The executable form's `/2` lowering on a target (`decision_runtime-plan-format-2.md` §1 and §7; leaves `M4.1.7.6.7.1` to
+/// `.3`): an `archogen-assignment/3` record resolved on `target`, lowered over `program` with the target's platform in the
 /// system's own's place, as `on_target` gives it. No command reaches it: nothing but a test may call it, as for [`lower`].
 ///
-/// ⚠️ **It writes no plan yet.** A plan on a target's regions and placement, its memory and its controller, and what a
-/// target adds to what it owes, are leaves `M4.1.7.6.7.3` and `M4.1.7.6.8`'s, so after every refusal §7 places before them
-/// it refuses `tool-failure`, naming the leaves, rather than return a plan short of them as if whole.
+/// ⚠️ **It writes no plan yet.** A plan on a target's memory, its allocations and its image, and its controller are leaf
+/// `M4.1.7.6.8`'s, so after every refusal §7 places before them it refuses `tool-failure`, naming the leaf, rather than
+/// return a plan short of them as if whole.
 /// [`on_target_so_far`] gives what is written meanwhile, and [`target_lines`] the target's own lines.
 ///
 /// # Errors
@@ -1111,7 +1126,7 @@ pub fn lower_on_target(
     )?;
     Err(refuse(
         "tool-failure",
-        "a plan on a target's regions and placement, its memory and its controller, and what a target adds to what it owes are written by task-tree leaves M4.1.7.6.7.3 and M4.1.7.6.8, not built yet",
+        "a plan on a target's memory, its allocations and its image, and its controller are written by task-tree leaf M4.1.7.6.8, not built yet",
     ))
 }
 
@@ -1123,17 +1138,17 @@ pub struct OnTargetSoFar {
 }
 
 impl OnTargetSoFar {
-    /// The text written so far, each line a form, in §3's order, and short of the lines `M4.1.7.6.7.3` and `M4.1.7.6.8`
-    /// write.
+    /// The text written so far, each line a form, in §3's order, and short of the lines `M4.1.7.6.8` writes.
     #[must_use]
     pub fn text(&self) -> &str {
         &self.text
     }
 }
 
-/// A plan on a target as far as it is built (leaf `M4.1.7.6.7.2`): every refusal [`lower_on_target`] makes, then the text
-/// those leaves write, the target's lines, its time, and what it shares with a hosted plan, for a reader to hold before
-/// the rest is written. Not a plan: its regions, placement, memory, controller and a target's owed lines are missing.
+/// A plan on a target as far as it is built (leaves `M4.1.7.6.7.2` and `.3`): every refusal [`lower_on_target`] makes, then
+/// the text those leaves write, the target's lines, its time, what it shares with a hosted plan, its regions and placement
+/// and what a target adds to what it owes, for a reader to hold before the rest is written. Not a plan: its memory and
+/// controller are missing.
 ///
 /// # Errors
 ///
@@ -2409,6 +2424,46 @@ fn body(
         })
         .collect();
     owed_by_two.extend(owed_by_alarms);
+    // On a target, its placement line and what a target adds to what is owed (§3, "`(owed …)`, as `/2` writes it", and
+    // §5, "Which is placement memory"; leaf `M4.1.7.6.7.3`): `external` of a source on a target, and of each alarm, a
+    // source of its own, whether its interrupt reaches the controller; `holds-under-preemption` of each node whose context
+    // line holds `job`, each alarm and each source on a target, all by the realization.
+    let (placement, target_owed) = match there {
+        None => (None, Vec::new()),
+        Some(_) => {
+            let placement = record
+                .placement
+                .as_ref()
+                .map(|(provider, region)| format!("(placement {provider} {region})"));
+            let sources: Vec<String> = routes
+                .iter()
+                .filter(|r| !r.timer)
+                .map(Route::item)
+                .collect();
+            let mut target_owed = Vec::new();
+            for item in sources.iter().chain(&two.items) {
+                owe(&mut target_owed, item, "external", "realization");
+                owe(
+                    &mut target_owed,
+                    item,
+                    "holds-under-preemption",
+                    "realization",
+                );
+            }
+            for n in nodes
+                .iter()
+                .filter(|n| contexts.get(*n).is_some_and(|c| c.contains("job")))
+            {
+                owe(
+                    &mut target_owed,
+                    &names.text(n),
+                    "holds-under-preemption",
+                    "realization",
+                );
+            }
+            (placement, target_owed)
+        }
+    };
     Ok((
         Body {
             profile: record.profile.clone(),
@@ -2433,6 +2488,8 @@ fn body(
             two,
             task_order,
             time,
+            placement,
+            target_owed,
         },
         accepted,
     ))
@@ -2992,6 +3049,10 @@ fn alarms_of(
         }
     }
     two.alarms = alarms.iter().map(|a| a.line.clone()).collect();
+    two.items = alarms
+        .iter()
+        .map(|a| format!("(alarm {})", a.text))
+        .collect();
     // `RA-H7`: each task that writes an alarm on the counter itself that is no wake, where it reaches the alarm's node.
     for alarm in alarms
         .iter()
