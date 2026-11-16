@@ -290,6 +290,15 @@ pub fn in_order(regions: &mut [(u128, &str, &str)]) {
     regions.sort_unstable();
 }
 
+/// §3's `(obligation placement …)` line of an executable region that is not reserved, `(region PROVIDER NAME)` its subject,
+/// so two providers' regions of one name are two lines (RP13-2), discharged by `M4.4`, whose holes the `(region …)` lines
+/// name (RP11-2), in `decision_runtime-plan.md` §3's form of every obligation line, `(obligation KIND SUBJECT (discharged-by
+/// LEAF …))` (leaf `M4.1.7.6.8`).
+#[must_use]
+pub fn placement_obligation(provider: &str, region: &str) -> String {
+    format!("(obligation placement (region {provider} {region}) (discharged-by M4.4))")
+}
+
 // ---- §5: the stacks
 
 /// The fault path's figures, which every stack adds on top of the deepest of what it holds (§5, "A fault is added, and

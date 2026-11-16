@@ -3,11 +3,11 @@
 //! "The application and the realization in the identity", and §7's order; leaf `M4.1.7.6.7.1`), over `targets/riscv-virt-up.eadl`
 //! and the S0 heartbeat: the target's own refusals first, by the code `check` gives them; then the application's file; then
 //! the record, of the kind and the target given, the digest deciding the run; then the application's target, the platform's
-//! name. Its time (leaf `M4.1.7.6.7.2`) is held through `on_target_so_far`: the release timer's line, the epoch's, each
+//! name. Its time (leaf `M4.1.7.6.7.2`), read from the whole plan `lower_on_target` writes: the release timer's line, the epoch's, each
 //! alarm's `COUNTER` line, the release timer's device's `(interrupt timer)`, and what each owes, over the shipped target
 //! and `TWO_CHANNELS`, a test target with an alarm's room and a source, written in this file. Its regions, its placement
-//! line and what a target adds to what is owed (leaf `M4.1.7.6.7.3`) are held the same way. The rest of a plan on a target,
-//! its memory and its controller, is `M4.1.7.6.8`'s, and the lowering says so rather than write it short.
+//! line and what a target adds to what is owed (leaf `M4.1.7.6.7.3`) are held the same way, and so are its allocations, its
+//! image, its placement obligation and each route's controller (leaf `M4.1.7.6.8`), with which the plan is whole.
 
 mod common;
 
@@ -16,8 +16,7 @@ use std::fs;
 use archogen_digest::Digest;
 use archogen_plan::application::{CLAUSE_CUT, CLAUSE_PARTS, FORMAT};
 use archogen_plan::{
-    lower_hosted, lower_on_target, on_target_so_far, target_lines, ApplicationFile, Generation,
-    Refusal, TargetFile,
+    lower_hosted, lower_on_target, target_lines, ApplicationFile, Generation, Refusal, TargetFile,
 };
 use common::{
     catalog, hosted_record, lowered_both, registry, root, searched_on_target, vocabulary,
@@ -79,9 +78,6 @@ fn refused(outcome: Result<String, Refusal>, said: &str) -> &'static str {
     refusal.code
 }
 
-/// Past every stage built: the rest of the plan, its memory and its controller, is `M4.1.7.6.8`'s.
-const UNBUILT: &str = "M4.1.7.6.8";
-
 /// A whole application's file for the heartbeat, of `target`.
 fn an_application(target: &str) -> String {
     const LIST: &str = r#"(scope "one job") (binary unbuilt) (evidence analytically-established) (locator "docs/argument.md") (basis "by reading")"#;
@@ -105,10 +101,7 @@ fn an_application(target: &str) -> String {
 /// platform with the digest of its forms, and the catalog's digest with the platform's `catalog-target`.
 #[test]
 fn the_heartbeat_on_riscv_virt_up_has_its_target_s_lines() {
-    assert_eq!(
-        refused(on(&riscv_virt_up(), None, None), UNBUILT),
-        "tool-failure"
-    );
+    let plan = on(&riscv_virt_up(), None, None).expect("it lowers whole");
     let lines = target_lines(
         &TargetFile {
             name: "riscv-virt-up.eadl",
@@ -130,9 +123,13 @@ fn the_heartbeat_on_riscv_virt_up_has_its_target_s_lines() {
         lines.catalog,
         format!("(catalog \"{}\" riscv-virt-up)", Digest::of(b"").hex())
     );
-    // A comment moves no digest, so the record resolved on the file stands on it commented.
+    assert!(
+        plan.contains(&format!("{}\n", lines.target))
+            && plan.contains(&format!("{}\n", lines.catalog))
+    );
+    // A comment moves no digest, so the record resolved on the file stands on it commented, and gives the same plan.
     let commented = format!("; a comment\n{}", riscv_virt_up());
-    assert_eq!(refused(on(&commented, None, None), UNBUILT), "tool-failure");
+    assert_eq!(on(&commented, None, None).expect("it lowers whole"), plan);
 }
 
 /// §7's first stage: the target's own refusals before anything is lowered, `check`'s judgement of its file alone, by the code
@@ -256,10 +253,7 @@ fn a_record_is_accepted_by_its_kind_and_its_target_s_digest() {
 #[test]
 fn an_application_names_its_target_by_the_platform() {
     let own = an_application("target.riscv-virt-up");
-    assert_eq!(
-        refused(on(&riscv_virt_up(), None, Some(&own)), UNBUILT),
-        "tool-failure"
-    );
+    on(&riscv_virt_up(), None, Some(&own)).expect("it lowers whole");
     for other in ["riscv-virt-up", "hosted-playground"] {
         let file = an_application(other);
         let refusal = on(&riscv_virt_up(), None, Some(&file)).expect_err("refused");
@@ -486,11 +480,11 @@ const SPORADIC: &str = "(eadl-version eadl/1)
   (platform (uses soc.e)))
 ";
 
-/// `description`'s first system on `target`, searched there and lowered as far as built: its lines.
+/// `description`'s first system on `target`, searched there and lowered whole: its lines.
 fn so_far(description: &str, target: &str) -> Vec<String> {
     let (program, record) =
         searched_on_target(description, target).expect("it resolves on the target");
-    on_target_so_far(
+    lower_on_target(
         &program,
         &record,
         &TargetFile {
@@ -503,8 +497,7 @@ fn so_far(description: &str, target: &str) -> Vec<String> {
         &generation(),
         None,
     )
-    .expect("it lowers as far as built")
-    .text()
+    .expect("it lowers whole")
     .lines()
     .map(str::to_owned)
     .collect()
@@ -589,7 +582,7 @@ fn an_alarm_on_a_target_writes_its_counter_and_owes_its_lag() {
     );
     assert_eq!(
         headed(&lines, "route"),
-        ["(route 1 (alarm wait) (separation programmed) (level machine) (deliverable yes) (requesters wait) (costs))"]
+        ["(route 1 (alarm wait) (separation programmed) (level machine) (deliverable yes) (requesters wait) (costs) (controller owed))"]
     );
     assert_eq!(headed(&lines, "enabled"), ["(enabled timer (alarm wait))"]);
     assert!(lines.contains(
@@ -612,18 +605,6 @@ fn an_alarm_on_a_target_writes_its_counter_and_owes_its_lag() {
     assert!(headed(&lines, "clock").is_empty());
     // The release requester is no node and takes no alarm.
     assert!(!lines.iter().any(|line| line.contains("(alarm (release ")));
-}
-
-/// The plan on a target is still refused past every stage built, now naming the one leaf left: no plan short of its memory
-/// and controller is returned as whole.
-#[test]
-fn a_plan_on_a_target_names_the_leaves_it_waits_on() {
-    let refusal = on(&riscv_virt_up(), None, None).expect_err("refused");
-    assert_eq!(refusal.code, "tool-failure");
-    assert!(
-        refusal.message.contains("M4.1.7.6.8") && !refusal.message.contains("M4.1.7.6.7.3"),
-        "{refusal}"
-    );
 }
 
 // ---- a target's regions and what it owes (leaf `M4.1.7.6.7.3`)
@@ -716,4 +697,183 @@ fn a_source_and_an_alarm_on_a_target_owe_external_and_holds_under_preemption() {
         );
         assert!(!hosted.contains("(placement "), "{hosted}");
     }
+}
+
+// ---- a target's memory and its controller (leaf `M4.1.7.6.8`)
+
+/// The S0 heartbeat on the shipped target, whole: each stack owed, in §5's order, the boot's, the interrupt's, each task's by
+/// runtime index, no table being known while the catalog states none; each naming what it lacks of its own, the
+/// application's, the catalog's and the realization's by owner, then by text, and the last owed unit before it; the image's
+/// floor at the placement region's base, no hole above it, its limit owed; the placement region's obligation; and what each
+/// figure is owed by. No route, so no controller (§3, `UNIT`, `NEED`, "Orders", `(obligation …)` and what is owed; §5; §6).
+#[test]
+fn the_heartbeat_s_memory_on_the_shipped_target() {
+    let lines = so_far(&heartbeat(), &riscv_virt_up());
+    assert_eq!(
+        headed(&lines, "allocation"),
+        [
+            "(allocation (stack boot) owed (needs (application heartbeat initialisation) (record alignment) (record fault-check-stack) (record fault-path-stack) (record guard) (record idle-stack) (record initialisation-path-stack) (record transition-stack) (record trap-frame) (realization (fault) fault-entry-stack) (realization (stack boot) call-frame) (realization (stack boot) last-act-stack) (realization (step 1) initialisation-stack) (realization (step 2) initialisation-stack) (realization (step 3) initialisation-stack)))",
+            "(allocation (stack interrupt) owed (needs (record alignment) (record fault-check-stack) (record fault-path-stack) (record guard) (record timer-service-stack) (record trap-frame) (record trap-path-stack) (realization (fault) fault-entry-stack) (realization (stack interrupt) call-frame) (unit (stack boot))))",
+            "(allocation (stack (task heartbeat beat)) owed (needs (application (task heartbeat beat) node-calls) (application (task heartbeat beat) os-calls) (application (task heartbeat beat) stack-bound) (record alignment) (record completion-stack) (record fault-check-stack) (record fault-path-stack) (record guard) (record trap-frame) (realization (fault) fault-entry-stack) (realization (stack (task heartbeat beat)) call-frame) (unit (stack interrupt))))",
+            "(allocation (stack (task heartbeat chime)) owed (needs (application (task heartbeat chime) node-calls) (application (task heartbeat chime) os-calls) (application (task heartbeat chime) stack-bound) (record alignment) (record completion-stack) (record fault-check-stack) (record fault-path-stack) (record guard) (record trap-frame) (realization (fault) fault-entry-stack) (realization (stack (task heartbeat chime)) call-frame) (unit (stack (task heartbeat beat)))))",
+        ]
+    );
+    assert_eq!(
+        headed(&lines, "image"),
+        ["(image (floor 2147483648) (limit owed) (truncated-by))"]
+    );
+    assert_eq!(
+        headed(&lines, "obligation")
+            .into_iter()
+            .filter(|line| line.starts_with("(obligation placement "))
+            .collect::<Vec<_>>(),
+        ["(obligation placement (region target.riscv-virt-up target.ram) (discharged-by M4.4))"]
+    );
+    let owed = |owner: &str| -> Vec<&str> {
+        headed(&lines, "owed")
+            .into_iter()
+            .filter(|line| line.contains("stack") && line.ends_with(&format!("(by {owner}))")))
+            .collect()
+    };
+    assert_eq!(
+        owed("realization"),
+        [
+            "(owed (fault) fault-entry-stack (by realization))",
+            "(owed (stack (task heartbeat beat)) call-frame (by realization))",
+            "(owed (stack (task heartbeat chime)) call-frame (by realization))",
+            "(owed (stack boot) call-frame (by realization))",
+            "(owed (stack boot) last-act-stack (by realization))",
+            "(owed (stack interrupt) call-frame (by realization))",
+            "(owed (step 1) initialisation-stack (by realization))",
+            "(owed (step 2) initialisation-stack (by realization))",
+            "(owed (step 3) initialisation-stack (by realization))",
+        ]
+    );
+    // Each stack's catalog figures, of that stack: five of every stack, and each its sum's own.
+    assert_eq!(owed("catalog").len(), 8 + 7 + 6 + 6);
+    for line in [
+        "(owed (stack boot) idle-stack (by catalog))",
+        "(owed (stack interrupt) timer-service-stack (by catalog))",
+        "(owed (stack (task heartbeat beat)) completion-stack (by catalog))",
+    ] {
+        assert!(lines.contains(&line.to_owned()), "{line}");
+    }
+    // No route: nothing reaches a controller, and nothing owes its line or its levels.
+    assert!(!lines.iter().any(|line| line.contains("controller")));
+    // §3's order: the placement, the allocations, the image, then the nodes.
+    let at = |head: &str| {
+        lines
+            .iter()
+            .position(|line| archogen_plan::identity::head(line) == head)
+    };
+    assert!(
+        at("placement") < at("allocation")
+            && at("allocation") < at("image")
+            && at("image") < at("node")
+    );
+    // The allocations and the image are figures, which the code identity leaves out (§1).
+    let preimage =
+        archogen_plan::identity::preimage(&(lines.join("\n") + "\n")).expect("a preimage");
+    assert!(!preimage.contains("(allocation ") && !preimage.contains("(image "));
+}
+
+/// A route on a target reaches the controller while its `external` is owed, so it writes `(controller owed)` last on its line,
+/// its line owed of its item and the controller's levels owed, by the catalog; the interrupt stack holds its service, owed by
+/// the realization; under `(timer none)` no timer service, so none of its stack is asked. The hosted plan of the same system
+/// writes no controller and lays out no memory (§3, §5, §6; RP12-4, RP22-1, RP29-2, RP30-2).
+#[test]
+fn each_route_on_a_target_reaches_the_controller() {
+    let lines = so_far(SPORADIC, &two_channels());
+    assert_eq!(
+        headed(&lines, "route"),
+        ["(route 1 (source target.button) (separation 1/50 s) (level machine) (deliverable yes) (requesters evt) (costs) (controller owed))"]
+    );
+    for line in [
+        "(owed (source target.button) controller-line (by catalog))",
+        "(owed (controller) controller-levels (by catalog))",
+        "(owed (route (source target.button)) service-stack (by realization))",
+    ] {
+        assert!(lines.contains(&line.to_owned()), "{line}");
+    }
+    let interrupt = headed(&lines, "allocation")
+        .into_iter()
+        .find(|line| line.starts_with("(allocation (stack interrupt) "))
+        .expect("the interrupt stack");
+    assert!(
+        interrupt.contains("(realization (route (source target.button)) service-stack)"),
+        "{interrupt}"
+    );
+    assert!(!lines
+        .iter()
+        .any(|line| line.contains("timer-service-stack")));
+    let (_, hosted) = lowered_both(SPORADIC, None, &generation()).expect("it resolves");
+    let hosted = hosted.expect("it lowers hosted");
+    assert!(
+        !hosted.contains("controller")
+            && !hosted.contains("(allocation ")
+            && !hosted.contains("(image "),
+        "{hosted}"
+    );
+}
+
+/// With an application's file, what it states is no unit's need: the boot's stack needs no initialisation of it where the
+/// file states none, a task's no bound and no calls, a call to a node or a primitive named only where its list names one;
+/// and the owed lines of what it states are gone (§5, "With no application's file …"; §3, "Only what no input states is
+/// written").
+#[test]
+fn an_application_s_file_takes_what_it_states_from_each_unit_s_needs() {
+    let file = an_application("target.riscv-virt-up");
+    let plan = on(&riscv_virt_up(), None, Some(&file)).expect("it lowers whole");
+    let allocations: Vec<&str> = plan
+        .lines()
+        .filter(|line| line.starts_with("(allocation "))
+        .collect();
+    assert_eq!(allocations.len(), 4);
+    for line in &allocations {
+        assert!(!line.contains("(application "), "{line}");
+        assert!(
+            !line.contains("node-stack") && !line.contains("primitive-stack"),
+            "{line}"
+        );
+    }
+    assert!(!plan.contains("stack-bound (by application))"), "{plan}");
+}
+
+/// The image around the target's holes (§5, "The image lies at the bottom"): a reserved range at the placement region's base
+/// moves the floor past it; one above the floor truncates the image, its limit owed while the allocations are, the hole named.
+#[test]
+fn the_image_lies_past_a_hole_at_the_base_and_short_of_one_above() {
+    let with = |hole: &str| {
+        riscv_virt_up().replacen(
+            "(region target.ram (base 0x8000_0000) (size 128 MiB) (executable true))",
+            &format!(
+                "(region target.ram (base 0x8000_0000) (size 128 MiB) (executable true)) {hole}"
+            ),
+            1,
+        )
+    };
+    let at_base = so_far(
+        &heartbeat(),
+        &with("(region target.boot (base 0x8000_0000) (size 64 KiB) (reserved true))"),
+    );
+    assert_eq!(
+        headed(&at_base, "image"),
+        ["(image (floor 2147549184) (limit owed) (truncated-by))"]
+    );
+    let above = so_far(
+        &heartbeat(),
+        &with("(region target.gap (base 0x8100_0000) (size 4 KiB) (reserved true))"),
+    );
+    assert_eq!(
+        headed(&above, "image"),
+        ["(image (floor 2147483648) (limit owed) (truncated-by (target.riscv-virt-up target.gap)))"]
+    );
+    // A reserved region is a hole and no placement memory: one placement obligation, the executable region's.
+    assert_eq!(
+        headed(&above, "obligation")
+            .into_iter()
+            .filter(|line| line.starts_with("(obligation placement "))
+            .count(),
+        1
+    );
 }

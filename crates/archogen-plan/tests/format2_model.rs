@@ -4320,12 +4320,35 @@ fn placement_obligations(regions: Vec<(u64, &str, &str, bool, bool)>) -> Vec<Str
     lines
 }
 
+/// [`placement_obligations`], the library's line held to it (leaf `M4.1.7.6.8`): each line the model writes is the library's of the same region, but for the
+/// `(discharged-by M4.4)` the library writes in `/1`'s form of every obligation line, which the model leaves out.
+fn placement_held(regions: Vec<(u64, &str, &str, bool, bool)>) -> Vec<String> {
+    let model = placement_obligations(regions.clone());
+    let mut library: Vec<String> = regions
+        .iter()
+        .filter(|&&(_, _, _, executable, reserved)| executable && !reserved)
+        .map(|&(_, name, provider, _, _)| {
+            archogen_plan::layout::placement_obligation(provider, name)
+        })
+        .collect();
+    library.sort();
+    assert_eq!(
+        library,
+        model
+            .iter()
+            .map(|line| line.replacen("))", ") (discharged-by M4.4))", 1))
+            .collect::<Vec<_>>(),
+        "the library's placement obligations of {regions:?}"
+    );
+    model
+}
+
 /// Two executable regions give two lines, and two providers' regions of one name two texts: round 10 wrote one, for the placement region, by its name alone
 /// (round 11, RP11-2).
 #[test]
 fn each_placement_obligation_has_a_line_of_its_own() {
     // RP11-2's case: a platform with two executable regions, `sram1` and `sram2`; and a reserved one, which no placement takes.
-    let lines = placement_obligations(vec![
+    let lines = placement_held(vec![
         (0x2000_0000, "sram2", "soc", true, false),
         (0x1000_0000, "sram1", "soc", true, false),
         (0x3000_0000, "boot", "soc", true, true),
@@ -4337,7 +4360,7 @@ fn each_placement_obligation_has_a_line_of_its_own() {
             "(obligation placement (region soc sram2))"
         ]
     );
-    let two_rams = placement_obligations(vec![
+    let two_rams = placement_held(vec![
         (0, "ram", "a", true, false),
         (0, "ram", "b", true, false),
     ]);
@@ -4525,7 +4548,7 @@ fn no_count_is_said_checked_that_nothing_checks() {
 /// builders following the two rules wrote two code identities (round 13, RP13-2).
 #[test]
 fn placement_obligations_stand_by_their_text() {
-    let lines = placement_obligations(vec![
+    let lines = placement_held(vec![
         (0x1000_0000, "sram", "soc", true, false),
         (0x8000_0000, "dram", "soc", true, false),
     ]);
@@ -4537,7 +4560,7 @@ fn placement_obligations_stand_by_their_text() {
         ],
         "RP13-2's case"
     );
-    let lines = placement_obligations(vec![
+    let lines = placement_held(vec![
         (0, "ram", "z.soc", true, false),
         (0x1000, "ram", "a.soc", true, false),
     ]);

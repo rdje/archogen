@@ -514,6 +514,28 @@ struct Body {
     /// `holds-under-preemption` of each node a job calls, each alarm and each source, by the realization (leaf
     /// `M4.1.7.6.7.3`).
     target_owed: Vec<String>,
+    /// On a target, its memory and its controller (leaf `M4.1.7.6.8`); none on the playground.
+    memory: Option<Memory>,
+}
+
+/// A plan on a target's memory and its controller (`decision_runtime-plan-format-2.md` §5 and §6; leaf `M4.1.7.6.8`): what
+/// the body gives of them, and what [`laid_out`] lays out once the application's file is known.
+#[derive(Debug, Clone, PartialEq, Eq, Default)]
+struct Memory {
+    /// `(image (floor F) (limit owed) (truncated-by …))`.
+    image: String,
+    /// Each `(obligation placement (region PROVIDER NAME) (discharged-by M4.4))`, by its text.
+    obligations: Vec<String>,
+    /// How many initialisation steps there are, each owing its `initialisation-stack`.
+    steps: usize,
+    /// Each route's `ITEM`, by rank: each owes its `service-stack`, and each reaches the controller.
+    routes: Vec<String>,
+    /// Whether the plan has a release timer, whose service's stack the interrupt stack holds.
+    timer: bool,
+    /// Each `(allocation UNIT owed (needs …))`, in §5's order, once laid out.
+    allocations: Vec<String>,
+    /// What the memory and the controller owe, once laid out.
+    owed: Vec<String>,
 }
 
 /// What `/2` writes of a body's alarms (`decision_runtime-plan-format-2.md` §3; `decision_release-alarm.md` §2 and §3):
@@ -604,7 +626,14 @@ struct Place {
     regions: bool,
     /// `(placement PROVIDER REGION)`, a target's; a hosted plan has none (§1).
     placement: Option<String>,
-    /// What the place owes beside the rest: a target's time.
+    /// A target's `(allocation …)` lines, then its `(image …)` line (§5); a hosted plan lays out no memory.
+    memory: Vec<String>,
+    /// A target's `(obligation placement …)` lines, among the rest by their text (§3).
+    obligations: Vec<String>,
+    /// Whether each route ends in `(controller owed)`, on a target, where every route reaches the controller while its
+    /// `external` is owed (§6); a hosted route writes no `(controller …)`.
+    controller: bool,
+    /// What the place owes beside the rest: a target's time, memory and controller.
     owed: Vec<String>,
 }
 
@@ -662,6 +691,9 @@ impl Body {
                 timer: format!("(timer simulator {})", list("releases", &self.releases)),
                 regions: true,
                 placement: None,
+                memory: Vec::new(),
+                obligations: Vec::new(),
+                controller: false,
                 owed: Vec::new(),
             },
             generation,
@@ -669,10 +701,11 @@ impl Body {
         )
     }
 
-    /// `archogen-runtime-plan/2`'s text on a target as far as it is built (`decision_runtime-plan-format-2.md` §1 and §3;
-    /// leaves `M4.1.7.6.7.1` to `.3`): the target's and the catalog's lines, its time, every line it shares with a hosted
+    /// `archogen-runtime-plan/2`'s text on a target (`decision_runtime-plan-format-2.md` §1, §3, §5 and §6; leaves
+    /// `M4.1.7.6.7.1` to `M4.1.7.6.8`): the target's and the catalog's lines, its time, every line it shares with a hosted
     /// plan, an alarm's `COUNTER` and its `lag` among them, its regions with its placement memory's, its `(placement …)`
-    /// line and what a target adds to what is owed; its memory and controller are `M4.1.7.6.8`'s.
+    /// line, its allocations and its image, its placement obligations, each route's `(controller owed)`, and what a target
+    /// adds to what is owed.
     fn write_two_on_target(
         &self,
         target: &TargetLines,
@@ -685,6 +718,12 @@ impl Body {
                 "a body lowered on a target holds no time (§4)",
             )
         })?;
+        let memory = self.memory.as_ref().ok_or_else(|| {
+            refuse(
+                "tool-failure",
+                "a body lowered on a target holds no memory (§5)",
+            )
+        })?;
         Ok(self.write_two(
             &Place {
                 target: target.target.clone(),
@@ -693,7 +732,21 @@ impl Body {
                 timer: time.timer.clone(),
                 regions: true,
                 placement: self.placement.clone(),
-                owed: time.owed.iter().chain(&self.target_owed).cloned().collect(),
+                memory: memory
+                    .allocations
+                    .iter()
+                    .chain(std::iter::once(&memory.image))
+                    .cloned()
+                    .collect(),
+                obligations: memory.obligations.clone(),
+                controller: true,
+                owed: time
+                    .owed
+                    .iter()
+                    .chain(&self.target_owed)
+                    .chain(&memory.owed)
+                    .cloned()
+                    .collect(),
             },
             generation,
             application,
@@ -742,18 +795,35 @@ impl Body {
         lines.push(place.timer.clone());
         lines.extend(self.two.alarms.iter().cloned());
         lines.extend(self.two.clocks.iter().cloned());
-        lines.extend(self.two.routes.iter().cloned());
+        // §6: on a target each route that reaches the controller writes `(controller …)` last on its line, owed while no
+        // record states its line and its levels; every route reaches it while its `external` is owed (RP22-1).
+        lines.extend(self.two.routes.iter().map(|route| {
+            match (place.controller, route.strip_suffix(')')) {
+                (true, Some(open)) => format!("{open} (controller owed))"),
+                _ => route.clone(),
+            }
+        }));
         lines.push(list("enabled", &self.two.enabled));
         lines.push("(interrupt-model (nesting no) (masking all))".to_string());
         if place.regions {
             lines.extend(self.regions.iter().cloned());
         }
         lines.extend(place.placement.iter().cloned());
+        lines.extend(place.memory.iter().cloned());
         lines.extend(self.nodes.iter().cloned());
         lines.extend(self.two.contexts.iter().cloned());
         lines.extend(self.depends.iter().cloned());
         lines.extend(self.steps.iter().cloned());
-        lines.extend(self.two.obligations.iter().cloned());
+        let mut obligations: Vec<String> = self
+            .two
+            .obligations
+            .iter()
+            .chain(&place.obligations)
+            .cloned()
+            .collect();
+        obligations.sort();
+        obligations.dedup();
+        lines.extend(obligations);
         // An alarm's line stands in place of `/1`'s timer route, so what `/1` owes of that route is owed of none (§3).
         // What the application's file states is owed of none: each task's facts it holds and the system's (§3, "Only what
         // no input states is written").
@@ -1086,14 +1156,11 @@ pub fn target_lines(
     lines_of(&a_target(file, kinds, vocabulary)?, generation)
 }
 
-/// The executable form's `/2` lowering on a target (`decision_runtime-plan-format-2.md` §1 and §7; leaves `M4.1.7.6.7.1` to
-/// `.3`): an `archogen-assignment/3` record resolved on `target`, lowered over `program` with the target's platform in the
-/// system's own's place, as `on_target` gives it. No command reaches it: nothing but a test may call it, as for [`lower`].
-///
-/// ⚠️ **It writes no plan yet.** A plan on a target's memory, its allocations and its image, and its controller are leaf
-/// `M4.1.7.6.8`'s, so after every refusal §7 places before them it refuses `tool-failure`, naming the leaf, rather than
-/// return a plan short of them as if whole.
-/// [`on_target_so_far`] gives what is written meanwhile, and [`target_lines`] the target's own lines.
+/// The executable form's `/2` lowering on a target (`decision_runtime-plan-format-2.md` §1 to §7; leaves `M4.1.7.6.7.1` to
+/// `M4.1.7.6.8`): an `archogen-assignment/3` record resolved on `target`, lowered over `program` with the target's platform in
+/// the system's own's place, as `on_target` gives it, and written whole: the target's lines, its time, its regions and
+/// placement, its allocations and image, each route's controller and what it owes. No command reaches it: nothing but a
+/// test may call it, as for [`lower`]. [`target_lines`] gives the target's own lines.
 ///
 /// # Errors
 ///
@@ -1102,7 +1169,7 @@ pub fn target_lines(
 /// `stale-input` with the program's digest, another platform beside the file's own digest `tool-failure`, the rest of `/1`'s list with the
 /// joint rules' findings over the target's hardware `tool-failure`; then the application's `(target …)` other than the plan's and each thing
 /// `unmet` reports, `invalid-description`; and `tool-failure` for an emitter's version that is no single atom, a count the
-/// format cannot write, and the rest of the plan being unwritten.
+/// format cannot write, and a text not written as `/2`'s §3 writes one.
 #[allow(clippy::too_many_arguments)]
 pub fn lower_on_target(
     program: &Program,
@@ -1114,56 +1181,6 @@ pub fn lower_on_target(
     generation: &Generation<'_>,
     application: Option<&ApplicationFile<'_>>,
 ) -> Result<String, Refusal> {
-    on_target_body(
-        program,
-        record,
-        target,
-        kinds,
-        vocabulary,
-        catalog,
-        generation,
-        application,
-    )?;
-    Err(refuse(
-        "tool-failure",
-        "a plan on a target's memory, its allocations and its image, and its controller are written by task-tree leaf M4.1.7.6.8, not built yet",
-    ))
-}
-
-/// What a plan on a target holds so far: its text as the leaves built write it, which is not yet a whole plan
-/// ([`on_target_so_far`]).
-#[derive(Debug, Clone, PartialEq, Eq)]
-pub struct OnTargetSoFar {
-    text: String,
-}
-
-impl OnTargetSoFar {
-    /// The text written so far, each line a form, in §3's order, and short of the lines `M4.1.7.6.8` writes.
-    #[must_use]
-    pub fn text(&self) -> &str {
-        &self.text
-    }
-}
-
-/// A plan on a target as far as it is built (leaves `M4.1.7.6.7.2` and `.3`): every refusal [`lower_on_target`] makes, then
-/// the text those leaves write, the target's lines, its time, what it shares with a hosted plan, its regions and placement
-/// and what a target adds to what it owes, for a reader to hold before the rest is written. Not a plan: its memory and
-/// controller are missing.
-///
-/// # Errors
-///
-/// [`lower_on_target`]'s refusals but the last, and `tool-failure` for a text not written as `/2`'s §3 writes one.
-#[allow(clippy::too_many_arguments)]
-pub fn on_target_so_far(
-    program: &Program,
-    record: &str,
-    target: &TargetFile<'_>,
-    kinds: &Registry,
-    vocabulary: &Vocabulary,
-    catalog: &Catalog,
-    generation: &Generation<'_>,
-    application: Option<&ApplicationFile<'_>>,
-) -> Result<OnTargetSoFar, Refusal> {
     let (body, lines, application) = on_target_body(
         program,
         record,
@@ -1181,7 +1198,7 @@ pub fn on_target_so_far(
             format!("the lowering wrote a `/2` plan not written as §3 writes one: {why}"),
         )
     })?;
-    Ok(OnTargetSoFar { text })
+    Ok(text)
 }
 
 /// [`lower_on_target`]'s stages, in §7's order, and what they give: the body, the target's lines and the application's.
@@ -1262,7 +1279,7 @@ fn on_target_body(
             ),
         )
     })?;
-    let (body, _) = body(
+    let (mut body, _) = body(
         program,
         record,
         None,
@@ -1300,6 +1317,15 @@ fn on_target_body(
             ));
         }
     }
+    // §5: its allocations, laid out once the application's file is known, which says what each stack's own code needs.
+    let memory = body.memory.as_ref().map(|memory| {
+        laid_out(
+            &body,
+            memory,
+            application.as_ref().map(|(_, inputs)| inputs),
+        )
+    });
+    body.memory = memory;
     let written = application
         .as_ref()
         .map(|(file, inputs)| inputs::lines(file.text, inputs));
@@ -2464,6 +2490,24 @@ fn body(
             (placement, target_owed)
         }
     };
+    // On a target, its image and its placement obligations (§5, "The image lies at the bottom", "Which regions"; §3,
+    // `(obligation …)`; leaf `M4.1.7.6.8`); what lays out its allocations waits for the application's file (`laid_out`).
+    let memory = match there {
+        None => None,
+        Some(_) => Some(memory_of(
+            &rebuilt,
+            &names,
+            record.placement.as_ref(),
+            step_lines.len(),
+            two.enabled
+                .iter()
+                .filter(|item| *item != "timer")
+                .cloned()
+                .collect(),
+            time.as_ref()
+                .is_some_and(|time| time.timer != "(timer none)"),
+        )?),
+    };
     Ok((
         Body {
             profile: record.profile.clone(),
@@ -2490,9 +2534,268 @@ fn body(
             time,
             placement,
             target_owed,
+            memory,
         },
         accepted,
     ))
+}
+
+/// A target's image and placement obligations, and what its memory waits on but the application's file (§5; leaf
+/// `M4.1.7.6.8`). `F` is the floor of the placement region the assignment chose, the holes being those `Joint::map`
+/// reports in it; with every unit owed, as every one is while no catalog record states a frame, a guard or an alignment,
+/// the limit is owed and `truncated-by` names each hole at the lowest base above `F`, by provider, then name.
+fn memory_of(
+    rebuilt: &assignment::Rebuilt<'_>,
+    names: &Names<'_>,
+    placement: Option<&(String, String)>,
+    steps: usize,
+    routes: Vec<String>,
+    timer: bool,
+) -> Result<Memory, Refusal> {
+    let unwritable = |why: String| refuse("tool-failure", why);
+    let regions = rebuilt.joint.regions(&rebuilt.system);
+    let region_of = |provider: &str, name: &str| {
+        regions
+            .iter()
+            .find(|(p, r)| names.text(p) == provider && r.name == name)
+            .map(|(_, r)| *r)
+    };
+    let mut obligations = Vec::new();
+    let mut image = None;
+    for obligation in &rebuilt.map.obligations {
+        let Obligation::Placement {
+            provider,
+            region,
+            holes,
+            ..
+        } = obligation
+        else {
+            continue;
+        };
+        let provider_text = names.text(provider);
+        obligations.push(layout::placement_obligation(&provider_text, region));
+        if placement.is_some_and(|(p, r)| *p == provider_text && r == region) {
+            let at = region_of(&provider_text, region).ok_or_else(|| {
+                unwritable(format!("the placement region `{region}` of `{provider_text}` is no region of the target's hardware (§5)"))
+            })?;
+            let span_of = |base: i128, bytes: Option<i128>| -> Result<layout::Reserved, Refusal> {
+                Ok(layout::Reserved {
+                    base: u128::try_from(base).map_err(|_| {
+                        unwritable(format!("a base below address nothing, {base} (§5)"))
+                    })?,
+                    bytes: bytes
+                        .map(|bytes| {
+                            u128::try_from(bytes).map_err(|_| {
+                                unwritable(format!("a size below nothing, {bytes} (§5)"))
+                            })
+                        })
+                        .transpose()?,
+                })
+            };
+            let place = span_of(at.base, at.bytes)?;
+            let bytes = place.bytes.ok_or_else(|| {
+                unwritable(format!("the placement region `{region}` states no size, which `Joint::map` refuses before any plan (§5)"))
+            })?;
+            let span = layout::Span::of(place.base, bytes);
+            let mut named = Vec::new();
+            let mut reserved = Vec::new();
+            for (hole_provider, hole_region) in holes {
+                let hole_text = names.text(hole_provider);
+                let hole = region_of(&hole_text, hole_region).ok_or_else(|| {
+                    unwritable(format!("the hole `{hole_region}` of `{hole_text}` is no region of the target's hardware (§5)"))
+                })?;
+                reserved.push(span_of(hole.base, hole.bytes)?);
+                named.push((hole_text, hole_region.clone()));
+            }
+            let laid = layout::holes(span, &reserved);
+            let floor = layout::floor(span, &laid);
+            let limit = layout::limit(span, &laid, floor, &[], true);
+            let mut truncated: Vec<String> = limit
+                .truncated_by
+                .iter()
+                .map(|hole| {
+                    let (p, r) = &named[hole.of];
+                    format!("({p} {r})")
+                })
+                .collect();
+            truncated.sort();
+            truncated.dedup();
+            let written_floor = u64::try_from(floor)
+                .map_err(|_| unwritable(format!("a floor past 2^64 − 1, {floor} (§3, `INT`)")))?;
+            image = Some(format!(
+                "(image (floor {written_floor}) (limit owed) {})",
+                list("truncated-by", &truncated)
+            ));
+        }
+    }
+    obligations.sort();
+    obligations.dedup();
+    let image = image.ok_or_else(|| {
+        unwritable("a plan on a target names no placement memory `Joint::map` reports, which `Target::admission` refuses before any plan (§5)".to_string())
+    })?;
+    Ok(Memory {
+        image,
+        obligations,
+        steps,
+        routes,
+        timer,
+        allocations: Vec::new(),
+        owed: Vec::new(),
+    })
+}
+
+/// The catalog's figures of each stack, which no record states yet, so each is owed of its unit (§3, "`(owed …)`, as
+/// `/2` writes it"; §5's table of sums and its table of figures): `guard` and `alignment` of every stack, the fault path's
+/// two figures and a trap frame of every stack, and of each its sum's own.
+const OF_EVERY_STACK: [&str; 5] = [
+    "alignment",
+    "fault-check-stack",
+    "fault-path-stack",
+    "guard",
+    "trap-frame",
+];
+
+/// A plan on a target's allocations and what its memory and its controller owe (§5, "The formula", "An owed unit makes
+/// every later unit owed" and "With no application's file the boot's stack is owed"; §3, `UNIT`, `NEED`, "Orders" and
+/// "`(owed …)`, as `/2` writes it"; §6; leaf `M4.1.7.6.8`). The units in §5's order: the boot's stack, the interrupt
+/// stack, each task's by runtime index, then each table by name, which none is while the catalog states none. Each lacks
+/// the figures of its sum not yet stated: the application's where no file is given, the catalog's, which no record states
+/// yet, and the realization's, which no file states yet; a node's or a primitive's only once a file names its calls, none
+/// being known until then. So every unit is owed, and each later one names the last before it.
+fn laid_out(
+    body: &Body,
+    memory: &Memory,
+    application: Option<&application::Application>,
+) -> Memory {
+    use layout::{Need, Owner};
+    let record = |fact: &str| Need {
+        owner: Owner::Record,
+        fact: fact.to_owned(),
+    };
+    let realization = |subject: &str, fact: &str| Need {
+        owner: Owner::Realization {
+            subject: subject.to_owned(),
+        },
+        fact: fact.to_owned(),
+    };
+    let of_application = |of: &str, fact: &str| Need {
+        owner: Owner::Application { of: of.to_owned() },
+        fact: fact.to_owned(),
+    };
+    let fault = realization("(fault)", "fault-entry-stack");
+    let mut units: Vec<(String, Vec<Need>)> = Vec::new();
+    // The boot's stack: `call-frame + max(initialisation-stack, initialisation-path-stack, stack-bound + node-stack,
+    // last-act-stack + max(transition-stack, idle-stack)) + fault-use + trap-frame`.
+    let mut boot: Vec<Need> = OF_EVERY_STACK
+        .iter()
+        .chain(&[
+            "idle-stack",
+            "initialisation-path-stack",
+            "transition-stack",
+        ])
+        .map(|fact| record(fact))
+        .collect();
+    boot.push(realization("(stack boot)", "call-frame"));
+    boot.push(realization("(stack boot)", "last-act-stack"));
+    boot.push(fault.clone());
+    boot.extend(
+        (1..=memory.steps)
+            .map(|step| realization(&format!("(step {step})"), "initialisation-stack")),
+    );
+    match application {
+        None => boot.push(of_application(&body.system, "initialisation")),
+        Some(file) => boot.extend(
+            file.initialisation
+                .iter()
+                .flat_map(|initialisation| initialisation.node_calls.calls.iter())
+                .map(|(node, _)| realization(node, "node-stack")),
+        ),
+    }
+    units.push(("(stack boot)".to_string(), boot));
+    // The interrupt stack: `trap-path-stack + call-frame + max(service-stack, timer-service-stack) + fault-use +
+    // trap-frame`, `timer-service-stack` nothing and owed by no one under `(timer none)` (RP12-4).
+    let mut interrupt: Vec<Need> = OF_EVERY_STACK
+        .iter()
+        .chain(&["trap-path-stack"])
+        .map(|fact| record(fact))
+        .collect();
+    if memory.timer {
+        interrupt.push(record("timer-service-stack"));
+    }
+    interrupt.push(realization("(stack interrupt)", "call-frame"));
+    interrupt.push(fault.clone());
+    interrupt.extend(
+        memory
+            .routes
+            .iter()
+            .map(|item| realization(&format!("(route {item})"), "service-stack")),
+    );
+    units.push(("(stack interrupt)".to_string(), interrupt));
+    // Each task's stack, by runtime index: `call-frame + stack-bound + max(node-stack, primitive-stack, completion-stack) +
+    // fault-use + trap-frame`.
+    for (name, text) in &body.task_order {
+        let unit = format!("(stack {text})");
+        let mut needs: Vec<Need> = OF_EVERY_STACK
+            .iter()
+            .chain(&["completion-stack"])
+            .map(|fact| record(fact))
+            .collect();
+        needs.push(realization(&unit, "call-frame"));
+        needs.push(fault.clone());
+        match application.and_then(|file| file.tasks.iter().find(|task| task.name == *name)) {
+            None => {
+                for fact in ["node-calls", "os-calls", "stack-bound"] {
+                    needs.push(of_application(text, fact));
+                }
+            }
+            Some(task) => {
+                if !task.os_calls.calls.is_empty() {
+                    needs.push(record("primitive-stack"));
+                }
+                needs.extend(
+                    task.node_calls
+                        .calls
+                        .iter()
+                        .map(|(node, _)| realization(node, "node-stack")),
+                );
+            }
+        }
+        units.push((unit, needs));
+    }
+    let owed_needs = layout::owed_needs(&units);
+    let allocations = owed_needs
+        .iter()
+        .map(|(unit, needs)| format!("(allocation {unit} owed (needs {}))", needs.join(" ")))
+        .collect();
+    // What is owed of them: each unit's catalog figures of that unit, and each figure of the generated code of its own
+    // subject, by the realization (§3); the application's are owed already, `/1`'s and `/2`'s, where no file is given.
+    let mut owed = Vec::new();
+    for (unit, needs) in &units {
+        for need in needs {
+            match &need.owner {
+                Owner::Record => owed.push(format!("(owed {unit} {} (by catalog))", need.fact)),
+                Owner::Realization { subject } => {
+                    owed.push(format!("(owed {subject} {} (by realization))", need.fact));
+                }
+                Owner::Application { .. } => {}
+            }
+        }
+    }
+    // §6: every route reaches the controller while its `external` is owed, so each owes its line and the controller its
+    // levels, by the catalog, which states neither yet (RP29-2, RP32-4).
+    for item in &memory.routes {
+        owed.push(format!("(owed {item} controller-line (by catalog))"));
+    }
+    if !memory.routes.is_empty() {
+        owed.push("(owed (controller) controller-levels (by catalog))".to_string());
+    }
+    owed.sort();
+    owed.dedup();
+    Memory {
+        allocations,
+        owed,
+        ..memory.clone()
+    }
 }
 
 /// The facts a source owes as a source, which `/2` owes of each alarm too, each being a source of its own

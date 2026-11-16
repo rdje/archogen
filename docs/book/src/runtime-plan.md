@@ -282,10 +282,17 @@ Then a target's regions and what it owes (leaf `M4.1.7.6.7.3`). Each region of t
 placement memory the search chose written `placement` and followed by `(placement PROVIDER REGION)`. On a target, each
 source and each alarm owes `external`, whether its interrupt reaches the controller. It owes `holds-under-preemption`
 too, as does each node a job calls: that each cost the generated code states holds under any preemption. Both are the
-realization's to state, and a hosted plan owes neither, since the simulator states them. Until its memory and its
-controller are written (leaf `M4.1.7.6.8`), the lowering on a target refuses after every refusal that comes before them,
-rather than return a plan short of them; `archogen_plan::on_target_so_far` gives what is written meanwhile, for the tests.
-No command writes a `/2` plan yet.
+realization's to state, and a hosted plan owes neither, since the simulator states them.
+
+Then a target's memory and its controller (leaf `M4.1.7.6.8`), with which `archogen_plan::lower_on_target` writes a
+plan on a target whole. Each stack has an allocation, in a fixed order: the boot's, the interrupt's, then each task's.
+No catalog record states a frame, a guard or an alignment yet, so every one is owed. Each says what it lacks: the
+application's figures where no file is given, the catalog's, and those of the generated code. Each later one also names
+the last owed before it, since no address below an owed unit is known. The image's line gives the floor, past any hole
+at the bottom of the placement memory. Its limit is owed while the allocations are, and it names the hole above that
+truncates it. The placement memory has its obligation, which `M4.4` discharges. Every route reaches the controller
+while whether its interrupt does is owed, so each writes `(controller owed)`, its line and the controller's levels owed
+by the catalog. No command writes a `/2` plan yet.
 
 ## From a plan to a generated system
 
