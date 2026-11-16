@@ -1122,9 +1122,37 @@ mdBook that is the director's window into the project.
   Commit: `ARCHOGEN-PROGRAM-1390 (leaf PROGRAM.150)`
 
 - ID: `PROGRAM.151`
-  Status: `in_progress` — pull request [#1](https://github.com/rdje/archogen/pull/1)'s required checks failed on the runner, `focused`, `catalog-check` and `trust-gate` (`target/p151/ci/`); each is repaired on local `main` and added by `update` before the director's approval and merge. Filed `2026-11-16` by `PROGRAM.149`.
+  Status: `in_progress` — pull request [#1](https://github.com/rdje/archogen/pull/1)'s required checks failed on the runner, four of five, `enforce` passing (`target/p151/ci/`); split `2026-11-16` into its leaves by root cause, three repairs, the runner's baseline and the landing. Filed `2026-11-16` by `PROGRAM.149`.
   Goal: once the batch merges, `bash scripts/open_batch.sh sync` brings local `main` back in step, its merge changing no file (`decision_main-protection.md` §3, step 6); a failing check fixed on local `main` and added by `bash scripts/open_batch.sh update --summary <file>` first.
-  Acceptance: `bash scripts/open_batch.sh sync` → exit 0; `git merge-base --is-ancestor origin/main HEAD`; `bash scripts/push_cadence.sh` counting from the merge.
+  Acceptance: every required check green on the pull request's last push; `bash scripts/open_batch.sh sync` → exit 0; `git merge-base --is-ancestor origin/main HEAD`.
+  The first run's failures, read from the jobs' own logs: `focused` and `integration` → `tier focused: failed — 2 passed, 1 failed` and `tier integration: failed — 13 passed, 1 failed`, each `crates/archogen-cli/tests/sibling.rs` alone, three tests whose stand-in is a script, `/bin/sh: 0: cannot open /proc/self/fd/3: No such file`; `catalog-check` → `could not judge: the repository is shallow`; `trust-gate` → `refused — the change: 112 line(s)`, 18 baseline forms and 51 test units with no form. ⭐ PR #1 is the first pull request this repository has had, so `catalog-check` and `trust-gate`'s pull-request runs, and every Linux run of the launcher, are first runs; and both trust findings are refused on the baseline's host alone, `x86_64-unknown-linux-gnu`, where off it the gate says "not compared" and passes.
+
+- ID: `PROGRAM.151.1`
+  Status: `done` — `2026-11-16`: the launcher on Linux names the hashed file under the front's own `/proc` entry. Its Linux run is the runner's: no host here is Linux, and none holds that target's standard library.
+  Goal: the descriptor named under the front's own `/proc` entry, which stands until the sibling ends, so whatever the kernel runs reads the file that was hashed.
+  Acceptance:
+    - [x] ROOT CAUSE — WHY: `crates/archogen-cli/src/sibling.rs:201` at `fac8754e` ran `/proc/self/fd/N`, `N` a descriptor `File::open` makes close-on-exec; the kernel runs a compiled program from it before it closes, and hands a script's interpreter that name, which in the child is gone by the time the interpreter opens it. An installed sibling is compiled, so only `crates/archogen-cli/tests/sibling.rs`'s three script stand-ins met it; WHERE, the runner's `focused` job → `/bin/sh: 0: cannot open /proc/self/fd/3: No such file`, `test result: FAILED. 3 passed; 3 failed` (`target/p151/ci/job-133209133175.log`), and `integration` the same.
+    - [x] FIX — `runnable` names `/proc/<the front's pid>/fd/N`, by `std::process::id()`: the front holds the file open until the sibling's output is read, `drop(opened)` after `output()`, so the name stands for whatever the kernel or an interpreter opens; the module's comment says so. Nothing else of the launcher moves: the hash, the cleared environment, the empty standard input, the relay.
+    - [x] ADDRESSED — `cargo test -q -p archogen-cli --test sibling` on this host → `test result: ok. 6 passed; 0 failed` (`target/p151/sibling-mac.log`), the path elsewhere unchanged; the Linux path is held by the runner's `focused` and `integration` jobs on the pull request's next push, read into `PROGRAM.151`.
+    - [x] NO REGRESSION — `cargo fmt --all -- --check` → exit 0; `make focused` on the staged tree, the commit's gate; the trust inventory on a commit of it.
+    - [x] LOCKSTEP — the launcher's comment, this leaf, `PROGRAM.151`'s split, the Commit Log.
+  Commit: `ARCHOGEN-PROGRAM-1391 (leaf PROGRAM.151.1)`
+
+- ID: `PROGRAM.151.2`
+  Status: `pending` — `.github/workflows/catalog-check.yml` checks the judged merge out two commits deep (`M2.7.6.3`, `2026-10-01`), and the checker refuses a shallow repository since `M2.7.4.2` (`2026-10-03`): no pull request ran between.
+  Goal: the whole history checked out, as the trust gate's workflow does.
+
+- ID: `PROGRAM.151.3`
+  Status: `pending` — the batch gave `crates/archogen-cli`, `crates/archogen-emit` and `crates/archogen-plan` a development edge to `crates/archogen-plan-check`, so 51 test units compile both roles' packages with no form in `trust/roots.eadl`; the local inventory marks each `trust-unclassified-program` and refuses none (`target/p151/formless-units.json`).
+  Goal: each unit named by a derivation where it compares the two roles, or classified by a `defprogram` form whose reason says what it uses of the checker, each read from its source.
+
+- ID: `PROGRAM.151.4`
+  Status: `pending` — the runner's proposal for `trust/baseline.eadl`, its 18 forms whose digests this tree moved or which it shares anew, committed unaccepted as `TI-H3` has it (`M3.6.3.2.1`); the owned leaf `M3.6.3.2.1.1` asks for. After `.1` to `.3` and `PROGRAM.150` are on the pull request, since each moves a digest.
+  Goal: the gate's change part on the runner holding no refusal.
+
+- ID: `PROGRAM.151.5`
+  Status: `pending` — the commit-time inventory refuses a program it cannot classify, as the runner's gate does, so a unit compiling two roles is classified by the commit that makes it one, not found by a batch.
+  Goal: `cargo xtask trust-inventory` exits non-zero on a `trust-unclassified-program`, whatever host it runs on, with its arm.
 
 ## Roadmap coverage map
 
@@ -1294,6 +1322,7 @@ leaf's outcome is its row in the Commit Log below, and a sealed leaf's full reco
 | `PROGRAM.149` | `ARCHOGEN-PROGRAM-1388 (leaf PROGRAM.149)` | **the batch filed**: the director's yes; the tier and a fresh review at its tip, then its pull request. |
 | `PROGRAM.149` | `ARCHOGEN-PROGRAM-1389 (leaf PROGRAM.149)` | **the batch opened**, pull request #1, 409 commits at `10861334`, the integration tier passed at its tip; the review's confirmed findings filed as `PROGRAM.150`, the landing as `PROGRAM.151`. |
 | `PROGRAM.150` | `ARCHOGEN-PROGRAM-1390 (leaf PROGRAM.150)` | **the batch review's findings fixed**: the surface's record, `explain`'s scope, the allocator's count after a null, a host path in a test string, the hook's ledger entry. |
+| `PROGRAM.151.1`, `PROGRAM.151` | `ARCHOGEN-PROGRAM-1391 (leaf PROGRAM.151.1)` | **the launcher on Linux runs what it hashed through the front's own `/proc` entry**, which a script's interpreter can open; `PROGRAM.151` split by root cause. |
 
 ## Changelog
 
@@ -1428,3 +1457,4 @@ leaf's outcome is its row in the Commit Log below, and a sealed leaf's full reco
 - `2026-11-16`: `PROGRAM.149` filed: the director's yes to the batch; the tier and a fresh review at its tip, then its pull request.
 - `2026-11-16`: `PROGRAM.149` done: the batch is pull request #1; `PROGRAM.150` filed for the review's findings, `PROGRAM.151` for the landing.
 - `2026-11-16`: `PROGRAM.150` done: the review's findings fixed; it joins pull request #1, whose required checks failed on the runner.
+- `2026-11-16`: `PROGRAM.151` split into five leaves by root cause; `PROGRAM.151.1` done: the launcher on Linux names its descriptor under the front's own `/proc` entry.

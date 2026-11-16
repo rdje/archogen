@@ -12,8 +12,9 @@
 //! ⚠️ **What that guards, and what it does not** (the review's D2). Whoever can write the install directory can replace
 //! the front and the manifest together, so the digests catch a stale or mismatched sibling — an older build left beside
 //! a newer front, a program copied in by hand — never tampering. On Linux the sibling runs from the file it was hashed
-//! from, through `/proc/self/fd`; elsewhere it runs by its path, and a file replaced between the hash and the start
-//! runs unchecked: a race stated, not closed.
+//! from, through the descriptor this process holds until the sibling ends, named under this process's `/proc` entry;
+//! elsewhere it runs by its path, and a file replaced between the hash and the start runs unchecked: a race stated,
+//! not closed.
 
 use std::fs::File;
 use std::io::{Read, Write};
@@ -194,11 +195,18 @@ fn manifest(dir: &Path, program: &str) -> Result<Manifest, Unlaunched> {
     }
 }
 
-/// What to start: on Linux the very file that was hashed, through its descriptor.
+/// What to start: on Linux the very file that was hashed, through the descriptor this process holds open until the
+/// sibling ends. It is named under this process's own `/proc` entry, not `/proc/self`: the child's copy of the
+/// descriptor closes as the child starts its program, so an interpreter the kernel hands a script's name to would find
+/// nothing at `/proc/self/fd`, where this process's descriptor still stands (leaf `PROGRAM.151.1`).
 #[cfg(target_os = "linux")]
 fn runnable(opened: &File, _file: &Path) -> PathBuf {
     use std::os::fd::AsRawFd;
-    PathBuf::from(format!("/proc/self/fd/{}", opened.as_raw_fd()))
+    PathBuf::from(format!(
+        "/proc/{}/fd/{}",
+        std::process::id(),
+        opened.as_raw_fd()
+    ))
 }
 
 /// What to start: elsewhere the file by its name, which may change between the hash and the start.
