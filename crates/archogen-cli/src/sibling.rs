@@ -57,16 +57,18 @@ impl Launch for Installed {
                 "install the toolchain again, into one directory, and run the `archogen` it places there",
             ));
         }
-        let mine = std::fs::read(&front).map_err(|error| {
-            refused(
-                format!(
-                    "cannot read the running `archogen`, {}, to check it: {error}",
-                    place(&front)
-                ),
-                "run the `archogen` an install placed",
-            )
-        })?;
-        if Digest::of(&mine) != manifest.front().sha256 {
+        let mine = File::open(&front)
+            .and_then(|opened| sha256_of(&opened))
+            .map_err(|error| {
+                refused(
+                    format!(
+                        "cannot read the running `archogen`, {}, to check it: {error}",
+                        place(&front)
+                    ),
+                    "run the `archogen` an install placed",
+                )
+            })?;
+        if mine != manifest.front().sha256 {
             return Err(refused(
                 format!(
                     "this `archogen` is not the one the install in {} placed, so its siblings are another build's",
@@ -82,20 +84,19 @@ impl Launch for Installed {
             ));
         };
         let file = dir.join(&entry.name);
-        let mut opened = File::open(&file).map_err(|error| {
+        let opened = File::open(&file).map_err(|error| {
             refused(
                 format!("cannot open `{program}` in {}: {error}", place(&dir)),
                 "install the toolchain again",
             )
         })?;
-        let mut bytes = Vec::new();
-        opened.read_to_end(&mut bytes).map_err(|error| {
+        let theirs = sha256_of(&opened).map_err(|error| {
             refused(
                 format!("cannot read `{program}` in {}: {error}", place(&dir)),
                 "install the toolchain again",
             )
         })?;
-        if Digest::of(&bytes) != entry.sha256 {
+        if theirs != entry.sha256 {
             return Err(refused(
                 format!(
                     "`{program}` in {} is not the one the install placed: its sha256 is not the manifest's",
@@ -104,7 +105,6 @@ impl Launch for Installed {
                 "install the toolchain again, so the front and its siblings come from one build",
             ));
         }
-        drop(bytes);
         let mut command = Command::new(runnable(&opened, &file));
         command.args(args).env_clear().stdin(Stdio::null());
         // Nothing else of this environment reaches it: this is the instance's, and the same for what it starts.
@@ -132,6 +132,22 @@ impl Launch for Installed {
             sha256: entry.sha256,
             front: manifest.front().sha256,
         })
+    }
+}
+
+/// The sha256 of what `file` holds, read in pieces, so that a program's size takes nothing of the front's memory ceiling
+/// (leaf `PROGRAM.151.6`): a build with its debug information linked in, as Linux links it, is larger than a small
+/// ceiling, and the front reads two of them, its own and the sibling's.
+fn sha256_of(mut file: &File) -> std::io::Result<Digest> {
+    let mut hash = archogen_digest::Sha256::new();
+    let mut piece = vec![0_u8; 1 << 16];
+    loop {
+        match file.read(&mut piece) {
+            Ok(0) => return Ok(hash.finish()),
+            Ok(read) => hash.update(&piece[..read]),
+            Err(error) if error.kind() == std::io::ErrorKind::Interrupted => {}
+            Err(error) => return Err(error),
+        }
     }
 }
 

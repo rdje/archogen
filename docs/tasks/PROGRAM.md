@@ -1125,6 +1125,7 @@ mdBook that is the director's window into the project.
   Status: `in_progress` — pull request [#1](https://github.com/rdje/archogen/pull/1)'s required checks failed on the runner, four of five, `enforce` passing (`target/p151/ci/`); split `2026-11-16` into its leaves by root cause, three repairs, the runner's baseline and the landing. Filed `2026-11-16` by `PROGRAM.149`.
   Goal: once the batch merges, `bash scripts/open_batch.sh sync` brings local `main` back in step, its merge changing no file (`decision_main-protection.md` §3, step 6); a failing check fixed on local `main` and added by `bash scripts/open_batch.sh update --summary <file>` first.
   Acceptance: every required check green on the pull request's last push; `bash scripts/open_batch.sh sync` → exit 0; `git merge-base --is-ancestor origin/main HEAD`.
+  The second run, of `bea0b097`: `catalog-check` and both `doctrines` passed; `trust-gate` refused on the baseline's digests alone (`.4`); `focused` failed on the checker's ceiling (`.6`), which the first run had never reached.
   The first run's failures, read from the jobs' own logs: `focused` and `integration` → `tier focused: failed — 2 passed, 1 failed` and `tier integration: failed — 13 passed, 1 failed`, each `crates/archogen-cli/tests/sibling.rs` alone, three tests whose stand-in is a script, `/bin/sh: 0: cannot open /proc/self/fd/3: No such file`; `catalog-check` → `could not judge: the repository is shallow`; `trust-gate` → `refused — the change: 112 line(s)`, 18 baseline forms and 51 test units with no form. ⭐ PR #1 is the first pull request this repository has had, so `catalog-check` and `trust-gate`'s pull-request runs, and every Linux run of the launcher, are first runs; and both trust findings are refused on the baseline's host alone, `x86_64-unknown-linux-gnu`, where off it the gate says "not compared" and passes.
 
 - ID: `PROGRAM.151.1`
@@ -1174,6 +1175,21 @@ mdBook that is the director's window into the project.
 - ID: `PROGRAM.151.5`
   Status: `pending` — the commit-time inventory refuses a program it cannot classify, as the runner's gate does, so a unit compiling two roles is classified by the commit that makes it one, not found by a batch.
   Goal: `cargo xtask trust-inventory` exits non-zero on a `trust-unclassified-program`, whatever host it runs on, with its arm.
+
+- ID: `PROGRAM.151.6`
+  Status: `done` — `2026-11-16`: filed by the pull request's second run, whose `focused` failed on `crates/archogen-plan-check/tests/ceiling.rs` alone; each program hashes a program's file in pieces. The first run had never reached that test: `cargo test` stops at the first failing binary, and `crates/archogen-cli`'s `sibling` failed first.
+  Goal: no program's own file, nor the sibling's, held whole under the memory ceiling.
+  Acceptance:
+    - [x] ROOT CAUSE — WHY: `git grep -n 'and_then(std::fs::read)' 7b61cdb2 -- crates/archogen-plan-check/src/main.rs` → `191`, `me()` reading the running executable whole to name it by its sha256, and `git grep -n 'let mine = std::fs::read(&front)' 7b61cdb2 -- crates/archogen-cli/src/sibling.rs` → `60`, the front reading its own file and the sibling's whole to check them; under the counting allocator each byte counts against the ceiling, and a debug build with its debug information linked in, as Linux links it (`[profile.dev] split-debuginfo` is `off`, rustc's own default there), is larger than the test's 32 MiB before any judging starts; on this host the file is 9.4 MB and needed a ceiling of 8 to 12 MiB, the judgement itself under 1; WHERE, the runner's job → `the_checker_stops_at_its_ceiling … FAILED`, `left: 14`, `right: 14`, a description of two bytes stopped at 32 MiB (`target/p151/ci/focused2-*.log`).
+    - [x] FIX — each hashes the file in pieces of 64 KiB through `archogen_digest::Sha256`, its own `sha256_of`, the shared crate unchanged; the launcher keeps the sibling's descriptor open as before. Two tests, a ceiling of half the program's own file, so that they hold on every host: `the_checker_s_own_size_takes_nothing_of_its_ceiling` and `the_programs_sizes_take_nothing_of_the_front_s_ceiling`. The launcher's file is in the generator and configuration checker's invocation item, so its digest moved: `trust/baseline.eadl`'s form takes the new one, `bd346a51…`, the one line of the local proposal that differs from the runner's, a digest of source text and no host's (the runner's and the local both `10cc3d74…` before).
+    - [x] ADDRESSED — `cargo test -q -p archogen-plan-check --test ceiling` → `test result: ok. 2 passed`, and without the fix → `FAILED. 1 passed; 1 failed`, `a ceiling of 4 MiB, half of its own 9394152 bytes: archogen-plan-check: analysis-inconclusive`; `cargo test -q -p archogen-cli --test sibling` → `test result: ok. 7 passed`, and without it → `FAILED. 6 passed; 1 failed`, `a ceiling of 7 MiB, half of its own 14711544 bytes` (`target/p151/ceil-*.log`, `sib-*.log`); the checker judges at a ceiling of 1 MiB; `cargo xtask trust-gate` on the staged tree → exit 0, its proposal differing from `.4`'s in that one digest.
+    - [x] NO REGRESSION — `cargo fmt --all -- --check` → exit 0; `cargo clippy --all-targets --all-features -- -D warnings` → exit 0, after its `precedence` lint on the two tests' shift, which the first focused run refused; the record's producer is the same sha256, computed in pieces; `make focused` on the staged tree, the commit's gate; the trust inventory on a commit of it.
+    - [x] LOCKSTEP — both programs' comments, this leaf, the Commit Log.
+  Commit: `ARCHOGEN-PROGRAM-1395 (leaf PROGRAM.151.6)`
+
+- ID: `PROGRAM.151.7`
+  Status: `pending` — the tier's `tests` step runs `cargo test --all`, which stops at the first failing test binary, so each run of the pull request showed one failure and hid what followed: the first run's `sibling` hid `.6`'s ceiling.
+  Goal: `--no-fail-fast`, so that one run names every failing binary; the book's example of a failed step with it.
 
 ## Roadmap coverage map
 
@@ -1347,6 +1363,7 @@ leaf's outcome is its row in the Commit Log below, and a sealed leaf's full reco
 | `PROGRAM.151.2` | `ARCHOGEN-PROGRAM-1392 (leaf PROGRAM.151.2)` | **the catalog check's workflow checks out the whole history**, which its checker requires and two commits deep was not. |
 | `PROGRAM.151.3` | `ARCHOGEN-PROGRAM-1393 (leaf PROGRAM.151.3)` | **the 51 test units compiling both roles named**: 49 classified, `target-parity` and `plan-bounded` derivations, and `resolve-plan` a derivation as the record's rule makes it. |
 | `PROGRAM.151.4` | `ARCHOGEN-PROGRAM-1394 (leaf PROGRAM.151.4)` | **the runner's baseline committed**, its proposal byte for byte: 23 forms kept with their review text, 6 digests moved, 15 shared anew. |
+| `PROGRAM.151.6` | `ARCHOGEN-PROGRAM-1395 (leaf PROGRAM.151.6)` | **a program's file hashed in pieces**, the checker's own and the front's two, so a debug build's size takes nothing of the ceiling; the launcher's invocation digest moved with it. |
 
 ## Changelog
 
@@ -1485,3 +1502,4 @@ leaf's outcome is its row in the Commit Log below, and a sealed leaf's full reco
 - `2026-11-16`: `PROGRAM.151.2` done: the catalog check's workflow checks out the whole history.
 - `2026-11-16`: `PROGRAM.151.3` done: every test unit compiling two roles named or classified, none left unclassified.
 - `2026-11-16`: `PROGRAM.151.4` done: the runner's proposal committed as the baseline.
+- `2026-11-16`: `PROGRAM.151.6` filed and done: a program's file hashed in pieces; `PROGRAM.151.7` filed, the tier's tests to run every binary.

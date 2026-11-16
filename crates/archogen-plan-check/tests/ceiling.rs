@@ -55,3 +55,26 @@ fn the_checker_stops_at_its_ceiling() {
         "{said}"
     );
 }
+
+/// The checker names itself by its own file's sha256, read in pieces (leaf `PROGRAM.151.6`): a ceiling below that
+/// file's size still lets it judge, on any host, where a build with its debug information linked in is the larger.
+#[test]
+fn the_checker_s_own_size_takes_nothing_of_its_ceiling() {
+    let dir = std::path::Path::new(env!("CARGO_TARGET_TMPDIR"))
+        .join(format!("plan-check-own-size-{}", std::process::id()));
+    let _ = std::fs::remove_dir_all(&dir);
+    std::fs::create_dir_all(&dir).expect("a scratch directory");
+    std::fs::write(dir.join("p"), "(junk)").expect("written");
+    std::fs::write(dir.join("small.eadl"), "x ").expect("written");
+    let own = std::fs::metadata(env!("CARGO_BIN_EXE_archogen-plan-check"))
+        .expect("the built checker")
+        .len();
+    let ceiling = ((own / 2) >> 20).max(1);
+    let (code, said) = checker(&ceiling.to_string(), &dir, &["small.eadl", "p"]);
+    assert_ne!(
+        code,
+        Status::AnalysisInconclusive.code(),
+        "a ceiling of {ceiling} MiB, half of its own {own} bytes: {said}"
+    );
+    let _ = std::fs::remove_dir_all(&dir);
+}

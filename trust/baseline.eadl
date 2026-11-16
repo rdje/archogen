@@ -46,7 +46,7 @@
 (defshared "generator+configuration-checker invocation"
   (pair "generator" "configuration-checker")
   (kind invocation)
-  (digest "content=10cc3d74667b4dd31be57a0fa20d551d498fbfad4c9a134e22eeef3026f875d5")
+  (digest "content=bd346a51754b5e09905cf9a9baaa74a3a51e6f05e937c6585e854fbd66c792da")
   (classification unstated)
   (property "unstated")
   (risk "unstated")

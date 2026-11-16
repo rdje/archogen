@@ -188,12 +188,29 @@ fn parse(args: &[String]) -> Result<Asked, String> {
 /// This program as a record names it: its name, and the sha256 of the file that runs.
 fn me() -> Result<Producer, String> {
     std::env::current_exe()
-        .and_then(std::fs::read)
-        .map(|bytes| Producer {
+        .and_then(std::fs::File::open)
+        .and_then(sha256_of)
+        .map(|sha256| Producer {
             name: NAME.to_owned(),
-            sha256: Digest::of(&bytes),
+            sha256,
         })
         .map_err(|error| format!("cannot read its own executable to name it: {error}"))
+}
+
+/// The sha256 of what `file` holds, read in pieces, so that the size of this program's own file takes nothing of
+/// its memory ceiling (leaf `PROGRAM.151.6`): a build with its debug information linked in, as Linux links it, is
+/// larger than a small ceiling, and read whole it stopped the checker before it judged anything.
+fn sha256_of(mut file: std::fs::File) -> std::io::Result<Digest> {
+    let mut hash = archogen_digest::Sha256::new();
+    let mut piece = vec![0_u8; 1 << 16];
+    loop {
+        match file.read(&mut piece) {
+            Ok(0) => return Ok(hash.finish()),
+            Ok(read) => hash.update(&piece[..read]),
+            Err(error) if error.kind() == std::io::ErrorKind::Interrupted => {}
+            Err(error) => return Err(error),
+        }
+    }
 }
 
 /// Refuse the invocation: nothing was judged, so no record is written.

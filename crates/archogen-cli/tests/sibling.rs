@@ -297,6 +297,34 @@ fn the_memory_ceiling_reaches_the_checker_and_nothing_else_does() {
     assert_eq!(text(&output.stdout), "ceiling=77 other=\n");
 }
 
+/// The front hashes its own file and the sibling's in pieces (leaf `PROGRAM.151.6`): a ceiling below its own size still
+/// starts the sibling, on any host, where a build with its debug information linked in is the larger.
+#[test]
+fn the_programs_sizes_take_nothing_of_the_front_s_ceiling() {
+    let front = install(&Spoil::default());
+    let own = std::fs::metadata(&front)
+        .expect("the installed front")
+        .len();
+    let ceiling = ((own / 2) >> 20).max(1);
+    let output = Command::new(&front)
+        .args(["plan-check", "--version"])
+        .env("ARCHOGEN_MEMORY_MIB", ceiling.to_string())
+        .stdin(Stdio::null())
+        .output()
+        .expect("the front runs");
+    assert_eq!(
+        output.status.code(),
+        Some(0),
+        "a ceiling of {ceiling} MiB, half of its own {own} bytes: {}",
+        text(&output.stderr)
+    );
+    assert!(
+        text(&output.stdout).starts_with("archogen "),
+        "{}",
+        text(&output.stdout)
+    );
+}
+
 /// A checker stopped at its ceiling, through the real front, is what it says, and no fault of the toolchain's.
 #[test]
 fn a_checker_at_its_ceiling_is_inconclusive_through_the_real_front() {
