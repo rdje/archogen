@@ -2,7 +2,7 @@
 
 - **Type:** `decision`
 - **Date:** `2026-11-07`
-- **Status:** `active` — written by leaf `M4.1.7.1`; its formulas held by the executable model `crates/archogen-plan/tests/format2_model.rs`, reviewed in leaf `M4.1.7.2`, in `docs/reviews/decision_runtime-plan-format-2-reviews.md`, closed on round 39, which found no defect; built by `M4.1.7.3` to `M4.1.7.6`: `archogen_plan::lower_hosted` and `lower_on_target` write it, which no command reaches yet, held to the model and pinned by five goldens (`M4.1.7.6.9`); what a realization's file and the catalog's records state waits for `M4.1.7.6.10`, and its readers for `M4.1.7.7`
+- **Status:** `active` — written by leaf `M4.1.7.1`; its formulas held by the executable model `crates/archogen-plan/tests/format2_model.rs`, reviewed in leaf `M4.1.7.2`, in `docs/reviews/decision_runtime-plan-format-2-reviews.md`, closed on round 39, which found no defect; built by `M4.1.7.3` to `M4.1.7.6`: `archogen_plan::lower_hosted` and `lower_on_target` write it, which no command reaches yet, held to the model and pinned by five goldens (`M4.1.7.6.9`); what a realization's file and the catalog's records state waits for `M4.1.7.6.10`; its reader is `archogen_plan::contents2` (`M4.1.7.7`)
 - **External sources:** none: this record decides how the engine lowers its own records
 - **Owner / source:** leaf `M4.1.7` (`docs/tasks/M4.md`), from `decision_runtime-plan.md` §4 `.7` and `docs/reviews/decision_runtime-plan-reviews.md`'s "Kept for `M4.1.7`"; the hand-offs `RA-H1`, `RA-H8` (`decision_release-alarm.md`), `DC-H1` to `DC-H4` (`decision_device-correspondence.md`), `RTP-H5` and `AI-H2` (`decision_application-inputs.md`); `ROADMAP.md` §6.2, §7.3 and §10.3.
 
