@@ -314,7 +314,9 @@ fn the_joint_rules_findings_over_the_target_are_a_tool_failure() {
 /// §7's order, read from the record, over the places this leaf reaches: each adjacent pair, both met by one input, gives the
 /// earlier refusal. The target's own before the application's file not reading; that before the record; a platform against
 /// the file's digest, and a joint rules' finding, before the application's target, which stands in an application's unmet's
-/// place.
+/// place. And every other pair today's lowering can reach (leaf `M4.1.7.6.9`): within the target's own, as `check` ranks
+/// them; the application's file before a record of the other kind; the digest before the platform; the platform before a
+/// joint rules' finding. The places a realization's file or a catalog record decides are `M4.1.7.6.10`'s.
 #[test]
 fn each_pair_of_section_7_s_places_gives_the_earlier() {
     const RECORD: &str = include_str!("../../../docs/decisions/decision_runtime-plan-format-2.md");
@@ -395,6 +397,78 @@ fn each_pair_of_section_7_s_places_gives_the_earlier() {
         ),
         "tool-failure"
     );
+
+    // ---- the rest of §7's adjacent pairs that today's lowering can reach (leaf `M4.1.7.6.9`)
+
+    // Within the target's own refusals, as `check`'s precedence ranks them: a source no mask stops before no placement memory,
+    // and no placement memory before a count silent (`section_7_places_every_refusal_in_one_order`'s `RANKED`).
+    let no_ram = shipped.replacen(
+        "\n    (region target.ram (base 0x8000_0000) (size 128 MiB) (executable true))",
+        "",
+        1,
+    );
+    assert_ne!(no_ram, shipped);
+    assert_eq!(
+        refused(
+            on(
+                &no_ram.replacen(
+                    "(non-maskable-interrupts 0)",
+                    "(non-maskable-interrupts 1)",
+                    1
+                ),
+                None,
+                None
+            ),
+            "riscv-virt-up.eadl"
+        ),
+        "unsupported-profile"
+    );
+    assert_eq!(
+        refused(
+            on(
+                &no_ram.replacen("\n    (non-maskable-interrupts 0)", "", 1),
+                None,
+                None
+            ),
+            "riscv-virt-up.eadl"
+        ),
+        "infeasible-configuration"
+    );
+    // The application's file not reading before a record of the other kind, a `/2` given a target.
+    let (_, hosted) = hosted_record(&heartbeat()).expect("the heartbeat resolves hosted");
+    assert_eq!(
+        refused(on(&shipped, Some(&hosted), Some("not a file")), "app.eadl"),
+        "invalid-description"
+    );
+    assert_eq!(
+        refused(on(&shipped, Some(&hosted), None), "resolved on no target"),
+        "stale-input"
+    );
+    // Another file's digest before another platform beside it: the digest decides the run, so a record naming both is
+    // another run's, `stale-input`, and not one no run writes.
+    let both = misnamed.replacen(&shipped_digest, &"a".repeat(64), 1);
+    assert_eq!(
+        refused(on(&shipped, Some(&both), None), "resolve again"),
+        "stale-input"
+    );
+    // Another platform beside the file's own digest before a joint rules' finding over its hardware.
+    let misnamed_filled = theirs.replacen(
+        "(target target.riscv-virt-up ",
+        "(target target.elsewhere ",
+        1,
+    );
+    assert_eq!(
+        refused(
+            on(&filled, Some(&misnamed_filled), None),
+            "never writes this record"
+        ),
+        "tool-failure"
+    );
+    // Not reachable together today, so held by no pair here: a record of the other kind and another target's digest, since a
+    // `/2` names no target; and each place a realization's file or a catalog record decides — the realization's file not
+    // reading, too few levels while lowering the plan's code, a realization of another code identity, a route whose
+    // `external` the file states `no`, and no room while placing, every allocation being owed while no record states a
+    // figure — which are `M4.1.7.6.10`'s. The build's own refusals follow every lowering's, `M4.2`'s.
 }
 
 // ---- a target's time (leaf `M4.1.7.6.7.2`)

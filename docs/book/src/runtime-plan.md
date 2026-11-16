@@ -292,7 +292,15 @@ the last owed before it, since no address below an owed unit is known. The image
 at the bottom of the placement memory. Its limit is owed while the allocations are, and it names the hole above that
 truncates it. The placement memory has its obligation, which `M4.4` discharges. Every route reaches the controller
 while whether its interrupt does is owed, so each writes `(controller owed)`, its line and the controller's levels owed
-by the catalog. No command writes a `/2` plan yet.
+by the catalog.
+
+Five plans of `/2` are frozen as goldens (leaf `M4.1.7.6.9`), lowered from frozen inputs by `lower_hosted` and `lower_on_target` and never
+rewritten, as `/1`'s are: the heartbeat on the hosted playground, with and without its application's file; on a frozen
+copy of `riscv-virt-up`; and a sporadic system and one with two alarms on a test target. Each is held to its digest and
+its code identity, and each frozen plan the search wrote is one the configuration checker accepts
+(`crates/archogen-plan/tests/format2_goldens.rs`). §7's order is held end to end: each pair of its places that can fail
+together gives the earlier refusal. What a realization's file and the catalog's records state, and the places only they
+decide, wait for those inputs (`M4.1.7.6.10`), and the readers of `/2` for `M4.1.7.7`. No command writes a `/2` plan yet.
 
 ## From a plan to a generated system
 
